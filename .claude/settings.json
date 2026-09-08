@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm check-types)",
+      "Bash(pnpm check)",
+      "Bash(pnpm fix)",
+      "Bash(pnpm test)",
+      "Bash(pnpm build)",
+      "Bash(pnpm api:generate)",
+      "Bash(pnpm db:start)",
+      "Bash(pnpm db:stop)",
+      "Bash(pnpm exec biome:*)",
+      "Bash(./mvnw -pl com.proj:server test)",
+      "Bash(./mvnw -pl com.proj:server compile)",
+      "Bash(nx show:*)",
+      "Bash(nx graph:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(docker compose ps:*)",
+      "Bash(docker compose logs:*)"
+    ],
+    "deny": [
+      "Bash(git stash:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm install:*)",
+      "Bash(npm install:*)",
+      "Bash(npm i:*)",
+      "Bash(yarn add:*)",
+      "Bash(brew install:*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/format-edited-file.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: server
+
+  datasource:
+    # Postgres is owned by the root docker-compose.yml (`pnpm db:start`).
+    # Prisma owns the schema; Spring only reads/writes - it never migrates.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/proj}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:}
+
+  autoconfigure:
+    exclude:
+      # Spring AI 2.0.1's Anthropic chat auto-config cannot bind
+      # `spring.ai.anthropic.chat.thinking` under Spring Boot 4.1.1 - it fails
+      # with "Configuration property name '-json' is not valid" and takes the
+      # whole application context down, regardless of our configuration.
+      # The starter is kept on the classpath for when we build an AI feature;
+      # delete this exclusion (and re-test) once Spring AI ships a fix.
+      - org.springframework.ai.model.anthropic.autoconfigure.AnthropicChatAutoConfiguration
+
+server:
+  port: ${SERVER_PORT:8080}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui
+
+app:
+  cors:
+    # Comma-separated. The web app calls the API directly from the browser.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3001}
+
+# Okta is intentionally NOT configured here. Set OKTA_OAUTH2_ISSUER (see
+# apps/server/.env.example) to switch on JWT validation; while it is unset the
+# Okta starter stays dormant and SecurityConfig leaves the API open locally.

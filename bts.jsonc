@@ -1,0 +1,28 @@
+// Better-T-Stack project metadata
+//
+// Keep this file to use the `add` command.
+// Add addons: pnpm dlx create-better-t-stack@latest add
+//
+// Docs: https://better-t-stack.dev/docs
+// Stack Builder: https://better-t-stack.dev/new
+
+{
+  "$schema": "https://r2.better-t-stack.dev/schema.json",
+  "version": "3.42.2",
+  "createdAt": "2026-09-07T11:42:05.964Z",
+  "reproducibleCommand": "pnpm create better-t-stack@latest proj --frontend tanstack-start --backend self --runtime none --database postgres --orm prisma --api none --auth none --payments none --addons nx ultracite --examples none --db-setup docker --web-deploy docker --server-deploy none --git --package-manager pnpm --no-install",
+  "database": "postgres",
+  "orm": "prisma",
+  "backend": "self",
+  "runtime": "none",
+  "frontend": ["tanstack-start"],
+  "addons": ["nx", "ultracite"],
+  "examples": [],
+  "auth": "none",
+  "payments": "none",
+  "packageManager": "pnpm",
+  "dbSetup": "docker",
+  "api": "none",
+  "webDeploy": "docker",
+  "serverDeploy": "none",
+}

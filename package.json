@@ -1,0 +1,42 @@
+{
+  "name": "proj",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "api:generate": "nx run-many -t openapi --projects=com.proj:server && nx run-many -t openapi:types --projects=@proj/api",
+    "build": "nx run-many -t build",
+    "check": "ultracite check",
+    "check-types": "nx run-many -t check-types",
+    "db:down": "docker compose down postgres",
+    "db:generate": "nx run-many -t db:generate --projects=@proj/db",
+    "db:migrate": "nx run-many -t db:migrate --projects=@proj/db",
+    "db:push": "nx run-many -t db:push --projects=@proj/db",
+    "db:start": "docker compose up -d postgres",
+    "db:stop": "docker compose stop postgres",
+    "db:studio": "nx run-many -t db:studio --projects=@proj/db",
+    "db:watch": "docker compose up postgres",
+    "dev": "nx run-many -t dev",
+    "dev:server": "nx run-many -t dev --projects=com.proj:server",
+    "dev:web": "nx run-many -t dev --projects=web",
+    "docker:build": "docker compose build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:up": "docker compose up -d --build",
+    "fix": "ultracite fix",
+    "test": "nx run-many -t test"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@nx/maven": "23.2.0",
+    "@proj/config": "workspace:*",
+    "@types/node": "catalog:",
+    "nx": "^23.1.2",
+    "typescript": "catalog:",
+    "ultracite": "7.11.0"
+  },
+  "packageManager": "pnpm@12.3.4"
+}

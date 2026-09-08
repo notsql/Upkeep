@@ -1,0 +1,35 @@
+packages:
+  - apps/*
+  - packages/*
+allowBuilds:
+  esbuild: true
+  sharp: true
+  "@prisma/client": true
+  "@prisma/engines": true
+  prisma: true
+  nx: true
+  msgpackr-extract: true
+  workerd: true
+catalog:
+  dotenv: ^17.4.2
+  zod: ^4.4.3
+  typescript: ^7.0.2
+  "@prisma/client": ^7.10.0
+  "@types/node": ^26.2.0
+  lucide-react: ^1.27.0
+  next-themes: ^0.4.6
+  react: ^19.2.8
+  react-dom: ^19.2.8
+  sonner: ^2.0.7
+  tailwindcss: ^4.3.3
+  "@types/react": ^19.2.17
+  "@types/react-dom": ^19.2.3
+  openapi-fetch: ^0.17.0
+  vitest: ^5.0.0
+  openapi-typescript: ^7.13.0
+minimumReleaseAgeExclude:
+  - '@tanstack/history@1.162.2'
+  - '@tanstack/router-core@1.171.28'
+  - bidi-js@1.1.0
+  - tldts-core@7.4.12
+  - tldts@7.4.12

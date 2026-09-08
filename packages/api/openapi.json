@@ -1,0 +1,1 @@
+{"openapi":"3.1.0","info":{"title":"proj API","version":"v1"},"servers":[{"url":"http://localhost:8080","description":"Generated server url"}],"security":[{"bearerAuth":[]}],"paths":{},"components":{"securitySchemes":{"bearerAuth":{"type":"http","scheme":"bearer","bearerFormat":"JWT"}}}}

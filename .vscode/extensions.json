@@ -1,0 +1,30 @@
+{
+  "recommendations": [
+    // Formatting and linting - this project uses Biome (via Ultracite), not Prettier.
+    "biomejs.biome",
+
+    // Java / Spring Boot. The pack pulls in language support, debugger, test
+    // runner and Maven integration; the Boot extension adds application.yaml
+    // completion and live bean inspection.
+    "vscjava.vscode-java-pack",
+    "vmware.vscode-boot-dev-pack",
+
+    // Database - Prisma owns the schema (see .spec/decisions/0001).
+    "prisma.prisma",
+
+    // Frontend
+    "bradlc.vscode-tailwindcss",
+
+    // Monorepo task running and graph visualisation.
+    "nrwl.angular-console",
+
+    // Containers and config files.
+    "ms-azuretools.vscode-containers",
+    "redhat.vscode-yaml"
+  ],
+  "unwantedRecommendations": [
+    // Biome is the formatter for this repo. Running Prettier alongside it
+    // produces churn in diffs.
+    "esbenp.prettier-vscode"
+  ]
+}

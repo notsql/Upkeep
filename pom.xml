@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!--
+		Aggregator POM for the monorepo. This is NOT the parent of apps/server -
+		that stays spring-boot-starter-parent. This exists so Maven (and therefore
+		the @nx/maven plugin, which invokes Maven from the workspace root) can see
+		every Java module in one reactor.
+	-->
+	<groupId>com.proj</groupId>
+	<artifactId>proj</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>proj</name>
+	<description>Monorepo aggregator</description>
+
+	<modules>
+		<module>apps/server</module>
+	</modules>
+
+	<build>
+		<plugins>
+			<!-- Lets Nx analyse the Maven reactor and infer targets/dependencies. -->
+			<plugin>
+				<groupId>dev.nx.maven</groupId>
+				<artifactId>nx-maven-plugin</artifactId>
+				<version>0.0.17</version>
+			</plugin>
+		</plugins>
+	</build>
+</project>

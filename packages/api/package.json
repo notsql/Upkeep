@@ -1,0 +1,22 @@
+{
+  "name": "@proj/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "openapi:types": "openapi-typescript ./openapi.json -o ./src/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "catalog:"
+  },
+  "devDependencies": {
+    "@proj/config": "workspace:*",
+    "openapi-typescript": "catalog:",
+    "typescript": "catalog:"
+  }
+}

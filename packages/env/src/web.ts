@@ -1,0 +1,12 @@
+import { createEnv } from "@t3-oss/env-core";
+import { z } from "zod";
+
+export const env = createEnv({
+  clientPrefix: "VITE_",
+  client: {
+    /** Base URL of the Spring Boot API. The browser calls it directly. */
+    VITE_API_URL: z.url().default("http://localhost:8080"),
+  },
+  runtimeEnv: import.meta.env,
+  emptyStringAsUndefined: true,
+});

@@ -1,0 +1,29 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "com.proj:server",
+  "projectType": "application",
+  "metadata": {
+    "mavenProject": "com.proj:server"
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "dependsOn": ["package"],
+      "metadata": {
+        "description": "Alias for the Maven `package` phase so `nx run-many -t build` covers Java too."
+      }
+    },
+    "dev": {
+      "executor": "@nx/maven:maven",
+      "options": { "goals": "spring-boot:run" },
+      "metadata": { "description": "Runs the API with devtools reload on :8080." }
+    },
+    "openapi": {
+      "executor": "@nx/maven:maven",
+      "options": { "goals": "verify", "args": ["-Popenapi", "-DskipTests"] },
+      "metadata": {
+        "description": "Exports the OpenAPI contract to packages/api/openapi.json."
+      }
+    }
+  }
+}

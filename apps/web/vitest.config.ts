@@ -1,0 +1,26 @@
+import viteReact from "@vitejs/plugin-react";
+import { defineConfig } from "vitest/config";
+
+/**
+ * Deliberately separate from vite.config.ts.
+ *
+ * The app config loads the TanStack Start and Nitro plugins, which exist to
+ * build an SSR server. Component tests run in jsdom and don't need any of
+ * that - loading it only slows the suite down and drags server-side concerns
+ * into unit tests. React transform and path aliases are all that's required.
+ */
+export default defineConfig({
+  plugins: [viteReact()],
+  resolve: {
+    // Vite 8 resolves the `paths` in tsconfig.json natively - `@/*` and
+    // `@proj/ui/*` work in tests exactly as they do in the app.
+    tsconfigPaths: true,
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./tests/setup.ts"],
+    include: ["tests/**/*.{test,spec}.{ts,tsx}"],
+    // Undo spies/stubs between tests so state can't leak across them.
+    restoreMocks: true,
+  },
+});
