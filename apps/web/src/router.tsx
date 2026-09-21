@@ -18,12 +18,12 @@ export const getRouter = () => {
   });
 
   const router = createTanStackRouter({
+    context: { queryClient },
+    defaultNotFoundComponent: () => <div>Not Found</div>,
+    defaultPendingComponent: () => <Loader />,
+    defaultPreloadStaleTime: 0,
     routeTree,
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
-    context: { queryClient },
-    defaultPendingComponent: () => <Loader />,
-    defaultNotFoundComponent: () => <div>Not Found</div>,
   });
 
   return router;

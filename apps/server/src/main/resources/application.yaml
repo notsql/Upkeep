@@ -37,6 +37,14 @@ app:
     # Comma-separated. The web app calls the API directly from the browser.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3001}
 
-# Okta is intentionally NOT configured here. Set OKTA_OAUTH2_ISSUER (see
-# apps/server/.env.example) to switch on JWT validation; while it is unset the
-# Okta starter stays dormant and SecurityConfig leaves the API open locally.
+# WorkOS AuthKit is intentionally NOT configured here, and the issuer must not
+# be given an empty default: Spring's resource-server auto-configuration keys
+# off the property merely being present, so a blank value would build a
+# JwtDecoder against no issuer and take the context down at startup.
+#
+# To switch JWT validation on, set the environment variable
+#   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+# to your AuthKit domain (e.g. https://<tenant>.authkit.app). Relaxed binding
+# maps it onto spring.security.oauth2.resourceserver.jwt.issuer-uri, Spring
+# discovers the JWKS from it, and SecurityConfig starts requiring a token.
+# While it is unset the API stays open locally. See apps/server/.env.example.

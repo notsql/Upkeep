@@ -19,9 +19,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * The browser calls this API directly (no BFF proxy), so CORS is configured
  * here and the API is stateless - every request carries its own bearer token.
  *
- * <p>JWT validation only switches on when {@code okta.oauth2.issuer} is set, so
- * the app runs locally without an Okta tenant and production becomes a config
- * change rather than a code change.
+ * <p>JWT validation only switches on when
+ * {@code spring.security.oauth2.resourceserver.jwt.issuer-uri} is set, so the
+ * app runs locally without a WorkOS tenant and production becomes a config
+ * change rather than a code change. WorkOS AuthKit issues standard OIDC
+ * tokens, so Spring discovers the JWKS from the issuer on its own.
  */
 @Configuration
 @EnableWebSecurity
@@ -35,7 +37,7 @@ public class SecurityConfig {
   @Value("${app.cors.allowed-origins}")
   private List<String> allowedOrigins;
 
-  @Value("${okta.oauth2.issuer:}")
+  @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
   private String issuer;
 
   @Bean

@@ -16,13 +16,22 @@
     "dev": {
       "executor": "@nx/maven:maven",
       "options": { "goals": "spring-boot:run" },
-      "metadata": { "description": "Runs the API with devtools reload on :8080." }
+      "metadata": {
+        "description": "Runs the API with devtools reload on :8080."
+      }
     },
     "openapi": {
       "executor": "@nx/maven:maven",
       "options": { "goals": "verify", "args": ["-Popenapi", "-DskipTests"] },
       "metadata": {
         "description": "Exports the OpenAPI contract to packages/api/openapi.json."
+      }
+    },
+    "db:generate": {
+      "executor": "@nx/maven:maven",
+      "options": { "goals": "generate-sources", "args": ["-Pjooq"] },
+      "metadata": {
+        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Needs `pnpm db:start`."
       }
     }
   }

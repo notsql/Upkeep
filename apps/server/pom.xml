@@ -16,15 +16,29 @@
 	<properties>
 		<java.version>25</java.version>
 		<spring-ai.version>2.0.1</spring-ai.version>
+		<!--
+			Where jOOQ's code generator reads the schema from. Defaults match the
+			docker-compose Postgres (`pnpm db:start`); override with
+			-Djooq.jdbc.url=... when pointing at another database.
+		-->
+		<jooq.jdbc.url>jdbc:postgresql://localhost:5432/proj</jooq.jdbc.url>
+		<jooq.jdbc.user>postgres</jooq.jdbc.user>
+		<jooq.jdbc.password>password</jooq.jdbc.password>
 	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<!--
+			jOOQ generates typed table/record classes from the Prisma-migrated
+			database (see the `jooq` profile below), so a schema change surfaces
+			as a compile error rather than a runtime one. Brings
+			spring-boot-starter-jdbc in transitively.
+		-->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jdbc</artifactId>
+			<artifactId>spring-boot-starter-jooq</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -42,10 +56,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
+		<!--
+			WorkOS AuthKit issues standard OIDC JWTs, so the plain resource-server
+			starter is enough - no vendor starter needed. Validation switches on
+			when spring.security.oauth2.resourceserver.jwt.issuer-uri is set.
+		-->
 		<dependency>
-			<groupId>com.okta.spring</groupId>
-			<artifactId>okta-spring-boot-starter</artifactId>
-			<version>3.1.0</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>
@@ -157,6 +175,65 @@
 							<apiDocsUrl>http://localhost:8080/v3/api-docs</apiDocsUrl>
 							<outputFileName>openapi.json</outputFileName>
 							<outputDir>${project.basedir}/../../packages/api</outputDir>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<!--
+			Regenerates the typed jOOQ classes from the live database. Prisma owns
+			the schema (see .spec/decisions/0001), so this reads whatever
+			`pnpm db:migrate` last applied - it never changes the database itself.
+
+			Requires Postgres to be up (`pnpm db:start`). Driven by
+			`pnpm db:generate`. Kept in a profile so an ordinary `mvn package`
+			(and CI) builds from the committed sources without needing a database.
+		-->
+		<profile>
+			<id>jooq</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jooq</groupId>
+						<artifactId>jooq-codegen-maven</artifactId>
+						<version>${jooq.version}</version>
+						<dependencies>
+							<dependency>
+								<groupId>org.postgresql</groupId>
+								<artifactId>postgresql</artifactId>
+								<version>${postgresql.version}</version>
+							</dependency>
+						</dependencies>
+						<executions>
+							<execution>
+								<id>generate-jooq</id>
+								<phase>generate-sources</phase>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<jdbc>
+								<driver>org.postgresql.Driver</driver>
+								<url>${jooq.jdbc.url}</url>
+								<user>${jooq.jdbc.user}</user>
+								<password>${jooq.jdbc.password}</password>
+							</jdbc>
+							<generator>
+								<database>
+									<name>org.jooq.meta.postgres.PostgresDatabase</name>
+									<inputSchema>public</inputSchema>
+									<includes>.*</includes>
+									<!-- Prisma's own migration bookkeeping is not ours to read. -->
+									<excludes>_prisma_migrations</excludes>
+								</database>
+								<target>
+									<packageName>com.proj.server.db</packageName>
+									<directory>${project.basedir}/src/main/java</directory>
+								</target>
+							</generator>
 						</configuration>
 					</plugin>
 				</plugins>

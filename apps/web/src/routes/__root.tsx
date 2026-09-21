@@ -1,10 +1,16 @@
 import { Toaster } from "@proj/ui/components/sonner";
-import { QueryClientProvider } from "@tanstack/react-query";
 import type { QueryClient } from "@tanstack/react-query";
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import { QueryClientProvider } from "@tanstack/react-query";
+import {
+  createRootRouteWithContext,
+  HeadContent,
+  Outlet,
+  Scripts,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "next-themes";
 
+import { AuthProvider } from "../components/auth-provider";
 import Header from "../components/header";
 
 import appCss from "../index.css?url";
@@ -49,15 +55,22 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange enableSystem>
-          <QueryClientProvider client={queryClient}>
-            <div className="grid h-svh grid-rows-[auto_1fr]">
-              <Header />
-              <Outlet />
-            </div>
-            <Toaster richColors />
-            <TanStackRouterDevtools position="bottom-left" />
-          </QueryClientProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          enableSystem
+        >
+          <AuthProvider>
+            <QueryClientProvider client={queryClient}>
+              <div className="grid h-svh grid-rows-[auto_1fr]">
+                <Header />
+                <Outlet />
+              </div>
+              <Toaster richColors />
+              <TanStackRouterDevtools position="bottom-left" />
+            </QueryClientProvider>
+          </AuthProvider>
         </ThemeProvider>
         <Scripts />
       </body>
