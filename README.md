@@ -12,11 +12,13 @@ Prisma-owned schema, orchestrated by Nx.
 | --- | --- | --- | --- |
 | Frontend | TanStack Start, React 19, Vite, Tailwind 4 | `apps/web` | 3001 |
 | Backend | Spring Boot 4, Java 25, Maven | `apps/server` | 8080 |
+| Inference | FastAPI, onnxruntime, uv | `apps/ml` | 8000 |
 | Contract | springdoc -> OpenAPI -> typed TS client | `packages/api` | - |
 | Database | Postgres 18, Prisma 7 | `packages/db` | 5432 |
 
 The browser calls the Spring API directly over CORS. The web app has no
-database access; `apps/server` is the only thing that talks to Postgres.
+database access; `apps/server` is the only thing that talks to Postgres, and
+the only thing that calls the `apps/ml` inference service.
 
 ## Prerequisites
 
@@ -26,6 +28,7 @@ database access; `apps/server` is the only thing that talks to Postgres.
 | **pnpm 10** | Workspace package manager. |
 | **Node 22+** | Required by Vite 8 and Vitest 5. |
 | **Docker** | Runs Postgres. Nothing else in the dev loop needs it. |
+| **uv** | Runs the Python inference service (`brew install uv`). |
 
 Maven is *not* a prerequisite - use `./mvnw` at the repo root. It lives at the
 root rather than in `apps/server` because `@nx/maven` runs Maven from the
@@ -51,15 +54,7 @@ need them to develop, and `pnpm dev` does not use them.
 
 ## Getting started
 
-**1. Install dependencies.**
-
-```bash
-pnpm install
-```
-
-This also generates Prisma Client via a `postinstall` hook.
-
-**2. Create your env files.**
+**1. Create your env files.**
 
 ```bash
 cp apps/web/.env.example apps/web/.env
@@ -67,17 +62,34 @@ cp apps/server/.env.example apps/server/.env
 cp packages/db/.env.example packages/db/.env
 ```
 
-The defaults work out of the box: the API is open (no Okta tenant needed) and
-points at the local Postgres.
+Do this before installing: the `postinstall` hook reads `packages/db/.env`
+and fails without it. The defaults work out of the box: the API is open (no
+WorkOS tenant needed) and points at the local Postgres.
 
-**3. Start Postgres and apply the schema.**
+**2. Install dependencies.**
 
 ```bash
-pnpm db:start      # Postgres 18 in Docker, on :5432
-pnpm db:migrate    # applies the Prisma schema
+pnpm install
 ```
 
-**4. Generate the API contract.**
+This also generates Prisma Client via a `postinstall` hook.
+
+**3. Add a model for the inference service.**
+
+Drop an ONNX file at `apps/ml/models/model.onnx` - `apps/ml` refuses to boot
+without one. `uv` must be installed (`brew install uv`); it creates the Python
+environment on first run. See [`apps/ml/README.md`](apps/ml/README.md).
+
+**4. Start Postgres, apply the schema and seed it.**
+
+```bash
+pnpm db:setup      # Postgres 18 in Docker on :5432, migrations, seed data
+```
+
+`pnpm dev` runs this for you too, so this step just gets the database ready for
+the contract export below.
+
+**5. Generate the API contract.**
 
 ```bash
 pnpm api:generate
@@ -86,7 +98,7 @@ pnpm api:generate
 `packages/api/src/schema.ts` ships as an empty seed, so run this once after
 cloning to build the real typed client from the Spring controllers.
 
-**5. Run everything.**
+**6. Run everything.**
 
 ```bash
 pnpm dev
@@ -97,22 +109,26 @@ pnpm dev
 | App | <http://localhost:3001> |
 | API | <http://localhost:8080> |
 | Swagger UI | <http://localhost:8080/swagger-ui> |
+| Inference (internal) | <http://localhost:8000> |
 
 ## Day-to-day development
 
-Postgres only needs starting once per session; it keeps running in the
-background until you stop it.
-
 ```bash
-pnpm db:start                  # once per session
-pnpm dev                       # web + API, with reload on both sides
+pnpm dev                       # Postgres + migrations + seed, then web + API + ML
 ```
 
-Working on one side only:
+`pnpm dev` first runs `pnpm db:setup`: it starts Postgres (waiting until it is
+healthy), applies any pending migrations, and runs the seed. The seed is
+idempotent, so re-running it every time is safe. Postgres keeps running in the
+background after you stop `pnpm dev`.
+
+Working on one side only (these do **not** start the database - run
+`pnpm db:setup` first if you need it):
 
 ```bash
 pnpm dev:web                   # TanStack Start on :3001
 pnpm dev:server                # Spring Boot on :8080
+pnpm dev:ml                    # FastAPI inference on :8000
 ```
 
 Before committing:
@@ -129,6 +145,7 @@ pnpm test                      # web (Vitest) and server (JUnit) tests
 | --- | --- |
 | `apps/web` | Vitest + Testing Library, jsdom |
 | `apps/server` | JUnit via Surefire |
+| `apps/ml` | pytest (`cd apps/ml && uv run pytest`) |
 
 ```bash
 pnpm test                          # everything, cached by Nx
@@ -174,8 +191,8 @@ Commit the generated files alongside the Java change. Full workflow in
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | Web + API |
-| `pnpm dev:web` / `pnpm dev:server` | One side only |
+| `pnpm dev` | DB setup, then web + API + inference |
+| `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Everything, Java included |
 | `pnpm test` | web (Vitest) + server (JUnit) tests |
 | `pnpm --filter web test:watch` | Web tests in watch mode |
@@ -183,16 +200,21 @@ Commit the generated files alongside the Java change. Full workflow in
 | `pnpm check` / `pnpm fix` | Ultracite (Biome) lint + format |
 | `pnpm api:generate` | Regenerate the API contract |
 | `pnpm db:start` / `pnpm db:stop` / `pnpm db:down` | Postgres container |
+| `pnpm db:setup` | Start Postgres, apply migrations, seed |
 | `pnpm db:migrate` / `pnpm db:push` / `pnpm db:studio` | Prisma |
+| `pnpm db:seed` / `pnpm db:reset` | Seed / drop, re-migrate and seed |
 | `pnpm docker:up` / `pnpm docker:down` / `pnpm docker:logs` | Full stack in Docker |
 
 Java directly: `./mvnw -pl com.proj:server <phase>` from the repo root.
 
 ## Authentication
 
-Okta is wired but dormant. While `OKTA_OAUTH2_ISSUER` is unset the API is open,
-so local development needs no Okta tenant; set it and `SecurityConfig` starts
-validating JWTs. Turning auth on is a config change, not a code change.
+WorkOS AuthKit is wired but dormant. While
+`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` is unset the API is
+open, so local development needs no WorkOS tenant; set it to your AuthKit
+domain and `SecurityConfig` starts validating JWTs. On the web side, set
+`VITE_WORKOS_CLIENT_ID` to mount the AuthKit provider and show the sign-in
+control. Turning auth on is a config change, not a code change.
 
 ## Project structure
 
@@ -200,7 +222,8 @@ validating JWTs. Turning auth on is a config change, not a code change.
 proj/
 ├── apps/
 │   ├── web/          # TanStack Start frontend
-│   └── server/       # Spring Boot API
+│   ├── server/       # Spring Boot API
+│   └── ml/           # FastAPI ONNX inference (internal)
 ├── packages/
 │   ├── api/          # generated OpenAPI types + typed client
 │   ├── db/           # Prisma schema, migrations, client

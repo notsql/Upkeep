@@ -47,8 +47,11 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3001}
+      ML_API_URL: http://ml:8000
     depends_on:
       postgres:
+        condition: service_healthy
+      ml:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
@@ -56,6 +59,32 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+    restart: unless-stopped
+
+  ml:
+    build:
+      context: .
+      dockerfile: apps/ml/Dockerfile
+    init: true
+    # No published port: only the `server` service calls this, over the compose
+    # network at http://ml:8000.
+    expose:
+      - "8000"
+    env_file:
+      - path: apps/ml/.env
+        required: false
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     restart: unless-stopped
 
   postgres:

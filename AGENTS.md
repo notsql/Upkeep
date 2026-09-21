@@ -43,13 +43,16 @@ something in. Equally, do not leave dependencies behind that nothing imports.
 | --- | --- | --- | --- |
 | Frontend | TanStack Start, React 19, Vite, Tailwind 4 | `apps/web` | 3001 |
 | Backend | Spring Boot 4, Java 25, Maven | `apps/server` | 8080 |
+| Inference | FastAPI, onnxruntime, uv | `apps/ml` | 8000 |
 | Contract | springdoc -> `openapi-typescript` -> `openapi-fetch` | `packages/api` | - |
 | Database | Postgres 18, Prisma 7 | `packages/db` | 5432 |
 | Orchestration | Nx 23 + `@nx/maven`, pnpm workspaces | root | - |
-| Testing | Vitest + Testing Library (web), JUnit (server) | - | - |
+| Testing | Vitest + Testing Library (web), JUnit (server), pytest (ml) | - | - |
 | Data fetching | React Query over the generated client | `apps/web` | - |
 
-The browser calls Spring **directly** (CORS, not a proxy).
+The browser calls Spring **directly** (CORS, not a proxy). `apps/ml` is
+internal: only `apps/server` calls it, so the browser's API surface stays the
+generated contract. See `.spec/decisions/0007-*`.
 
 ---
 
@@ -59,14 +62,17 @@ Run everything from the repo root.
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | Web + API together |
-| `pnpm dev:web` / `pnpm dev:server` | One side only |
+| `pnpm dev` | `db:setup`, then web + API + inference together |
+| `pnpm db:setup` | Start Postgres, apply pending migrations, seed |
+| `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Builds everything, Java included |
 | `pnpm test` | All tests |
 | `pnpm check-types` | TypeScript across the workspace |
 | `pnpm check` / `pnpm fix` | Ultracite (Biome) lint + format |
 | `pnpm db:start` / `pnpm db:stop` | Postgres container |
 | `pnpm db:migrate` | Create + apply a Prisma migration |
+| `pnpm db:seed` | Seed the database (`packages/db/prisma/seed.ts`, idempotent) |
+| `pnpm db:reset` | Drop, recreate, replay migrations, then seed |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm api:generate` | **Regenerate the API contract** (see §4) |
 | `pnpm docker:up` | Full stack in Docker |
@@ -129,9 +135,16 @@ const { data } = useQuery({
 
 1. Edit `packages/db/prisma/schema/schema.prisma`.
 2. `pnpm db:migrate` - creates the migration and applies it.
-3. Update the Java persistence code in `apps/server` to match. **Nothing checks
-   this for you**; the migration is only half the task.
-4. Commit the migration directory with the code.
+3. `pnpm db:generate` - regenerates the Prisma client **and** the jOOQ classes
+   in `com.proj.server.db` from the migrated database. Postgres must be up.
+4. `./mvnw -pl com.proj:server compile` - the Java side now fails wherever the
+   schema moved. Fix those call sites. Never hand-edit `com.proj.server.db`;
+   it is generated output and the generator overwrites it.
+5. If the table needs development data, add it to `packages/db/prisma/seed.ts`
+   and run `pnpm db:seed`. Seeding must stay idempotent - `upsert` on a stable
+   id, never `create` - because `pnpm db:reset` replays it on every reset.
+6. Commit the migration directory **and the regenerated jOOQ sources** with the
+   code, the same way the generated API contract is committed.
 
 ### Adding a shared UI component
 
@@ -144,8 +157,23 @@ never be reused belong in `apps/web/src/components` instead.
 
 ### Turning on authentication
 
-Set `OKTA_OAUTH2_ISSUER` in `apps/server/.env`. `SecurityConfig` switches from
-open to JWT-validating on its own - do not add conditional logic for this.
+Authentication is WorkOS AuthKit, and both sides stay dormant until configured
+- do not add conditional logic for this.
+
+- **Server:** set `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` in
+  `apps/server/.env` to your AuthKit domain (`https://<tenant>.authkit.app`).
+  `SecurityConfig` switches from open to JWT-validating on its own. Do **not**
+  give this property an empty default in `application.yaml` - Spring's
+  resource-server auto-configuration keys off the property merely being
+  present, and a blank value takes the context down at startup.
+- **Web:** set `VITE_WORKOS_CLIENT_ID` (and `VITE_WORKOS_REDIRECT_URI` if not
+  `http://localhost:3001`) in `apps/web/.env`. While the client ID is unset,
+  `AuthProvider` and `AuthButton` render straight through and the app runs
+  unauthenticated.
+
+The bearer token reaches the API through `createApiClient`'s `getToken`, wired
+by `AuthTokenBridge` in `apps/web/src/components/auth-provider.tsx`. Never
+attach the header by hand.
 
 ---
 
@@ -187,6 +215,18 @@ TypeScript 7 anyway. **If `pnpm api:generate` starts failing in a way that
 points at the compiler API, this is why** - the fix is to pin
 `packages/api` to `typescript: ^5.9.3` in its own `package.json`, which is
 supported because pnpm isolates each package's `node_modules`.
+
+### Python (`apps/ml`)
+
+- `uv` manages the environment; dependencies go in `apps/ml/pyproject.toml`,
+  **not** the pnpm `catalog:`. As with everything else, edit the manifest and
+  tell the human to run `uv sync` - do not install on your own initiative.
+- Pydantic models for request and response bodies. Configuration through
+  `pydantic-settings` (`ML_*`), never bare `os.environ`.
+- Keep the service model-agnostic: `/predict` reads the loaded session's
+  signature. Swapping the `.onnx` should not need a code change.
+- Tests in `apps/ml/tests`, run with `uv run pytest`. Build fixture models in
+  the test rather than checking a binary in.
 
 ### Java
 
@@ -245,6 +285,8 @@ and what not to test. The essentials:
 | Change the API's OpenAPI metadata | `apps/server/.../config/OpenApiConfig.java` |
 | Add an env var | `packages/env/src/*.ts` **and** the matching `.env.example` |
 | Change Nx targets for Java | `apps/server/project.json` |
+| Serve or swap the ONNX model | `apps/ml/` (drop the file at `apps/ml/models/`) |
+| Train, evaluate or explore a model | `ml-research/` - not `apps/` |
 | Write a web test | `apps/web/tests/`, mirroring `src/` |
 | Configure web tests | `apps/web/vitest.config.ts`, `apps/web/tests/setup.ts` |
 | Bump a shared dependency version | the `catalog:` in `pnpm-workspace.yaml` |
@@ -257,6 +299,6 @@ and what not to test. The essentials:
 - `pnpm fix` has been run.
 - If you touched a controller: `pnpm api:generate` was run and the generated
   files are committed.
-- If you touched the Prisma schema: the migration is committed and the Java
-  side was updated.
+- If you touched the Prisma schema: `pnpm db:generate` was run, and the
+  migration and the regenerated jOOQ sources are committed.
 - If you made a structural or architectural choice: a note in `.spec/decisions/`.

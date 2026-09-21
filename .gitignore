@@ -2,6 +2,9 @@
 node_modules
 .pnp
 .pnp.js
+.venv
+__pycache__/
+.pytest_cache/
 
 # Build outputs
 dist
@@ -46,6 +49,12 @@ lerna-debug.log*
 # Better-T-Stack
 .alchemy
 .vercel
+
+# ML research - code only; datasets and trained weights live elsewhere
+ml-research/data/*
+!ml-research/data/.gitkeep
+ml-research/artifacts/
+.ipynb_checkpoints/
 
 # Testing
 coverage

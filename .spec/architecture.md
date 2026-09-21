@@ -91,16 +91,26 @@ type generates as `unknown` and destroys type safety on the frontend.
 
 ## Authentication
 
-Okta (OAuth2 / OIDC), wired but dormant.
+WorkOS AuthKit (OAuth2 / OIDC), wired but dormant on both sides.
 
-`SecurityConfig` reads `okta.oauth2.issuer`. While it is unset - the default -
-the API is fully open, so local development needs no Okta tenant. Set
-`OKTA_OAUTH2_ISSUER` and the same config switches to validating JWTs on every
-request except the OpenAPI and health endpoints. Turning auth on is a config
-change, not a code change.
+AuthKit issues standard OIDC tokens, so the server is a plain Spring resource
+server - no vendor starter. `SecurityConfig` reads
+`spring.security.oauth2.resourceserver.jwt.issuer-uri`. While it is unset - the
+default - the API is fully open, so local development needs no WorkOS tenant.
+Set it to the AuthKit domain and the same config switches to validating JWTs on
+every request except the OpenAPI and health endpoints, discovering the JWKS
+from the issuer. Turning auth on is a config change, not a code change.
 
-The generated client accepts a `getToken` callback (`apps/web/src/lib/api.ts`)
-which attaches the bearer token; it is not wired to a login flow yet.
+The property must not be given an empty default in `application.yaml`: Spring's
+resource-server auto-configuration keys off the property merely being present,
+so a blank value builds a `JwtDecoder` against no issuer and fails at startup.
+
+On the web side `AuthProvider` (`apps/web/src/components/auth-provider.tsx`)
+mounts AuthKit only when `VITE_WORKOS_CLIENT_ID` is set, and `AuthTokenBridge`
+hands the token resolver to the generated client's `getToken` callback. The
+resolver is installed browser-side only - the app server-side renders, and a
+module-scope resolver on the server would be shared across requests, so SSR
+fetches go out unauthenticated by design.
 
 ## Environment
 
@@ -112,7 +122,9 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `SPRING_DATASOURCE_*` | `apps/server` | JDBC URL, not the Prisma URL. |
 | `VITE_API_URL` | `apps/web` | **Baked in at build time**, so it must be the URL the *browser* uses - never a Docker-internal hostname. |
 | `CORS_ALLOWED_ORIGINS` | `apps/server` | Must include the web app's origin. |
-| `OKTA_OAUTH2_ISSUER` | `apps/server` | Blank/unset disables auth. |
+| `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` | `apps/server` | WorkOS AuthKit domain. Unset disables auth; never set it blank. |
+| `VITE_WORKOS_CLIENT_ID` | `apps/web` | Unset means the app runs unauthenticated. |
+| `VITE_WORKOS_REDIRECT_URI` | `apps/web` | Must be registered in the WorkOS dashboard. Defaults to the dev origin. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |
 
 ## Testing

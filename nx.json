@@ -1,10 +1,7 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": [
-      "{projectRoot}/**/*",
-      "sharedGlobals"
-    ],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
       "!{workspaceRoot}/apps/web/dist/**",
@@ -21,28 +18,15 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "production",
-        "^production"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
     },
     "check-types": {
-      "dependsOn": [
-        "^check-types"
-      ],
-      "inputs": [
-        "default",
-        "^default"
-      ]
+      "dependsOn": ["^check-types"],
+      "inputs": ["default", "^default"]
     },
     "test": {
-      "inputs": [
-        "default",
-        "^default"
-      ],
+      "inputs": ["default", "^default"],
       "cache": true
     },
     "test:watch": {
@@ -60,6 +44,15 @@
       "cache": false
     },
     "db:migrate": {
+      "cache": false
+    },
+    "db:migrate:deploy": {
+      "cache": false
+    },
+    "db:seed": {
+      "cache": false
+    },
+    "db:reset": {
       "cache": false
     },
     "db:studio": {
@@ -83,7 +76,6 @@
       "cache": false
     }
   },
-  "plugins": [
-    "@nx/maven"
-  ]
+  "plugins": ["@nx/maven"],
+  "analytics": false
 }

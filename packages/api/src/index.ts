@@ -9,7 +9,7 @@ export type CreateApiClientOptions = {
   baseUrl: string;
   /**
    * Resolves the bearer token for each request. Return `undefined` to send the
-   * request unauthenticated - useful locally, where Okta is not configured.
+   * request unauthenticated - useful locally, where WorkOS is not configured.
    */
   getToken?: () => Promise<string | undefined> | string | undefined;
 };
@@ -19,7 +19,10 @@ export type CreateApiClientOptions = {
  * shape comes from `schema.ts`, which is generated from the server's OpenAPI
  * document - do not hand-write request types.
  */
-export function createApiClient({ baseUrl, getToken }: CreateApiClientOptions): ApiClient {
+export function createApiClient({
+  baseUrl,
+  getToken,
+}: CreateApiClientOptions): ApiClient {
   const client = createClient<paths>({ baseUrl });
 
   if (getToken) {
