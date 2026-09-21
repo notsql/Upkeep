@@ -1,0 +1,24 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "ml",
+  "projectType": "application",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run uvicorn ml.main:app --reload --host 0.0.0.0 --port 8000",
+        "cwd": "apps/ml"
+      },
+      "metadata": {
+        "description": "Runs the ONNX inference service with reload on :8000."
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run pytest",
+        "cwd": "apps/ml"
+      }
+    }
+  }
+}
