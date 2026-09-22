@@ -25,8 +25,9 @@ Environment variables, read from `apps/ml/.env` (all prefixed `ML_`):
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `ML_MODEL_PATH` | `models/model.onnx` | The `.onnx` file to serve, relative to `apps/ml` |
-| `ML_HOST` | `0.0.0.0` | Bind address |
-| `ML_PORT` | `8000` | Port |
+
+The bind address and port (`0.0.0.0:8000`) are uvicorn CLI flags, set in
+`apps/ml/project.json` and `apps/ml/Dockerfile`.
 
 These are Python-side settings via `pydantic-settings`, so they are *not* in
 `packages/env` - that package only types the TypeScript apps' environment.
@@ -35,7 +36,7 @@ These are Python-side settings via `pydantic-settings`, so they are *not* in
 
 | Route | Does |
 | --- | --- |
-| `GET /health` | Liveness |
+| `GET /health` | `200 {"status":"ok"}`, or `503 {"status":"no_model"}` when no `.onnx` is present |
 | `GET /model` | The loaded model's input/output names, types and shapes |
 | `POST /predict` | Runs inference |
 
@@ -54,6 +55,10 @@ curl -X POST localhost:8000/predict \
 
 Unknown or missing input names come back as `400`. Call `GET /model` when you
 are not sure what the model wants.
+
+The service starts even when `ML_MODEL_PATH` points at nothing; until a model
+is dropped in and the service restarted, `/model` and `/predict` return `503`.
+A model file that exists but won't load still stops startup.
 
 ## Tests
 

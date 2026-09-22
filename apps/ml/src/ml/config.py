@@ -10,8 +10,6 @@ class Settings(BaseSettings):
 
     # Path to the .onnx file this service serves.
     model_path: Path = Path("models/model.onnx")
-    host: str = "0.0.0.0"
-    port: int = 8000
 
 
 settings = Settings()

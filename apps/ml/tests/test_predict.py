@@ -68,3 +68,41 @@ def test_predict_rejects_a_missing_input(client: TestClient) -> None:
 
     assert response.status_code == 400
     assert "x" in response.json()["detail"]
+
+
+@pytest.fixture
+def client_without_model() -> TestClient:
+    from ml.main import app
+
+    app.state.model = None
+    return TestClient(app)
+
+
+def test_health_reports_a_missing_model(client_without_model: TestClient) -> None:
+    response = client_without_model.get("/health")
+
+    assert response.status_code == 503
+    assert response.json() == {"status": "no_model"}
+
+
+@pytest.mark.parametrize(
+    ("method", "path"), [("GET", "/model"), ("POST", "/predict")]
+)
+def test_model_routes_503_without_a_model(
+    client_without_model: TestClient, method: str, path: str
+) -> None:
+    response = client_without_model.request(method, path, json={"inputs": {}})
+
+    assert response.status_code == 503
+    assert "model" in response.json()["detail"].lower()
+
+
+def test_starts_without_a_model_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from ml.config import settings
+    from ml.main import app
+
+    monkeypatch.setattr(settings, "model_path", tmp_path / "missing.onnx")
+    with TestClient(app) as client:
+        assert client.get("/health").status_code == 503
