@@ -17,7 +17,7 @@ Follow the contract loop in `AGENTS.md` §4 exactly:
    bare `Object`: those generate as `unknown` and break frontend type safety.
    Never return a persistence type directly.
 4. Validate the request body with `@Valid` plus Jakarta constraints.
-5. Run `pnpm db:start`, then `pnpm api:generate` to export the contract and
+5. Run `pnpm api:generate` to export the contract and
    regenerate `packages/api/src/schema.ts`.
 6. Run `pnpm check-types` and fix every call site the contract change breaks.
 7. Call the endpoint from the web app through `apps/web/src/lib/api.ts` - never

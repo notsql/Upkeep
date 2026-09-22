@@ -5,11 +5,14 @@
     "ultracite/biome/react",
     "ultracite/biome/tanstack"
   ],
+  "files": {
+    "includes": ["!!packages/ui"]
+  },
   "linter": {
     "rules": {
       "performance": {
         "noNamespaceImport": "off",
-        "noBarrelFile": "warn"
+        "noBarrelFile": "off"
       },
       "style": {
         "useConsistentTypeDefinitions": {

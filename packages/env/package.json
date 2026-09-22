@@ -7,6 +7,10 @@
     "./server": "./src/server.ts",
     "./web": "./src/web.ts"
   },
+  "scripts": {
+    "lint": "ultracite check",
+    "lint:fix": "ultracite fix"
+  },
   "dependencies": {
     "@t3-oss/env-core": "^0.13.11",
     "dotenv": "catalog:",

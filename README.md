@@ -102,7 +102,7 @@ Types flow one way. Each step generates what the next one compiles against, so
 work top to bottom and stop at the first step your change doesn't touch.
 
 ```
-schema.prisma --db:migrate--> database --db:generate--> jOOQ (Java)
+schema.prisma --migrate----> database --db:generate--> jOOQ (Java)
                                                           |
                               Spring controller <---------+
                                      |
@@ -113,11 +113,13 @@ schema.prisma --db:migrate--> database --db:generate--> jOOQ (Java)
 
 ```bash
 # edit packages/db/prisma/schema/schema.prisma
-pnpm db:migrate      # creates + applies a migration (prompts for a name)
+pnpm --filter @proj/db db:migrate --name <what_changed>   # creates + applies a named migration
 pnpm db:generate     # regenerates Prisma Client + the jOOQ classes
 ```
 
-`db:migrate` changes the database it points at, so run it against your own
+Migrating is a `packages/db` task, not a root script - name each migration
+for what it changes (`add_user_email`, not `update`). It changes the database
+it points at, so run it against your own
 [Neon branch](#neon-the-dev-database), never the shared one.
 
 **2. Backend** - write the service and `@RestController` in
@@ -193,26 +195,14 @@ SPRING_DATASOURCE_PASSWORD=<password>
 
 **Changing the schema?** Create your own
 [branch](https://neon.tech/docs/introduction/branching) of the dev database in
-the Neon console and point both files at it while you work. `pnpm db:migrate`
+the Neon console and point both files at it while you work. Migrating
 there cannot break anyone else; once your migration is merged, `pnpm db:deploy`
 applies it to the shared database.
 
-**jOOQ reads from `localhost` by default** (the `jooq.jdbc.*` properties in
-`apps/server/pom.xml`), so against Neon run the generator with overrides
-instead of `pnpm db:generate`'s Java half:
-
-```bash
-./mvnw -pl com.proj:server generate-sources -Pjooq \
-  -Djooq.jdbc.url='jdbc:postgresql://<endpoint>.<region>.aws.neon.tech/proj?sslmode=require' \
-  -Djooq.jdbc.user=<user> -Djooq.jdbc.password=<password>
-```
-
-**Prefer local Postgres?** Point the same two files at
-`localhost:5432` (the values in the `.env.example` files) and run
-`pnpm db:setup` first - it starts Postgres 18 in Docker and applies migrations.
-`pnpm db:stop` / `pnpm db:down` stop it. Nothing else in the dev loop needs
-Docker; the `web` and `server` services in `docker-compose.yml` are for
-deployment parity.
+**jOOQ reads the same database as the app** - `pnpm db:generate` uses the
+`SPRING_DATASOURCE_*` values in `apps/server/.env`, so point that file at your
+Neon branch while changing the schema. Nothing in the dev loop needs Docker;
+`docker-compose.yml` is for deployment parity.
 
 ## Scripts
 
@@ -224,12 +214,10 @@ deployment parity.
 | `pnpm test` | web (Vitest) + server (JUnit) tests |
 | `pnpm --filter web test:watch` | Web tests in watch mode |
 | `pnpm check-types` | TypeScript across the workspace |
-| `pnpm check` / `pnpm fix` | Ultracite (Biome) lint + format |
+| `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Ruff (ml), Spotless (server) |
 | `pnpm api:generate` | Regenerate the API contract |
-| `pnpm db:start` / `pnpm db:stop` / `pnpm db:down` | Postgres container |
-| `pnpm db:deploy` | Apply pending migrations (no Docker) |
-| `pnpm db:setup` | Local Postgres only: start it, apply migrations |
-| `pnpm db:migrate` / `pnpm db:push` / `pnpm db:studio` | Prisma |
+| `pnpm db:deploy` | Apply pending migrations |
+| `pnpm db:studio` | Prisma Studio |
 | `pnpm db:reset` | Drop and re-migrate |
 | `pnpm docker:up` / `pnpm docker:down` / `pnpm docker:logs` | Full stack in Docker |
 
@@ -279,11 +267,10 @@ Design tokens are in `packages/ui/src/styles/globals.css`.
 
 ## Docker
 
-Development needs no Docker (Neon), or only `pnpm db:start` for local
-Postgres. The full stack is for deployment and production parity:
+Development needs no Docker (Neon). The full stack is for deployment and production parity:
 
 ```bash
-pnpm docker:up      # build and start web + server + postgres
+pnpm docker:up      # build and start web + server + ml (against Neon)
 pnpm docker:logs
 pnpm docker:down
 ```

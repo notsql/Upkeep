@@ -9,8 +9,8 @@ schema, Spring never migrates.
 Requested change: $ARGUMENTS
 
 1. Edit `packages/db/prisma/schema/schema.prisma`.
-2. Run `pnpm db:start`, then `pnpm db:migrate` to create and apply the
-   migration.
+2. Run `pnpm --filter @proj/db db:migrate --name <what_changed>` against your
+   Neon branch to create and apply the migration.
 3. Update the Java persistence code in `apps/server` so it matches the new
    shape. **Nothing verifies this automatically** - the migration is only half
    the task, and skipping this step produces runtime failures rather than

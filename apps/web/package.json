@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "check-types": "tsc --noEmit",
     "dev": "vite dev",
+    "lint": "ultracite check",
+    "lint:fix": "ultracite fix",
     "serve": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest"

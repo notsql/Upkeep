@@ -64,14 +64,11 @@ Run everything from the repo root.
 | --- | --- |
 | `pnpm dev` | web + API + inference together (no database setup) |
 | `pnpm db:deploy` | Apply pending migrations to whatever `DATABASE_URL` points at |
-| `pnpm db:setup` | Local Postgres only: start the container, then `db:deploy` |
 | `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Builds everything, Java included |
 | `pnpm test` | All tests |
 | `pnpm check-types` | TypeScript across the workspace |
-| `pnpm check` / `pnpm fix` | Ultracite (Biome) lint + format |
-| `pnpm db:start` / `pnpm db:stop` | Postgres container |
-| `pnpm db:migrate` | Create + apply a Prisma migration |
+| `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Ruff (ml), Spotless (server) |
 | `pnpm db:reset` | Drop, recreate, replay migrations |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm api:generate` | **Regenerate the API contract** (see §4) |
@@ -81,9 +78,8 @@ Java directly, when you need it: `./mvnw -pl com.proj:server <phase>` from the
 repo root. The wrapper is at the root, not in `apps/server` - `@nx/maven`
 requires it there.
 
-**Nx runs tasks; Docker runs services.** The dev database is Neon (or, if you
-prefer, local Postgres via `pnpm db:setup`); everything else runs natively
-through Nx (`pnpm dev`). The
+**Nx runs tasks; Docker runs services.** The dev database is Neon; everything else
+runs natively through Nx (`pnpm dev`). The
 `web` and `server` services in `docker-compose.yml` are for deployment parity -
 do not `docker compose up` the full stack just to develop or to check a change.
 
@@ -100,8 +96,8 @@ The single most important loop in this repo. Do not skip step 4.
    on the frontend and defeats the whole setup.
 2. Annotate anything the generated types can't infer (`@RequestParam`
    requiredness, response codes via `@ApiResponse`).
-3. The export boots the app, so the database must be reachable - Neon, or
-   `pnpm db:start` if you develop against local Postgres.
+3. The export boots the app, so the Neon database in `apps/server/.env` must be
+   reachable.
 4. `pnpm api:generate` - rewrites `packages/api/openapi.json` and
    `packages/api/src/schema.ts`.
 5. `pnpm check-types` - the web app now fails wherever the contract moved. Fix
@@ -138,7 +134,7 @@ const { data } = useQuery({
 1. Edit `packages/db/prisma/schema/schema.prisma`.
 2. `pnpm db:migrate` - creates the migration and applies it.
 3. `pnpm db:generate` - regenerates the Prisma client **and** the jOOQ classes
-   in `com.proj.server.db` from the migrated database. Postgres must be up.
+   in `com.proj.server.db` from the migrated Neon database.
 4. `./mvnw -pl com.proj:server compile` - the Java side now fails wherever the
    schema moved. Fix those call sites. Never hand-edit `com.proj.server.db`;
    it is generated output and the generator overwrites it.

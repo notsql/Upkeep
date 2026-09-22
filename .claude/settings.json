@@ -8,8 +8,6 @@
       "Bash(pnpm test)",
       "Bash(pnpm build)",
       "Bash(pnpm api:generate)",
-      "Bash(pnpm db:start)",
-      "Bash(pnpm db:stop)",
       "Bash(pnpm exec biome:*)",
       "Bash(./mvnw -pl com.proj:server test)",
       "Bash(./mvnw -pl com.proj:server compile)",

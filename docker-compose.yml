@@ -43,14 +43,9 @@ services:
       - path: apps/server/.env
         required: false
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/proj
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-password}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3001}
       ML_API_URL: http://ml:8000
     depends_on:
-      postgres:
-        condition: service_healthy
       ml:
         condition: service_healthy
     healthcheck:
@@ -87,23 +82,3 @@ services:
       start_period: 15s
     restart: unless-stopped
 
-  postgres:
-    image: postgres:18
-    container_name: proj-postgres
-    environment:
-      POSTGRES_DB: proj
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
-    ports:
-      - "5432:5432"
-    volumes:
-      - proj_postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-volumes:
-  proj_postgres_data:

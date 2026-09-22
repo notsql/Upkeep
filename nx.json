@@ -37,9 +37,6 @@
       "cache": false,
       "continuous": true
     },
-    "db:push": {
-      "cache": false
-    },
     "db:generate": {
       "cache": false
     },
@@ -55,19 +52,6 @@
     "db:studio": {
       "cache": false,
       "continuous": true
-    },
-    "db:start": {
-      "cache": false
-    },
-    "db:stop": {
-      "cache": false
-    },
-    "db:watch": {
-      "cache": false,
-      "continuous": true
-    },
-    "db:down": {
-      "cache": false
     },
     "openapi": {
       "cache": false

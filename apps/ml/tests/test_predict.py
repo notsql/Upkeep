@@ -85,9 +85,7 @@ def test_health_reports_a_missing_model(client_without_model: TestClient) -> Non
     assert response.json() == {"status": "no_model"}
 
 
-@pytest.mark.parametrize(
-    ("method", "path"), [("GET", "/model"), ("POST", "/predict")]
-)
+@pytest.mark.parametrize(("method", "path"), [("GET", "/model"), ("POST", "/predict")])
 def test_model_routes_503_without_a_model(
     client_without_model: TestClient, method: str, path: str
 ) -> None:

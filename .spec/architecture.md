@@ -75,11 +75,10 @@ This is the workflow that keeps the two languages in agreement:
 
 ```
 1. Change a @RestController in apps/server
-2. pnpm db:start                 # springdoc needs the app to boot
-3. pnpm api:generate             # boots the app, writes packages/api/openapi.json,
+2. pnpm api:generate             # boots the app, writes packages/api/openapi.json,
                                  # regenerates packages/api/src/schema.ts
-4. apps/web now type-errors wherever the contract changed. Fix those.
-5. Commit the generated files alongside the Java change.
+3. apps/web now type-errors wherever the contract changed. Fix those.
+4. Commit the generated files alongside the Java change.
 ```
 
 `openapi.json` and `schema.ts` are committed on purpose: a fresh clone
@@ -130,7 +129,7 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `SERVER_PORT` | `apps/server` | Defaults to `8080`. |
 | `ML_API_URL` | `apps/server` | Where Spring reaches `apps/ml`. Set by `docker-compose.yml`; not read by any code until the ML client exists. |
 | `ML_MODEL_PATH` | `apps/ml` | Defaults to `models/model.onnx`. |
-| `POSTGRES_PASSWORD`, `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm db:start` / `pnpm docker:up`. Change `POSTGRES_PASSWORD` and the app `.env` passwords together. |
+| `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm docker:up`. |
 
 Nx loads each project's `.env` into its tasks (`pnpm dev`, `api:generate`,
 ...). Running `./mvnw` directly does **not**, so Spring falls back to the
