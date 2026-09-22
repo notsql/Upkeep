@@ -17,13 +17,13 @@
 		<java.version>25</java.version>
 		<spring-ai.version>2.0.1</spring-ai.version>
 		<!--
-			Where jOOQ's code generator reads the schema from. Defaults match the
-			docker-compose Postgres (`pnpm db:start`). The `jooq-env-datasource`
-			profile swaps in SPRING_DATASOURCE_* from apps/server/.env when set.
+			Where jOOQ's code generator reads the schema from: the same Neon
+			database the app uses. Nx loads apps/server/.env into the task's
+			environment.
 		-->
-		<jooq.jdbc.url>jdbc:postgresql://localhost:5432/proj</jooq.jdbc.url>
-		<jooq.jdbc.user>postgres</jooq.jdbc.user>
-		<jooq.jdbc.password>password</jooq.jdbc.password>
+		<jooq.jdbc.url>${env.SPRING_DATASOURCE_URL}</jooq.jdbc.url>
+		<jooq.jdbc.user>${env.SPRING_DATASOURCE_USERNAME}</jooq.jdbc.user>
+		<jooq.jdbc.password>${env.SPRING_DATASOURCE_PASSWORD}</jooq.jdbc.password>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -125,14 +125,29 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+			<!-- `pnpm check` runs spotless:check; `pnpm fix` runs spotless:apply. -->
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>3.4.0</version>
+				<configuration>
+					<java>
+						<excludes>
+							<exclude>src/main/java/com/proj/server/db/**</exclude>
+						</excludes>
+						<palantirJavaFormat/>
+						<removeUnusedImports/>
+					</java>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
 	<profiles>
 		<!--
 			Exports the OpenAPI contract. Boots the app, hits /v3/api-docs, writes
-			packages/api/openapi.json, stops the app. Requires Postgres to be up
-			(`pnpm db:start`). Driven by `pnpm api:generate`.
+			packages/api/openapi.json, stops the app. Requires the database in
+			apps/server/.env to be reachable. Driven by `pnpm api:generate`.
 		-->
 		<profile>
 			<id>openapi</id>
@@ -182,31 +197,11 @@
 		</profile>
 
 		<!--
-			Points jOOQ at the same database the app uses. Nx loads
-			apps/server/.env into the task's environment, so when
-			SPRING_DATASOURCE_URL is set there (e.g. Neon) codegen reads it
-			instead of the local docker-compose defaults above.
-		-->
-		<profile>
-			<id>jooq-env-datasource</id>
-			<activation>
-				<property>
-					<name>env.SPRING_DATASOURCE_URL</name>
-				</property>
-			</activation>
-			<properties>
-				<jooq.jdbc.url>${env.SPRING_DATASOURCE_URL}</jooq.jdbc.url>
-				<jooq.jdbc.user>${env.SPRING_DATASOURCE_USERNAME}</jooq.jdbc.user>
-				<jooq.jdbc.password>${env.SPRING_DATASOURCE_PASSWORD}</jooq.jdbc.password>
-			</properties>
-		</profile>
-
-		<!--
 			Regenerates the typed jOOQ classes from the live database. Prisma owns
 			the schema (see .spec/decisions/0001), so this reads whatever
-			`pnpm db:migrate` last applied - it never changes the database itself.
+			the last migration applied - it never changes the database itself.
 
-			Requires Postgres to be up (`pnpm db:start`). Driven by
+			Reads the database in apps/server/.env. Driven by
 			`pnpm db:generate`. Kept in a profile so an ordinary `mvn package`
 			(and CI) builds from the committed sources without needing a database.
 		-->

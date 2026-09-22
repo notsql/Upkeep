@@ -9,11 +9,11 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-    # Postgres is owned by the root docker-compose.yml (`pnpm db:start`).
+    # The Neon dev database, from apps/server/.env.
     # Prisma owns the schema; Spring only reads/writes - it never migrates.
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/proj}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
 
   ai:
     anthropic:

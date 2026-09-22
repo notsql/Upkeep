@@ -20,6 +20,23 @@
         "description": "Runs the API with devtools reload on :8080."
       }
     },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./mvnw -pl com.proj:server spotless:check",
+        "cwd": "{workspaceRoot}"
+      },
+      "metadata": {
+        "description": "Checks Java formatting with Spotless."
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./mvnw -pl com.proj:server spotless:apply",
+        "cwd": "{workspaceRoot}"
+      }
+    },
     "openapi": {
       "executor": "nx:run-commands",
       "options": {
@@ -37,7 +54,7 @@
         "cwd": "{workspaceRoot}"
       },
       "metadata": {
-        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Needs `pnpm db:start`. Runs ./mvnw directly for the same reason as openapi."
+        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Reads the database in apps/server/.env. Runs ./mvnw directly for the same reason as openapi."
       }
     }
   }

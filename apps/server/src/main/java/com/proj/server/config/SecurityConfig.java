@@ -1,7 +1,6 @@
 package com.proj.server.config;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,67 +30,64 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  /** Endpoints that must stay reachable without a token. */
-  private static final String[] PUBLIC_PATHS = {
-    "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui", "/swagger-ui/**", "/actuator/health", "/health"
-  };
+    /** Endpoints that must stay reachable without a token. */
+    private static final String[] PUBLIC_PATHS = {
+        "/v3/api-docs", "/v3/api-docs/**", "/swagger-ui", "/swagger-ui/**", "/actuator/health", "/health"
+    };
 
-  @Value("${app.cors.allowed-origins}")
-  private List<String> allowedOrigins;
+    @Value("${app.cors.allowed-origins}")
+    private List<String> allowedOrigins;
 
-  @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
-  private String issuer;
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri:}")
+    private String issuer;
 
-  @Bean
-  SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.cors(Customizer.withDefaults())
-        .csrf(csrf -> csrf.disable())
-        .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+    @Bean
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.cors(Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-    if (issuer.isBlank()) {
-      // Local development: no identity provider configured.
-      http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-      return http.build();
+        if (issuer.isBlank()) {
+            // Local development: no identity provider configured.
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            return http.build();
+        }
+
+        http.authorizeHttpRequests(auth -> auth.requestMatchers(PUBLIC_PATHS)
+                        .permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
+                        .permitAll()
+                        .requestMatchers("/users", "/users/**")
+                        .hasRole("admin")
+                        .anyRequest()
+                        .authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(roleConverter())));
+        return http.build();
     }
 
-    http.authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers(PUBLIC_PATHS)
-                    .permitAll()
-                    .requestMatchers(HttpMethod.OPTIONS, "/**")
-                    .permitAll()
-                    .requestMatchers("/users", "/users/**")
-                    .hasRole("admin")
-                    .anyRequest()
-                    .authenticated())
-        .oauth2ResourceServer(
-            oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(roleConverter())));
-    return http.build();
-  }
+    /**
+     * AuthKit puts the caller's role slug (e.g. {@code admin}, {@code member}) in
+     * the {@code role} claim; expose it as {@code ROLE_<slug>} for {@code hasRole}.
+     */
+    private static JwtAuthenticationConverter roleConverter() {
+        var authorities = new JwtGrantedAuthoritiesConverter();
+        authorities.setAuthoritiesClaimName("role");
+        authorities.setAuthorityPrefix("ROLE_");
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authorities);
+        return converter;
+    }
 
-  /**
-   * AuthKit puts the caller's role slug (e.g. {@code admin}, {@code member}) in
-   * the {@code role} claim; expose it as {@code ROLE_<slug>} for {@code hasRole}.
-   */
-  private static JwtAuthenticationConverter roleConverter() {
-    var authorities = new JwtGrantedAuthoritiesConverter();
-    authorities.setAuthoritiesClaimName("role");
-    authorities.setAuthorityPrefix("ROLE_");
-    var converter = new JwtAuthenticationConverter();
-    converter.setJwtGrantedAuthoritiesConverter(authorities);
-    return converter;
-  }
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        var config = new CorsConfiguration();
+        config.setAllowedOrigins(allowedOrigins);
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
-  @Bean
-  CorsConfigurationSource corsConfigurationSource() {
-    var config = new CorsConfiguration();
-    config.setAllowedOrigins(allowedOrigins);
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("*"));
-    config.setAllowCredentials(true);
-
-    var source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-  }
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 }
