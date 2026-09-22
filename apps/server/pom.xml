@@ -18,8 +18,8 @@
 		<spring-ai.version>2.0.1</spring-ai.version>
 		<!--
 			Where jOOQ's code generator reads the schema from. Defaults match the
-			docker-compose Postgres (`pnpm db:start`); override with
-			-Djooq.jdbc.url=... when pointing at another database.
+			docker-compose Postgres (`pnpm db:start`). The `jooq-env-datasource`
+			profile swaps in SPRING_DATASOURCE_* from apps/server/.env when set.
 		-->
 		<jooq.jdbc.url>jdbc:postgresql://localhost:5432/proj</jooq.jdbc.url>
 		<jooq.jdbc.user>postgres</jooq.jdbc.user>
@@ -179,6 +179,26 @@
 					</plugin>
 				</plugins>
 			</build>
+		</profile>
+
+		<!--
+			Points jOOQ at the same database the app uses. Nx loads
+			apps/server/.env into the task's environment, so when
+			SPRING_DATASOURCE_URL is set there (e.g. Neon) codegen reads it
+			instead of the local docker-compose defaults above.
+		-->
+		<profile>
+			<id>jooq-env-datasource</id>
+			<activation>
+				<property>
+					<name>env.SPRING_DATASOURCE_URL</name>
+				</property>
+			</activation>
+			<properties>
+				<jooq.jdbc.url>${env.SPRING_DATASOURCE_URL}</jooq.jdbc.url>
+				<jooq.jdbc.user>${env.SPRING_DATASOURCE_USERNAME}</jooq.jdbc.user>
+				<jooq.jdbc.password>${env.SPRING_DATASOURCE_PASSWORD}</jooq.jdbc.password>
+			</properties>
 		</profile>
 
 		<!--

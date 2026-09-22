@@ -18,9 +18,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.{test,spec}.{ts,tsx}"],
     // Undo spies/stubs between tests so state can't leak across them.
     restoreMocks: true,
+    setupFiles: ["./tests/setup.ts"],
   },
 });

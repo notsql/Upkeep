@@ -7,3 +7,17 @@ import { afterEach } from "vitest";
 afterEach(() => {
   cleanup();
 });
+
+// jsdom has no matchMedia, which next-themes calls for `enableSystem` - so
+// every renderWithProviders call would throw without this stub.
+window.matchMedia ??= (query: string): MediaQueryList =>
+  ({
+    addEventListener: () => undefined,
+    addListener: () => undefined,
+    dispatchEvent: () => false,
+    matches: false,
+    media: query,
+    onchange: null,
+    removeEventListener: () => undefined,
+    removeListener: () => undefined,
+  }) satisfies MediaQueryList;

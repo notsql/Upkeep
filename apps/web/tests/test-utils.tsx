@@ -10,21 +10,26 @@ import type { ReactElement, ReactNode } from "react";
  * this instead of Testing Library's bare `render` whenever a component touches
  * data fetching or the theme.
  */
-export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) {
+export function renderWithProviders(
+  ui: ReactElement,
+  options?: Omit<RenderOptions, "wrapper">
+) {
   // A fresh client per test: a shared one would leak cached data between tests
   // and make them order-dependent.
   const queryClient = new QueryClient({
     defaultOptions: {
+      mutations: { retry: false },
       // Retries turn an intentional failure case into a multi-second timeout.
       queries: { retry: false },
-      mutations: { retry: false },
     },
   });
 
   function Wrapper({ children }: { children: ReactNode }) {
     return (
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
       </ThemeProvider>
     );
   }

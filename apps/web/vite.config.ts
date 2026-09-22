@@ -5,11 +5,16 @@ import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  server: {
-    port: 3001,
-  },
+  plugins: [
+    tailwindcss(),
+    tanstackStart(),
+    nitro({ preset: "node-server" }),
+    viteReact(),
+  ],
   resolve: {
     tsconfigPaths: true,
   },
-  plugins: [tailwindcss(), tanstackStart(), nitro({ preset: "node-server" }), viteReact()],
+  server: {
+    port: 3001,
+  },
 });

@@ -1,6 +1,6 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "name": "com.proj:server",
+  "name": "server",
   "projectType": "application",
   "metadata": {
     "mavenProject": "com.proj:server"
@@ -21,17 +21,23 @@
       }
     },
     "openapi": {
-      "executor": "@nx/maven:maven",
-      "options": { "goals": "verify", "args": ["-Popenapi", "-DskipTests"] },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./mvnw -pl com.proj:server verify -Popenapi -DskipTests",
+        "cwd": "{workspaceRoot}"
+      },
       "metadata": {
-        "description": "Exports the OpenAPI contract to packages/api/openapi.json."
+        "description": "Exports the OpenAPI contract to packages/api/openapi.json. Runs ./mvnw directly: the @nx/maven batch executor drops -P profile args."
       }
     },
     "db:generate": {
-      "executor": "@nx/maven:maven",
-      "options": { "goals": "generate-sources", "args": ["-Pjooq"] },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./mvnw -pl com.proj:server generate-sources -Pjooq",
+        "cwd": "{workspaceRoot}"
+      },
       "metadata": {
-        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Needs `pnpm db:start`."
+        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Needs `pnpm db:start`. Runs ./mvnw directly for the same reason as openapi."
       }
     }
   }
