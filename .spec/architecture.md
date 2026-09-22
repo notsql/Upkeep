@@ -28,7 +28,7 @@ never at module scope, because this app server-side renders and a shared client
 would leak one user's cache into another's response.
 
 `packages/db` is deliberately **not** imported by any running application. It
-exists for schema, migrations, seeding and Studio. At runtime, Postgres is
+exists for schema, migrations and Studio. At runtime, Postgres is
 reached only by Spring over JDBC; `packages/db` reaches it through Prisma's
 `@prisma/adapter-pg` driver adapter when you run its scripts.
 
@@ -51,7 +51,7 @@ See `decisions/0001` and `decisions/0002` for why.
 | Path | What it is | Nx project |
 | --- | --- | --- |
 | `apps/web` | TanStack Start app, port 3001 | `web` |
-| `apps/server` | Spring Boot API, port 8080 | `com.proj:server` |
+| `apps/server` | Spring Boot API, port 8080 | `server` |
 | `packages/api` | Generated OpenAPI types + typed fetch client | `@proj/api` |
 | `packages/db` | Prisma schema, migrations, client | `@proj/db` |
 | `packages/ui` | Shared shadcn/ui primitives | `@proj/ui` |
@@ -126,6 +126,15 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `VITE_WORKOS_CLIENT_ID` | `apps/web` | Unset means the app runs unauthenticated. |
 | `VITE_WORKOS_REDIRECT_URI` | `apps/web` | Must be registered in the WorkOS dashboard. Defaults to the dev origin. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |
+| `WORKOS_API_KEY` | `apps/server` | Secret. Only for server-to-WorkOS calls (`GET /users`); never in `apps/web`. Blank makes `/users` return 503. |
+| `SERVER_PORT` | `apps/server` | Defaults to `8080`. |
+| `ML_API_URL` | `apps/server` | Where Spring reaches `apps/ml`. Set by `docker-compose.yml`; not read by any code until the ML client exists. |
+| `ML_MODEL_PATH` | `apps/ml` | Defaults to `models/model.onnx`. |
+| `POSTGRES_PASSWORD`, `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm db:start` / `pnpm docker:up`. Change `POSTGRES_PASSWORD` and the app `.env` passwords together. |
+
+Nx loads each project's `.env` into its tasks (`pnpm dev`, `api:generate`,
+...). Running `./mvnw` directly does **not**, so Spring falls back to the
+defaults in `application.yaml`.
 
 ## Testing
 

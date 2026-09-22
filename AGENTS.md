@@ -62,8 +62,9 @@ Run everything from the repo root.
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | `db:setup`, then web + API + inference together |
-| `pnpm db:setup` | Start Postgres, apply pending migrations, seed |
+| `pnpm dev` | web + API + inference together (no database setup) |
+| `pnpm db:deploy` | Apply pending migrations to whatever `DATABASE_URL` points at |
+| `pnpm db:setup` | Local Postgres only: start the container, then `db:deploy` |
 | `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Builds everything, Java included |
 | `pnpm test` | All tests |
@@ -71,8 +72,7 @@ Run everything from the repo root.
 | `pnpm check` / `pnpm fix` | Ultracite (Biome) lint + format |
 | `pnpm db:start` / `pnpm db:stop` | Postgres container |
 | `pnpm db:migrate` | Create + apply a Prisma migration |
-| `pnpm db:seed` | Seed the database (`packages/db/prisma/seed.ts`, idempotent) |
-| `pnpm db:reset` | Drop, recreate, replay migrations, then seed |
+| `pnpm db:reset` | Drop, recreate, replay migrations |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm api:generate` | **Regenerate the API contract** (see §4) |
 | `pnpm docker:up` | Full stack in Docker |
@@ -81,8 +81,9 @@ Java directly, when you need it: `./mvnw -pl com.proj:server <phase>` from the
 repo root. The wrapper is at the root, not in `apps/server` - `@nx/maven`
 requires it there.
 
-**Nx runs tasks; Docker runs services.** The dev loop is Postgres in Docker
-(`pnpm db:start`) and everything else natively through Nx (`pnpm dev`). The
+**Nx runs tasks; Docker runs services.** The dev database is Neon (or, if you
+prefer, local Postgres via `pnpm db:setup`); everything else runs natively
+through Nx (`pnpm dev`). The
 `web` and `server` services in `docker-compose.yml` are for deployment parity -
 do not `docker compose up` the full stack just to develop or to check a change.
 
@@ -99,7 +100,8 @@ The single most important loop in this repo. Do not skip step 4.
    on the frontend and defeats the whole setup.
 2. Annotate anything the generated types can't infer (`@RequestParam`
    requiredness, response codes via `@ApiResponse`).
-3. `pnpm db:start` - the export boots the app, so Postgres must be up.
+3. The export boots the app, so the database must be reachable - Neon, or
+   `pnpm db:start` if you develop against local Postgres.
 4. `pnpm api:generate` - rewrites `packages/api/openapi.json` and
    `packages/api/src/schema.ts`.
 5. `pnpm check-types` - the web app now fails wherever the contract moved. Fix
@@ -140,10 +142,7 @@ const { data } = useQuery({
 4. `./mvnw -pl com.proj:server compile` - the Java side now fails wherever the
    schema moved. Fix those call sites. Never hand-edit `com.proj.server.db`;
    it is generated output and the generator overwrites it.
-5. If the table needs development data, add it to `packages/db/prisma/seed.ts`
-   and run `pnpm db:seed`. Seeding must stay idempotent - `upsert` on a stable
-   id, never `create` - because `pnpm db:reset` replays it on every reset.
-6. Commit the migration directory **and the regenerated jOOQ sources** with the
+5. Commit the migration directory **and the regenerated jOOQ sources** with the
    code, the same way the generated API contract is committed.
 
 ### Adding a shared UI component
@@ -302,3 +301,29 @@ and what not to test. The essentials:
 - If you touched the Prisma schema: `pnpm db:generate` was run, and the
   migration and the regenerated jOOQ sources are committed.
 - If you made a structural or architectural choice: a note in `.spec/decisions/`.
+
+
+<!-- nx configuration start-->
+<!-- Leave the start & end comments to automatically receive updates. -->
+
+## General Guidelines for working with Nx
+
+- For navigating/exploring the workspace, invoke the `nx-workspace` skill first - it has patterns for querying projects, targets, and dependencies
+- When running tasks (for example build, lint, test, e2e, etc.), always prefer running the task through `nx` (i.e. `nx run`, `nx run-many`, `nx affected`) instead of using the underlying tooling directly
+- Prefix nx commands with the workspace's package manager (e.g., `pnpm nx build`, `npm exec nx test`) - avoids using globally installed CLI
+- You have access to the Nx MCP server and its tools, use them to help the user
+- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
+- NEVER guess CLI flags - always check nx_docs or `--help` first when unsure
+
+## Scaffolding & Generators
+
+- For scaffolding tasks (creating apps, libs, project structure, setup), ALWAYS invoke the `nx-generate` skill FIRST before exploring or calling MCP tools
+
+## When to use nx_docs
+
+- USE for: advanced config options, unfamiliar flags, migration guides, plugin configuration, edge cases
+- DON'T USE for: basic generator syntax (`nx g @nx/react:app`), standard commands, things you already know
+- The `nx-generate` skill handles generator discovery internally - don't call nx_docs just to look up generator syntax
+
+
+<!-- nx configuration end-->

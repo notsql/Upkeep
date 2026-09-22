@@ -26,7 +26,7 @@ Split the two responsibilities rather than the data:
 - Java persistence code must be kept in line with the Prisma schema by hand.
   A schema change is therefore a two-step task: migrate, then update the Java
   side. `features/` specs should call this out explicitly.
-- Prisma Client stays available to `packages/db` for scripts, seeding and
+- Prisma Client stays available to `packages/db` for scripts and
   Studio - convenient, and outside the request path.
 - If the Java/Prisma drift ever becomes painful, the escape hatch is to
   generate JPA entities or jOOQ classes from the migrated database. We are not

@@ -34,9 +34,10 @@ the Java app answers to the same verbs as the TypeScript ones:
 - `pnpm dev`, `pnpm build` and `pnpm test` cover Java and TypeScript together.
 - Nx caches Java builds, keyed on sources, POMs and the resolved dependency
   tree.
-- The Nx project name is the Maven coordinate `com.proj:server`, not `server`,
-  because that is what the plugin infers. Scripts targeting it use
-  `--projects=com.proj:server`.
+- The plugin infers the Maven coordinate `com.proj:server` as the Nx project
+  name; `apps/server/project.json` overrides it to `server` so tasks read
+  `server:dev`. Scripts target it with `--projects=server`. Maven itself still
+  uses the coordinate (`./mvnw -pl com.proj:server`).
 - `@nx/maven` is marked experimental upstream. If it breaks on an upgrade, the
   fallback is a hand-written `project.json` calling `./mvnw` via
   `nx:run-commands` - the root POM and wrapper layout stay valid either way.

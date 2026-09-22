@@ -38,67 +38,37 @@ VS Code users: accept the recommended extensions prompt (see
 `.vscode/extensions.json`) for Java, Spring Boot, Prisma, Tailwind, Nx and
 Biome support.
 
-## Nx and Docker do different jobs
-
-A common point of confusion, so to be explicit:
-
-- **Nx runs your tasks.** `dev`, `build`, `test`, `check-types` - across both
-  TypeScript and Java, with caching. This is the dev loop.
-- **Docker runs your services.** Nx cannot give you a Postgres server, so
-  Postgres always comes from Docker.
-
-In day-to-day development you run **Postgres in Docker and everything else
-natively through Nx**. The `web` and `server` services in
-`docker-compose.yml` exist for deployment and production parity - you do not
-need them to develop, and `pnpm dev` does not use them.
-
 ## Getting started
 
-**1. Create your env files.**
+The team develops against a shared **Neon** dev database, so no local Postgres
+is needed. The generated code (`packages/api/src/schema.ts`, the jOOQ classes)
+is committed, so a fresh clone needs no generation step either.
+
+**1. Copy the env files, then fill them in.**
 
 ```bash
-cp apps/web/.env.example apps/web/.env
-cp apps/server/.env.example apps/server/.env
 cp packages/db/.env.example packages/db/.env
+cp apps/server/.env.example apps/server/.env
+cp apps/web/.env.example apps/web/.env
 ```
 
-Do this before installing: the `postinstall` hook reads `packages/db/.env`
-and fails without it. The defaults work out of the box: the API is open (no
-WorkOS tenant needed) and points at the local Postgres.
+Do this before installing: the `postinstall` hook reads `packages/db/.env`.
+Get the Neon connection strings from the team (see
+[Neon](#neon-the-dev-database)); each `.env.example` explains the rest. All
+`.env` files are gitignored - never commit real credentials.
 
 **2. Install dependencies.**
 
 ```bash
-pnpm install
+pnpm install         # also generates Prisma Client (postinstall)
 ```
-
-This also generates Prisma Client via a `postinstall` hook.
 
 **3. Add a model for the inference service.**
 
 Drop an ONNX file at `apps/ml/models/model.onnx` - `apps/ml` refuses to boot
-without one. `uv` must be installed (`brew install uv`); it creates the Python
-environment on first run. See [`apps/ml/README.md`](apps/ml/README.md).
+without one. See [`apps/ml/README.md`](apps/ml/README.md).
 
-**4. Start Postgres, apply the schema and seed it.**
-
-```bash
-pnpm db:setup      # Postgres 18 in Docker on :5432, migrations, seed data
-```
-
-`pnpm dev` runs this for you too, so this step just gets the database ready for
-the contract export below.
-
-**5. Generate the API contract.**
-
-```bash
-pnpm api:generate
-```
-
-`packages/api/src/schema.ts` ships as an empty seed, so run this once after
-cloning to build the real typed client from the Spring controllers.
-
-**6. Run everything.**
+**4. Run everything.**
 
 ```bash
 pnpm dev
@@ -114,30 +84,67 @@ pnpm dev
 ## Day-to-day development
 
 ```bash
-pnpm dev                       # Postgres + migrations + seed, then web + API + ML
+pnpm dev             # web + API + ML
+pnpm dev:web         # or one side only: :3001
+pnpm dev:server      # :8080
+pnpm dev:ml          # :8000
 ```
 
-`pnpm dev` first runs `pnpm db:setup`: it starts Postgres (waiting until it is
-healthy), applies any pending migrations, and runs the seed. The seed is
-idempotent, so re-running it every time is safe. Postgres keeps running in the
-background after you stop `pnpm dev`.
-
-Working on one side only (these do **not** start the database - run
-`pnpm db:setup` first if you need it):
+After pulling, if someone added a migration, apply it:
 
 ```bash
-pnpm dev:web                   # TanStack Start on :3001
-pnpm dev:server                # Spring Boot on :8080
-pnpm dev:ml                    # FastAPI inference on :8000
+pnpm db:deploy       # applies pending migrations; never creates one
 ```
 
-Before committing:
+### The lifecycle: database -> backend -> frontend
+
+Types flow one way. Each step generates what the next one compiles against, so
+work top to bottom and stop at the first step your change doesn't touch.
+
+```
+schema.prisma --db:migrate--> database --db:generate--> jOOQ (Java)
+                                                          |
+                              Spring controller <---------+
+                                     |
+                              --api:generate--> schema.ts (TypeScript) --> web
+```
+
+**1. Database** - only when a table or column changes:
 
 ```bash
-pnpm fix                       # Biome format + autofix
-pnpm check-types               # TypeScript across the workspace
-pnpm test                      # web (Vitest) and server (JUnit) tests
+# edit packages/db/prisma/schema/schema.prisma
+pnpm db:migrate      # creates + applies a migration (prompts for a name)
+pnpm db:generate     # regenerates Prisma Client + the jOOQ classes
 ```
+
+`db:migrate` changes the database it points at, so run it against your own
+[Neon branch](#neon-the-dev-database), never the shared one.
+
+**2. Backend** - write the service and `@RestController` in
+`apps/server/src/main/java/com/proj/server/<feature>/`, returning a `record`
+DTO. `./mvnw -pl com.proj:server compile` shows anything the schema change
+broke.
+
+**3. Contract** - whenever a controller or DTO changed:
+
+```bash
+pnpm api:generate    # boots the API, rewrites packages/api/openapi.json + src/schema.ts
+pnpm check-types     # the web app now fails wherever the contract moved
+```
+
+**4. Frontend** - call the endpoint through `api` from `@/lib/api` inside
+`useQuery`; the types come from step 3. `src/components/user-list.tsx` is a
+worked example.
+
+**5. Before committing**
+
+```bash
+pnpm fix && pnpm check-types && pnpm test
+```
+
+Commit the generated files with the code that caused them: the migration
+folder and jOOQ classes with step 1, `openapi.json` and `schema.ts` with step
+3. Full detail in [`AGENTS.md`](AGENTS.md) §4.
 
 ## Testing
 
@@ -161,37 +168,57 @@ data fetching or the theme.
 workflow, what not to test, and the rules that keep tests trustworthy.
 
 Configuration is in `apps/web/vitest.config.ts`, deliberately separate from
-`vite.config.ts` so tests don't load the SSR plugins.
+`vite.config.ts` so tests don't load the SSR plugins. Nx caches all of these;
+add `--skip-nx-cache` to bypass it.
 
-Nx caches all of these, so re-running an unchanged project is close to
-instant. To bypass the cache, add `--skip-nx-cache`.
+## Neon (the dev database)
 
-Stopping Postgres:
+Prisma owns the schema; Neon is just where it lives. Neon gives two hosts per
+branch: a **direct** one and a **pooled** one (contains `-pooler`). Prisma
+migrations need the direct host; Spring is fine with either.
 
-```bash
-pnpm db:stop                   # stop, keep the data
-pnpm db:down                   # stop and remove the container
-```
-
-## The contract loop
-
-The frontend's types are generated from the backend's code, so after changing
-any controller:
+`packages/db/.env`:
 
 ```bash
-pnpm db:start        # the export boots the app, so Postgres must be up
-pnpm api:generate    # writes packages/api/openapi.json + src/schema.ts
-pnpm check-types     # the web app fails wherever the contract moved
+DATABASE_URL=postgresql://<user>:<password>@<endpoint>.<region>.aws.neon.tech/proj?sslmode=require
 ```
 
-Commit the generated files alongside the Java change. Full workflow in
-[`AGENTS.md`](AGENTS.md) §4.
+`apps/server/.env` (JDBC takes the credentials separately):
+
+```bash
+SPRING_DATASOURCE_URL=jdbc:postgresql://<endpoint>.<region>.aws.neon.tech/proj?sslmode=require
+SPRING_DATASOURCE_USERNAME=<user>
+SPRING_DATASOURCE_PASSWORD=<password>
+```
+
+**Changing the schema?** Create your own
+[branch](https://neon.tech/docs/introduction/branching) of the dev database in
+the Neon console and point both files at it while you work. `pnpm db:migrate`
+there cannot break anyone else; once your migration is merged, `pnpm db:deploy`
+applies it to the shared database.
+
+**jOOQ reads from `localhost` by default** (the `jooq.jdbc.*` properties in
+`apps/server/pom.xml`), so against Neon run the generator with overrides
+instead of `pnpm db:generate`'s Java half:
+
+```bash
+./mvnw -pl com.proj:server generate-sources -Pjooq \
+  -Djooq.jdbc.url='jdbc:postgresql://<endpoint>.<region>.aws.neon.tech/proj?sslmode=require' \
+  -Djooq.jdbc.user=<user> -Djooq.jdbc.password=<password>
+```
+
+**Prefer local Postgres?** Point the same two files at
+`localhost:5432` (the values in the `.env.example` files) and run
+`pnpm db:setup` first - it starts Postgres 18 in Docker and applies migrations.
+`pnpm db:stop` / `pnpm db:down` stop it. Nothing else in the dev loop needs
+Docker; the `web` and `server` services in `docker-compose.yml` are for
+deployment parity.
 
 ## Scripts
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | DB setup, then web + API + inference |
+| `pnpm dev` | web + API + inference |
 | `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Everything, Java included |
 | `pnpm test` | web (Vitest) + server (JUnit) tests |
@@ -200,9 +227,10 @@ Commit the generated files alongside the Java change. Full workflow in
 | `pnpm check` / `pnpm fix` | Ultracite (Biome) lint + format |
 | `pnpm api:generate` | Regenerate the API contract |
 | `pnpm db:start` / `pnpm db:stop` / `pnpm db:down` | Postgres container |
-| `pnpm db:setup` | Start Postgres, apply migrations, seed |
+| `pnpm db:deploy` | Apply pending migrations (no Docker) |
+| `pnpm db:setup` | Local Postgres only: start it, apply migrations |
 | `pnpm db:migrate` / `pnpm db:push` / `pnpm db:studio` | Prisma |
-| `pnpm db:seed` / `pnpm db:reset` | Seed / drop, re-migrate and seed |
+| `pnpm db:reset` | Drop and re-migrate |
 | `pnpm docker:up` / `pnpm docker:down` / `pnpm docker:logs` | Full stack in Docker |
 
 Java directly: `./mvnw -pl com.proj:server <phase>` from the repo root.
@@ -251,8 +279,8 @@ Design tokens are in `packages/ui/src/styles/globals.css`.
 
 ## Docker
 
-For local development you only ever need `pnpm db:start`, which runs Postgres
-alone. The full stack is for deployment and production parity:
+Development needs no Docker (Neon), or only `pnpm db:start` for local
+Postgres. The full stack is for deployment and production parity:
 
 ```bash
 pnpm docker:up      # build and start web + server + postgres
