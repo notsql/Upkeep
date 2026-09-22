@@ -20,22 +20,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/users": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["list"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -45,22 +29,6 @@ export interface components {
   requestBodies: never;
   responses: never;
   schemas: {
-    UserPage: {
-      users: components["schemas"]["UserResponse"][];
-      nextCursor?: string;
-    };
-    UserResponse: {
-      id: string;
-      email: string;
-      firstName?: string;
-      lastName?: string;
-      emailVerified: boolean;
-      profilePictureUrl?: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      lastSignInAt?: string;
-    };
     HealthResponse: {
       ok: boolean;
       database: boolean;
@@ -87,49 +55,6 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["HealthResponse"];
-        };
-      };
-    };
-  };
-  list: {
-    parameters: {
-      query?: {
-        /** @description Page size, 1-100 */
-        limit?: number;
-        /** @description Cursor from a previous page's nextCursor */
-        after?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description A page of WorkOS users */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["UserPage"];
-        };
-      };
-      /** @description Caller is not an admin */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["UserPage"];
-        };
-      };
-      /** @description WORKOS_API_KEY is not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["UserPage"];
         };
       };
     };

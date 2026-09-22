@@ -9,6 +9,8 @@
   },
   "scripts": {
     "check-types": "tsc --noEmit",
+    "lint": "ultracite check",
+    "lint:fix": "ultracite fix",
     "openapi:types": "openapi-typescript ./openapi.json -o ./src/schema.ts"
   },
   "dependencies": {
@@ -17,6 +19,6 @@
   "devDependencies": {
     "@proj/config": "workspace:*",
     "openapi-typescript": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "^6.0.3"
   }
 }

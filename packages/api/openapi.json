@@ -6,48 +6,6 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
-    "/users": {
-      "get": {
-        "tags": ["user-controller"],
-        "operationId": "list",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "Page size, 1-100",
-            "required": false,
-            "schema": { "type": "integer", "format": "int32", "default": 10 }
-          },
-          {
-            "name": "after",
-            "in": "query",
-            "description": "Cursor from a previous page's nextCursor",
-            "required": false,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A page of WorkOS users",
-            "content": {
-              "*/*": { "schema": { "$ref": "#/components/schemas/UserPage" } }
-            }
-          },
-          "403": {
-            "description": "Caller is not an admin",
-            "content": {
-              "*/*": { "schema": { "$ref": "#/components/schemas/UserPage" } }
-            }
-          },
-          "503": {
-            "description": "WORKOS_API_KEY is not configured",
-            "content": {
-              "*/*": { "schema": { "$ref": "#/components/schemas/UserPage" } }
-            }
-          }
-        }
-      }
-    },
     "/health": {
       "get": {
         "tags": ["health-controller"],
@@ -67,31 +25,6 @@
   },
   "components": {
     "schemas": {
-      "UserPage": {
-        "type": "object",
-        "properties": {
-          "users": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/UserResponse" }
-          },
-          "nextCursor": { "type": "string" }
-        },
-        "required": ["users"]
-      },
-      "UserResponse": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string" },
-          "email": { "type": "string" },
-          "firstName": { "type": "string" },
-          "lastName": { "type": "string" },
-          "emailVerified": { "type": "boolean" },
-          "profilePictureUrl": { "type": "string" },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "lastSignInAt": { "type": "string", "format": "date-time" }
-        },
-        "required": ["createdAt", "email", "emailVerified", "id"]
-      },
       "HealthResponse": {
         "type": "object",
         "properties": {

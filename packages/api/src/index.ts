@@ -4,7 +4,7 @@ import type { paths } from "./schema";
 
 export type ApiClient = ReturnType<typeof createClient<paths>>;
 
-export type CreateApiClientOptions = {
+export interface CreateApiClientOptions {
   /** Base URL of the Spring Boot API, e.g. http://localhost:8080 */
   baseUrl: string;
   /**
@@ -12,7 +12,7 @@ export type CreateApiClientOptions = {
    * request unauthenticated - useful locally, where WorkOS is not configured.
    */
   getToken?: () => Promise<string | undefined> | string | undefined;
-};
+}
 
 /**
  * Typed client for the Spring Boot API. Every path, parameter and response
