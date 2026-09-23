@@ -24,7 +24,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * {@code spring.security.oauth2.resourceserver.jwt.issuer-uri} is set, so the
  * app runs locally without a WorkOS tenant and production becomes a config
  * change rather than a code change. WorkOS AuthKit issues standard OIDC
- * tokens, so Spring discovers the JWKS from the issuer on its own.
+ * tokens, so Spring discovers the JWKS from the issuer on its own. Spring Boot
+ * also validates the audience when
+ * {@code spring.security.oauth2.resourceserver.jwt.audiences} is configured.
  */
 @Configuration
 @EnableWebSecurity

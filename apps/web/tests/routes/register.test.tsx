@@ -1,39 +1,66 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RegistrationPage } from "@/routes/register";
 
-describe("Registration password", () => {
-  it.each([
-    ["", false],
-    ["Aa1!aaa", false],
-    ["aa1!aaaa", false],
-    ["AA1!AAAA", false],
-    ["Aa!aaaaa", false],
-    ["Aa1aaaaa", false],
-    ["Aa1 aaaa", false],
-    ["Aa1!aaaa", true],
-  ])("validates password complexity for %j", (value, valid) => {
-    render(<RegistrationPage />);
-    const password = screen.getByLabelText<HTMLInputElement>("Password");
+const { signUp } = vi.hoisted(() => ({ signUp: vi.fn() }));
+const HOSTED_FIELDS_MESSAGE =
+  /workos will securely collect your name and password/i;
 
-    fireEvent.change(password, { target: { value } });
+vi.mock("@proj/env/web", () => ({
+  env: {
+    VITE_WORKOS_CLIENT_ID: "client_test",
+  },
+}));
 
-    expect(password.checkValidity()).toBe(valid);
+vi.mock("@workos-inc/authkit-react", () => ({
+  useAuth: () => ({ signUp }),
+}));
+
+describe("RegistrationPage", () => {
+  beforeEach(() => {
+    signUp.mockReset();
   });
 
-  it("updates the requirements as the password changes", () => {
+  it("starts the hosted WorkOS sign-up flow with the entered email", async () => {
+    signUp.mockResolvedValue(undefined);
     render(<RegistrationPage />);
-    const password = screen.getByLabelText("Password");
 
-    fireEvent.change(password, { target: { value: "Aa1!aaaa" } });
-    expect(screen.getByRole("status").textContent).toContain(
-      "Password meets all requirements."
-    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Email address" }), {
+      target: { value: "new.user@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
-    fireEvent.change(password, { target: { value: "weak" } });
-    expect(screen.getByRole("status").textContent).toContain(
-      "Password does not meet all requirements."
+    await waitFor(() => {
+      expect(signUp).toHaveBeenCalledWith({
+        loginHint: "new.user@example.com",
+      });
+    });
+  });
+
+  it("does not collect a password before redirecting to WorkOS", () => {
+    render(<RegistrationPage />);
+
+    expect(screen.queryByLabelText("Password")).toBeNull();
+    screen.getByText(HOSTED_FIELDS_MESSAGE);
+  });
+
+  it("shows an error and allows retrying when WorkOS cannot start", async () => {
+    signUp.mockRejectedValueOnce(new Error("WorkOS unavailable"));
+    render(<RegistrationPage />);
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Email address" }), {
+      target: { value: "new.user@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert.textContent).toContain(
+      "Unable to start registration. Please try again."
     );
+    expect(
+      screen.getByRole<HTMLButtonElement>("button", { name: "Create account" })
+        .disabled
+    ).toBe(false);
   });
 });
