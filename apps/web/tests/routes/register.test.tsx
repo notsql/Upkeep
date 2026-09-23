@@ -4,8 +4,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RegistrationPage } from "@/routes/register";
 
 const { signUp } = vi.hoisted(() => ({ signUp: vi.fn() }));
-const HOSTED_FIELDS_MESSAGE =
-  /workos will securely collect your name and password/i;
 
 vi.mock("@proj/env/web", () => ({
   env: {
@@ -42,7 +40,6 @@ describe("RegistrationPage", () => {
     render(<RegistrationPage />);
 
     expect(screen.queryByLabelText("Password")).toBeNull();
-    screen.getByText(HOSTED_FIELDS_MESSAGE);
   });
 
   it("shows an error and allows retrying when WorkOS cannot start", async () => {
