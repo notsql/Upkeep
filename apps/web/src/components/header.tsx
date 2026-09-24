@@ -1,22 +1,29 @@
 import { Link } from "@tanstack/react-router";
+import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 
 import { AuthButton } from "./auth-button";
 
-export default function Header() {
-  const links = [
-    { label: "Home", to: "/" },
-    { label: "Register", to: "/register" },
-  ] as const;
+function AuthenticationNavigationLink() {
+  const { loading, user } = useAuth();
 
+  if (loading) {
+    return null;
+  }
+
+  return user ? (
+    <Link to="/account">Account</Link>
+  ) : (
+    <Link to="/register">Register</Link>
+  );
+}
+
+export default function Header() {
   return (
     <div>
       <div className="flex flex-row items-center justify-between px-2 py-1">
         <nav className="flex gap-4 text-lg">
-          {links.map(({ to, label }) => (
-            <Link key={to} to={to}>
-              {label}
-            </Link>
-          ))}
+          <Link to="/">Home</Link>
+          <AuthenticationNavigationLink />
         </nav>
         <div className="flex items-center gap-2">
           <AuthButton />

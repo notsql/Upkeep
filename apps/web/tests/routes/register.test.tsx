@@ -1,39 +1,17 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 
 import { RegistrationPage } from "@/routes/register";
 
-const { signUp } = vi.hoisted(() => ({ signUp: vi.fn() }));
-
-vi.mock("@proj/env/web", () => ({
-  env: {
-    VITE_WORKOS_CLIENT_ID: "client_test",
-  },
-}));
-
-vi.mock("@workos-inc/authkit-react", () => ({
-  useAuth: () => ({ signUp }),
-}));
-
 describe("RegistrationPage", () => {
-  beforeEach(() => {
-    signUp.mockReset();
-  });
-
-  it("starts the hosted WorkOS sign-up flow with the entered email", async () => {
-    signUp.mockResolvedValue(undefined);
+  it("starts the hosted WorkOS sign-up flow", () => {
     render(<RegistrationPage />);
 
-    fireEvent.change(screen.getByRole("textbox", { name: "Email address" }), {
-      target: { value: "new.user@example.com" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-
-    await waitFor(() => {
-      expect(signUp).toHaveBeenCalledWith({
-        loginHint: "new.user@example.com",
-      });
-    });
+    expect(
+      screen
+        .getByRole<HTMLAnchorElement>("link", { name: "Create account" })
+        .getAttribute("href")
+    ).toBe("/api/auth/sign-up");
   });
 
   it("does not collect a password before redirecting to WorkOS", () => {
@@ -41,23 +19,12 @@ describe("RegistrationPage", () => {
 
     expect(screen.queryByLabelText("Password")).toBeNull();
   });
+  it("shows a retryable message when registration cannot start", () => {
+    render(<RegistrationPage error="auth_unavailable" />);
 
-  it("shows an error and allows retrying when WorkOS cannot start", async () => {
-    signUp.mockRejectedValueOnce(new Error("WorkOS unavailable"));
-    render(<RegistrationPage />);
-
-    fireEvent.change(screen.getByRole("textbox", { name: "Email address" }), {
-      target: { value: "new.user@example.com" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
-
-    const alert = await screen.findByRole("alert");
-    expect(alert.textContent).toContain(
-      "Unable to start registration. Please try again."
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Registration is temporarily unavailable"
     );
-    expect(
-      screen.getByRole<HTMLButtonElement>("button", { name: "Create account" })
-        .disabled
-    ).toBe(false);
+    screen.getByRole("link", { name: "Create account" });
   });
 });
