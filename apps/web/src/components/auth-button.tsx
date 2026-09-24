@@ -3,7 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { useAuth } from "@workos-inc/authkit-react";
 import { useCallback } from "react";
 
-import { startSignOut } from "../lib/auth-session";
+import { startSignOut } from "@/lib/auth-session";
 
 /**
  * Sign in / sign out control. Split from `AuthButton` because `useAuth` must be

@@ -2,7 +2,7 @@ import { env } from "@proj/env/web";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import { getCurrentReturnTo } from "@/lib/auth-redirect";
-import { RequireAuth } from "@/routes/-components/require-auth";
+import { AuthGuard } from "@/routes/-components/auth-guard";
 
 export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
@@ -20,8 +20,8 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <RequireAuth returnTo={getCurrentReturnTo()}>
+    <AuthGuard returnTo={getCurrentReturnTo()}>
       <Outlet />
-    </RequireAuth>
+    </AuthGuard>
   );
 }

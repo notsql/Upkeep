@@ -8,7 +8,7 @@ describe("authentication session transitions", () => {
     );
     const signIn = vi.fn().mockResolvedValue(undefined);
 
-    reauthenticateAfterRefreshFailure(signIn, "/account");
+    await reauthenticateAfterRefreshFailure(signIn, "/account", vi.fn());
 
     expect(signIn).toHaveBeenCalledWith({
       state: { returnTo: "/account" },
@@ -24,11 +24,25 @@ describe("authentication session transitions", () => {
     const signIn = vi.fn().mockResolvedValue(undefined);
 
     startSignOut(signOut, "http://localhost:3001");
-    reauthenticateAfterRefreshFailure(signIn, "/account");
+    await reauthenticateAfterRefreshFailure(signIn, "/account", vi.fn());
 
     expect(signOut).toHaveBeenCalledWith({
       returnTo: "http://localhost:3001",
     });
     expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it("reports a failure to restart authentication", async () => {
+    vi.resetModules();
+    const { reauthenticateAfterRefreshFailure } = await import(
+      "@/lib/auth-session"
+    );
+    const error = new Error("WorkOS unavailable");
+    const signIn = vi.fn().mockRejectedValue(error);
+    const onFailure = vi.fn();
+
+    await reauthenticateAfterRefreshFailure(signIn, "/account", onFailure);
+
+    expect(onFailure).toHaveBeenCalledWith(error);
   });
 });

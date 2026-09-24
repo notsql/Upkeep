@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { RequireAuth } from "@/routes/-components/require-auth";
+import { AuthGuard } from "@/routes/-components/auth-guard";
 
 const { auth } = vi.hoisted(() => ({
   auth: {
@@ -16,7 +16,7 @@ vi.mock("@workos-inc/authkit-react", () => ({
   useAuth: () => auth,
 }));
 
-describe("RequireAuth", () => {
+describe("AuthGuard", () => {
   beforeEach(() => {
     auth.isLoading = false;
     auth.user = null;
@@ -27,7 +27,7 @@ describe("RequireAuth", () => {
   it("does not reveal protected content while authentication loads", () => {
     auth.isLoading = true;
 
-    render(<RequireAuth returnTo="/account">Confidential records</RequireAuth>);
+    render(<AuthGuard returnTo="/account">Confidential records</AuthGuard>);
 
     screen.getByRole("status", { name: "Checking authentication" });
     expect(screen.queryByText("Confidential records")).toBeNull();
@@ -36,7 +36,7 @@ describe("RequireAuth", () => {
   it("starts sign-in instead of revealing protected content", async () => {
     auth.signIn.mockResolvedValue(undefined);
 
-    render(<RequireAuth returnTo="/account">Confidential records</RequireAuth>);
+    render(<AuthGuard returnTo="/account">Confidential records</AuthGuard>);
 
     await waitFor(() => {
       expect(auth.signIn).toHaveBeenCalledWith({
@@ -49,7 +49,7 @@ describe("RequireAuth", () => {
   it("renders protected content for an authenticated user", () => {
     auth.user = { email: "user@example.com" };
 
-    render(<RequireAuth returnTo="/account">Confidential records</RequireAuth>);
+    render(<AuthGuard returnTo="/account">Confidential records</AuthGuard>);
 
     screen.getByText("Confidential records");
   });

@@ -3,7 +3,11 @@ import type { ReactNode } from "react";
 
 import { AuthKitLogin } from "@/routes/-components/auth-kit-login";
 
-export function RequireAuth({
+/**
+ * Client-side navigation guard for protected route content. Spring Security is
+ * the authorization boundary and independently validates every API request.
+ */
+export function AuthGuard({
   children,
   returnTo,
 }: {

@@ -1,4 +1,12 @@
-const APP_ORIGIN = "https://app.local";
+function getValidationOrigin(): string {
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+
+  // URL parsing requires an absolute base during SSR. The value is used only
+  // for the same-origin comparison; successful results remain relative paths.
+  return "http://localhost";
+}
 
 /**
  * Accept only paths within this application. OAuth state is returned through
@@ -10,8 +18,9 @@ export function sanitizeReturnTo(value: unknown): string {
   }
 
   try {
-    const url = new URL(value, APP_ORIGIN);
-    if (url.origin !== APP_ORIGIN) {
+    const validationOrigin = getValidationOrigin();
+    const url = new URL(value, validationOrigin);
+    if (url.origin !== validationOrigin) {
       return "/";
     }
     return `${url.pathname}${url.search}${url.hash}`;

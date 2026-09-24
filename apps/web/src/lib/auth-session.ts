@@ -22,13 +22,18 @@ export function startSignOut(
   }
 }
 
-export function reauthenticateAfterRefreshFailure(
+export async function reauthenticateAfterRefreshFailure(
   signIn: (options: SignInOptions) => Promise<void>,
-  returnTo: string
-): void {
+  returnTo: string,
+  onFailure: (error: unknown) => void
+): Promise<void> {
   if (signOutInProgress) {
     return;
   }
 
-  signIn({ state: { returnTo } }).catch(() => undefined);
+  try {
+    await signIn({ state: { returnTo } });
+  } catch (error) {
+    onFailure(error);
+  }
 }

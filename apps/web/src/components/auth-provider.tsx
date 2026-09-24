@@ -3,10 +3,10 @@ import { AuthKitProvider, useAuth } from "@workos-inc/authkit-react";
 import type { ComponentProps, ReactNode } from "react";
 import { useEffect } from "react";
 
-import { setAccessTokenResolver } from "../lib/api";
-import { getCurrentReturnTo, restoreReturnTo } from "../lib/auth-redirect";
-import { reauthenticateAfterRefreshFailure } from "../lib/auth-session";
-import { AuthIdleGuard } from "../routes/-components/auth-idle-guard";
+import { setAccessTokenResolver } from "@/lib/api";
+import { getCurrentReturnTo, restoreReturnTo } from "@/lib/auth-redirect";
+import { reauthenticateAfterRefreshFailure } from "@/lib/auth-session";
+import { AuthIdleGuard } from "@/routes/-components/auth-idle-guard";
 
 type ProviderProps = ComponentProps<typeof AuthKitProvider>;
 
@@ -19,7 +19,11 @@ const handleRedirectCallback: NonNullable<
 const handleRefreshFailure: NonNullable<ProviderProps["onRefreshFailure"]> = ({
   signIn,
 }) => {
-  reauthenticateAfterRefreshFailure(signIn, getCurrentReturnTo());
+  const returnTo = getCurrentReturnTo();
+  return reauthenticateAfterRefreshFailure(signIn, returnTo, () => {
+    const search = new URLSearchParams({ returnTo });
+    restoreReturnTo(`/login?${search.toString()}`);
+  });
 };
 
 /**
