@@ -118,6 +118,23 @@ collects only an email hint before redirecting; WorkOS collects the user's name
 and password, applies the configured password policy, sends the verification
 email, and does not complete authentication until verification succeeds.
 
+Sign-in follows the same hosted model. `/login` initiates AuthKit, and the
+pathless `_authenticated` route layout prevents protected pages such as
+`/account` from rendering until AuthKit has restored a valid user session.
+OAuth return locations are reduced to same-origin paths before navigation.
+Terminal refresh failures start authentication again; transient API failures
+do not create a separate local session.
+
+The session policy is 5-minute access tokens, a 30-minute inactivity timeout,
+and an 8-hour maximum session length, configured in the WorkOS application.
+While a user is signed in, the global web guard also signs out after 30 minutes
+without meaningful browser input, including on public routes;
+`VITE_AUTH_IDLE_TIMEOUT_MINUTES` keeps that UI policy configurable. WorkOS
+remains the session authority. Hosted AuthKit's rate limits and adaptive
+brute-force protection are used as provided: AuthKit does not expose a fixed
+per-account "N consecutive failures" lockout setting, and this application does
+not duplicate credential handling to manufacture one.
+
 The WorkOS dashboard must have public sign-up, Email + Password, and automated
 verification emails enabled. Configure first and last name as required fields,
 register the web redirect URI and allowed origin, and add the Spring API URI as
@@ -138,6 +155,7 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES` | `apps/server` | API audience also configured in the WorkOS JWT template. |
 | `VITE_WORKOS_CLIENT_ID` | `apps/web` | Unset means the app runs unauthenticated. |
 | `VITE_WORKOS_REDIRECT_URI` | `apps/web` | Must be registered in the WorkOS dashboard. Defaults to the dev origin. |
+| `VITE_AUTH_IDLE_TIMEOUT_MINUTES` | `apps/web` | Browser inactivity before AuthKit sign-out. Defaults to `30`; keep it aligned with the WorkOS Sessions policy. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |
 | `WORKOS_API_KEY` | `apps/server` | Secret. Only for server-to-WorkOS calls (`GET /users`); never in `apps/web`. Blank makes `/users` return 503. |
 | `SERVER_PORT` | `apps/server` | Defaults to `8080`. |

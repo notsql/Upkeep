@@ -235,6 +235,27 @@ to mount the AuthKit provider and enable hosted sign-in and registration.
 WorkOS owns password handling and email verification. Turning auth on is a
 config change, not a code change.
 
+The public `/login` route starts the hosted WorkOS sign-in flow. `/account` is
+the first route under the pathless authenticated layout and demonstrates the
+guard used for personal or confidential pages. The browser returns users only
+to validated same-origin paths after sign-in. A failed token refresh requires
+sign-in again, and signed-in users time out after the configured idle period
+on public or protected pages (`VITE_AUTH_IDLE_TIMEOUT_MINUTES`, 30 minutes by
+default).
+
+Configure the WorkOS application with:
+
+- Redirect URI: `http://localhost:3001`
+- Initiate login URI: `http://localhost:3001/login`
+- Sign-out URIs: `http://localhost:3001` and `http://localhost:3001/login`
+- Access token duration: 5 minutes
+- Inactivity timeout: 30 minutes
+- Maximum session length: 8 hours
+
+Hosted AuthKit applies its own sign-in throttling and brute-force protection.
+It does not expose a fixed "lock after N consecutive failures" counter, so the
+application must not implement a second password or lockout system around it.
+
 ## Project structure
 
 ```

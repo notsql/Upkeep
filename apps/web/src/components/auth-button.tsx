@@ -3,6 +3,8 @@ import { Button } from "@proj/ui/components/button";
 import { useAuth } from "@workos-inc/authkit-react";
 import { useCallback } from "react";
 
+import { startSignOut } from "../lib/auth-session";
+
 /**
  * Sign in / sign out control. Split from `AuthButton` because `useAuth` must be
  * called unconditionally, and it only has a provider to read when AuthKit is
@@ -12,7 +14,10 @@ function AuthKitButton() {
   const { isLoading, signIn, signOut, user } = useAuth();
 
   const handleSignIn = useCallback(() => signIn(), [signIn]);
-  const handleSignOut = useCallback(() => signOut(), [signOut]);
+  const handleSignOut = useCallback(
+    () => startSignOut(signOut, window.location.origin),
+    [signOut]
+  );
 
   if (isLoading) {
     return (
@@ -25,7 +30,7 @@ function AuthKitButton() {
   if (!user) {
     return (
       <Button onClick={handleSignIn} size="sm">
-        Sign in
+        Log in
       </Button>
     );
   }

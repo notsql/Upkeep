@@ -16,6 +16,8 @@ export const env = createEnv({
      * redirect URI in the WorkOS dashboard.
      */
     VITE_WORKOS_REDIRECT_URI: z.url().default("http://localhost:3001"),
+    /** User inactivity before AuthKit signs out and requires authentication. */
+    VITE_AUTH_IDLE_TIMEOUT_MINUTES: z.coerce.number().positive().default(30),
   },
   clientPrefix: "VITE_",
   emptyStringAsUndefined: true,

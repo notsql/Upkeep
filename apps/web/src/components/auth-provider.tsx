@@ -1,9 +1,26 @@
 import { env } from "@proj/env/web";
 import { AuthKitProvider, useAuth } from "@workos-inc/authkit-react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useEffect } from "react";
 
 import { setAccessTokenResolver } from "../lib/api";
+import { getCurrentReturnTo, restoreReturnTo } from "../lib/auth-redirect";
+import { reauthenticateAfterRefreshFailure } from "../lib/auth-session";
+import { AuthIdleGuard } from "../routes/-components/auth-idle-guard";
+
+type ProviderProps = ComponentProps<typeof AuthKitProvider>;
+
+const handleRedirectCallback: NonNullable<
+  ProviderProps["onRedirectCallback"]
+> = ({ state }) => {
+  restoreReturnTo(state?.returnTo);
+};
+
+const handleRefreshFailure: NonNullable<ProviderProps["onRefreshFailure"]> = ({
+  signIn,
+}) => {
+  reauthenticateAfterRefreshFailure(signIn, getCurrentReturnTo());
+};
 
 /**
  * Hands the API client a way to read the current access token. The client is a
@@ -44,9 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthKitProvider
       clientId={clientId}
+      onRedirectCallback={handleRedirectCallback}
+      onRefreshFailure={handleRefreshFailure}
       redirectUri={env.VITE_WORKOS_REDIRECT_URI}
     >
-      <AuthTokenBridge>{children}</AuthTokenBridge>
+      <AuthTokenBridge>
+        <AuthIdleGuard timeoutMinutes={env.VITE_AUTH_IDLE_TIMEOUT_MINUTES}>
+          {children}
+        </AuthIdleGuard>
+      </AuthTokenBridge>
     </AuthKitProvider>
   );
 }
