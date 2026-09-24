@@ -3,7 +3,10 @@ import { Link } from "@tanstack/react-router";
 import { AuthButton } from "./auth-button";
 
 export default function Header() {
-  const links = [{ label: "Home", to: "/" }] as const;
+  const links = [
+    { label: "Home", to: "/" },
+    { label: "Register", to: "/register" },
+  ] as const;
 
   return (
     <div>

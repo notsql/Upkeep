@@ -98,7 +98,9 @@ server - no vendor starter. `SecurityConfig` reads
 default - the API is fully open, so local development needs no WorkOS tenant.
 Set it to the AuthKit domain and the same config switches to validating JWTs on
 every request except the OpenAPI and health endpoints, discovering the JWKS
-from the issuer. Turning auth on is a config change, not a code change.
+from the issuer. Set `spring.security.oauth2.resourceserver.jwt.audiences` to
+the API URI in the WorkOS JWT template so Spring also rejects tokens minted for
+another resource. Turning auth on is a config change, not a code change.
 
 The property must not be given an empty default in `application.yaml`: Spring's
 resource-server auto-configuration keys off the property merely being present,
@@ -111,6 +113,17 @@ resolver is installed browser-side only - the app server-side renders, and a
 module-scope resolver on the server would be shared across requests, so SSR
 fetches go out unauthenticated by design.
 
+Registration uses AuthKit's hosted sign-up flow. The local `/register` page
+collects only an email hint before redirecting; WorkOS collects the user's name
+and password, applies the configured password policy, sends the verification
+email, and does not complete authentication until verification succeeds.
+
+The WorkOS dashboard must have public sign-up, Email + Password, and automated
+verification emails enabled. Configure first and last name as required fields,
+register the web redirect URI and allowed origin, and add the Spring API URI as
+the JWT template's `aud` claim. The issuer and audience configured in Spring
+must exactly match the resulting access token.
+
 ## Environment
 
 Each app reads its own `.env`; see the `.env.example` next to each one.
@@ -122,6 +135,7 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `VITE_API_URL` | `apps/web` | **Baked in at build time**, so it must be the URL the *browser* uses - never a Docker-internal hostname. |
 | `CORS_ALLOWED_ORIGINS` | `apps/server` | Must include the web app's origin. |
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` | `apps/server` | WorkOS AuthKit domain. Unset disables auth; never set it blank. |
+| `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES` | `apps/server` | API audience also configured in the WorkOS JWT template. |
 | `VITE_WORKOS_CLIENT_ID` | `apps/web` | Unset means the app runs unauthenticated. |
 | `VITE_WORKOS_REDIRECT_URI` | `apps/web` | Must be registered in the WorkOS dashboard. Defaults to the dev origin. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |

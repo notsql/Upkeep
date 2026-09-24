@@ -57,5 +57,8 @@ app:
 #   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
 # to your AuthKit domain (e.g. https://<tenant>.authkit.app). Relaxed binding
 # maps it onto spring.security.oauth2.resourceserver.jwt.issuer-uri, Spring
-# discovers the JWKS from it, and SecurityConfig starts requiring a token.
-# While it is unset the API stays open locally. See apps/server/.env.example.
+# discovers the JWKS from it, and SecurityConfig starts requiring a token. Also
+# set SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES to the API audience
+# configured in the WorkOS JWT template so tokens minted for another resource
+# are rejected. While the issuer is unset the API stays open locally. See
+# apps/server/.env.example.
