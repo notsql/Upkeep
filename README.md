@@ -225,38 +225,12 @@ Java directly: `./mvnw -pl com.proj:server <phase>` from the repo root.
 
 ## Authentication
 
-WorkOS AuthKit owns authentication and session management. While
-`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` is unset the API is
-open, so local development needs no WorkOS tenant; set it to your AuthKit
-domain and set `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES` to the API
-audience configured in the WorkOS JWT template. `SecurityConfig` then validates
-JWTs before protected API calls. The TanStack Start server uses the official
-AuthKit adapter, an encrypted HTTP-only session cookie, and server-side route
-loaders. Configure `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`,
-`WORKOS_REDIRECT_URI`, and `WORKOS_COOKIE_PASSWORD` in `apps/web/.env`.
-WorkOS owns password handling and email verification.
-
-The public `/login` route links to the server-side sign-in endpoint. `/account`
-is under a pathless authenticated layout whose loader verifies the WorkOS
-session before rendering. Client hooks obtain a fresh access token through the
-web server and the generated API client sends it to Spring, which independently
-validates it. Signed-in users time out after the configured idle period on
-public or protected pages (`VITE_AUTH_IDLE_TIMEOUT_MINUTES`, 30 minutes by
-default). Manual and inactivity logout both use the `/logout` server route so
-the session cookie is cleared before redirecting.
-
-Configure the WorkOS application with:
-
-- Redirect URI: `http://localhost:3001/api/auth/callback`
-- Initiate login URI: `http://localhost:3001/api/auth/sign-in`
-- Sign-out URIs: `http://localhost:3001` and `http://localhost:3001/login`
-- Access token duration: 5 minutes
-- Inactivity timeout: 30 minutes
-- Maximum session length: 8 hours
-
-Hosted AuthKit applies its own sign-in throttling and brute-force protection.
-It does not expose a fixed "lock after N consecutive failures" counter, so the
-application must not implement a second password or lockout system around it.
+WorkOS AuthKit handles registration, verification, and sessions through TanStack
+Start; Spring validates API bearer tokens. Configure each app using
+[web environment variables](apps/web/.env.example) and
+[server environment variables](apps/server/.env.example). See
+[authentication setup](.spec/architecture.md#authentication) for dashboard settings
+and session policy. The API is open while its JWT issuer is unset.
 
 ## Project structure
 

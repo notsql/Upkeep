@@ -90,7 +90,7 @@ type generates as `unknown` and destroys type safety on the frontend.
 
 ## Authentication
 
-WorkOS AuthKit (OAuth2 / OIDC), wired but dormant on both sides.
+WorkOS AuthKit handles web sessions; Spring validates API bearer tokens.
 
 AuthKit issues standard OIDC tokens, so the server is a plain Spring resource
 server - no vendor starter. `SecurityConfig` reads
@@ -141,6 +141,12 @@ verification emails enabled. Configure first and last name as required fields,
 register the web redirect URI and allowed origin, and add the Spring API URI as
 the JWT template's `aud` claim. The issuer and audience configured in Spring
 must exactly match the resulting access token.
+
+Local WorkOS redirect settings:
+
+- Redirect URI: `http://localhost:3001/api/auth/callback`
+- Initiate login URI: `http://localhost:3001/api/auth/sign-in`
+- Sign-out URIs: `http://localhost:3001` and `http://localhost:3001/login`
 
 ## Environment
 
