@@ -29,24 +29,20 @@ export function sanitizeReturnTo(value: unknown): string {
   }
 }
 
-export function getCurrentReturnTo(): string {
-  if (typeof window === "undefined") {
-    return "/";
-  }
-
-  return sanitizeReturnTo(
-    `${window.location.pathname}${window.location.search}${window.location.hash}`
-  );
+export function buildSignInPath(returnTo: unknown): string {
+  const search = new URLSearchParams({
+    returnPathname: sanitizeReturnTo(returnTo),
+  });
+  return `/api/auth/sign-in?${search.toString()}`;
 }
 
-/**
- * Restore the route requested before authentication without reloading React.
- * AuthKit has already updated its provider state when this runs, so keeping the
- * current document alive lets consumers immediately observe the signed-in user.
- */
-export function restoreReturnTo(value: unknown): void {
-  const returnTo = sanitizeReturnTo(value);
+export function buildSignOutPath(returnTo: unknown): string {
+  const search = new URLSearchParams({
+    returnTo: sanitizeReturnTo(returnTo),
+  });
+  return `/logout?${search.toString()}`;
+}
 
-  window.history.replaceState({}, "", returnTo);
-  window.dispatchEvent(new PopStateEvent("popstate"));
+export function startServerSignOut(returnTo: unknown): void {
+  window.location.assign(buildSignOutPath(returnTo));
 }

@@ -1,13 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useAuth } from "@workos-inc/authkit-react";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated/account")({
   component: AccountPage,
   head: () => ({ meta: [{ title: "Your account" }] }),
 });
 
+const authenticatedRoute = getRouteApi("/_authenticated");
+
 function AccountPage() {
-  const { user } = useAuth();
+  const { user } = authenticatedRoute.useLoaderData();
 
   return (
     <main className="container mx-auto max-w-3xl px-4 py-8">
@@ -16,13 +17,13 @@ function AccountPage() {
         <div>
           <dt className="font-medium">Name</dt>
           <dd className="text-muted-foreground">
-            {[user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
+            {[user.firstName, user.lastName].filter(Boolean).join(" ") ||
               "Not provided"}
           </dd>
         </div>
         <div>
           <dt className="font-medium">Email</dt>
-          <dd className="text-muted-foreground">{user?.email}</dd>
+          <dd className="text-muted-foreground">{user.email}</dd>
         </div>
       </dl>
     </main>

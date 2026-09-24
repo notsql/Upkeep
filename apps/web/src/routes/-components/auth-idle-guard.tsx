@@ -1,8 +1,8 @@
-import { useAuth } from "@workos-inc/authkit-react";
+import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 
-import { startSignOut } from "@/lib/auth-session";
+import { startServerSignOut } from "@/lib/auth-redirect";
 
 const ACTIVITY_EVENTS = [
   "keydown",
@@ -18,7 +18,7 @@ export function AuthIdleGuard({
   children: ReactNode;
   timeoutMinutes: number;
 }) {
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user) {
@@ -28,7 +28,7 @@ export function AuthIdleGuard({
     let timeoutId: ReturnType<typeof setTimeout>;
 
     const signOutAfterInactivity = () => {
-      startSignOut(signOut, `${window.location.origin}/login`);
+      startServerSignOut("/login");
     };
 
     const resetTimer = () => {
@@ -50,7 +50,7 @@ export function AuthIdleGuard({
         window.removeEventListener(eventName, resetTimer);
       }
     };
-  }, [signOut, timeoutMinutes, user]);
+  }, [timeoutMinutes, user]);
 
   return children;
 }

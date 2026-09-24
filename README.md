@@ -225,28 +225,30 @@ Java directly: `./mvnw -pl com.proj:server <phase>` from the repo root.
 
 ## Authentication
 
-WorkOS AuthKit is wired but dormant. While
+WorkOS AuthKit owns authentication and session management. While
 `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` is unset the API is
 open, so local development needs no WorkOS tenant; set it to your AuthKit
 domain and set `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES` to the API
 audience configured in the WorkOS JWT template. `SecurityConfig` then validates
-JWTs before protected API calls. On the web side, set `VITE_WORKOS_CLIENT_ID`
-to mount the AuthKit provider and enable hosted sign-in and registration.
-WorkOS owns password handling and email verification. Turning auth on is a
-config change, not a code change.
+JWTs before protected API calls. The TanStack Start server uses the official
+AuthKit adapter, an encrypted HTTP-only session cookie, and server-side route
+loaders. Configure `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`,
+`WORKOS_REDIRECT_URI`, and `WORKOS_COOKIE_PASSWORD` in `apps/web/.env`.
+WorkOS owns password handling and email verification.
 
-The public `/login` route starts the hosted WorkOS sign-in flow. `/account` is
-the first route under the pathless authenticated layout and demonstrates the
-guard used for personal or confidential pages. The browser returns users only
-to validated same-origin paths after sign-in. A failed token refresh requires
-sign-in again, and signed-in users time out after the configured idle period
-on public or protected pages (`VITE_AUTH_IDLE_TIMEOUT_MINUTES`, 30 minutes by
-default).
+The public `/login` route links to the server-side sign-in endpoint. `/account`
+is under a pathless authenticated layout whose loader verifies the WorkOS
+session before rendering. Client hooks obtain a fresh access token through the
+web server and the generated API client sends it to Spring, which independently
+validates it. Signed-in users time out after the configured idle period on
+public or protected pages (`VITE_AUTH_IDLE_TIMEOUT_MINUTES`, 30 minutes by
+default). Manual and inactivity logout both use the `/logout` server route so
+the session cookie is cleared before redirecting.
 
 Configure the WorkOS application with:
 
-- Redirect URI: `http://localhost:3001`
-- Initiate login URI: `http://localhost:3001/login`
+- Redirect URI: `http://localhost:3001/api/auth/callback`
+- Initiate login URI: `http://localhost:3001/api/auth/sign-in`
 - Sign-out URIs: `http://localhost:3001` and `http://localhost:3001/login`
 - Access token duration: 5 minutes
 - Inactivity timeout: 30 minutes

@@ -1,11 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { restoreReturnTo, sanitizeReturnTo } from "@/lib/auth-redirect";
-
-afterEach(() => {
-  window.history.replaceState({}, "", "/");
-  vi.restoreAllMocks();
-});
+import {
+  buildSignInPath,
+  buildSignOutPath,
+  sanitizeReturnTo,
+} from "@/lib/auth-redirect";
 
 describe("sanitizeReturnTo", () => {
   it("keeps same-origin application paths", () => {
@@ -24,17 +23,28 @@ describe("sanitizeReturnTo", () => {
   });
 });
 
-describe("restoreReturnTo", () => {
-  it("navigates without reloading the authenticated application", () => {
-    const popStateListener = vi.fn();
-    window.addEventListener("popstate", popStateListener);
+describe("buildSignInPath", () => {
+  it("preserves a safe protected destination", () => {
+    expect(buildSignInPath("/account?tab=profile")).toBe(
+      "/api/auth/sign-in?returnPathname=%2Faccount%3Ftab%3Dprofile"
+    );
+  });
 
-    restoreReturnTo("/account?tab=profile");
+  it("replaces an external destination with the application home page", () => {
+    expect(buildSignInPath("https://attacker.example/account")).toBe(
+      "/api/auth/sign-in?returnPathname=%2F"
+    );
+  });
+});
 
-    expect(window.location.pathname).toBe("/account");
-    expect(window.location.search).toBe("?tab=profile");
-    expect(popStateListener).toHaveBeenCalledOnce();
+describe("buildSignOutPath", () => {
+  it("sends inactivity logout to the login page", () => {
+    expect(buildSignOutPath("/login")).toBe("/logout?returnTo=%2Flogin");
+  });
 
-    window.removeEventListener("popstate", popStateListener);
+  it("rejects an external post-logout destination", () => {
+    expect(buildSignOutPath("https://attacker.example")).toBe(
+      "/logout?returnTo=%2F"
+    );
   });
 });

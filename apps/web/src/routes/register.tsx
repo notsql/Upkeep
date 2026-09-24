@@ -1,14 +1,23 @@
-import { env } from "@proj/env/web";
 import { createFileRoute } from "@tanstack/react-router";
 
-import { AuthKitRegistrationForm } from "@/routes/-components/auth-kit-registration-form";
+interface RegisterSearch {
+  error?: string;
+}
 
 export const Route = createFileRoute("/register")({
-  component: RegistrationPage,
+  component: RegisterRoute,
   head: () => ({ meta: [{ title: "Create an account" }] }),
+  validateSearch: (search: Record<string, unknown>): RegisterSearch => ({
+    error: typeof search.error === "string" ? search.error : undefined,
+  }),
 });
 
-export function RegistrationPage() {
+function RegisterRoute() {
+  const { error } = Route.useSearch();
+  return <RegistrationPage error={error} />;
+}
+
+export function RegistrationPage({ error }: { error?: string } = {}) {
   return (
     <main className="flex items-center justify-center px-4 py-12">
       <section
@@ -21,13 +30,17 @@ export function RegistrationPage() {
         <p className="mt-2 text-muted-foreground text-sm">
           Create your UpKeep account through our secure authentication provider.
         </p>
-        {env.VITE_WORKOS_CLIENT_ID ? (
-          <AuthKitRegistrationForm />
-        ) : (
-          <p className="mt-8 text-destructive text-sm" role="alert">
-            Registration is not configured. Please contact support.
+        {error ? (
+          <p className="mt-6 text-destructive text-sm" role="alert">
+            Registration is temporarily unavailable. Please try again.
           </p>
-        )}
+        ) : null}
+        <a
+          className="mt-8 inline-flex h-10 w-full items-center justify-center bg-primary px-4 font-medium text-primary-foreground text-sm hover:bg-primary/80"
+          href="/api/auth/sign-up"
+        >
+          Create account
+        </a>
       </section>
     </main>
   );

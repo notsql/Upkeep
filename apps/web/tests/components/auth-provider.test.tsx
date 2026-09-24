@@ -4,31 +4,34 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthProvider } from "@/components/auth-provider";
 
-const { auth } = vi.hoisted(() => ({
+const { auth, startServerSignOut } = vi.hoisted(() => ({
   auth: {
     getAccessToken: vi.fn().mockResolvedValue(undefined),
-    signOut: vi.fn(),
     user: { email: "user@example.com" } as { email: string } | null,
   },
+  startServerSignOut: vi.fn(),
 }));
 
 vi.mock("@proj/env/web", () => ({
   env: {
     VITE_AUTH_IDLE_TIMEOUT_MINUTES: 30,
-    VITE_WORKOS_CLIENT_ID: "client_test",
-    VITE_WORKOS_REDIRECT_URI: "http://localhost:3001",
   },
 }));
 
-vi.mock("@workos-inc/authkit-react", () => ({
+vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   AuthKitProvider: ({ children }: { children: ReactNode }) => children,
   useAuth: () => auth,
+  useAccessToken: () => ({ getAccessToken: auth.getAccessToken }),
+}));
+
+vi.mock("@/lib/auth-redirect", () => ({
+  startServerSignOut,
 }));
 
 describe("AuthProvider", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    auth.signOut.mockReset();
+    startServerSignOut.mockReset();
     auth.user = { email: "user@example.com" };
   });
 
@@ -47,13 +50,11 @@ describe("AuthProvider", () => {
     await vi.advanceTimersByTimeAsync(29 * 60 * 1000);
     fireEvent.keyDown(window, { key: "Tab" });
     await vi.advanceTimersByTimeAsync(29 * 60 * 1000);
-    expect(auth.signOut).not.toHaveBeenCalled();
+    expect(startServerSignOut).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(60 * 1000);
 
-    expect(auth.signOut).toHaveBeenCalledWith({
-      returnTo: `${window.location.origin}/login`,
-    });
+    expect(startServerSignOut).toHaveBeenCalledWith("/login");
   });
 
   it("does not start an inactivity timer for signed-out visitors", async () => {
@@ -67,6 +68,6 @@ describe("AuthProvider", () => {
 
     await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
 
-    expect(auth.signOut).not.toHaveBeenCalled();
+    expect(startServerSignOut).not.toHaveBeenCalled();
   });
 });

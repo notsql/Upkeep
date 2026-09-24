@@ -1,30 +1,13 @@
 import { env } from "@proj/env/web";
-import { AuthKitProvider, useAuth } from "@workos-inc/authkit-react";
-import type { ComponentProps, ReactNode } from "react";
+import {
+  AuthKitProvider,
+  useAccessToken,
+} from "@workos/authkit-tanstack-react-start/client";
+import type { ReactNode } from "react";
 import { useEffect } from "react";
 
 import { setAccessTokenResolver } from "@/lib/api";
-import { getCurrentReturnTo, restoreReturnTo } from "@/lib/auth-redirect";
-import { reauthenticateAfterRefreshFailure } from "@/lib/auth-session";
 import { AuthIdleGuard } from "@/routes/-components/auth-idle-guard";
-
-type ProviderProps = ComponentProps<typeof AuthKitProvider>;
-
-const handleRedirectCallback: NonNullable<
-  ProviderProps["onRedirectCallback"]
-> = ({ state }) => {
-  restoreReturnTo(state?.returnTo);
-};
-
-const handleRefreshFailure: NonNullable<ProviderProps["onRefreshFailure"]> = ({
-  signIn,
-}) => {
-  const returnTo = getCurrentReturnTo();
-  return reauthenticateAfterRefreshFailure(signIn, returnTo, () => {
-    const search = new URLSearchParams({ returnTo });
-    restoreReturnTo(`/login?${search.toString()}`);
-  });
-};
 
 /**
  * Hands the API client a way to read the current access token. The client is a
@@ -36,7 +19,7 @@ const handleRefreshFailure: NonNullable<ProviderProps["onRefreshFailure"]> = ({
  * answers 401, which the caller already has to handle.
  */
 function AuthTokenBridge({ children }: { children: ReactNode }) {
-  const { getAccessToken } = useAuth();
+  const { getAccessToken } = useAccessToken();
 
   useEffect(() => {
     setAccessTokenResolver(() =>
@@ -50,25 +33,13 @@ function AuthTokenBridge({ children }: { children: ReactNode }) {
 /**
  * Wraps the app in WorkOS AuthKit.
  *
- * When `VITE_WORKOS_CLIENT_ID` is unset the provider is skipped entirely and
- * the app runs unauthenticated. That mirrors the server, which leaves the API
- * open until its issuer URI is configured, so a fresh clone runs with no
- * WorkOS tenant and turning auth on stays a config change, not a code change.
+ * The TanStack Start adapter stores the WorkOS session in an encrypted,
+ * HTTP-only cookie. Client hooks call its server functions and never receive
+ * the refresh token.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const clientId = env.VITE_WORKOS_CLIENT_ID;
-
-  if (!clientId) {
-    return children;
-  }
-
   return (
-    <AuthKitProvider
-      clientId={clientId}
-      onRedirectCallback={handleRedirectCallback}
-      onRefreshFailure={handleRefreshFailure}
-      redirectUri={env.VITE_WORKOS_REDIRECT_URI}
-    >
+    <AuthKitProvider>
       <AuthTokenBridge>
         <AuthIdleGuard timeoutMinutes={env.VITE_AUTH_IDLE_TIMEOUT_MINUTES}>
           {children}

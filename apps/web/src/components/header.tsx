@@ -1,13 +1,12 @@
-import { env } from "@proj/env/web";
 import { Link } from "@tanstack/react-router";
-import { useAuth } from "@workos-inc/authkit-react";
+import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 
 import { AuthButton } from "./auth-button";
 
-function AuthKitNavigationLink() {
-  const { isLoading, user } = useAuth();
+function AuthenticationNavigationLink() {
+  const { loading, user } = useAuth();
 
-  if (isLoading) {
+  if (loading) {
     return null;
   }
 
@@ -16,14 +15,6 @@ function AuthKitNavigationLink() {
   ) : (
     <Link to="/register">Register</Link>
   );
-}
-
-function AuthenticationNavigationLink() {
-  if (!env.VITE_WORKOS_CLIENT_ID) {
-    return <Link to="/register">Register</Link>;
-  }
-
-  return <AuthKitNavigationLink />;
 }
 
 export default function Header() {

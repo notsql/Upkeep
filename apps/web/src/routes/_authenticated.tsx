@@ -1,27 +1,17 @@
-import { env } from "@proj/env/web";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { getAuth } from "@workos/authkit-tanstack-react-start";
 
-import { getCurrentReturnTo } from "@/lib/auth-redirect";
-import { AuthGuard } from "@/routes/-components/auth-guard";
+import { buildSignInPath } from "@/lib/auth-redirect";
 
 export const Route = createFileRoute("/_authenticated")({
-  component: AuthenticatedLayout,
+  component: Outlet,
+  loader: async ({ location }) => {
+    const { user } = await getAuth();
+
+    if (!user) {
+      throw redirect({ href: buildSignInPath(location.href) });
+    }
+
+    return { user };
+  },
 });
-
-function AuthenticatedLayout() {
-  if (!env.VITE_WORKOS_CLIENT_ID) {
-    return (
-      <main className="container mx-auto max-w-3xl px-4 py-8">
-        <p className="text-destructive text-sm" role="alert">
-          Authentication is not configured. Please contact support.
-        </p>
-      </main>
-    );
-  }
-
-  return (
-    <AuthGuard returnTo={getCurrentReturnTo()}>
-      <Outlet />
-    </AuthGuard>
-  );
-}

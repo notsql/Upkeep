@@ -27,6 +27,8 @@ catalog:
   openapi-fetch: ^0.17.0
   vitest: ^5.0.0
   openapi-typescript: ^7.13.0
+  "@workos-inc/node": ^10.7.0
+  "@workos/authkit-tanstack-react-start": ^0.11.1
 minimumReleaseAgeExclude:
   - '@tanstack/history@1.162.2'
   - '@tanstack/router-core@1.171.28'
