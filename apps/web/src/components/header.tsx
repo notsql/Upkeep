@@ -11,7 +11,10 @@ function AuthenticationNavigationLink() {
   }
 
   return user ? (
-    <Link to="/account">Account</Link>
+    <>
+      <Link to="/estates">My estates</Link>
+      <Link to="/account">Account</Link>
+    </>
   ) : (
     <Link to="/register">Register</Link>
   );

@@ -171,9 +171,10 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `ML_MODEL_PATH` | `apps/ml` | Defaults to `models/model.onnx`. |
 | `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm docker:up`. |
 
-Nx loads each project's `.env` into its tasks (`pnpm dev`, `api:generate`,
-...). Running `./mvnw` directly does **not**, so Spring falls back to the
-defaults in `application.yaml`.
+Spring imports the server's `.env` because the Nx Maven executor does not
+reliably forward it to Java. The JWT environment post-processor maps nonblank
+issuer/audience keys before auto-configuration, preserving explicit overrides.
+See [decision 0011](decisions/0011-map-dotenv-jwt-settings-before-autoconfiguration.md).
 
 ## Testing
 
