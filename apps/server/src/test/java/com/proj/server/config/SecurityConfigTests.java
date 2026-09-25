@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
             "spring.security.oauth2.resourceserver.jwt.audiences[0]=https://api.example.com"
         })
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, SecurityConfigTests.TestController.class})
 class SecurityConfigTests {
 
     @Autowired
@@ -35,7 +35,9 @@ class SecurityConfigTests {
 
     @Test
     void leavesHealthEndpointPublic() throws Exception {
-        mockMvc.perform(get("/health")).andExpect(status().isOk()).andExpect(content().string("ok"));
+        mockMvc.perform(get("/health"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("ok"));
     }
 
     @Test
@@ -52,7 +54,7 @@ class SecurityConfigTests {
 
     @Test
     void rejectsInvalidBearerToken() throws Exception {
-        when(jwtDecoder.decode("invalid")).thenThrow(new JwtException("Invalid token"));
+        when(jwtDecoder.decode("invalid")).thenThrow(new BadJwtException("Invalid token"));
 
         mockMvc.perform(get("/test/protected").header("Authorization", "Bearer invalid"))
                 .andExpect(status().isUnauthorized());
