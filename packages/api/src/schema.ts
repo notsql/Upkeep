@@ -4,6 +4,70 @@
  */
 
 export interface paths {
+  "/api/admin/users/{membershipId}/role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["updateRole"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/organization/{organizationId}/members": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getMembers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/organization/{organizationId}/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getOrganizationRoles"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/organization/all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getOrganizations"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/health": {
     parameters: {
       query?: never;
@@ -29,16 +93,102 @@ export interface components {
   requestBodies: never;
   responses: never;
   schemas: {
+    UserRoles: {
+      roleSlugs?: string[];
+    };
     HealthResponse: {
       ok: boolean;
       database: boolean;
       /** Format: date-time */
       timestamp: string;
     };
+    Role: {
+      id?: string;
+      slug?: string;
+      name?: string;
+      description?: string;
+      permissions?: string[];
+    };
+    AdminUserResponse: {
+      membershipId?: string;
+      userId?: string;
+      name?: string;
+      email?: string;
+      joined?: string;
+      roleSlugs?: string[];
+    };
+    Organization: {
+      id?: string;
+      name?: string;
+    };
   };
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  getMembers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AdminUserResponse"][];
+        };
+      };
+    };
+  };
+  getOrganizationRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["Role"][];
+        };
+      };
+    };
+  };
+  getOrganizations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["Organization"][];
+        };
+      };
+    };
+  };
   health: {
     parameters: {
       query?: never;
@@ -55,6 +205,32 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["HealthResponse"];
+        };
+      };
+    };
+  };
+  updateRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        membershipId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserRoles"];
+      };
+    };
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["UserRoles"];
         };
       };
     };
