@@ -6,6 +6,36 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/api/admin/users/{membershipId}/role": {
+      "put": {
+        "tags": ["admin-controller"],
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "name": "membershipId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserRoles" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/UserRoles" } }
+            }
+          }
+        }
+      }
+    },
     "/estates": {
       "get": {
         "tags": ["estate-controller"],
@@ -323,10 +353,89 @@
           }
         }
       }
+    },
+    "/api/admin/users/organization/{organizationId}/roles": {
+      "get": {
+        "tags": ["admin-controller"],
+        "operationId": "getOrganizationRoles",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Role" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/organization/{organizationId}/members": {
+      "get": {
+        "tags": ["admin-controller"],
+        "operationId": "getMembers",
+        "parameters": [
+          {
+            "name": "organizationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AdminUserResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/organization/all": {
+      "get": {
+        "tags": ["admin-controller"],
+        "operationId": "getOrganizations",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/Organization" }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "UserRoles": {
+        "type": "object",
+        "properties": {
+          "roleSlugs": { "type": "array", "items": { "type": "string" } }
+        }
+      },
       "EstateRequest": {
         "type": "object",
         "properties": {
@@ -381,6 +490,34 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
+      },
+      "Role": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "permissions": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "AdminUserResponse": {
+        "type": "object",
+        "properties": {
+          "membershipId": { "type": "string" },
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "joined": { "type": "string" },
+          "roleSlugs": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "Organization": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        }
       }
     },
     "securitySchemes": {

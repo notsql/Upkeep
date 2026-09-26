@@ -1,7 +1,7 @@
 import { Input } from "@proj/ui/components/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { type ChangeEvent, useCallback, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
 
@@ -18,11 +18,11 @@ const memberQueryKey = (organizationId: string) =>
   ["admin", "members", organizationId] as const;
 
 // Local mutation arguments; API request/response types remain inferred.
-type RoleChange = {
-  organizationId: string;
+interface RoleChange {
   membershipId: string;
+  organizationId: string;
   role: string;
-};
+}
 
 function AdminUsersPage() {
   const queryClient = useQueryClient();
@@ -103,6 +103,41 @@ function AdminUsersPage() {
       }),
   });
 
+  const handleOrganizationChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      setOrganizationId(event.target.value);
+      roleUpdate.reset();
+    },
+    [roleUpdate]
+  );
+
+  const handleSearchChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setSearch(event.target.value);
+    },
+    []
+  );
+
+  const handleRoleChange = useCallback(
+    (event: ChangeEvent<HTMLSelectElement>) => {
+      const {
+        dataset: { currentRole = "", membershipId },
+        value: role,
+      } = event.target;
+
+      if (!membershipId || role === currentRole) {
+        return;
+      }
+
+      roleUpdate.mutate({
+        organizationId,
+        membershipId,
+        role,
+      });
+    },
+    [organizationId, roleUpdate]
+  );
+
   const filteredUsers = useMemo(() => {
     const users = members.data ?? [];
     const query = search.trim().toLowerCase();
@@ -158,16 +193,16 @@ function AdminUsersPage() {
           </div>
         </header>
 
-        {error && (
+        {error ? (
           <p
             className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-destructive text-sm"
             role="alert"
           >
             {error.message}
           </p>
-        )}
+        ) : null}
 
-        {organizations.isPending && <p role="status">Loading estates…</p>}
+        {organizations.isPending ? <p role="status">Loading estates…</p> : null}
 
         {organizations.data?.length === 0 && (
           <p className="text-muted-foreground">No estates found.</p>
@@ -179,10 +214,7 @@ function AdminUsersPage() {
             <select
               className={selectClassName}
               disabled={roleUpdate.isPending}
-              onChange={(event) => {
-                setOrganizationId(event.target.value);
-                roleUpdate.reset();
-              }}
+              onChange={handleOrganizationChange}
               value={organizationId}
             >
               <option value="">Select an estate</option>
@@ -195,15 +227,15 @@ function AdminUsersPage() {
           </label>
         )}
 
-        {isLoadingOrganization && (
+        {isLoadingOrganization ? (
           <p role="status">Loading members and roles…</p>
-        )}
+        ) : null}
 
-        {roleUpdate.isPending && (
+        {roleUpdate.isPending ? (
           <p className="text-muted-foreground text-sm" role="status">
             Saving role and refreshing members…
           </p>
-        )}
+        ) : null}
 
         <section
           aria-labelledby="members-heading"
@@ -219,11 +251,12 @@ function AdminUsersPage() {
               </p>
             </div>
 
-            <label className="block sm:w-72">
+            <label className="block sm:w-72" htmlFor="user-search">
               <span className="sr-only">Search users</span>
               <Input
                 className="h-9 rounded-md"
-                onChange={(event) => setSearch(event.target.value)}
+                id="user-search"
+                onChange={handleSearchChange}
                 placeholder="Search by name or email"
                 type="search"
                 value={search}
@@ -278,35 +311,25 @@ function AdminUsersPage() {
                           <span className="sr-only">Role for {name}</span>
                           <select
                             className={selectClassName}
+                            data-current-role={currentRole}
+                            data-membership-id={user.membershipId}
                             disabled={
                               roleUpdate.isPending ||
                               rolesUnavailable ||
                               hasMultipleRoles ||
                               !user.membershipId
                             }
-                            onChange={(event) => {
-                              const role = event.target.value;
-
-                              if (!user.membershipId || role === currentRole) {
-                                return;
-                              }
-
-                              roleUpdate.mutate({
-                                organizationId,
-                                membershipId: user.membershipId,
-                                role,
-                              });
-                            }}
+                            onChange={handleRoleChange}
                             value={currentRole}
                           >
                             <option disabled value="">
                               Select a role
                             </option>
-                            {currentRoleMissing && (
+                            {currentRoleMissing ? (
                               <option disabled value={currentRole}>
                                 {currentRole}
                               </option>
-                            )}
+                            ) : null}
                             {organizationRoles.data?.map((role) => (
                               <option key={role.slug} value={role.slug}>
                                 {role.name}

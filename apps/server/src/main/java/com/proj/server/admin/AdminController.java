@@ -4,18 +4,13 @@ import com.proj.server.workos.Organization;
 import com.proj.server.workos.Role;
 import com.proj.server.workos.UserRoles;
 import com.proj.server.workos.WorkOSService;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -42,9 +37,7 @@ public class AdminController {
     }
 
     @PutMapping("/{membershipId}/role")
-    public UserRoles updateRole(
-            @PathVariable String membershipId,
-            @RequestBody UserRoles request) {
+    public UserRoles updateRole(@PathVariable String membershipId, @RequestBody UserRoles request) {
         return workOSService.updateRole(membershipId, request);
     }
 }

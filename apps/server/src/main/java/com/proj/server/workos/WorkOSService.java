@@ -19,7 +19,7 @@ public class WorkOSService {
 
     public WorkOSService(
             RestClient.Builder builder,
-            @Value("${app.workos.api-url}") String apiUrl,
+            @Value("${WORKOS_API_BASE_URL}") String apiUrl,
             @Value("${WORKOS_API_KEY}") String apiKey) {
         this.apiKey = apiKey;
         this.client = builder.baseUrl(apiUrl)

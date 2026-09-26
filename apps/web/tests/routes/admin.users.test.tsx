@@ -38,10 +38,9 @@ beforeEach(() => {
 it("loads organization members and saves their role through the API", async () => {
   put.mockResolvedValue({ data: {} });
   renderWithProviders(<Page />);
-  fireEvent.change(
-    await screen.findByRole("combobox", { name: "Organization" }),
-    { target: { value: "org_1" } }
-  );
+  fireEvent.change(await screen.findByRole("combobox", { name: "Estate" }), {
+    target: { value: "org_1" },
+  });
   const role = await screen.findByRole("combobox", {
     name: "Role for Casey Doe",
   });
@@ -64,10 +63,9 @@ it("shows a failed load without displaying mock users", async () => {
 it("reports a failed save and keeps the saved role", async () => {
   put.mockResolvedValue({ error: {} });
   renderWithProviders(<Page />);
-  fireEvent.change(
-    await screen.findByRole("combobox", { name: "Organization" }),
-    { target: { value: "org_1" } }
-  );
+  fireEvent.change(await screen.findByRole("combobox", { name: "Estate" }), {
+    target: { value: "org_1" },
+  });
   fireEvent.change(
     await screen.findByRole("combobox", { name: "Role for Casey Doe" }),
     { target: { value: "admin" } }

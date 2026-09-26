@@ -4,7 +4,7 @@
  */
 
 export interface paths {
-   "/api/admin/users/{membershipId}/role": {
+  "/api/admin/users/{membershipId}/role": {
     parameters: {
       query?: never;
       header?: never;
@@ -382,7 +382,7 @@ export interface operations {
       };
     };
   };
-    getMembers: {
+  getMembers: {
     parameters: {
       query?: never;
       header?: never;
