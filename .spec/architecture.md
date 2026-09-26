@@ -90,7 +90,7 @@ type generates as `unknown` and destroys type safety on the frontend.
 
 ## Authentication
 
-WorkOS AuthKit (OAuth2 / OIDC), wired but dormant on both sides.
+WorkOS AuthKit handles web sessions; Spring validates API bearer tokens.
 
 AuthKit issues standard OIDC tokens, so the server is a plain Spring resource
 server - no vendor starter. `SecurityConfig` reads
@@ -106,23 +106,47 @@ The property must not be given an empty default in `application.yaml`: Spring's
 resource-server auto-configuration keys off the property merely being present,
 so a blank value builds a `JwtDecoder` against no issuer and fails at startup.
 
-On the web side `AuthProvider` (`apps/web/src/components/auth-provider.tsx`)
-mounts AuthKit only when `VITE_WORKOS_CLIENT_ID` is set, and `AuthTokenBridge`
-hands the token resolver to the generated client's `getToken` callback. The
-resolver is installed browser-side only - the app server-side renders, and a
-module-scope resolver on the server would be shared across requests, so SSR
-fetches go out unauthenticated by design.
+On the web side, the official AuthKit TanStack Start middleware validates and
+refreshes the session stored in an encrypted HTTP-only cookie. Protected route
+loaders call `getAuth()` before rendering. `AuthProvider`
+(`apps/web/src/components/auth-provider.tsx`) supplies reactive client hooks,
+and `AuthTokenBridge` hands a fresh access token resolver to the generated
+client's `getToken` callback. The resolver is installed browser-side only - a
+module-scope resolver on the SSR server would be shared across requests.
 
 Registration uses AuthKit's hosted sign-up flow. The local `/register` page
-collects only an email hint before redirecting; WorkOS collects the user's name
-and password, applies the configured password policy, sends the verification
-email, and does not complete authentication until verification succeeds.
+links through a server endpoint that establishes the PKCE state before
+redirecting; WorkOS collects the user's name and password, applies the
+configured password policy, sends the verification email, and does not
+complete authentication until verification succeeds.
+
+Sign-in follows the same hosted model. `/api/auth/sign-in` creates the PKCE
+state, `/api/auth/callback` exchanges the authorization code, and the pathless
+`_authenticated` route loader prevents protected pages such as `/account` from
+rendering without a valid server-side session. OAuth return locations are
+reduced to same-origin paths before they reach WorkOS.
+
+The session policy is 5-minute access tokens, a 30-minute inactivity timeout,
+and an 8-hour maximum session length, configured in the WorkOS application.
+While a user is signed in, the global web guard also signs out after 30 minutes
+without meaningful browser input, including on public routes;
+`VITE_AUTH_IDLE_TIMEOUT_MINUTES` keeps that UI policy configurable. WorkOS
+remains the session authority. Hosted AuthKit's rate limits and adaptive
+brute-force protection are used as provided: AuthKit does not expose a fixed
+per-account "N consecutive failures" lockout setting, and this application does
+not duplicate credential handling to manufacture one.
 
 The WorkOS dashboard must have public sign-up, Email + Password, and automated
 verification emails enabled. Configure first and last name as required fields,
 register the web redirect URI and allowed origin, and add the Spring API URI as
 the JWT template's `aud` claim. The issuer and audience configured in Spring
 must exactly match the resulting access token.
+
+Local WorkOS redirect settings:
+
+- Redirect URI: `http://localhost:3001/api/auth/callback`
+- Initiate login URI: `http://localhost:3001/api/auth/sign-in`
+- Sign-out URIs: `http://localhost:3001` and `http://localhost:3001/login`
 
 ## Environment
 
@@ -136,18 +160,21 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `CORS_ALLOWED_ORIGINS` | `apps/server` | Must include the web app's origin. |
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` | `apps/server` | WorkOS AuthKit domain. Unset disables auth; never set it blank. |
 | `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES` | `apps/server` | API audience also configured in the WorkOS JWT template. |
-| `VITE_WORKOS_CLIENT_ID` | `apps/web` | Unset means the app runs unauthenticated. |
-| `VITE_WORKOS_REDIRECT_URI` | `apps/web` | Must be registered in the WorkOS dashboard. Defaults to the dev origin. |
+| `WORKOS_CLIENT_ID` | `apps/web` | Server-side AuthKit application client ID. |
+| `WORKOS_API_KEY` | `apps/web`, `apps/server` | Secret. AuthKit sessions require it in web; Spring uses it only for explicit WorkOS API calls. |
+| `WORKOS_REDIRECT_URI` | `apps/web` | Must match the AuthKit callback URI registered in WorkOS. |
+| `WORKOS_COOKIE_PASSWORD` | `apps/web` | Secret of at least 32 characters used to encrypt the session cookie. |
+| `VITE_AUTH_IDLE_TIMEOUT_MINUTES` | `apps/web` | Browser inactivity before AuthKit sign-out. Defaults to `30`; keep it aligned with the WorkOS Sessions policy. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |
-| `WORKOS_API_KEY` | `apps/server` | Secret. Only for server-to-WorkOS calls (`GET /users`); never in `apps/web`. Blank makes `/users` return 503. |
 | `SERVER_PORT` | `apps/server` | Defaults to `8080`. |
 | `ML_API_URL` | `apps/server` | Where Spring reaches `apps/ml`. Set by `docker-compose.yml`; not read by any code until the ML client exists. |
 | `ML_MODEL_PATH` | `apps/ml` | Defaults to `models/model.onnx`. |
 | `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm docker:up`. |
 
-Nx loads each project's `.env` into its tasks (`pnpm dev`, `api:generate`,
-...). Running `./mvnw` directly does **not**, so Spring falls back to the
-defaults in `application.yaml`.
+Spring imports the server's `.env` because the Nx Maven executor does not
+reliably forward it to Java. The JWT environment post-processor maps nonblank
+issuer/audience keys before auto-configuration, preserving explicit overrides.
+See [decision 0011](decisions/0011-map-dotenv-jwt-settings-before-autoconfiguration.md).
 
 ## Testing
 

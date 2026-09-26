@@ -1,20 +1,10 @@
-import { env } from "@proj/env/web";
-import { Button } from "@proj/ui/components/button";
-import { useAuth } from "@workos-inc/authkit-react";
-import { useCallback } from "react";
+import { Button, buttonVariants } from "@proj/ui/components/button";
+import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 
-/**
- * Sign in / sign out control. Split from `AuthButton` because `useAuth` must be
- * called unconditionally, and it only has a provider to read when AuthKit is
- * configured - see `auth-provider.tsx`.
- */
-function AuthKitButton() {
-  const { isLoading, signIn, signOut, user } = useAuth();
+export function AuthButton() {
+  const { loading, user } = useAuth();
 
-  const handleSignIn = useCallback(() => signIn(), [signIn]);
-  const handleSignOut = useCallback(() => signOut(), [signOut]);
-
-  if (isLoading) {
+  if (loading) {
     return (
       <Button disabled size="sm" variant="ghost">
         Loading...
@@ -24,30 +14,24 @@ function AuthKitButton() {
 
   if (!user) {
     return (
-      <Button onClick={handleSignIn} size="sm">
-        Sign in
-      </Button>
+      <a
+        className="inline-flex h-7 items-center justify-center rounded-none bg-primary px-2.5 font-medium text-primary-foreground text-xs hover:bg-primary/80"
+        href="/api/auth/sign-in"
+      >
+        Log in
+      </a>
     );
   }
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-muted-foreground text-sm">{user.email}</span>
-      <Button onClick={handleSignOut} size="sm" variant="outline">
+      <a
+        className={buttonVariants({ size: "sm", variant: "outline" })}
+        href="/logout"
+      >
         Sign out
-      </Button>
+      </a>
     </div>
   );
-}
-
-/**
- * Renders nothing when `VITE_WORKOS_CLIENT_ID` is unset, matching the provider:
- * with no WorkOS tenant configured the app has no sign-in to offer.
- */
-export function AuthButton() {
-  if (!env.VITE_WORKOS_CLIENT_ID) {
-    return null;
-  }
-
-  return <AuthKitButton />;
 }

@@ -55,9 +55,10 @@ app:
 #
 # To switch JWT validation on, set the environment variable
 #   SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
-# to your AuthKit domain (e.g. https://<tenant>.authkit.app). Relaxed binding
-# maps it onto spring.security.oauth2.resourceserver.jwt.issuer-uri, Spring
-# discovers the JWKS from it, and SecurityConfig starts requiring a token. Also
+# to the exact iss claim of an access token. OS environment variables bind
+# directly; DotenvJwtEnvironmentPostProcessor maps uppercase .env file keys
+# before auto-configuration, without adding a blank issuer. Spring discovers
+# the JWKS from the issuer and SecurityConfig requires a token. Also
 # set SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES to the API audience
 # configured in the WorkOS JWT template so tokens minted for another resource
 # are rejected. While the issuer is unset the API stays open locally. See

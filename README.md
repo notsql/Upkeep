@@ -225,15 +225,12 @@ Java directly: `./mvnw -pl com.proj:server <phase>` from the repo root.
 
 ## Authentication
 
-WorkOS AuthKit is wired but dormant. While
-`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` is unset the API is
-open, so local development needs no WorkOS tenant; set it to your AuthKit
-domain and set `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES` to the API
-audience configured in the WorkOS JWT template. `SecurityConfig` then validates
-JWTs before protected API calls. On the web side, set `VITE_WORKOS_CLIENT_ID`
-to mount the AuthKit provider and enable hosted sign-in and registration.
-WorkOS owns password handling and email verification. Turning auth on is a
-config change, not a code change.
+WorkOS AuthKit handles registration, verification, and sessions through TanStack
+Start; Spring validates API bearer tokens. Configure each app using
+[web environment variables](apps/web/.env.example) and
+[server environment variables](apps/server/.env.example). See
+[authentication setup](.spec/architecture.md#authentication) for dashboard settings
+and session policy. The API is open while its JWT issuer is unset.
 
 ## Project structure
 
