@@ -25,7 +25,7 @@ the only thing that calls the `apps/ml` inference service.
 | Tool | Why |
 | --- | --- |
 | **Java 25** | Runs the Spring Boot API. Maven itself comes from the wrapper. |
-| **pnpm 10** | Workspace package manager. |
+| **pnpm 12** | Workspace package manager (version pinned by `packageManager` in `package.json`). |
 | **Node 22+** | Required by Vite 8 and Vitest 5. |
 | **Docker** | Runs Postgres. Nothing else in the dev loop needs it. |
 | **uv** | Runs the Python inference service (`brew install uv`). |
@@ -211,7 +211,7 @@ Neon branch while changing the schema. Nothing in the dev loop needs Docker;
 | `pnpm dev` | web + API + inference |
 | `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Everything, Java included |
-| `pnpm test` | web (Vitest) + server (JUnit) tests |
+| `pnpm test` | All tests: web (Vitest), server (JUnit), ml (pytest) |
 | `pnpm --filter web test:watch` | Web tests in watch mode |
 | `pnpm check-types` | TypeScript across the workspace |
 | `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Ruff (ml), Spotless (server) |

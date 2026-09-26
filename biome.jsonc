@@ -6,7 +6,7 @@
     "ultracite/biome/tanstack"
   ],
   "files": {
-    "includes": ["!!packages/ui"]
+    "includes": ["!!packages/ui", "!!**/routeTree.gen.ts"]
   },
   "linter": {
     "rules": {
