@@ -19,7 +19,7 @@ class WorkOSServiceTests {
     private final RestClient.Builder builder = RestClient.builder();
     private final MockRestServiceServer server =
             MockRestServiceServer.bindTo(builder).build();
-    private final WorkOSService service = new WorkOSService(builder, "https://api.workos.com", "test-key");
+    private final WorkOSService service = new WorkOSService("test-key");
 
     @Test
     void updatesTheOrganizationMembershipRole() {
