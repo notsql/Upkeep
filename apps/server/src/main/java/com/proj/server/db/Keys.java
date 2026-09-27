@@ -5,12 +5,16 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.records.EstateRecord;
+import com.proj.server.db.tables.records.LocationRecord;
 
+import org.jooq.ForeignKey;
 import org.jooq.TableField;
 import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.Internal;
+import org.jooq.impl.QOM.ForeignKeyRule;
 
 
 /**
@@ -25,4 +29,11 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
+    public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
+
+    // -------------------------------------------------------------------------
+    // FOREIGN KEY definitions
+    // -------------------------------------------------------------------------
+
+    public static final ForeignKey<LocationRecord, EstateRecord> LOCATION__LOCATION_ESTATEID_FKEY = Internal.createForeignKey(Location.LOCATION, DSL.name("Location_estateId_fkey"), new TableField[] { Location.LOCATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
 }

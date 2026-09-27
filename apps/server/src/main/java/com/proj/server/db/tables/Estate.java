@@ -7,6 +7,7 @@ package com.proj.server.db.tables;
 import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
+import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
 import java.time.OffsetDateTime;
@@ -17,10 +18,14 @@ import java.util.UUID;
 
 import org.jooq.Condition;
 import org.jooq.Field;
+import org.jooq.ForeignKey;
 import org.jooq.Index;
+import org.jooq.InverseForeignKey;
 import org.jooq.Name;
+import org.jooq.Path;
 import org.jooq.PlainSQL;
 import org.jooq.QueryPart;
+import org.jooq.Record;
 import org.jooq.SQL;
 import org.jooq.Schema;
 import org.jooq.Stringly;
@@ -135,6 +140,39 @@ public class Estate extends TableImpl<EstateRecord> {
         this(DSL.name("Estate"), null);
     }
 
+    public <O extends Record> Estate(Table<O> path, ForeignKey<O, EstateRecord> childPath, InverseForeignKey<O, EstateRecord> parentPath) {
+        super(path, childPath, parentPath, ESTATE);
+    }
+
+    /**
+     * A subtype implementing {@link Path} for simplified path-based joins.
+     */
+    public static class EstatePath extends Estate implements Path<EstateRecord> {
+
+        private static final long serialVersionUID = 1L;
+        public <O extends Record> EstatePath(Table<O> path, ForeignKey<O, EstateRecord> childPath, InverseForeignKey<O, EstateRecord> parentPath) {
+            super(path, childPath, parentPath);
+        }
+        private EstatePath(Name alias, Table<EstateRecord> aliased) {
+            super(alias, aliased);
+        }
+
+        @Override
+        public EstatePath as(String alias) {
+            return new EstatePath(DSL.name(alias), this);
+        }
+
+        @Override
+        public EstatePath as(Name alias) {
+            return new EstatePath(alias, this);
+        }
+
+        @Override
+        public EstatePath as(Table<?> alias) {
+            return new EstatePath(alias.getQualifiedName(), this);
+        }
+    }
+
     @Override
     public Schema getSchema() {
         return aliased() ? null : Public.PUBLIC;
@@ -148,6 +186,19 @@ public class Estate extends TableImpl<EstateRecord> {
     @Override
     public UniqueKey<EstateRecord> getPrimaryKey() {
         return Keys.ESTATE_PKEY;
+    }
+
+    private transient LocationPath _location;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.Location</code>
+     * table
+     */
+    public LocationPath location() {
+        if (_location == null)
+            _location = new LocationPath(this, null, Keys.LOCATION__LOCATION_ESTATEID_FKEY.getInverseKey());
+
+        return _location;
     }
 
     @Override
