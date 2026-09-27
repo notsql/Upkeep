@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 
 import { AuthButton } from "./auth-button";
+import { EstateSwitcher } from "./estates/estate-switcher";
 
 function AuthenticationNavigationLink() {
   const { loading, user } = useAuth();
@@ -28,7 +29,8 @@ export default function Header() {
           <Link to="/">Home</Link>
           <AuthenticationNavigationLink />
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <EstateSwitcher />
           <AuthButton />
         </div>
       </div>

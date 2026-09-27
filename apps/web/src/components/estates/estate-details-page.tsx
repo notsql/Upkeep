@@ -85,20 +85,26 @@ export function EstateDetailsPage({ estateId }: { estateId: string }) {
               </dd>
             </div>
           </dl>
-          <div className="flex items-center gap-4">
-            <Link
-              className="border px-4 py-2 text-sm"
-              params={{ estateId }}
-              to="/estates/$estateId/edit"
-            >
-              Edit estate
-            </Link>
-            {estate.data.deactivatedAt ? null : (
-              <Button onClick={openConfirmation} variant="destructive">
-                Deactivate estate
-              </Button>
-            )}
-          </div>
+          {estate.data.owned ? (
+            <div className="flex items-center gap-4">
+              <Link
+                className="border px-4 py-2 text-sm"
+                params={{ estateId }}
+                to="/estates/$estateId/edit"
+              >
+                Edit estate
+              </Link>
+              {estate.data.deactivatedAt ? null : (
+                <Button onClick={openConfirmation} variant="destructive">
+                  Deactivate estate
+                </Button>
+              )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              Shared with you. Only the owner can change this estate.
+            </p>
+          )}
           {confirming ? (
             <DeactivateEstateDialog
               code={estate.data.code}

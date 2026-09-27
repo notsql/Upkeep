@@ -5,6 +5,7 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Estateaccess;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -24,4 +25,5 @@ public class Indexes {
 
     public static final Index ESTATE_CODE_KEY = Internal.createIndex(DSL.name("Estate_code_key"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.CODE }, true);
     public static final Index ESTATE_OWNERUSERID_IDX = Internal.createIndex(DSL.name("Estate_ownerUserId_idx"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.OWNERUSERID }, false);
+    public static final Index ESTATEACCESS_USERID_IDX = Internal.createIndex(DSL.name("EstateAccess_userId_idx"), Estateaccess.ESTATEACCESS, new OrderField[] { Estateaccess.ESTATEACCESS.USERID }, false);
 }

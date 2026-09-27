@@ -1,8 +1,15 @@
 import { Input } from "@proj/ui/components/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { type ChangeEvent, useCallback, useMemo, useState } from "react";
+import {
+  type ChangeEvent,
+  type MouseEvent,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 
+import { MemberEstateAccess } from "@/components/admin/member-estate-access";
 import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/users")({
@@ -24,10 +31,16 @@ interface RoleChange {
   role: string;
 }
 
+interface SelectedMember {
+  name: string;
+  userId: string;
+}
+
 function AdminUsersPage() {
   const queryClient = useQueryClient();
   const [organizationId, setOrganizationId] = useState("");
   const [search, setSearch] = useState("");
+  const [selectedMember, setSelectedMember] = useState<SelectedMember>();
 
   const organizations = useQuery({
     queryKey: ["admin", "organizations"],
@@ -106,6 +119,7 @@ function AdminUsersPage() {
   const handleOrganizationChange = useCallback(
     (event: ChangeEvent<HTMLSelectElement>) => {
       setOrganizationId(event.target.value);
+      setSelectedMember(undefined);
       roleUpdate.reset();
     },
     [roleUpdate]
@@ -136,6 +150,16 @@ function AdminUsersPage() {
       });
     },
     [organizationId, roleUpdate]
+  );
+
+  const handleManageEstates = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      const { memberName = "", userId } = event.currentTarget.dataset;
+      if (userId) {
+        setSelectedMember({ name: memberName, userId });
+      }
+    },
+    []
   );
 
   const filteredUsers = useMemo(() => {
@@ -278,6 +302,9 @@ function AdminUsersPage() {
                   <th className="px-5 py-3 font-medium" scope="col">
                     Current role
                   </th>
+                  <th className="px-5 py-3 font-medium" scope="col">
+                    Estates
+                  </th>
                 </tr>
               </thead>
 
@@ -343,6 +370,19 @@ function AdminUsersPage() {
                           </p>
                         )}
                       </td>
+                      <td className="px-5 py-4">
+                        <button
+                          aria-label={`Manage estates for ${name}`}
+                          className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
+                          data-member-name={name}
+                          data-user-id={user.userId}
+                          disabled={!user.userId}
+                          onClick={handleManageEstates}
+                          type="button"
+                        >
+                          Manage estates
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -362,6 +402,14 @@ function AdminUsersPage() {
             </p>
           )}
         </section>
+
+        {selectedMember ? (
+          <MemberEstateAccess
+            key={selectedMember.userId}
+            name={selectedMember.name}
+            userId={selectedMember.userId}
+          />
+        ) : null}
 
         <p className="text-muted-foreground text-xs">
           Role changes are saved automatically. Members with multiple roles must

@@ -1,30 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ChangeEvent, useCallback, useState } from "react";
-import { api } from "@/lib/api";
-import {
-  type EstateStatus,
-  estateError,
-  useEstateSession,
-} from "@/lib/estates";
+import { type EstateStatus, useEstateList } from "@/lib/estates";
 
 export function EstateListPage() {
   const [status, setStatus] = useState<EstateStatus>("ACTIVE");
-  const { userId, ready } = useEstateSession();
-  const estates = useQuery({
-    queryKey: ["estates", userId, "list", status],
-    enabled: ready,
-    retry: false,
-    queryFn: async () => {
-      const { data, error, response } = await api.GET("/estates", {
-        params: { query: { status } },
-      });
-      if (error || !data) {
-        throw estateError(error, response.status);
-      }
-      return data;
-    },
-  });
+  const estates = useEstateList(status);
   const changeStatus = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
     const { value } = event.target;
     if (value === "ACTIVE" || value === "INACTIVE" || value === "ALL") {
@@ -43,7 +23,7 @@ export function EstateListPage() {
         </Link>
       </div>
       <p className="mt-2 text-muted-foreground">
-        Manage the properties you own.
+        Estates you own, and estates an admin has shared with you.
       </p>
       <div className="my-6 flex items-center gap-3">
         <label htmlFor="estate-status">Status</label>
@@ -84,9 +64,16 @@ export function EstateListPage() {
                   {estate.name}
                 </Link>
               </h2>
-              <span className="border px-2 py-1 text-xs">
-                {estate.deactivatedAt ? "Inactive" : "Active"}
-              </span>
+              <div className="flex gap-2">
+                {estate.owned ? null : (
+                  <span className="border px-2 py-1 text-xs">
+                    Shared with you
+                  </span>
+                )}
+                <span className="border px-2 py-1 text-xs">
+                  {estate.deactivatedAt ? "Inactive" : "Active"}
+                </span>
+              </div>
             </div>
             <p className="mt-2 text-muted-foreground text-sm">{estate.code}</p>
             <p className="mt-3 text-sm">

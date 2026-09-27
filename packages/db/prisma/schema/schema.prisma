@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated"
+  provider     = "prisma-client"
+  output       = "../generated"
   moduleFormat = "esm"
 }
 
@@ -9,16 +9,30 @@ datasource db {
 }
 
 model Estate {
-  id            String    @id @default(uuid()) @db.Uuid
-  ownerUserId   String    @db.VarChar(255)
-  name          String    @db.VarChar(200)
-  code          String    @unique @db.VarChar(50)
-  address       String    @db.VarChar(500)
-  postalCode    String    @db.VarChar(20)
-  description   String?   @db.VarChar(2000)
-  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
-  deactivatedAt DateTime? @db.Timestamptz(6)
+  id            String         @id @default(uuid()) @db.Uuid
+  ownerUserId   String         @db.VarChar(255)
+  name          String         @db.VarChar(200)
+  code          String         @unique @db.VarChar(50)
+  address       String         @db.VarChar(500)
+  postalCode    String         @db.VarChar(20)
+  description   String?        @db.VarChar(2000)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+  deactivatedAt DateTime?      @db.Timestamptz(6)
+  access        EstateAccess[]
 
   @@index([ownerUserId])
+}
+
+// An admin's grant of view access to an estate for a WorkOS user. Ownership
+// stays on Estate.ownerUserId; see decision 0012.
+model EstateAccess {
+  estateId  String   @db.Uuid
+  userId    String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([estateId, userId])
+  @@index([userId])
 }

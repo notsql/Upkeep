@@ -14,12 +14,12 @@ public class EstateService {
         this.repository = repository;
     }
 
-    public List<EstateResponse> list(String owner, EstateStatus status) {
-        return repository.listOwned(owner, status);
+    public List<EstateResponse> list(String user, EstateStatus status) {
+        return repository.listAccessible(user, status);
     }
 
-    public EstateResponse get(UUID id, String owner) {
-        return owned(id, owner, false);
+    public EstateResponse get(UUID id, String user) {
+        return repository.findAccessible(id, user).orElseThrow(EstateService::notFound);
     }
 
     public EstateResponse create(String owner, EstateRequest request) {
@@ -28,13 +28,13 @@ public class EstateService {
 
     @Transactional
     public EstateResponse update(UUID id, String owner, EstateRequest request) {
-        owned(id, owner, true);
+        owned(id, owner);
         return repository.update(id, owner, request);
     }
 
     @Transactional
     public EstateResponse deactivate(UUID id, String owner, String code) {
-        var estate = owned(id, owner, true);
+        var estate = owned(id, owner);
         if (!estate.code().equals(code)) {
             throw new EstateException(HttpStatus.BAD_REQUEST, "Enter the estate code exactly to confirm deactivation.");
         }
@@ -44,9 +44,16 @@ public class EstateService {
         return repository.deactivate(id, owner);
     }
 
-    private EstateResponse owned(UUID id, String owner, boolean lock) {
+    // Granted users can see an estate but not change it; hiding it would protect nothing.
+    private EstateResponse owned(UUID id, String user) {
         return repository
-                .findOwned(id, owner, lock)
-                .orElseThrow(() -> new EstateException(HttpStatus.NOT_FOUND, "Estate not found."));
+                .findOwned(id, user, true)
+                .orElseThrow(() -> repository.findAccessible(id, user).isPresent()
+                        ? new EstateException(HttpStatus.FORBIDDEN, "Only the estate owner can change it.")
+                        : notFound());
+    }
+
+    private static EstateException notFound() {
+        return new EstateException(HttpStatus.NOT_FOUND, "Estate not found.");
     }
 }

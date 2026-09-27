@@ -6,6 +6,88 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/api/admin/users/{userId}/estates/{estateId}": {
+      "put": {
+        "tags": ["estate-access-controller"],
+        "summary": "Grant a user access to an estate",
+        "operationId": "grantEstateAccess",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Access granted" }
+        }
+      },
+      "delete": {
+        "tags": ["estate-access-controller"],
+        "summary": "Revoke a user's access to an estate",
+        "operationId": "revokeEstateAccess",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Access revoked" }
+        }
+      }
+    },
     "/api/admin/users/{membershipId}/role": {
       "put": {
         "tags": ["admin-controller"],
@@ -354,6 +436,78 @@
         }
       }
     },
+    "/api/admin/users/{userId}/estates": {
+      "get": {
+        "tags": ["estate-access-controller"],
+        "summary": "List every estate with a user's access",
+        "operationId": "listUserEstateAccess",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateAccessResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin role required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateAccessResponse"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Every estate with the user's access",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateAccessResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/organization/{organizationId}/roles": {
       "get": {
         "tags": ["admin-controller"],
@@ -430,6 +584,11 @@
   },
   "components": {
     "schemas": {
+      "EstateError": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"]
+      },
       "UserRoles": {
         "type": "object",
         "properties": {
@@ -447,11 +606,6 @@
         },
         "required": ["address", "code", "name", "postalCode"]
       },
-      "EstateError": {
-        "type": "object",
-        "properties": { "message": { "type": "string" } },
-        "required": ["message"]
-      },
       "EstateResponse": {
         "type": "object",
         "properties": {
@@ -463,7 +617,11 @@
           "description": { "type": ["string", "null"] },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
-          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "owned": { "type": "boolean" }
         },
         "required": [
           "address",
@@ -471,6 +629,7 @@
           "createdAt",
           "id",
           "name",
+          "owned",
           "postalCode",
           "updatedAt"
         ]
@@ -490,6 +649,18 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
+      },
+      "EstateAccessResponse": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "active": { "type": "boolean" },
+          "owner": { "type": "boolean" },
+          "granted": { "type": "boolean" }
+        },
+        "required": ["active", "code", "estateId", "granted", "name", "owner"]
       },
       "Role": {
         "type": "object",

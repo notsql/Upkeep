@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EstateDetailsPage } from "@/components/estates/estate-details-page";
 import { EstateListPage } from "@/components/estates/estate-list-page";
 import { api } from "@/lib/api";
-import { renderWithProviders, screen, waitFor } from "../../test-utils";
+import { renderWithProviders, screen, waitFor, within } from "../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
@@ -25,6 +25,7 @@ const estate = {
   postalCode: "123456",
   createdAt: "2026-09-25T00:00:00Z",
   updatedAt: "2026-09-25T00:00:00Z",
+  owned: true,
 };
 
 describe("estate pages", () => {
@@ -88,5 +89,29 @@ describe("estate pages", () => {
       screen.queryByRole("button", { name: "Deactivate estate" })
     ).toBeNull();
     expect(screen.getByRole("status").textContent).toContain("Inactive");
+  });
+
+  it("marks a granted estate in the list as shared with you", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: [{ ...estate, owned: false }],
+      response: new Response(),
+    });
+    renderWithProviders(<EstateListPage />);
+    await screen.findByRole("link", { name: "Maple Grove" });
+    within(screen.getByRole("listitem")).getByText("Shared with you");
+  });
+
+  it("shows a granted estate read-only", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: { ...estate, owned: false },
+      response: new Response(),
+    });
+    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
+    await screen.findByRole("heading", { name: "Maple Grove" });
+    screen.getByText("Shared with you. Only the owner can change this estate.");
+    expect(screen.queryByRole("link", { name: "Edit estate" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Deactivate estate" })
+    ).toBeNull();
   });
 });

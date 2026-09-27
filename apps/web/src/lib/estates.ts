@@ -48,3 +48,21 @@ export function useEstate(estateId?: string) {
     },
   });
 }
+
+export function useEstateList(status: EstateStatus) {
+  const { userId, ready } = useEstateSession();
+  return useQuery({
+    queryKey: ["estates", userId, "list", status],
+    enabled: ready,
+    retry: false,
+    queryFn: async () => {
+      const { data, error, response } = await api.GET("/estates", {
+        params: { query: { status } },
+      });
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+  });
+}
