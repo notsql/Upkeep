@@ -9,17 +9,18 @@ datasource db {
 }
 
 model Estate {
-  id            String     @id @default(uuid()) @db.Uuid
-  ownerUserId   String     @db.VarChar(255)
-  name          String     @db.VarChar(200)
-  code          String     @unique @db.VarChar(50)
-  address       String     @db.VarChar(500)
-  postalCode    String     @db.VarChar(20)
-  description   String?    @db.VarChar(2000)
-  createdAt     DateTime   @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime   @updatedAt @db.Timestamptz(6)
-  deactivatedAt DateTime?  @db.Timestamptz(6)
+  id            String         @id @default(uuid()) @db.Uuid
+  ownerUserId   String         @db.VarChar(255)
+  name          String         @db.VarChar(200)
+  code          String         @unique @db.VarChar(50)
+  address       String         @db.VarChar(500)
+  postalCode    String         @db.VarChar(20)
+  description   String?        @db.VarChar(2000)
+  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
+  deactivatedAt DateTime?      @db.Timestamptz(6)
   locations     Location[]
+  users         EstateUser[]
   assets        Asset[]
 
   @@index([ownerUserId])
@@ -53,6 +54,19 @@ model Location {
   @@unique([id, estateId])
   @@index([estateId])
   @@index([parentId])
+}
+
+// A WorkOS user an admin has assigned to an estate, giving them view access.
+// Ownership stays on Estate.ownerUserId; see decision 0012.
+model EstateUser {
+  estateId  String   @db.Uuid
+  userId    String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([estateId, userId])
+  @@index([userId])
 }
 
 // A piece of equipment in an estate. `reference` is assigned by the server as

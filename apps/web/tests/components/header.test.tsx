@@ -21,6 +21,11 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => auth,
 }));
 
+// The switcher fetches estates; it has its own tests.
+vi.mock("@/components/estates/estate-switcher", () => ({
+  EstateSwitcher: () => null,
+}));
+
 describe("Header", () => {
   beforeEach(() => {
     auth.loading = false;

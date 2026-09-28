@@ -72,7 +72,7 @@ class AssetControllerTests {
 
     private EstateResponse estate(OffsetDateTime deactivatedAt) {
         return new EstateResponse(
-                estateId, "Sunrise Court", "SUNRISE", "1 Sunrise Road", "123456", null, now, now, deactivatedAt);
+                estateId, "Sunrise Court", "SUNRISE", "1 Sunrise Road", "123456", null, now, now, deactivatedAt, true);
     }
 
     private LocationResponse location(

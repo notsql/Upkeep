@@ -6,6 +6,7 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 
 
@@ -24,6 +25,11 @@ public class Tables {
      * The table <code>public.Estate</code>.
      */
     public static final Estate ESTATE = Estate.ESTATE;
+
+    /**
+     * The table <code>public.EstateUser</code>.
+     */
+    public static final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
 
     /**
      * The table <code>public.Location</code>.

@@ -20,6 +20,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/users/{userId}/estates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List every estate and whether the user is assigned to it */
+    get: operations["listUserEstates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/users/{userId}/estates/{estateId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Add a user to an estate */
+    put: operations["addEstateUser"];
+    post?: never;
+    /** Remove a user from an estate */
+    delete: operations["removeEstateUser"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/users/organization/{organizationId}/members": {
     parameters: {
       query?: never;
@@ -239,6 +274,9 @@ export interface components {
   requestBodies: never;
   responses: never;
   schemas: {
+    EstateError: {
+      message: string;
+    };
     UserRoles: {
       roleSlugs?: string[];
     };
@@ -248,9 +286,6 @@ export interface components {
       address: string;
       postalCode: string;
       description?: string;
-    };
-    EstateError: {
-      message: string;
     };
     EstateResponse: {
       /** Format: uuid */
@@ -266,6 +301,7 @@ export interface components {
       updatedAt: string;
       /** Format: date-time */
       deactivatedAt?: string | null;
+      owned: boolean;
     };
     DeactivateEstateRequest: {
       code: string;
@@ -388,6 +424,15 @@ export interface components {
       /** Format: date-time */
       timestamp: string;
     };
+    EstateUserResponse: {
+      /** Format: uuid */
+      estateId: string;
+      name: string;
+      code: string;
+      active: boolean;
+      owner: boolean;
+      granted: boolean;
+    };
     Role: {
       id?: string;
       slug?: string;
@@ -411,6 +456,59 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  addEstateUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User added */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   create: {
     parameters: {
       query?: never;
@@ -1087,6 +1185,113 @@ export interface operations {
       };
       /** @description Duplicate name or level position, inactive estate or location, or active children */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listUserEstates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every estate and whether the user is assigned to it */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateUserResponse"][];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  removeEstateUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User removed */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };

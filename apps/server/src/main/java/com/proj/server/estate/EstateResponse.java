@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Schema(requiredProperties = {"id", "name", "code", "address", "postalCode", "createdAt", "updatedAt"})
+@Schema(requiredProperties = {"id", "name", "code", "address", "postalCode", "createdAt", "updatedAt", "owned"})
 public record EstateResponse(
         UUID id,
         String name,
@@ -14,4 +14,5 @@ public record EstateResponse(
         @Schema(nullable = true) String description,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        @Schema(nullable = true) OffsetDateTime deactivatedAt) {}
+        @Schema(nullable = true) OffsetDateTime deactivatedAt,
+        boolean owned) {}

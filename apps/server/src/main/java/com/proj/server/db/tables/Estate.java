@@ -8,6 +8,7 @@ import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Asset.AssetPath;
+import com.proj.server.db.tables.Estateuser.EstateuserPath;
 import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
@@ -199,6 +200,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _asset = new AssetPath(this, null, Keys.ASSET__ASSET_ESTATEID_FKEY.getInverseKey());
 
         return _asset;
+    }
+
+    private transient EstateuserPath _estateuser;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.EstateUser</code>
+     * table
+     */
+    public EstateuserPath estateuser() {
+        if (_estateuser == null)
+            _estateuser = new EstateuserPath(this, null, Keys.ESTATEUSER__ESTATEUSER_ESTATEID_FKEY.getInverseKey());
+
+        return _estateuser;
     }
 
     private transient LocationPath _location;

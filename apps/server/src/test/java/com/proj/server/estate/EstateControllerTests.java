@@ -47,8 +47,12 @@ class EstateControllerTests {
         """;
 
     private EstateResponse estate(OffsetDateTime deactivatedAt) {
+        return estate(deactivatedAt, true);
+    }
+
+    private EstateResponse estate(OffsetDateTime deactivatedAt, boolean owned) {
         return new EstateResponse(
-                id, "Maple Grove", "MG-001", "1 Grove Road", "123456", "A property", now, now, deactivatedAt);
+                id, "Maple Grove", "MG-001", "1 Grove Road", "123456", "A property", now, now, deactivatedAt, owned);
     }
 
     @BeforeEach
@@ -99,11 +103,42 @@ class EstateControllerTests {
     }
 
     @Test
-    void listsOnlyOwnedEstatesWithRequestedFilter() throws Exception {
-        when(repository.listOwned("owner", EstateStatus.INACTIVE)).thenReturn(List.of(estate(now)));
+    void listsOwnedAndGrantedEstatesWithRequestedFilter() throws Exception {
+        when(repository.listAccessible("owner", EstateStatus.INACTIVE))
+                .thenReturn(List.of(estate(now), estate(now, false)));
         mvc.perform(get("/estates?status=INACTIVE").with(jwt().jwt(t -> t.subject("owner"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].deactivatedAt").isNotEmpty());
+                .andExpect(jsonPath("$[0].deactivatedAt").isNotEmpty())
+                .andExpect(jsonPath("$[0].owned").value(true))
+                .andExpect(jsonPath("$[1].owned").value(false));
+    }
+
+    @Test
+    void grantedUserReadsEstateButCannotChangeIt() throws Exception {
+        when(repository.findAccessible(id, "viewer")).thenReturn(Optional.of(estate(null, false)));
+        mvc.perform(get("/estates/" + id).with(jwt().jwt(t -> t.subject("viewer"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.owned").value(false));
+        mvc.perform(patch("/estates/" + id)
+                        .with(jwt().jwt(t -> t.subject("viewer")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/estates/" + id + "/deactivate")
+                        .with(jwt().jwt(t -> t.subject("viewer")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"MG-001\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void revokedAccessHidesEstateOnTheNextRequest() throws Exception {
+        when(repository.findAccessible(id, "viewer")).thenReturn(Optional.of(estate(null, false)));
+        mvc.perform(get("/estates/" + id).with(jwt().jwt(t -> t.subject("viewer"))))
+                .andExpect(status().isOk());
+        when(repository.findAccessible(id, "viewer")).thenReturn(Optional.empty());
+        mvc.perform(get("/estates/" + id).with(jwt().jwt(t -> t.subject("viewer"))))
+                .andExpect(status().isNotFound());
     }
 
     @Test

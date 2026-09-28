@@ -6,6 +6,88 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/api/admin/users/{userId}/estates/{estateId}": {
+      "put": {
+        "tags": ["estate-user-controller"],
+        "summary": "Add a user to an estate",
+        "operationId": "addEstateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "User added" }
+        }
+      },
+      "delete": {
+        "tags": ["estate-user-controller"],
+        "summary": "Remove a user from an estate",
+        "operationId": "removeEstateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "User removed" }
+        }
+      }
+    },
     "/api/admin/users/{membershipId}/role": {
       "put": {
         "tags": ["admin-controller"],
@@ -874,6 +956,52 @@
         }
       }
     },
+    "/api/admin/users/{userId}/estates": {
+      "get": {
+        "tags": ["estate-user-controller"],
+        "summary": "List every estate and whether the user is assigned to it",
+        "operationId": "listUserEstates",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Every estate and whether the user is assigned to it",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/EstateUserResponse" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/organization/{organizationId}/roles": {
       "get": {
         "tags": ["admin-controller"],
@@ -950,6 +1078,11 @@
   },
   "components": {
     "schemas": {
+      "EstateError": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"]
+      },
       "UserRoles": {
         "type": "object",
         "properties": {
@@ -967,11 +1100,6 @@
         },
         "required": ["address", "code", "name", "postalCode"]
       },
-      "EstateError": {
-        "type": "object",
-        "properties": { "message": { "type": "string" } },
-        "required": ["message"]
-      },
       "EstateResponse": {
         "type": "object",
         "properties": {
@@ -983,7 +1111,11 @@
           "description": { "type": ["string", "null"] },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
-          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "owned": { "type": "boolean" }
         },
         "required": [
           "address",
@@ -991,6 +1123,7 @@
           "createdAt",
           "id",
           "name",
+          "owned",
           "postalCode",
           "updatedAt"
         ]
@@ -1163,6 +1296,18 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
+      },
+      "EstateUserResponse": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "active": { "type": "boolean" },
+          "owner": { "type": "boolean" },
+          "granted": { "type": "boolean" }
+        },
+        "required": ["active", "code", "estateId", "granted", "name", "owner"]
       },
       "Role": {
         "type": "object",

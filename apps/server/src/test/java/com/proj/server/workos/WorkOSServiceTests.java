@@ -2,46 +2,47 @@ package com.proj.server.workos;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import com.workos.WorkOS;
+import com.workos.common.exceptions.TransportException;
+import com.workos.organizationmembership.CreateUserRole;
+import com.workos.organizationmembership.OrganizationMembershipService;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpMethod;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 class WorkOSServiceTests {
-    private final RestClient.Builder builder = RestClient.builder();
-    private final MockRestServiceServer server =
-            MockRestServiceServer.bindTo(builder).build();
-    private final WorkOSService service = new WorkOSService("test-key");
+    private final WorkOS client = mock(WorkOS.class);
+    private final OrganizationMembershipService memberships = mock(OrganizationMembershipService.class);
+    private final WorkOSService service = new WorkOSService("test-key", client);
+
+    @BeforeEach
+    void setUp() {
+        when(client.getOrganizationMembership()).thenReturn(memberships);
+    }
 
     @Test
     void updatesTheOrganizationMembershipRole() {
-        server.expect(requestTo("https://api.workos.com/user_management/organization_memberships/om_test"))
-                .andExpect(method(HttpMethod.PUT))
-                .andExpect(content().json("{\"role_slugs\":[\"admin\"]}"))
-                .andRespond(withSuccess());
-
         var result = service.updateRole("om_test", new UserRoles(List.of("admin")));
 
         assertEquals(List.of("admin"), result.roleSlugs());
-        server.verify();
+        verify(memberships).update("om_test", new CreateUserRole.Multiple(List.of("admin")));
     }
 
     @Test
     void reportsWhenTheRoleUpdateFails() {
-        server.expect(requestTo("https://api.workos.com/user_management/organization_memberships/om_test"))
-                .andExpect(method(HttpMethod.PUT))
-                .andRespond(withServerError());
+        when(memberships.update("om_test", new CreateUserRole.Multiple(List.of("admin"))))
+                .thenThrow(new TransportException("request failed", new RuntimeException("boom")));
 
-        assertThrows(
+        var exception = assertThrows(
                 ResponseStatusException.class, () -> service.updateRole("om_test", new UserRoles(List.of("admin"))));
-        server.verify();
+
+        assertEquals(HttpStatus.BAD_GATEWAY, exception.getStatusCode());
+        assertEquals("WorkOS request failed", exception.getReason());
     }
 }

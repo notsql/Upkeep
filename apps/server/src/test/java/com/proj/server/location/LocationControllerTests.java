@@ -61,7 +61,7 @@ class LocationControllerTests {
 
     private EstateResponse estate(OffsetDateTime deactivatedAt) {
         return new EstateResponse(
-                estateId, "Maple Grove", "MG-001", "1 Grove Road", "123456", null, now, now, deactivatedAt);
+                estateId, "Maple Grove", "MG-001", "1 Grove Road", "123456", null, now, now, deactivatedAt, true);
     }
 
     private LocationResponse location(UUID id, LocationType type, UUID parentId, Integer sortOrder) {

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes = EstateController.class)
+@RestControllerAdvice(assignableTypes = {EstateController.class, EstateUserController.class})
 public class EstateExceptionHandler {
     @ExceptionHandler(EstateException.class)
     ResponseEntity<EstateError> estate(EstateException error) {

@@ -1,6 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { Route } from "@/routes/admin.users";
+import { Route } from "@/routes/_authenticated/admin.users";
 import { renderWithProviders, screen, waitFor } from "../test-utils";
 
 const { get, put } = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn() }));
@@ -78,4 +78,19 @@ it("reports a failed save and keeps the saved role", async () => {
       name: "Role for Casey Doe",
     }).value
   ).toBe("viewer");
+});
+it("opens a member's estate access", async () => {
+  renderWithProviders(<Page />);
+  fireEvent.change(await screen.findByRole("combobox", { name: "Estate" }), {
+    target: { value: "org_1" },
+  });
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Manage estates for Casey Doe" })
+  );
+  screen.getByRole("heading", { name: "Estate access for Casey Doe" });
+  await waitFor(() =>
+    expect(get).toHaveBeenCalledWith("/api/admin/users/{userId}/estates", {
+      params: { path: { userId: "usr_1" } },
+    })
+  );
 });
