@@ -196,7 +196,7 @@ public class Asset extends TableImpl<AssetRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.ASSET_ESTATEID_IDX, Indexes.ASSET_ESTATEID_REFERENCE_KEY, Indexes.ASSET_LOCATIONID_IDX);
+        return Arrays.asList(Indexes.ASSET_ESTATEID_IDX, Indexes.ASSET_ESTATEID_REFERENCE_KEY, Indexes.ASSET_ID_ESTATEID_KEY, Indexes.ASSET_LOCATIONID_IDX);
     }
 
     @Override

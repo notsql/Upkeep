@@ -622,6 +622,139 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/devices": {
+      "get": {
+        "tags": ["device-controller"],
+        "operationId": "listDevices",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, or an unsupported metric",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The asset's devices, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/DeviceResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["device-controller"],
+        "operationId": "registerDevice",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDeviceRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, or an unsupported metric",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Device registered, awaiting its first reading",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/DeviceResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{id}": {
       "get": {
         "tags": ["estate-controller"],
@@ -1249,6 +1382,97 @@
           "reference": { "type": "string", "maxLength": 60, "minLength": 0 }
         },
         "required": ["reference"]
+      },
+      "CreateDeviceRequest": {
+        "type": "object",
+        "properties": {
+          "identifier": { "type": "string", "maxLength": 100, "minLength": 0 },
+          "model": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "locationId": { "type": "string", "format": "uuid" },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "POWER",
+                "ENERGY"
+              ]
+            },
+            "minItems": 1
+          },
+          "reportingIntervalSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 86400,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "identifier",
+          "locationId",
+          "metrics",
+          "model",
+          "reportingIntervalSeconds"
+        ]
+      },
+      "DeviceMetricResponse": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": { "type": "string" }
+        },
+        "required": ["metric", "unit"]
+      },
+      "DeviceResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string" },
+          "model": { "type": "string" },
+          "metrics": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DeviceMetricResponse" }
+          },
+          "reportingIntervalSeconds": { "type": "integer", "format": "int32" },
+          "lastSeenAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device last sent a valid reading. Null until its first."
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "assetId",
+          "createdAt",
+          "estateId",
+          "id",
+          "identifier",
+          "locationId",
+          "metrics",
+          "model",
+          "reportingIntervalSeconds",
+          "updatedAt"
+        ]
       },
       "UpdateLocationRequest": {
         "type": "object",

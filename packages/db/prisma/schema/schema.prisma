@@ -9,19 +9,20 @@ datasource db {
 }
 
 model Estate {
-  id            String         @id @default(uuid()) @db.Uuid
-  ownerUserId   String         @db.VarChar(255)
-  name          String         @db.VarChar(200)
-  code          String         @unique @db.VarChar(50)
-  address       String         @db.VarChar(500)
-  postalCode    String         @db.VarChar(20)
-  description   String?        @db.VarChar(2000)
-  createdAt     DateTime       @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
-  deactivatedAt DateTime?      @db.Timestamptz(6)
+  id            String       @id @default(uuid()) @db.Uuid
+  ownerUserId   String       @db.VarChar(255)
+  name          String       @db.VarChar(200)
+  code          String       @unique @db.VarChar(50)
+  address       String       @db.VarChar(500)
+  postalCode    String       @db.VarChar(20)
+  description   String?      @db.VarChar(2000)
+  createdAt     DateTime     @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime     @updatedAt @db.Timestamptz(6)
+  deactivatedAt DateTime?    @db.Timestamptz(6)
   locations     Location[]
   users         EstateUser[]
   assets        Asset[]
+  devices       Device[]
 
   @@index([ownerUserId])
 }
@@ -49,6 +50,7 @@ model Location {
   parent   Location?  @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
   children Location[] @relation("LocationTree")
   assets   Asset[]
+  devices  Device[]
 
   @@unique([id, type, estateId])
   @@unique([id, estateId])
@@ -90,8 +92,37 @@ model Asset {
 
   estate   Estate   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   location Location @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  devices  Device[]
 
+  @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId])
+  @@index([locationId])
+}
+
+// A sensor or meter registered against an asset (decision 0016). `identifier`
+// is the label the manager enters, unique across all estates; it is not a
+// credential. `metrics` holds names from the server's fixed catalogue. The
+// composite foreign keys carry `estateId`, so Postgres rejects a device whose
+// asset or location belongs to another estate.
+model Device {
+  id                       String    @id @default(uuid()) @db.Uuid
+  estateId                 String    @db.Uuid
+  assetId                  String    @db.Uuid
+  locationId               String    @db.Uuid
+  identifier               String    @unique @db.VarChar(100)
+  model                    String    @db.VarChar(200)
+  metrics                  String[]  @db.VarChar(30)
+  reportingIntervalSeconds Int
+  lastSeenAt               DateTime? @db.Timestamptz(6)
+  createdAt                DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt                DateTime  @updatedAt @db.Timestamptz(6)
+
+  estate   Estate   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset    Asset    @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  location Location @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId])
+  @@index([assetId])
   @@index([locationId])
 }

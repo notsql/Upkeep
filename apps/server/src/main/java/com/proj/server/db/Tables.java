@@ -5,6 +5,7 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Asset;
+import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
@@ -20,6 +21,11 @@ public class Tables {
      * The table <code>public.Asset</code>.
      */
     public static final Asset ASSET = Asset.ASSET;
+
+    /**
+     * The table <code>public.Device</code>.
+     */
+    public static final Device DEVICE = Device.DEVICE;
 
     /**
      * The table <code>public.Estate</code>.

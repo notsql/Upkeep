@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DeactivateAssetDialog } from "@/components/assets/deactivate-asset-dialog";
+import { AssetDevicesSection } from "@/components/devices/asset-devices-section";
 import { assetCategoryLabel, useAsset, useDeactivateAsset } from "@/lib/assets";
 
 const NOT_RECORDED = "Not recorded";
@@ -104,6 +105,12 @@ export function AssetDetailsPage({
               </Button>
             </div>
           )}
+          <AssetDevicesSection
+            assetId={assetId}
+            assetLocationId={asset.data.locationId}
+            canRegister={!asset.data.deactivatedAt}
+            estateId={estateId}
+          />
           {confirming ? (
             <DeactivateAssetDialog
               name={asset.data.name}
