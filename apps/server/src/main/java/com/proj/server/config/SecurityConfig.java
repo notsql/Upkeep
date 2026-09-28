@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
-                        .requestMatchers("/users", "/users/**")
+                        .requestMatchers("/users", "/users/**", "/api/admin/users", "/api/admin/users/**")
                         .hasRole("admin")
                         .anyRequest()
                         .authenticated())
