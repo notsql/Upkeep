@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Build, type-check, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # Ephemeral Postgres for @SpringBootTest. jOOQ classes are committed, so the
+    # build itself needs no database.
+    # NEVER point CI at the shared Neon DB: CI runs on unmerged branches.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: proj
+          POSTGRES_PASSWORD: proj
+          POSTGRES_DB: proj
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U proj"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://proj:proj@localhost:5432/proj
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/proj
+      SPRING_DATASOURCE_USERNAME: proj
+      SPRING_DATASOURCE_PASSWORD: proj
+      # WorkOS vars are deliberately unset: JWT validation stays off in CI.
+      NX_NO_CLOUD: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Version comes from "packageManager" in the root package.json.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      # apps/ml has a pytest target, so `pnpm test` needs uv + Python.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      # prisma.config.ts reads packages/db/.env
+      - name: Write env files
+        run: echo "DATABASE_URL=${DATABASE_URL}" > packages/db/.env
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply migrations
+        run: pnpm db:deploy
+
+      - name: check-types
+        run: pnpm check-types
+
+      - name: test
+        run: pnpm test
+
+      - name: build
+        run: pnpm build
