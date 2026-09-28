@@ -5,6 +5,7 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Asset;
+import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
@@ -27,7 +28,12 @@ public class Indexes {
 
     public static final Index ASSET_ESTATEID_IDX = Internal.createIndex(DSL.name("Asset_estateId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID }, false);
     public static final Index ASSET_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("Asset_estateId_reference_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID, Asset.ASSET.REFERENCE }, true);
+    public static final Index ASSET_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Asset_id_estateId_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ID, Asset.ASSET.ESTATEID }, true);
     public static final Index ASSET_LOCATIONID_IDX = Internal.createIndex(DSL.name("Asset_locationId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.LOCATIONID }, false);
+    public static final Index DEVICE_ASSETID_IDX = Internal.createIndex(DSL.name("Device_assetId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ASSETID }, false);
+    public static final Index DEVICE_ESTATEID_IDX = Internal.createIndex(DSL.name("Device_estateId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ESTATEID }, false);
+    public static final Index DEVICE_IDENTIFIER_KEY = Internal.createIndex(DSL.name("Device_identifier_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.IDENTIFIER }, true);
+    public static final Index DEVICE_LOCATIONID_IDX = Internal.createIndex(DSL.name("Device_locationId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.LOCATIONID }, false);
     public static final Index ESTATE_CODE_KEY = Internal.createIndex(DSL.name("Estate_code_key"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.CODE }, true);
     public static final Index ESTATE_OWNERUSERID_IDX = Internal.createIndex(DSL.name("Estate_ownerUserId_idx"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.OWNERUSERID }, false);
     public static final Index ESTATEUSER_USERID_IDX = Internal.createIndex(DSL.name("EstateUser_userId_idx"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, false);

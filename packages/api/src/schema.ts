@@ -136,6 +136,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/devices": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listDevices"];
+    put?: never;
+    post: operations["registerDevice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{id}": {
     parameters: {
       query?: never;
@@ -390,6 +406,59 @@ export interface components {
     };
     DeactivateAssetRequest: {
       reference: string;
+    };
+    CreateDeviceRequest: {
+      identifier: string;
+      model: string;
+      /** Format: uuid */
+      locationId: string;
+      metrics: (
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "POWER"
+        | "ENERGY"
+      )[];
+      /** Format: int32 */
+      reportingIntervalSeconds: number;
+    };
+    DeviceMetricResponse: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+    };
+    DeviceResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      assetId: string;
+      /** Format: uuid */
+      locationId: string;
+      identifier: string;
+      model: string;
+      metrics: components["schemas"]["DeviceMetricResponse"][];
+      /** Format: int32 */
+      reportingIntervalSeconds: number;
+      /**
+       * Format: date-time
+       * @description When the device last sent a valid reading. Null until its first.
+       */
+      lastSeenAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
     };
     UpdateLocationRequest: {
       /** Format: uuid */
@@ -1136,6 +1205,65 @@ export interface operations {
       };
     };
   };
+  listDevices: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's devices, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DeviceResponse"][];
+        };
+      };
+      /** @description Missing or invalid details, or an unsupported metric */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate identifier, or an inactive estate, asset or location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listLocations: {
     parameters: {
       query?: never;
@@ -1239,6 +1367,69 @@ export interface operations {
       };
       /** @description Estate not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  registerDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateDeviceRequest"];
+      };
+    };
+    responses: {
+      /** @description Device registered, awaiting its first reading */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DeviceResponse"];
+        };
+      };
+      /** @description Missing or invalid details, or an unsupported metric */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate identifier, or an inactive estate, asset or location */
+      409: {
         headers: {
           [name: string]: unknown;
         };
