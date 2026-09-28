@@ -5,11 +5,13 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Asset;
+import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.records.AssetRecord;
+import com.proj.server.db.tables.records.AssetassessmentRecord;
 import com.proj.server.db.tables.records.DeviceRecord;
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.db.tables.records.EstateuserRecord;
@@ -35,6 +37,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<AssetRecord> ASSET_PKEY = Internal.createUniqueKey(Asset.ASSET, DSL.name("Asset_pkey"), new TableField[] { Asset.ASSET.ID }, true);
+    public static final UniqueKey<AssetassessmentRecord> ASSETASSESSMENT_PKEY = Internal.createUniqueKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_pkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ID }, true);
     public static final UniqueKey<DeviceRecord> DEVICE_PKEY = Internal.createUniqueKey(Device.DEVICE, DSL.name("Device_pkey"), new TableField[] { Device.DEVICE.ID }, true);
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
     public static final UniqueKey<EstateuserRecord> ESTATEUSER_PKEY = Internal.createUniqueKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_pkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID, Estateuser.ESTATEUSER.USERID }, true);
@@ -45,6 +48,7 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final ForeignKey<AssetRecord, EstateRecord> ASSET__ASSET_ESTATEID_FKEY = Internal.createForeignKey(Asset.ASSET, DSL.name("Asset_estateId_fkey"), new TableField[] { Asset.ASSET.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<AssetassessmentRecord, EstateRecord> ASSETASSESSMENT__ASSETASSESSMENT_ESTATEID_FKEY = Internal.createForeignKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_estateId_fkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<DeviceRecord, EstateRecord> DEVICE__DEVICE_ESTATEID_FKEY = Internal.createForeignKey(Device.DEVICE, DSL.name("Device_estateId_fkey"), new TableField[] { Device.DEVICE.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateuserRecord, EstateRecord> ESTATEUSER__ESTATEUSER_ESTATEID_FKEY = Internal.createForeignKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_estateId_fkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<LocationRecord, EstateRecord> LOCATION__LOCATION_ESTATEID_FKEY = Internal.createForeignKey(Location.LOCATION, DSL.name("Location_estateId_fkey"), new TableField[] { Location.LOCATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);

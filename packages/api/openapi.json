@@ -755,6 +755,145 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/assessments": {
+      "get": {
+        "tags": ["asset-assessment-controller"],
+        "operationId": "listAssetAssessments",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, or a date in the future",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or deactivated asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Every assessment, current condition first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetAssessmentResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["asset-assessment-controller"],
+        "operationId": "recordAssetAssessment",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetAssessmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, or a date in the future",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or deactivated asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Assessment recorded",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetAssessmentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{id}": {
       "get": {
         "tags": ["estate-controller"],
@@ -1472,6 +1611,46 @@
           "model",
           "reportingIntervalSeconds",
           "updatedAt"
+        ]
+      },
+      "CreateAssetAssessmentRequest": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "string",
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          },
+          "assessedOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string", "maxLength": 2000, "minLength": 0 }
+        },
+        "required": ["assessedOn", "condition", "notes"]
+      },
+      "AssetAssessmentResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "condition": {
+            "type": "string",
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          },
+          "assessedOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string" },
+          "recordedByUserId": { "type": "string" },
+          "recordedByName": {
+            "type": ["string", "null"],
+            "description": "The recorder's name when they recorded it. Null if WorkOS was unavailable."
+          },
+          "recordedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "assessedOn",
+          "assetId",
+          "condition",
+          "id",
+          "notes",
+          "recordedAt",
+          "recordedByUserId"
         ]
       },
       "UpdateLocationRequest": {
