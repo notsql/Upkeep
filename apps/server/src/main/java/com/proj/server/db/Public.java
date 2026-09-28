@@ -5,6 +5,7 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Asset;
+import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
@@ -36,6 +37,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.Asset</code>.
      */
     public final Asset ASSET = Asset.ASSET;
+
+    /**
+     * The table <code>public.AssetAssessment</code>.
+     */
+    public final Assetassessment ASSETASSESSMENT = Assetassessment.ASSETASSESSMENT;
 
     /**
      * The table <code>public.Device</code>.
@@ -74,6 +80,7 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Asset.ASSET,
+            Assetassessment.ASSETASSESSMENT,
             Device.DEVICE,
             Estate.ESTATE,
             Estateuser.ESTATEUSER,

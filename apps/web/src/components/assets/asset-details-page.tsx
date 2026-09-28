@@ -2,6 +2,7 @@ import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { AssetConditionSection } from "@/components/assets/asset-condition-section";
 import { DeactivateAssetDialog } from "@/components/assets/deactivate-asset-dialog";
 import { AssetDevicesSection } from "@/components/devices/asset-devices-section";
 import { assetCategoryLabel, useAsset, useDeactivateAsset } from "@/lib/assets";
@@ -105,6 +106,11 @@ export function AssetDetailsPage({
               </Button>
             </div>
           )}
+          <AssetConditionSection
+            assetId={assetId}
+            canRecord={!asset.data.deactivatedAt}
+            estateId={estateId}
+          />
           <AssetDevicesSection
             assetId={assetId}
             assetLocationId={asset.data.locationId}

@@ -136,6 +136,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/assessments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetAssessments"];
+    put?: never;
+    post: operations["recordAssetAssessment"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/devices": {
     parameters: {
       query?: never;
@@ -459,6 +475,29 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    CreateAssetAssessmentRequest: {
+      /** @enum {string} */
+      condition: "GOOD" | "NEEDS_ATTENTION" | "FAULTY";
+      /** Format: date */
+      assessedOn: string;
+      notes: string;
+    };
+    AssetAssessmentResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      condition: "GOOD" | "NEEDS_ATTENTION" | "FAULTY";
+      /** Format: date */
+      assessedOn: string;
+      notes: string;
+      recordedByUserId: string;
+      /** @description The recorder's name when they recorded it. Null if WorkOS was unavailable. */
+      recordedByName?: string | null;
+      /** Format: date-time */
+      recordedAt: string;
     };
     UpdateLocationRequest: {
       /** Format: uuid */
@@ -1205,6 +1244,65 @@ export interface operations {
       };
     };
   };
+  listAssetAssessments: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every assessment, current condition first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetAssessmentResponse"][];
+        };
+      };
+      /** @description Missing or invalid details, or a date in the future */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or deactivated asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listDevices: {
     parameters: {
       query?: never;
@@ -1367,6 +1465,69 @@ export interface operations {
       };
       /** @description Estate not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  recordAssetAssessment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAssetAssessmentRequest"];
+      };
+    };
+    responses: {
+      /** @description Assessment recorded */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetAssessmentResponse"];
+        };
+      };
+      /** @description Missing or invalid details, or a date in the future */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or deactivated asset */
+      409: {
         headers: {
           [name: string]: unknown;
         };

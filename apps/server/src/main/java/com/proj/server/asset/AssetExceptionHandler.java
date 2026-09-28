@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes = AssetController.class)
+@RestControllerAdvice(assignableTypes = {AssetController.class, AssetAssessmentController.class})
 public class AssetExceptionHandler {
     @ExceptionHandler(AssetException.class)
     ResponseEntity<EstateError> asset(AssetException error) {

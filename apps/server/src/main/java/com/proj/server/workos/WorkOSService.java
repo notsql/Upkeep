@@ -7,6 +7,7 @@ import com.workos.models.SlimRole;
 import com.workos.organizationmembership.CreateUserRole;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -87,6 +88,19 @@ public class WorkOSService {
                 .update(membershipId, new CreateUserRole.Multiple(request.roleSlugs())));
 
         return request;
+    }
+
+    /** A user's name for display, or empty if WorkOS is unavailable. Never throws. */
+    public Optional<String> findDisplayName(String userId) {
+        if (apiKey.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            var user = client.getUserManagement().get(userId);
+            return Optional.ofNullable(formatName(user.getFirstName(), user.getLastName(), user.getEmail()));
+        } catch (WorkOSException exception) {
+            return Optional.empty();
+        }
     }
 
     private <T> T execute(Supplier<T> operation) {
