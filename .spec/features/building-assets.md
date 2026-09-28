@@ -160,9 +160,9 @@ Test-first: every test is seen failing before the phase that makes it pass
 - [ ] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
 
 ### 4. Web tests (red)
-- [ ] `apps/web/tests/lib/assets.test.ts`: the query keys include the user and
+- [x] `apps/web/tests/lib/assets.test.ts`: the query keys include the user and
   estate IDs, and failed requests throw.
-- [ ] `apps/web/tests/components/assets/asset-form.test.tsx`:
+- [x] `apps/web/tests/components/assets/asset-form.test.tsx`:
   - the labelled fields render
   - the location `<select>` lists every active location by its full path
   - the required errors show
@@ -170,26 +170,26 @@ Test-first: every test is seen failing before the phase that makes it pass
   - the data is kept on a server error
   - there is no double submit
   - edit mode is pre-filled with a read-only reference
-- [ ] `apps/web/tests/components/assets/deactivate-asset-dialog.test.tsx`:
+- [x] `apps/web/tests/components/assets/deactivate-asset-dialog.test.tsx`:
   - confirm stays disabled until the exact reference is typed
   - cancel sends no request
   - a server error keeps the dialog open
-- [ ] Run `pnpm nx test web` and confirm the tests fail.
+- [x] Run `pnpm nx test web` and confirm the tests fail.
 
 ### 5. Web (green)
-- [ ] `apps/web/src/lib/assets.ts`, following `lib/estates.ts` and
+- [x] `apps/web/src/lib/assets.ts`, following `lib/estates.ts` and
   `lib/locations.ts`. Keys are `["estates", userId, "assets", estateId, ...]`,
   built from `useEstateSession`.
-- [ ] The location `<select>` options come from `useLocations(estateId)` and
+- [x] The location `<select>` options come from `useLocations(estateId)` and
   `flattenLocations`, with labels from `node.path.join(" › ")`.
-- [ ] `components/assets/asset-form.tsx` and `components/assets/deactivate-asset-dialog.tsx`.
+- [x] `components/assets/asset-form.tsx` and `components/assets/deactivate-asset-dialog.tsx`.
   The dialog is modelled on `deactivate-estate-dialog.tsx`.
-- [ ] Routes under `routes/_authenticated/`:
-  - `estates.$estateId.assets.new.tsx`
-  - `estates.$estateId.assets.$assetId.tsx`, a minimal detail page with Edit
-    and Deactivate
-  - `estates.$estateId.assets.$assetId.edit.tsx`
-- [ ] A "Register asset" link on `estate-details-page.tsx`.
+- [x] Routes under `routes/_authenticated/`:
+  - `estates/$estateId/assets/new.tsx`
+  - `estates/$estateId/assets/$assetId/index.tsx`, a minimal detail page with
+    Edit and Deactivate
+  - `estates/$estateId/assets/$assetId/edit.tsx`
+- [x] A "Register asset" link on `estate-details-page.tsx`.
 
 ### 6. Finish
 - [ ] `pnpm fix`, `pnpm check-types`, `pnpm test`.

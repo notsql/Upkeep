@@ -123,7 +123,7 @@ Add these cases to `AssetControllerTests`:
 - [ ] Confirm the tests fail.
 
 ### 5. Web (green)
-- [ ] `routes/_authenticated/estates.$estateId.assets.index.tsx` and
+- [ ] `routes/_authenticated/estates/$estateId/assets/index.tsx` and
   `components/assets/asset-list.tsx`.
 - [ ] `components/assets/asset-details.tsx`, used by the existing detail route.
 - [ ] Add the condition field to `asset-form.tsx`. Link "Assets" from
