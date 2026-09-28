@@ -1,6 +1,6 @@
 # Location hierarchy
 
-**Status:** built; server tests and generated code pending a run on a Neon branch
+**Status:** built
 **Owner:** Genghong
 
 ## Problem
@@ -79,5 +79,6 @@ composite parent foreign key and the hand-written `Location_hierarchy_check`.
 - Web: `tests/lib/locations.test.ts` and
   `tests/components/locations/locations-section.test.tsx` were seen failing
   before the implementation existed.
-- Pending on a Neon feature branch: `prisma migrate dev` reporting no drift,
-  `db:generate`, `LocationControllerTests`, `api:generate`, `check-types`.
+- On a Neon feature branch: `prisma migrate dev` reported no drift, and
+  `db:generate`, `LocationControllerTests`, `api:generate` and `check-types`
+  passed.

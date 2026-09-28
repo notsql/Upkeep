@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
@@ -29,6 +30,11 @@ public class Public extends SchemaImpl {
      * The reference instance of <code>public</code>
      */
     public static final Public PUBLIC = new Public();
+
+    /**
+     * The table <code>public.Asset</code>.
+     */
+    public final Asset ASSET = Asset.ASSET;
 
     /**
      * The table <code>public.Estate</code>.
@@ -61,6 +67,7 @@ public class Public extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
+            Asset.ASSET,
             Estate.ESTATE,
             Estateuser.ESTATEUSER,
             Location.LOCATION

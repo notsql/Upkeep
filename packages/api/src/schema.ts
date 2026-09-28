@@ -120,6 +120,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createAsset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAsset"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["updateAsset"];
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{id}/deactivate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["deactivateAsset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/locations": {
     parameters: {
       query?: never;
@@ -287,12 +335,88 @@ export interface components {
       /** Format: date-time */
       deactivatedAt?: string | null;
     };
+    CreateAssetRequest: {
+      name: string;
+      /** @enum {string} */
+      category:
+        | "LIFT"
+        | "PUMP"
+        | "GENERATOR"
+        | "LIGHTING"
+        | "FIRE_SAFETY"
+        | "HVAC"
+        | "ELECTRICAL"
+        | "OTHER";
+      /** Format: uuid */
+      locationId: string;
+      /** Format: date */
+      installedOn?: string;
+      manufacturer?: string;
+      model?: string;
+      serialNumber?: string;
+    };
+    AssetResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      reference: string;
+      name: string;
+      /** @enum {string} */
+      category:
+        | "LIFT"
+        | "PUMP"
+        | "GENERATOR"
+        | "LIGHTING"
+        | "FIRE_SAFETY"
+        | "HVAC"
+        | "ELECTRICAL"
+        | "OTHER";
+      /** Format: uuid */
+      locationId: string;
+      /** @description The location's names from its block down, e.g. "Blk 101 › Level 1 › Lift lobby" */
+      locationPath: string;
+      /** Format: date */
+      installedOn?: string | null;
+      manufacturer?: string | null;
+      model?: string | null;
+      serialNumber?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deactivatedAt?: string | null;
+    };
+    DeactivateAssetRequest: {
+      reference: string;
+    };
     UpdateLocationRequest: {
       /** Format: uuid */
       parentId?: string;
       name: string;
       /** Format: int32 */
       sortOrder?: number;
+    };
+    UpdateAssetRequest: {
+      name: string;
+      /** @enum {string} */
+      category:
+        | "LIFT"
+        | "PUMP"
+        | "GENERATOR"
+        | "LIGHTING"
+        | "FIRE_SAFETY"
+        | "HVAC"
+        | "ELECTRICAL"
+        | "OTHER";
+      /** Format: uuid */
+      locationId: string;
+      /** Format: date */
+      installedOn?: string;
+      manufacturer?: string;
+      model?: string;
+      serialNumber?: string;
     };
     HealthResponse: {
       ok: boolean;
@@ -445,6 +569,68 @@ export interface operations {
       };
     };
   };
+  createAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Asset registered with a generated reference */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   createLocation: {
     parameters: {
       query?: never;
@@ -569,6 +755,69 @@ export interface operations {
       };
     };
   };
+  deactivateAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeactivateAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Asset deactivated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   deactivateLocation: {
     parameters: {
       query?: never;
@@ -676,6 +925,65 @@ export interface operations {
         };
       };
       /** @description Duplicate estate code */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Asset details, including deactivated assets */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
       409: {
         headers: {
           [name: string]: unknown;
@@ -1045,6 +1353,69 @@ export interface operations {
         };
       };
       /** @description Duplicate estate code */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  updateAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Asset updated or moved */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
       409: {
         headers: {
           [name: string]: unknown;

@@ -25,15 +25,21 @@ code, it belongs here.
 
 ## Status
 
-The domain is not defined yet.
-
 - `architecture.md` and `decisions/` describe the **platform as built** and are
   current.
-- `features/` is **empty**, waiting on the project's actual subject matter.
+- `features/`:
 
-To start: write `features/` docs from `features/TEMPLATE.md`, then model the
-domain in `packages/db/prisma/schema/schema.prisma` (Prisma owns the schema -
-see `decisions/0001`).
+| Spec | Jira | Status |
+| --- | --- | --- |
+| `estate-management.md` | - | built |
+| `location-hierarchy.md` | - | built |
+| `building-assets.md` | ID-46 | draft |
+| `asset-location-picker.md` | ID-54 | draft |
+| `asset-search.md` | ID-47 | draft |
+
+Draft specs carry an **Implementation phases** checklist. Build them in the
+order listed, test-first, and tick the boxes as you go. New specs start from
+`features/TEMPLATE.md`.
 
 ## Why this folder starts with a dot
 

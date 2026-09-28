@@ -486,6 +486,142 @@
         }
       }
     },
+    "/estates/{estateId}/assets": {
+      "post": {
+        "tags": ["asset-controller"],
+        "operationId": "createAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateAssetRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Asset registered with a generated reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{id}/deactivate": {
+      "post": {
+        "tags": ["asset-controller"],
+        "operationId": "deactivateAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateAssetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset deactivated",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{id}": {
       "get": {
         "tags": ["estate-controller"],
@@ -668,6 +804,136 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/LocationResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{id}": {
+      "get": {
+        "tags": ["asset-controller"],
+        "operationId": "getAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset details, including deactivated assets",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["asset-controller"],
+        "operationId": "updateAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateAssetRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset updated or moved",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -903,6 +1169,87 @@
         },
         "required": ["createdAt", "id", "name", "type", "updatedAt"]
       },
+      "CreateAssetRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "category": {
+            "type": "string",
+            "enum": [
+              "LIFT",
+              "PUMP",
+              "GENERATOR",
+              "LIGHTING",
+              "FIRE_SAFETY",
+              "HVAC",
+              "ELECTRICAL",
+              "OTHER"
+            ]
+          },
+          "locationId": { "type": "string", "format": "uuid" },
+          "installedOn": { "type": "string", "format": "date" },
+          "manufacturer": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "model": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "serialNumber": { "type": "string", "maxLength": 200, "minLength": 0 }
+        },
+        "required": ["category", "locationId", "name"]
+      },
+      "AssetResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "name": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": [
+              "LIFT",
+              "PUMP",
+              "GENERATOR",
+              "LIGHTING",
+              "FIRE_SAFETY",
+              "HVAC",
+              "ELECTRICAL",
+              "OTHER"
+            ]
+          },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationPath": {
+            "type": "string",
+            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
+          },
+          "installedOn": { "type": ["string", "null"], "format": "date" },
+          "manufacturer": { "type": ["string", "null"] },
+          "model": { "type": ["string", "null"] },
+          "serialNumber": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": [
+          "category",
+          "createdAt",
+          "estateId",
+          "id",
+          "locationId",
+          "locationPath",
+          "name",
+          "reference",
+          "updatedAt"
+        ]
+      },
+      "DeactivateAssetRequest": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 }
+        },
+        "required": ["reference"]
+      },
       "UpdateLocationRequest": {
         "type": "object",
         "properties": {
@@ -911,6 +1258,35 @@
           "sortOrder": { "type": "integer", "format": "int32" }
         },
         "required": ["name"]
+      },
+      "UpdateAssetRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "category": {
+            "type": "string",
+            "enum": [
+              "LIFT",
+              "PUMP",
+              "GENERATOR",
+              "LIGHTING",
+              "FIRE_SAFETY",
+              "HVAC",
+              "ELECTRICAL",
+              "OTHER"
+            ]
+          },
+          "locationId": { "type": "string", "format": "uuid" },
+          "installedOn": { "type": "string", "format": "date" },
+          "manufacturer": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "model": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "serialNumber": { "type": "string", "maxLength": 200, "minLength": 0 }
+        },
+        "required": ["category", "locationId", "name"]
       },
       "HealthResponse": {
         "type": "object",

@@ -21,6 +21,7 @@ model Estate {
   deactivatedAt DateTime?      @db.Timestamptz(6)
   locations     Location[]
   users         EstateUser[]
+  assets        Asset[]
 
   @@index([ownerUserId])
 }
@@ -47,8 +48,10 @@ model Location {
   estate   Estate     @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   parent   Location?  @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
   children Location[] @relation("LocationTree")
+  assets   Asset[]
 
   @@unique([id, type, estateId])
+  @@unique([id, estateId])
   @@index([estateId])
   @@index([parentId])
 }
@@ -64,4 +67,31 @@ model EstateUser {
 
   @@id([estateId, userId])
   @@index([userId])
+}
+
+// A piece of equipment in an estate. `reference` is assigned by the server as
+// `<ESTATE CODE>-A<nnnn>` (decision 0015). The composite foreign key to Location
+// carries `estateId`, so Postgres rejects a location from another estate. Rows
+// are never deleted: deactivation sets `deactivatedAt`.
+model Asset {
+  id            String    @id @default(uuid()) @db.Uuid
+  estateId      String    @db.Uuid
+  locationId    String    @db.Uuid
+  reference     String    @db.VarChar(60)
+  name          String    @db.VarChar(200)
+  category      String    @db.VarChar(30)
+  installedOn   DateTime? @db.Date
+  manufacturer  String?   @db.VarChar(200)
+  model         String?   @db.VarChar(200)
+  serialNumber  String?   @db.VarChar(200)
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+  deactivatedAt DateTime? @db.Timestamptz(6)
+
+  estate   Estate   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location Location @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, reference])
+  @@index([estateId])
+  @@index([locationId])
 }

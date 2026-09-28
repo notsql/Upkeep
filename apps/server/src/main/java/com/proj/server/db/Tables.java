@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
@@ -14,6 +15,11 @@ import com.proj.server.db.tables.Location;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
+
+    /**
+     * The table <code>public.Asset</code>.
+     */
+    public static final Asset ASSET = Asset.ASSET;
 
     /**
      * The table <code>public.Estate</code>.
