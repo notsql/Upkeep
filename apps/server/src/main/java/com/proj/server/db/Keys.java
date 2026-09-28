@@ -4,8 +4,10 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.db.tables.records.LocationRecord;
 
@@ -28,6 +30,7 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final UniqueKey<AssetRecord> ASSET_PKEY = Internal.createUniqueKey(Asset.ASSET, DSL.name("Asset_pkey"), new TableField[] { Asset.ASSET.ID }, true);
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
     public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
 
@@ -35,5 +38,6 @@ public class Keys {
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final ForeignKey<AssetRecord, EstateRecord> ASSET__ASSET_ESTATEID_FKEY = Internal.createForeignKey(Asset.ASSET, DSL.name("Asset_estateId_fkey"), new TableField[] { Asset.ASSET.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<LocationRecord, EstateRecord> LOCATION__LOCATION_ESTATEID_FKEY = Internal.createForeignKey(Location.LOCATION, DSL.name("Location_estateId_fkey"), new TableField[] { Location.LOCATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
 }

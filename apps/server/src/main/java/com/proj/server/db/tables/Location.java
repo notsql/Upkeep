@@ -181,7 +181,7 @@ public class Location extends TableImpl<LocationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.LOCATION_ESTATEID_IDX, Indexes.LOCATION_ID_TYPE_ESTATEID_KEY, Indexes.LOCATION_PARENTID_IDX);
+        return Arrays.asList(Indexes.LOCATION_ESTATEID_IDX, Indexes.LOCATION_ID_ESTATEID_KEY, Indexes.LOCATION_ID_TYPE_ESTATEID_KEY, Indexes.LOCATION_PARENTID_IDX);
     }
 
     @Override

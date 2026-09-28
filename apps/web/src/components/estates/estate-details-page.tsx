@@ -101,6 +101,15 @@ export function EstateDetailsPage({
               Edit estate
             </Link>
             {estate.data.deactivatedAt ? null : (
+              <Link
+                className="border px-4 py-2 text-sm"
+                params={{ estateId }}
+                to="/estates/$estateId/assets/new"
+              >
+                Register asset
+              </Link>
+            )}
+            {estate.data.deactivatedAt ? null : (
               <Button onClick={openConfirmation} variant="destructive">
                 Deactivate estate
               </Button>
