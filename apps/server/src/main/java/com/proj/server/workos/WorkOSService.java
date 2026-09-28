@@ -18,8 +18,7 @@ public class WorkOSService {
     private final WorkOS client;
     private final String apiKey;
 
-    public WorkOSService(
-            @Value("${WORKOS_API_KEY}") String apiKey) {
+    public WorkOSService(@Value("${WORKOS_API_KEY}") String apiKey) {
         this.apiKey = apiKey;
         this.client = new WorkOS(apiKey);
     }
@@ -28,10 +27,8 @@ public class WorkOSService {
         return execute(() -> {
             var organizations = new ArrayList<Organization>();
 
-            for (var organization :
-                    client.getOrganizations().list().autoPagingIterable()) {
-                organizations.add(new Organization(
-                        organization.getId(), organization.getName()));
+            for (var organization : client.getOrganizations().list().autoPagingIterable()) {
+                organizations.add(new Organization(organization.getId(), organization.getName()));
             }
 
             return organizations;
@@ -39,41 +36,29 @@ public class WorkOSService {
     }
 
     public List<Role> getOrganizationRoles(String organizationId) {
-        return execute(() -> client.getAuthorization()
-                .listOrganizationRoles(organizationId)
-                .getData()
-                .stream()
+        return execute(() -> client.getAuthorization().listOrganizationRoles(organizationId).getData().stream()
                 .map(role -> new Role(
-                        role.getId(),
-                        role.getSlug(),
-                        role.getName(),
-                        role.getDescription(),
-                        role.getPermissions()))
+                        role.getId(), role.getSlug(), role.getName(), role.getDescription(), role.getPermissions()))
                 .toList());
     }
 
     public List<AdminUserResponse> getMembers(String organizationId) {
         return execute(() -> {
             var members = new ArrayList<AdminUserResponse>();
-            var memberships = client.getOrganizationMembership()
-                    .list(null, null, 100, null, organizationId);
+            var memberships = client.getOrganizationMembership().list(null, null, 100, null, organizationId);
 
             for (var membership : memberships.autoPagingIterable()) {
                 var user = membership.getUser();
 
                 if (user == null) {
-                    throw new ResponseStatusException(
-                            HttpStatus.BAD_GATEWAY, "Missing WorkOS user");
+                    throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Missing WorkOS user");
                 }
 
-                String name = formatName(
-                        user.getFirstName(), user.getLastName(), user.getEmail());
+                String name = formatName(user.getFirstName(), user.getLastName(), user.getEmail());
 
                 List<SlimRole> roles = membership.getRoles();
                 if (roles == null) {
-                    roles = membership.getRole() == null
-                            ? List.of()
-                            : List.of(membership.getRole());
+                    roles = membership.getRole() == null ? List.of() : List.of(membership.getRole());
                 }
 
                 members.add(new AdminUserResponse(
@@ -93,9 +78,7 @@ public class WorkOSService {
         validateRoles(request);
 
         execute(() -> client.getOrganizationMembership()
-                .update(
-                        membershipId,
-                        new CreateUserRole.Multiple(request.roleSlugs())));
+                .update(membershipId, new CreateUserRole.Multiple(request.roleSlugs())));
 
         return request;
     }
@@ -106,19 +89,12 @@ public class WorkOSService {
         try {
             return operation.get();
         } catch (WorkOSException exception) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_GATEWAY,
-                    "WorkOS request failed",
-                    exception);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "WorkOS request failed", exception);
         }
     }
 
-    private static String formatName(
-            String firstName, String lastName, String fallbackEmail) {
-        String name = ((firstName == null ? "" : firstName)
-                        + " "
-                        + (lastName == null ? "" : lastName))
-                .trim();
+    private static String formatName(String firstName, String lastName, String fallbackEmail) {
+        String name = ((firstName == null ? "" : firstName) + " " + (lastName == null ? "" : lastName)).trim();
 
         return name.isEmpty() ? fallbackEmail : name;
     }
@@ -126,18 +102,14 @@ public class WorkOSService {
     private static void validateRoles(UserRoles request) {
         if (request.roleSlugs() == null
                 || request.roleSlugs().isEmpty()
-                || request.roleSlugs().stream()
-                        .anyMatch(role -> role == null || role.isBlank())) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "At least one role is required");
+                || request.roleSlugs().stream().anyMatch(role -> role == null || role.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one role is required");
         }
     }
 
     private void requireConfigured() {
         if (apiKey.isBlank()) {
-            throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE,
-                    "WorkOS is not configured");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "WorkOS is not configured");
         }
     }
 }
