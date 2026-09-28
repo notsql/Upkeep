@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { EstateDetailsPage } from "@/components/estates/estate-details-page";
+import { LocationsSection } from "@/components/locations/locations-section";
 
 export const Route = createFileRoute("/_authenticated/estates/$estateId/")({
   component: EstateDetailsRoute,
@@ -8,5 +9,9 @@ export const Route = createFileRoute("/_authenticated/estates/$estateId/")({
 
 function EstateDetailsRoute() {
   const { estateId } = Route.useParams();
-  return <EstateDetailsPage estateId={estateId} />;
+  return (
+    <EstateDetailsPage estateId={estateId}>
+      <LocationsSection estateId={estateId} />
+    </EstateDetailsPage>
+  );
 }

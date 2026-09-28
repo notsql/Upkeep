@@ -5,6 +5,7 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Location;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +35,11 @@ public class Public extends SchemaImpl {
     public final Estate ESTATE = Estate.ESTATE;
 
     /**
+     * The table <code>public.Location</code>.
+     */
+    public final Location LOCATION = Location.LOCATION;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -49,7 +55,8 @@ public class Public extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
-            Estate.ESTATE
+            Estate.ESTATE,
+            Location.LOCATION
         );
     }
 }
