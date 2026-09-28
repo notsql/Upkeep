@@ -120,6 +120,55 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/locations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List an estate's active locations */
+    get: operations["listLocations"];
+    put?: never;
+    post: operations["createLocation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/locations/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["updateLocation"];
+    trace?: never;
+  };
+  "/estates/{estateId}/locations/{id}/deactivate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["deactivateLocation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{id}": {
     parameters: {
       query?: never;
@@ -208,6 +257,42 @@ export interface components {
     };
     DeactivateEstateRequest: {
       code: string;
+    };
+    CreateLocationRequest: {
+      /** @enum {string} */
+      type: "BLOCK" | "LEVEL" | "COMMON_AREA";
+      /** Format: uuid */
+      parentId?: string;
+      name: string;
+      /** Format: int32 */
+      sortOrder?: number;
+    };
+    LocationResponse: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      type: "BLOCK" | "LEVEL" | "COMMON_AREA";
+      /** Format: uuid */
+      parentId?: string | null;
+      name: string;
+      /**
+       * Format: int32
+       * @description A level's position in its block, lowest first
+       */
+      sortOrder?: number | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      deactivatedAt?: string | null;
+    };
+    UpdateLocationRequest: {
+      /** Format: uuid */
+      parentId?: string;
+      name: string;
+      /** Format: int32 */
+      sortOrder?: number;
     };
     HealthResponse: {
       ok: boolean;
@@ -307,6 +392,68 @@ export interface operations {
       };
     };
   };
+  createLocation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateLocationRequest"];
+      };
+    };
+    responses: {
+      /** @description Location created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["LocationResponse"];
+        };
+      };
+      /** @description Invalid request or hierarchy shape */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate name or level position, inactive estate or location, or active children */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   deactivate: {
     parameters: {
       query?: never;
@@ -359,6 +506,65 @@ export interface operations {
         };
       };
       /** @description Duplicate estate code */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  deactivateLocation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Location deactivated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["LocationResponse"];
+        };
+      };
+      /** @description Invalid request or hierarchy shape */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate name or level position, inactive estate or location, or active children */
       409: {
         headers: {
           [name: string]: unknown;
@@ -622,6 +828,64 @@ export interface operations {
       };
     };
   };
+  listLocations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The estate's active locations, siblings in display order */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["LocationResponse"][];
+        };
+      };
+      /** @description Invalid request or hierarchy shape */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate name or level position, inactive estate or location, or active children */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listUserEstateAccess: {
     parameters: {
       query?: never;
@@ -785,6 +1049,69 @@ export interface operations {
         };
       };
       /** @description Duplicate estate code */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  updateLocation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateLocationRequest"];
+      };
+    };
+    responses: {
+      /** @description Location renamed, reordered or moved */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["LocationResponse"];
+        };
+      };
+      /** @description Invalid request or hierarchy shape */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate name or level position, inactive estate or location, or active children */
       409: {
         headers: {
           [name: string]: unknown;

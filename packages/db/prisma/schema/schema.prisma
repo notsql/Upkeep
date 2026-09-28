@@ -19,9 +19,38 @@ model Estate {
   createdAt     DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
   deactivatedAt DateTime?      @db.Timestamptz(6)
+  locations     Location[]
   access        EstateAccess[]
 
   @@index([ownerUserId])
+}
+
+// A block, level or common area inside an estate. Levels sit under blocks;
+// common areas sit under a block or a level. `parentType` repeats the parent's
+// type, and the composite foreign key also carries `estateId`, so Postgres
+// rejects a parent of the wrong type or from another estate. The type rules
+// themselves live in the hand-written Location_hierarchy_check constraint in
+// the migration (Prisma cannot express CHECK constraints). Rows are never
+// deleted: deactivation keeps the ID stable for records that reference it.
+model Location {
+  id            String    @id @default(uuid()) @db.Uuid
+  estateId      String    @db.Uuid
+  type          String    @db.VarChar(20)
+  parentId      String?   @db.Uuid
+  parentType    String?   @db.VarChar(20)
+  name          String    @db.VarChar(200)
+  sortOrder     Int?
+  createdAt     DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
+  deactivatedAt DateTime? @db.Timestamptz(6)
+
+  estate   Estate     @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  parent   Location?  @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
+  children Location[] @relation("LocationTree")
+
+  @@unique([id, type, estateId])
+  @@index([estateId])
+  @@index([parentId])
 }
 
 // An admin's grant of view access to an estate for a WorkOS user. Ownership
