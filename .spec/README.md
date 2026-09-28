@@ -32,6 +32,7 @@ code, it belongs here.
 | Spec | Jira | Status |
 | --- | --- | --- |
 | `estate-management.md` | - | built |
+| `location-hierarchy.md` | - | built |
 | `building-assets.md` | ID-46 | draft |
 | `asset-location-picker.md` | ID-54 | draft |
 | `asset-search.md` | ID-47 | draft |

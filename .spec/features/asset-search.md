@@ -56,7 +56,8 @@ come from ID-2's tables.
   from "nothing matches these filters".
 - A `locationId` from another estate returns 404. A deactivated location can
   still be used as a filter.
-- The descendant filter uses a recursive CTE over `Location` in a single query.
+- The descendant filter uses a recursive CTE over `Location.parentId` in a
+  single query.
 - Unknown `category`, `condition` or `status` values return 400.
 - The query key includes the user ID, the estate ID and every filter.
 - The search input is debounced so each keystroke does not send a request.
@@ -73,8 +74,10 @@ come from ID-2's tables.
 - [building-assets](building-assets.md) and
   [asset-location-picker](asset-location-picker.md). The location filter reuses
   the picker.
-- Read access for non-owners uses `feat/scope-users-to-estate`'s `EstateAccess`
-  once it merges. Until then, access is owner-only through `findOwned`.
+- [location-hierarchy](location-hierarchy.md) is merged.
+- `feat/scope-users-to-estate` (`EstateAccess`) is **not merged**. Until it
+  is, read access is owner-only through `EstateRepository.findOwned`, and the
+  "estate-access reader" rows above and the reader test below wait for it.
 
 ## Implementation phases
 

@@ -56,9 +56,12 @@ Prisma `Asset`:
 | `manufacturer`, `model`, `serialNumber` | varchar(200)? | |
 | `createdAt`, `updatedAt`, `deactivatedAt?` | timestamptz | |
 
-Also `@@index([estateId])` and `@@index([locationId])`. Location needs a
-matching `@@unique([id, estateId])` if the location branch does not already
-provide one. Rows are never deleted.
+Also `@@index([estateId])` and `@@index([locationId])`. Rows are never deleted.
+
+`Location` currently only has `@@unique([id, type, estateId])`, which its
+parent FK uses. Add `@@unique([id, estateId])` to `Location` so that `Asset`'s
+composite FK has a target. Also add the `assets Asset[]` back-relations on
+`Estate` and `Location`.
 
 ## API
 
@@ -80,9 +83,16 @@ provide one. Rows are never deleted.
 - Validation failures return 400. A wrong deactivation reference returns 400.
 - An unknown or foreign estate, asset or location returns 404.
 - An inactive estate, asset or location returns 409.
-- Every write locks the estate row (`EstateRepository.findOwned(id, owner, true)`)
-  and then the asset row. That serialises reference generation, and a write
+- Every write locks the estate row and then the asset row. The estate lock
+  mirrors `LocationService.lockActiveEstate`, which calls
+  `EstateRepository.findOwned(id, owner, true)` and returns 409 if the estate
+  is inactive. That serialises reference generation, and a write
   cannot slip past a concurrent estate deactivation.
+- The location check reuses `LocationRepository.find(id, estateId)`. An empty
+  result is a 404. A non-null `deactivatedAt` is a 409.
+- `locationPath` is built on the server. The hierarchy is at most three deep
+  (block › level › common area), so a walk up `parentId` is enough, with no
+  recursive query.
 - A PATCH body's `reference` is ignored.
 - If a database constraint still fires, the API returns 409 without SQL detail.
 - Editing an estate's code does not rewrite existing asset references.
@@ -100,8 +110,9 @@ provide one. Rows are never deleted.
 
 ## Dependencies
 
-- `feat/location-hierarchy` (the `Location` model, `/locations` endpoints and
-  `apps/web/src/lib/locations.ts`) must be merged, or be this branch's base.
+- [location-hierarchy](location-hierarchy.md) is merged into `main` and this
+  branch (PR #7).
+- `feat/scope-users-to-estate` is not merged, and nothing here needs it.
 
 ## Implementation phases
 
@@ -109,11 +120,12 @@ Test-first: every test is seen failing before the phase that makes it pass
 ([testing.md](../testing.md)).
 
 ### 0. Branch
-- [ ] Rebase `feat/building-assets` onto `feat/location-hierarchy`, or onto
-  `main` once that branch has merged.
+- [x] Merge `main` (with the location hierarchy) into `feat/building-assets`.
 
 ### 1. Data (`add-model` skill)
-- [ ] Add `Asset` to `packages/db/prisma/schema/schema.prisma` as specified above.
+- [ ] Add `Asset` to `packages/db/prisma/schema/schema.prisma` as specified
+  above, along with Location's `@@unique([id, estateId])` and the
+  back-relations.
 - [ ] `pnpm db:migrate`, then `pnpm db:generate`, then
   `./mvnw -pl com.proj:server compile`.
 
@@ -152,7 +164,7 @@ Test-first: every test is seen failing before the phase that makes it pass
   estate IDs, and failed requests throw.
 - [ ] `apps/web/tests/components/assets/asset-form.test.tsx`:
   - the labelled fields render
-  - the location `<select>` lists only active locations
+  - the location `<select>` lists every active location by its full path
   - the required errors show
   - submit posts the payload
   - the data is kept on a server error
@@ -165,7 +177,11 @@ Test-first: every test is seen failing before the phase that makes it pass
 - [ ] Run `pnpm nx test web` and confirm the tests fail.
 
 ### 5. Web (green)
-- [ ] `apps/web/src/lib/assets.ts`, following `lib/estates.ts`.
+- [ ] `apps/web/src/lib/assets.ts`, following `lib/estates.ts` and
+  `lib/locations.ts`. Keys are `["estates", userId, "assets", estateId, ...]`,
+  built from `useEstateSession`.
+- [ ] The location `<select>` options come from `useLocations(estateId)` and
+  `flattenLocations`, with labels from `node.path.join(" › ")`.
 - [ ] `components/assets/asset-form.tsx` and `components/assets/deactivate-asset-dialog.tsx`.
   The dialog is modelled on `deactivate-estate-dialog.tsx`.
 - [ ] Routes under `routes/_authenticated/`:

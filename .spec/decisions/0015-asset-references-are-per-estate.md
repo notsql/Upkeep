@@ -24,5 +24,5 @@ Rejected:
 References are stored, not derived. If an owner later edits the estate's code,
 existing references keep the old prefix. Creation is serialised per estate
 because of the estate row lock, which it already needs for the inactive-estate
-check (decision 0010). This decision is numbered 0015 because unmerged branches already
-use 0012 and 0014.
+check (decision 0010). This decision is numbered 0015 because 0012 is taken on the
+unmerged `feat/scope-users-to-estate` and 0014 by the location hierarchy.
