@@ -1,4 +1,4 @@
-# Estate access
+# Estate users
 
 **Status:** built
 **Owner:** ID-56
@@ -27,7 +27,7 @@ access to who is actually responsible for an estate.
 
 ## Data
 
-New Prisma model `EstateAccess`: composite key of `estateId` (FK to `Estate`,
+New Prisma model `EstateUser` (a user an admin has assigned to an estate): composite key of `estateId` (FK to `Estate`,
 restrict on delete) and WorkOS `userId`, plus `createdAt`. An index on `userId`
 backs the per-user list query. Ownership stays on `Estate.ownerUserId`, as
 decision 0010 describes, and decision 0012 explains the split.
@@ -36,7 +36,7 @@ decision 0010 describes, and decision 0012 explains the split.
 
 | Method | Path | Request | Response | Auth |
 | --- | --- | --- | --- | --- |
-| GET | /api/admin/users/{userId}/estates | - | EstateAccessResponse[] | Admin |
+| GET | /api/admin/users/{userId}/estates | - | EstateUserResponse[] | Admin |
 | PUT | /api/admin/users/{userId}/estates/{estateId} | - | 204 | Admin |
 | DELETE | /api/admin/users/{userId}/estates/{estateId} | - | 204 | Admin |
 | GET | /estates, /estates/{id} | unchanged | EstateResponse gains `owned` | Owner or granted |

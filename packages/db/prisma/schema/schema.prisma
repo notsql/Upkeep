@@ -20,7 +20,7 @@ model Estate {
   updatedAt     DateTime       @updatedAt @db.Timestamptz(6)
   deactivatedAt DateTime?      @db.Timestamptz(6)
   locations     Location[]
-  access        EstateAccess[]
+  users         EstateUser[]
 
   @@index([ownerUserId])
 }
@@ -53,9 +53,9 @@ model Location {
   @@index([parentId])
 }
 
-// An admin's grant of view access to an estate for a WorkOS user. Ownership
-// stays on Estate.ownerUserId; see decision 0012.
-model EstateAccess {
+// A WorkOS user an admin has assigned to an estate, giving them view access.
+// Ownership stays on Estate.ownerUserId; see decision 0012.
+model EstateUser {
   estateId  String   @db.Uuid
   userId    String   @db.VarChar(255)
   createdAt DateTime @default(now()) @db.Timestamptz(6)

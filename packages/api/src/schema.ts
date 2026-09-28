@@ -27,8 +27,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** List every estate with a user's access */
-    get: operations["listUserEstateAccess"];
+    /** List every estate and whether the user is assigned to it */
+    get: operations["listUserEstates"];
     put?: never;
     post?: never;
     delete?: never;
@@ -45,11 +45,11 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Grant a user access to an estate */
-    put: operations["grantEstateAccess"];
+    /** Add a user to an estate */
+    put: operations["addEstateUser"];
     post?: never;
-    /** Revoke a user's access to an estate */
-    delete: operations["revokeEstateAccess"];
+    /** Remove a user from an estate */
+    delete: operations["removeEstateUser"];
     options?: never;
     head?: never;
     patch?: never;
@@ -300,7 +300,7 @@ export interface components {
       /** Format: date-time */
       timestamp: string;
     };
-    EstateAccessResponse: {
+    EstateUserResponse: {
       /** Format: uuid */
       estateId: string;
       name: string;
@@ -332,6 +332,59 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  addEstateUser: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userId: string;
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User added */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   create: {
     parameters: {
       query?: never;
@@ -697,59 +750,6 @@ export interface operations {
       };
     };
   };
-  grantEstateAccess: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Access granted */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Admin role required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
   health: {
     parameters: {
       query?: never;
@@ -886,7 +886,7 @@ export interface operations {
       };
     };
   };
-  listUserEstateAccess: {
+  listUserEstates: {
     parameters: {
       query?: never;
       header?: never;
@@ -897,13 +897,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Every estate with the user's access */
+      /** @description Every estate and whether the user is assigned to it */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["EstateAccessResponse"][];
+          "*/*": components["schemas"]["EstateUserResponse"][];
         };
       };
       /** @description Invalid request */
@@ -920,18 +920,14 @@ export interface operations {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "*/*": components["schemas"]["EstateAccessResponse"][];
-        };
+        content?: never;
       };
       /** @description Admin role required */
       403: {
         headers: {
           [name: string]: unknown;
         };
-        content: {
-          "*/*": components["schemas"]["EstateAccessResponse"][];
-        };
+        content?: never;
       };
       /** @description Estate not found */
       404: {
@@ -944,7 +940,7 @@ export interface operations {
       };
     };
   };
-  revokeEstateAccess: {
+  removeEstateUser: {
     parameters: {
       query?: never;
       header?: never;
@@ -956,7 +952,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Access revoked */
+      /** @description User removed */
       204: {
         headers: {
           [name: string]: unknown;

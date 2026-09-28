@@ -17,40 +17,40 @@ import org.springframework.web.bind.annotation.*;
             responseCode = "400",
             description = "Invalid request",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
-    @ApiResponse(responseCode = "401", description = "Sign in required"),
-    @ApiResponse(responseCode = "403", description = "Admin role required"),
+    @ApiResponse(responseCode = "401", description = "Sign in required", content = @Content),
+    @ApiResponse(responseCode = "403", description = "Admin role required", content = @Content),
     @ApiResponse(
             responseCode = "404",
             description = "Estate not found",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
 })
-public class EstateAccessController {
-    private final EstateAccessService service;
+public class EstateUserController {
+    private final EstateUserService service;
 
-    public EstateAccessController(EstateAccessService service) {
+    public EstateUserController(EstateUserService service) {
         this.service = service;
     }
 
     @GetMapping
-    @ApiResponse(responseCode = "200", description = "Every estate with the user's access")
-    @Operation(summary = "List every estate with a user's access")
-    public List<EstateAccessResponse> listUserEstateAccess(@PathVariable String userId) {
+    @ApiResponse(responseCode = "200", description = "Every estate and whether the user is assigned to it")
+    @Operation(summary = "List every estate and whether the user is assigned to it")
+    public List<EstateUserResponse> listUserEstates(@PathVariable String userId) {
         return service.list(userId);
     }
 
     @PutMapping("/{estateId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiResponse(responseCode = "204", description = "Access granted")
-    @Operation(summary = "Grant a user access to an estate")
-    public void grantEstateAccess(@PathVariable String userId, @PathVariable UUID estateId) {
-        service.grant(userId, estateId);
+    @ApiResponse(responseCode = "204", description = "User added")
+    @Operation(summary = "Add a user to an estate")
+    public void addEstateUser(@PathVariable String userId, @PathVariable UUID estateId) {
+        service.add(userId, estateId);
     }
 
     @DeleteMapping("/{estateId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @ApiResponse(responseCode = "204", description = "Access revoked")
-    @Operation(summary = "Revoke a user's access to an estate")
-    public void revokeEstateAccess(@PathVariable String userId, @PathVariable UUID estateId) {
-        service.revoke(userId, estateId);
+    @ApiResponse(responseCode = "204", description = "User removed")
+    @Operation(summary = "Remove a user from an estate")
+    public void removeEstateUser(@PathVariable String userId, @PathVariable UUID estateId) {
+        service.remove(userId, estateId);
     }
 }

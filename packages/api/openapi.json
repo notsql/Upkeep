@@ -8,9 +8,9 @@
   "paths": {
     "/api/admin/users/{userId}/estates/{estateId}": {
       "put": {
-        "tags": ["estate-access-controller"],
-        "summary": "Grant a user access to an estate",
-        "operationId": "grantEstateAccess",
+        "tags": ["estate-user-controller"],
+        "summary": "Add a user to an estate",
+        "operationId": "addEstateUser",
         "parameters": [
           {
             "name": "userId",
@@ -44,13 +44,13 @@
               }
             }
           },
-          "204": { "description": "Access granted" }
+          "204": { "description": "User added" }
         }
       },
       "delete": {
-        "tags": ["estate-access-controller"],
-        "summary": "Revoke a user's access to an estate",
-        "operationId": "revokeEstateAccess",
+        "tags": ["estate-user-controller"],
+        "summary": "Remove a user from an estate",
+        "operationId": "removeEstateUser",
         "parameters": [
           {
             "name": "userId",
@@ -84,7 +84,7 @@
               }
             }
           },
-          "204": { "description": "Access revoked" }
+          "204": { "description": "User removed" }
         }
       }
     },
@@ -692,9 +692,9 @@
     },
     "/api/admin/users/{userId}/estates": {
       "get": {
-        "tags": ["estate-access-controller"],
-        "summary": "List every estate with a user's access",
-        "operationId": "listUserEstateAccess",
+        "tags": ["estate-user-controller"],
+        "summary": "List every estate and whether the user is assigned to it",
+        "operationId": "listUserEstates",
         "parameters": [
           {
             "name": "userId",
@@ -712,32 +712,8 @@
               }
             }
           },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateAccessResponse"
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Admin role required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateAccessResponse"
-                  }
-                }
-              }
-            }
-          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
           "404": {
             "description": "Estate not found",
             "content": {
@@ -747,14 +723,12 @@
             }
           },
           "200": {
-            "description": "Every estate with the user's access",
+            "description": "Every estate and whether the user is assigned to it",
             "content": {
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateAccessResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/EstateUserResponse" }
                 }
               }
             }
@@ -947,7 +921,7 @@
         },
         "required": ["database", "ok", "timestamp"]
       },
-      "EstateAccessResponse": {
+      "EstateUserResponse": {
         "type": "object",
         "properties": {
           "estateId": { "type": "string", "format": "uuid" },

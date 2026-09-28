@@ -10,9 +10,9 @@ interface AccessChange {
 }
 
 const accessQueryKey = (userId: string) =>
-  ["admin", "estate-access", userId] as const;
+  ["admin", "estate-users", userId] as const;
 
-export function MemberEstateAccess({
+export function MemberEstates({
   name,
   userId,
 }: {
@@ -69,10 +69,10 @@ export function MemberEstateAccess({
 
   return (
     <section
-      aria-labelledby="estate-access-heading"
+      aria-labelledby="member-estates-heading"
       className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm"
     >
-      <h2 className="font-semibold" id="estate-access-heading">
+      <h2 className="font-semibold" id="member-estates-heading">
         Estate access for {name}
       </h2>
       <p className="mt-1 text-muted-foreground text-sm">

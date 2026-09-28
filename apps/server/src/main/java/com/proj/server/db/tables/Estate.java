@@ -7,7 +7,7 @@ package com.proj.server.db.tables;
 import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
-import com.proj.server.db.tables.Estateaccess.EstateaccessPath;
+import com.proj.server.db.tables.Estateuser.EstateuserPath;
 import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
@@ -189,17 +189,17 @@ public class Estate extends TableImpl<EstateRecord> {
         return Keys.ESTATE_PKEY;
     }
 
-    private transient EstateaccessPath _estateaccess;
+    private transient EstateuserPath _estateuser;
 
     /**
-     * Get the implicit to-many join path to the
-     * <code>public.EstateAccess</code> table
+     * Get the implicit to-many join path to the <code>public.EstateUser</code>
+     * table
      */
-    public EstateaccessPath estateaccess() {
-        if (_estateaccess == null)
-            _estateaccess = new EstateaccessPath(this, null, Keys.ESTATEACCESS__ESTATEACCESS_ESTATEID_FKEY.getInverseKey());
+    public EstateuserPath estateuser() {
+        if (_estateuser == null)
+            _estateuser = new EstateuserPath(this, null, Keys.ESTATEUSER__ESTATEUSER_ESTATEID_FKEY.getInverseKey());
 
-        return _estateaccess;
+        return _estateuser;
     }
 
     private transient LocationPath _location;

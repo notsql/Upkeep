@@ -1,7 +1,7 @@
 package com.proj.server.estate;
 
 import static com.proj.server.db.tables.Estate.ESTATE;
-import static com.proj.server.db.tables.Estateaccess.ESTATEACCESS;
+import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 
 import com.proj.server.db.tables.records.EstateRecord;
 import java.time.OffsetDateTime;
@@ -98,7 +98,7 @@ public class EstateRepository {
         return ESTATE.OWNERUSERID
                 .eq(user)
                 .or(ESTATE.ID.in(
-                        DSL.select(ESTATEACCESS.ESTATEID).from(ESTATEACCESS).where(ESTATEACCESS.USERID.eq(user))));
+                        DSL.select(ESTATEUSER.ESTATEID).from(ESTATEUSER).where(ESTATEUSER.USERID.eq(user))));
     }
 
     private static EstateResponse response(EstateRecord row, String user) {

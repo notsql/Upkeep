@@ -40,7 +40,7 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[vue]": {
     "editor.defaultFormatter": "biomejs.biome"

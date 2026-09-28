@@ -9,7 +9,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import { MemberEstateAccess } from "@/components/admin/member-estate-access";
+import { MemberEstates } from "@/components/admin/member-estates";
 import { api } from "@/lib/api";
 
 const ADMIN_ROLE = "admin";
@@ -413,7 +413,7 @@ function AdminUsersPage() {
         </section>
 
         {selectedMember ? (
-          <MemberEstateAccess
+          <MemberEstates
             key={selectedMember.userId}
             name={selectedMember.name}
             userId={selectedMember.userId}

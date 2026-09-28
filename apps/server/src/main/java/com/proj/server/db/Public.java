@@ -5,7 +5,7 @@ package com.proj.server.db;
 
 
 import com.proj.server.db.tables.Estate;
-import com.proj.server.db.tables.Estateaccess;
+import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 
 import java.util.Arrays;
@@ -36,9 +36,9 @@ public class Public extends SchemaImpl {
     public final Estate ESTATE = Estate.ESTATE;
 
     /**
-     * The table <code>public.EstateAccess</code>.
+     * The table <code>public.EstateUser</code>.
      */
-    public final Estateaccess ESTATEACCESS = Estateaccess.ESTATEACCESS;
+    public final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
 
     /**
      * The table <code>public.Location</code>.
@@ -62,7 +62,7 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Estate.ESTATE,
-            Estateaccess.ESTATEACCESS,
+            Estateuser.ESTATEUSER,
             Location.LOCATION
         );
     }

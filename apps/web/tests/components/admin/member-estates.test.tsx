@@ -1,6 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MemberEstateAccess } from "@/components/admin/member-estate-access";
+import { MemberEstates } from "@/components/admin/member-estates";
 import { api } from "@/lib/api";
 import { renderWithProviders, screen, waitFor } from "../../test-utils";
 
@@ -13,7 +13,7 @@ const maple = /Maple Grove/;
 const oak = /Oak Park/;
 const ownedPine = /Pine Court.*Owner/;
 
-describe("MemberEstateAccess", () => {
+describe("MemberEstates", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(api.GET).mockResolvedValue({
@@ -47,7 +47,7 @@ describe("MemberEstateAccess", () => {
   });
 
   it("shows which estates the member can access", async () => {
-    renderWithProviders(<MemberEstateAccess name="Casey Doe" userId="usr_1" />);
+    renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
     screen.getByRole("heading", { name: "Estate access for Casey Doe" });
     const mapleBox = await screen.findByRole<HTMLInputElement>("checkbox", {
       name: maple,
@@ -75,7 +75,7 @@ describe("MemberEstateAccess", () => {
       data: undefined,
       response: new Response(null, { status: 204 }),
     });
-    renderWithProviders(<MemberEstateAccess name="Casey Doe" userId="usr_1" />);
+    renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
 
     fireEvent.click(await screen.findByRole("checkbox", { name: maple }));
     await waitFor(() =>
@@ -99,7 +99,7 @@ describe("MemberEstateAccess", () => {
 
   it("reports a failed change", async () => {
     vi.mocked(api.PUT).mockResolvedValue({ error: {} });
-    renderWithProviders(<MemberEstateAccess name="Casey Doe" userId="usr_1" />);
+    renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
     fireEvent.click(await screen.findByRole("checkbox", { name: maple }));
     expect((await screen.findByRole("alert")).textContent).toContain(
       "Unable to update estate access"

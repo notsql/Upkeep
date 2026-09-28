@@ -21,18 +21,18 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(
-        controllers = EstateAccessController.class,
+        controllers = EstateUserController.class,
         properties = {
             "app.cors.allowed-origins=http://localhost:3001",
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app"
         })
-@Import({SecurityConfig.class, EstateAccessService.class, EstateExceptionHandler.class})
-class EstateAccessControllerTests {
+@Import({SecurityConfig.class, EstateUserService.class, EstateExceptionHandler.class})
+class EstateUserControllerTests {
     @Autowired
     MockMvc mvc;
 
     @MockitoBean
-    EstateAccessRepository repository;
+    EstateUserRepository repository;
 
     @MockitoBean
     JwtDecoder jwtDecoder;
@@ -52,16 +52,16 @@ class EstateAccessControllerTests {
                 .andExpect(status().isForbidden());
         mvc.perform(delete(path + "/" + estateId).with(jwt().jwt(t -> t.subject("member_1"))))
                 .andExpect(status().isForbidden());
-        verify(repository, never()).grant(estateId, "user_1");
-        verify(repository, never()).revoke(estateId, "user_1");
+        verify(repository, never()).add(estateId, "user_1");
+        verify(repository, never()).remove(estateId, "user_1");
     }
 
     @Test
     void listsEveryEstateWithTheUsersAccess() throws Exception {
         when(repository.listForUser("user_1"))
                 .thenReturn(List.of(
-                        new EstateAccessResponse(estateId, "Maple Grove", "MG-001", true, false, true),
-                        new EstateAccessResponse(UUID.randomUUID(), "Oak Park", "OP-001", false, true, false)));
+                        new EstateUserResponse(estateId, "Maple Grove", "MG-001", true, false, true),
+                        new EstateUserResponse(UUID.randomUUID(), "Oak Park", "OP-001", false, true, false)));
         mvc.perform(get(path).with(admin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].estateId").value(estateId.toString()))
@@ -71,24 +71,24 @@ class EstateAccessControllerTests {
     }
 
     @Test
-    void grantsAccessToAnExistingEstate() throws Exception {
+    void addsAUserToAnExistingEstate() throws Exception {
         when(repository.estateExists(estateId)).thenReturn(true);
         mvc.perform(put(path + "/" + estateId).with(admin())).andExpect(status().isNoContent());
-        verify(repository).grant(estateId, "user_1");
+        verify(repository).add(estateId, "user_1");
     }
 
     @Test
-    void rejectsAGrantToAnUnknownEstate() throws Exception {
+    void rejectsAddingAUserToAnUnknownEstate() throws Exception {
         when(repository.estateExists(estateId)).thenReturn(false);
         mvc.perform(put(path + "/" + estateId).with(admin()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Estate not found."));
-        verify(repository, never()).grant(estateId, "user_1");
+        verify(repository, never()).add(estateId, "user_1");
     }
 
     @Test
-    void revokesAccess() throws Exception {
+    void removesAUserFromAnEstate() throws Exception {
         mvc.perform(delete(path + "/" + estateId).with(admin())).andExpect(status().isNoContent());
-        verify(repository).revoke(estateId, "user_1");
+        verify(repository).remove(estateId, "user_1");
     }
 }
