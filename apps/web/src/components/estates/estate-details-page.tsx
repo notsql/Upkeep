@@ -1,13 +1,20 @@
 import { Button } from "@proj/ui/components/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DeactivateEstateDialog } from "@/components/estates/deactivate-estate-dialog";
 import { api } from "@/lib/api";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 
-export function EstateDetailsPage({ estateId }: { estateId: string }) {
+export function EstateDetailsPage({
+  estateId,
+  children,
+}: {
+  estateId: string;
+  /** Sections rendered below the estate's details once it has loaded. */
+  children?: ReactNode;
+}) {
   const estate = useEstate(estateId);
   const { userId } = useEstateSession();
   const queryClient = useQueryClient();
@@ -113,6 +120,7 @@ export function EstateDetailsPage({ estateId }: { estateId: string }) {
               onConfirm={deactivate.mutateAsync}
             />
           ) : null}
+          {children}
         </>
       ) : null}
     </main>

@@ -6,6 +6,7 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateaccess;
+import com.proj.server.db.tables.Location;
 
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +41,11 @@ public class Public extends SchemaImpl {
     public final Estateaccess ESTATEACCESS = Estateaccess.ESTATEACCESS;
 
     /**
+     * The table <code>public.Location</code>.
+     */
+    public final Location LOCATION = Location.LOCATION;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -56,7 +62,8 @@ public class Public extends SchemaImpl {
     public final List<Table<?>> getTables() {
         return Arrays.asList(
             Estate.ESTATE,
-            Estateaccess.ESTATEACCESS
+            Estateaccess.ESTATEACCESS,
+            Location.LOCATION
         );
     }
 }

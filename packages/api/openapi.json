@@ -302,6 +302,190 @@
         }
       }
     },
+    "/estates/{estateId}/locations": {
+      "get": {
+        "tags": ["location-controller"],
+        "summary": "List an estate's active locations",
+        "operationId": "listLocations",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or hierarchy shape",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name or level position, inactive estate or location, or active children",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The estate's active locations, siblings in display order",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/LocationResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["location-controller"],
+        "operationId": "createLocation",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateLocationRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or hierarchy shape",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name or level position, inactive estate or location, or active children",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Location created",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/LocationResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/locations/{id}/deactivate": {
+      "post": {
+        "tags": ["location-controller"],
+        "operationId": "deactivateLocation",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or hierarchy shape",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name or level position, inactive estate or location, or active children",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Location deactivated",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/LocationResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{id}": {
       "get": {
         "tags": ["estate-controller"],
@@ -414,6 +598,76 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/locations/{id}": {
+      "patch": {
+        "tags": ["location-controller"],
+        "operationId": "updateLocation",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UpdateLocationRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or hierarchy shape",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name or level position, inactive estate or location, or active children",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Location renamed, reordered or moved",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/LocationResponse" }
               }
             }
           }
@@ -640,6 +894,49 @@
           "code": { "type": "string", "maxLength": 50, "minLength": 0 }
         },
         "required": ["code"]
+      },
+      "CreateLocationRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["BLOCK", "LEVEL", "COMMON_AREA"]
+          },
+          "parentId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "sortOrder": { "type": "integer", "format": "int32" }
+        },
+        "required": ["name", "type"]
+      },
+      "LocationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "type": "string",
+            "enum": ["BLOCK", "LEVEL", "COMMON_AREA"]
+          },
+          "parentId": { "type": ["string", "null"], "format": "uuid" },
+          "name": { "type": "string" },
+          "sortOrder": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "A level's position in its block, lowest first"
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["createdAt", "id", "name", "type", "updatedAt"]
+      },
+      "UpdateLocationRequest": {
+        "type": "object",
+        "properties": {
+          "parentId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "sortOrder": { "type": "integer", "format": "int32" }
+        },
+        "required": ["name"]
       },
       "HealthResponse": {
         "type": "object",
