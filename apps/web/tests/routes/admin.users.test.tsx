@@ -1,6 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { Route } from "@/routes/admin.users";
+import { Route } from "@/routes/_authenticated/admin.users";
 import { renderWithProviders, screen, waitFor } from "../test-utils";
 
 const { get, put } = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn() }));

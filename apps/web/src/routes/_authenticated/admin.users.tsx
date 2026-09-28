@@ -1,6 +1,7 @@
 import { Input } from "@proj/ui/components/input";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { getAuth } from "@workos/authkit-tanstack-react-start";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -8,12 +9,20 @@ import {
   useMemo,
   useState,
 } from "react";
-
 import { MemberEstateAccess } from "@/components/admin/member-estate-access";
 import { api } from "@/lib/api";
 
-export const Route = createFileRoute("/admin/users")({
+const ADMIN_ROLE = "admin";
+
+export const Route = createFileRoute("/_authenticated/admin/users")({
   component: AdminUsersPage,
+  loader: async () => {
+    const auth = await getAuth();
+
+    if (!auth.user || auth.role !== ADMIN_ROLE) {
+      throw redirect({ to: "/estates" });
+    }
+  },
 });
 
 const selectClassName =

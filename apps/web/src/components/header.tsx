@@ -4,20 +4,26 @@ import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { AuthButton } from "./auth-button";
 import { EstateSwitcher } from "./estates/estate-switcher";
 
+const ADMIN_ROLE = "admin";
 function AuthenticationNavigationLink() {
-  const { loading, user } = useAuth();
+  const { loading, role, user } = useAuth();
 
   if (loading) {
     return null;
   }
 
-  return user ? (
+  if (!user) {
+    return <Link to="/register">Register</Link>;
+  }
+
+  return (
     <>
       <Link to="/estates">My estates</Link>
       <Link to="/account">Account</Link>
+      {role === ADMIN_ROLE ? (
+        <Link to="/admin/users">Admin Dashboard</Link>
+      ) : null}
     </>
-  ) : (
-    <Link to="/register">Register</Link>
   );
 }
 
