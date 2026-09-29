@@ -11,10 +11,10 @@
   },
   "scripts": {
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "infisical run --env=dev --path=/packages/db -- prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:reset": "prisma migrate reset",
-    "db:studio": "prisma studio",
+    "db:reset": "infisical run --env=dev --path=/packages/db -- prisma migrate reset",
+    "db:studio": "infisical run --env=dev --path=/packages/db -- prisma studio",
     "postinstall": "prisma generate",
     "lint": "ultracite check",
     "lint:fix": "ultracite fix"
