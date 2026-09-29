@@ -24,6 +24,40 @@ Non-negotiable. Breaking one of these is a bug even if the code works.
 5. **Only Prisma changes the database's shape.** Schema lives in
    `packages/db/prisma/schema/schema.prisma`. Spring never migrates.
 6. **Never hand-write API types in the frontend.** Regenerate the contract.
+7. **Tests first (TDD).** Every behaviour change - web, server or ml - starts
+   with a failing test that you run and see fail, then the implementation.
+   See §5 "Tests" and `.spec/testing.md`.
+8. **Folder-based routing.** Web routes nest as directories under
+   `apps/web/src/routes`, not dot-separated file names:
+   `_authenticated/admin/users.tsx`, not `_authenticated/admin.users.tsx`. A
+   segment's root is its `index.tsx`; components used by one route only live
+   beside it in a `-components/` folder.
+9. **Build UI from shadcn.** Use the components in `packages/ui` rather than
+   hand-rolling buttons, inputs, dialogs, cards and the like. If the one you
+   need is missing, add it with the shadcn CLI (§4), never by hand.
+10. **Refactor the UI you touch.** When you change a screen, move it onto
+    shadcn components and folder-based routes (rules 8-9) as part of the same
+    change. This is the one sanctioned exception to rule 3 - but stay within
+    the screen you were asked to change.
+11. **Document for AI in `.docs/`.** `.docs/` describes the system *as built*,
+    written so an agent can work from it without reading the code
+    (`.spec/features/` is the plan made *before* building). One file per
+    feature on each side:
+    - `.docs/api/<feature>.md` - the API contract: every endpoint's method,
+      path, request and response DTOs (fields and types), status codes,
+      auth, and a short example. It must agree with
+      `packages/api/openapi.json`, which stays the source of truth.
+    - `.docs/frontend/<feature>.md` - the routes and their folders, the
+      screens and shadcn components they use, and which endpoints each
+      screen calls (query keys, mutations, invalidations).
+    - `.docs/README.md` - an index linking every file above.
+
+    Update the matching `.docs/` files in the same change as the code.
+12. **Plan before building anything non-trivial.** A new feature, a new
+    endpoint or table, or any change spanning more than one app starts with a
+    spec in `.spec/features/` (the `/new-feature-spec` command). Stop and get
+    it agreed by a human before writing code. Bug fixes and changes confined
+    to one file skip this, but still start with a failing test (rule 7).
 
 Rules 4-6 are explained in `.spec/decisions/`.
 
@@ -63,7 +97,9 @@ Run everything from the repo root.
 | Command | Does |
 | --- | --- |
 | `pnpm dev` | web + API + inference together (no database setup) |
+| `pnpm db:migrate` | Create a migration from the schema and apply it |
 | `pnpm db:deploy` | Apply pending migrations to whatever `DATABASE_URL` points at |
+| `pnpm db:generate` | Regenerate the Prisma client and the jOOQ classes |
 | `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
 | `pnpm build` | Builds everything, Java included |
 | `pnpm test` | All tests |
@@ -77,6 +113,21 @@ Run everything from the repo root.
 Java directly, when you need it: `./mvnw -pl com.proj:server <phase>` from the
 repo root. The wrapper is at the root, not in `apps/server` - `@nx/maven`
 requires it there.
+
+**Secrets come from Infisical.** Each project wraps its own commands that need
+secrets in `infisical run --env=dev --path=<its folder>`: `dev` in
+`apps/web/package.json`; `db:migrate`, `db:reset` and `db:studio` in
+`packages/db/package.json`; `dev`, `openapi` and `db:generate` in
+`apps/server/project.json`. Root scripts stay plain Nx calls, so
+`pnpm nx run <project>:<target>` gets secrets too. Infisical's
+folders mirror the repo (`/apps/web`, `/apps/server`, `/packages/db`) and each
+script loads only the folders it needs. One-time setup per machine:
+install the Infisical CLI, then `infisical login`. `.infisical.json` links the
+repo to the project and is committed. `build`, `test`, `check-types` and
+`db:deploy` are not wrapped, because CI supplies its own environment. Do not
+create secrets with empty values - a blank
+`SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI` takes the API down (§4).
+See `.spec/decisions/0018-*`.
 
 **Nx runs tasks; Docker runs services.** The dev database is Neon; everything else
 runs natively through Nx (`pnpm dev`). The
@@ -128,6 +179,11 @@ const { data } = useQuery({
 
 `openapi-fetch` returns errors rather than throwing, so throw explicitly in
 `queryFn` - otherwise React Query treats a failed request as success.
+
+Put a feature's query and mutation hooks in `apps/web/src/lib/<feature>.ts`
+(see `lib/assets.ts`) and have components call those hooks, not `api`
+directly. Query keys for per-user data start with the user's ID, so one user's
+cache is never served to the next.
 
 ### Adding or changing a database table
 
@@ -238,16 +294,16 @@ supported because pnpm isolates each package's `node_modules`.
 **Read `.spec/testing.md` before writing tests.** It carries the TDD workflow
 and what not to test. The essentials:
 
+- **Write the failing test first, and run it.** A test you never saw fail is
+  a test you have no reason to trust. Show the failure before implementing.
+- **Never edit a test to make an implementation pass.** If a test is
+  genuinely wrong, say so and fix it as a change of its own.
 - Assertions inside `it()`/`test()` blocks; `async`/`await`, no done callbacks.
 - No `.only` or `.skip` in committed code.
 - **Web:** Vitest + Testing Library, jsdom. Tests live in `apps/web/tests/`,
   mirroring `src/` - a test for `src/routes/thing.tsx` goes at
   `tests/routes/thing.test.tsx`. Import the subject via `@/`, not a relative
   path.
-  - **Write the failing test first, and run it.** A test you never saw fail is
-    a test you have no reason to trust. Show the failure before implementing.
-  - **Never edit a test to make an implementation pass.** If a test is
-    genuinely wrong, say so and fix it as a change of its own.
   - Import test globals explicitly (`import { describe, it, expect } from
     "vitest"`) - this project does not enable Vitest globals.
   - Use `renderWithProviders` from `tests/test-utils.tsx` for anything touching
@@ -272,13 +328,15 @@ and what not to test. The essentials:
 | You want to... | Go to |
 | --- | --- |
 | Understand the system | `.spec/architecture.md` |
+| Look up an endpoint or a screen as built | `.docs/` (start at `.docs/README.md`) |
 | Know why something is the way it is | `.spec/decisions/` |
-| Write a feature spec | `.spec/features/TEMPLATE.md` |
+| Write a feature spec | `.spec/features/TEMPLATE.md`, or `/new-feature-spec` |
+| Follow a workflow step by step | `.claude/commands/` (`/add-endpoint`, `/add-model`, `/new-feature-spec`) |
 | Learn how we test | `.spec/testing.md` |
 | Change the DB schema | `packages/db/prisma/schema/schema.prisma` |
 | Change API security or CORS | `apps/server/.../config/SecurityConfig.java` |
 | Change the API's OpenAPI metadata | `apps/server/.../config/OpenApiConfig.java` |
-| Add an env var | `packages/env/src/*.ts` **and** the matching `.env.example` |
+| Add an env var | `packages/env/src/*.ts`, the matching `.env.example`, **and** the matching Infisical `dev` folder, e.g. `/apps/server` (a human adds the value) |
 | Change Nx targets for Java | `apps/server/project.json` |
 | Serve or swap the ONNX model | `apps/ml/` (drop the file at `apps/ml/models/`) |
 | Train, evaluate or explore a model | `ml-research/` - not `apps/` |
@@ -290,12 +348,17 @@ and what not to test. The essentials:
 
 ## 7. Before you finish
 
+- Non-trivial work had an agreed spec in `.spec/features/` before coding.
+- Tests were written first and seen failing before the implementation.
 - `pnpm check-types` and `pnpm test` pass.
 - `pnpm fix` has been run.
 - If you touched a controller: `pnpm api:generate` was run and the generated
   files are committed.
 - If you touched the Prisma schema: `pnpm db:generate` was run, and the
   migration and the regenerated jOOQ sources are committed.
+- `.docs/api/` and `.docs/frontend/` match what was built, and
+  `.docs/README.md` links any new file.
+- Any screen you touched uses shadcn components and folder-based routes.
 - If you made a structural or architectural choice: a note in `.spec/decisions/`.
 
 

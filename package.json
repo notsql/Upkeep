@@ -13,6 +13,7 @@
     "check-types": "nx run-many -t check-types",
     "db:deploy": "nx run @proj/db:db:migrate:deploy",
     "db:generate": "nx run-many -t db:generate --projects=@proj/db,server",
+    "db:migrate": "nx run @proj/db:db:migrate",
     "db:reset": "nx run-many -t db:reset --projects=@proj/db",
     "db:studio": "nx run-many -t db:studio --projects=@proj/db",
     "dev": "nx run-many -t dev",

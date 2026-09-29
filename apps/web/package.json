@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build",
     "check-types": "tsc --noEmit",
-    "dev": "vite dev",
+    "dev": "infisical run --env=dev --path=/apps/web -- vite dev",
     "lint": "ultracite check",
     "lint:fix": "ultracite fix",
     "serve": "vite preview",

@@ -21,7 +21,7 @@ public class WorkOSService {
     private final String apiKey;
 
     @Autowired
-    public WorkOSService(@Value("${WORKOS_API_KEY}") String apiKey) {
+    public WorkOSService(@Value("${app.workos.api-key}") String apiKey) {
         this(apiKey, new WorkOS(apiKey));
     }
 

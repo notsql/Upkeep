@@ -1,6 +1,7 @@
 package com.proj.server.workos;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,9 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -85,5 +89,21 @@ class WorkOSServiceTests {
 
         assertEquals(Optional.empty(), service.findDisplayName("user_1"));
         assertEquals(Optional.empty(), new WorkOSService("", client).findDisplayName("user_1"));
+    }
+
+    @Test
+    void startsUnconfiguredWhenTheApiKeyIsBlank() {
+        new ApplicationContextRunner()
+                .withConfiguration(AutoConfigurations.of(PropertyPlaceholderAutoConfiguration.class))
+                .withPropertyValues("app.workos.api-key=")
+                .withUserConfiguration(WorkOSService.class)
+                .run(context -> {
+                    assertNull(context.getStartupFailure());
+
+                    var exception =
+                            assertThrows(ResponseStatusException.class, () -> context.getBean(WorkOSService.class)
+                                    .getOrganizations());
+                    assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
+                });
     }
 }

@@ -14,10 +14,13 @@
       }
     },
     "dev": {
-      "executor": "@nx/maven:maven",
-      "options": { "goals": "spring-boot:run" },
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "infisical run --env=dev --path=/apps/server -- ./mvnw -pl com.proj:server spring-boot:run",
+        "cwd": "{workspaceRoot}"
+      },
       "metadata": {
-        "description": "Runs the API with devtools reload on :8080."
+        "description": "Runs the API with devtools reload on :8080, with secrets from Infisical /apps/server. Runs ./mvnw directly: the @nx/maven executor does not pass the calling environment through to the forked JVM."
       }
     },
     "lint": {
@@ -40,7 +43,7 @@
     "openapi": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./mvnw -pl com.proj:server verify -Popenapi -DskipTests",
+        "command": "infisical run --env=dev --path=/apps/server -- ./mvnw -pl com.proj:server verify -Popenapi -DskipTests",
         "cwd": "{workspaceRoot}"
       },
       "metadata": {
@@ -50,11 +53,11 @@
     "db:generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "./mvnw -pl com.proj:server generate-sources -Pjooq",
+        "command": "infisical run --env=dev --path=/apps/server -- ./mvnw -pl com.proj:server generate-sources -Pjooq",
         "cwd": "{workspaceRoot}"
       },
       "metadata": {
-        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Reads the database in apps/server/.env. Runs ./mvnw directly for the same reason as openapi."
+        "description": "Regenerates the jOOQ classes in com.proj.server.db from the migrated database. Reads the database from Infisical /apps/server. Runs ./mvnw directly for the same reason as openapi."
       }
     }
   }

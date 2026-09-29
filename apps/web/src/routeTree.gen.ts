@@ -15,13 +15,17 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
-import { Route as AuthenticatedEstatesIndexRouteImport } from './routes/_authenticated/estates.index'
-import { Route as AuthenticatedEstatesNewRouteImport } from './routes/_authenticated/estates.new'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedEstatesIndexRouteImport } from './routes/_authenticated/estates/index'
+import { Route as AuthenticatedEstatesNewRouteImport } from './routes/_authenticated/estates/new'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
 import { Route as ApiAuthSignInRouteImport } from './routes/api/auth/sign-in'
 import { Route as ApiAuthSignUpRouteImport } from './routes/api/auth/sign-up'
-import { Route as AuthenticatedEstatesEstateIdIndexRouteImport } from './routes/_authenticated/estates.$estateId.index'
-import { Route as AuthenticatedEstatesEstateIdEditRouteImport } from './routes/_authenticated/estates.$estateId.edit'
+import { Route as AuthenticatedEstatesEstateIdIndexRouteImport } from './routes/_authenticated/estates/$estateId/index'
+import { Route as AuthenticatedEstatesEstateIdEditRouteImport } from './routes/_authenticated/estates/$estateId/edit'
+import { Route as AuthenticatedEstatesEstateIdAssetsNewRouteImport } from './routes/_authenticated/estates/$estateId/assets/new'
+import { Route as AuthenticatedEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_authenticated/estates/$estateId/assets/$assetId/index'
+import { Route as AuthenticatedEstatesEstateIdAssetsAssetIdEditRouteImport } from './routes/_authenticated/estates/$estateId/assets/$assetId/edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -50,6 +54,11 @@ const RegisterRoute = RegisterRouteImport.update({
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEstatesIndexRoute =
@@ -90,6 +99,24 @@ const AuthenticatedEstatesEstateIdEditRoute =
     path: '/estates/$estateId/edit',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedEstatesEstateIdAssetsNewRoute =
+  AuthenticatedEstatesEstateIdAssetsNewRouteImport.update({
+    id: '/estates/$estateId/assets/new',
+    path: '/estates/$estateId/assets/new',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute =
+  AuthenticatedEstatesEstateIdAssetsAssetIdIndexRouteImport.update({
+    id: '/estates/$estateId/assets/$assetId/',
+    path: '/estates/$estateId/assets/$assetId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute =
+  AuthenticatedEstatesEstateIdAssetsAssetIdEditRouteImport.update({
+    id: '/estates/$estateId/assets/$assetId/edit',
+    path: '/estates/$estateId/assets/$assetId/edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -97,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/logout': typeof LogoutRoute
   '/register': typeof RegisterRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/estates/new': typeof AuthenticatedEstatesNewRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/sign-in': typeof ApiAuthSignInRoute
@@ -104,6 +132,9 @@ export interface FileRoutesByFullPath {
   '/estates/': typeof AuthenticatedEstatesIndexRoute
   '/estates/$estateId/edit': typeof AuthenticatedEstatesEstateIdEditRoute
   '/estates/$estateId/': typeof AuthenticatedEstatesEstateIdIndexRoute
+  '/estates/$estateId/assets/new': typeof AuthenticatedEstatesEstateIdAssetsNewRoute
+  '/estates/$estateId/assets/$assetId/edit': typeof AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute
+  '/estates/$estateId/assets/$assetId/': typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -111,6 +142,7 @@ export interface FileRoutesByTo {
   '/logout': typeof LogoutRoute
   '/register': typeof RegisterRoute
   '/account': typeof AuthenticatedAccountRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/estates/new': typeof AuthenticatedEstatesNewRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/sign-in': typeof ApiAuthSignInRoute
@@ -118,6 +150,9 @@ export interface FileRoutesByTo {
   '/estates': typeof AuthenticatedEstatesIndexRoute
   '/estates/$estateId/edit': typeof AuthenticatedEstatesEstateIdEditRoute
   '/estates/$estateId': typeof AuthenticatedEstatesEstateIdIndexRoute
+  '/estates/$estateId/assets/new': typeof AuthenticatedEstatesEstateIdAssetsNewRoute
+  '/estates/$estateId/assets/$assetId/edit': typeof AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute
+  '/estates/$estateId/assets/$assetId': typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -127,6 +162,7 @@ export interface FileRoutesById {
   '/logout': typeof LogoutRoute
   '/register': typeof RegisterRoute
   '/_authenticated/account': typeof AuthenticatedAccountRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/estates/new': typeof AuthenticatedEstatesNewRoute
   '/api/auth/callback': typeof ApiAuthCallbackRoute
   '/api/auth/sign-in': typeof ApiAuthSignInRoute
@@ -134,6 +170,9 @@ export interface FileRoutesById {
   '/_authenticated/estates/': typeof AuthenticatedEstatesIndexRoute
   '/_authenticated/estates/$estateId/edit': typeof AuthenticatedEstatesEstateIdEditRoute
   '/_authenticated/estates/$estateId/': typeof AuthenticatedEstatesEstateIdIndexRoute
+  '/_authenticated/estates/$estateId/assets/new': typeof AuthenticatedEstatesEstateIdAssetsNewRoute
+  '/_authenticated/estates/$estateId/assets/$assetId/edit': typeof AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute
+  '/_authenticated/estates/$estateId/assets/$assetId/': typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -143,6 +182,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/register'
     | '/account'
+    | '/admin/users'
     | '/estates/new'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
@@ -150,6 +190,9 @@ export interface FileRouteTypes {
     | '/estates/'
     | '/estates/$estateId/edit'
     | '/estates/$estateId/'
+    | '/estates/$estateId/assets/new'
+    | '/estates/$estateId/assets/$assetId/edit'
+    | '/estates/$estateId/assets/$assetId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -157,6 +200,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/register'
     | '/account'
+    | '/admin/users'
     | '/estates/new'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
@@ -164,6 +208,9 @@ export interface FileRouteTypes {
     | '/estates'
     | '/estates/$estateId/edit'
     | '/estates/$estateId'
+    | '/estates/$estateId/assets/new'
+    | '/estates/$estateId/assets/$assetId/edit'
+    | '/estates/$estateId/assets/$assetId'
   id:
     | '__root__'
     | '/'
@@ -172,6 +219,7 @@ export interface FileRouteTypes {
     | '/logout'
     | '/register'
     | '/_authenticated/account'
+    | '/_authenticated/admin/users'
     | '/_authenticated/estates/new'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
@@ -179,6 +227,9 @@ export interface FileRouteTypes {
     | '/_authenticated/estates/'
     | '/_authenticated/estates/$estateId/edit'
     | '/_authenticated/estates/$estateId/'
+    | '/_authenticated/estates/$estateId/assets/new'
+    | '/_authenticated/estates/$estateId/assets/$assetId/edit'
+    | '/_authenticated/estates/$estateId/assets/$assetId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/estates/': {
       id: '/_authenticated/estates/'
       path: '/estates'
@@ -285,24 +343,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEstatesEstateIdEditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/estates/$estateId/assets/new': {
+      id: '/_authenticated/estates/$estateId/assets/new'
+      path: '/estates/$estateId/assets/new'
+      fullPath: '/estates/$estateId/assets/new'
+      preLoaderRoute: typeof AuthenticatedEstatesEstateIdAssetsNewRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/estates/$estateId/assets/$assetId/': {
+      id: '/_authenticated/estates/$estateId/assets/$assetId/'
+      path: '/estates/$estateId/assets/$assetId'
+      fullPath: '/estates/$estateId/assets/$assetId/'
+      preLoaderRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/estates/$estateId/assets/$assetId/edit': {
+      id: '/_authenticated/estates/$estateId/assets/$assetId/edit'
+      path: '/estates/$estateId/assets/$assetId/edit'
+      fullPath: '/estates/$estateId/assets/$assetId/edit'
+      preLoaderRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedEstatesNewRoute: typeof AuthenticatedEstatesNewRoute
   AuthenticatedEstatesIndexRoute: typeof AuthenticatedEstatesIndexRoute
   AuthenticatedEstatesEstateIdEditRoute: typeof AuthenticatedEstatesEstateIdEditRoute
   AuthenticatedEstatesEstateIdIndexRoute: typeof AuthenticatedEstatesEstateIdIndexRoute
+  AuthenticatedEstatesEstateIdAssetsNewRoute: typeof AuthenticatedEstatesEstateIdAssetsNewRoute
+  AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute
+  AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedEstatesNewRoute: AuthenticatedEstatesNewRoute,
   AuthenticatedEstatesIndexRoute: AuthenticatedEstatesIndexRoute,
   AuthenticatedEstatesEstateIdEditRoute: AuthenticatedEstatesEstateIdEditRoute,
   AuthenticatedEstatesEstateIdIndexRoute:
     AuthenticatedEstatesEstateIdIndexRoute,
+  AuthenticatedEstatesEstateIdAssetsNewRoute:
+    AuthenticatedEstatesEstateIdAssetsNewRoute,
+  AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute:
+    AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute,
+  AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute:
+    AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
