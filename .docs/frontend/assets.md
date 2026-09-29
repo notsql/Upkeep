@@ -2,15 +2,15 @@
 
 Building assets registered in an estate, and their condition history. Paths
 are relative to `apps/web/src/`; route folders below are under
-`routes/_authenticated/estates/$estateId/assets/`. All require sign-in.
+`routes/_auth/estates/$estateId/assets/`. All require sign-in.
 
 ## Routes
 
 | File | URL | Params | Title | Renders |
 | --- | --- | --- | --- | --- |
-| `new.tsx` | `/estates/$estateId/assets/new` | `estateId` | "Register asset" | `NewAssetPage` |
+| `new/index.tsx` | `/estates/$estateId/assets/new` | `estateId` | "Register asset" | `NewAssetPage` |
 | `$assetId/index.tsx` | `/estates/$estateId/assets/$assetId` | `estateId`, `assetId` | "Asset details" | `AssetDetailsPage` |
-| `$assetId/edit.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
+| `$assetId/edit/index.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
 
 Entry point: the "Register asset" link on the estate details page (owner, active
 estate only). There is no asset list screen yet.

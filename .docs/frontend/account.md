@@ -6,12 +6,12 @@ Paths are relative to `apps/web/src/`.
 
 | File | URL | Guard | Title |
 | --- | --- | --- | --- |
-| `routes/_authenticated/account.tsx` | `/account` | `_authenticated` (signed in) | "Your account" |
+| `routes/_auth/account/index.tsx` | `/account` | `_auth` (signed in) | "Your account" |
 
 ## Screen
 
-`AccountPage` reads the signed-in user from the `_authenticated` layout's
-loader data (`getRouteApi("/_authenticated").useLoaderData().user`) and shows a
+`AccountPage` reads the signed-in user from the `_auth` layout's
+loader data (`getRouteApi("/_auth").useLoaderData().user`) and shows a
 `<dl>` of:
 
 - **Name** - `firstName lastName`, or "Not provided".

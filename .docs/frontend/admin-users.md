@@ -6,7 +6,7 @@ Paths are relative to `apps/web/src/`.
 
 | File | URL | Guard | Title |
 | --- | --- | --- | --- |
-| `routes/_authenticated/admin/users.tsx` | `/admin/users` | `_authenticated`, then own loader: `getAuth()`; if no user or `role !== "admin"`, `redirect({ to: "/estates" })` | none set |
+| `routes/_auth/admin/users/index.tsx` | `/admin/users` | `_auth`, then own loader: `getAuth()`; if no user or `role !== "admin"`, `redirect({ to: "/estates" })` | none set |
 
 The header shows "Admin Dashboard" only to admins (see [shell.md](shell.md)).
 
@@ -14,8 +14,8 @@ The header shows "Admin Dashboard" only to admins (see [shell.md](shell.md)).
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `AdminUsersPage` (`routes/_authenticated/admin/users.tsx`) | "User roles" page. "Total users" card (member count or "—"). "Estate" select of WorkOS organizations (disabled while a role save is pending; changing it clears the selected member and resets the role mutation). Members table (`TableCaption` "Users and assigned roles", sr-only): User (name + email), Joined, Current role (per-row select (`MemberRoleSelect`, trigger `aria-label="Role for {name}"`), saves on change; disabled while saving, when roles failed to load or are empty, when the member has several roles - "Manage multiple roles in WorkOS." - or has no membership ID), Estates ("Manage estates" button, `aria-label="Manage estates for {name}"`). Search box ("Search users") filters by name or email client-side. Opens `MemberEstates` for the chosen member. Shows the first of any query/mutation errors in one alert. | `Button`, `Card`, `Input`, `Label`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableHead`, `TableHeader`, `TableRow` |
-| `MemberEstates` (`routes/_authenticated/admin/-components/member-estates.tsx`) | "Estate access for {name}" section. One checkbox per estate, labelled "{name} ({code})", plus " · Owner" / " · Inactive". Checked when `owner || granted`; disabled for owners (they always keep access) and while a change is pending. Toggling saves immediately. Keyed by `userId`, so switching member resets it. | `Checkbox`, `Label` |
+| `AdminUsersPage` (`routes/_auth/admin/users/index.tsx`) | "User roles" page. "Total users" card (member count or "—"). "Estate" select of WorkOS organizations (disabled while a role save is pending; changing it clears the selected member and resets the role mutation). Members table (`TableCaption` "Users and assigned roles", sr-only): User (name + email), Joined, Current role (per-row select (`MemberRoleSelect`, trigger `aria-label="Role for {name}"`), saves on change; disabled while saving, when roles failed to load or are empty, when the member has several roles - "Manage multiple roles in WorkOS." - or has no membership ID), Estates ("Manage estates" button, `aria-label="Manage estates for {name}"`). Search box ("Search users") filters by name or email client-side. Opens `MemberEstates` for the chosen member. Shows the first of any query/mutation errors in one alert. | `Button`, `Card`, `Input`, `Label`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue`, `Table`, `TableBody`, `TableCaption`, `TableCell`, `TableHead`, `TableHeader`, `TableRow` |
+| `MemberEstates` (`routes/_auth/admin/-components/member-estates.tsx`) | "Estate access for {name}" section. One checkbox per estate, labelled "{name} ({code})", plus " · Owner" / " · Inactive". Checked when `owner || granted`; disabled for owners (they always keep access) and while a change is pending. Toggling saves immediately. Keyed by `userId`, so switching member resets it. | `Checkbox`, `Label` |
 
 ## Endpoints
 

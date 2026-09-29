@@ -6,12 +6,12 @@ IoT devices registered to an asset. Paths are relative to `apps/web/src/`.
 
 No route of its own. `AssetDevicesSection` renders on the asset details page,
 `/estates/$estateId/assets/$assetId`
-(`routes/_authenticated/estates/$estateId/assets/$assetId/index.tsx`, see
+(`routes/_auth/estates/$estateId/assets/$assetId/index.tsx`, see
 [assets.md](assets.md)). Requires sign-in.
 
 ## Screens and components
 
-Both files are in `routes/_authenticated/estates/$estateId/assets/$assetId/-components/`.
+Both files are in `routes/_auth/estates/$estateId/assets/$assetId/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |

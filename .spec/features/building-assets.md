@@ -184,11 +184,11 @@ Test-first: every test is seen failing before the phase that makes it pass
   `flattenLocations`, with labels from `node.path.join(" › ")`.
 - [x] `components/assets/asset-form.tsx` and `components/assets/deactivate-asset-dialog.tsx`.
   The dialog is modelled on `deactivate-estate-dialog.tsx`.
-- [x] Routes under `routes/_authenticated/`:
-  - `estates/$estateId/assets/new.tsx`
+- [x] Routes under `routes/_auth/`:
+  - `estates/$estateId/assets/new/index.tsx`
   - `estates/$estateId/assets/$assetId/index.tsx`, a minimal detail page with
     Edit and Deactivate
-  - `estates/$estateId/assets/$assetId/edit.tsx`
+  - `estates/$estateId/assets/$assetId/edit/index.tsx`
 - [x] A "Register asset" link on `estate-details-page.tsx`.
 
 ### 6. Finish

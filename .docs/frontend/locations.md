@@ -6,7 +6,7 @@ relative to `apps/web/src/`.
 ## Routes
 
 No route of its own. `LocationsSection` renders inside the estate details page
-at `/estates/$estateId` (`routes/_authenticated/estates/$estateId/index.tsx`,
+at `/estates/$estateId` (`routes/_auth/estates/$estateId/index.tsx`,
 see [estates.md](estates.md)). Location pickers also appear in the asset and
 device forms (see [assets.md](assets.md), [devices.md](devices.md)).
 

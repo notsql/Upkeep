@@ -1,16 +1,16 @@
 # Estates (frontend)
 
 Paths are relative to `apps/web/src/`. Every route here sits under
-`routes/_authenticated/` and requires a signed-in user.
+`routes/_auth/` and requires a signed-in user.
 
 ## Routes
 
 | File | URL | Params | Title | Renders |
 | --- | --- | --- | --- | --- |
-| `routes/_authenticated/estates/index.tsx` | `/estates` | - | "My estates" | `EstateListPage` |
-| `routes/_authenticated/estates/new.tsx` | `/estates/new` | - | "Create estate" | `EstateEditorPage` (no `estateId`) |
-| `routes/_authenticated/estates/$estateId/index.tsx` | `/estates/$estateId` | `estateId` | "Estate details" | `EstateDetailsPage` with `LocationsSection` as children (see [locations.md](locations.md)) |
-| `routes/_authenticated/estates/$estateId/edit.tsx` | `/estates/$estateId/edit` | `estateId` | "Edit estate" | `EstateEditorPage estateId` |
+| `routes/_auth/estates/index.tsx` | `/estates` | - | "My estates" | `EstateListPage` |
+| `routes/_auth/estates/new/index.tsx` | `/estates/new` | - | "Create estate" | `EstateEditorPage` (no `estateId`) |
+| `routes/_auth/estates/$estateId/index.tsx` | `/estates/$estateId` | `estateId` | "Estate details" | `EstateDetailsPage` with `LocationsSection` as children (see [locations.md](locations.md)) |
+| `routes/_auth/estates/$estateId/edit/index.tsx` | `/estates/$estateId/edit` | `estateId` | "Edit estate" | `EstateEditorPage estateId` |
 
 ## Screens and components
 

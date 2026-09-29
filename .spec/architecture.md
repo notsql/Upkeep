@@ -122,7 +122,7 @@ complete authentication until verification succeeds.
 
 Sign-in follows the same hosted model. `/api/auth/sign-in` creates the PKCE
 state, `/api/auth/callback` exchanges the authorization code, and the pathless
-`_authenticated` route loader prevents protected pages such as `/account` from
+`_auth` route loader prevents protected pages such as `/account` from
 rendering without a valid server-side session. OAuth return locations are
 reduced to same-origin paths before they reach WorkOS.
 
