@@ -1,5 +1,13 @@
+import { Label } from "@proj/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { type ChangeEvent, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useEstateList } from "@/lib/estates";
 
 const storageKey = "upkeep:current-estate";
@@ -30,8 +38,10 @@ export function EstateSwitcher() {
   useEffect(() => setRememberedEstateId(readRemembered()), []);
 
   const switchEstate = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      const estateId = event.target.value;
+    (estateId: string | null) => {
+      if (!estateId) {
+        return;
+      }
       remember(estateId);
       setRememberedEstateId(estateId);
       navigate({ to: "/estates/$estateId", params: { estateId } });
@@ -51,23 +61,31 @@ export function EstateSwitcher() {
       options.some((estate) => estate.id === id)
     ) ?? "";
 
+  const items = [
+    { value: "", label: "Choose an estate" },
+    ...options.map((estate) => ({ value: estate.id, label: estate.name })),
+  ];
+
   return (
-    <label className="flex items-center gap-2 text-sm">
-      Current estate
-      <select
-        className="border bg-background px-2 py-1"
-        onChange={switchEstate}
-        value={current}
-      >
-        <option disabled value="">
-          Choose an estate
-        </option>
-        {options.map((estate) => (
-          <option key={estate.id} value={estate.id}>
-            {estate.name}
-          </option>
-        ))}
-      </select>
-    </label>
+    <div className="flex items-center gap-2">
+      <Label className="text-sm" htmlFor="current-estate">
+        Current estate
+      </Label>
+      <Select items={items} onValueChange={switchEstate} value={current}>
+        <SelectTrigger id="current-estate">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem disabled value="">
+            Choose an estate
+          </SelectItem>
+          {options.map((estate) => (
+            <SelectItem key={estate.id} value={estate.id}>
+              {estate.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }

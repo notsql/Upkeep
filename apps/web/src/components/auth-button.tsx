@@ -14,10 +14,7 @@ export function AuthButton() {
 
   if (!user) {
     return (
-      <a
-        className="inline-flex h-7 items-center justify-center rounded-none bg-primary px-2.5 font-medium text-primary-foreground text-xs hover:bg-primary/80"
-        href="/api/auth/sign-in"
-      >
+      <a className={buttonVariants({ size: "sm" })} href="/api/auth/sign-in">
         Log in
       </a>
     );

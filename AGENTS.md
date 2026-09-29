@@ -29,7 +29,7 @@ Non-negotiable. Breaking one of these is a bug even if the code works.
    See §5 "Tests" and `.spec/testing.md`.
 8. **Folder-based routing.** Web routes nest as directories under
    `apps/web/src/routes`, not dot-separated file names:
-   `_authenticated/admin/users.tsx`, not `_authenticated/admin.users.tsx`. A
+   `_auth/admin/users/index.tsx`, not `_auth/admin.users.tsx`. A
    segment's root is its `index.tsx`; components used by one route only live
    beside it in a `-components/` folder.
 9. **Build UI from shadcn.** Use the components in `packages/ui` rather than
@@ -319,7 +319,9 @@ and what not to test. The essentials:
     `vite.config.ts`: tests must not load the TanStack Start and Nitro SSR
     plugins.
 - **Java:** tests live in `apps/server/src/test/java`. `@SpringBootTest` for
-  context-level tests, plain unit tests for logic.
+  context-level tests, plain unit tests for logic. Context tests start a
+  migrated Postgres via Testcontainers (`@Import(TestcontainersConfiguration.class)`),
+  so Docker must be running. See `.spec/decisions/0019-*`.
 
 ---
 
