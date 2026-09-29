@@ -1,3 +1,12 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { buttonVariants } from "@proj/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@proj/ui/components/card";
 import { createFileRoute } from "@tanstack/react-router";
 
 interface RegisterSearch {
@@ -20,28 +29,38 @@ function RegisterRoute() {
 export function RegistrationPage({ error }: { error?: string } = {}) {
   return (
     <main className="flex items-center justify-center px-4 py-12">
-      <section
+      <Card
         aria-labelledby="registration-heading"
-        className="w-full max-w-md rounded-lg border bg-card p-6 shadow-sm sm:p-8"
+        className="w-full max-w-md"
+        role="region"
       >
-        <h1 className="font-semibold text-2xl" id="registration-heading">
-          Create an account
-        </h1>
-        <p className="mt-2 text-muted-foreground text-sm">
-          Create your UpKeep account through our secure authentication provider.
-        </p>
-        {error ? (
-          <p className="mt-6 text-destructive text-sm" role="alert">
-            Registration is temporarily unavailable. Please try again.
-          </p>
-        ) : null}
-        <a
-          className="mt-8 inline-flex h-10 w-full items-center justify-center bg-primary px-4 font-medium text-primary-foreground text-sm hover:bg-primary/80"
-          href="/api/auth/sign-up"
-        >
-          Create account
-        </a>
-      </section>
+        <CardHeader>
+          <CardTitle>
+            <h1 className="font-semibold text-2xl" id="registration-heading">
+              Create an account
+            </h1>
+          </CardTitle>
+          <CardDescription>
+            Create your UpKeep account through our secure authentication
+            provider.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          {error ? (
+            <Alert variant="destructive">
+              <AlertDescription>
+                Registration is temporarily unavailable. Please try again.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          <a
+            className={buttonVariants({ className: "w-full", size: "lg" })}
+            href="/api/auth/sign-up"
+          >
+            Create account
+          </a>
+        </CardContent>
+      </Card>
     </main>
   );
 }

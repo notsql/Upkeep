@@ -1,10 +1,10 @@
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@proj/ui/components/spinner";
 
 export default function Loader() {
   return (
     <div className="flex h-full items-center justify-center pt-8">
-      {/* Announce loading to screen readers - an unlabelled spinner is silent. */}
-      <Loader2 aria-label="Loading" className="animate-spin" role="status" />
+      {/* Spinner is a labelled status, so screen readers announce loading. */}
+      <Spinner className="size-6" />
     </div>
   );
 }

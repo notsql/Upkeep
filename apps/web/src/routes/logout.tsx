@@ -1,3 +1,4 @@
+import { Spinner } from "@proj/ui/components/spinner";
 import { createFileRoute } from "@tanstack/react-router";
 import { signOut } from "@workos/authkit-tanstack-react-start";
 
@@ -20,7 +21,12 @@ export const Route = createFileRoute("/logout")({
 
 function LogoutPage() {
   return (
-    <p aria-label="Signing out" role="status">
+    <p
+      aria-label="Signing out"
+      className="flex items-center gap-2 p-4"
+      role="status"
+    >
+      <Spinner aria-hidden="true" />
       Signing out...
     </p>
   );

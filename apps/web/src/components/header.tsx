@@ -1,3 +1,4 @@
+import { Separator } from "@proj/ui/components/separator";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 
@@ -40,7 +41,7 @@ export default function Header() {
           <AuthButton />
         </div>
       </div>
-      <hr />
+      <Separator />
     </div>
   );
 }

@@ -1,3 +1,11 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { buttonVariants } from "@proj/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@proj/ui/components/card";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { buildSignInPath, sanitizeReturnTo } from "@/lib/auth-redirect";
@@ -30,29 +38,32 @@ export function LoginPage({
 }) {
   return (
     <main className="flex items-center justify-center px-4 py-12">
-      <section
-        aria-labelledby="login-heading"
-        className="w-full max-w-md rounded-lg border bg-card p-6 shadow-sm sm:p-8"
-      >
-        <h1 className="font-semibold text-2xl" id="login-heading">
-          Sign in
-        </h1>
-        <div className="mt-6">
+      <Card aria-labelledby="login-heading" className="w-full max-w-md" role="region">
+        <CardHeader>
+          <CardTitle>
+            <h1 className="font-semibold text-2xl" id="login-heading">
+              Sign in
+            </h1>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4">
           {error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {error === "auth_unavailable"
-                ? "Authentication is temporarily unavailable. Please try again."
-                : "Authentication failed or expired. Please try again."}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>
+                {error === "auth_unavailable"
+                  ? "Authentication is temporarily unavailable. Please try again."
+                  : "Authentication failed or expired. Please try again."}
+              </AlertDescription>
+            </Alert>
           ) : null}
           <a
-            className="mt-4 inline-flex h-10 w-full items-center justify-center bg-primary px-4 font-medium text-primary-foreground text-sm hover:bg-primary/80"
+            className={buttonVariants({ className: "w-full", size: "lg" })}
             href={buildSignInPath(returnTo)}
           >
             Continue to secure sign in
           </a>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </main>
   );
 }

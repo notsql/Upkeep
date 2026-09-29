@@ -1,3 +1,11 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@proj/ui/components/card";
+import { Spinner } from "@proj/ui/components/spinner";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -20,10 +28,19 @@ function ApiStatus() {
   });
 
   if (isPending) {
-    return <p className="text-muted-foreground text-sm">Checking...</p>;
+    return (
+      <p className="flex items-center gap-2 text-muted-foreground text-sm">
+        <Spinner aria-hidden="true" />
+        Checking...
+      </p>
+    );
   }
   if (isError) {
-    return <p className="text-red-500 text-sm">API unreachable</p>;
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>API unreachable</AlertDescription>
+      </Alert>
+    );
   }
   return (
     <ul className="text-sm">
@@ -54,10 +71,16 @@ function HomeComponent() {
     <div className="container mx-auto max-w-3xl px-4 py-2">
       <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
       <div className="grid gap-6">
-        <section className="rounded-lg border p-4">
-          <h2 className="mb-2 font-medium">API Status</h2>
-          <ApiStatus />
-        </section>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <h2>API Status</h2>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ApiStatus />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
