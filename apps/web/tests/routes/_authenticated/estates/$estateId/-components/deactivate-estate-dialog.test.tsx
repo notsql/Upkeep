@@ -1,21 +1,11 @@
 import { fireEvent } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DeactivateEstateDialog } from "@/routes/_authenticated/estates/$estateId/-components/deactivate-estate-dialog";
 import {
   renderWithProviders,
   screen,
   waitFor,
 } from "../../../../../test-utils";
-
-// jsdom does not implement native modal dialog methods.
-beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function showModal() {
-    this.open = true;
-  };
-  HTMLDialogElement.prototype.close = function close() {
-    this.open = false;
-  };
-});
 
 describe("DeactivateEstateDialog", () => {
   it("requires the exact code before submitting", async () => {

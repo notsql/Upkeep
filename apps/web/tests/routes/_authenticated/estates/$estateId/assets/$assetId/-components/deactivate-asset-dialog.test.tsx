@@ -1,21 +1,11 @@
 import { fireEvent } from "@testing-library/react";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DeactivateAssetDialog } from "@/routes/_authenticated/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
 import {
   renderWithProviders,
   screen,
   waitFor,
 } from "../../../../../../../test-utils";
-
-// jsdom does not implement native modal dialog methods.
-beforeAll(() => {
-  HTMLDialogElement.prototype.showModal = function showModal() {
-    this.open = true;
-  };
-  HTMLDialogElement.prototype.close = function close() {
-    this.open = false;
-  };
-});
 
 describe("DeactivateAssetDialog", () => {
   it("keeps confirm disabled until the exact reference is typed", async () => {

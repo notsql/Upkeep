@@ -1,5 +1,7 @@
+import { Checkbox } from "@proj/ui/components/checkbox";
+import { Label } from "@proj/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ChangeEvent, useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 
 import { api } from "@/lib/api";
 
@@ -11,6 +13,39 @@ interface AccessChange {
 
 const accessQueryKey = (userId: string) =>
   ["admin", "estate-users", userId] as const;
+
+function EstateOption({
+  checked,
+  children,
+  disabled,
+  estateId,
+  onChange,
+}: {
+  checked: boolean;
+  children: ReactNode;
+  disabled: boolean;
+  estateId: string;
+  onChange: (estateId: string, granted: boolean) => void;
+}) {
+  const id = `member-estate-${estateId}`;
+  const handleCheckedChange = useCallback(
+    (granted: boolean) => onChange(estateId, granted),
+    [estateId, onChange]
+  );
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        checked={checked}
+        disabled={disabled}
+        id={id}
+        onCheckedChange={handleCheckedChange}
+      />
+      <Label className="text-sm" htmlFor={id}>
+        {children}
+      </Label>
+    </div>
+  );
+}
 
 export function MemberEstates({
   name,
@@ -55,14 +90,10 @@ export function MemberEstates({
       }),
   });
 
+  const { mutate } = change;
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const { checked, dataset } = event.target;
-      if (dataset.estateId) {
-        change.mutate({ estateId: dataset.estateId, granted: checked });
-      }
-    },
-    [change]
+    (estateId: string, granted: boolean) => mutate({ estateId, granted }),
+    [mutate]
   );
 
   const error = access.error ?? change.error;
@@ -102,19 +133,15 @@ export function MemberEstates({
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">
         {access.data?.map((estate) => (
           <li key={estate.estateId}>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                checked={estate.owner || estate.granted}
-                data-estate-id={estate.estateId}
-                disabled={estate.owner || change.isPending}
-                onChange={handleChange}
-                type="checkbox"
-              />
-              <span>
-                {estate.name} ({estate.code}){estate.owner ? " · Owner" : ""}
-                {estate.active ? "" : " · Inactive"}
-              </span>
-            </label>
+            <EstateOption
+              checked={estate.owner || estate.granted}
+              disabled={estate.owner || change.isPending}
+              estateId={estate.estateId}
+              onChange={handleChange}
+            >
+              {estate.name} ({estate.code}){estate.owner ? " · Owner" : ""}
+              {estate.active ? "" : " · Inactive"}
+            </EstateOption>
           </li>
         ))}
       </ul>

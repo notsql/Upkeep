@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { Checkbox } from "@proj/ui/components/checkbox";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
@@ -67,6 +68,42 @@ function validate(values: FormValues, metrics: Set<DeviceMetric>): FieldErrors {
   return errors;
 }
 
+function MetricOption({
+  checked,
+  disabled,
+  id,
+  label,
+  metric,
+  onChange,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  id: string;
+  label: string;
+  metric: DeviceMetric;
+  onChange: (metric: DeviceMetric, checked: boolean) => void;
+}) {
+  const handleCheckedChange = useCallback(
+    (next: boolean) => onChange(metric, next),
+    [metric, onChange]
+  );
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        checked={checked}
+        disabled={disabled}
+        id={id}
+        name="metrics"
+        onCheckedChange={handleCheckedChange}
+        value={metric}
+      />
+      <Label className="text-sm" htmlFor={id}>
+        {label}
+      </Label>
+    </div>
+  );
+}
+
 export function DeviceForm({
   defaultLocationId,
   estateId,
@@ -102,14 +139,13 @@ export function DeviceForm({
   );
 
   const handleMetricChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const { checked, value } = event.target;
+    (metric: DeviceMetric, checked: boolean) => {
       setMetrics((current) => {
         const next = new Set(current);
         if (checked) {
-          next.add(value as DeviceMetric);
+          next.add(metric);
         } else {
-          next.delete(value as DeviceMetric);
+          next.delete(metric);
         }
         return next;
       });
@@ -230,16 +266,16 @@ export function DeviceForm({
             Supported metrics
           </legend>
           {catalogue.map(([metric, { name, unit }]) => (
-            <label className="flex items-center gap-2 text-sm" key={metric}>
-              <input
-                checked={metrics.has(metric)}
-                name="metrics"
-                onChange={handleMetricChange}
-                type="checkbox"
-                value={metric}
-              />
-              {`${name} (${unit})`}
-            </label>
+            <MetricOption
+              checked={metrics.has(metric)}
+              // A fieldset does not disable the non-native checkbox.
+              disabled={pending}
+              id={`${id}-metric-${metric}`}
+              key={metric}
+              label={`${name} (${unit})`}
+              metric={metric}
+              onChange={handleMetricChange}
+            />
           ))}
           {errorText("metrics")}
         </fieldset>
