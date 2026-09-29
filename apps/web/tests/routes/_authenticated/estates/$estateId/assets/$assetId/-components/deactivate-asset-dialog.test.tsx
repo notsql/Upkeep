@@ -86,10 +86,8 @@ describe("DeactivateAssetDialog", () => {
     expect((await screen.findByRole("alert")).textContent).toContain(
       "estate is inactive"
     );
-    const dialog = screen.getByRole<HTMLDialogElement>("dialog", {
-      name: "Deactivate Lift A?",
-    });
-    expect(dialog.open).toBe(true);
+    // Still exposed as an open dialog - a closed one leaves the a11y tree.
+    screen.getByRole("dialog", { name: "Deactivate Lift A?" });
     expect(onCancel).not.toHaveBeenCalled();
     expect(input.value).toBe("SUNRISE-A0001");
     // The owner can retry once the request has settled.

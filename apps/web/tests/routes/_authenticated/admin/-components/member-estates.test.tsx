@@ -13,6 +13,15 @@ const maple = /Maple Grove/;
 const oak = /Oak Park/;
 const ownedPine = /Pine Court.*Owner/;
 
+// Disabled state as assistive tech sees it, whether the checkbox is a native
+// input or an ARIA widget.
+function isDisabled(element: HTMLElement): boolean {
+  return (
+    element.matches(":disabled") ||
+    element.getAttribute("aria-disabled") === "true"
+  );
+}
+
 describe("MemberEstates", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -49,18 +58,13 @@ describe("MemberEstates", () => {
   it("shows which estates the member can access", async () => {
     renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
     screen.getByRole("heading", { name: "Estate access for Casey Doe" });
-    const mapleBox = await screen.findByRole<HTMLInputElement>("checkbox", {
-      name: maple,
-    });
-    expect(mapleBox.checked).toBe(false);
-    expect(
-      screen.getByRole<HTMLInputElement>("checkbox", { name: oak }).checked
-    ).toBe(true);
-    const owned = screen.getByRole<HTMLInputElement>("checkbox", {
+    await screen.findByRole("checkbox", { name: maple, checked: false });
+    screen.getByRole("checkbox", { name: oak, checked: true });
+    const owned = screen.getByRole("checkbox", {
       name: ownedPine,
+      checked: true,
     });
-    expect(owned.checked).toBe(true);
-    expect(owned.disabled).toBe(true);
+    expect(isDisabled(owned)).toBe(true);
     expect(api.GET).toHaveBeenCalledWith("/api/admin/users/{userId}/estates", {
       params: { path: { userId: "usr_1" } },
     });
@@ -85,9 +89,9 @@ describe("MemberEstates", () => {
     );
 
     await waitFor(() =>
-      expect(
-        screen.getByRole<HTMLInputElement>("checkbox", { name: oak }).disabled
-      ).toBe(false)
+      expect(isDisabled(screen.getByRole("checkbox", { name: oak }))).toBe(
+        false
+      )
     );
     fireEvent.click(screen.getByRole("checkbox", { name: oak }));
     await waitFor(() =>

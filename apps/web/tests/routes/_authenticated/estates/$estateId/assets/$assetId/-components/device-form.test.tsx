@@ -47,7 +47,7 @@ function intervalField() {
   return screen.getByRole<HTMLInputElement>("spinbutton", { name: INTERVAL });
 }
 function metric(name: string) {
-  return screen.getByRole<HTMLInputElement>("checkbox", { name });
+  return screen.getByRole("checkbox", { name });
 }
 function submit() {
   fireEvent.click(screen.getByRole("button", { name: "Register device" }));
@@ -148,6 +148,6 @@ describe("DeviceForm", () => {
     );
     expect(onSave).toHaveBeenCalledTimes(1);
     expect(identifierField().value).toBe("PUMP-01");
-    expect(metric("Power (kW)").checked).toBe(true);
+    screen.getByRole("checkbox", { name: "Power (kW)", checked: true });
   });
 });
