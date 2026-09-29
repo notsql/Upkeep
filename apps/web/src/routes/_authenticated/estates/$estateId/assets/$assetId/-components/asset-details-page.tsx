@@ -1,4 +1,4 @@
-import { Button } from "@proj/ui/components/button";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -95,7 +95,7 @@ export function AssetDetailsPage({
           {asset.data.deactivatedAt ? null : (
             <div className="flex items-center gap-4">
               <Link
-                className="border px-4 py-2 text-sm"
+                className={buttonVariants({ variant: "outline" })}
                 params={{ estateId, assetId }}
                 to="/estates/$estateId/assets/$assetId/edit"
               >
