@@ -2,12 +2,17 @@ import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { localToday } from "@/lib/assessments";
 import { AssessmentForm } from "@/routes/_authenticated/estates/$estateId/assets/$assetId/-components/assessment-form";
-import { screen, waitFor, within } from "../../../../../../../test-utils";
+import {
+  chooseOption,
+  screen,
+  waitFor,
+  within,
+} from "../../../../../../../test-utils";
 
 const REQUIRED = /required/i;
 
 function conditionField() {
-  return screen.getByRole<HTMLSelectElement>("combobox", { name: "Condition" });
+  return screen.getByRole("combobox", { name: "Condition" });
 }
 function dateField() {
   // Date inputs have no ARIA role, so fall back to the label.
@@ -21,13 +26,12 @@ function submit() {
 }
 
 describe("AssessmentForm", () => {
-  it("offers every condition and starts on today's date", () => {
+  it("offers every condition and starts on today's date", async () => {
     render(<AssessmentForm onSave={vi.fn()} />);
+    within(conditionField()).getByText("Select a condition");
+    fireEvent.click(conditionField());
     expect(
-      within(conditionField())
-        .getAllByRole<HTMLOptionElement>("option")
-        .map((option) => option.textContent)
-        .slice(1)
+      (await screen.findAllByRole("option")).map((option) => option.textContent)
     ).toEqual(["Good", "Needs attention", "Faulty"]);
     expect(dateField().value).toBe(localToday());
     expect(dateField().max).toBe(localToday());
@@ -36,9 +40,7 @@ describe("AssessmentForm", () => {
   it("records the condition, date and trimmed notes", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     render(<AssessmentForm onSave={onSave} />);
-    fireEvent.change(conditionField(), {
-      target: { value: "NEEDS_ATTENTION" },
-    });
+    await chooseOption(conditionField(), "Needs attention");
     fireEvent.change(dateField(), { target: { value: "2026-09-20" } });
     fireEvent.change(notesField(), {
       target: { value: "  Seal weeping at the gland.  " },
@@ -66,7 +68,7 @@ describe("AssessmentForm", () => {
   it("rejects a date in the future", async () => {
     const onSave = vi.fn();
     render(<AssessmentForm onSave={onSave} />);
-    fireEvent.change(conditionField(), { target: { value: "GOOD" } });
+    await chooseOption(conditionField(), "Good");
     fireEvent.change(dateField(), { target: { value: "2999-01-01" } });
     fireEvent.change(notesField(), { target: { value: "Fine" } });
     submit();
@@ -79,13 +81,13 @@ describe("AssessmentForm", () => {
       .fn()
       .mockRejectedValue(new Error("This asset is deactivated."));
     render(<AssessmentForm onSave={onSave} />);
-    fireEvent.change(conditionField(), { target: { value: "FAULTY" } });
+    await chooseOption(conditionField(), "Faulty");
     fireEvent.change(notesField(), { target: { value: "Motor seized." } });
     submit();
     expect((await screen.findByRole("alert")).textContent).toContain(
       "deactivated"
     );
-    expect(conditionField().value).toBe("FAULTY");
+    within(conditionField()).getByText("Faulty");
     expect(notesField().value).toBe("Motor seized.");
   });
 });

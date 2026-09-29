@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import type { Assessment } from "@/lib/assessments";
 import { AssetConditionSection } from "@/routes/_authenticated/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import {
+  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -118,9 +119,10 @@ describe("AssetConditionSection", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Record assessment" })
     );
-    fireEvent.change(screen.getByRole("combobox", { name: "Condition" }), {
-      target: { value: "NEEDS_ATTENTION" },
-    });
+    await chooseOption(
+      screen.getByRole("combobox", { name: "Condition" }),
+      "Needs attention"
+    );
     fireEvent.change(screen.getByLabelText("Assessment date"), {
       target: { value: "2026-09-27" },
     });

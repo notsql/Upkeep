@@ -1,7 +1,12 @@
 import { fireEvent } from "@testing-library/react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_authenticated/admin/users";
-import { renderWithProviders, screen, waitFor } from "../../../test-utils";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+} from "../../../test-utils";
 
 const { get, put } = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn() }));
 vi.mock("@/lib/api", () => ({ api: { GET: get, PUT: put } }));
@@ -38,13 +43,14 @@ beforeEach(() => {
 it("loads organization members and saves their role through the API", async () => {
   put.mockResolvedValue({ data: {} });
   renderWithProviders(<Page />);
-  fireEvent.change(await screen.findByRole("combobox", { name: "Estate" }), {
-    target: { value: "org_1" },
-  });
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Estate" }),
+    "Acme"
+  );
   const role = await screen.findByRole("combobox", {
     name: "Role for Casey Doe",
   });
-  fireEvent.change(role, { target: { value: "admin" } });
+  await chooseOption(role, "Admin");
   await waitFor(() =>
     expect(put).toHaveBeenCalledWith("/api/admin/users/{membershipId}/role", {
       params: { path: { membershipId: "om_1" } },
@@ -63,27 +69,26 @@ it("shows a failed load without displaying mock users", async () => {
 it("reports a failed save and keeps the saved role", async () => {
   put.mockResolvedValue({ error: {} });
   renderWithProviders(<Page />);
-  fireEvent.change(await screen.findByRole("combobox", { name: "Estate" }), {
-    target: { value: "org_1" },
-  });
-  fireEvent.change(
-    await screen.findByRole("combobox", { name: "Role for Casey Doe" }),
-    { target: { value: "admin" } }
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Estate" }),
+    "Acme"
   );
+  const role = await screen.findByRole("combobox", {
+    name: "Role for Casey Doe",
+  });
+  await chooseOption(role, "Admin");
   expect((await screen.findByRole("alert")).textContent).toContain(
     "Unable to update role"
   );
-  expect(
-    screen.getByRole<HTMLSelectElement>("combobox", {
-      name: "Role for Casey Doe",
-    }).value
-  ).toBe("viewer");
+  expect(role.textContent).toContain("Viewer");
+  expect(role.textContent).not.toContain("Admin");
 });
 it("opens a member's estate access", async () => {
   renderWithProviders(<Page />);
-  fireEvent.change(await screen.findByRole("combobox", { name: "Estate" }), {
-    target: { value: "org_1" },
-  });
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Estate" }),
+    "Acme"
+  );
   fireEvent.click(
     await screen.findByRole("button", { name: "Manage estates for Casey Doe" })
   );

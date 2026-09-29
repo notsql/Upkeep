@@ -2,9 +2,12 @@ import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@proj/ui/components/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import { Textarea } from "@proj/ui/components/textarea";
 import {
   type ChangeEvent,
@@ -27,6 +30,14 @@ interface FormValues {
 }
 
 type Field = keyof FormValues;
+
+const conditionItems = [
+  { value: "", label: "Select a condition" },
+  ...Object.entries(conditionLabel).map(([value, label]) => ({
+    value,
+    label,
+  })),
+];
 type FieldErrors = Partial<Record<Field, string>>;
 
 function isCondition(value: string): value is AssetCondition {
@@ -67,16 +78,16 @@ export function AssessmentForm({
   const [pending, setPending] = useState(false);
 
   const handleChange = useCallback(
-    (
-      event: ChangeEvent<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >
-    ) => {
+    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = event.target;
       setValues((current) => ({ ...current, [name]: value }));
     },
     []
   );
+
+  const handleConditionChange = useCallback((value: string | null) => {
+    setValues((current) => ({ ...current, condition: value ?? "" }));
+  }, []);
 
   const handleSubmit = useCallback(
     async (event: SubmitEvent<HTMLFormElement>) => {
@@ -127,22 +138,27 @@ export function AssessmentForm({
         <legend className="sr-only">Condition assessment</legend>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-condition`}>Condition</Label>
-          <NativeSelect
-            {...errorProps("condition")}
-            className="w-full"
-            id={`${id}-condition`}
-            name="condition"
-            onChange={handleChange}
+          <Select
+            items={conditionItems}
+            onValueChange={handleConditionChange}
             required
             value={values.condition}
           >
-            <NativeSelectOption value="">Select a condition</NativeSelectOption>
-            {Object.entries(conditionLabel).map(([value, label]) => (
-              <NativeSelectOption key={value} value={value}>
-                {label}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+            <SelectTrigger
+              {...errorProps("condition")}
+              className="w-full"
+              id={`${id}-condition`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {conditionItems.slice(1).map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errorText("condition")}
         </div>
         <div className="grid gap-2">

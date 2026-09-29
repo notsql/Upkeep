@@ -2,19 +2,27 @@ import { buttonVariants } from "@proj/ui/components/button";
 import { Card } from "@proj/ui/components/card";
 import { Label } from "@proj/ui/components/label";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@proj/ui/components/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import { Link } from "@tanstack/react-router";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { type EstateStatus, useEstateList } from "@/lib/estates";
+
+const statusItems: { value: EstateStatus; label: string }[] = [
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+  { value: "ALL", label: "All" },
+];
 
 export function EstateListPage() {
   const [status, setStatus] = useState<EstateStatus>("ACTIVE");
   const estates = useEstateList(status);
-  const changeStatus = useCallback((event: ChangeEvent<HTMLSelectElement>) => {
-    const { value } = event.target;
-    if (value === "ACTIVE" || value === "INACTIVE" || value === "ALL") {
+  const changeStatus = useCallback((value: EstateStatus | null) => {
+    if (value) {
       setStatus(value);
     }
   }, []);
@@ -33,11 +41,18 @@ export function EstateListPage() {
         <Label className="text-sm" htmlFor="estate-status">
           Status
         </Label>
-        <NativeSelect id="estate-status" onChange={changeStatus} value={status}>
-          <NativeSelectOption value="ACTIVE">Active</NativeSelectOption>
-          <NativeSelectOption value="INACTIVE">Inactive</NativeSelectOption>
-          <NativeSelectOption value="ALL">All</NativeSelectOption>
-        </NativeSelect>
+        <Select items={statusItems} onValueChange={changeStatus} value={status}>
+          <SelectTrigger id="estate-status">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {statusItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {estates.isPending ? <p aria-live="polite">Loading estates…</p> : null}
       {estates.error ? (

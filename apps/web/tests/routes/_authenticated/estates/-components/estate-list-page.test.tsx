@@ -1,9 +1,9 @@
-import { fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { EstateListPage } from "@/routes/_authenticated/estates/-components/estate-list-page";
 import {
+  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -54,9 +54,10 @@ describe("estate list page", () => {
     });
     const { queryClient } = renderWithProviders(<EstateListPage />);
     await screen.findByRole("link", { name: "Maple Grove" });
-    fireEvent.change(screen.getByRole("combobox", { name: "Status" }), {
-      target: { value: "INACTIVE" },
-    });
+    await chooseOption(
+      screen.getByRole("combobox", { name: "Status" }),
+      "Inactive"
+    );
     await waitFor(() =>
       expect(api.GET).toHaveBeenCalledWith("/estates", {
         params: { query: { status: "INACTIVE" } },

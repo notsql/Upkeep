@@ -4,9 +4,11 @@ import { api } from "@/lib/api";
 import type { Location } from "@/lib/locations";
 import { DeviceForm } from "@/routes/_authenticated/estates/$estateId/assets/$assetId/-components/device-form";
 import {
+  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "../../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
@@ -41,7 +43,7 @@ function modelField() {
   return screen.getByRole<HTMLInputElement>("textbox", { name: "Model" });
 }
 function locationField() {
-  return screen.getByRole<HTMLSelectElement>("combobox", { name: "Location" });
+  return screen.getByRole("combobox", { name: "Location" });
 }
 function intervalField() {
   return screen.getByRole<HTMLInputElement>("spinbutton", { name: INTERVAL });
@@ -61,7 +63,10 @@ async function renderForm(onSave = vi.fn().mockResolvedValue(undefined)) {
       onSave={onSave}
     />
   );
-  await screen.findByRole("option", { name: "Blk 101 › Pipe run" });
+  // The asset's location shows by its path once the locations have loaded.
+  await waitFor(() =>
+    within(locationField()).getByText("Blk 101 › Plant room")
+  );
   return onSave;
 }
 
@@ -76,7 +81,7 @@ describe("DeviceForm", () => {
 
   it("starts at the asset's location and offers every metric with its unit", async () => {
     await renderForm();
-    expect(locationField().value).toBe("plant");
+    within(locationField()).getByText("Blk 101 › Plant room");
     for (const name of [
       "Temperature (°C)",
       "Humidity (%)",
@@ -94,7 +99,7 @@ describe("DeviceForm", () => {
     const onSave = await renderForm();
     fireEvent.change(identifierField(), { target: { value: " PUMP-01 " } });
     fireEvent.change(modelField(), { target: { value: " PT-100 " } });
-    fireEvent.change(locationField(), { target: { value: "pipes" } });
+    await chooseOption(locationField(), "Blk 101 › Pipe run");
     fireEvent.click(metric("Pressure (bar)"));
     fireEvent.click(metric("Temperature (°C)"));
     fireEvent.change(intervalField(), { target: { value: "300" } });

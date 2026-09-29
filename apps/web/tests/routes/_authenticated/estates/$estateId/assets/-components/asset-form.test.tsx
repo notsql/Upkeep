@@ -5,6 +5,7 @@ import type { Asset } from "@/lib/assets";
 import type { Location } from "@/lib/locations";
 import { AssetForm } from "@/routes/_authenticated/estates/$estateId/assets/-components/asset-form";
 import {
+  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -68,19 +69,24 @@ function serveLocations() {
 
 /** Resolves once the location options have arrived. */
 async function locationsLoaded() {
-  await screen.findByRole("option", {
-    name: "Blk 101 › Level 1 › Lift lobby",
-  });
+  await waitFor(() => within(locationField()).getByText("Select a location"));
+}
+
+/** Opens a select and lists its options' labels. */
+async function optionLabels(trigger: HTMLElement): Promise<string[]> {
+  fireEvent.click(trigger);
+  const options = await screen.findAllByRole("option");
+  return options.map((option) => option.textContent ?? "");
 }
 
 function nameField() {
   return screen.getByRole<HTMLInputElement>("textbox", { name: "Name" });
 }
 function categoryField() {
-  return screen.getByRole<HTMLSelectElement>("combobox", { name: "Category" });
+  return screen.getByRole("combobox", { name: "Category" });
 }
 function locationField() {
-  return screen.getByRole<HTMLSelectElement>("combobox", { name: "Location" });
+  return screen.getByRole("combobox", { name: "Location" });
 }
 function installedOnField() {
   // Date inputs have no ARIA role, so fall back to the label.
@@ -100,10 +106,10 @@ function serialNumberField() {
   });
 }
 
-function fillRequired() {
+async function fillRequired() {
   fireEvent.change(nameField(), { target: { value: "Lift A" } });
-  fireEvent.change(categoryField(), { target: { value: "LIFT" } });
-  fireEvent.change(locationField(), { target: { value: "a2" } });
+  await chooseOption(categoryField(), "Lift");
+  await chooseOption(locationField(), "Blk 101 › Level 1 › Lift lobby");
 }
 
 describe("AssetForm", () => {
@@ -128,20 +134,15 @@ describe("AssetForm", () => {
   it("offers every asset category", async () => {
     renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
     await locationsLoaded();
-    expect(
-      within(categoryField())
-        .getAllByRole<HTMLOptionElement>("option")
-        .map((option) => option.value)
-        .filter(Boolean)
-    ).toEqual([
-      "LIFT",
-      "PUMP",
-      "GENERATOR",
-      "LIGHTING",
-      "FIRE_SAFETY",
+    expect(await optionLabels(categoryField())).toEqual([
+      "Lift",
+      "Pump",
+      "Generator",
+      "Lighting",
+      "Fire safety",
       "HVAC",
-      "ELECTRICAL",
-      "OTHER",
+      "Electrical",
+      "Other",
     ]);
   });
 
@@ -151,18 +152,13 @@ describe("AssetForm", () => {
     expect(api.GET).toHaveBeenCalledWith("/estates/{estateId}/locations", {
       params: { path: { estateId: "estate-id" } },
     });
-    const options = within(locationField())
-      .getAllByRole<HTMLOptionElement>("option")
-      .filter((option) => option.value);
-    expect(options.map((option) => [option.value, option.textContent])).toEqual(
-      [
-        ["b1", "Blk 101"],
-        ["l1", "Blk 101 › Level 1"],
-        ["a2", "Blk 101 › Level 1 › Lift lobby"],
-        ["a1", "Blk 101 › Lift"],
-        ["b2", "Blk 102"],
-      ]
-    );
+    expect(await optionLabels(locationField())).toEqual([
+      "Blk 101",
+      "Blk 101 › Level 1",
+      "Blk 101 › Level 1 › Lift lobby",
+      "Blk 101 › Lift",
+      "Blk 102",
+    ]);
   });
 
   it("explains which required fields are missing instead of saving", async () => {
@@ -189,7 +185,7 @@ describe("AssetForm", () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
     await locationsLoaded();
-    fillRequired();
+    await fillRequired();
     fireEvent.change(installedOnField(), { target: { value: "2020-05-01" } });
     fireEvent.change(manufacturerField(), { target: { value: "Otis" } });
     fireEvent.change(modelField(), { target: { value: "Gen2" } });
@@ -212,7 +208,7 @@ describe("AssetForm", () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
     await locationsLoaded();
-    fillRequired();
+    await fillRequired();
     fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toEqual({
@@ -228,15 +224,15 @@ describe("AssetForm", () => {
       .mockRejectedValue(new Error("This location has been deactivated."));
     renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
     await locationsLoaded();
-    fillRequired();
+    await fillRequired();
     fireEvent.change(manufacturerField(), { target: { value: "Otis" } });
     fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
     expect((await screen.findByRole("alert")).textContent).toContain(
       "deactivated"
     );
     expect(nameField().value).toBe("Lift A");
-    expect(categoryField().value).toBe("LIFT");
-    expect(locationField().value).toBe("a2");
+    within(categoryField()).getByText("Lift");
+    within(locationField()).getByText("Blk 101 › Level 1 › Lift lobby");
     expect(manufacturerField().value).toBe("Otis");
     await waitFor(() =>
       expect(
@@ -257,7 +253,7 @@ describe("AssetForm", () => {
     );
     renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
     await locationsLoaded();
-    fillRequired();
+    await fillRequired();
     fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
     const pending = await screen.findByRole<HTMLButtonElement>("button", {
       name: "Saving…",
@@ -275,22 +271,23 @@ describe("AssetForm", () => {
     renderWithProviders(
       <AssetForm estateId="estate-id" initialValues={asset} onSave={onSave} />
     );
-    await locationsLoaded();
     const reference = screen.getByRole<HTMLInputElement>("textbox", {
       name: "Reference",
     });
     expect(reference.value).toBe("SUNRISE-A0001");
     expect(reference.readOnly).toBe(true);
     expect(nameField().value).toBe("Lift A");
-    expect(categoryField().value).toBe("LIFT");
-    await waitFor(() => expect(locationField().value).toBe("a2"));
+    within(categoryField()).getByText("Lift");
+    await waitFor(() =>
+      within(locationField()).getByText("Blk 101 › Level 1 › Lift lobby")
+    );
     expect(installedOnField().value).toBe("2020-05-01");
     expect(manufacturerField().value).toBe("Otis");
     expect(modelField().value).toBe("Gen2");
     expect(serialNumberField().value).toBe("SN-123");
 
     fireEvent.change(nameField(), { target: { value: "Lift B" } });
-    fireEvent.change(locationField(), { target: { value: "a1" } });
+    await chooseOption(locationField(), "Blk 101 › Lift");
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({

@@ -3,9 +3,12 @@ import { Checkbox } from "@proj/ui/components/checkbox";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@proj/ui/components/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import {
   type ChangeEvent,
   type SubmitEvent,
@@ -115,9 +118,19 @@ export function DeviceForm({
 }) {
   const id = useId();
   const locations = useLocations(estateId);
-  const locationOptions = useMemo(
-    () => flattenLocations(locations.data ?? []),
-    [locations.data]
+  // The first item is the placeholder shown while nothing is chosen.
+  const locationItems = useMemo(
+    () => [
+      {
+        value: "",
+        label: locations.isPending ? "Loading locations…" : "Select a location",
+      },
+      ...flattenLocations(locations.data ?? []).map((node) => ({
+        value: node.id,
+        label: node.path.join(" › "),
+      })),
+    ],
+    [locations.data, locations.isPending]
   );
   const [values, setValues] = useState<FormValues>({
     identifier: "",
@@ -130,13 +143,14 @@ export function DeviceForm({
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
 
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const { name, value } = event.target;
-      setValues((current) => ({ ...current, [name]: value }));
-    },
-    []
-  );
+  const handleChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setValues((current) => ({ ...current, [name]: value }));
+  }, []);
+
+  const handleLocationChange = useCallback((value: string | null) => {
+    setValues((current) => ({ ...current, locationId: value ?? "" }));
+  }, []);
 
   const handleMetricChange = useCallback(
     (metric: DeviceMetric, checked: boolean) => {
@@ -233,24 +247,27 @@ export function DeviceForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-location`}>Location</Label>
-          <NativeSelect
-            {...errorProps("locationId")}
-            className="w-full"
-            id={`${id}-location`}
-            name="locationId"
-            onChange={handleChange}
+          <Select
+            items={locationItems}
+            onValueChange={handleLocationChange}
             required
             value={values.locationId}
           >
-            <NativeSelectOption value="">
-              {locations.isPending ? "Loading locations…" : "Select a location"}
-            </NativeSelectOption>
-            {locationOptions.map((node) => (
-              <NativeSelectOption key={node.id} value={node.id}>
-                {node.path.join(" › ")}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+            <SelectTrigger
+              {...errorProps("locationId")}
+              className="w-full"
+              id={`${id}-location`}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {locationItems.slice(1).map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errorText("locationId")}
           {locations.error ? (
             <p className="text-destructive text-sm" role="alert">

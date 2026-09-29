@@ -2,9 +2,12 @@ import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@proj/ui/components/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import { type SubmitEvent, useCallback, useId, useState } from "react";
 
 export interface LocationFormValues {
@@ -113,18 +116,25 @@ export function LocationForm({
         {parentOptions ? (
           <div className="grid gap-1">
             <Label htmlFor={`${id}-parent`}>Inside</Label>
-            <NativeSelect
-              className="w-full"
+            <Select
               defaultValue={initialParentId}
-              id={`${id}-parent`}
+              items={parentOptions.map((option) => ({
+                value: option.id,
+                label: option.label,
+              }))}
               name="parentId"
             >
-              {parentOptions.map((option) => (
-                <NativeSelectOption key={option.id} value={option.id}>
-                  {option.label}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              <SelectTrigger className="w-full" id={`${id}-parent`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {parentOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         ) : null}
         {error ? (

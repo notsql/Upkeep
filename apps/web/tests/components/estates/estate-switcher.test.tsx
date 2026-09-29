@@ -2,7 +2,12 @@ import { fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EstateSwitcher } from "@/components/estates/estate-switcher";
 import { api } from "@/lib/api";
-import { renderWithProviders, screen, waitFor } from "../../test-utils";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+} from "../../test-utils";
 
 const { navigate, params } = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -45,52 +50,49 @@ describe("EstateSwitcher", () => {
     const select = await screen.findByRole("combobox", {
       name: "Current estate",
     });
-    await screen.findByRole("option", { name: "Oak Park" });
     expect(api.GET).toHaveBeenCalledWith("/estates", {
       params: { query: { status: "ACTIVE" } },
     });
-
-    fireEvent.change(select, { target: { value: "oak" } });
+    await chooseOption(select, "Oak Park");
 
     expect(navigate).toHaveBeenCalledWith({
       to: "/estates/$estateId",
       params: { estateId: "oak" },
     });
     expect(localStorage.getItem("upkeep:current-estate")).toBe("oak");
+    fireEvent.click(select);
+    await screen.findByRole("option", { name: "Maple Grove" });
   });
 
   it("shows the estate being viewed", async () => {
     params.estateId = "oak";
     renderWithProviders(<EstateSwitcher />);
-    await screen.findByRole("option", { name: "Oak Park" });
-    expect(
-      screen.getByRole<HTMLSelectElement>("combobox", {
-        name: "Current estate",
-      }).value
-    ).toBe("oak");
+    const select = await screen.findByRole("combobox", {
+      name: "Current estate",
+    });
+    expect(select.textContent).toContain("Oak Park");
+    expect(select.textContent).not.toContain("Maple Grove");
   });
 
   it("remembers the last estate chosen, and ignores one no longer accessible", async () => {
     localStorage.setItem("upkeep:current-estate", "maple");
     const { unmount } = renderWithProviders(<EstateSwitcher />);
-    await screen.findByRole("option", { name: "Oak Park" });
+    const remembered = await screen.findByRole("combobox", {
+      name: "Current estate",
+    });
     await waitFor(() =>
-      expect(
-        screen.getByRole<HTMLSelectElement>("combobox", {
-          name: "Current estate",
-        }).value
-      ).toBe("maple")
+      expect(remembered.textContent).toContain("Maple Grove")
     );
+    expect(remembered.textContent).not.toContain("Oak Park");
     unmount();
 
     localStorage.setItem("upkeep:current-estate", "revoked");
     renderWithProviders(<EstateSwitcher />);
-    await screen.findByRole("option", { name: "Oak Park" });
-    expect(
-      screen.getByRole<HTMLSelectElement>("combobox", {
-        name: "Current estate",
-      }).value
-    ).toBe("");
+    const revoked = await screen.findByRole("combobox", {
+      name: "Current estate",
+    });
+    expect(revoked.textContent).toContain("Choose an estate");
+    expect(revoked.textContent).not.toContain("Maple Grove");
   });
 
   it("stays hidden when the user has no active estates", async () => {

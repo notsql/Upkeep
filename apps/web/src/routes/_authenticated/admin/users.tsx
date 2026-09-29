@@ -1,11 +1,15 @@
+import type { components } from "@proj/api/schema";
 import { Button } from "@proj/ui/components/button";
 import { Card } from "@proj/ui/components/card";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
-  NativeSelect,
-  NativeSelectOption,
-} from "@proj/ui/components/native-select";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import {
   Table,
   TableBody,
@@ -54,6 +58,75 @@ interface RoleChange {
 interface SelectedMember {
   name: string;
   userId: string;
+}
+
+type Role = components["schemas"]["Role"];
+
+interface MemberRoleSelectProps {
+  currentRole: string;
+  disabled: boolean;
+  membershipId?: string;
+  name: string;
+  onRoleChange: (membershipId: string, role: string) => void;
+  roles: Role[];
+}
+
+function MemberRoleSelect({
+  currentRole,
+  disabled,
+  membershipId,
+  name,
+  onRoleChange,
+  roles,
+}: MemberRoleSelectProps) {
+  const currentRoleMissing =
+    Boolean(currentRole) && !roles.some((role) => role.slug === currentRole);
+  const items = [
+    { value: "", label: "Select a role" },
+    ...(currentRoleMissing ? [{ value: currentRole, label: currentRole }] : []),
+    ...roles.map((role) => ({
+      value: role.slug ?? "",
+      label: role.name ?? role.slug ?? "",
+    })),
+  ];
+
+  const changeRole = useCallback(
+    (role: string | null) => {
+      if (!(membershipId && role) || role === currentRole) {
+        return;
+      }
+      onRoleChange(membershipId, role);
+    },
+    [currentRole, membershipId, onRoleChange]
+  );
+
+  return (
+    <Select
+      disabled={disabled}
+      items={items}
+      onValueChange={changeRole}
+      value={currentRole}
+    >
+      <SelectTrigger aria-label={`Role for ${name}`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem disabled value="">
+          Select a role
+        </SelectItem>
+        {currentRoleMissing ? (
+          <SelectItem disabled value={currentRole}>
+            {currentRole}
+          </SelectItem>
+        ) : null}
+        {roles.map((role) => (
+          <SelectItem key={role.slug} value={role.slug}>
+            {role.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 }
 
 function AdminUsersPage() {
@@ -137,8 +210,8 @@ function AdminUsersPage() {
   });
 
   const handleOrganizationChange = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      setOrganizationId(event.target.value);
+    (value: string | null) => {
+      setOrganizationId(value ?? "");
       setSelectedMember(undefined);
       roleUpdate.reset();
     },
@@ -153,16 +226,7 @@ function AdminUsersPage() {
   );
 
   const handleRoleChange = useCallback(
-    (event: ChangeEvent<HTMLSelectElement>) => {
-      const {
-        dataset: { currentRole = "", membershipId },
-        value: role,
-      } = event.target;
-
-      if (!membershipId || role === currentRole) {
-        return;
-      }
-
+    (membershipId: string, role: string) => {
       roleUpdate.mutate({
         organizationId,
         membershipId,
@@ -196,6 +260,14 @@ function AdminUsersPage() {
         (user.email ?? "").toLowerCase().includes(query)
     );
   }, [members.data, search]);
+
+  const organizationItems = [
+    { value: "", label: "Select an estate" },
+    ...(organizations.data ?? []).map((organization) => ({
+      value: organization.id,
+      label: organization.name,
+    })),
+  ];
 
   const error =
     organizations.error ??
@@ -253,24 +325,29 @@ function AdminUsersPage() {
         )}
 
         {Boolean(organizations.data?.length) && (
-          <Label className="flex-wrap gap-3 font-medium text-sm">
-            Estate
-            <NativeSelect
+          <div className="flex flex-wrap items-center gap-3">
+            <Label className="font-medium text-sm" htmlFor="admin-estate">
+              Estate
+            </Label>
+            <Select
               disabled={roleUpdate.isPending}
-              onChange={handleOrganizationChange}
+              items={organizationItems}
+              onValueChange={handleOrganizationChange}
               value={organizationId}
             >
-              <NativeSelectOption value="">Select an estate</NativeSelectOption>
-              {organizations.data?.map((organization) => (
-                <NativeSelectOption
-                  key={organization.id}
-                  value={organization.id}
-                >
-                  {organization.name}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </Label>
+              <SelectTrigger id="admin-estate">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Select an estate</SelectItem>
+                {organizations.data?.map((organization) => (
+                  <SelectItem key={organization.id} value={organization.id}>
+                    {organization.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
         {isLoadingOrganization ? (
@@ -348,11 +425,6 @@ function AdminUsersPage() {
                 const currentRole = user.roleSlugs?.[0] ?? "";
                 const hasMultipleRoles = (user.roleSlugs?.length ?? 0) > 1;
                 const name = user.name || user.email || "Unnamed member";
-                const currentRoleMissing =
-                  Boolean(currentRole) &&
-                  !organizationRoles.data?.some(
-                    (role) => role.slug === currentRole
-                  );
 
                 return (
                   <TableRow
@@ -366,38 +438,19 @@ function AdminUsersPage() {
                       {user.joined ? user.joined.toLocaleString() : "—"}
                     </TableCell>
                     <TableCell className="px-5 py-4">
-                      <Label>
-                        <span className="sr-only">Role for {name}</span>
-                        <NativeSelect
-                          data-current-role={currentRole}
-                          data-membership-id={user.membershipId}
-                          disabled={
-                            roleUpdate.isPending ||
-                            rolesUnavailable ||
-                            hasMultipleRoles ||
-                            !user.membershipId
-                          }
-                          onChange={handleRoleChange}
-                          value={currentRole}
-                        >
-                          <NativeSelectOption disabled value="">
-                            Select a role
-                          </NativeSelectOption>
-                          {currentRoleMissing ? (
-                            <NativeSelectOption disabled value={currentRole}>
-                              {currentRole}
-                            </NativeSelectOption>
-                          ) : null}
-                          {organizationRoles.data?.map((role) => (
-                            <NativeSelectOption
-                              key={role.slug}
-                              value={role.slug}
-                            >
-                              {role.name}
-                            </NativeSelectOption>
-                          ))}
-                        </NativeSelect>
-                      </Label>
+                      <MemberRoleSelect
+                        currentRole={currentRole}
+                        disabled={
+                          roleUpdate.isPending ||
+                          rolesUnavailable ||
+                          hasMultipleRoles ||
+                          !user.membershipId
+                        }
+                        membershipId={user.membershipId}
+                        name={name}
+                        onRoleChange={handleRoleChange}
+                        roles={organizationRoles.data ?? []}
+                      />
                       {hasMultipleRoles && (
                         <p className="mt-1 text-muted-foreground text-xs">
                           Manage multiple roles in WorkOS.

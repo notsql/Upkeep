@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import type { Location } from "@/lib/locations";
 import { LocationsSection } from "@/routes/_authenticated/estates/$estateId/-components/locations-section";
 import {
+  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -202,12 +203,18 @@ describe("locations section", () => {
     );
     const form = screen.getByRole("form", { name: "Edit Level 2" });
     const inside = within(form).getByRole("combobox", { name: "Inside" });
+    expect(inside.textContent).toContain("Blk 101");
+    fireEvent.click(inside);
     expect(
-      within(inside)
-        .getAllByRole("option")
-        .map((option) => option.textContent)
+      (await screen.findAllByRole("option")).map((option) => option.textContent)
     ).toEqual(["Blk 101", "Blk 102"]);
-    fireEvent.change(inside, { target: { value: "b2" } });
+    fireEvent.keyDown(screen.getByRole("listbox"), { key: "Escape" });
+    await waitFor(() =>
+      expect(inside.getAttribute("aria-expanded")).toBe("false")
+    );
+    await chooseOption(inside, "Blk 102");
+    expect(inside.textContent).toContain("Blk 102");
+    expect(inside.textContent).not.toContain("Blk 101");
     fireEvent.click(within(form).getByRole("button", { name: "Save" }));
     await waitFor(() =>
       expect(api.PATCH).toHaveBeenCalledWith(

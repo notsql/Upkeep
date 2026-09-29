@@ -109,7 +109,12 @@ describe("AssetDevicesSection", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: "Register device" })
     );
-    await screen.findByRole("option", { name: "Blk 101 › Plant room" });
+    // The asset's location shows by its path once the locations have loaded.
+    await waitFor(() =>
+      within(screen.getByRole("combobox", { name: "Location" })).getByText(
+        "Blk 101 › Plant room"
+      )
+    );
     fireEvent.change(screen.getByRole("textbox", { name: "Identifier" }), {
       target: { value: "PUMP-01" },
     });
