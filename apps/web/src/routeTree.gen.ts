@@ -10,12 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
-import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin/users'
 import { Route as AuthenticatedEstatesIndexRouteImport } from './routes/_authenticated/estates/index'
 import { Route as AuthenticatedEstatesNewRouteImport } from './routes/_authenticated/estates/new'
 import { Route as ApiAuthCallbackRouteImport } from './routes/api/auth/callback'
@@ -32,7 +32,7 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
@@ -54,23 +54,23 @@ const RegisterRoute = RegisterRouteImport.update({
 const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   id: '/account',
   path: '/account',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
   id: '/admin/users',
   path: '/admin/users',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedEstatesIndexRoute =
   AuthenticatedEstatesIndexRouteImport.update({
     id: '/estates/',
     path: '/estates/',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstatesNewRoute = AuthenticatedEstatesNewRouteImport.update({
   id: '/estates/new',
   path: '/estates/new',
-  getParentRoute: () => AuthenticatedRoute,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiAuthCallbackRoute = ApiAuthCallbackRouteImport.update({
   id: '/api/auth/callback',
@@ -91,31 +91,31 @@ const AuthenticatedEstatesEstateIdIndexRoute =
   AuthenticatedEstatesEstateIdIndexRouteImport.update({
     id: '/estates/$estateId/',
     path: '/estates/$estateId/',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstatesEstateIdEditRoute =
   AuthenticatedEstatesEstateIdEditRouteImport.update({
     id: '/estates/$estateId/edit',
     path: '/estates/$estateId/edit',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstatesEstateIdAssetsNewRoute =
   AuthenticatedEstatesEstateIdAssetsNewRouteImport.update({
     id: '/estates/$estateId/assets/new',
     path: '/estates/$estateId/assets/new',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute =
   AuthenticatedEstatesEstateIdAssetsAssetIdIndexRouteImport.update({
     id: '/estates/$estateId/assets/$assetId/',
     path: '/estates/$estateId/assets/$assetId/',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedEstatesEstateIdAssetsAssetIdEditRoute =
   AuthenticatedEstatesEstateIdAssetsAssetIdEditRouteImport.update({
     id: '/estates/$estateId/assets/$assetId/edit',
     path: '/estates/$estateId/assets/$assetId/edit',
-    getParentRoute: () => AuthenticatedRoute,
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -157,7 +157,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/logout': typeof LogoutRoute
   '/register': typeof RegisterRoute
@@ -234,7 +234,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
   LogoutRoute: typeof LogoutRoute
   RegisterRoute: typeof RegisterRoute
@@ -256,7 +256,7 @@ declare module '@tanstack/react-router' {
       id: '/_authenticated'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -285,28 +285,28 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/users': {
       id: '/_authenticated/admin/users'
       path: '/admin/users'
       fullPath: '/admin/users'
       preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estates/': {
       id: '/_authenticated/estates/'
       path: '/estates'
       fullPath: '/estates/'
       preLoaderRoute: typeof AuthenticatedEstatesIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estates/new': {
       id: '/_authenticated/estates/new'
       path: '/estates/new'
       fullPath: '/estates/new'
       preLoaderRoute: typeof AuthenticatedEstatesNewRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/auth/callback': {
       id: '/api/auth/callback'
@@ -334,40 +334,40 @@ declare module '@tanstack/react-router' {
       path: '/estates/$estateId'
       fullPath: '/estates/$estateId/'
       preLoaderRoute: typeof AuthenticatedEstatesEstateIdIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estates/$estateId/edit': {
       id: '/_authenticated/estates/$estateId/edit'
       path: '/estates/$estateId/edit'
       fullPath: '/estates/$estateId/edit'
       preLoaderRoute: typeof AuthenticatedEstatesEstateIdEditRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estates/$estateId/assets/new': {
       id: '/_authenticated/estates/$estateId/assets/new'
       path: '/estates/$estateId/assets/new'
       fullPath: '/estates/$estateId/assets/new'
       preLoaderRoute: typeof AuthenticatedEstatesEstateIdAssetsNewRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estates/$estateId/assets/$assetId/': {
       id: '/_authenticated/estates/$estateId/assets/$assetId/'
       path: '/estates/$estateId/assets/$assetId'
       fullPath: '/estates/$estateId/assets/$assetId/'
       preLoaderRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/estates/$estateId/assets/$assetId/edit': {
       id: '/_authenticated/estates/$estateId/assets/$assetId/edit'
       path: '/estates/$estateId/assets/$assetId/edit'
       fullPath: '/estates/$estateId/assets/$assetId/edit'
       preLoaderRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdEditRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
-interface AuthenticatedRouteChildren {
+interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedEstatesNewRoute: typeof AuthenticatedEstatesNewRoute
@@ -379,7 +379,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute
 }
 
-const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedEstatesNewRoute: AuthenticatedEstatesNewRoute,
@@ -395,13 +395,12 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedEstatesEstateIdAssetsAssetIdIndexRoute,
 }
 
-const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   LoginRoute: LoginRoute,
   LogoutRoute: LogoutRoute,
   RegisterRoute: RegisterRoute,

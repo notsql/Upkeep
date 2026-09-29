@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { EstateEditorPage } from "@/components/estates/estate-editor-page";
+import { EstateEditorPage } from "@/routes/_authenticated/estates/-components/estate-editor-page";
 
 export const Route = createFileRoute("/_authenticated/estates/$estateId/edit")({
   component: EstateEditRoute,
