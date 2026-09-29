@@ -1,4 +1,4 @@
-import { Button } from "@proj/ui/components/button";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useState } from "react";
@@ -95,7 +95,7 @@ export function EstateDetailsPage({
           {estate.data.owned ? (
             <div className="flex items-center gap-4">
               <Link
-                className="border px-4 py-2 text-sm"
+                className={buttonVariants({ variant: "outline" })}
                 params={{ estateId }}
                 to="/estates/$estateId/edit"
               >
@@ -103,7 +103,7 @@ export function EstateDetailsPage({
               </Link>
               {estate.data.deactivatedAt ? null : (
                 <Link
-                  className="border px-4 py-2 text-sm"
+                  className={buttonVariants({ variant: "outline" })}
                   params={{ estateId }}
                   to="/estates/$estateId/assets/new"
                 >

@@ -1,6 +1,10 @@
 import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@proj/ui/components/native-select";
 import { Textarea } from "@proj/ui/components/textarea";
 import {
   type ChangeEvent,
@@ -123,22 +127,22 @@ export function AssessmentForm({
         <legend className="sr-only">Condition assessment</legend>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-condition`}>Condition</Label>
-          <select
+          <NativeSelect
             {...errorProps("condition")}
-            className="h-8 border bg-transparent px-2 text-sm"
+            className="w-full"
             id={`${id}-condition`}
             name="condition"
             onChange={handleChange}
             required
             value={values.condition}
           >
-            <option value="">Select a condition</option>
+            <NativeSelectOption value="">Select a condition</NativeSelectOption>
             {Object.entries(conditionLabel).map(([value, label]) => (
-              <option key={value} value={value}>
+              <NativeSelectOption key={value} value={value}>
                 {label}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
           {errorText("condition")}
         </div>
         <div className="grid gap-2">

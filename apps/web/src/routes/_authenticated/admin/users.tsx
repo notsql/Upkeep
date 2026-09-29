@@ -1,4 +1,20 @@
+import { Button } from "@proj/ui/components/button";
+import { Card } from "@proj/ui/components/card";
 import { Input } from "@proj/ui/components/input";
+import { Label } from "@proj/ui/components/label";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@proj/ui/components/native-select";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@proj/ui/components/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getAuth } from "@workos/authkit-tanstack-react-start";
@@ -24,11 +40,6 @@ export const Route = createFileRoute("/_authenticated/admin/users")({
     }
   },
 });
-
-const selectClassName =
-  "h-9 rounded-md border border-input bg-background px-3 text-sm " +
-  "text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring " +
-  "disabled:cursor-not-allowed disabled:opacity-50";
 
 const memberQueryKey = (organizationId: string) =>
   ["admin", "members", organizationId] as const;
@@ -216,14 +227,14 @@ function AdminUsersPage() {
             </p>
           </div>
 
-          <div className="rounded-xl border border-border bg-card px-4 py-3 text-card-foreground shadow-sm">
+          <Card className="gap-1 px-4" size="sm">
             <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
               Total users
             </p>
-            <p className="mt-1 font-semibold text-2xl">
+            <p className="font-semibold text-2xl">
               {members.data?.length ?? "—"}
             </p>
-          </div>
+          </Card>
         </header>
 
         {error ? (
@@ -242,22 +253,24 @@ function AdminUsersPage() {
         )}
 
         {Boolean(organizations.data?.length) && (
-          <label className="flex flex-wrap items-center gap-3 font-medium text-sm">
+          <Label className="flex-wrap gap-3 font-medium text-sm">
             Estate
-            <select
-              className={selectClassName}
+            <NativeSelect
               disabled={roleUpdate.isPending}
               onChange={handleOrganizationChange}
               value={organizationId}
             >
-              <option value="">Select an estate</option>
+              <NativeSelectOption value="">Select an estate</NativeSelectOption>
               {organizations.data?.map((organization) => (
-                <option key={organization.id} value={organization.id}>
+                <NativeSelectOption
+                  key={organization.id}
+                  value={organization.id}
+                >
                   {organization.name}
-                </option>
+                </NativeSelectOption>
               ))}
-            </select>
-          </label>
+            </NativeSelect>
+          </Label>
         )}
 
         {isLoadingOrganization ? (
@@ -284,7 +297,7 @@ function AdminUsersPage() {
               </p>
             </div>
 
-            <label className="block sm:w-72" htmlFor="user-search">
+            <Label className="block sm:w-72" htmlFor="user-search">
               <span className="sr-only">Search users</span>
               <Input
                 className="h-9 rounded-md"
@@ -294,110 +307,122 @@ function AdminUsersPage() {
                 type="search"
                 value={search}
               />
-            </label>
+            </Label>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <caption className="sr-only">Users and assigned roles</caption>
-              <thead className="bg-muted text-muted-foreground text-xs uppercase tracking-wide">
-                <tr>
-                  <th className="px-5 py-3 font-medium" scope="col">
-                    User
-                  </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
-                    Joined
-                  </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
-                    Current role
-                  </th>
-                  <th className="px-5 py-3 font-medium" scope="col">
-                    Estates
-                  </th>
-                </tr>
-              </thead>
+          <Table className="min-w-[640px] text-sm">
+            <TableCaption className="sr-only">
+              Users and assigned roles
+            </TableCaption>
+            <TableHeader className="bg-muted text-xs uppercase tracking-wide">
+              <TableRow className="hover:bg-transparent">
+                <TableHead
+                  className="px-5 py-3 text-muted-foreground"
+                  scope="col"
+                >
+                  User
+                </TableHead>
+                <TableHead
+                  className="px-5 py-3 text-muted-foreground"
+                  scope="col"
+                >
+                  Joined
+                </TableHead>
+                <TableHead
+                  className="px-5 py-3 text-muted-foreground"
+                  scope="col"
+                >
+                  Current role
+                </TableHead>
+                <TableHead
+                  className="px-5 py-3 text-muted-foreground"
+                  scope="col"
+                >
+                  Estates
+                </TableHead>
+              </TableRow>
+            </TableHeader>
 
-              <tbody className="divide-y divide-border">
-                {filteredUsers.map((user) => {
-                  const currentRole = user.roleSlugs?.[0] ?? "";
-                  const hasMultipleRoles = (user.roleSlugs?.length ?? 0) > 1;
-                  const name = user.name || user.email || "Unnamed member";
-                  const currentRoleMissing =
-                    Boolean(currentRole) &&
-                    !organizationRoles.data?.some(
-                      (role) => role.slug === currentRole
-                    );
-
-                  return (
-                    <tr
-                      className="align-middle hover:bg-muted/50"
-                      key={user.membershipId ?? user.userId ?? user.email}
-                    >
-                      <td className="px-5 py-4">
-                        <p className="font-medium">{name}</p>
-                        <p className="mt-1 text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </td>
-                      <td className="px-5 py-4 text-muted-foreground">
-                        {user.joined ? user.joined.toLocaleString() : "—"}
-                      </td>
-                      <td className="px-5 py-4">
-                        <label>
-                          <span className="sr-only">Role for {name}</span>
-                          <select
-                            className={selectClassName}
-                            data-current-role={currentRole}
-                            data-membership-id={user.membershipId}
-                            disabled={
-                              roleUpdate.isPending ||
-                              rolesUnavailable ||
-                              hasMultipleRoles ||
-                              !user.membershipId
-                            }
-                            onChange={handleRoleChange}
-                            value={currentRole}
-                          >
-                            <option disabled value="">
-                              Select a role
-                            </option>
-                            {currentRoleMissing ? (
-                              <option disabled value={currentRole}>
-                                {currentRole}
-                              </option>
-                            ) : null}
-                            {organizationRoles.data?.map((role) => (
-                              <option key={role.slug} value={role.slug}>
-                                {role.name}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        {hasMultipleRoles && (
-                          <p className="mt-1 text-muted-foreground text-xs">
-                            Manage multiple roles in WorkOS.
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <button
-                          aria-label={`Manage estates for ${name}`}
-                          className="rounded-md border border-input px-3 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
-                          data-member-name={name}
-                          data-user-id={user.userId}
-                          disabled={!user.userId}
-                          onClick={handleManageEstates}
-                          type="button"
-                        >
-                          Manage estates
-                        </button>
-                      </td>
-                    </tr>
+            <TableBody>
+              {filteredUsers.map((user) => {
+                const currentRole = user.roleSlugs?.[0] ?? "";
+                const hasMultipleRoles = (user.roleSlugs?.length ?? 0) > 1;
+                const name = user.name || user.email || "Unnamed member";
+                const currentRoleMissing =
+                  Boolean(currentRole) &&
+                  !organizationRoles.data?.some(
+                    (role) => role.slug === currentRole
                   );
-                })}
-              </tbody>
-            </table>
-          </div>
+
+                return (
+                  <TableRow
+                    key={user.membershipId ?? user.userId ?? user.email}
+                  >
+                    <TableCell className="px-5 py-4">
+                      <p className="font-medium">{name}</p>
+                      <p className="mt-1 text-muted-foreground">{user.email}</p>
+                    </TableCell>
+                    <TableCell className="px-5 py-4 text-muted-foreground">
+                      {user.joined ? user.joined.toLocaleString() : "—"}
+                    </TableCell>
+                    <TableCell className="px-5 py-4">
+                      <Label>
+                        <span className="sr-only">Role for {name}</span>
+                        <NativeSelect
+                          data-current-role={currentRole}
+                          data-membership-id={user.membershipId}
+                          disabled={
+                            roleUpdate.isPending ||
+                            rolesUnavailable ||
+                            hasMultipleRoles ||
+                            !user.membershipId
+                          }
+                          onChange={handleRoleChange}
+                          value={currentRole}
+                        >
+                          <NativeSelectOption disabled value="">
+                            Select a role
+                          </NativeSelectOption>
+                          {currentRoleMissing ? (
+                            <NativeSelectOption disabled value={currentRole}>
+                              {currentRole}
+                            </NativeSelectOption>
+                          ) : null}
+                          {organizationRoles.data?.map((role) => (
+                            <NativeSelectOption
+                              key={role.slug}
+                              value={role.slug}
+                            >
+                              {role.name}
+                            </NativeSelectOption>
+                          ))}
+                        </NativeSelect>
+                      </Label>
+                      {hasMultipleRoles && (
+                        <p className="mt-1 text-muted-foreground text-xs">
+                          Manage multiple roles in WorkOS.
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-5 py-4">
+                      <Button
+                        aria-label={`Manage estates for ${name}`}
+                        data-member-name={name}
+                        data-user-id={user.userId}
+                        disabled={!user.userId}
+                        onClick={handleManageEstates}
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                      >
+                        Manage estates
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
 
           {!organizationId && (
             <p className="px-5 py-12 text-center text-muted-foreground text-sm">

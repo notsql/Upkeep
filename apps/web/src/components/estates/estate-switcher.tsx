@@ -1,3 +1,8 @@
+import { Label } from "@proj/ui/components/label";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@proj/ui/components/native-select";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { useEstateList } from "@/lib/estates";
@@ -52,22 +57,18 @@ export function EstateSwitcher() {
     ) ?? "";
 
   return (
-    <label className="flex items-center gap-2 text-sm">
+    <Label className="text-sm">
       Current estate
-      <select
-        className="border bg-background px-2 py-1"
-        onChange={switchEstate}
-        value={current}
-      >
-        <option disabled value="">
+      <NativeSelect onChange={switchEstate} value={current}>
+        <NativeSelectOption disabled value="">
           Choose an estate
-        </option>
+        </NativeSelectOption>
         {options.map((estate) => (
-          <option key={estate.id} value={estate.id}>
+          <NativeSelectOption key={estate.id} value={estate.id}>
             {estate.name}
-          </option>
+          </NativeSelectOption>
         ))}
-      </select>
-    </label>
+      </NativeSelect>
+    </Label>
   );
 }

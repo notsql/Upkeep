@@ -2,6 +2,10 @@ import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@proj/ui/components/native-select";
+import {
   type ChangeEvent,
   type SubmitEvent,
   useCallback,
@@ -193,24 +197,24 @@ export function DeviceForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-location`}>Location</Label>
-          <select
+          <NativeSelect
             {...errorProps("locationId")}
-            className="h-8 border bg-transparent px-2 text-sm"
+            className="w-full"
             id={`${id}-location`}
             name="locationId"
             onChange={handleChange}
             required
             value={values.locationId}
           >
-            <option value="">
+            <NativeSelectOption value="">
               {locations.isPending ? "Loading locations…" : "Select a location"}
-            </option>
+            </NativeSelectOption>
             {locationOptions.map((node) => (
-              <option key={node.id} value={node.id}>
+              <NativeSelectOption key={node.id} value={node.id}>
                 {node.path.join(" › ")}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
+          </NativeSelect>
           {errorText("locationId")}
           {locations.error ? (
             <p className="text-destructive text-sm" role="alert">
