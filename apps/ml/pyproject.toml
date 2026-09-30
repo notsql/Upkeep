@@ -4,20 +4,20 @@ version = "0.0.0"
 description = "ONNX inference service for the Spring API"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.121.0",
-    "uvicorn[standard]>=0.41.0",
-    "onnxruntime>=1.24.0",
-    "numpy>=2.4.0",
-    "pydantic-settings>=2.13.0",
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.54.0",
+    "onnxruntime>=1.30.0",
+    "numpy>=2.5.3",
+    "pydantic-settings>=2.15.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.0",
+    "pytest>=9.1.1",
     "httpx>=0.28.1",
     # Only the tests build an .onnx file; the service just runs onnxruntime.
-    "onnx>=1.20.0",
-    "ruff>=0.14.0",
+    "onnx>=1.23.0",
+    "ruff>=0.16.9",
 ]
 
 [build-system]
