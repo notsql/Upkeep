@@ -11,7 +11,7 @@ are relative to `apps/web/src/`.
 | `routes/login/index.tsx` | `/login` | page | Search: `error?: string`, `returnTo` (sanitised, default `/`). Shows an alert for `error=auth_unavailable` or any other error, and a "Continue to secure sign in" link to `buildSignInPath(returnTo)`. Title "Sign in". Exports `LoginPage` for tests. |
 | `routes/register/index.tsx` | `/register` | page | Search: `error?: string`. "Create account" link to `/api/auth/sign-up`; alert when `error` is set. Title "Create an account". Exports `RegistrationPage`. |
 | `routes/logout/index.tsx` | `/logout` | page + loader | Search: `returnTo` (sanitised). Loader calls AuthKit `signOut({ data: { returnTo } })`. Renders "Signing out..." (`role="status"`) with a decorative `Spinner`. |
-| `routes/api/auth/sign-in/index.tsx` | `GET /api/auth/sign-in` | server handler | Reads `returnPathname`, sanitises it, 307 to `getSignInUrl`. On failure 303 to `/login?error=auth_unavailable`. |
+| `routes/api/auth/sign-in/index.tsx` | `GET /api/auth/sign-in` | server handler | Sanitises `returnPathname`; when `invitation_token` is present, forwards it on the AuthKit authorization URL and returns to `/estates`. Preserves PKCE/state. Responds 307. On failure 303 to `/login?error=auth_unavailable`. |
 | `routes/api/auth/sign-up/index.tsx` | `GET /api/auth/sign-up` | server handler | 307 to `getSignUpUrl` with `returnPathname: "/account"`. On failure 303 to `/register?error=auth_unavailable`. |
 | `routes/api/auth/callback/index.tsx` | `GET /api/auth/callback` | server handler | `handleCallbackRoute`; on error redirects to `/login?error=auth_failed`. |
 | `routes/_auth/route.tsx` | pathless layout `_auth` | guard | Loader: `getAuth()`; no user throws `redirect({ href: buildSignInPath(location.href) })`. Returns `{ user }` as loader data (read by `/account`). Component is `Outlet`. Every route under `routes/_auth/` is behind this guard. |
@@ -48,3 +48,9 @@ the API client, never by hand.
 
 `useAuth().role === "admin"` shows the Admin Dashboard link in the header; the
 `/admin/users` loader enforces it (see [admin-users.md](admin-users.md)).
+
+## Council invitation sign-in
+
+The invitation-token branch above is for new-account WorkOS email invitations.
+Existing-account invitations use ordinary sign-in and explicit acceptance on My
+estates. See [council-invitations.md](council-invitations.md) for both flows.

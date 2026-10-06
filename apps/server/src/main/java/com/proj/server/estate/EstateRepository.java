@@ -101,7 +101,7 @@ public class EstateRepository {
                         DSL.select(ESTATEUSER.ESTATEID).from(ESTATEUSER).where(ESTATEUSER.USERID.eq(user))));
     }
 
-    private static EstateResponse response(EstateRecord row, String user) {
+    private EstateResponse response(EstateRecord row, String user) {
         return new EstateResponse(
                 row.getId(),
                 row.getName(),
@@ -112,6 +112,16 @@ public class EstateRepository {
                 row.getCreatedat(),
                 row.getUpdatedat(),
                 row.getDeactivatedat(),
+                row.getOwneruserid().equals(user),
+                row.getDeactivatedat() == null
+                        && (row.getOwneruserid().equals(user)
+                                || db.fetchExists(
+                                        ESTATEUSER,
+                                        ESTATEUSER
+                                                .ESTATEID
+                                                .eq(row.getId())
+                                                .and(ESTATEUSER.USERID.eq(user))
+                                                .and(ESTATEUSER.CANINVITEMEMBERS.isTrue()))),
                 row.getOwneruserid().equals(user));
     }
 }

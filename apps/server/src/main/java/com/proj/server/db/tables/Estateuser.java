@@ -76,6 +76,16 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
      */
     public final TableField<EstateuserRecord, OffsetDateTime> CREATEDAT = createField(DSL.name("createdAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "");
 
+    /**
+     * The column <code>public.EstateUser.canInviteMembers</code>.
+     */
+    public final TableField<EstateuserRecord, Boolean> CANINVITEMEMBERS = createField(DSL.name("canInviteMembers"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column <code>public.EstateUser.role</code>.
+     */
+    public final TableField<EstateuserRecord, String> ROLE = createField(DSL.name("role"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'MEMBER'::character varying"), SQLDataType.VARCHAR)), this, "");
+
     private Estateuser(Name alias, Table<EstateuserRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

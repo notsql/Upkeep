@@ -52,8 +52,8 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   const [panel, setPanel] = useState<Panel>();
   const id = useId();
 
-  // Hide every write control until we know the estate is active.
-  const canEdit = Boolean(estate.data) && !estate.data?.deactivatedAt;
+  // Members can browse, but only the owner can change active locations.
+  const canEdit = Boolean(estate.data?.owned) && !estate.data?.deactivatedAt;
   const items = locations.data ?? EMPTY;
   const tree = useMemo(() => buildLocationTree(items), [items]);
   const matches = useMemo(() => searchLocations(items, query), [items, query]);
@@ -132,16 +132,17 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     [estateId, saved]
   );
 
-  const panelView = panel ? (
-    <PanelView
-      items={items}
-      onCancel={close}
-      onCreate={create}
-      onDeactivate={deactivate}
-      onUpdate={update}
-      panel={panel}
-    />
-  ) : null;
+  const panelView =
+    panel && canEdit ? (
+      <PanelView
+        items={items}
+        onCancel={close}
+        onCreate={create}
+        onDeactivate={deactivate}
+        onUpdate={update}
+        panel={panel}
+      />
+    ) : null;
   const panelTargetId =
     panel?.kind === "create" ? panel.parent?.id : panel?.node.id;
 

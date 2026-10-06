@@ -11,6 +11,8 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { type EstateStatus, useEstateList } from "@/lib/estates";
+import { InvitationAcceptance } from "@/routes/_auth/estates/-components/invitation-acceptance";
+import { PendingInvitations } from "@/routes/_auth/estates/-components/pending-invitations";
 
 const statusItems: { value: EstateStatus; label: string }[] = [
   { value: "ACTIVE", label: "Active" },
@@ -34,6 +36,8 @@ export function EstateListPage() {
           Create estate
         </Link>
       </div>
+      <InvitationAcceptance />
+      <PendingInvitations />
       <p className="mt-2 text-muted-foreground">
         Estates you own, and estates an admin has shared with you.
       </p>
