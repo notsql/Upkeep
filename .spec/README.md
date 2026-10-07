@@ -36,6 +36,7 @@ code, it belongs here.
 | `building-assets.md` | ID-46 | draft |
 | `asset-location-picker.md` | ID-54 | draft |
 | `asset-search.md` | ID-47 | draft |
+| `failure-risk.md` | ID-32 | draft |
 
 Draft specs carry an **Implementation phases** checklist. Build them in the
 order listed, test-first, and tick the boxes as you go. New specs start from
