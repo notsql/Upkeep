@@ -1,14 +1,7 @@
-import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@proj/ui/components/select";
 import {
   Table,
   TableBody,
@@ -18,51 +11,19 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { ConditionBadge } from "@/components/condition-badge";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
-import { conditionLabel } from "@/lib/assessments";
 import { type AssetFilters, assetCategoryLabel, useAssets } from "@/lib/assets";
 import { useEstate } from "@/lib/estates";
 import { flattenLocations, useLocations } from "@/lib/locations";
+import { useMobile } from "@/lib/use-mobile";
+import {
+  AssetFilterControls,
+  MobileAssetFilters,
+} from "@/routes/_auth/estates/$estateId/assets/-components/asset-filters";
 
-const conditions = {
-  ...conditionLabel,
-  UNASSESSED: "Not assessed yet",
-};
-function FilterSelect({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: Record<string, string>;
-  onChange: (value: string) => void;
-}) {
-  const handleValueChange = useCallback(
-    (next: string | null) => onChange(next ?? ""),
-    [onChange]
-  );
-  return (
-    <div className="grid gap-2">
-      <Label>{label}</Label>
-      <Select onValueChange={handleValueChange} value={value}>
-        <SelectTrigger aria-label={label}>
-          <SelectValue>{options[value] ?? "All"}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(options).map(([key, text]) => (
-            <SelectItem key={key} value={key}>
-              {text}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
 export function AssetRegisterPage({
   estateId,
   filters,
@@ -72,6 +33,7 @@ export function AssetRegisterPage({
   filters: AssetFilters;
   onFiltersChange: (filters: AssetFilters) => void;
 }) {
+  const mobile = useMobile();
   const assets = useAssets(estateId, filters);
   const estate = useEstate(estateId);
   const locations = useLocations(estateId, true);
@@ -94,47 +56,25 @@ export function AssetRegisterPage({
       filters.condition ||
       (filters.status && filters.status !== "ACTIVE")
   );
-  const locationOptions = Object.fromEntries(
-    flattenLocations(locations.data ?? []).map((location) => [
-      location.id,
-      `${location.path.join(" › ")}${location.deactivatedAt ? " (inactive)" : ""}`,
-    ])
+  const locationOptions = useMemo(
+    () =>
+      Object.fromEntries(
+        flattenLocations(locations.data ?? []).map((location) => [
+          location.id,
+          `${location.path.join(" › ")}${location.deactivatedAt ? " (inactive)" : ""}`,
+        ])
+      ),
+    [locations.data]
   );
-  const retryAssets = useCallback(() => assets.refetch(), [assets]);
-  const retryLocations = useCallback(() => locations.refetch(), [locations]);
+  const retryAssets = useCallback(() => assets.refetch(), [assets.refetch]);
+  const retryLocations = useCallback(
+    () => locations.refetch(),
+    [locations.refetch]
+  );
   const clearFilters = useCallback(() => {
     setSearch("");
     onFiltersChange({});
   }, [onFiltersChange]);
-  const changeStatus = useCallback(
-    (value: string) =>
-      onFiltersChange({
-        ...filters,
-        status: value as AssetFilters["status"],
-      }),
-    [onFiltersChange, filters]
-  );
-  const changeCondition = useCallback(
-    (value: string) =>
-      onFiltersChange({
-        ...filters,
-        condition: (value as AssetFilters["condition"]) || undefined,
-      }),
-    [onFiltersChange, filters]
-  );
-  const changeLocation = useCallback(
-    (value: string) =>
-      onFiltersChange({ ...filters, locationId: value || undefined }),
-    [onFiltersChange, filters]
-  );
-  const changeCategory = useCallback(
-    (value: string) =>
-      onFiltersChange({
-        ...filters,
-        category: (value as AssetFilters["category"]) || undefined,
-      }),
-    [onFiltersChange, filters]
-  );
   const changeSearch = useCallback(
     (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
       setSearch(event.target.value),
@@ -174,7 +114,7 @@ export function AssetRegisterPage({
           This estate is inactive. Existing assets remain available.
         </p>
       ) : null}
-      <div className="section-surface grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="section-surface grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:grid-cols-3 xl:grid-cols-5">
         <div className="grid gap-2">
           <Label htmlFor="asset-search">Search assets</Label>
           <Input
@@ -184,30 +124,19 @@ export function AssetRegisterPage({
             value={search}
           />
         </div>
-        <FilterSelect
-          label="Category"
-          onChange={changeCategory}
-          options={{ "": "All categories", ...assetCategoryLabel }}
-          value={filters.category ?? ""}
-        />
-        <FilterSelect
-          label="Location"
-          onChange={changeLocation}
-          options={{ "": "All locations", ...locationOptions }}
-          value={filters.locationId ?? ""}
-        />
-        <FilterSelect
-          label="Condition"
-          onChange={changeCondition}
-          options={{ "": "All conditions", ...conditions }}
-          value={filters.condition ?? ""}
-        />
-        <FilterSelect
-          label="Status"
-          onChange={changeStatus}
-          options={{ ACTIVE: "Active", INACTIVE: "Retired", ALL: "All" }}
-          value={filters.status ?? "ACTIVE"}
-        />
+        {mobile ? (
+          <MobileAssetFilters
+            filters={filters}
+            locations={locationOptions}
+            onChange={onFiltersChange}
+          />
+        ) : (
+          <AssetFilterControls
+            filters={filters}
+            locations={locationOptions}
+            onChange={onFiltersChange}
+          />
+        )}
       </div>
       {filtered ? (
         <Button onClick={clearFilters} variant="outline">
@@ -234,7 +163,58 @@ export function AssetRegisterPage({
             : "No active assets yet. Choose All to include retired assets."}
         </p>
       ) : null}
-      {assets.data && assets.data.length > 0 ? (
+      {assets.data && assets.data.length > 0 && mobile ? (
+        <ul aria-label="Assets" className="grid gap-3">
+          {assets.data.map((asset) => (
+            <li key={asset.id}>
+              <Link
+                aria-label={`${asset.name} (${asset.reference})`}
+                className="group block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                params={{ estateId, assetId: asset.id }}
+                to="/estates/$estateId/assets/$assetId"
+              >
+                <Card className="h-full transition-[background-color,box-shadow] group-hover:bg-accent/40 group-hover:shadow-sm group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 motion-reduce:transition-none">
+                  <CardContent className="grid gap-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="break-words font-semibold underline">
+                          {asset.name}
+                        </h2>
+                        <p className="mt-1 text-muted-foreground text-sm">
+                          {asset.reference}
+                        </p>
+                      </div>
+                      <LifecycleStatusBadge
+                        inactive={Boolean(asset.deactivatedAt)}
+                        inactiveLabel="Retired"
+                      />
+                    </div>
+                    <dl className="grid gap-2 text-sm">
+                      <div>
+                        <dt className="text-muted-foreground">Category</dt>
+                        <dd>{assetCategoryLabel[asset.category]}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted-foreground">Location</dt>
+                        <dd className="break-words">{asset.locationPath}</dd>
+                      </div>
+                      <div>
+                        <dt className="mb-1 text-muted-foreground">
+                          Current condition
+                        </dt>
+                        <dd>
+                          <ConditionBadge condition={asset.currentCondition} />
+                        </dd>
+                      </div>
+                    </dl>
+                  </CardContent>
+                </Card>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {assets.data && assets.data.length > 0 && !mobile ? (
         <Table aria-label="Assets">
           <TableHeader>
             <TableRow>
@@ -274,9 +254,7 @@ export function AssetRegisterPage({
                 <TableCell>{assetCategoryLabel[asset.category]}</TableCell>
                 <TableCell>{asset.locationPath}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">
-                    {conditions[asset.currentCondition ?? "UNASSESSED"]}
-                  </Badge>
+                  <ConditionBadge condition={asset.currentCondition} />
                 </TableCell>
                 <TableCell>
                   <LifecycleStatusBadge

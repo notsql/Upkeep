@@ -122,10 +122,10 @@ h2 {
     min-width: 0;
   }
   .app-topbar {
-    @apply sticky top-0 z-30 flex min-h-18 flex-wrap items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 backdrop-blur-sm md:px-8;
+    @apply sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b bg-card/95 px-4 py-3 backdrop-blur-sm md:px-8;
   }
   .topbar-controls {
-    @apply flex min-w-0 flex-wrap items-center gap-2 sm:gap-4;
+    @apply flex min-w-0 items-center gap-2 sm:gap-3;
   }
   .app-sidebar {
     @apply fixed inset-y-0 left-0 z-40 hidden w-60 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-5 md:flex;
@@ -159,10 +159,10 @@ h2 {
     @apply mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:px-8 md:py-8;
   }
   .page-header {
-    @apply mb-8 flex flex-wrap items-start justify-between gap-5;
+    @apply mb-5 flex flex-wrap items-start justify-between gap-3;
   }
   .page-title {
-    @apply font-semibold text-3xl sm:text-4xl;
+    @apply font-semibold text-[28px] sm:text-[32px];
   }
   .page-description {
     @apply mt-2 max-w-2xl text-muted-foreground text-sm leading-relaxed;
@@ -171,7 +171,7 @@ h2 {
     @apply flex flex-wrap items-center gap-3;
   }
   .detail-grid {
-    @apply grid gap-5 rounded-xl border bg-card p-5 sm:grid-cols-2 sm:p-6;
+    @apply grid gap-4 rounded-xl border bg-card p-4 sm:grid-cols-2 sm:p-5;
   }
   .detail-grid dt {
     @apply mb-1 font-medium text-muted-foreground text-sm;
@@ -180,7 +180,7 @@ h2 {
     @apply break-words font-medium text-base;
   }
   .section-surface {
-    @apply rounded-xl border bg-card p-5 sm:p-6;
+    @apply rounded-xl border bg-card p-4 sm:p-5;
   }
   .form-surface {
     @apply rounded-xl border bg-card p-5 shadow-sm sm:p-8;
@@ -249,4 +249,45 @@ h2 {
 .lifecycle-status-badge[data-state="inactive"] {
   color: var(--status-inactive-foreground);
   background: var(--status-inactive);
+}
+
+:root {
+  --status-attention: #fef3c7;
+  --status-attention-foreground: #92400e;
+}
+.dark {
+  --status-attention: #3d3015;
+  --status-attention-foreground: #fde68a;
+}
+.condition-badge[data-condition="GOOD"] {
+  color: var(--status-active-foreground);
+  background: var(--status-active);
+}
+.condition-badge[data-condition="FAULTY"] {
+  color: var(--status-inactive-foreground);
+  background: var(--status-inactive);
+}
+.condition-badge[data-condition="NEEDS_ATTENTION"] {
+  color: var(--status-attention-foreground);
+  background: var(--status-attention);
+}
+.condition-badge[data-condition="UNASSESSED"] {
+  color: var(--muted-foreground);
+  background: var(--muted);
+}
+@layer components {
+  .estate-navigation {
+    @apply mx-auto grid max-w-6xl gap-2 border-b px-4 py-2 sm:px-6 md:hidden;
+  }
+  .estate-nav-link {
+    @apply flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 font-medium text-muted-foreground text-sm;
+  }
+  .estate-nav-link[aria-current="page"] {
+    @apply bg-accent text-accent-foreground;
+  }
+}
+
+.topbar-controls [data-slot="button"] {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
 }

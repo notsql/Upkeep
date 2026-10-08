@@ -1,5 +1,9 @@
 package com.proj.server.estate;
 
+import static com.proj.server.estate.CouncilInvitationStatus.IN_APP;
+import static com.proj.server.estate.CouncilInvitationStatus.PENDING;
+import static com.proj.server.estate.CouncilInvitationStatus.SENDING;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -44,8 +48,7 @@ public class CouncilService {
                 throw error(HttpStatus.CONFLICT, "Already a member of this estate.");
         }
         var row = council.reserve(estateId, user, request);
-        if (!"SENDING".equals(row.getStatus()))
-            throw error(HttpStatus.CONFLICT, "Already invited or already a member.");
+        if (!SENDING.matches(row.getStatus())) throw error(HttpStatus.CONFLICT, "Already invited or already a member.");
         // A failed dispatch is retried with its original payload and idempotency key.
         var invitation = identity.send(row.getId(), row.getEmail(), row.getInviteruserid());
         if (!row.getEmail().equalsIgnoreCase(invitation.email()) || invitation.expiresAt() == null)
@@ -56,7 +59,7 @@ public class CouncilService {
                 row.getId(),
                 estateId,
                 row.getEmail(),
-                "existing_account".equals(invitation.state()) ? "IN_APP" : "PENDING",
+                "existing_account".equals(invitation.state()) ? IN_APP.name() : PENDING.name(),
                 invitation.expiresAt());
     }
 
@@ -115,7 +118,7 @@ public class CouncilService {
         var person = verifiedPerson(user);
         var row = council.forRecipient(id, person.email().toLowerCase(Locale.ROOT))
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Invitation not found for this account."));
-        if (!List.of("IN_APP", "PENDING").contains(row.getStatus())
+        if (!CouncilInvitationStatus.canAccept(row.getStatus())
                 || !council.activateExplicit(id, user, java.time.OffsetDateTime.now()))
             throw error(HttpStatus.CONFLICT, "This invitation is no longer available. Ask the estate owner for help.");
         return new AcceptedInvitationsResponse(List.of(row.getEstateid()));

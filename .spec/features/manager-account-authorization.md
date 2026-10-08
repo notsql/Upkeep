@@ -63,6 +63,11 @@ be interpreted alongside this clarified invitation scope.
 `EstateUser` stores role and invitation permission. `EstateInvitation` stores the
 current attempt, not an immutable audit history: SENDING, PENDING, IN_APP,
 ACCEPTED or CANCELLED. No plaintext setup token or local user profile is stored.
+The enum review refactor centralizes these five states and acceptance/outstanding
+rules in `CouncilInvitationStatus`. Only IN_APP/PENDING are acceptable; SENDING
+is outstanding but not acceptable, and ACCEPTED/CANCELLED are terminal for the
+current attempt. Unrecognized stored states remain ineligible. Persisted and API
+status strings keep their existing values; this refactor needs no migration.
 The legacy non-null name column remains compatible with the applied migration;
 new attempts write an empty value and the invitation API/UI never uses it.
 
@@ -104,6 +109,12 @@ estate/location screens, and PKCE-preserving invitation sign-in forwarding.
 Boundaries include expiry, wrong/unverified recipients, duplicates, provider
 failure/retry, concurrency, revocation/removal, fresh invitation IDs and preserved
 other-estate access.
+
+Enum review verification (2026-10-08): the new rule tests first failed because
+the enum was missing, then passed after implementation. Twelve rule cases and
+six HTTP/database cases cover all five local states plus an unrecognized value.
+`pnpm test` passed with 188 Java tests; workspace type checks and formatting
+also passed. No schema, controller or generated API changes were needed.
 
 User-confirmed live checks on 2026-10-06:
 

@@ -46,9 +46,9 @@ function MemberPermission({
     [permission, userId]
   );
   return (
-    <li className="space-y-2 border-b py-4 last:border-b-0">
-      <p className="font-medium">{name}</p>
-      <p className="text-muted-foreground text-sm">{email}</p>
+    <li className="grid gap-3 rounded-lg border p-3">
+      <p className="break-words font-medium">{name}</p>
+      <p className="break-all text-muted-foreground text-sm">{email}</p>
       <div className="flex items-center gap-2">
         <Checkbox
           checked={allowed}
@@ -61,6 +61,16 @@ function MemberPermission({
         </Label>
       </div>
       <RemoveMemberButton email={email} estateId={estateId} memberId={userId} />
+      {permission.isPending ? (
+        <p className="text-muted-foreground text-sm" role="status">
+          Saving invitation permission…
+        </p>
+      ) : null}
+      {permission.isSuccess ? (
+        <p className="text-muted-foreground text-sm" role="status">
+          Permission saved.
+        </p>
+      ) : null}
       {permission.error ? (
         <p className="text-destructive text-sm" role="alert">
           {permission.error.message}
@@ -104,10 +114,13 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
       </CardHeader>
       <CardContent>
         <p className="mb-4 text-muted-foreground text-sm">
-          New users receive an email invitation. Existing users accept on My
-          estates. Existing accounts keep their current access.
+          New users receive an email invitation. Existing users accept on
+          Estates. Existing accounts keep their current access.
         </p>
-        <form className="space-y-4" onSubmit={submit}>
+        <form
+          className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+          onSubmit={submit}
+        >
           <div className="space-y-2">
             <Label htmlFor="council-email">Email</Label>
             <Input
@@ -127,12 +140,12 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
             {invitation.isPending ? "Sending invitation…" : "Send invitation"}
           </Button>
           {invitation.error ? (
-            <p className="text-destructive" role="alert">
+            <p className="text-destructive sm:col-span-2" role="alert">
               {invitation.error.message}
             </p>
           ) : null}
           {invitation.data ? (
-            <p role="status">
+            <p className="sm:col-span-2" role="status">
               {invitation.data.status === "IN_APP"
                 ? `Invitation created for ${invitation.data.email}. They can accept it on Estates. No email was sent.`
                 : `Invitation sent to ${invitation.data.email}. Access starts after they accept it.`}
@@ -149,7 +162,11 @@ export function CouncilPage({ estateId }: { estateId: string }) {
   const canManage = estate.data?.canManageInvitationPermissions === true;
   const members = useEstateMembers(estateId, canManage);
   if (estate.isPending) {
-    return <p role="status">Loading estate…</p>;
+    return (
+      <p className="sm:col-span-2" role="status">
+        Loading estate…
+      </p>
+    );
   }
   if (estate.error) {
     return <p role="alert">{estate.error.message}</p>;
@@ -183,12 +200,14 @@ export function CouncilPage({ estateId }: { estateId: string }) {
         description={`Invitations and estate access for ${estate.data.name}.`}
         title="Council members"
       />
-      {estate.data.canInviteMembers ? (
-        <CouncilInvitationForm estateId={estateId} />
-      ) : (
-        <p>This estate is inactive. New invitations are disabled.</p>
-      )}
-      {canManage ? <OwnerInvitations estateId={estateId} /> : null}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        {estate.data.canInviteMembers ? (
+          <CouncilInvitationForm estateId={estateId} />
+        ) : (
+          <p>This estate is inactive. New invitations are disabled.</p>
+        )}
+        {canManage ? <OwnerInvitations estateId={estateId} /> : null}
+      </div>
       {canManage ? (
         <Card>
           <CardHeader>
@@ -208,7 +227,7 @@ export function CouncilPage({ estateId }: { estateId: string }) {
                 No members yet. Invite someone to get started.
               </p>
             ) : null}
-            <ul className="mt-5 space-y-3">
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {members.data?.map((member) => (
                 <MemberPermission
                   allowed={member.canInviteMembers}

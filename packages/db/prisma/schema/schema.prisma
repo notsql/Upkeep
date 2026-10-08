@@ -160,25 +160,6 @@ model AssetAssessment {
   @@index([assetId, assessedOn, createdAt])
 }
 
-// Estate-local Council invitations; WorkOS owns identity and email delivery.
-model EstateInvitation {
-  id                   String    @id @default(uuid()) @db.Uuid
-  estateId             String    @db.Uuid
-  name                 String    @db.VarChar(200)
-  email                String    @db.VarChar(254)
-  inviterUserId        String    @db.VarChar(255)
-  providerInvitationId String?   @unique @db.VarChar(255)
-  status               String    @default("SENDING") @db.VarChar(20)
-  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
-  expiresAt            DateTime? @db.Timestamptz(6)
-  acceptedAt           DateTime? @db.Timestamptz(6)
-  acceptedUserId       String?   @db.VarChar(255)
-  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-
-  @@unique([estateId, email])
-  @@index([email, status])
-}
-
 model AssetLifecycleEvent {
   id String @id @default(uuid()) @db.Uuid
   estateId String @db.Uuid
@@ -196,4 +177,23 @@ model AssetLifecycleEvent {
   asset Asset @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   @@unique([assetId, lifecycleVersion])
   @@index([estateId, assetId])
+}
+
+// Estate-local Council invitations; WorkOS owns identity and email delivery.
+model EstateInvitation {
+  id                   String    @id @default(uuid()) @db.Uuid
+  estateId             String    @db.Uuid
+  name                 String    @db.VarChar(200)
+  email                String    @db.VarChar(254)
+  inviterUserId        String    @db.VarChar(255)
+  providerInvitationId String?   @unique @db.VarChar(255)
+  status               String    @default("SENDING") @db.VarChar(20)
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  expiresAt            DateTime? @db.Timestamptz(6)
+  acceptedAt           DateTime? @db.Timestamptz(6)
+  acceptedUserId       String?   @db.VarChar(255)
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, email])
+  @@index([email, status])
 }

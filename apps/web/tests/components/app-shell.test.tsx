@@ -49,10 +49,11 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: state.user, role: state.role, loading: false }),
 }));
-vi.mock("@/lib/estates", () => ({ useEstate: () => ({ data: state.estate }) }));
-vi.mock("@/components/estates/estate-switcher", () => ({
-  EstateSwitcher: () => <span>Current estate: Maple Estate</span>,
+vi.mock("@/lib/estates", () => ({
+  useEstate: () => ({ data: state.estate }),
+  useEstateList: () => ({ data: [], isSuccess: true }),
 }));
+
 beforeEach(() => {
   state.pathname = "/estates/e/assets";
   state.hash = "";
@@ -65,8 +66,9 @@ beforeEach(() => {
     canManageInvitationPermissions: true,
   };
 });
+
 describe("dashboard navigation", () => {
-  it("moves desktop account access to the profile menu while retaining mobile Account", () => {
+  it("keeps mobile Home and Estates stable and puts Settings in More", async () => {
     state.pathname = "/estates";
     renderWithProviders(
       <AppShell>
@@ -78,9 +80,14 @@ describe("dashboard navigation", () => {
         screen.getByRole("navigation", { name: "Desktop navigation" })
       ).queryByRole("link", { name: "Account" })
     ).toBeNull();
-    within(
+    const mobile = within(
       screen.getByRole("navigation", { name: "Mobile navigation" })
-    ).getByRole("link", { name: "Account" });
+    );
+    expect(mobile.getAllByRole("link").map((link) => link.textContent)).toEqual(
+      ["Home", "Estates"]
+    );
+    fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
+    await screen.findByRole("menuitem", { name: "Settings" });
     screen.getByRole("button", { name: "Open account menu" });
   });
   it("marks the asset destination current and supplies estate-specific links", () => {
@@ -103,8 +110,13 @@ describe("dashboard navigation", () => {
       screen.getByRole("navigation", { name: "Mobile navigation" })
     );
     mobile.getByRole("link", { name: "Estates" });
-    mobile.getByRole("link", { name: "Overview" });
-    mobile.getByRole("link", { name: "Assets" });
+    mobile.getByRole("link", { name: "Home" });
+    expect(mobile.queryByRole("link", { name: "Assets" })).toBeNull();
+    const context = within(
+      screen.getByRole("navigation", { name: "Estate navigation" })
+    );
+    context.getByRole("link", { name: "Overview" });
+    context.getByRole("link", { name: "Assets", current: "page" });
     mobile.getByRole("button", { name: "More navigation" });
   });
   it("hides estate features outside an estate and admin features from ordinary users", () => {
@@ -139,7 +151,7 @@ describe("dashboard navigation", () => {
     expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
     nav.getByRole("link", { name: "Council" });
   });
-  it("keeps Account in mobile More without duplicating the Locations section", async () => {
+  it("keeps Settings in mobile More without duplicating the Locations section", async () => {
     renderWithProviders(
       <AppShell>
         <main>Content</main>
@@ -150,7 +162,7 @@ describe("dashboard navigation", () => {
         screen.getByRole("navigation", { name: "Mobile navigation" })
       ).getByRole("button", { name: "More navigation" })
     );
-    await screen.findByRole("menuitem", { name: "Account" });
+    await screen.findByRole("menuitem", { name: "Settings" });
     expect(screen.queryByRole("menuitem", { name: "Locations" })).toBeNull();
   });
   it("keeps the public header for signed-out visitors", () => {

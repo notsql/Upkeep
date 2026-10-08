@@ -29,6 +29,7 @@ export function LocationForm({
   showPosition,
   parentOptions,
   onSave,
+  onPendingChange,
   onCancel,
 }: {
   title: string;
@@ -41,6 +42,7 @@ export function LocationForm({
   parentOptions?: ParentOption[];
   onSave: (values: LocationFormValues) => Promise<unknown>;
   onCancel: () => void;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const id = useId();
   const [error, setError] = useState<string>();
@@ -55,6 +57,7 @@ export function LocationForm({
       const parentId = values.get("parentId");
       const sortOrder = values.get("sortOrder");
       setPending(true);
+      onPendingChange?.(true);
       setError(undefined);
       try {
         await onSave({
@@ -70,18 +73,15 @@ export function LocationForm({
         );
       } finally {
         setPending(false);
+        onPendingChange?.(false);
       }
     },
-    [onSave, pending, initialParentId]
+    [onSave, pending, initialParentId, onPendingChange]
   );
   return (
-    <form
-      aria-label={title}
-      className="mt-2 grid gap-3 border p-3"
-      onSubmit={handleSubmit}
-    >
+    <form aria-label={title} className="grid gap-3" onSubmit={handleSubmit}>
       <fieldset className="grid gap-3" disabled={pending}>
-        <legend className="font-medium text-sm">{title}</legend>
+        <legend className="sr-only">{title}</legend>
         <div className="grid gap-1">
           <Label htmlFor={`${id}-name`}>Name</Label>
           <Input
@@ -144,7 +144,12 @@ export function LocationForm({
         ) : null}
         <div className="flex gap-2">
           <Button type="submit">{pending ? "Saving…" : "Save"}</Button>
-          <Button onClick={onCancel} type="button" variant="outline">
+          <Button
+            disabled={pending}
+            onClick={onCancel}
+            type="button"
+            variant="outline"
+          >
             Cancel
           </Button>
         </div>

@@ -64,6 +64,22 @@ export function AssetDetailsPage({
       {asset.data ? (
         <>
           <PageHeader
+            actions={
+              asset.data.deactivatedAt ? undefined : (
+                <div className="flex flex-wrap items-center gap-4">
+                  <Link
+                    className={buttonVariants({ variant: "outline" })}
+                    params={{ estateId, assetId }}
+                    to="/estates/$estateId/assets/$assetId/edit"
+                  >
+                    Edit asset
+                  </Link>
+                  <Button onClick={openConfirmation} variant="destructive">
+                    Retire asset
+                  </Button>
+                </div>
+              )
+            }
             breadcrumbs={[
               { label: "Estates", to: "/estates" },
               {
@@ -93,7 +109,7 @@ export function AssetDetailsPage({
               longer be edited until restored.
             </p>
           ) : null}
-          <dl className="detail-grid my-6">
+          <dl className="detail-grid my-4">
             <div>
               <dt className="font-medium">Reference</dt>
               <dd>{asset.data.reference}</dd>
@@ -123,20 +139,6 @@ export function AssetDetailsPage({
               <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
             </div>
           </dl>
-          {asset.data.deactivatedAt ? null : (
-            <div className="flex flex-wrap items-center gap-4">
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                params={{ estateId, assetId }}
-                to="/estates/$estateId/assets/$assetId/edit"
-              >
-                Edit asset
-              </Link>
-              <Button onClick={openConfirmation} variant="destructive">
-                Retire asset
-              </Button>
-            </div>
-          )}
           <AssetRetirementPanel asset={asset.data} />
           <AssetConditionSection
             assetId={assetId}
@@ -145,7 +147,6 @@ export function AssetDetailsPage({
           />
           <AssetDevicesSection
             assetId={assetId}
-            assetLocationId={asset.data.locationId}
             canRegister={!asset.data.deactivatedAt}
             estateId={estateId}
           />

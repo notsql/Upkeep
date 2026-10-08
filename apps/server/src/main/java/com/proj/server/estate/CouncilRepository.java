@@ -3,6 +3,11 @@ package com.proj.server.estate;
 import static com.proj.server.db.tables.Estate.ESTATE;
 import static com.proj.server.db.tables.Estateinvitation.ESTATEINVITATION;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
+import static com.proj.server.estate.CouncilInvitationStatus.ACCEPTED;
+import static com.proj.server.estate.CouncilInvitationStatus.CANCELLED;
+import static com.proj.server.estate.CouncilInvitationStatus.IN_APP;
+import static com.proj.server.estate.CouncilInvitationStatus.PENDING;
+import static com.proj.server.estate.CouncilInvitationStatus.SENDING;
 
 import com.proj.server.db.tables.records.EstateinvitationRecord;
 import java.time.OffsetDateTime;
@@ -68,7 +73,7 @@ public class CouncilRepository {
                 .set(ESTATEINVITATION.NAME, "")
                 .set(ESTATEINVITATION.EMAIL, request.email())
                 .set(ESTATEINVITATION.INVITERUSERID, inviter)
-                .set(ESTATEINVITATION.STATUS, "SENDING")
+                .set(ESTATEINVITATION.STATUS, SENDING.name())
                 .set(ESTATEINVITATION.CREATEDAT, OffsetDateTime.now())
                 .onConflict(ESTATEINVITATION.ESTATEID, ESTATEINVITATION.EMAIL)
                 .doNothing()
@@ -77,18 +82,18 @@ public class CouncilRepository {
                 .where(ESTATEINVITATION.ESTATEID.eq(estateId).and(ESTATEINVITATION.EMAIL.eq(request.email())))
                 .forUpdate()
                 .fetchSingle();
-        boolean removedRecipient = "ACCEPTED".equals(row.getStatus())
+        boolean removedRecipient = ACCEPTED.matches(row.getStatus())
                 && !db.fetchExists(
                         ESTATEUSER,
                         ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(row.getAccepteduserid())));
-        if (!"CANCELLED".equals(row.getStatus()) && !removedRecipient) return row;
+        if (!CANCELLED.matches(row.getStatus()) && !removedRecipient) return row;
         // A new attempt gets a new identity; late callbacks for the old ID cannot
         // finalize or activate this replacement. The unique estate/email slot stays.
         return db.update(ESTATEINVITATION)
                 .set(ESTATEINVITATION.ID, UUID.randomUUID())
                 .set(ESTATEINVITATION.NAME, "")
                 .set(ESTATEINVITATION.INVITERUSERID, inviter)
-                .set(ESTATEINVITATION.STATUS, "SENDING")
+                .set(ESTATEINVITATION.STATUS, SENDING.name())
                 .set(ESTATEINVITATION.CREATEDAT, OffsetDateTime.now())
                 .setNull(ESTATEINVITATION.PROVIDERINVITATIONID)
                 .setNull(ESTATEINVITATION.EXPIRESAT)
@@ -105,8 +110,8 @@ public class CouncilRepository {
                         .set(ESTATEINVITATION.EXPIRESAT, invitation.expiresAt())
                         .set(
                                 ESTATEINVITATION.STATUS,
-                                "existing_account".equals(invitation.state()) ? "IN_APP" : "PENDING")
-                        .where(ESTATEINVITATION.ID.eq(id).and(ESTATEINVITATION.STATUS.eq("SENDING")))
+                                "existing_account".equals(invitation.state()) ? IN_APP.name() : PENDING.name())
+                        .where(ESTATEINVITATION.ID.eq(id).and(ESTATEINVITATION.STATUS.eq(SENDING.name())))
                         .execute()
                 == 1;
     }
@@ -116,7 +121,7 @@ public class CouncilRepository {
                 .where(ESTATEINVITATION
                         .ESTATEID
                         .eq(estateId)
-                        .and(ESTATEINVITATION.STATUS.in("SENDING", "PENDING", "IN_APP")))
+                        .and(ESTATEINVITATION.STATUS.in(SENDING.name(), PENDING.name(), IN_APP.name())))
                 .orderBy(ESTATEINVITATION.CREATEDAT)
                 .fetch(row -> new CouncilInvitationResponse(
                         row.getId(), row.getEstateid(), row.getEmail(), row.getStatus(), row.getExpiresat()));
@@ -129,13 +134,13 @@ public class CouncilRepository {
                 .forUpdate()
                 .fetchOptional()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found."));
-        if ("CANCELLED".equals(invitation.getStatus())) return;
-        if (!List.of("SENDING", "PENDING", "IN_APP").contains(invitation.getStatus()))
+        if (CANCELLED.matches(invitation.getStatus())) return;
+        if (!CouncilInvitationStatus.isOutstanding(invitation.getStatus()))
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "This invitation has already been accepted. Remove the member's access instead.");
         db.update(ESTATEINVITATION)
-                .set(ESTATEINVITATION.STATUS, "CANCELLED")
+                .set(ESTATEINVITATION.STATUS, CANCELLED.name())
                 .where(ESTATEINVITATION.ID.eq(id))
                 .execute();
     }
@@ -155,19 +160,19 @@ public class CouncilRepository {
                 .execute();
         if (removed == 0) return false;
         db.update(ESTATEINVITATION)
-                .set(ESTATEINVITATION.STATUS, "CANCELLED")
+                .set(ESTATEINVITATION.STATUS, CANCELLED.name())
                 .where(ESTATEINVITATION
                         .ESTATEID
                         .eq(estateId)
                         .and(ESTATEINVITATION.EMAIL.eq(email).or(ESTATEINVITATION.INVITERUSERID.eq(userId)))
-                        .and(ESTATEINVITATION.STATUS.in("SENDING", "PENDING", "IN_APP")))
+                        .and(ESTATEINVITATION.STATUS.in(SENDING.name(), PENDING.name(), IN_APP.name())))
                 .execute();
         return true;
     }
 
     public List<EstateinvitationRecord> pending(String email) {
         return db.selectFrom(ESTATEINVITATION)
-                .where(ESTATEINVITATION.EMAIL.eq(email).and(ESTATEINVITATION.STATUS.eq("PENDING")))
+                .where(ESTATEINVITATION.EMAIL.eq(email).and(ESTATEINVITATION.STATUS.eq(PENDING.name())))
                 .orderBy(ESTATEINVITATION.CREATEDAT)
                 .fetch();
     }
@@ -180,7 +185,7 @@ public class CouncilRepository {
                 .where(ESTATEINVITATION
                         .EMAIL
                         .eq(email)
-                        .and(ESTATEINVITATION.STATUS.in("IN_APP", "PENDING"))
+                        .and(ESTATEINVITATION.STATUS.in(IN_APP.name(), PENDING.name()))
                         .and(ESTATEINVITATION.EXPIRESAT.gt(OffsetDateTime.now()))
                         .and(ESTATE.DEACTIVATEDAT.isNull()))
                 .orderBy(ESTATEINVITATION.CREATEDAT)
@@ -211,8 +216,8 @@ public class CouncilRepository {
                 .fetchOptional()
                 .orElse(null);
         if (invitation == null) return false;
-        boolean inApp = "IN_APP".equals(invitation.getStatus());
-        if (!inApp && !"PENDING".equals(invitation.getStatus())) return false;
+        boolean inApp = IN_APP.matches(invitation.getStatus());
+        if (!CouncilInvitationStatus.canAccept(invitation.getStatus())) return false;
         if ((inApp || explicit)
                 && (invitation.getExpiresat() == null
                         || !invitation.getExpiresat().isAfter(OffsetDateTime.now()))) return false;
@@ -237,7 +242,7 @@ public class CouncilRepository {
                 .onConflictDoNothing()
                 .execute();
         db.update(ESTATEINVITATION)
-                .set(ESTATEINVITATION.STATUS, "ACCEPTED")
+                .set(ESTATEINVITATION.STATUS, ACCEPTED.name())
                 .set(ESTATEINVITATION.ACCEPTEDAT, acceptedAt)
                 .set(ESTATEINVITATION.ACCEPTEDUSERID, userId)
                 .where(ESTATEINVITATION.ID.eq(invitationId))

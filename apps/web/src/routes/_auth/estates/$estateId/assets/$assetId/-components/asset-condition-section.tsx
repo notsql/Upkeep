@@ -1,9 +1,17 @@
 import { Button } from "@proj/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@proj/ui/components/dialog";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { ConditionBadge } from "@/components/condition-badge";
 import {
   type AssessmentInput,
-  conditionLabel,
   useAssessments,
   useRecordAssessment,
 } from "@/lib/assessments";
@@ -21,7 +29,15 @@ export function AssetConditionSection({
   const assessments = useAssessments(estateId, assetId);
   const recordAssessment = useRecordAssessment(estateId, assetId);
   const [recording, setRecording] = useState(false);
-  const openForm = useCallback(() => setRecording(true), []);
+  const changeOpen = useCallback(
+    (open: boolean) => {
+      if (!recordAssessment.isPending) {
+        setRecording(open);
+      }
+    },
+    [recordAssessment.isPending]
+  );
+  const cancel = useCallback(() => setRecording(false), []);
   const save = useCallback(
     async (values: AssessmentInput) => {
       await recordAssessment.mutateAsync(values);
@@ -34,73 +50,87 @@ export function AssetConditionSection({
   const current = assessments.data?.[0];
 
   return (
-    <section
-      aria-labelledby="condition-heading"
-      className="section-surface mt-8"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="font-semibold text-xl" id="condition-heading">
-          Condition
-        </h2>
-        {canRecord && !recording ? (
-          <Button onClick={openForm} variant="outline">
-            Record assessment
-          </Button>
+    <Dialog onOpenChange={changeOpen} open={recording && canRecord}>
+      <section
+        aria-labelledby="condition-heading"
+        className="section-surface mt-6"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h2 className="font-semibold text-xl" id="condition-heading">
+            Condition
+          </h2>
+          {canRecord && !recording ? (
+            <DialogTrigger render={<Button variant="outline" />}>
+              Record assessment
+            </DialogTrigger>
+          ) : null}
+        </div>
+        {assessments.isPending ? (
+          <p aria-live="polite" className="mt-4">
+            Loading condition…
+          </p>
         ) : null}
-      </div>
-      {assessments.isPending ? (
-        <p aria-live="polite" className="mt-4">
-          Loading condition…
-        </p>
-      ) : null}
-      {assessments.error ? (
-        <p className="mt-4 text-destructive" role="alert">
-          {assessments.error.message}
-        </p>
-      ) : null}
-      {assessments.data ? (
-        <p
-          aria-label="Current condition"
-          className="mt-4 border p-4"
-          role="status"
-        >
-          {current ? (
-            <>
-              <span className="font-medium">
-                {conditionLabel[current.condition]}
-              </span>{" "}
-              <span className="text-muted-foreground text-sm">
-                assessed {current.assessedOn}
-              </span>
-            </>
-          ) : (
-            "Not assessed yet"
-          )}
-        </p>
-      ) : null}
-      {recording ? <AssessmentForm onSave={save} /> : null}
-      {assessments.data?.length ? (
-        <>
-          <h3 className="mt-6 font-medium">History</h3>
-          <ul className="mt-2 grid gap-3">
-            {assessments.data.map((assessment) => (
-              <li className="rounded-lg border p-4 text-sm" key={assessment.id}>
-                <p>
-                  <span className="font-medium">
-                    {conditionLabel[assessment.condition]}
-                  </span>{" "}
-                  · assessed {assessment.assessedOn}
-                </p>
-                <p className="mt-2 whitespace-pre-wrap">{assessment.notes}</p>
-                <p className="mt-2 text-muted-foreground">
-                  Recorded by {assessment.recordedByName ?? "Unknown user"} on{" "}
-                  {new Date(assessment.recordedAt).toLocaleString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
-    </section>
+        {assessments.error ? (
+          <p className="mt-4 text-destructive" role="alert">
+            {assessments.error.message}
+          </p>
+        ) : null}
+        {assessments.data ? (
+          <p
+            aria-label="Current condition"
+            className="mt-3 flex flex-wrap items-center gap-2 text-sm"
+            role="status"
+          >
+            {current ? (
+              <>
+                <ConditionBadge condition={current.condition} />{" "}
+                <span className="text-muted-foreground text-sm">
+                  assessed {current.assessedOn}
+                </span>
+              </>
+            ) : (
+              "Not assessed yet"
+            )}
+          </p>
+        ) : null}
+        {recording && canRecord ? (
+          <DialogContent
+            className="sm:max-w-lg"
+            showCloseButton={!recordAssessment.isPending}
+          >
+            <DialogHeader>
+              <DialogTitle>Record assessment</DialogTitle>
+              <DialogDescription>
+                Record the condition, assessment date and notes.
+              </DialogDescription>
+            </DialogHeader>
+            <AssessmentForm onCancel={cancel} onSave={save} />
+          </DialogContent>
+        ) : null}
+        {assessments.data?.length ? (
+          <>
+            <h3 className="mt-6 font-medium">History</h3>
+            <ul className="mt-2 grid gap-3">
+              {assessments.data.map((assessment) => (
+                <li
+                  className="rounded-lg border p-3 text-sm"
+                  key={assessment.id}
+                >
+                  <p>
+                    <ConditionBadge condition={assessment.condition} /> ·
+                    assessed {assessment.assessedOn}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap">{assessment.notes}</p>
+                  <p className="mt-2 text-muted-foreground">
+                    Recorded by {assessment.recordedByName ?? "Unknown user"} on{" "}
+                    {new Date(assessment.recordedAt).toLocaleString()}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </section>
+    </Dialog>
   );
 }

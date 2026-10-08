@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 import { AuthButton } from "./auth-button";
-import { EstateSwitcher } from "./estates/estate-switcher";
 
 export default function Header() {
   return (
@@ -16,7 +15,6 @@ export default function Header() {
         </Link>
       </nav>
       <div className="topbar-controls">
-        <EstateSwitcher />
         <ThemeToggle />
         <AuthButton />
       </div>

@@ -91,7 +91,7 @@ function MetricOption({
     [metric, onChange]
   );
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-h-11 items-center gap-3 rounded-lg border px-3 py-2">
       <Checkbox
         checked={checked}
         disabled={disabled}
@@ -111,10 +111,12 @@ export function DeviceForm({
   defaultLocationId,
   estateId,
   onSave,
+  onCancel,
 }: {
   defaultLocationId: string;
   estateId: string;
   onSave: (values: DeviceInput) => Promise<unknown>;
+  onCancel?: () => void;
 }) {
   const id = useId();
   const locations = useLocations(estateId);
@@ -218,7 +220,7 @@ export function DeviceForm({
   return (
     <form className="mt-4 grid gap-5" noValidate onSubmit={handleSubmit}>
       <fieldset className="grid gap-5" disabled={pending}>
-        <legend className="sr-only">Device details</legend>
+        <legend className="mb-3 font-semibold">Device identity</legend>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-identifier`}>Identifier</Label>
           <Input
@@ -245,6 +247,9 @@ export function DeviceForm({
           />
           {errorText("model")}
         </div>
+      </fieldset>
+      <fieldset className="grid gap-3" disabled={pending}>
+        <legend className="mb-3 font-semibold">Location</legend>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-location`}>Location</Label>
           <Select
@@ -275,27 +280,29 @@ export function DeviceForm({
             </p>
           ) : null}
         </div>
-        <fieldset
-          {...errorProps("metrics")}
-          className="grid gap-2 sm:grid-cols-2"
-        >
-          <legend className="mb-2 font-medium text-sm">
-            Supported metrics
-          </legend>
-          {catalogue.map(([metric, { name, unit }]) => (
-            <MetricOption
-              checked={metrics.has(metric)}
-              // A fieldset does not disable the non-native checkbox.
-              disabled={pending}
-              id={`${id}-metric-${metric}`}
-              key={metric}
-              label={`${name} (${unit})`}
-              metric={metric}
-              onChange={handleMetricChange}
-            />
-          ))}
-          {errorText("metrics")}
-        </fieldset>
+      </fieldset>
+      <fieldset
+        disabled={pending}
+        {...errorProps("metrics")}
+        className="grid gap-2 sm:grid-cols-2"
+      >
+        <legend className="mb-2 font-medium text-sm">Supported metrics</legend>
+        {catalogue.map(([metric, { name, unit }]) => (
+          <MetricOption
+            checked={metrics.has(metric)}
+            // A fieldset does not disable the non-native checkbox.
+            disabled={pending}
+            id={`${id}-metric-${metric}`}
+            key={metric}
+            label={`${name} (${unit})`}
+            metric={metric}
+            onChange={handleMetricChange}
+          />
+        ))}
+        {errorText("metrics")}
+      </fieldset>
+      <fieldset className="grid gap-3" disabled={pending}>
+        <legend className="mb-3 font-semibold">Reporting</legend>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-interval`}>
             Expected reporting interval (seconds)
@@ -320,7 +327,17 @@ export function DeviceForm({
           {error}
         </p>
       ) : null}
-      <div>
+      <div className="flex flex-wrap justify-end gap-2">
+        {onCancel ? (
+          <Button
+            disabled={pending}
+            onClick={onCancel}
+            type="button"
+            variant="outline"
+          >
+            Cancel
+          </Button>
+        ) : null}
         <Button disabled={pending} type="submit">
           {pending ? "Registering…" : "Register device"}
         </Button>

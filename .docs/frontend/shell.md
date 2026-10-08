@@ -16,25 +16,29 @@ below relies on. Paths are relative to `apps/web/src/`.
 
 | File | URL | Guard | Screen |
 | --- | --- | --- | --- |
-| `routes/index.tsx` | `/` | none | Home: `routes/-components/home-page.tsx`, workspace introduction, sign-in/register or Estates action, capability descriptions and secondary System status `Card`. |
+| `routes/index.tsx` | `/` | none | Home: `routes/-components/home-page.tsx`, public introduction/authentication and secondary System status; signed-in `workspace-home.tsx` shows portfolio summaries and attention actions (see [dashboard.md](dashboard.md)). |
 
 The public home content has one Create account action. The header omits Register
 and uses the same Sign in wording as the home action.
 
-Home uses `useHealth()` from `lib/health.ts`: key `["health"]`,
-`api.GET("/health")`, shows the real `ok`/`database` availability, a pending
-status or a destructive Alert. Health is public; no estate data is fetched here.
+Public Home uses `useHealth()` from `lib/health.ts`: key `["health"]`,
+`GET /health`, real `ok`/`database` availability with loading/error feedback.
+Signed-in Home mounts the portfolio dashboard described in [dashboard.md](dashboard.md).
+It uses the authenticated summary endpoint and a separate compact invitation
+query. Estate browsing, creation and invitation acceptance remain on Estates.
+Public auth remains Sign in/Create account.
 
 ## Shell and navigation
 
 `components/app-shell.tsx` renders a skip-to-content link targeting the focusable
 `#main-content` wrapper. Route screens own their main landmark. While AuthKit is
 loading or signed out, the public header remains; authenticated navigation appears
-only with a loaded user. `Header` is the shared top bar with brand, estate switcher, theme toggle and
+only with a loaded user. `Header` is the shared top bar with brand, theme toggle and
 existing auth controls. Authenticated workspace navigation lives in AppNavigation.
 
-`components/app-navigation.tsx` uses the current router pathname and the
-session-gated, cached `useEstate(estateId)` query. Desktop destinations are Home and Estates, plus Admin users for
+`components/app-navigation.tsx` subscribes to the router pathname rather than
+the whole location and uses the session-gated, cached `useEstate(estateId)` query.
+Desktop destinations are Home and Estates, plus Admin users for
 `role === "admin"`. Account is reached through Settings in the top-right
 profile menu, rather than a sidebar item. On estate routes,
 Overview appears, with Locations as a section of that screen rather than a
@@ -43,21 +47,43 @@ requires `canInviteMembers || canManageInvitationPermissions`. This preserves
 current server permissions. `/estates/new` has no estate context.
 
 Desktop navigation is a 240px fixed sidebar at widths >=768px. Below 768px,
-the bottom app bar exposes global Home/Estates/Account (admins also get More).
-Within an estate it exposes Estates/Overview/allowed Assets/allowed Council/More.
-More is a shadcn DropdownMenu containing Home, Account and admin
-navigation where allowed. Navigation links use exact router matching
+the bottom app bar always exposes Home / Estates / More. More is a shadcn
+DropdownMenu with Settings and admin-only Admin users. Estate pages additionally
+show a mobile `EstateNavigation` section with the estate switcher above Overview /
+permitted Assets / Council links inside the workspace content. These are routed
+links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
+has no estate selector. Context comes from the route, named breadcrumbs, headings
+and desktop sidebar. The obsolete header `EstateSwitcher` and its remembered-estate
+storage logic remain removed. Navigation links use exact router matching
 with search excluded, so parent links do not acquire the router's automatic
 active state on child screens. The explicit destination state keeps Assets
 selected on asset details. Links carry `aria-current="page"`; decorative icons
 are hidden. Overview remains selected when visiting section anchors such as
 `#locations`; there is no separate Locations navigation item.
 
+`components/estates/estate-context-switcher.tsx` replaces the desktop sidebar's
+estate heading and appears above the mobile estate links. It uses the existing
+shadcn Button/DropdownMenu and `useEstateList("ALL")`: `GET /estates?status=ALL`,
+key `["estates", userId, "list", "ALL"]`, gated by `useEstateSession`. Both
+responsive instances share the query cache. It mounts only on estate routes,
+never Home, the directory or `/estates/new`. The trigger shows the current
+estate name from its detail query (or matching list entry), falling back to
+Current estate while unavailable. Menu entries show accessible owned/shared
+estates with name/code; inactive entries carry an Inactive label. The current
+entry has a checkmark and `aria-current="location"`. Selecting any entry opens
+`/estates/{id}` Overview with empty search/hash, using routed menu links.
+Navigation capabilities come from that destination's own `useEstate` data; old
+owner-only links disappear while the new detail response loads. The menu has
+loading, empty and generic error feedback plus Retry loading estates, which
+refetches the list without changing the current route. There is no mutation,
+extra endpoint or remembered-selection storage. Estates remains the full
+searchable directory. Base UI supplies keyboard menu navigation/focus handling.
+
 `components/theme-toggle.tsx` is a shadcn Button using next-themes: light default,
 saved light/dark preferences, and a label naming the next mode. It is disabled
 before client mount to avoid a server/client theme mismatch. `AuthButton` shows a circular profile button at the top right for signed-in
 users. Its shadcn DropdownMenu displays their email, Settings (`/account`) and
-Sign out (`/logout`). Mobile Account remains in the bottom app bar/More.
+Sign out (`/logout`). Mobile Settings remains available through More and the profile menu.
 
 `components/not-found-page.tsx` is the router's default not-found screen, with
 PageHeader and Go to home recovery navigation. The pending screen remains Loader.
@@ -85,11 +111,17 @@ and form patterns, mobile safe-area spacing and manual verification checklist.
   with a decorative shadcn `Spinner` (`aria-hidden`), so only the text is
   announced.
 - **Status pills:** estate/asset states use shared LifecycleStatusBadge (green Active,
-  red Inactive/Retired); register conditions use textual shadcn `Badge`s. Estates uses shadcn `Empty`; other features retain descriptive empty text.
+  red Inactive/Retired); conditions use shared ConditionBadge (Good green, Needs attention amber, Faulty red, unassessed neutral). Estates uses shadcn `Empty`; other features retain descriptive empty text.
 - **Success feedback:** `toast.success(...)` from `sonner`.
 - **Forms:** feature-local state/FormData, existing shadcn Input/Select/Checkbox/
   Textarea and Label (or Field where already used), disabled fieldsets while
   pending, optional-field labels and retained inputs after errors. Asset form
   errors are linked using aria-invalid/aria-describedby. Estate/asset editors
-  share FormActions for Save/Cancel; other local forms retain their existing
-  action patterns. Server validation and payloads are unchanged.
+  share FormActions for Save/Cancel. Location/assessment forms use dialogs and
+  device registration has its own page; email invitations remain inline. Server validation and payloads are unchanged.
+
+## Test imports
+
+The web tsconfig maps `@/*` to `src/*` and `@tests/*` to `tests/*`. Vite and
+Vitest use the same native tsconfig path resolution. Tests import application
+code through `@/` and can import shared helpers through `@tests/test-utils`.

@@ -359,3 +359,27 @@ it("does not expose owner removal controls to delegates", async () => {
     screen.queryByRole("heading", { name: "Pending invitations" })
   ).toBeNull();
 });
+
+const ESTATES_GUIDANCE = /Existing users accept on Estates\./;
+it("uses Estates consistently in invitation guidance", async () => {
+  renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await screen.findByText(ESTATES_GUIDANCE);
+});
+it("announces when invitation permission is saving", async () => {
+  let complete: ((value: unknown) => void) | undefined;
+  vi.mocked(api.PUT).mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        complete = resolve;
+      }) as never
+  );
+  renderWithProviders(<CouncilPage estateId="estate-id" />);
+  fireEvent.click(
+    await screen.findByRole("checkbox", {
+      name: "Can invite members for Alice",
+    })
+  );
+  await screen.findByText("Saving invitation permission…");
+  complete?.({ response: new Response(null, { status: 204 }) });
+  await screen.findByText("Permission saved.");
+});

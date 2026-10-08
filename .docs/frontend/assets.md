@@ -24,7 +24,7 @@ Entry point: Assets section beneath Locations on estate details. Owners have Vie
 | `AssetForm` (`assets/-components/asset-form.tsx`) | Read-only "Reference" when editing. Fields: `name` (req, max 200), `category` (req, select from `assetCategoryLabel`), `locationId` (req, select of `flattenLocations` paths from `useLocations`), `installedOn` (date, optional), `manufacturer`, `model`, `serialNumber` (optional, max 200). Client-side required checks; blank optional fields are omitted from the payload. | `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` |
 | `AssetDetailsPage` (`assets/$assetId/-components/asset-details-page.tsx`) | Name, Active/Retired status, reference, category, `locationPath`, installation date, manufacturer, model, serial number ("Not recorded" when absent). While active: "Edit asset" link and "Retire asset" button. Below: `AssetConditionSection` and `AssetDevicesSection` (see [devices.md](devices.md)); both disable writes when deactivated. | `Button`, `buttonVariants` (Edit asset link) |
 | `DeactivateAssetDialog` (`assets/$assetId/-components/deactivate-asset-dialog.tsx`) | Always-open modal; exact reference plus retirement date and trimmed reason are required. Dates default to Singapore today and cannot precede known installation or exceed today. Submits the displayed lifecycle version. Closing blocked while pending. On success: toast "Asset retired. Its record has been preserved." | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label`, `Textarea` |
-| `AssetConditionSection` (`assets/$assetId/-components/asset-condition-section.tsx`) | "Condition" section: current condition (`role="status"`, `aria-label="Current condition"`, first item of the list, or "Not assessed yet"), "Record assessment" button (when `canRecord`), and a History list (condition, assessed date, notes, recorded by and at). On save: close form, toast "Assessment recorded." | `Button` |
+| `AssetConditionSection` (`assets/$assetId/-components/asset-condition-section.tsx`) | "Condition" section: current condition (`role="status"`, `aria-label="Current condition"`, first item of the list, or "Not assessed yet"), "Record assessment" button (when `canRecord`), and a History list (condition, assessed date, notes, recorded by and at). Record assessment opens a Dialog with Cancel; pending submission blocks dismissal. On save: close dialog, toast "Assessment recorded." | `Button`, `Dialog`, `ConditionBadge` |
 | `AssessmentForm` (`assets/$assetId/-components/assessment-form.tsx`) | Fields: `condition` (req, `GOOD` / `NEEDS_ATTENTION` / `FAULTY`), `assessedOn` (req date, defaults to `localToday()`, not in the future), `notes` (req, max 2000, trimmed). | `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Textarea` |
 
 ## Data
@@ -68,7 +68,10 @@ All queries: `enabled: ready`, `retry: false`, errors via `estateError`.
 `assets/-components/asset-register-page.tsx` uses shadcn Table, Input, Label,
 Select and Button. The separate table links reference/name to details and shows
 category, hierarchical location, latest condition and Active/Retired status.
-Search is debounced 300ms. URL query fields q/category/locationId/condition/status
+Search is debounced 300ms.
+Location filter options are memoized by the locations response, avoiding another
+hierarchy build on each search keystroke; location changes refresh the options.
+URL query fields q/category/locationId/condition/status
 are validated in assets/index.tsx; invalid values are omitted. Filters combine
 with AND; Clear filters returns to the default active register. Loading, retry,
 empty and no-match states are explicit. Browser back restores URL filters.
@@ -105,17 +108,29 @@ final authority for date validation.
 ## Dashboard presentation
 
 Register/detail/editor screens share `page-layout` and `PageHeader` breadcrumbs
-through Estates / the actual estate name / Assets. The register's filters wrap in a surface and
-its named Assets table has a focusable horizontal scroll region (`Assets table`).
-Condition uses textual shadcn Badges. LifecycleStatusBadge uses green Active
+through Estates / the actual estate name / Assets. The register shows a compact desktop filter grid and a named Assets table with
+a focusable overflow region. Below 768px it renders cards retaining all six
+fields. Each mobile card is one routed link labelled with its asset name and
+reference; tapping any part, including location/condition/status, opens details.
+There are no nested links/buttons. Keyboard focus, mouse hover and touch press
+highlight the card; motion-reduced preferences disable its transition. Desktop
+table names/references remain links. Search stays visible; Filters opens an
+Apply/Clear secondary filters/Cancel dialog. Draft changes do not query until
+Apply; cancellation discards them. The count excludes search/default Active.
+Page Clear resets everything; dialog Clear retains search. Condition uses shared
+ConditionBadge with green/amber/red/neutral labels. LifecycleStatusBadge uses green Active
 and red Retired labels, shared with estate status styling. Table order, linked
 references/names, URL filters and back navigation retain their existing behavior.
 
 Editors use a narrow form surface and shared `FormActions`; creation Cancel
 returns to the register, edit Cancel to asset details. Both actions disable while
 saving. Required/optional guidance is visible without changing payload fields.
-Details use a responsive summary grid, then distinct lifecycle, condition and
-device surfaces. Dialogs use the shared theme and fit within a scrollable viewport.
+Details group management actions in PageHeader, use a compact responsive summary
+and separate lifecycle, condition/history and device surfaces. Record assessment
+opens an existing Dialog with Cancel; it blocks closing while saving, preserves
+failed input, and retains current-condition/history ordering. Condition history
+uses ConditionBadge. Device registration links to its dedicated page (see
+[devices.md](devices.md)). Dialogs use the shared theme and fit within a scrollable viewport.
 See [design-system.md](design-system.md). Existing endpoint hooks, permissions,
 retirement dates, version checks and invalidations above remain in effect.
 
@@ -123,3 +138,7 @@ Register, detail and create/edit screens read `useEstate(estateId)` using
 `["estates", userId, "details", estateId]` to name the estate in breadcrumbs.
 This existing query is cached and session-gated; Estate is a loading fallback. For an inactive estate, Register asset is hidden and the screen explains
 that existing assets remain available. Backend write restrictions are unchanged.
+
+Creating, retiring or restoring an asset and recording a condition assessment also
+invalidate `["estates", userId, "dashboard"]` so Home reflects operational changes.
+See [dashboard.md](dashboard.md).

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import Header from "@/components/header";
+import { api } from "@/lib/api";
 import { HomePage } from "@/routes/-components/home-page";
 import { renderWithProviders, screen, within } from "../../test-utils";
 
@@ -13,8 +14,19 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => auth,
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    params: _params,
+    ...props
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: unknown;
+  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
   ),
 }));
 vi.mock("@/lib/api", () => ({
@@ -22,11 +34,17 @@ vi.mock("@/lib/api", () => ({
     GET: vi.fn().mockResolvedValue({ data: { ok: true, database: true } }),
   },
 }));
-vi.mock("@/components/estates/estate-switcher", () => ({
-  EstateSwitcher: () => null,
-}));
+
 beforeEach(() => {
   auth.user = null;
+  auth.loading = false;
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data: path === "/health" ? { ok: true, database: true } : [],
+        response: new Response(),
+      }) as never
+  );
 });
 it("offers one account-creation action and consistent Sign in labels across the home page", () => {
   renderWithProviders(
@@ -46,9 +64,36 @@ it("offers one account-creation action and consistent Sign in labels across the 
   expect(screen.queryByRole("link", { name: "Log in" })).toBeNull();
   expect(screen.getAllByRole("link", { name: "Sign in" })).toHaveLength(2);
 });
-it("gives signed-in users a clear route to Estates", () => {
+it("gives signed-in users a clear route to Estates", async () => {
   auth.user = { id: "owner" };
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data:
+          path === "/dashboard/summary"
+            ? {
+                accessibleEstateCount: 1,
+                activeEstateCount: 1,
+                inactiveEstateCount: 0,
+                activeOwnedEstateCount: 1,
+                totalActiveAssets: 0,
+                councilMemberCount: 0,
+                conditionCounts: {
+                  good: 0,
+                  needsAttention: 0,
+                  faulty: 0,
+                  unassessed: 0,
+                },
+                affectedEstateCount: 0,
+                estatesNeedingAttention: [],
+              }
+            : [],
+        response: new Response(),
+      }) as never
+  );
   renderWithProviders(<HomePage />);
-  screen.getByRole("link", { name: "Go to Estates" });
+  await screen.findByRole("link", { name: "Accessible estates" });
+  expect(screen.queryByRole("link", { name: "Browse estates" })).toBeNull();
+  screen.getByRole("link", { name: "Accessible estates" });
   expect(screen.queryByRole("link", { name: "Create account" })).toBeNull();
 });

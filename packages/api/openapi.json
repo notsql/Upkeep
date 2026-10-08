@@ -1,20 +1,10 @@
 {
   "openapi": "3.1.0",
-  "info": {
-    "title": "proj API",
-    "version": "v1"
-  },
+  "info": { "title": "proj API", "version": "v1" },
   "servers": [
-    {
-      "url": "http://localhost:8080",
-      "description": "Generated server url"
-    }
+    { "url": "http://localhost:8080", "description": "Generated server url" }
   ],
-  "security": [
-    {
-      "bearerAuth": []
-    }
-  ],
+  "security": [{ "bearerAuth": [] }],
   "paths": {
     "/estates/{estateId}/members/{userId}/invitation-permission": {
       "put": {
@@ -25,18 +15,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "userId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "requestBody": {
@@ -54,9 +39,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -64,9 +47,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -74,9 +55,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -84,9 +63,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -94,9 +71,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -104,9 +79,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -114,15 +87,11 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "204": {
-            "description": "Invitation permission saved"
-          }
+          "204": { "description": "Invitation permission saved" }
         }
       }
     },
@@ -136,18 +105,13 @@
             "name": "userId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -155,31 +119,21 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "401": {
-            "description": "Sign in required"
-          },
-          "403": {
-            "description": "Admin role required"
-          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
           "404": {
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "204": {
-            "description": "User added"
-          }
+          "204": { "description": "User added" }
         }
       },
       "delete": {
@@ -191,18 +145,13 @@
             "name": "userId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -210,31 +159,21 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "401": {
-            "description": "Sign in required"
-          },
-          "403": {
-            "description": "Admin role required"
-          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
           "404": {
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "204": {
-            "description": "User removed"
-          }
+          "204": { "description": "User removed" }
         }
       }
     },
@@ -247,17 +186,13 @@
             "name": "membershipId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserRoles"
-              }
+              "schema": { "$ref": "#/components/schemas/UserRoles" }
             }
           },
           "required": true
@@ -266,11 +201,7 @@
           "200": {
             "description": "OK",
             "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserRoles"
-                }
-              }
+              "*/*": { "schema": { "$ref": "#/components/schemas/UserRoles" } }
             }
           }
         }
@@ -298,9 +229,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -308,9 +237,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -318,9 +245,7 @@
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -328,9 +253,7 @@
             "description": "Duplicate estate code",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -340,9 +263,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/EstateResponse" }
                 }
               }
             }
@@ -355,9 +276,7 @@
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EstateRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/EstateRequest" }
             }
           },
           "required": true
@@ -367,9 +286,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -377,9 +294,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -387,9 +302,7 @@
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -397,9 +310,7 @@
             "description": "Duplicate estate code",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -407,9 +318,7 @@
             "description": "Estate created",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateResponse" }
               }
             }
           }
@@ -425,10 +334,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
@@ -446,9 +352,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -456,9 +360,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -466,9 +368,7 @@
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -476,9 +376,7 @@
             "description": "Duplicate estate code",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -486,9 +384,7 @@
             "description": "Estate deactivated",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateResponse" }
               }
             }
           }
@@ -505,19 +401,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "includeInactive",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
+            "schema": { "type": "boolean", "default": false }
           }
         ],
         "responses": {
@@ -525,9 +415,7 @@
             "description": "Invalid request or hierarchy shape",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -535,9 +423,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -545,9 +431,7 @@
             "description": "Estate or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -555,9 +439,7 @@
             "description": "Duplicate name or level position, inactive estate or location, or active children",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -567,9 +449,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/LocationResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/LocationResponse" }
                 }
               }
             }
@@ -584,18 +464,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLocationRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateLocationRequest" }
             }
           },
           "required": true
@@ -605,9 +480,7 @@
             "description": "Invalid request or hierarchy shape",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -615,9 +488,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -625,9 +496,7 @@
             "description": "Estate or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -635,9 +504,7 @@
             "description": "Duplicate name or level position, inactive estate or location, or active children",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -645,9 +512,7 @@
             "description": "Location created",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/LocationResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/LocationResponse" }
               }
             }
           }
@@ -663,19 +528,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -683,9 +542,7 @@
             "description": "Invalid request or hierarchy shape",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -693,9 +550,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -703,9 +558,7 @@
             "description": "Estate or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -713,9 +566,7 @@
             "description": "Duplicate name or level position, inactive estate or location, or active children",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -723,9 +574,7 @@
             "description": "Location deactivated",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/LocationResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/LocationResponse" }
               }
             }
           }
@@ -741,10 +590,7 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -752,9 +598,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -762,9 +606,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -772,9 +614,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -782,9 +622,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -792,9 +630,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -802,9 +638,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -812,9 +646,7 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -841,10 +673,7 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
@@ -862,9 +691,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -872,9 +699,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -882,9 +707,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -892,9 +715,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -902,9 +723,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -912,9 +731,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -922,9 +739,7 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -950,18 +765,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "q",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "category",
@@ -985,10 +795,7 @@
             "name": "locationId",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "condition",
@@ -1015,9 +822,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1025,9 +830,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1035,9 +838,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1045,9 +846,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1057,9 +856,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AssetResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/AssetResponse" }
                 }
               }
             }
@@ -1074,18 +871,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAssetRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateAssetRequest" }
             }
           },
           "required": true
@@ -1095,9 +887,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1105,9 +895,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1115,9 +903,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1125,9 +911,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1135,9 +919,7 @@
             "description": "Asset registered with a generated reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -1153,27 +935,19 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RestoreAssetRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/RestoreAssetRequest" }
             }
           },
           "required": true
@@ -1183,9 +957,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1193,9 +965,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1203,9 +973,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1213,9 +981,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1223,9 +989,7 @@
             "description": "Asset restored",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -1241,19 +1005,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
@@ -1271,9 +1029,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1281,9 +1037,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1291,9 +1045,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1301,9 +1053,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1311,9 +1061,7 @@
             "description": "Asset deactivated",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -1329,19 +1077,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -1349,9 +1091,7 @@
             "description": "Missing or invalid details, or an unsupported metric",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1359,9 +1099,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1369,9 +1107,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1379,9 +1115,7 @@
             "description": "Duplicate identifier, or an inactive estate, asset or location",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1391,9 +1125,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/DeviceResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/DeviceResponse" }
                 }
               }
             }
@@ -1408,27 +1140,19 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateDeviceRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/CreateDeviceRequest" }
             }
           },
           "required": true
@@ -1438,9 +1162,7 @@
             "description": "Missing or invalid details, or an unsupported metric",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1448,9 +1170,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1458,9 +1178,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1468,9 +1186,7 @@
             "description": "Duplicate identifier, or an inactive estate, asset or location",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1478,9 +1194,7 @@
             "description": "Device registered, awaiting its first reading",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/DeviceResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/DeviceResponse" }
               }
             }
           }
@@ -1496,19 +1210,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -1516,9 +1224,7 @@
             "description": "Missing or invalid details, or a date in the future",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1526,9 +1232,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1536,9 +1240,7 @@
             "description": "Estate or asset not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1546,9 +1248,7 @@
             "description": "Inactive estate or deactivated asset",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1575,19 +1275,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "assetId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
@@ -1605,9 +1299,7 @@
             "description": "Missing or invalid details, or a date in the future",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1615,9 +1307,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1625,9 +1315,7 @@
             "description": "Estate or asset not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1635,9 +1323,7 @@
             "description": "Inactive estate or deactivated asset",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1663,10 +1349,7 @@
             "name": "invitationId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -1674,9 +1357,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1684,9 +1365,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1694,9 +1373,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1704,9 +1381,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1714,9 +1389,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1724,9 +1397,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1734,9 +1405,7 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1762,9 +1431,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1772,9 +1439,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1782,9 +1447,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1792,9 +1455,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1802,9 +1463,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1812,9 +1471,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1822,9 +1479,7 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1850,10 +1505,7 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -1861,9 +1513,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1871,9 +1521,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1881,9 +1529,7 @@
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1891,9 +1537,7 @@
             "description": "Duplicate estate code",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1901,9 +1545,7 @@
             "description": "Estate details",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateResponse" }
               }
             }
           }
@@ -1917,18 +1559,13 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EstateRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/EstateRequest" }
             }
           },
           "required": true
@@ -1938,9 +1575,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1948,9 +1583,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1958,9 +1591,7 @@
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1968,9 +1599,7 @@
             "description": "Duplicate estate code",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -1978,9 +1607,7 @@
             "description": "Estate updated",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateResponse" }
               }
             }
           }
@@ -1996,27 +1623,19 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateLocationRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateLocationRequest" }
             }
           },
           "required": true
@@ -2026,9 +1645,7 @@
             "description": "Invalid request or hierarchy shape",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2036,9 +1653,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2046,9 +1661,7 @@
             "description": "Estate or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2056,9 +1669,7 @@
             "description": "Duplicate name or level position, inactive estate or location, or active children",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2066,9 +1677,7 @@
             "description": "Location renamed, reordered or moved",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/LocationResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/LocationResponse" }
               }
             }
           }
@@ -2084,19 +1693,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -2104,9 +1707,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2114,9 +1715,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2124,9 +1723,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2134,9 +1731,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2144,9 +1739,7 @@
             "description": "Asset details, including deactivated assets",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -2160,27 +1753,19 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateAssetRequest"
-              }
+              "schema": { "$ref": "#/components/schemas/UpdateAssetRequest" }
             }
           },
           "required": true
@@ -2190,9 +1775,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2200,9 +1783,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2210,9 +1791,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2220,9 +1799,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2230,9 +1807,7 @@
             "description": "Asset updated or moved",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -2248,19 +1823,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "requestBody": {
@@ -2278,9 +1847,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2288,9 +1855,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2298,9 +1863,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2308,9 +1871,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2318,9 +1879,7 @@
             "description": "Retirement information corrected",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AssetResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
               }
             }
           }
@@ -2336,9 +1895,7 @@
             "description": "OK",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
               }
             }
           }
@@ -2354,10 +1911,7 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -2365,9 +1919,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2375,9 +1927,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2385,9 +1935,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2395,9 +1943,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2405,9 +1951,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2415,9 +1959,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2425,9 +1967,7 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2456,19 +1996,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -2476,9 +2010,7 @@
             "description": "Invalid request or wrong confirmation reference",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2486,9 +2018,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2496,9 +2026,7 @@
             "description": "Estate, asset or location not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2506,9 +2034,7 @@
             "description": "Inactive estate, asset or location, or a conflicting change",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2528,6 +2054,41 @@
         }
       }
     },
+    "/dashboard/summary": {
+      "get": {
+        "tags": ["dashboard-controller"],
+        "summary": "Summarise your estates and active assets in estates you own",
+        "operationId": "summary",
+        "responses": {
+          "200": {
+            "description": "User-scoped portfolio summary",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Summary temporarily unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/council-invitations": {
       "get": {
         "tags": ["council-controller"],
@@ -2537,9 +2098,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2547,9 +2106,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2557,9 +2114,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2567,9 +2122,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2577,9 +2130,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2587,9 +2138,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2597,9 +2146,7 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2629,9 +2176,7 @@
             "name": "userId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -2639,25 +2184,17 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "401": {
-            "description": "Sign in required"
-          },
-          "403": {
-            "description": "Admin role required"
-          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
           "404": {
             "description": "Estate not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2667,9 +2204,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateUserResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/EstateUserResponse" }
                 }
               }
             }
@@ -2686,9 +2221,7 @@
             "name": "organizationId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -2698,9 +2231,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Role"
-                  }
+                  "items": { "$ref": "#/components/schemas/Role" }
                 }
               }
             }
@@ -2717,9 +2248,7 @@
             "name": "organizationId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -2729,9 +2258,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AdminUserResponse"
-                  }
+                  "items": { "$ref": "#/components/schemas/AdminUserResponse" }
                 }
               }
             }
@@ -2750,9 +2277,7 @@
               "*/*": {
                 "schema": {
                   "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Organization"
-                  }
+                  "items": { "$ref": "#/components/schemas/Organization" }
                 }
               }
             }
@@ -2769,18 +2294,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "userId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
+            "schema": { "type": "string" }
           }
         ],
         "responses": {
@@ -2788,9 +2308,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2798,9 +2316,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2808,9 +2324,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2818,9 +2332,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2828,9 +2340,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2838,9 +2348,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2848,15 +2356,11 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "204": {
-            "description": "Member access removed from this estate"
-          }
+          "204": { "description": "Member access removed from this estate" }
         }
       }
     },
@@ -2869,19 +2373,13 @@
             "name": "estateId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           },
           {
             "name": "invitationId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
@@ -2889,9 +2387,7 @@
             "description": "Invalid request",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2899,9 +2395,7 @@
             "description": "Sign in required",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2909,9 +2403,7 @@
             "description": "Insufficient estate permissions",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2919,9 +2411,7 @@
             "description": "Estate or member not found",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2929,9 +2419,7 @@
             "description": "Duplicate invitation or inactive estate",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2939,9 +2427,7 @@
             "description": "Identity provider failed",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
@@ -2949,15 +2435,11 @@
             "description": "Identity provider not configured",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "204": {
-            "description": "Invitation cancelled for this estate"
-          }
+          "204": { "description": "Invitation cancelled for this estate" }
         }
       }
     }
@@ -2966,107 +2448,49 @@
     "schemas": {
       "InvitationPermissionRequest": {
         "type": "object",
-        "properties": {
-          "canInviteMembers": {
-            "type": "boolean"
-          }
-        },
+        "properties": { "canInviteMembers": { "type": "boolean" } },
         "required": ["canInviteMembers"]
       },
       "EstateError": {
         "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
-          }
-        },
+        "properties": { "message": { "type": "string" } },
         "required": ["message"]
       },
       "UserRoles": {
         "type": "object",
         "properties": {
-          "roleSlugs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
+          "roleSlugs": { "type": "array", "items": { "type": "string" } }
         }
       },
       "EstateRequest": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
-          "code": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 0
-          },
-          "address": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 0
-          },
-          "postalCode": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 0
-          },
-          "description": {
-            "type": "string",
-            "maxLength": 2000,
-            "minLength": 0
-          }
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "code": { "type": "string", "maxLength": 50, "minLength": 0 },
+          "address": { "type": "string", "maxLength": 500, "minLength": 0 },
+          "postalCode": { "type": "string", "maxLength": 20, "minLength": 0 },
+          "description": { "type": "string", "maxLength": 2000, "minLength": 0 }
         },
         "required": ["address", "code", "name", "postalCode"]
       },
       "EstateResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string"
-          },
-          "postalCode": {
-            "type": "string"
-          },
-          "description": {
-            "type": ["string", "null"]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "address": { "type": "string" },
+          "postalCode": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
           "deactivatedAt": {
             "type": ["string", "null"],
             "format": "date-time"
           },
-          "owned": {
-            "type": "boolean"
-          },
-          "canInviteMembers": {
-            "type": "boolean"
-          },
-          "canManageInvitationPermissions": {
-            "type": "boolean"
-          }
+          "owned": { "type": "boolean" },
+          "canInviteMembers": { "type": "boolean" },
+          "canManageInvitationPermissions": { "type": "boolean" }
         },
         "required": [
           "address",
@@ -3082,11 +2506,7 @@
       "DeactivateEstateRequest": {
         "type": "object",
         "properties": {
-          "code": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 0
-          }
+          "code": { "type": "string", "maxLength": 50, "minLength": 0 }
         },
         "required": ["code"]
       },
@@ -3097,57 +2517,30 @@
             "type": "string",
             "enum": ["BLOCK", "LEVEL", "COMMON_AREA"]
           },
-          "parentId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
-          "sortOrder": {
-            "type": "integer",
-            "format": "int32"
-          }
+          "parentId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "sortOrder": { "type": "integer", "format": "int32" }
         },
         "required": ["name", "type"]
       },
       "LocationResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
+          "id": { "type": "string", "format": "uuid" },
           "type": {
             "type": "string",
             "enum": ["BLOCK", "LEVEL", "COMMON_AREA"]
           },
-          "parentId": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
+          "parentId": { "type": ["string", "null"], "format": "uuid" },
+          "name": { "type": "string" },
           "sortOrder": {
             "type": ["integer", "null"],
             "format": "int32",
             "description": "A level's position in its block, lowest first"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deactivatedAt": {
-            "type": ["string", "null"],
-            "format": "date-time"
-          }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["createdAt", "id", "name", "type", "updatedAt"]
       },
@@ -3166,35 +2559,18 @@
       "CouncilInvitationResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": ["string", "null"],
-            "format": "date-time"
-          }
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "status": { "type": "string" },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["email", "estateId", "expiresAt", "id", "status"]
       },
       "CreateAssetRequest": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
           "category": {
             "type": "string",
             "enum": [
@@ -3208,49 +2584,25 @@
               "OTHER"
             ]
           },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "installedOn": {
-            "type": "string",
-            "format": "date"
-          },
+          "locationId": { "type": "string", "format": "uuid" },
+          "installedOn": { "type": "string", "format": "date" },
           "manufacturer": {
             "type": "string",
             "maxLength": 200,
             "minLength": 0
           },
-          "model": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
-          "serialNumber": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          }
+          "model": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "serialNumber": { "type": "string", "maxLength": 200, "minLength": 0 }
         },
         "required": ["category", "locationId", "name"]
       },
       "AssetResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "reference": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "name": { "type": "string" },
           "category": {
             "type": "string",
             "enum": [
@@ -3264,50 +2616,24 @@
               "OTHER"
             ]
           },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
+          "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
           },
-          "installedOn": {
-            "type": ["string", "null"],
-            "format": "date"
-          },
-          "manufacturer": {
-            "type": ["string", "null"]
-          },
-          "model": {
-            "type": ["string", "null"]
-          },
-          "serialNumber": {
-            "type": ["string", "null"]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
+          "installedOn": { "type": ["string", "null"], "format": "date" },
+          "manufacturer": { "type": ["string", "null"] },
+          "model": { "type": ["string", "null"] },
+          "serialNumber": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
           "deactivatedAt": {
             "type": ["string", "null"],
             "format": "date-time"
           },
-          "retiredOn": {
-            "type": ["string", "null"],
-            "format": "date"
-          },
-          "retirementReason": {
-            "type": ["string", "null"]
-          },
-          "lifecycleVersion": {
-            "type": "integer",
-            "format": "int32"
-          },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" },
           "currentCondition": {
             "type": ["string", "null"],
             "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
@@ -3329,11 +2655,7 @@
       "RestoreAssetRequest": {
         "type": "object",
         "properties": {
-          "reference": {
-            "type": "string",
-            "maxLength": 60,
-            "minLength": 0
-          },
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 },
           "expectedVersion": {
             "type": "integer",
             "format": "int32",
@@ -3345,15 +2667,8 @@
       "DeactivateAssetRequest": {
         "type": "object",
         "properties": {
-          "reference": {
-            "type": "string",
-            "maxLength": 60,
-            "minLength": 0
-          },
-          "retiredOn": {
-            "type": "string",
-            "format": "date"
-          },
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 },
+          "retiredOn": { "type": "string", "format": "date" },
           "retirementReason": {
             "type": "string",
             "maxLength": 2000,
@@ -3375,20 +2690,9 @@
       "CreateDeviceRequest": {
         "type": "object",
         "properties": {
-          "identifier": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 0
-          },
-          "model": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
+          "identifier": { "type": "string", "maxLength": 100, "minLength": 0 },
+          "model": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "locationId": { "type": "string", "format": "uuid" },
           "metrics": {
             "type": "array",
             "items": {
@@ -3435,60 +2739,31 @@
               "ENERGY"
             ]
           },
-          "unit": {
-            "type": "string"
-          }
+          "unit": { "type": "string" }
         },
         "required": ["metric", "unit"]
       },
       "DeviceResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "identifier": {
-            "type": "string"
-          },
-          "model": {
-            "type": "string"
-          },
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string" },
+          "model": { "type": "string" },
           "metrics": {
             "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DeviceMetricResponse"
-            }
+            "items": { "$ref": "#/components/schemas/DeviceMetricResponse" }
           },
-          "reportingIntervalSeconds": {
-            "type": "integer",
-            "format": "int32"
-          },
+          "reportingIntervalSeconds": { "type": "integer", "format": "int32" },
           "lastSeenAt": {
             "type": ["string", "null"],
             "format": "date-time",
             "description": "When the device last sent a valid reading. Null until its first."
           },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
         },
         "required": [
           "assetId",
@@ -3510,51 +2785,28 @@
             "type": "string",
             "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
           },
-          "assessedOn": {
-            "type": "string",
-            "format": "date"
-          },
-          "notes": {
-            "type": "string",
-            "maxLength": 2000,
-            "minLength": 0
-          }
+          "assessedOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string", "maxLength": 2000, "minLength": 0 }
         },
         "required": ["assessedOn", "condition", "notes"]
       },
       "AssetAssessmentResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string",
-            "format": "uuid"
-          },
+          "id": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
           "condition": {
             "type": "string",
             "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
           },
-          "assessedOn": {
-            "type": "string",
-            "format": "date"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "recordedByUserId": {
-            "type": "string"
-          },
+          "assessedOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string" },
+          "recordedByUserId": { "type": "string" },
           "recordedByName": {
             "type": ["string", "null"],
             "description": "The recorder's name when they recorded it. Null if WorkOS was unavailable."
           },
-          "recordedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "recordedAt": { "type": "string", "format": "date-time" }
         },
         "required": [
           "assessedOn",
@@ -3571,10 +2823,7 @@
         "properties": {
           "estateIds": {
             "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uuid"
-            }
+            "items": { "type": "string", "format": "uuid" }
           }
         },
         "required": ["estateIds"]
@@ -3582,30 +2831,16 @@
       "UpdateLocationRequest": {
         "type": "object",
         "properties": {
-          "parentId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
-          "sortOrder": {
-            "type": "integer",
-            "format": "int32"
-          }
+          "parentId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "sortOrder": { "type": "integer", "format": "int32" }
         },
         "required": ["name"]
       },
       "UpdateAssetRequest": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
           "category": {
             "type": "string",
             "enum": [
@@ -3619,39 +2854,22 @@
               "OTHER"
             ]
           },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "installedOn": {
-            "type": "string",
-            "format": "date"
-          },
+          "locationId": { "type": "string", "format": "uuid" },
+          "installedOn": { "type": "string", "format": "date" },
           "manufacturer": {
             "type": "string",
             "maxLength": 200,
             "minLength": 0
           },
-          "model": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          },
-          "serialNumber": {
-            "type": "string",
-            "maxLength": 200,
-            "minLength": 0
-          }
+          "model": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "serialNumber": { "type": "string", "maxLength": 200, "minLength": 0 }
         },
         "required": ["category", "locationId", "name"]
       },
       "RetirementCorrectionRequest": {
         "type": "object",
         "properties": {
-          "retiredOn": {
-            "type": "string",
-            "format": "date"
-          },
+          "retiredOn": { "type": "string", "format": "date" },
           "retirementReason": {
             "type": "string",
             "maxLength": 2000,
@@ -3668,80 +2886,42 @@
       "HealthResponse": {
         "type": "object",
         "properties": {
-          "ok": {
-            "type": "boolean"
-          },
-          "database": {
-            "type": "boolean"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "ok": { "type": "boolean" },
+          "database": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
       },
       "EstateMemberResponse": {
         "type": "object",
         "properties": {
-          "userId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "canInviteMembers": {
-            "type": "boolean"
-          }
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "canInviteMembers": { "type": "boolean" }
         },
         "required": ["canInviteMembers", "email", "name", "userId"]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "action": {
-            "type": "string"
-          },
-          "occurredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "actorUserId": {
-            "type": "string"
-          },
+          "id": { "type": "string", "format": "uuid" },
+          "action": { "type": "string" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "actorUserId": { "type": "string" },
           "previousDeactivatedAt": {
             "type": ["string", "null"],
             "format": "date-time"
           },
-          "previousRetiredOn": {
-            "type": ["string", "null"],
-            "format": "date"
-          },
-          "previousRetirementReason": {
-            "type": ["string", "null"]
-          },
+          "previousRetiredOn": { "type": ["string", "null"], "format": "date" },
+          "previousRetirementReason": { "type": ["string", "null"] },
           "deactivatedAt": {
             "type": ["string", "null"],
             "format": "date-time"
           },
-          "retiredOn": {
-            "type": ["string", "null"],
-            "format": "date"
-          },
-          "retirementReason": {
-            "type": ["string", "null"]
-          },
-          "lifecycleVersion": {
-            "type": "integer",
-            "format": "int32"
-          }
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" }
         },
         "required": [
           "action",
@@ -3751,110 +2931,113 @@
           "occurredAt"
         ]
       },
+      "DashboardConditionCounts": {
+        "type": "object",
+        "properties": {
+          "good": { "type": "integer", "format": "int64" },
+          "needsAttention": { "type": "integer", "format": "int64" },
+          "faulty": { "type": "integer", "format": "int64" },
+          "unassessed": { "type": "integer", "format": "int64" }
+        },
+        "required": ["faulty", "good", "needsAttention", "unassessed"]
+      },
+      "DashboardEstateSummary": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "estateCode": { "type": "string" },
+          "totalActiveAssets": { "type": "integer", "format": "int64" },
+          "needsAttentionCount": { "type": "integer", "format": "int64" },
+          "faultyCount": { "type": "integer", "format": "int64" }
+        },
+        "required": [
+          "estateCode",
+          "estateId",
+          "estateName",
+          "faultyCount",
+          "needsAttentionCount",
+          "totalActiveAssets"
+        ]
+      },
+      "DashboardSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "accessibleEstateCount": { "type": "integer", "format": "int32" },
+          "activeEstateCount": { "type": "integer", "format": "int32" },
+          "inactiveEstateCount": { "type": "integer", "format": "int32" },
+          "activeOwnedEstateCount": { "type": "integer", "format": "int32" },
+          "councilMemberCount": { "type": "integer", "format": "int64" },
+          "totalActiveAssets": { "type": "integer", "format": "int64" },
+          "conditionCounts": {
+            "$ref": "#/components/schemas/DashboardConditionCounts"
+          },
+          "affectedEstateCount": { "type": "integer", "format": "int32" },
+          "estatesNeedingAttention": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardEstateSummary" }
+          }
+        },
+        "required": [
+          "accessibleEstateCount",
+          "activeEstateCount",
+          "activeOwnedEstateCount",
+          "affectedEstateCount",
+          "conditionCounts",
+          "councilMemberCount",
+          "estatesNeedingAttention",
+          "inactiveEstateCount",
+          "totalActiveAssets"
+        ]
+      },
       "PendingCouncilInvitationResponse": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateName": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          }
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" }
         },
         "required": ["estateId", "estateName", "expiresAt", "id"]
       },
       "EstateUserResponse": {
         "type": "object",
         "properties": {
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "code": {
-            "type": "string"
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "owner": {
-            "type": "boolean"
-          },
-          "granted": {
-            "type": "boolean"
-          }
+          "estateId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "active": { "type": "boolean" },
+          "owner": { "type": "boolean" },
+          "granted": { "type": "boolean" }
         },
         "required": ["active", "code", "estateId", "granted", "name", "owner"]
       },
       "Role": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "permissions": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
+          "id": { "type": "string" },
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "permissions": { "type": "array", "items": { "type": "string" } }
         }
       },
       "AdminUserResponse": {
         "type": "object",
         "properties": {
-          "membershipId": {
-            "type": "string"
-          },
-          "userId": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "email": {
-            "type": "string"
-          },
-          "joined": {
-            "type": "string"
-          },
-          "roleSlugs": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
+          "membershipId": { "type": "string" },
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "joined": { "type": "string" },
+          "roleSlugs": { "type": "array", "items": { "type": "string" } }
         }
       },
       "Organization": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          }
+          "id": { "type": "string" },
+          "name": { "type": "string" }
         }
       }
     },

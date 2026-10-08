@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { mockMobileViewport } from "@tests/mock-viewport";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/admin/users";
@@ -105,4 +106,25 @@ it("opens a member's estate access", async () => {
       params: { path: { userId: "usr_1" } },
     })
   );
+});
+
+it("shows all member information and role controls on mobile cards", async () => {
+  mockMobileViewport();
+  renderWithProviders(<Page />);
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Estate" }),
+    "Acme"
+  );
+  const cards = await screen.findByRole("list", { name: "Members" });
+  expect(cards.textContent).toContain("Casey Doe");
+  expect(cards.textContent).toContain("casey@example.com");
+  expect(cards.textContent).toContain("2026");
+  screen.getByRole("combobox", { name: "Role for Casey Doe" });
+  expect(screen.queryByRole("table")).toBeNull();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Manage estates for Casey Doe" })
+  );
+  await screen.findByRole("dialog", { name: "Estate access for Casey Doe" });
+  fireEvent.click(screen.getByRole("button", { name: "Close" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

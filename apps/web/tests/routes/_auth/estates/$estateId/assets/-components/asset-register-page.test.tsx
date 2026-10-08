@@ -1,6 +1,10 @@
 import { fireEvent } from "@testing-library/react";
+import { mockMobileViewport } from "@tests/mock-viewport";
+import { chooseOption } from "@tests/test-utils";
+import { type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
+import type { AssetFilters } from "@/lib/assets";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
 import {
   renderWithProviders,
@@ -16,8 +20,24 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    params,
+    ...props
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: { estateId: string; assetId?: string };
+  } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a
+      href={to
+        .replace("$estateId", params?.estateId ?? "")
+        .replace("$assetId", params?.assetId ?? "")}
+      {...props}
+    >
+      {children}
+    </a>
   ),
 }));
 describe("estate asset register", () => {
@@ -132,4 +152,111 @@ describe("estate asset register", () => {
     );
     expect(screen.queryByRole("link", { name: "Register asset" })).toBeNull();
   });
+});
+
+function MobileRegister() {
+  const [filters, setFilters] = useState<AssetFilters>({ q: "pump" });
+  return (
+    <AssetRegisterPage
+      estateId="estate"
+      filters={filters}
+      onFiltersChange={setFilters}
+    />
+  );
+}
+
+it("shows complete mobile cards and switches to a table without refetching", async () => {
+  const resize = mockMobileViewport();
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data:
+          path === "/estates/{estateId}/assets"
+            ? [
+                {
+                  id: "a",
+                  reference: "E-A0001",
+                  name: "Water pump",
+                  category: "PUMP",
+                  locationPath: "Block A › Level 1 › Pump room",
+                  currentCondition: "FAULTY",
+                  lifecycleVersion: 0,
+                },
+              ]
+            : [],
+        response: new Response(),
+      }) as never
+  );
+  renderWithProviders(
+    <AssetRegisterPage
+      estateId="estate"
+      filters={{}}
+      onFiltersChange={vi.fn()}
+    />
+  );
+  const cards = within(await screen.findByRole("list", { name: "Assets" }));
+  const card = cards.getByRole("link", { name: "Water pump (E-A0001)" });
+  expect(cards.getAllByRole("link")).toHaveLength(1);
+  within(card).getByText("Water pump");
+  within(card).getByText("E-A0001");
+  cards.getByText("Pump");
+  cards.getByText("Block A › Level 1 › Pump room");
+  cards.getByText("Faulty");
+  cards.getByText("Active");
+  expect(screen.queryByRole("table")).toBeNull();
+  const calls = vi.mocked(api.GET).mock.calls.length;
+  resize(false);
+  await screen.findByRole("table", { name: "Assets" });
+  expect(screen.queryByRole("list", { name: "Assets" })).toBeNull();
+  expect(vi.mocked(api.GET).mock.calls.length).toBe(calls);
+});
+
+it("applies mobile filter drafts, discards Cancel and keeps search when clearing secondary filters", async () => {
+  mockMobileViewport();
+  renderWithProviders(<MobileRegister />);
+  expect(screen.queryByRole("combobox", { name: "Condition" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+  await screen.findByRole("dialog", { name: "Filter assets" });
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Condition" }),
+    "Faulty"
+  );
+  expect(api.GET).not.toHaveBeenCalledWith(
+    "/estates/{estateId}/assets",
+    expect.objectContaining({
+      params: expect.objectContaining({
+        query: expect.objectContaining({ condition: "FAULTY" }),
+      }),
+    })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+  expect(
+    screen.getByRole("combobox", { name: "Condition" }).textContent
+  ).toContain("All conditions");
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Condition" }),
+    "Faulty"
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+  screen.getByRole("button", { name: "Filters (1)" });
+  await waitFor(() =>
+    expect(api.GET).toHaveBeenCalledWith("/estates/{estateId}/assets", {
+      params: {
+        path: { estateId: "estate" },
+        query: { q: "pump", condition: "FAULTY" },
+      },
+    })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Filters (1)" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Clear secondary filters" })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
+  screen.getByRole("button", { name: "Filters" });
+  expect(
+    screen.getByRole<HTMLInputElement>("textbox", { name: "Search assets" })
+      .value
+  ).toBe("pump");
 });

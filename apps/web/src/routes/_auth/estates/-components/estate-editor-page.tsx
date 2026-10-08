@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
 import { api } from "@/lib/api";
+import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-form";
 
@@ -28,9 +29,12 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
     },
     onSuccess: async (data) => {
       queryClient.setQueryData(["estates", userId, "details", data.id], data);
-      await queryClient.invalidateQueries({
-        queryKey: ["estates", userId, "list"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "list"],
+        }),
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
       toast.success(estateId ? "Estate details updated." : "Estate created.");
       await navigate({
         to: "/estates/$estateId",

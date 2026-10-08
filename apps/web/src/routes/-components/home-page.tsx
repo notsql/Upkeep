@@ -11,6 +11,7 @@ import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { Building2, Layers, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useHealth } from "@/lib/health";
+import { WorkspaceHome } from "@/routes/-components/workspace-home";
 
 function SystemStatus() {
   const health = useHealth();
@@ -40,6 +41,9 @@ function SystemStatus() {
 }
 export function HomePage() {
   const { user, loading } = useAuth();
+  if (user && !loading) {
+    return <WorkspaceHome />;
+  }
   return (
     <main className="page-layout">
       <PageHeader
@@ -53,11 +57,6 @@ export function HomePage() {
         </p>
         <div className="page-actions">
           {loading ? <p role="status">Checking your sign-in…</p> : null}
-          {!loading && user ? (
-            <Link className={buttonVariants()} to="/estates">
-              Go to Estates
-            </Link>
-          ) : null}
           {loading || user ? null : (
             <>
               <a className={buttonVariants()} href="/api/auth/sign-in">

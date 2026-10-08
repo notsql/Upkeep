@@ -5,16 +5,16 @@ JWT subject. Estate and location IDs are UUIDs.
 
 | Method | Path | Request | Success | Access |
 | --- | --- | --- | --- | --- |
-| GET | `/estates/{estateId}/locations` | `includeInactive?: boolean` (default false) | 200 `LocationResponse[]` | Owner or current estate member; owner-only when includeInactive=true |
+| GET | `/estates/{estateId}/locations` | Optional query `includeInactive: boolean`, default false | 200 `LocationResponse[]` | Owner or current estate member for active rows; owner only with `includeInactive=true` |
 | POST | `/estates/{estateId}/locations` | `CreateLocationRequest` | 201 `LocationResponse`, Location header | Owner, active estate |
 | PATCH | `/estates/{estateId}/locations/{id}` | `UpdateLocationRequest` | 200 `LocationResponse` | Owner, active estate/location |
 | POST | `/estates/{estateId}/locations/{id}/deactivate` | none | 200 `LocationResponse` | Owner, active estate |
 
 Invited members must accept before reading. Removing membership immediately
 denies subsequent reads. Invitation delegation does not confer location-write
-permission. Default reads list active locations, including on an inactive estate.
-Owners can request `includeInactive=true` to include historical locations in
-the asset register; this does not grant writes to members.
+permission. Reads list active locations, including on an inactive estate.
+Owners can use `includeInactive=true` to include deactivated locations when
+browsing historical asset records. Members cannot use that option (404).
 
 ## DTOs
 

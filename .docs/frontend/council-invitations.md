@@ -104,8 +104,10 @@ to the broader estate-role permissions follow-up, outside this invitation scope.
 
 CouncilPage uses shared PageHeader with Estates / estate / Council members
 breadcrumbs and themed shadcn Cards. Invitation, pending-invitation and member
-access sections remain distinct. Member permissions use separated rows and
-wrapping action controls. The shell's Council link follows the same API
+access sections remain distinct. Invite/pending cards use two columns on large screens; email and Send invitation
+share a row where space allows. Member permissions use bordered responsive cards
+with wrapping email/actions and Saving invitation permission/Permission saved
+status feedback. Outstanding invitations are compact cards with delivery/expiry. The shell's Council link follows the same API
 capabilities as the estate-details link; it never grants an admin role. Acceptance
 and in-app delivery guidance use the label Estates. All hooks, owner/delegate
 checks and access confirmations above are unchanged. See

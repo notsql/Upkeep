@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
 import { api } from "@/lib/api";
+import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
 
@@ -84,9 +85,12 @@ export function EstateDetailsPage({
       toast.success(
         "Estate deactivated. Existing records have been preserved."
       );
-      await queryClient.invalidateQueries({
-        queryKey: ["estates", userId, "list"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "list"],
+        }),
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
     },
   });
   const openConfirmation = useCallback(() => setConfirming(true), []);
@@ -109,6 +113,12 @@ export function EstateDetailsPage({
       {estate.data ? (
         <>
           <PageHeader
+            actions={
+              <EstateActions
+                estate={estate.data}
+                onDeactivate={openConfirmation}
+              />
+            }
             breadcrumbs={[
               { label: "Estates", to: "/estates" },
               { label: estate.data.name },
@@ -128,7 +138,7 @@ export function EstateDetailsPage({
               assets and reports are not accepted.
             </p>
           ) : null}
-          <dl className="detail-grid my-6">
+          <dl className="detail-grid my-4">
             <div>
               <dt className="font-medium">Estate code</dt>
               <dd>{estate.data.code}</dd>
@@ -153,7 +163,6 @@ export function EstateDetailsPage({
               Shared with you. Only the owner can change this estate.
             </p>
           )}
-          <EstateActions estate={estate.data} onDeactivate={openConfirmation} />
           {confirming ? (
             <DeactivateEstateDialog
               code={estate.data.code}
@@ -166,7 +175,7 @@ export function EstateDetailsPage({
           {estate.data.owned ? (
             <section
               aria-label="Estate assets"
-              className="section-surface mt-8 space-y-4"
+              className="section-surface mt-6 space-y-3"
             >
               <h2 className="font-semibold text-xl">Assets</h2>
               <div className="flex flex-wrap gap-4">

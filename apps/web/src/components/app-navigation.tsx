@@ -18,6 +18,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
+import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
 import { useEstate } from "@/lib/estates";
 
 const ESTATE_PATH = /^\/estates\/([^/]+)/;
@@ -39,37 +40,49 @@ interface NavigationItem {
 
 function useNavigation() {
   const { role } = useAuth();
-  const { pathname } = useRouterState({
-    select: (state) => state.location,
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
   });
   const candidate = pathname.match(ESTATE_PATH)?.[1];
   const estateId = candidate && candidate !== "new" ? candidate : undefined;
   const estate = useEstate(estateId);
-  const global: NavigationItem[] = [
-    { label: "Home", to: "/", icon: Home, active: pathname === "/" },
+  const home: NavigationItem = {
+    label: "Home",
+    to: "/",
+    icon: Home,
+    active: pathname === "/",
+  };
+  const estates: NavigationItem = {
+    label: "Estates",
+    to: "/estates",
+    icon: Building2,
+    active:
+      pathname === "/estates" ||
+      pathname === "/estates/" ||
+      pathname === "/estates/new",
+  };
+  const desktop = [home, estates];
+  const primary = [
+    home,
+    { ...estates, active: pathname.startsWith("/estates") },
+  ];
+  const overflow: NavigationItem[] = [
     {
-      label: "Estates",
-      to: "/estates",
-      icon: Building2,
-      active:
-        pathname === "/estates" ||
-        pathname === "/estates/" ||
-        pathname === "/estates/new",
-    },
-    {
-      label: "Account",
+      label: "Settings",
       to: "/account",
       icon: UserRound,
       active: pathname.startsWith("/account"),
     },
   ];
   if (role === "admin") {
-    global.push({
+    const admin: NavigationItem = {
       label: "Admin users",
       to: "/admin/users",
       icon: ShieldCheck,
       active: pathname.startsWith("/admin"),
-    });
+    };
+    desktop.push(admin);
+    overflow.push(admin);
   }
   const local: NavigationItem[] = [];
   if (estateId) {
@@ -103,27 +116,37 @@ function useNavigation() {
       });
     }
   }
-  const primary = estateId
-    ? [global[1], ...local]
-    : global.filter((item) => item.label !== "Admin users");
-  const overflow = estateId
-    ? global.filter((item) => item.label !== "Estates")
-    : global.filter((item) => item.label === "Admin users");
-  return { global, local, primary, overflow, estateName: estate.data?.name };
+  return {
+    desktop,
+    local,
+    primary,
+    overflow,
+    estateId,
+    estateName: estate.data?.name,
+  };
 }
 function DestinationLink({
   item,
   mobile = false,
+  contextual = false,
 }: {
   item: NavigationItem;
   mobile?: boolean;
+  contextual?: boolean;
 }) {
   const Icon = item.icon;
+  let linkClass = "sidebar-link";
+  if (mobile) {
+    linkClass = "bottom-nav-link";
+  }
+  if (contextual) {
+    linkClass = "estate-nav-link";
+  }
   return (
     <Link
       activeOptions={{ exact: true, includeSearch: false }}
       aria-current={item.active ? "page" : undefined}
-      className={mobile ? "bottom-nav-link" : "sidebar-link"}
+      className={linkClass}
       params={item.estateId ? { estateId: item.estateId } : undefined}
       to={item.to}
     >
@@ -176,7 +199,8 @@ function OverflowNavigation({ items }: { items: NavigationItem[] }) {
   );
 }
 export function AppNavigation() {
-  const { global, local, primary, overflow, estateName } = useNavigation();
+  const { desktop, local, primary, overflow, estateId, estateName } =
+    useNavigation();
   return (
     <>
       <aside className="app-sidebar">
@@ -186,16 +210,17 @@ export function AppNavigation() {
         </Link>
         <p className="sidebar-eyebrow">Workspace</p>
         <nav aria-label="Desktop navigation" className="grid gap-1">
-          {global
-            .filter((item) => item.to !== "/account")
-            .map((item) => (
-              <DestinationLink item={item} key={item.label} />
-            ))}
-          {local.length ? (
+          {desktop.map((item) => (
+            <DestinationLink item={item} key={item.label} />
+          ))}
+          {estateId ? (
             <>
-              <p className="sidebar-eyebrow mt-6 break-words">
-                {estateName ?? "Current estate"}
-              </p>
+              <div className="mt-6 mb-2">
+                <EstateContextSwitcher
+                  estateId={estateId}
+                  estateName={estateName}
+                />
+              </div>
               {local.map((item) => (
                 <DestinationLink item={item} key={item.label} />
               ))}
@@ -213,5 +238,22 @@ export function AppNavigation() {
         {overflow.length ? <OverflowNavigation items={overflow} /> : null}
       </nav>
     </>
+  );
+}
+
+export function EstateNavigation() {
+  const { local, estateId, estateName } = useNavigation();
+  if (!estateId) {
+    return null;
+  }
+  return (
+    <nav aria-label="Estate navigation" className="estate-navigation">
+      <EstateContextSwitcher estateId={estateId} estateName={estateName} />
+      <div className="flex flex-wrap gap-2">
+        {local.map((item) => (
+          <DestinationLink contextual item={item} key={item.label} />
+        ))}
+      </div>
+    </nav>
   );
 }

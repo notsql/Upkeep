@@ -234,7 +234,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
   return (
     <section
       aria-label="Asset lifecycle"
-      className="section-surface my-8 space-y-4"
+      className="section-surface mt-6 space-y-3"
     >
       {asset.deactivatedAt ? (
         <>
@@ -265,9 +265,12 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
         </div>
       ) : null}
       {history.data?.length === 0 ? <p>No lifecycle events recorded.</p> : null}
-      <ol className="space-y-4">
+      <ol aria-label="Lifecycle events" className="grid gap-3">
         {history.data?.map((event) => (
-          <li className="border p-4" key={event.id}>
+          <li
+            className="grid gap-2 rounded-lg border p-3 text-sm"
+            key={event.id}
+          >
             <p>
               {actionLabels[event.action ?? ""] ?? event.action} ·{" "}
               {event.occurredAt
@@ -277,7 +280,9 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                 : "Not recorded"}{" "}
               (Singapore)
             </p>
-            <p>By {event.actorUserId}</p>
+            <p className="break-all text-muted-foreground">
+              By {event.actorUserId}
+            </p>
             <p>
               Previous retirement: {event.previousRetiredOn ?? "Not recorded"} —{" "}
               {event.previousRetirementReason ?? "Not recorded"}

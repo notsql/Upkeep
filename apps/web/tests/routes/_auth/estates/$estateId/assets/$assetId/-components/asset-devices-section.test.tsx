@@ -1,4 +1,3 @@
-import { fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { Device } from "@/lib/devices";
@@ -7,7 +6,6 @@ import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$as
 import {
   renderWithProviders,
   screen,
-  waitFor,
   within,
 } from "../../../../../../../test-utils";
 
@@ -17,7 +15,26 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn() } }));
 
-const INTERVAL = /^Expected reporting interval/;
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({
+    children,
+    to,
+    params,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    params?: { estateId: string; assetId: string };
+  }) => (
+    <a
+      href={to
+        .replace("$estateId", params?.estateId ?? "")
+        .replace("$assetId", params?.assetId ?? "")}
+    >
+      {children}
+    </a>
+  ),
+}));
+
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
 
 const at = "2026-09-28T00:00:00Z";
@@ -51,18 +68,19 @@ const device: Device = {
 let devices: Device[];
 
 function serve() {
-  vi.mocked(api.GET).mockImplementation(((path: string) =>
-    Promise.resolve({
-      data: path === DEVICES_PATH ? devices : locations,
-      response: new Response(),
-    })) as never);
+  vi.mocked(api.GET).mockImplementation(((path: string) => {
+    let data: unknown = locations;
+    if (path === DEVICES_PATH) {
+      data = devices;
+    }
+    return Promise.resolve({ data, response: new Response() });
+  }) as never);
 }
 
 function renderSection(canRegister = true) {
   renderWithProviders(
     <AssetDevicesSection
       assetId="asset-id"
-      assetLocationId="plant"
       canRegister={canRegister}
       estateId="estate-id"
     />
@@ -94,52 +112,16 @@ describe("AssetDevicesSection", () => {
     devices = [];
     renderSection(false);
     await screen.findByText("No devices are registered to this asset yet.");
-    expect(
-      screen.queryByRole("button", { name: "Register device" })
-    ).toBeNull();
+    expect(screen.queryByRole("link", { name: "Register device" })).toBeNull();
   });
+});
 
-  it("registers a device and lists it", async () => {
-    devices = [];
-    vi.mocked(api.POST).mockImplementation((() => {
-      devices = [device];
-      return Promise.resolve({ data: device, response: new Response() });
-    }) as never);
-    renderSection();
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Register device" })
-    );
-    // The asset's location shows by its path once the locations have loaded.
-    await waitFor(() =>
-      within(screen.getByRole("combobox", { name: "Location" })).getByText(
-        "Blk 101 › Plant room"
-      )
-    );
-    fireEvent.change(screen.getByRole("textbox", { name: "Identifier" }), {
-      target: { value: "PUMP-01" },
-    });
-    fireEvent.change(screen.getByRole("textbox", { name: "Model" }), {
-      target: { value: "PT-100" },
-    });
-    fireEvent.click(screen.getByRole("checkbox", { name: "Temperature (°C)" }));
-    fireEvent.change(screen.getByRole("spinbutton", { name: INTERVAL }), {
-      target: { value: "60" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Register device" }));
-
-    await waitFor(() =>
-      expect(api.POST).toHaveBeenCalledWith(DEVICES_PATH, {
-        params: { path: { estateId: "estate-id", assetId: "asset-id" } },
-        body: {
-          identifier: "PUMP-01",
-          model: "PT-100",
-          locationId: "plant",
-          metrics: ["TEMPERATURE"],
-          reportingIntervalSeconds: 60,
-        },
-      })
-    );
-    await screen.findByRole("heading", { name: "PUMP-01" });
-    expect(screen.queryByRole("textbox", { name: "Identifier" })).toBeNull();
-  });
+it("links to a dedicated device form from the asset", () => {
+  serve();
+  renderSection();
+  expect(
+    screen.getByRole<HTMLAnchorElement>("link", { name: "Register device" })
+      .href
+  ).toContain("/estates/estate-id/assets/asset-id/devices/new");
+  expect(screen.queryByRole("textbox", { name: "Identifier" })).toBeNull();
 });

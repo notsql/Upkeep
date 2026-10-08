@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   buildLocationTree,
+  filterLocationTree,
   type Location,
   nextLevelPosition,
-  searchLocations,
 } from "@/lib/locations";
 
 const at = "2026-09-27T00:00:00Z";
@@ -53,21 +53,6 @@ describe("buildLocationTree", () => {
   });
 });
 
-describe("searchLocations", () => {
-  it("matches names case-insensitively, in tree order, showing where each sits", () => {
-    expect(
-      searchLocations(locations, "  LIFT ").map((match) =>
-        match.path.join(" › ")
-      )
-    ).toEqual(["Blk 101 › Level 1 › Lift lobby", "Blk 101 › Lift"]);
-  });
-
-  it("finds nothing for a blank query or a name that does not exist", () => {
-    expect(searchLocations(locations, "   ")).toEqual([]);
-    expect(searchLocations(locations, "carpark")).toEqual([]);
-  });
-});
-
 describe("nextLevelPosition", () => {
   it("suggests the position above the highest level in the block", () => {
     expect(nextLevelPosition(locations, "b1")).toBe(3);
@@ -75,5 +60,43 @@ describe("nextLevelPosition", () => {
 
   it("starts an empty block at level 1", () => {
     expect(nextLevelPosition(locations, "b2")).toBe(1);
+  });
+});
+
+describe("filterLocationTree", () => {
+  it("reveals name matches with their ancestors in server order", () => {
+    const tree = buildLocationTree(locations);
+    const filtered = filterLocationTree(tree, "  LIFT ");
+    expect(filtered.map((node) => node.name)).toEqual(["Blk 101"]);
+    expect(filtered[0].children.map((node) => node.name)).toEqual([
+      "Level 1",
+      "Lift",
+    ]);
+    expect(filtered[0].children[0].children.map((node) => node.path)).toEqual([
+      ["Blk 101", "Level 1", "Lift lobby"],
+    ]);
+    // Filtering must not remove siblings from the full tree used by counts.
+    expect(tree[0].children.map((node) => node.name)).toEqual([
+      "B1",
+      "Level 1",
+      "Level 2",
+      "Lift",
+    ]);
+  });
+  it("keeps all descendants of a matching block or level", () => {
+    const tree = buildLocationTree(locations);
+    expect(filterLocationTree(tree, "blk 101")).toEqual([tree[0]]);
+    const levelMatch = filterLocationTree(tree, "level 1");
+    expect(levelMatch[0].children).toEqual([tree[0].children[1]]);
+  });
+  it("returns the full hierarchy for a blank search", () => {
+    const tree = buildLocationTree(locations);
+    expect(filterLocationTree(tree, "   ")).toEqual(tree);
+  });
+  it("returns no rows for an unmatched search or an empty estate", () => {
+    expect(filterLocationTree(buildLocationTree(locations), "carpark")).toEqual(
+      []
+    );
+    expect(filterLocationTree([], "Lift")).toEqual([]);
   });
 });

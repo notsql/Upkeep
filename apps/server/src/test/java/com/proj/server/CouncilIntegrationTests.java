@@ -14,6 +14,7 @@ import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -354,6 +355,22 @@ class CouncilIntegrationTests {
         assertEquals(
                 "CANCELLED",
                 db.fetchOne("select status from \"EstateInvitation\" where \"estateId\" = ?", estateId)
+                        .get(0));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"SENDING, 409", "PENDING, 200", "IN_APP, 200", "ACCEPTED, 409", "CANCELLED, 409", "UNRECOGNIZED, 409"})
+    void explicitAcceptanceOnlyGrantsMembershipForAcceptableStates(String state, int expectedStatus) throws Exception {
+        UUID id = inviteExisting();
+        db.execute("update \"EstateInvitation\" set status = ? where id = ?", state, id);
+        mvc.perform(post("/council-invitations/" + id + "/accept").with(jwt().jwt(t -> t.subject("recipient"))))
+                .andExpect(status().is(expectedStatus));
+        assertEquals(
+                expectedStatus == 200,
+                estates.findAccessible(estateId, "recipient").isPresent());
+        assertEquals(
+                expectedStatus == 200 ? "ACCEPTED" : state,
+                db.fetchOne("select status from \"EstateInvitation\" where id = ?", id)
                         .get(0));
     }
 

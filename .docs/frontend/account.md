@@ -21,7 +21,7 @@ Read-only. Uses shared `PageHeader` with Home / Account breadcrumbs and the
 `detail-grid` summary surface. No edits or API calls are introduced.
 
 Desktop entry: Settings in the circular top-right profile menu. Mobile entry:
-Account in the global bottom bar or estate-context More menu. Settings opens
+Settings in the fixed mobile More menu. Settings opens
 this existing read-only profile screen; it does not introduce editable settings.
 
 ## Endpoints
