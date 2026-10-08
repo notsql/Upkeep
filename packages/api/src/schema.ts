@@ -127,7 +127,7 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    get: operations["listAssets"];
     put?: never;
     post: operations["createAsset"];
     delete?: never;
@@ -198,6 +198,54 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{id}/lifecycle-events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetLifecycleEvents"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["restoreAsset"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{id}/retirement": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["correctAssetRetirement"];
     trace?: never;
   };
   "/estates/{estateId}/locations": {
@@ -419,9 +467,26 @@ export interface components {
       updatedAt: string;
       /** Format: date-time */
       deactivatedAt?: string | null;
+      /** Format: date */
+      retiredOn?: string | null;
+      retirementReason?: string | null;
+      /** Format: int32 */
+      lifecycleVersion: number;
+      /** @enum {string|null} */
+      currentCondition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
+    };
+    RestoreAssetRequest: {
+      reference: string;
+      /** Format: int32 */
+      expectedVersion: number;
     };
     DeactivateAssetRequest: {
       reference: string;
+      /** Format: date */
+      retiredOn: string;
+      retirementReason: string;
+      /** Format: int32 */
+      expectedVersion: number;
     };
     CreateDeviceRequest: {
       identifier: string;
@@ -526,11 +591,38 @@ export interface components {
       model?: string;
       serialNumber?: string;
     };
+    RetirementCorrectionRequest: {
+      /** Format: date */
+      retiredOn: string;
+      retirementReason: string;
+      /** Format: int32 */
+      expectedVersion: number;
+    };
     HealthResponse: {
       ok: boolean;
       database: boolean;
       /** Format: date-time */
       timestamp: string;
+    };
+    AssetLifecycleEventResponse: {
+      /** Format: uuid */
+      id: string;
+      action: string;
+      /** Format: date-time */
+      occurredAt: string;
+      actorUserId: string;
+      /** Format: date-time */
+      previousDeactivatedAt?: string | null;
+      /** Format: date */
+      previousRetiredOn?: string | null;
+      previousRetirementReason?: string | null;
+      /** Format: date-time */
+      deactivatedAt?: string | null;
+      /** Format: date */
+      retiredOn?: string | null;
+      retirementReason?: string | null;
+      /** Format: int32 */
+      lifecycleVersion: number;
     };
     EstateUserResponse: {
       /** Format: uuid */
@@ -608,6 +700,69 @@ export interface operations {
       };
       /** @description Estate not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  correctAssetRetirement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RetirementCorrectionRequest"];
+      };
+    };
+    responses: {
+      /** @description Retirement information corrected */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
         headers: {
           [name: string]: unknown;
         };
@@ -1303,6 +1458,137 @@ export interface operations {
       };
     };
   };
+  listAssetLifecycleEvents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Asset lifecycle history, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetLifecycleEventResponse"][];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listAssets: {
+    parameters: {
+      query?: {
+        q?: string;
+        category?:
+          | "LIFT"
+          | "PUMP"
+          | "GENERATOR"
+          | "LIGHTING"
+          | "FIRE_SAFETY"
+          | "HVAC"
+          | "ELECTRICAL"
+          | "OTHER";
+        locationId?: string;
+        condition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | "UNASSESSED";
+        status?: "ACTIVE" | "INACTIVE" | "ALL";
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Asset register */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"][];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listDevices: {
     parameters: {
       query?: never;
@@ -1364,7 +1650,9 @@ export interface operations {
   };
   listLocations: {
     parameters: {
-      query?: never;
+      query?: {
+        includeInactive?: boolean;
+      };
       header?: never;
       path: {
         estateId: string;
@@ -1644,6 +1932,69 @@ export interface operations {
       };
       /** @description Estate not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  restoreAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RestoreAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Asset restored */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetResponse"];
+        };
+      };
+      /** @description Invalid request or wrong confirmation reference */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
         headers: {
           [name: string]: unknown;
         };

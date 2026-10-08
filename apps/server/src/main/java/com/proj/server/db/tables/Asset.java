@@ -127,6 +127,21 @@ public class Asset extends TableImpl<AssetRecord> {
      */
     public final TableField<AssetRecord, OffsetDateTime> DEACTIVATEDAT = createField(DSL.name("deactivatedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
 
+    /**
+     * The column <code>public.Asset.lifecycleVersion</code>.
+     */
+    public final TableField<AssetRecord, Integer> LIFECYCLEVERSION = createField(DSL.name("lifecycleVersion"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
+    /**
+     * The column <code>public.Asset.retiredOn</code>.
+     */
+    public final TableField<AssetRecord, LocalDate> RETIREDON = createField(DSL.name("retiredOn"), SQLDataType.LOCALDATE, this, "");
+
+    /**
+     * The column <code>public.Asset.retirementReason</code>.
+     */
+    public final TableField<AssetRecord, String> RETIREMENTREASON = createField(DSL.name("retirementReason"), SQLDataType.VARCHAR(2000), this, "");
+
     private Asset(Name alias, Table<AssetRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

@@ -80,7 +80,51 @@ public class AssetController {
             @PathVariable UUID estateId,
             @PathVariable UUID id,
             @Valid @RequestBody DeactivateAssetRequest request) {
-        return service.deactivate(estateId, id, owner(jwt), request.reference());
+        return service.deactivate(estateId, id, owner(jwt), request);
+    }
+
+    @GetMapping
+    @Operation(operationId = "listAssets")
+    @ApiResponse(responseCode = "200", description = "Asset register")
+    public java.util.List<AssetResponse> list(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) AssetCategory category,
+            @RequestParam(required = false) UUID locationId,
+            @RequestParam(required = false) AssetConditionFilter condition,
+            @RequestParam(defaultValue = "ACTIVE") AssetStatus status) {
+        return service.list(estateId, owner(jwt), q, category, locationId, condition, status);
+    }
+
+    @GetMapping("/{id}/lifecycle-events")
+    @Operation(operationId = "listAssetLifecycleEvents")
+    @ApiResponse(responseCode = "200", description = "Asset lifecycle history, newest first")
+    public java.util.List<AssetLifecycleEventResponse> events(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable UUID estateId, @PathVariable UUID id) {
+        return service.events(estateId, id, owner(jwt));
+    }
+
+    @PatchMapping("/{id}/retirement")
+    @Operation(operationId = "correctAssetRetirement")
+    @ApiResponse(responseCode = "200", description = "Retirement information corrected")
+    public AssetResponse correctRetirement(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID id,
+            @Valid @RequestBody RetirementCorrectionRequest request) {
+        return service.correctRetirement(estateId, id, owner(jwt), request);
+    }
+
+    @PostMapping("/{id}/restore")
+    @Operation(operationId = "restoreAsset")
+    @ApiResponse(responseCode = "200", description = "Asset restored")
+    public AssetResponse restore(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID id,
+            @Valid @RequestBody RestoreAssetRequest request) {
+        return service.restore(estateId, id, owner(jwt), request);
     }
 
     private static String owner(Jwt jwt) {

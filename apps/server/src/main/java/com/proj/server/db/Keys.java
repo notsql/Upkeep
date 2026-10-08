@@ -6,12 +6,14 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
+import com.proj.server.db.tables.records.AssetlifecycleeventRecord;
 import com.proj.server.db.tables.records.DeviceRecord;
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.db.tables.records.EstateuserRecord;
@@ -38,6 +40,7 @@ public class Keys {
 
     public static final UniqueKey<AssetRecord> ASSET_PKEY = Internal.createUniqueKey(Asset.ASSET, DSL.name("Asset_pkey"), new TableField[] { Asset.ASSET.ID }, true);
     public static final UniqueKey<AssetassessmentRecord> ASSETASSESSMENT_PKEY = Internal.createUniqueKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_pkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ID }, true);
+    public static final UniqueKey<AssetlifecycleeventRecord> ASSETLIFECYCLEEVENT_PKEY = Internal.createUniqueKey(Assetlifecycleevent.ASSETLIFECYCLEEVENT, DSL.name("AssetLifecycleEvent_pkey"), new TableField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ID }, true);
     public static final UniqueKey<DeviceRecord> DEVICE_PKEY = Internal.createUniqueKey(Device.DEVICE, DSL.name("Device_pkey"), new TableField[] { Device.DEVICE.ID }, true);
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
     public static final UniqueKey<EstateuserRecord> ESTATEUSER_PKEY = Internal.createUniqueKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_pkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID, Estateuser.ESTATEUSER.USERID }, true);

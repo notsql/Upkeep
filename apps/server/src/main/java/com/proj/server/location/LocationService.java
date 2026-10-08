@@ -25,9 +25,9 @@ public class LocationService {
         this.estates = estates;
     }
 
-    public List<LocationResponse> list(UUID estateId, String owner) {
+    public List<LocationResponse> list(UUID estateId, String owner, boolean includeInactive) {
         estates.findOwned(estateId, owner, false).orElseThrow(LocationService::estateNotFound);
-        return repository.listActive(estateId);
+        return includeInactive ? repository.listAll(estateId) : repository.listActive(estateId);
     }
 
     @Transactional

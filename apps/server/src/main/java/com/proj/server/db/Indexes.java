@@ -6,6 +6,7 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateuser;
@@ -33,6 +34,8 @@ public class Indexes {
     public static final Index ASSET_LOCATIONID_IDX = Internal.createIndex(DSL.name("Asset_locationId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.LOCATIONID }, false);
     public static final Index ASSETASSESSMENT_ASSETID_ASSESSEDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetAssessment_assetId_assessedOn_createdAt_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ASSETID, Assetassessment.ASSETASSESSMENT.ASSESSEDON, Assetassessment.ASSETASSESSMENT.CREATEDAT }, false);
     public static final Index ASSETASSESSMENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetAssessment_estateId_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ESTATEID }, false);
+    public static final Index ASSETLIFECYCLEEVENT_ASSETID_LIFECYCLEVERSION_KEY = Internal.createIndex(DSL.name("AssetLifecycleEvent_assetId_lifecycleVersion_key"), Assetlifecycleevent.ASSETLIFECYCLEEVENT, new OrderField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ASSETID, Assetlifecycleevent.ASSETLIFECYCLEEVENT.LIFECYCLEVERSION }, true);
+    public static final Index ASSETLIFECYCLEEVENT_ESTATEID_ASSETID_IDX = Internal.createIndex(DSL.name("AssetLifecycleEvent_estateId_assetId_idx"), Assetlifecycleevent.ASSETLIFECYCLEEVENT, new OrderField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ESTATEID, Assetlifecycleevent.ASSETLIFECYCLEEVENT.ASSETID }, false);
     public static final Index DEVICE_ASSETID_IDX = Internal.createIndex(DSL.name("Device_assetId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ASSETID }, false);
     public static final Index DEVICE_ESTATEID_IDX = Internal.createIndex(DSL.name("Device_estateId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ESTATEID }, false);
     public static final Index DEVICE_IDENTIFIER_KEY = Internal.createIndex(DSL.name("Device_identifier_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.IDENTIFIER }, true);
