@@ -40,3 +40,11 @@ Query key: `devicesQueryKey(userId, estateId, assetId)` =
 Also reads `useLocations(estateId)` (key `["estates", userId, "locations",
 estateId]`) for the location select and path labels. All queries:
 `enabled: ready`, `retry: false`, errors via `estateError`.
+
+## Dashboard presentation
+
+Devices is a separate themed surface on asset details with a wrapping section
+action row. Device metadata uses responsive columns; identifiers/models wrap.
+Shared shadcn form controls and dialog styling follow
+[design-system.md](design-system.md). Registration, metrics and read/write
+permissions are unchanged; devices have no independent navigation destination.

@@ -37,7 +37,7 @@ code, it belongs here.
 | `building-assets.md` | ID-46 | draft |
 | `asset-location-picker.md` | ID-54 | draft |
 | `asset-search.md` | ID-47 | draft |
-| [ui-redesign.md](features/ui-redesign.md) | ID-93 | agreed |
+| [ui-redesign.md](features/ui-redesign.md) | ID-93 | implemented; manual visual review pending |
 
 Draft specs carry an **Implementation phases** checklist. Build them in the
 order listed, test-first, and tick the boxes as you go. New specs start from

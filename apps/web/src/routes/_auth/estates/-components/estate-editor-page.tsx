@@ -1,7 +1,9 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import { api } from "@/lib/api";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-form";
@@ -36,14 +38,26 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
       });
     },
   });
+  const cancel = useCallback(() => {
+    navigate(
+      estateId
+        ? { to: "/estates/$estateId", params: { estateId } }
+        : { to: "/estates" }
+    );
+  }, [navigate, estateId]);
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-8">
+    <main className="page-layout max-w-3xl">
       <Link className="text-sm underline" to="/estates">
-        Back to my estates
+        Back to estates
       </Link>
-      <h1 className="mt-6 font-semibold text-2xl">
-        {estateId ? "Edit estate" : "Create estate"}
-      </h1>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          { label: estateId ? "Edit estate" : "Create estate" },
+        ]}
+        description="Keep estate identity and address details organised."
+        title={estateId ? "Edit estate" : "Create estate"}
+      />
       {estateId && estate.isPending ? (
         <p aria-live="polite" className="mt-6">
           Loading estate…
@@ -63,6 +77,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
         <EstateForm
           initialValues={estateId ? estate.data : undefined}
           key={estate.data?.id ?? "new"}
+          onCancel={cancel}
           onSave={save.mutateAsync}
         />
       ) : null}

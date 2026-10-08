@@ -27,7 +27,7 @@ sign-in/sign-up link is an `<a>` styled with `buttonVariants({ size: "lg" })`.
 | --- | --- | --- |
 | `components/auth-provider.tsx` | `AuthProvider` = `AuthKitProvider` > `AuthTokenBridge` > `AuthIdleGuard`. `AuthTokenBridge` installs `useAccessToken().getAccessToken` as the API client's token resolver (`setAccessTokenResolver`); failures resolve to `undefined`. | - |
 | `routes/-components/auth-idle-guard.tsx` | `AuthIdleGuard({ timeoutMinutes })`. When a user is signed in, resets a timer on `keydown`, `pointerdown`, `scroll`, `touchstart`; on expiry calls `startServerSignOut("/login")`. Timeout from `VITE_AUTH_IDLE_TIMEOUT_MINUTES` (default 30). | - |
-| `components/auth-button.tsx` | Header button. Loading: disabled ghost `Button` "Loading...". Signed out: "Log in" link to `/api/auth/sign-in` styled with `buttonVariants({ size: "sm" })`. Signed in: user email + "Sign out" link to `/logout` styled with `buttonVariants({ size: "sm", variant: "outline" })`. | `Button`, `buttonVariants` |
+| `components/auth-button.tsx` | Header button. Loading: disabled ghost `Button` "Loading...". Signed out: "Sign in" link to `/api/auth/sign-in` styled with `buttonVariants({ size: "sm" })`. Signed in: circular profile Button opens a DropdownMenu with user email, Settings linking to `/account`, and Sign out linking to `/logout`. | `Button`, `buttonVariants`, `DropdownMenu` |
 
 ## Helpers (`lib/auth-redirect.ts`)
 
@@ -46,11 +46,22 @@ the API client, never by hand.
 
 ## Roles
 
-`useAuth().role === "admin"` shows the Admin Dashboard link in the header; the
+`useAuth().role === "admin"` shows Admin users in desktop navigation and mobile
+More; the
 `/admin/users` loader enforces it (see [admin-users.md](admin-users.md)).
 
 ## Council invitation sign-in
 
 The invitation-token branch above is for new-account WorkOS email invitations.
-Existing-account invitations use ordinary sign-in and explicit acceptance on My
-estates. See [council-invitations.md](council-invitations.md) for both flows.
+Existing-account invitations use ordinary sign-in and explicit acceptance on Estates. See [council-invitations.md](council-invitations.md) for both flows.
+
+## Presentation
+
+Local authentication cards share the dashboard light/dark tokens and rounded,
+readable shadcn controls. The public header includes the saved theme toggle.
+WorkOS-hosted authentication and all redirect/session behavior stay the same.
+See [design-system.md](design-system.md).
+
+Public home has one Create account action in its content; the header no longer
+repeats it as Register. Header and home both use Sign in for authentication.
+The existing signup/sign-in endpoints and redirects remain unchanged.

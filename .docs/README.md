@@ -13,11 +13,11 @@ same change as the code.
 - [Assets, register and lifecycle](api/assets.md): asset search, details,
   retirement, restoration and history.
 
-
 ## Frontend (`apps/web`)
 
 | File | Covers |
 | --- | --- |
+| [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
 | [frontend/shell.md](frontend/shell.md) | Root layout, providers, header nav, home page (`/`), and conventions shared by every feature (API client, session gate, query-key prefix, errors) |
 | [frontend/auth.md](frontend/auth.md) | `/login`, `/register`, `/logout`, `/api/auth/*` handlers, `_auth` guard, idle sign-out, `AuthButton`, token bridge |
 | [frontend/account.md](frontend/account.md) | `/account` |

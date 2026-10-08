@@ -3,5 +3,5 @@ import { EstateListPage } from "@/routes/_auth/estates/-components/estate-list-p
 
 export const Route = createFileRoute("/_auth/estates/")({
   component: EstateListPage,
-  head: () => ({ meta: [{ title: "My estates" }] }),
+  head: () => ({ meta: [{ title: "Estates" }] }),
 });

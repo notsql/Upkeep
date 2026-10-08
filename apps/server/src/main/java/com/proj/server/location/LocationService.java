@@ -32,7 +32,6 @@ public class LocationService {
             estates.findAccessible(estateId, user).orElseThrow(LocationService::estateNotFound);
         }
         return includeInactive ? repository.listAll(estateId) : repository.listActive(estateId);
-
     }
 
     @Transactional

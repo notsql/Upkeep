@@ -10,6 +10,7 @@ import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { Link } from "@tanstack/react-router";
 import { type FormEvent, useCallback, useState } from "react";
+import { PageHeader } from "@/components/page-header";
 import {
   useCouncilInvitation,
   useEstateMembers,
@@ -133,7 +134,7 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
           {invitation.data ? (
             <p role="status">
               {invitation.data.status === "IN_APP"
-                ? `Invitation created for ${invitation.data.email}. They can accept it on My estates. No email was sent.`
+                ? `Invitation created for ${invitation.data.email}. They can accept it on Estates. No email was sent.`
                 : `Invitation sent to ${invitation.data.email}. Access starts after they accept it.`}
             </p>
           ) : null}
@@ -161,7 +162,7 @@ export function CouncilPage({ estateId }: { estateId: string }) {
     );
   }
   return (
-    <main className="container mx-auto max-w-3xl space-y-6 px-4 py-8">
+    <main className="page-layout space-y-6">
       <Link
         className="text-sm underline"
         params={{ estateId }}
@@ -169,10 +170,19 @@ export function CouncilPage({ estateId }: { estateId: string }) {
       >
         Back to estate
       </Link>
-      <header>
-        <h1 className="font-semibold text-2xl">Council members</h1>
-        <p className="text-muted-foreground">{estate.data.name}</p>
-      </header>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          {
+            label: estate.data.name,
+            to: "/estates/$estateId",
+            params: { estateId },
+          },
+          { label: "Council members" },
+        ]}
+        description={`Invitations and estate access for ${estate.data.name}.`}
+        title="Council members"
+      />
       {estate.data.canInviteMembers ? (
         <CouncilInvitationForm estateId={estateId} />
       ) : (
@@ -198,7 +208,7 @@ export function CouncilPage({ estateId }: { estateId: string }) {
                 No members yet. Invite someone to get started.
               </p>
             ) : null}
-            <ul>
+            <ul className="mt-5 space-y-3">
               {members.data?.map((member) => (
                 <MemberPermission
                   allowed={member.canInviteMembers}

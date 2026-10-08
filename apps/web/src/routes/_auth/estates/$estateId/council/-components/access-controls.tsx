@@ -77,7 +77,7 @@ function OutstandingInvitation({
   );
   let delivery = "Email invitation";
   if (invitation.status === "IN_APP") {
-    delivery = "Accepts in My estates";
+    delivery = "Accepts in Estates";
   }
   if (invitation.status === "SENDING") {
     delivery = "Sending or awaiting retry";

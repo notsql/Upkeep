@@ -8,7 +8,8 @@ Paths are relative to `apps/web/src/`.
 | --- | --- | --- | --- |
 | `routes/_auth/admin/users/index.tsx` | `/admin/users` | `_auth`, then own loader: `getAuth()`; if no user or `role !== "admin"`, `redirect({ to: "/estates" })` | none set |
 
-The header shows "Admin Dashboard" only to admins (see [shell.md](shell.md)).
+Desktop navigation and mobile More show Admin users only to admins (see
+[shell.md](shell.md)).
 
 ## Screens and components
 
@@ -43,3 +44,12 @@ access `estateId`, `name`, `code`, `owner`, `granted`, `active`.
 Error messages are fixed strings ("Unable to load organizations", "Unable to
 load members", "Unable to load roles", "Unable to update role", "Unable to load
 estate access", "Unable to update estate access"), not `estateError`.
+
+## Dashboard presentation
+
+The screen uses shared PageHeader (User roles) with Home / Admin users
+breadcrumbs, a real Total users card and a named User roles table. Its horizontal
+scroll region is labelled and keyboard-focusable. The organisation picker,
+search, role selection and estate-access controls keep their current endpoints
+and restrictions. Shared colors, theme switch and responsive layout follow
+[design-system.md](design-system.md).

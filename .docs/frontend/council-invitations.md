@@ -14,7 +14,7 @@
   delegated permissions.
 - Form: required email, length/email validation, pending button and disabled
   inputs, error with retained input, successful invitation confirmation.
-  IN_APP success directs the inviter to tell the recipient to open My estates
+  IN_APP success directs the inviter to tell the recipient to open Estates
   and explicitly states no email was sent.
   Permission controls retain the saved state when an update fails.
 - Owners also see pending invitations and member-removal controls. Both actions
@@ -51,14 +51,13 @@ AuthKit PKCE/state and returning to `/estates`. The WorkOS User invitation URL
 configuration is documented in the [API doc](../api/council-invitations.md).
 
 `InvitationAcceptance` sits in the estate list's `-components/` folder and mounts
-on **My estates**. Once the browser token bridge/session is ready, it checks
+on **Estates**. Once the browser token bridge/session is ready, it checks
 accepted email invitations once per mounted user through a mutation. It shows an
 activation confirmation or an error with **Retry invitations**; existing estates
 remain usable if verification fails. It does not grant access from URL claims:
 Spring verifies the WorkOS acceptance and recipient identity.
 
-`PendingInvitations` lives beside `InvitationAcceptance` and also mounts on My
-estates. It lists unexpired IN_APP and PENDING email invitations for the verified recipient
+`PendingInvitations` lives beside `InvitationAcceptance` and also mounts on Estates. It lists unexpired IN_APP and PENDING email invitations for the verified recipient
 in a shadcn Card with estate name,
 expiry and a labelled Accept button. It never accepts during loading or sign-in.
 Buttons disable during acceptance, errors remain beside the invitation, and
@@ -100,3 +99,14 @@ accepted member names come from WorkOS.
 Council members can read estates and locations. Shared asset details, assessment
 history and device lists remain blocked by owner-only server checks. They belong
 to the broader estate-role permissions follow-up, outside this invitation scope.
+
+## Dashboard presentation
+
+CouncilPage uses shared PageHeader with Estates / estate / Council members
+breadcrumbs and themed shadcn Cards. Invitation, pending-invitation and member
+access sections remain distinct. Member permissions use separated rows and
+wrapping action controls. The shell's Council link follows the same API
+capabilities as the estate-details link; it never grants an admin role. Acceptance
+and in-app delivery guidance use the label Estates. All hooks, owner/delegate
+checks and access confirmations above are unchanged. See
+[design-system.md](design-system.md).

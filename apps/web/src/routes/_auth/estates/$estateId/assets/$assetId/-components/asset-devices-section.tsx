@@ -54,8 +54,8 @@ export function AssetDevicesSection({
   );
 
   return (
-    <section aria-labelledby="devices-heading" className="mt-10">
-      <div className="flex items-center justify-between gap-4">
+    <section aria-labelledby="devices-heading" className="section-surface mt-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-semibold text-xl" id="devices-heading">
           Devices
         </h2>
@@ -89,9 +89,9 @@ export function AssetDevicesSection({
       ) : null}
       <ul className="mt-4 grid gap-4">
         {devices.data?.map((device) => (
-          <li className="border p-4" key={device.id}>
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-medium">{device.identifier}</h3>
+          <li className="rounded-lg border p-4" key={device.id}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h3 className="break-all font-medium">{device.identifier}</h3>
               <span className="border px-2 py-1 text-xs">
                 {device.lastSeenAt
                   ? `Last seen ${new Date(device.lastSeenAt).toLocaleString()}`
@@ -101,7 +101,7 @@ export function AssetDevicesSection({
             <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-muted-foreground">Model</dt>
-                <dd>{device.model}</dd>
+                <dd className="break-words">{device.model}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Location</dt>

@@ -101,3 +101,25 @@ and correction forms display Singapore today, the known installation date, and
 an accessible inline explanation for dates before installation or in the future.
 Date validation is shared through `retirementDateError()`; the API remains the
 final authority for date validation.
+
+## Dashboard presentation
+
+Register/detail/editor screens share `page-layout` and `PageHeader` breadcrumbs
+through Estates / the actual estate name / Assets. The register's filters wrap in a surface and
+its named Assets table has a focusable horizontal scroll region (`Assets table`).
+Condition uses textual shadcn Badges. LifecycleStatusBadge uses green Active
+and red Retired labels, shared with estate status styling. Table order, linked
+references/names, URL filters and back navigation retain their existing behavior.
+
+Editors use a narrow form surface and shared `FormActions`; creation Cancel
+returns to the register, edit Cancel to asset details. Both actions disable while
+saving. Required/optional guidance is visible without changing payload fields.
+Details use a responsive summary grid, then distinct lifecycle, condition and
+device surfaces. Dialogs use the shared theme and fit within a scrollable viewport.
+See [design-system.md](design-system.md). Existing endpoint hooks, permissions,
+retirement dates, version checks and invalidations above remain in effect.
+
+Register, detail and create/edit screens read `useEstate(estateId)` using
+`["estates", userId, "details", estateId]` to name the estate in breadcrumbs.
+This existing query is cached and session-gated; Estate is a loading fallback. For an inactive estate, Register asset is hidden and the screen explains
+that existing assets remain available. Backend write restrictions are unchanged.

@@ -53,3 +53,13 @@ After any successful write: close the panel and invalidate
 shown in the form / confirm panel. No toasts.
 
 The asset register opts into `useLocations(estateId, true)` for inactive locations. It sends `includeInactive=true` and appends `"all"` to the query key. Ordinary pickers retain active-only defaults.
+
+## Dashboard presentation
+
+Locations is a `section-surface` within estate overview, with `id="locations"`
+and scroll margin for the sticky header. It has no separate desktop/mobile
+navigation destination; users reach it within Overview. Direct #locations links
+remain valid and keep Overview selected. Heading/action rows and node actions wrap on
+narrow screens; the hierarchy, search, forms and authorization stay the same.
+Shared form/dialog colors and control sizes follow
+[design-system.md](design-system.md).

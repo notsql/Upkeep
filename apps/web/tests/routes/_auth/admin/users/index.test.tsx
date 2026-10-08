@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/admin/users";
 import {
@@ -8,6 +9,12 @@ import {
   waitFor,
 } from "../../../../test-utils";
 
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({ children, to }: { children: ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
+}));
 const { get, put } = vi.hoisted(() => ({ get: vi.fn(), put: vi.fn() }));
 vi.mock("@/lib/api", () => ({ api: { GET: get, PUT: put } }));
 const Page = Route.options.component as React.ComponentType;

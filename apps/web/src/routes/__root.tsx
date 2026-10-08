@@ -9,9 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "next-themes";
-
+import { AppShell } from "@/components/app-shell";
 import { AuthProvider } from "../components/auth-provider";
-import Header from "../components/header";
 
 import appCss from "../index.css?url";
 
@@ -30,7 +29,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "UpKeep",
       },
     ],
     links: [
@@ -57,16 +56,15 @@ function RootDocument() {
       <body>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           disableTransitionOnChange
           enableSystem
         >
           <AuthProvider>
             <QueryClientProvider client={queryClient}>
-              <div className="grid h-svh grid-rows-[auto_1fr]">
-                <Header />
+              <AppShell>
                 <Outlet />
-              </div>
+              </AppShell>
               <Toaster richColors />
               <TanStackRouterDevtools position="bottom-left" />
             </QueryClientProvider>

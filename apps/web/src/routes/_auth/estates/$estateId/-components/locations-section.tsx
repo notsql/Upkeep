@@ -147,8 +147,12 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     panel?.kind === "create" ? panel.parent?.id : panel?.node.id;
 
   return (
-    <section aria-labelledby={`${id}-heading`} className="mt-10">
-      <div className="flex items-center justify-between gap-4">
+    <section
+      aria-labelledby={`${id}-heading`}
+      className="section-surface mt-8 scroll-mt-24"
+      id="locations"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-semibold text-xl" id={`${id}-heading`}>
           Locations
         </h2>
@@ -502,7 +506,7 @@ function DeactivateLocation({
           {error}
         </p>
       ) : null}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button disabled={pending} onClick={confirm} variant="destructive">
           {pending ? "Deactivating…" : "Deactivate"}
         </Button>

@@ -1,5 +1,8 @@
-import { buttonVariants } from "@proj/ui/components/button";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Badge } from "@proj/ui/components/badge";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card } from "@proj/ui/components/card";
+import { Empty } from "@proj/ui/components/empty";
 import { Label } from "@proj/ui/components/label";
 import {
   Select,
@@ -10,6 +13,8 @@ import {
 } from "@proj/ui/components/select";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
+import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { PageHeader } from "@/components/page-header";
 import { type EstateStatus, useEstateList } from "@/lib/estates";
 import { InvitationAcceptance } from "@/routes/_auth/estates/-components/invitation-acceptance";
 import { PendingInvitations } from "@/routes/_auth/estates/-components/pending-invitations";
@@ -28,19 +33,20 @@ export function EstateListPage() {
       setStatus(value);
     }
   }, []);
+  const retry = useCallback(() => estates.refetch(), [estates.refetch]);
   return (
-    <main className="container mx-auto max-w-5xl px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-semibold text-2xl">My estates</h1>
-        <Link className={buttonVariants()} to="/estates/new">
-          Create estate
-        </Link>
-      </div>
+    <main className="page-layout">
+      <PageHeader
+        actions={
+          <Link className={buttonVariants()} to="/estates/new">
+            Create estate
+          </Link>
+        }
+        description="Estates you own or have access to."
+        title="Estates"
+      />
       <InvitationAcceptance />
       <PendingInvitations />
-      <p className="mt-2 text-muted-foreground">
-        Estates you own, and estates an admin has shared with you.
-      </p>
       <div className="my-6 flex items-center gap-3">
         <Label className="text-sm" htmlFor="estate-status">
           Status
@@ -60,22 +66,27 @@ export function EstateListPage() {
       </div>
       {estates.isPending ? <p aria-live="polite">Loading estates…</p> : null}
       {estates.error ? (
-        <p className="text-destructive" role="alert">
-          {estates.error.message}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>
+            {estates.error.message}
+            <Button onClick={retry} variant="outline">
+              Retry estates
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : null}
       {estates.data?.length === 0 ? (
-        <p className="border p-8 text-muted-foreground" role="status">
+        <Empty className="mb-6 border border-dashed bg-card" role="status">
           {status === "ALL"
             ? "No estates yet. Create your first estate to get started."
             : `No ${status.toLowerCase()} estates.`}
-        </p>
+        </Empty>
       ) : null}
       <ul className="grid gap-4 sm:grid-cols-2">
         {estates.data?.map((estate) => (
           <li key={estate.id}>
             <Card className="h-full gap-0 px-5 text-sm">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <h2 className="font-medium text-lg">
                   <Link
                     className="underline-offset-4 hover:underline"
@@ -85,15 +96,14 @@ export function EstateListPage() {
                     {estate.name}
                   </Link>
                 </h2>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {estate.owned ? null : (
-                    <span className="border px-2 py-1 text-xs">
-                      Shared with you
-                    </span>
+                    <Badge variant="secondary">Shared with you</Badge>
                   )}
-                  <span className="border px-2 py-1 text-xs">
-                    {estate.deactivatedAt ? "Inactive" : "Active"}
-                  </span>
+                  <LifecycleStatusBadge
+                    inactive={Boolean(estate.deactivatedAt)}
+                    inactiveLabel="Inactive"
+                  />
                 </div>
               </div>
               <p className="mt-2 text-muted-foreground text-sm">

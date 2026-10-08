@@ -1,4 +1,5 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { PageHeader } from "@/components/page-header";
 
 export const Route = createFileRoute("/_auth/account/")({
   component: AccountPage,
@@ -11,9 +12,13 @@ function AccountPage() {
   const { user } = authenticatedRoute.useLoaderData();
 
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-8">
-      <h1 className="font-semibold text-2xl">Your account</h1>
-      <dl className="mt-6 grid gap-2">
+    <main className="page-layout">
+      <PageHeader
+        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Account" }]}
+        description="Your profile and sign-in identity."
+        title="Your account"
+      />
+      <dl className="detail-grid mt-6">
         <div>
           <dt className="font-medium">Name</dt>
           <dd className="text-muted-foreground">

@@ -18,9 +18,7 @@
   "paths": {
     "/estates/{estateId}/members/{userId}/invitation-permission": {
       "put": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "permission",
         "parameters": [
           {
@@ -130,9 +128,7 @@
     },
     "/api/admin/users/{userId}/estates/{estateId}": {
       "put": {
-        "tags": [
-          "estate-user-controller"
-        ],
+        "tags": ["estate-user-controller"],
         "summary": "Add a user to an estate",
         "operationId": "addEstateUser",
         "parameters": [
@@ -187,9 +183,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "estate-user-controller"
-        ],
+        "tags": ["estate-user-controller"],
         "summary": "Remove a user from an estate",
         "operationId": "removeEstateUser",
         "parameters": [
@@ -246,9 +240,7 @@
     },
     "/api/admin/users/{membershipId}/role": {
       "put": {
-        "tags": [
-          "admin-controller"
-        ],
+        "tags": ["admin-controller"],
         "operationId": "updateRole",
         "parameters": [
           {
@@ -286,9 +278,7 @@
     },
     "/estates": {
       "get": {
-        "tags": [
-          "estate-controller"
-        ],
+        "tags": ["estate-controller"],
         "summary": "List your estates",
         "operationId": "list",
         "parameters": [
@@ -299,11 +289,7 @@
             "schema": {
               "type": "string",
               "default": "ACTIVE",
-              "enum": [
-                "ACTIVE",
-                "INACTIVE",
-                "ALL"
-              ]
+              "enum": ["ACTIVE", "INACTIVE", "ALL"]
             }
           }
         ],
@@ -364,9 +350,7 @@
         }
       },
       "post": {
-        "tags": [
-          "estate-controller"
-        ],
+        "tags": ["estate-controller"],
         "operationId": "create",
         "requestBody": {
           "content": {
@@ -434,9 +418,7 @@
     },
     "/estates/{id}/deactivate": {
       "post": {
-        "tags": [
-          "estate-controller"
-        ],
+        "tags": ["estate-controller"],
         "operationId": "deactivate",
         "parameters": [
           {
@@ -515,9 +497,7 @@
     },
     "/estates/{estateId}/locations": {
       "get": {
-        "tags": [
-          "location-controller"
-        ],
+        "tags": ["location-controller"],
         "summary": "List an estate's active locations",
         "operationId": "listLocations",
         "parameters": [
@@ -597,9 +577,7 @@
         }
       },
       "post": {
-        "tags": [
-          "location-controller"
-        ],
+        "tags": ["location-controller"],
         "operationId": "createLocation",
         "parameters": [
           {
@@ -678,9 +656,7 @@
     },
     "/estates/{estateId}/locations/{id}/deactivate": {
       "post": {
-        "tags": [
-          "location-controller"
-        ],
+        "tags": ["location-controller"],
         "operationId": "deactivateLocation",
         "parameters": [
           {
@@ -758,9 +734,7 @@
     },
     "/estates/{estateId}/council-invitations": {
       "get": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "outstanding",
         "parameters": [
           {
@@ -860,9 +834,7 @@
         }
       },
       "post": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "invite",
         "parameters": [
           {
@@ -971,9 +943,7 @@
     },
     "/estates/{estateId}/assets": {
       "get": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "listAssets",
         "parameters": [
           {
@@ -1026,12 +996,7 @@
             "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "GOOD",
-                "NEEDS_ATTENTION",
-                "FAULTY",
-                "UNASSESSED"
-              ]
+              "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY", "UNASSESSED"]
             }
           },
           {
@@ -1041,11 +1006,7 @@
             "schema": {
               "type": "string",
               "default": "ACTIVE",
-              "enum": [
-                "ACTIVE",
-                "INACTIVE",
-                "ALL"
-              ]
+              "enum": ["ACTIVE", "INACTIVE", "ALL"]
             }
           }
         ],
@@ -1106,9 +1067,7 @@
         }
       },
       "post": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "createAsset",
         "parameters": [
           {
@@ -1187,9 +1146,7 @@
     },
     "/estates/{estateId}/assets/{id}/restore": {
       "post": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "restoreAsset",
         "parameters": [
           {
@@ -1277,9 +1234,7 @@
     },
     "/estates/{estateId}/assets/{id}/deactivate": {
       "post": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "deactivateAsset",
         "parameters": [
           {
@@ -1367,9 +1322,7 @@
     },
     "/estates/{estateId}/assets/{assetId}/devices": {
       "get": {
-        "tags": [
-          "device-controller"
-        ],
+        "tags": ["device-controller"],
         "operationId": "listDevices",
         "parameters": [
           {
@@ -1448,9 +1401,7 @@
         }
       },
       "post": {
-        "tags": [
-          "device-controller"
-        ],
+        "tags": ["device-controller"],
         "operationId": "registerDevice",
         "parameters": [
           {
@@ -1538,9 +1489,7 @@
     },
     "/estates/{estateId}/assets/{assetId}/assessments": {
       "get": {
-        "tags": [
-          "asset-assessment-controller"
-        ],
+        "tags": ["asset-assessment-controller"],
         "operationId": "listAssetAssessments",
         "parameters": [
           {
@@ -1619,9 +1568,7 @@
         }
       },
       "post": {
-        "tags": [
-          "asset-assessment-controller"
-        ],
+        "tags": ["asset-assessment-controller"],
         "operationId": "recordAssetAssessment",
         "parameters": [
           {
@@ -1709,9 +1656,7 @@
     },
     "/council-invitations/{invitationId}/accept": {
       "post": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "acceptInApp",
         "parameters": [
           {
@@ -1810,9 +1755,7 @@
     },
     "/council-invitations/accept": {
       "post": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "accept",
         "responses": {
           "400": {
@@ -1900,9 +1843,7 @@
     },
     "/estates/{id}": {
       "get": {
-        "tags": [
-          "estate-controller"
-        ],
+        "tags": ["estate-controller"],
         "operationId": "get",
         "parameters": [
           {
@@ -1969,9 +1910,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "estate-controller"
-        ],
+        "tags": ["estate-controller"],
         "operationId": "update",
         "parameters": [
           {
@@ -2050,9 +1989,7 @@
     },
     "/estates/{estateId}/locations/{id}": {
       "patch": {
-        "tags": [
-          "location-controller"
-        ],
+        "tags": ["location-controller"],
         "operationId": "updateLocation",
         "parameters": [
           {
@@ -2140,9 +2077,7 @@
     },
     "/estates/{estateId}/assets/{id}": {
       "get": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "getAsset",
         "parameters": [
           {
@@ -2218,9 +2153,7 @@
         }
       },
       "patch": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "updateAsset",
         "parameters": [
           {
@@ -2308,9 +2241,7 @@
     },
     "/estates/{estateId}/assets/{id}/retirement": {
       "patch": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "correctAssetRetirement",
         "parameters": [
           {
@@ -2398,9 +2329,7 @@
     },
     "/health": {
       "get": {
-        "tags": [
-          "health-controller"
-        ],
+        "tags": ["health-controller"],
         "operationId": "health",
         "responses": {
           "200": {
@@ -2418,9 +2347,7 @@
     },
     "/estates/{estateId}/members": {
       "get": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "members",
         "parameters": [
           {
@@ -2522,9 +2449,7 @@
     },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
-        "tags": [
-          "asset-controller"
-        ],
+        "tags": ["asset-controller"],
         "operationId": "listAssetLifecycleEvents",
         "parameters": [
           {
@@ -2605,9 +2530,7 @@
     },
     "/council-invitations": {
       "get": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "pending",
         "responses": {
           "400": {
@@ -2698,9 +2621,7 @@
     },
     "/api/admin/users/{userId}/estates": {
       "get": {
-        "tags": [
-          "estate-user-controller"
-        ],
+        "tags": ["estate-user-controller"],
         "summary": "List every estate and whether the user is assigned to it",
         "operationId": "listUserEstates",
         "parameters": [
@@ -2758,9 +2679,7 @@
     },
     "/api/admin/users/organization/{organizationId}/roles": {
       "get": {
-        "tags": [
-          "admin-controller"
-        ],
+        "tags": ["admin-controller"],
         "operationId": "getOrganizationRoles",
         "parameters": [
           {
@@ -2791,9 +2710,7 @@
     },
     "/api/admin/users/organization/{organizationId}/members": {
       "get": {
-        "tags": [
-          "admin-controller"
-        ],
+        "tags": ["admin-controller"],
         "operationId": "getMembers",
         "parameters": [
           {
@@ -2824,9 +2741,7 @@
     },
     "/api/admin/users/organization/all": {
       "get": {
-        "tags": [
-          "admin-controller"
-        ],
+        "tags": ["admin-controller"],
         "operationId": "getOrganizations",
         "responses": {
           "200": {
@@ -2847,9 +2762,7 @@
     },
     "/estates/{estateId}/members/{userId}": {
       "delete": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "removeMember",
         "parameters": [
           {
@@ -2949,9 +2862,7 @@
     },
     "/estates/{estateId}/council-invitations/{invitationId}": {
       "delete": {
-        "tags": [
-          "council-controller"
-        ],
+        "tags": ["council-controller"],
         "operationId": "cancel",
         "parameters": [
           {
@@ -3060,9 +2971,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "canInviteMembers"
-        ]
+        "required": ["canInviteMembers"]
       },
       "EstateError": {
         "type": "object",
@@ -3071,9 +2980,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "message"
-        ]
+        "required": ["message"]
       },
       "UserRoles": {
         "type": "object",
@@ -3115,12 +3022,7 @@
             "minLength": 0
           }
         },
-        "required": [
-          "address",
-          "code",
-          "name",
-          "postalCode"
-        ]
+        "required": ["address", "code", "name", "postalCode"]
       },
       "EstateResponse": {
         "type": "object",
@@ -3142,10 +3044,7 @@
             "type": "string"
           },
           "description": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "createdAt": {
             "type": "string",
@@ -3156,10 +3055,7 @@
             "format": "date-time"
           },
           "deactivatedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "owned": {
@@ -3192,20 +3088,14 @@
             "minLength": 0
           }
         },
-        "required": [
-          "code"
-        ]
+        "required": ["code"]
       },
       "CreateLocationRequest": {
         "type": "object",
         "properties": {
           "type": {
             "type": "string",
-            "enum": [
-              "BLOCK",
-              "LEVEL",
-              "COMMON_AREA"
-            ]
+            "enum": ["BLOCK", "LEVEL", "COMMON_AREA"]
           },
           "parentId": {
             "type": "string",
@@ -3221,10 +3111,7 @@
             "format": "int32"
           }
         },
-        "required": [
-          "name",
-          "type"
-        ]
+        "required": ["name", "type"]
       },
       "LocationResponse": {
         "type": "object",
@@ -3235,27 +3122,17 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "BLOCK",
-              "LEVEL",
-              "COMMON_AREA"
-            ]
+            "enum": ["BLOCK", "LEVEL", "COMMON_AREA"]
           },
           "parentId": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "name": {
             "type": "string"
           },
           "sortOrder": {
-            "type": [
-              "integer",
-              "null"
-            ],
+            "type": ["integer", "null"],
             "format": "int32",
             "description": "A level's position in its block, lowest first"
           },
@@ -3268,20 +3145,11 @@
             "format": "date-time"
           },
           "deactivatedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
-        "required": [
-          "createdAt",
-          "id",
-          "name",
-          "type",
-          "updatedAt"
-        ]
+        "required": ["createdAt", "id", "name", "type", "updatedAt"]
       },
       "CouncilInvitationRequest": {
         "type": "object",
@@ -3293,9 +3161,7 @@
             "minLength": 0
           }
         },
-        "required": [
-          "email"
-        ]
+        "required": ["email"]
       },
       "CouncilInvitationResponse": {
         "type": "object",
@@ -3315,20 +3181,11 @@
             "type": "string"
           },
           "expiresAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           }
         },
-        "required": [
-          "email",
-          "estateId",
-          "expiresAt",
-          "id",
-          "status"
-        ]
+        "required": ["email", "estateId", "expiresAt", "id", "status"]
       },
       "CreateAssetRequest": {
         "type": "object",
@@ -3375,11 +3232,7 @@
             "minLength": 0
           }
         },
-        "required": [
-          "category",
-          "locationId",
-          "name"
-        ]
+        "required": ["category", "locationId", "name"]
       },
       "AssetResponse": {
         "type": "object",
@@ -3420,29 +3273,17 @@
             "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
           },
           "installedOn": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           },
           "manufacturer": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "model": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "serialNumber": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "createdAt": {
             "type": "string",
@@ -3453,39 +3294,23 @@
             "format": "date-time"
           },
           "deactivatedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "retiredOn": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           },
           "retirementReason": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "lifecycleVersion": {
             "type": "integer",
             "format": "int32"
           },
           "currentCondition": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "enum": [
-              "GOOD",
-              "NEEDS_ATTENTION",
-              "FAULTY"
-            ]
+            "type": ["string", "null"],
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
           }
         },
         "required": [
@@ -3515,10 +3340,7 @@
             "minimum": 0
           }
         },
-        "required": [
-          "expectedVersion",
-          "reference"
-        ]
+        "required": ["expectedVersion", "reference"]
       },
       "DeactivateAssetRequest": {
         "type": "object",
@@ -3617,10 +3439,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "metric",
-          "unit"
-        ]
+        "required": ["metric", "unit"]
       },
       "DeviceResponse": {
         "type": "object",
@@ -3658,10 +3477,7 @@
             "format": "int32"
           },
           "lastSeenAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time",
             "description": "When the device last sent a valid reading. Null until its first."
           },
@@ -3692,11 +3508,7 @@
         "properties": {
           "condition": {
             "type": "string",
-            "enum": [
-              "GOOD",
-              "NEEDS_ATTENTION",
-              "FAULTY"
-            ]
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
           },
           "assessedOn": {
             "type": "string",
@@ -3708,11 +3520,7 @@
             "minLength": 0
           }
         },
-        "required": [
-          "assessedOn",
-          "condition",
-          "notes"
-        ]
+        "required": ["assessedOn", "condition", "notes"]
       },
       "AssetAssessmentResponse": {
         "type": "object",
@@ -3727,11 +3535,7 @@
           },
           "condition": {
             "type": "string",
-            "enum": [
-              "GOOD",
-              "NEEDS_ATTENTION",
-              "FAULTY"
-            ]
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
           },
           "assessedOn": {
             "type": "string",
@@ -3744,10 +3548,7 @@
             "type": "string"
           },
           "recordedByName": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "description": "The recorder's name when they recorded it. Null if WorkOS was unavailable."
           },
           "recordedAt": {
@@ -3776,9 +3577,7 @@
             }
           }
         },
-        "required": [
-          "estateIds"
-        ]
+        "required": ["estateIds"]
       },
       "UpdateLocationRequest": {
         "type": "object",
@@ -3797,9 +3596,7 @@
             "format": "int32"
           }
         },
-        "required": [
-          "name"
-        ]
+        "required": ["name"]
       },
       "UpdateAssetRequest": {
         "type": "object",
@@ -3846,11 +3643,7 @@
             "minLength": 0
           }
         },
-        "required": [
-          "category",
-          "locationId",
-          "name"
-        ]
+        "required": ["category", "locationId", "name"]
       },
       "RetirementCorrectionRequest": {
         "type": "object",
@@ -3870,11 +3663,7 @@
             "minimum": 0
           }
         },
-        "required": [
-          "expectedVersion",
-          "retiredOn",
-          "retirementReason"
-        ]
+        "required": ["expectedVersion", "retiredOn", "retirementReason"]
       },
       "HealthResponse": {
         "type": "object",
@@ -3890,11 +3679,7 @@
             "format": "date-time"
           }
         },
-        "required": [
-          "database",
-          "ok",
-          "timestamp"
-        ]
+        "required": ["database", "ok", "timestamp"]
       },
       "EstateMemberResponse": {
         "type": "object",
@@ -3912,12 +3697,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "canInviteMembers",
-          "email",
-          "name",
-          "userId"
-        ]
+        "required": ["canInviteMembers", "email", "name", "userId"]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",
@@ -3937,44 +3717,26 @@
             "type": "string"
           },
           "previousDeactivatedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "previousRetiredOn": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           },
           "previousRetirementReason": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "deactivatedAt": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date-time"
           },
           "retiredOn": {
-            "type": [
-              "string",
-              "null"
-            ],
+            "type": ["string", "null"],
             "format": "date"
           },
           "retirementReason": {
-            "type": [
-              "string",
-              "null"
-            ]
+            "type": ["string", "null"]
           },
           "lifecycleVersion": {
             "type": "integer",
@@ -4008,12 +3770,7 @@
             "format": "date-time"
           }
         },
-        "required": [
-          "estateId",
-          "estateName",
-          "expiresAt",
-          "id"
-        ]
+        "required": ["estateId", "estateName", "expiresAt", "id"]
       },
       "EstateUserResponse": {
         "type": "object",
@@ -4038,14 +3795,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "active",
-          "code",
-          "estateId",
-          "granted",
-          "name",
-          "owner"
-        ]
+        "required": ["active", "code", "estateId", "granted", "name", "owner"]
       },
       "Role": {
         "type": "object",

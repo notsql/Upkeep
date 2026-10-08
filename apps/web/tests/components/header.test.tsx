@@ -1,8 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Header from "@/components/header";
+import { renderWithProviders, screen } from "../test-utils";
 
 const { auth } = vi.hoisted(() => ({
   auth: {
@@ -12,8 +13,10 @@ const { auth } = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -32,26 +35,37 @@ describe("Header", () => {
     auth.user = null;
   });
 
-  it("offers registration and login only to signed-out users", () => {
-    render(<Header />);
+  it("uses Sign in in the public header without duplicating home registration", () => {
+    renderWithProviders(<Header />);
 
-    screen.getByRole("link", { name: "Register" });
+    expect(screen.queryByRole("link", { name: "Register" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Create account" })).toBeNull();
     expect(
-      screen.getByRole<HTMLAnchorElement>("link", { name: "Log in" }).href
+      screen.getByRole<HTMLAnchorElement>("link", { name: "Sign in" }).href
     ).toContain("/api/auth/sign-in");
     expect(screen.queryByRole("link", { name: "Account" })).toBeNull();
   });
 
-  it("offers account access and logout only to signed-in users", () => {
+  it("offers settings and logout through the signed-in profile menu", async () => {
     auth.user = { email: "user@example.com" };
 
-    render(<Header />);
+    renderWithProviders(<Header />);
 
-    screen.getByRole("link", { name: "Account" });
+    expect(screen.queryByRole("link", { name: "Account" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Sign out" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
     expect(
-      screen.getByRole<HTMLAnchorElement>("link", { name: "Sign out" }).href
+      (
+        await screen.findByRole<HTMLAnchorElement>("menuitem", {
+          name: "Settings",
+        })
+      ).href
+    ).toContain("/account");
+    screen.getByText("user@example.com");
+    expect(
+      screen.getByRole<HTMLAnchorElement>("menuitem", { name: "Sign out" }).href
     ).toContain("/logout");
     expect(screen.queryByRole("link", { name: "Register" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Log in" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Sign in" })).toBeNull();
   });
 });

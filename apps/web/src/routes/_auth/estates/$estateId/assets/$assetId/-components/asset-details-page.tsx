@@ -3,7 +3,10 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { PageHeader } from "@/components/page-header";
 import { assetCategoryLabel, useAsset, useDeactivateAsset } from "@/lib/assets";
+import { useEstate } from "@/lib/estates";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
@@ -18,6 +21,7 @@ export function AssetDetailsPage({
   estateId: string;
   assetId: string;
 }) {
+  const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
   const deactivate = useDeactivateAsset(estateId, assetId);
   const [confirming, setConfirming] = useState(false);
@@ -32,7 +36,7 @@ export function AssetDetailsPage({
     [deactivate.mutateAsync]
   );
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-8">
+    <main className="page-layout">
       <Link
         className="text-sm underline"
         params={{ estateId }}
@@ -59,19 +63,37 @@ export function AssetDetailsPage({
       ) : null}
       {asset.data ? (
         <>
-          <div className="mt-6 flex items-center justify-between gap-4">
-            <h1 className="font-semibold text-2xl">{asset.data.name}</h1>
-            <span className="border px-3 py-1 text-sm" role="status">
-              {asset.data.deactivatedAt ? "Retired" : "Active"}
-            </span>
-          </div>
+          <PageHeader
+            breadcrumbs={[
+              { label: "Estates", to: "/estates" },
+              {
+                label: estate.data?.name ?? "Estate",
+                to: "/estates/$estateId",
+                params: { estateId },
+              },
+              {
+                label: "Assets",
+                to: "/estates/$estateId/assets",
+                params: { estateId },
+              },
+              { label: asset.data.name },
+            ]}
+            description={asset.data.reference}
+            status={
+              <LifecycleStatusBadge
+                inactive={Boolean(asset.data.deactivatedAt)}
+                inactiveLabel="Retired"
+              />
+            }
+            title={asset.data.name}
+          />
           {asset.data.deactivatedAt ? (
             <p className="mt-4 border p-4 text-sm">
               This asset is retired. Its record remains available but can no
               longer be edited until restored.
             </p>
           ) : null}
-          <dl className="my-6 grid gap-4">
+          <dl className="detail-grid my-6">
             <div>
               <dt className="font-medium">Reference</dt>
               <dd>{asset.data.reference}</dd>
@@ -102,7 +124,7 @@ export function AssetDetailsPage({
             </div>
           </dl>
           {asset.data.deactivatedAt ? null : (
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <Link
                 className={buttonVariants({ variant: "outline" })}
                 params={{ estateId, assetId }}

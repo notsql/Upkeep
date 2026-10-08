@@ -232,7 +232,10 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
   const openRestoration = useCallback(() => setMode("restore"), []);
   const openCorrection = useCallback(() => setMode("edit"), []);
   return (
-    <section aria-label="Asset lifecycle" className="my-8 space-y-4">
+    <section
+      aria-label="Asset lifecycle"
+      className="section-surface my-8 space-y-4"
+    >
       {asset.deactivatedAt ? (
         <>
           <dl>
@@ -243,7 +246,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
               {asset.retirementReason ?? "Not recorded"}
             </dd>
           </dl>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Button onClick={openCorrection} variant="outline">
               Edit retirement information
             </Button>

@@ -1,3 +1,5 @@
+import { fireEvent } from "@testing-library/react";
+
 vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
   PendingInvitations: () => null,
 }));
@@ -98,5 +100,28 @@ describe("estate list page", () => {
     renderWithProviders(<EstateListPage />);
     await screen.findByRole("link", { name: "Maple Grove" });
     within(screen.getByRole("listitem")).getByText("Shared with you");
+  });
+
+  it("uses Estates consistently as the page heading", () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: [],
+      response: new Response(),
+    });
+    renderWithProviders(<EstateListPage />);
+    screen.getByRole("heading", { name: "Estates", level: 1 });
+  });
+  it("offers retry after an estate load failure", async () => {
+    vi.mocked(api.GET)
+      .mockResolvedValueOnce({
+        error: { message: "Unable to load estates." },
+        response: new Response(null, { status: 500 }),
+      })
+      .mockResolvedValue({ data: [], response: new Response() });
+    renderWithProviders(<EstateListPage />);
+    await screen.findByRole("alert");
+    fireEvent.click(screen.getByRole("button", { name: "Retry estates" }));
+    expect((await screen.findByRole("status")).textContent).toContain(
+      "No active estates"
+    );
   });
 });

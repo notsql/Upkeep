@@ -6,6 +6,7 @@ import {
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
@@ -20,6 +21,30 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 describe("estate asset register", () => {
+  it("identifies the estate by name in the asset breadcrumbs", async () => {
+    vi.mocked(api.GET).mockImplementation(
+      async (path) =>
+        ({
+          data:
+            path === "/estates/{id}"
+              ? { id: "estate", name: "Maple Grove", owned: true }
+              : [],
+          response: new Response(),
+        }) as never
+    );
+    renderWithProviders(
+      <AssetRegisterPage
+        estateId="estate"
+        filters={{}}
+        onFiltersChange={vi.fn()}
+      />
+    );
+    const breadcrumbs = within(
+      screen.getByRole("navigation", { name: "Breadcrumbs" })
+    );
+    await breadcrumbs.findByRole("link", { name: "Maple Grove" });
+    expect(breadcrumbs.queryByRole("link", { name: "Estate" })).toBeNull();
+  });
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(api.GET).mockResolvedValue({
@@ -79,5 +104,32 @@ describe("estate asset register", () => {
         },
       })
     );
+  });
+  it("explains an inactive estate instead of offering asset registration", async () => {
+    vi.mocked(api.GET).mockImplementation(
+      async (path) =>
+        ({
+          data:
+            path === "/estates/{id}"
+              ? {
+                  id: "estate",
+                  owned: true,
+                  deactivatedAt: "2026-10-08T00:00:00Z",
+                }
+              : [],
+          response: new Response(),
+        }) as never
+    );
+    renderWithProviders(
+      <AssetRegisterPage
+        estateId="estate"
+        filters={{}}
+        onFiltersChange={vi.fn()}
+      />
+    );
+    await screen.findByText(
+      "This estate is inactive. Existing assets remain available."
+    );
+    expect(screen.queryByRole("link", { name: "Register asset" })).toBeNull();
   });
 });

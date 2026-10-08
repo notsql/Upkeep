@@ -29,6 +29,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { PageHeader } from "@/components/page-header";
 import { api } from "@/lib/api";
 import { MemberEstates } from "@/routes/_auth/admin/-components/member-estates";
 
@@ -283,31 +284,21 @@ function AdminUsersPage() {
     !organizationRoles.isSuccess || organizationRoles.data.length === 0;
 
   return (
-    <main className="min-h-full bg-background px-6 py-10 text-foreground sm:px-10">
+    <main className="page-layout">
       <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-          <div>
-            <p className="mb-2 font-semibold text-primary text-sm uppercase tracking-widest">
-              Administration
-            </p>
-            <h1 className="font-semibold text-3xl tracking-tight sm:text-4xl">
-              User roles
-            </h1>
-            <p className="mt-2 text-muted-foreground">
-              Manage what each member can access. Changes are saved
-              automatically.
-            </p>
-          </div>
-
-          <Card className="gap-1 px-4" size="sm">
-            <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-              Total users
-            </p>
-            <p className="font-semibold text-2xl">
-              {members.data?.length ?? "—"}
-            </p>
-          </Card>
-        </header>
+        <PageHeader
+          actions={
+            <Card className="gap-1 px-4" size="sm">
+              <p className="text-muted-foreground text-xs">Total users</p>
+              <p className="font-semibold text-2xl">
+                {members.data?.length ?? "—"}
+              </p>
+            </Card>
+          }
+          breadcrumbs={[{ label: "Home", to: "/" }, { label: "Admin users" }]}
+          description="Manage each member's role and estate access. Changes save automatically."
+          title="User roles"
+        />
 
         {error ? (
           <p

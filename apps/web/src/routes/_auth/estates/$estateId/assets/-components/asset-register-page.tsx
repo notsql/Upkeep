@@ -1,3 +1,4 @@
+import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
@@ -18,8 +19,11 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { PageHeader } from "@/components/page-header";
 import { conditionLabel } from "@/lib/assessments";
 import { type AssetFilters, assetCategoryLabel, useAssets } from "@/lib/assets";
+import { useEstate } from "@/lib/estates";
 import { flattenLocations, useLocations } from "@/lib/locations";
 
 const conditions = {
@@ -69,6 +73,7 @@ export function AssetRegisterPage({
   onFiltersChange: (filters: AssetFilters) => void;
 }) {
   const assets = useAssets(estateId, filters);
+  const estate = useEstate(estateId);
   const locations = useLocations(estateId, true);
   const [search, setSearch] = useState(filters.q ?? "");
   useEffect(() => setSearch(filters.q ?? ""), [filters.q]);
@@ -136,19 +141,40 @@ export function AssetRegisterPage({
     []
   );
   return (
-    <main className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <main className="page-layout space-y-6">
       <Link className="underline" params={{ estateId }} to="/estates/$estateId">
         Back to estate
       </Link>
-      <h1 className="font-semibold text-2xl">Assets</h1>
-      <Link
-        className={buttonVariants({ variant: "outline" })}
-        params={{ estateId }}
-        to="/estates/$estateId/assets/new"
-      >
-        Register asset
-      </Link>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <PageHeader
+        actions={
+          estate.data?.deactivatedAt ? undefined : (
+            <Link
+              className={buttonVariants()}
+              params={{ estateId }}
+              to="/estates/$estateId/assets/new"
+            >
+              Register asset
+            </Link>
+          )
+        }
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          {
+            label: estate.data?.name ?? "Estate",
+            to: "/estates/$estateId",
+            params: { estateId },
+          },
+          { label: "Assets" },
+        ]}
+        description="Find equipment by location, category and latest condition."
+        title="Assets"
+      />
+      {estate.data?.deactivatedAt ? (
+        <p className="section-surface text-muted-foreground text-sm">
+          This estate is inactive. Existing assets remain available.
+        </p>
+      ) : null}
+      <div className="section-surface grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <div className="grid gap-2">
           <Label htmlFor="asset-search">Search assets</Label>
           <Input
@@ -209,7 +235,7 @@ export function AssetRegisterPage({
         </p>
       ) : null}
       {assets.data && assets.data.length > 0 ? (
-        <Table>
+        <Table aria-label="Assets">
           <TableHeader>
             <TableRow>
               {[
@@ -248,10 +274,15 @@ export function AssetRegisterPage({
                 <TableCell>{assetCategoryLabel[asset.category]}</TableCell>
                 <TableCell>{asset.locationPath}</TableCell>
                 <TableCell>
-                  {conditions[asset.currentCondition ?? "UNASSESSED"]}
+                  <Badge variant="outline">
+                    {conditions[asset.currentCondition ?? "UNASSESSED"]}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  {asset.deactivatedAt ? "Retired" : "Active"}
+                  <LifecycleStatusBadge
+                    inactive={Boolean(asset.deactivatedAt)}
+                    inactiveLabel="Retired"
+                  />
                 </TableCell>
               </TableRow>
             ))}

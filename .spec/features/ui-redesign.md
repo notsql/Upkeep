@@ -1,6 +1,6 @@
 # Consistent application UI and design conventions
 
-**Status:** agreed (2026-10-08) — implementation starting on combined feature branches
+**Status:** implemented on feature branch (2026-10-08); manual visual acceptance pending
 **Owner:** Chan Ding Jie
 **Jira:** [ID-93](https://notjira.atlassian.net/browse/ID-93)
 **Branch:** `feat/ui-redesign`
@@ -85,12 +85,13 @@ use an existing shadcn control rather than adding a new dependency.
   medium breakpoint (initially 768px), the sidebar becomes a persistent bottom
   app bar. Tablet layouts use whichever arrangement fits without clipping; check
   both portrait and landscape. Keep the breakpoint documented and tokenised.
-- Global navigation: Home, Estates, Account; Admin users only for the existing
-  admin role. Use "Estates" consistently in headings, navigation, breadcrumbs and
+- Desktop global navigation: Home and Estates; Account via Settings in a circular
+  top-right profile menu with Sign out. Mobile retains Account. Admin users only
+  for the existing admin role. Use "Estates" consistently in headings, navigation, breadcrumbs and
   invitation guidance; existing URLs and workflow semantics stay the same.
   Do not create dashboard/work-order/report destinations that lack
   implemented routes.
-- Within an estate: Overview, Locations (anchor within overview), Assets (when
+- Within an estate: Overview (including its Locations section), Assets (when
   current permissions support asset reads), and Council members (when the existing
   API capabilities permit it). Do not invent separate locations/device pages.
 - Retain the current estate switcher and its URL/remembered-estate behaviour.
@@ -110,7 +111,7 @@ use an existing shadcn control rather than adding a new dependency.
   More only when additional allowed destinations such as Admin users are present.
   Inside an estate, Estates / Overview / Assets / Council / More; Assets and
   Council appear only when current capabilities allow them. More exposes Home,
-  Account, Locations and admin navigation where applicable. Every desktop
+  Account and admin navigation where applicable. Every desktop
   destination remains reachable; do not invent a route for an overflow item.
 - Keep the current estate name/switcher in the mobile top bar so bottom-bar actions
   have an unambiguous estate context. Switching estates updates destination URLs
@@ -247,30 +248,29 @@ agreement, follow the normal API generation loop. Styling alone should not requi
 
 ## Test-driven implementation phases
 
-- [ ] Agree design/navigation decisions and this scope; establish the combined
+- [x] Agree design/navigation decisions and this scope; establish the combined
       branch/database baseline and run existing checks before any redesign.
-- [ ] Write and run failing shell tests for selected navigation, estate context,
-      role visibility, bottom app-bar active links/overflow keyboard controls, content
-      clearance, skip link and theme selection.
-      Implement tokens, shell and the minimum repeated layout pieces.
-- [ ] Write and run failing user-flow tests for estate navigation, form feedback,
-      required fields, destructive confirmation, empty/error recovery and retained
-      input. Restyle estate/location screens, retaining business tests.
-- [ ] Write and run failing register/detail tests for filters/back navigation,
-      meaningful status labels, date errors and lifecycle actions. Restyle assets,
-      assessments/devices and retirement screens after their dependency lands.
-- [ ] Write and run failing council tests for owner/delegate/member visibility,
-      distinct delivery feedback, pending acceptance and cancellation/removal.
-      Restyle the invitation screens after their dependency lands.
-- [ ] Restyle local auth/account/home/admin screens with failing tests for any new
+- [x] Write and run failing shell tests for selected navigation, estate context,
+      role visibility, bottom app-bar destinations/More reachability, skip link
+      and saved theme selection. Implement tokens and repeated layout pieces;
+      actual keyboard focus and content clearance remain in browser review below.
+- [x] Write and run failing tests for the Estates label/retry and shared form
+      Save/Cancel/pending behavior. Restyle estate/location screens and retain
+      existing validation, destructive-confirmation and failure-retention tests.
+- [x] Verify asset filter/back-navigation, status, date and lifecycle regressions;
+      add failing tests for labelled table scrolling and inactive-estate action
+      feedback. Restyle register/detail, assessments/devices and lifecycle screens.
+- [x] Restyle council screens while preserving existing owner/delegate/member,
+      delivery, acceptance, cancellation/removal and failure-retention regressions.
+- [x] Restyle local auth/account/home/admin screens with failing tests for any new
       observable behaviour. Preserve existing AuthKit and admin tests.
 - [ ] Verify desktop/tablet/mobile and both themes in an actual browser, including
       keyboard, contrast, 200% zoom, long content, scrollable tables and dialogs.
       Do not assert CSS class names or screenshots alone as evidence of correct
       behaviour. Do not claim jsdom proves responsive layout or colour contrast.
-- [ ] Run pnpm test, pnpm check-types, web build and pnpm fix. Run targeted tests
+- [x] Run pnpm test, pnpm check-types, web build and pnpm fix. Run targeted tests
       during each loop; retain a final full regression run for branch integration.
-- [ ] Update `.docs/frontend/design-system.md`, `.docs/frontend/shell.md` and every
+- [x] Update `.docs/frontend/design-system.md`, `.docs/frontend/shell.md` and every
       touched feature's frontend doc; index the guide in `.docs/README.md`. Record
       architecture/layout decisions in an ADR only where a tradeoff needs rationale.
 
@@ -316,3 +316,48 @@ the implementation baseline.
 - Keep additional destinations reachable through More and respect the current
   estate and existing permissions. The initial mapping is a recommendation for
   the current set of features, not a permanent list for future releases.
+
+## Implementation evidence (2026-10-08)
+
+### Account navigation refinement — agreed (2026-10-08)
+
+Move desktop Account navigation from the sidebar to a circular profile button
+at the top right. Its existing shadcn DropdownMenu shows the signed-in email,
+Settings linking to the current `/account` screen, and Sign out using `/logout`.
+The account screen remains read-only; no new settings capabilities are implied.
+Preserve Account in mobile bottom navigation/More and keep public login controls.
+
+### Estate navigation/action refinement — agreed (2026-10-08)
+
+Locations remains a section of Overview, with no separate sidebar or mobile
+More destination. Overview stays selected for its section anchors. Group the
+Council members link with Edit estate and Deactivate estate in a single wrapping
+action row, preserving all current owner/delegate visibility checks.
+
+### Status and asset context refinement — agreed (2026-10-08)
+
+Use green Active badges and red Inactive estate / Retired asset badges in lists
+and details, retaining visible labels in both themes. Asset register, details and
+create/edit breadcrumbs display the estate's actual name via the existing cached,
+session-gated useEstate query. Keep a temporary Estate fallback while loading.
+
+### Public home actions refinement — agreed (2026-10-08)
+
+Keep one Create account action in the home content and remove the duplicate
+Register header link. Use Sign in consistently in the header and home content.
+Existing sign-in/signup routes and hosted authentication behavior are unchanged.
+
+Existing council and retirement behaviors retained their regression tests; no new
+business rule was needed for their visual restyling. New observable behavior was
+written and observed failing first: shell/context/capability visibility, saved
+theme toggle, PageHeader, estate retry/label, FormActions cancellation/pending,
+Home entry actions, labelled keyboard table scrolling, missing-page recovery and
+safe 5xx feedback and inactive-estate registration guidance. More items are tested; real keyboard focus, viewport clearance
+and rendered responsiveness remain in the manual browser phase above.
+
+The confirmed UI Neon branch received the two existing feature migrations and
+jOOQ/API artifacts were regenerated for the combined baseline. No ID-93 migration
+or API contract change was introduced. Integration passed its original backend
+and frontend regressions before the redesign. The as-built design guide and ADR
+0025 record implementation and branch decisions. Review ID-93 visually before
+calling it complete; keep its eventual PR Draft until dependency PRs merge.

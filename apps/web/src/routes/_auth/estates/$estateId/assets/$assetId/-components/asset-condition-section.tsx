@@ -34,8 +34,11 @@ export function AssetConditionSection({
   const current = assessments.data?.[0];
 
   return (
-    <section aria-labelledby="condition-heading" className="mt-10">
-      <div className="flex items-center justify-between gap-4">
+    <section
+      aria-labelledby="condition-heading"
+      className="section-surface mt-8"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-semibold text-xl" id="condition-heading">
           Condition
         </h2>
@@ -81,7 +84,7 @@ export function AssetConditionSection({
           <h3 className="mt-6 font-medium">History</h3>
           <ul className="mt-2 grid gap-3">
             {assessments.data.map((assessment) => (
-              <li className="border p-4 text-sm" key={assessment.id}>
+              <li className="rounded-lg border p-4 text-sm" key={assessment.id}>
                 <p>
                   <span className="font-medium">
                     {conditionLabel[assessment.condition]}
