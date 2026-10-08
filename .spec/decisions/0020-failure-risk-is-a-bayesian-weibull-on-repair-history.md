@@ -7,7 +7,7 @@ Accepted.
 ## Decision
 
 A pump's breakdown forecast is a Weibull life with a fixed shape `k` and a
-gamma prior on its scale, updated by that pump's own maintenance events. The
+gamma prior on its scale, updated by that pump's own `BREAKDOWN_REPAIR` and `PREVENTIVE` events. The
 update is two sums (`a = a₀ + failures`, `b = b₀ + Σ tᵢ^k`) and the
 probability of failure within `h` days is one closed-form expression. Spring
 computes it in `com.proj.server.risk`. It is not a model in `apps/ml`.

@@ -1,6 +1,6 @@
 # Failure risk
 
-**Status:** draft
+**Status:** agreed
 **Owner:** Zheng Kai
 **Jira:** [ID-32](https://notjira.atlassian.net/browse/ID-32) (epic [ID-10](https://notjira.atlassian.net/browse/ID-10) Council Dashboard and Budgeting; method from [ID-7](https://notjira.atlassian.net/browse/ID-7))
 
@@ -32,13 +32,85 @@ Research behind the choices:
 
 ## Behaviour
 
-### Maintenance events
+### Asset categories
 
-- An estate owner can record a maintenance event on an active asset in an active estate.
+Asset categories move from the server's `AssetCategory` enum to an
+`AssetCategory` table. Assets and catalogue models both reference it, so a
+category is defined once, with its label, and Postgres enforces it.
+
+- **Fields:** a category has a stable `code`, which is what assets store, and a display `label`.
+- **Seeded by migration:** rows are added only by migrations. No screen manages them in this spec.
+- **Categories:** the existing 8 codes keep their values, so existing assets need no rewrite. Five are new.
+
+  | Code | Label | Examples |
+  | --- | --- | --- |
+  | `LIFT` | Lift & escalator | Passenger and service lifts, escalators |
+  | `PUMP` | Pump | Booster, transfer, sump, sewage ejector, pool and fire pumps |
+  | `GENERATOR` | Generator | Standby generator, automatic transfer switch |
+  | `ELECTRICAL` | Electrical | Switchboards, transformers, lightning protection, EV chargers |
+  | `LIGHTING` | Lighting | Common-area, car park and emergency lighting |
+  | `FIRE_SAFETY` | Fire safety | Alarm panels, sprinklers, hose reels, extinguishers, detectors |
+  | `HVAC` | Air-con & ventilation | AHUs, fans, chillers, split units, car park ventilation |
+  | `PLUMBING` | Plumbing & water | Water tanks, water heaters, valves, piping |
+  | `SECURITY` | Security & access | CCTV, access control, intercom, gantries, vehicle barriers, gates |
+  | `WASTE` | Waste handling | Refuse chutes, compactors, pneumatic waste systems |
+  | `FACADE_ACCESS` | Facade access | Gondola or BMU, anchor points |
+  | `RECREATION` | Recreation | Pool filtration, gym and playground equipment |
+  | `OTHER` | Other | |
+
+- **Classify by what the equipment is, not where it is:** a pool pump or a fire pump is a `PUMP`.
+- **Asset requests still send the code as text.** An unknown code returns 400.
+- **Labels come from the server:** the web app reads them from the categories endpoint, and drops its hard-coded label map.
+- **Behaviour stays in code:**
+  - The forecast prior, the lifespan, the anomaly model and the silent-failure set stay server-side constants, keyed by category code.
+  - A category with no constants simply gets no forecast.
+  - The server keeps one constant per code it branches on (for example `PUMP`), not an enum of every category.
+- **Event categories are separate:** `AssetEventCategory` (`MAINTENANCE`) classifies events, not assets, and stays an enum (see Asset events).
+
+### Manufacturer and model catalogue
+
+Manufacturers and models are shared by all estates, so the same pump model is
+one record everywhere, not free text that varies by spelling.
+
+- **Manufacturer:**
+  - A manufacturer has a name, unique across all estates.
+  - Names are **stored normalised**: trimmed, inner whitespace collapsed to one space, uppercased. "Grundfos", " grundfos " and "GRUNDFOS" are all stored and shown as `GRUNDFOS`.
+- **Model:**
+  - A model belongs to one manufacturer and one asset category, from the same `AssetCategory` table assets use.
+  - Its name is normalised the same way, and unique per manufacturer and category. A mis-categorised entry therefore never blocks the correct one.
+  - Manufacturers have no category: one manufacturer can make pumps and fans.
+  - An asset's model must have the asset's category.
+  - A model cannot be recorded without a manufacturer.
+- **Adding on the fly:**
+  - The asset create and edit requests still take `manufacturer` and `model` as text, so those fields keep their shape.
+  - The server normalises the text, then finds the manufacturer by that name or creates it. It then does the same for the model under that manufacturer and the asset's category.
+  - Whoever can save the asset can add to the catalogue. There is no separate "add manufacturer" step.
+  - Asset responses still return `manufacturer` and `model` as text, using the catalogue's normalised names.
+- **Suggestions:**
+  - The asset form suggests existing manufacturers as the user types, then that manufacturer's models in the asset's chosen category.
+  - Typing a name that isn't listed is allowed. It is added when the asset is saved.
+  - Any signed-in user can read the catalogue. It holds no estate data.
+- **No edits:** catalogue entries are never renamed, merged or deleted in this spec. An entry no asset uses stays in the catalogue.
+
+### Asset events
+
+An asset event records something that happened to an asset on a date. It is
+the asset's general history, so later features add new event types rather than
+new tables.
+
+- An estate owner can record an event on an active asset in an active estate.
 - An event has a type, the date it happened, and notes. All three are required.
-- Types are `BREAKDOWN_REPAIR` (the asset failed and was repaired: the "Repaired" button) and `PREVENTIVE` (serviced while still working).
+- Every type belongs to one category. The category is derived from the type, never sent or stored separately.
+- Event categories and types are fixed server-side enums, like the metric catalogue (decision 0016). They are not asset categories. This spec adds one category with two types:
+
+  | Category | Type | Meaning |
+  | --- | --- | --- |
+  | `MAINTENANCE` | `BREAKDOWN_REPAIR` | The asset failed and was repaired: the "Repaired" button. |
+  | `MAINTENANCE` | `PREVENTIVE` | Serviced while still working. |
+
+- **Adding a type:** a new kind of record becomes a new type when it fits an event's columns (date, notes, recorder, unit snapshot) and is append-only. A record that needs its own columns or its own lifecycle, such as a work order, gets its own table instead.
 - The event date cannot be in the future, and cannot be before the asset's `installedOn` when that is set.
-- Each event stores a snapshot of the asset's `manufacturer` and `model` at the moment it is recorded.
+- Each event stores a snapshot of the asset's catalogue manufacturer and model (their IDs) at the moment it is recorded.
 - Events are never edited or deleted. The asset's event list shows every one, newest first (by `occurredOn`, then `createdAt`).
 - Each event records who recorded it (WorkOS user ID and a name snapshot) and when, as assessments do (decision 0017).
 - A deactivated asset keeps its events visible and rejects new ones with 409.
@@ -49,8 +121,9 @@ A forecast only learns from the unit currently installed. When a pump is
 replaced with a different brand or model, its old breakdowns stop counting.
 
 - An event **counts** toward the forecast only if:
+  - its type is `BREAKDOWN_REPAIR` or `PREVENTIVE` (types added later do not count unless their spec says so), and
   - its `occurredOn` is on or after the asset's current `installedOn` (when set), and
-  - its manufacturer and model snapshot match the asset's current `manufacturer` and `model`. Values are trimmed and compared case-insensitively, and null matches only null.
+  - its manufacturer and model snapshot IDs equal the asset's current ones. Null matches only null.
 - Events that don't count stay in the event list. They are marked `countsTowardForecast: false`.
 
 ### Breakdown forecast
@@ -133,51 +206,114 @@ pressure, temperature, flow rate and power, about once a second.
 
 ## Data
 
-New Prisma model `AssetMaintenanceEvent`, append-only like `AssetAssessment`:
+New Prisma model `AssetCategory`, shared by all estates:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `code` | varchar(30) | Primary key. Stable: never renamed. |
+| `label` | varchar(100) | |
+
+- The migration seeds the 13 rows in Asset categories.
+- `Asset.category` becomes a FK → `AssetCategory.code`. Its column and values are unchanged.
+- Rows are never deleted while referenced (`onDelete: Restrict`).
+
+New Prisma model `Manufacturer`, shared by all estates (no `estateId`):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | UUID | |
+| `name` | varchar(200) | `@unique`. Stored normalised (uppercase). |
+| `createdAt` | timestamptz | No `updatedAt`: rows never change |
+
+New Prisma model `AssetModel` (not `Model`, which reads ambiguously in Prisma):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `id` | UUID | |
+| `manufacturerId` | UUID | FK → Manufacturer |
+| `category` | varchar(30) | FK → `AssetCategory.code` |
+| `name` | varchar(200) | Stored normalised (uppercase). `@@unique([manufacturerId, category, name])` |
+| `createdAt` | timestamptz | |
+
+`AssetModel` also has `@@unique([id, manufacturerId])` and
+`@@unique([id, manufacturerId, category])`, as the targets of the composite
+foreign keys below.
+
+Changes to `Asset`:
+- Drop `manufacturer` and `model`.
+- Add `manufacturerId` UUID? → Manufacturer, and `modelId` UUID?.
+- Composite FK `(modelId, manufacturerId, category)` → `AssetModel(id, manufacturerId, category)`, so Postgres rejects a model from a different manufacturer or category.
+- Index `@@index([modelId])`.
+- **Data migration**, in the same Prisma migration:
+  - Insert the distinct normalised manufacturer names from existing assets, then the models per manufacturer and the asset's category.
+  - Point each asset at its rows, then drop the text columns.
+  - An asset with a model but no manufacturer gets the manufacturer `UNKNOWN`, created by the migration only if needed.
+
+New Prisma model `AssetEvent`, append-only like `AssetAssessment`:
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `id` | UUID | |
 | `estateId` | UUID | FK → Estate |
 | `assetId` | UUID | Composite FK `(assetId, estateId)` → Asset |
-| `type` | varchar(30) | `BREAKDOWN_REPAIR` or `PREVENTIVE` |
+| `type` | varchar(30) | An `AssetEventType` value. The category is not stored: it is derived from the type. |
 | `occurredOn` | date | |
 | `notes` | varchar(2000) | |
-| `assetManufacturer` | varchar(200)? | Snapshot of `Asset.manufacturer` when recorded |
-| `assetModel` | varchar(200)? | Snapshot of `Asset.model` when recorded |
+| `manufacturerId` | UUID? | FK → Manufacturer. Snapshot of `Asset.manufacturerId` when recorded. |
+| `modelId` | UUID? | Composite FK `(modelId, manufacturerId)` → AssetModel. Snapshot of `Asset.modelId`. |
 | `recordedByUserId` | varchar(255) | |
 | `recordedByName` | varchar(200)? | WorkOS snapshot, null if the lookup failed |
 | `createdAt` | timestamptz | No `updatedAt`: rows never change |
 
 Indexes are `@@index([estateId])` and `@@index([assetId, occurredOn, createdAt])`.
-Add the back-relations on `Estate` and `Asset`.
+Add the back-relations on `Estate`, `Asset`, `Manufacturer` and `AssetModel`.
 
 Other changes involve no new tables:
 - `AssetAssessment` rows written by anomaly detection use `recordedByUserId = "system:anomaly-model"`. No schema change is needed.
 - `VIBRATION_ACCELERATION` is a new value in the `DeviceMetric` enum. Device metrics are stored as strings, so no migration is needed.
 - The pump prior, the lifespan, the risk threshold, the silent-failure set and the model's thresholds are server-side constants, not tables, like the metric catalogue (decision 0016).
 - No forecast state and no readings are stored.
+- Event categories and types are server-side enums, not lookup tables. Adding a type is a code change and a contract regeneration (decision 0016). Since `type` stores a stable code, moving to lookup tables later is a data migration only.
 
 ## API
 
 | Method | Path | Request | Response | Auth |
 | --- | --- | --- | --- | --- |
-| GET | /estates/{estateId}/assets/{assetId}/maintenance-events | - | MaintenanceEventResponse[] (newest first) | Owner |
-| POST | /estates/{estateId}/assets/{assetId}/maintenance-events | CreateMaintenanceEventRequest | 201 MaintenanceEventResponse | Owner |
+| GET | /asset-categories | - | AssetCategoryResponse[] (by label) | Signed in |
+| GET | /manufacturers?query= | - | ManufacturerResponse[] | Signed in |
+| GET | /manufacturers/{manufacturerId}/models?category=&query= | - | AssetModelResponse[] | Signed in |
+| GET | /estates/{estateId}/assets/{assetId}/events | - | AssetEventResponse[] (newest first) | Owner |
+| POST | /estates/{estateId}/assets/{assetId}/events | CreateAssetEventRequest | 201 AssetEventResponse | Owner |
 | GET | /estates/{estateId}/assets/{assetId}/failure-risk | - | FailureRiskResponse | Owner |
 | GET | /estates/{estateId}/failure-risk | - | FailureRiskResponse[] (silent-failure categories, ordered as above) | Owner |
 | POST | /estates/{estateId}/assets/{assetId}/readings/anomaly-check | AnomalyCheckRequest | AnomalyCheckResponse | Owner |
 
+The asset create, edit and read endpoints keep their fields (see Manufacturer
+and model catalogue). One contract change: `category` on asset requests and
+responses becomes a plain string code instead of an enum, because the valid
+values now live in the database.
+
+`AssetCategoryResponse`: `code`, `label`
+
 **Request and response fields**
 
-`CreateMaintenanceEventRequest`:
+Catalogue lookups:
+- `query` is optional. The query is normalised the same way, and matches are names containing it, ordered by name, at most 20.
+- An unknown `manufacturerId` returns 404.
+- The models lookup requires `category`. An unknown category returns 400.
+
+`ManufacturerResponse`: `id`, `name`
+
+`AssetModelResponse`: `id`, `manufacturerId`, `category`, `name`
+
+`CreateAssetEventRequest`:
 - `type`
 - `occurredOn`
 - `notes`
 
-`MaintenanceEventResponse`:
-- Event: `id`, `assetId`, `type`, `occurredOn`, `notes`
-- Unit snapshot: `assetManufacturer`, `assetModel`
+`AssetEventResponse`:
+- Event: `id`, `assetId`, `category`, `type`, `occurredOn`, `notes`
+- Unit snapshot: `assetManufacturer`, `assetModel` (catalogue names, or null)
 - `countsTowardForecast`
 - Recorder: `recordedByUserId`, `recordedByName`, `createdAt`
 
@@ -212,6 +348,15 @@ Other changes involve no new tables:
   - When a pump is replaced, the owner edits its `manufacturer`, `model` and `installedOn`. Earlier events then stop counting, and the forecast restarts from the prior.
   - If only `installedOn` is moved later, events before it stop counting. If only `manufacturer` or `model` changes, events with the old snapshot stop counting, and `u` runs from `installedOn`.
   - A pump with no `manufacturer` or `model` recorded still learns. Its null snapshots match while both values stay null.
+  - Re-typing the same name with different case or spacing resolves to the same catalogue row, so it does not reset history.
+  - Changing an asset's category resolves its model under the new category, which is a different row, so earlier events stop counting.
+- **Categories:**
+  - An unknown category code returns 400 on asset create or edit, and on the models lookup.
+  - Every server constant keyed by a code (such as `PUMP`) must have a seeded row. A server test checks this.
+- **Catalogue:**
+  - A `model` without a `manufacturer` returns 400 on asset create or edit.
+  - Two saves adding the same new name at once both resolve to one row: insert on conflict of the unique name, then read it back.
+  - A typo creates a new entry. Cleaning those up is out of scope.
 - **Event dates:**
   - Two counting events on the same date form a zero-length interval. A failure there adds to `a` but nothing to `b`. This is allowed.
   - A back-dated event changes the next forecast read, because the forecast is derived on read.
@@ -232,13 +377,18 @@ Other changes involve no new tables:
 
 ## Out of scope
 
+- **Managing asset categories in the app.** Rows come from migrations only. An admin screen is a later spec.
+- **Managing the catalogue:** renaming, merging or deleting manufacturers and models, or an admin screen for them.
+- **Device models.** `Device.model` stays free text: sensor hardware is a different catalogue.
 - **Categories other than `PUMP`.** Each needs its own prior, lifespan and anomaly model.
 - **Device authentication and storing readings** (ID-42, ID-43). In this spec the owner's token submits a batch, and the batch is scored, not stored. Real devices posting with their own credentials comes later.
 - **Readings not tied to a registered device.** The check is per asset. Matching each reading to a `Device` is ID-43.
 - **Replacement cost estimates.** Cost data comes from the invoice system and is handled separately.
 - **Learning across pumps:** sharing history between identical pumps, or updating the pump prior from the estate's history. Each pump learns only from its own events.
 - **Feeding anomaly scores into the forecast.** For example, raising breakdown risk for a pump that is often abnormal. This needs real readings and repair history to validate first.
-- **Event changes:** editing or deleting maintenance events, costs on events, and work orders (ID-2, ID-49, ID-50).
+- **Event changes:** editing or deleting events, costs on events, and work orders (ID-2, ID-49, ID-50).
+- **Other event types and categories.** This spec adds only the two maintenance types. Event types and categories managed by staff in the app (lookup tables) are a separate spec if needed.
+- **A combined history view.** Merging events and assessments into one timeline on the asset page can be built on read later. Neither is stored for it.
 - **Access for estate users.** Access stays owner-only, like assets. A council only sees its own estate, so the per-estate page is the dashboard.
 - **Notifications or emails** when an asset becomes flagged.
 
@@ -246,7 +396,7 @@ Other changes involve no new tables:
 
 - [building-assets](building-assets.md), [asset-condition](asset-condition.md) and [device-registration](device-registration.md) are built.
 - `apps/ml` serves one ONNX model through the generic `/predict` endpoint (decision 0007). Phase 0b supplies that model.
-- ID-49 (maintenance records) overlaps with `AssetMaintenanceEvent`. See Open questions.
+- ID-49 (maintenance records) builds on `AssetEvent`. See Resolved.
 
 ## Implementation phases
 
@@ -295,21 +445,41 @@ not touch `apps/`, install nothing, and commit nothing.
 - [ ] **Hand-off:** copy `model.onnx` to `apps/ml/models/model.onnx`. It is committed with the Spring constants it matches; see Resolved.
 
 ### 1. Decision
-- [ ] Add `.spec/decisions/0020-failure-risk-is-a-bayesian-weibull-on-repair-history.md`. It records:
+- [x] Add `.spec/decisions/0020-failure-risk-is-a-bayesian-weibull-on-repair-history.md`. It records:
   - why the forecast is closed-form arithmetic in Spring rather than a model in `apps/ml`
   - why it is derived on read rather than stored
   - why history resets on a unit replacement
   - that the sensor-based remaining-life model was rejected (notebook 02)
-- [ ] Add `.spec/decisions/0021-anomaly-detection-records-system-assessments.md`. It records:
+- [x] Add `.spec/decisions/0021-anomaly-detection-records-system-assessments.md`. It records:
   - that model-generated conditions are ordinary assessments under the `system:anomaly-model` identity, rather than a separate table
   - that `VIBRATION_ACCELERATION` (g) is added rather than converting to mm/s
   - that readings are scored, not stored, until ID-43
+- [ ] Add `.spec/decisions/0022-asset-categories-and-models-are-shared-tables.md`. It records:
+  - why asset categories became a table: assets and models both reference them
+  - why manufacturers and models are a shared catalogue, created on the fly and stored uppercase
+  - that behaviour stays in code, keyed by category code
+  - that the forecast's unit snapshot is catalogue IDs
 
 ### 2. Data (`add-model` skill)
-- [ ] Add `AssetMaintenanceEvent` and its back-relations to `schema.prisma`.
-- [ ] Run `pnpm db:migrate`, `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`.
+- [ ] Add `AssetCategory`, `Manufacturer`, `AssetModel` and `AssetEvent`, and change `Asset`, in `schema.prisma`.
+- [ ] Create the migration without applying it (`prisma migrate dev --create-only`, via `pnpm db:migrate -- --create-only`), then add SQL to it that:
+  - seeds the 13 categories before the `Asset.category` foreign key is added
+  - fills the catalogue from the existing text columns and points each asset at it, before the text columns are dropped
+- [ ] Apply it with `pnpm db:migrate`.
+- [ ] Run `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`, and fix `AssetRepository` and `AssetService`.
 
 ### 3. Server tests (red)
+- [ ] `AssetCategoryControllerTests`:
+  - [ ] The endpoint lists the 13 seeded categories with their labels.
+  - [ ] Creating an asset with an unknown code returns 400.
+  - [ ] Every code the server keys constants on has a seeded row.
+- [ ] `CatalogueControllerTests`:
+  - [ ] Saving an asset with a new manufacturer and model creates both. Saving another with the same names, in different case and spacing, reuses them.
+  - [ ] Names are stored and returned trimmed, single-spaced and uppercase.
+  - [ ] A model without a manufacturer returns 400.
+  - [ ] The same model name under one manufacturer in two categories creates two rows. The models lookup filters by category.
+  - [ ] The lookups filter by query, cap at 20, and return 404 for an unknown manufacturer.
+  - [ ] The existing asset controller tests still pass. The only change to them is replacing `AssetCategory` enum values with code strings, since the contract changes (a test change of its own, made before the implementation).
 - [ ] `FailureRiskCalculatorTests` (plain unit tests):
   - [ ] The four scenarios in the Breakdown forecast table match to two decimal places.
   - [ ] A `BREAKDOWN_REPAIR` raises `a`. A `PREVENTIVE` interval raises only `b`.
@@ -317,7 +487,8 @@ not touch `apps/`, install nothing, and commit nothing.
   - [ ] The basis rules hold, including `NOT_SUPPORTED` for non-pumps.
   - [ ] The timeframe uses the 0.15 threshold.
   - [ ] The end-of-life date and the 12-year flag.
-- [ ] `MaintenanceEventControllerTests`:
+- [ ] `AssetEventControllerTests`:
+  - [ ] Each type returns its category (`MAINTENANCE` for both).
   - [ ] Create and list ordering.
   - [ ] The manufacturer and model snapshot, and `countsTowardForecast`.
   - [ ] 400s, 404s and 409s.
@@ -341,7 +512,9 @@ not touch `apps/`, install nothing, and commit nothing.
 - [ ] Run the tests and confirm they fail.
 
 ### 4. API (green, `add-endpoint` skill)
-- [ ] Package `com.proj.server.maintenance` for events.
+- [ ] Package `com.proj.server.catalogue` for the categories endpoint, the find-or-create service and the lookup controller. `AssetService` calls it on create and edit.
+- [ ] Remove the `AssetCategory` enum. Asset DTOs take and return the code as a `String`, validated against the table.
+- [ ] Package `com.proj.server.event` for events, with the `AssetEventCategory` and `AssetEventType` enums.
 - [ ] Package `com.proj.server.risk` for the calculator, the pump constants, the silent-failure set and the controller.
 - [ ] Package `com.proj.server.anomaly`:
   - the feature builder and the model constants
@@ -352,7 +525,7 @@ not touch `apps/`, install nothing, and commit nothing.
 - [ ] Update `architecture.md`: `ML_API_URL` is now read by the server.
 
 ### 5. Web tests (red)
-- [ ] `tests/lib/maintenance-events.test.ts` and `tests/lib/failure-risk.test.ts`:
+- [ ] `tests/lib/asset-events.test.ts` and `tests/lib/failure-risk.test.ts`:
   - [ ] Query keys include the user and estate IDs.
   - [ ] Failed requests throw.
   - [ ] Recording an event invalidates the asset's events and its forecasts.
@@ -367,10 +540,16 @@ not touch `apps/`, install nothing, and commit nothing.
   - [ ] The empty state shows.
   - [ ] `INSUFFICIENT_DATA` rows say "Not enough data".
 - [ ] The device form offers "Vibration acceleration (g)".
+- [ ] The asset form's category select lists the categories from the endpoint, and the details page shows the label.
+- [ ] The asset form's manufacturer and model fields:
+  - [ ] Suggest catalogue entries as the user types, and suggest models only for the chosen manufacturer and category.
+  - [ ] Accept a name that isn't listed and send it as text.
 - [ ] Run `pnpm nx test web` and confirm the tests fail.
 
 ### 6. Web (green)
-- [ ] `src/lib/maintenance-events.ts` and `src/lib/failure-risk.ts`.
+- [ ] `src/lib/asset-events.ts`, `src/lib/failure-risk.ts` and `src/lib/catalogue.ts` (categories, manufacturers, models).
+- [ ] Replace `assetCategoryLabel` in `src/lib/assets.ts` with the categories query. The asset form, list and details page read labels from it.
+- [ ] Asset form: manufacturer and model become comboboxes that allow free text. Add shadcn `combobox` with the CLI (§4) if it is missing.
 - [ ] Asset detail page:
   - [ ] A "Maintenance" section listing events, with the ones that don't count marked "Previous unit".
   - [ ] A "Record repair" button opening the record-event dialog, with the type defaulting to `BREAKDOWN_REPAIR`.
@@ -382,7 +561,7 @@ not touch `apps/`, install nothing, and commit nothing.
 
 ### 7. Finish
 - [ ] Docs:
-  - New: `.docs/api/maintenance-events.md`, `.docs/api/failure-risk.md`, `.docs/api/anomaly-check.md`, `.docs/frontend/failure-risk.md`.
+  - New: `.docs/api/catalogue.md` (categories, manufacturers, models), `.docs/api/asset-events.md`, `.docs/api/failure-risk.md`, `.docs/api/anomaly-check.md`, `.docs/frontend/failure-risk.md`.
   - Update: `.docs/frontend/assets.md`, `.docs/frontend/devices.md` and `.docs/README.md`.
 - [ ] Run `pnpm fix`, `pnpm check-types` and `pnpm test`.
 - [ ] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with the code.
@@ -406,9 +585,16 @@ estates have a year or more of repair history.
 
 ## Open questions
 
-1. **ID-49 overlap.** Should `AssetMaintenanceEvent` become ID-49's maintenance record, which ID-49 later extends with costs and work-order links, or should ID-49's spec define it first?
+None.
 
 Resolved:
+- **Existing assets with a model but no manufacturer:** the migration puts their models under a manufacturer named `UNKNOWN`, so no model text is lost.
+- **Manufacturer and model:** a catalogue shared by all estates, with models under manufacturers. Anyone saving an asset adds new names on the fly. The server finds or creates them, and the asset contract keeps text fields.
+- **Asset categories:** a lookup table, not an enum, because assets and catalogue models both reference it. Codes are seeded by migration, and behaviour stays in code keyed by code.
+- **Asset scope:** assets still belong to their estate and building. Only the manufacturer and model columns move to the catalogue.
+- **ID-49 overlap:** `AssetEvent` is the asset's general event history. ID-49 builds on it, adding cost columns when it needs them. Work orders (ID-50) have their own lifecycle, so they get their own table that links to events.
+- **Naming:** "event", not "log". It is one dated occurrence, matching `occurredOn`, and "log" clashes with application logging.
+- **Event type and subtype:** a fixed event category → type hierarchy in server-side enums, not lookup tables, because nothing yet needs staff to manage event types. Asset categories are a table (above).
 - **Licence:** GPL-3.0 is acceptable. The project is for education only.
 - **Served model:** commit `apps/ml/models/model.onnx` (about 4 MB) in the same commit as the Spring constants copied from its `metrics.json` (feature order and thresholds), so the two cannot drift. The Docker image copies `apps/ml/models`, so the model must be in the repo for the build to serve it.
 - **Model accuracy:** a weaker 5-input model is acceptable. The anomaly check is exercised with simulated readings from the held-out test set.
