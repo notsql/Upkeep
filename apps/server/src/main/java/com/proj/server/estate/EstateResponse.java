@@ -15,4 +15,32 @@ public record EstateResponse(
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
         @Schema(nullable = true) OffsetDateTime deactivatedAt,
-        boolean owned) {}
+        boolean owned,
+        boolean canInviteMembers,
+        boolean canManageInvitationPermissions) {
+    public EstateResponse(
+            UUID id,
+            String name,
+            String code,
+            String address,
+            String postalCode,
+            String description,
+            OffsetDateTime createdAt,
+            OffsetDateTime updatedAt,
+            OffsetDateTime deactivatedAt,
+            boolean owned) {
+        this(
+                id,
+                name,
+                code,
+                address,
+                postalCode,
+                description,
+                createdAt,
+                updatedAt,
+                deactivatedAt,
+                owned,
+                owned && deactivatedAt == null,
+                owned);
+    }
+}

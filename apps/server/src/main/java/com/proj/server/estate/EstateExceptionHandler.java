@@ -9,8 +9,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes = {EstateController.class, EstateUserController.class})
+@RestControllerAdvice(assignableTypes = {EstateController.class, EstateUserController.class, CouncilController.class})
 public class EstateExceptionHandler {
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ResponseEntity<EstateError> responseStatus(org.springframework.web.server.ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));
+    }
+
     @ExceptionHandler(EstateException.class)
     ResponseEntity<EstateError> estate(EstateException error) {
         return ResponseEntity.status(error.status()).body(new EstateError(error.getMessage()));

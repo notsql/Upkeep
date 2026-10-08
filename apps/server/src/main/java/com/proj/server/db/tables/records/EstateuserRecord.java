@@ -63,6 +63,34 @@ public class EstateuserRecord extends UpdatableRecordImpl<EstateuserRecord> {
         return (OffsetDateTime) get(2);
     }
 
+    /**
+     * Setter for <code>public.EstateUser.canInviteMembers</code>.
+     */
+    public void setCaninvitemembers(Boolean value) {
+        set(3, value);
+    }
+
+    /**
+     * Getter for <code>public.EstateUser.canInviteMembers</code>.
+     */
+    public Boolean getCaninvitemembers() {
+        return (Boolean) get(3);
+    }
+
+    /**
+     * Setter for <code>public.EstateUser.role</code>.
+     */
+    public void setRole(String value) {
+        set(4, value);
+    }
+
+    /**
+     * Getter for <code>public.EstateUser.role</code>.
+     */
+    public String getRole() {
+        return (String) get(4);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -86,12 +114,14 @@ public class EstateuserRecord extends UpdatableRecordImpl<EstateuserRecord> {
     /**
      * Create a detached, initialised EstateuserRecord
      */
-    public EstateuserRecord(UUID estateid, String userid, OffsetDateTime createdat) {
+    public EstateuserRecord(UUID estateid, String userid, OffsetDateTime createdat, Boolean caninvitemembers, String role) {
         super(Estateuser.ESTATEUSER);
 
         setEstateid(estateid);
         setUserid(userid);
         setCreatedat(createdat);
+        setCaninvitemembers(caninvitemembers);
+        setRole(role);
         resetTouchedOnNotNull();
     }
 }

@@ -56,4 +56,12 @@ describe("estate details page", () => {
       screen.queryByRole("button", { name: "Deactivate estate" })
     ).toBeNull();
   });
+  it("links delegated inviters to estate council management", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: { ...estate, owned: false, canInviteMembers: true },
+      response: new Response(),
+    });
+    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
+    await screen.findByRole("link", { name: "Council members" });
+  });
 });

@@ -22,6 +22,7 @@ import { Route as AuthEstatesNewIndexRouteImport } from './routes/_auth/estates/
 import { Route as ApiAuthCallbackIndexRouteImport } from './routes/api/auth/callback/index'
 import { Route as ApiAuthSignInIndexRouteImport } from './routes/api/auth/sign-in/index'
 import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-up/index'
+import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_auth/estates/$estateId/council/index'
 import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/edit/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/index'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
@@ -92,6 +93,12 @@ const ApiAuthSignUpIndexRoute = ApiAuthSignUpIndexRouteImport.update({
   path: '/api/auth/sign-up/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthEstatesEstateIdCouncilIndexRoute =
+  AuthEstatesEstateIdCouncilIndexRouteImport.update({
+    id: '/estates/$estateId/council/',
+    path: '/estates/$estateId/council/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdEditIndexRoute =
   AuthEstatesEstateIdEditIndexRouteImport.update({
     id: '/estates/$estateId/edit/',
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
+  '/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -148,6 +156,7 @@ export interface FileRoutesByTo {
   '/api/auth/callback': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up': typeof ApiAuthSignUpIndexRoute
+  '/estates/$estateId/council': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/edit': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
+  '/_auth/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/_auth/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
+    | '/estates/$estateId/council/'
     | '/estates/$estateId/edit/'
     | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/new/'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback'
     | '/api/auth/sign-in'
     | '/api/auth/sign-up'
+    | '/estates/$estateId/council'
     | '/estates/$estateId/edit'
     | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/assets/new'
@@ -225,6 +237,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
+    | '/_auth/estates/$estateId/council/'
     | '/_auth/estates/$estateId/edit/'
     | '/_auth/estates/$estateId/assets/$assetId/'
     | '/_auth/estates/$estateId/assets/new/'
@@ -335,6 +348,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSignUpIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_auth/estates/$estateId/council/': {
+      id: '/_auth/estates/$estateId/council/'
+      path: '/estates/$estateId/council'
+      fullPath: '/estates/$estateId/council/'
+      preLoaderRoute: typeof AuthEstatesEstateIdCouncilIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/edit/': {
       id: '/_auth/estates/$estateId/edit/'
       path: '/estates/$estateId/edit'
@@ -372,6 +392,7 @@ interface AuthRouteRouteChildren {
   AuthAdminUsersIndexRoute: typeof AuthAdminUsersIndexRoute
   AuthEstatesEstateIdIndexRoute: typeof AuthEstatesEstateIdIndexRoute
   AuthEstatesNewIndexRoute: typeof AuthEstatesNewIndexRoute
+  AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
   AuthEstatesEstateIdEditIndexRoute: typeof AuthEstatesEstateIdEditIndexRoute
   AuthEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -384,6 +405,7 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthAdminUsersIndexRoute: AuthAdminUsersIndexRoute,
   AuthEstatesEstateIdIndexRoute: AuthEstatesEstateIdIndexRoute,
   AuthEstatesNewIndexRoute: AuthEstatesNewIndexRoute,
+  AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
   AuthEstatesEstateIdEditIndexRoute: AuthEstatesEstateIdEditIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdIndexRoute,

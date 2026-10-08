@@ -8,6 +8,7 @@ import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 
@@ -39,6 +40,9 @@ public class Indexes {
     public static final Index DEVICE_LOCATIONID_IDX = Internal.createIndex(DSL.name("Device_locationId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.LOCATIONID }, false);
     public static final Index ESTATE_CODE_KEY = Internal.createIndex(DSL.name("Estate_code_key"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.CODE }, true);
     public static final Index ESTATE_OWNERUSERID_IDX = Internal.createIndex(DSL.name("Estate_ownerUserId_idx"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.OWNERUSERID }, false);
+    public static final Index ESTATEINVITATION_EMAIL_STATUS_IDX = Internal.createIndex(DSL.name("EstateInvitation_email_status_idx"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.EMAIL, Estateinvitation.ESTATEINVITATION.STATUS }, false);
+    public static final Index ESTATEINVITATION_ESTATEID_EMAIL_KEY = Internal.createIndex(DSL.name("EstateInvitation_estateId_email_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.ESTATEID, Estateinvitation.ESTATEINVITATION.EMAIL }, true);
+    public static final Index ESTATEINVITATION_PROVIDERINVITATIONID_KEY = Internal.createIndex(DSL.name("EstateInvitation_providerInvitationId_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.PROVIDERINVITATIONID }, true);
     public static final Index ESTATEUSER_USERID_IDX = Internal.createIndex(DSL.name("EstateUser_userId_idx"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, false);
     public static final Index LOCATION_ESTATEID_IDX = Internal.createIndex(DSL.name("Location_estateId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.ESTATEID }, false);
     public static final Index LOCATION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.ESTATEID }, true);

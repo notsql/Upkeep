@@ -75,12 +75,33 @@ class LocationControllerTests {
 
     @BeforeEach
     void setup() {
-        when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(null)));
+        when(estates.findAccessible(estateId, "owner")).thenReturn(Optional.of(estate(null)));
         when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
         when(repository.find(blockId, estateId)).thenReturn(Optional.of(block));
         when(repository.find(otherBlockId, estateId)).thenReturn(Optional.of(otherBlock));
         when(repository.find(levelId, estateId)).thenReturn(Optional.of(level));
         when(repository.find(areaId, estateId)).thenReturn(Optional.of(area));
+    }
+
+    @Test
+    void sharedMemberCanReadLocationsButCannotChangeThem() throws Exception {
+        when(estates.findAccessible(estateId, "member")).thenReturn(Optional.of(estate(null)));
+        when(repository.listActive(estateId)).thenReturn(List.of(block, level, area));
+        mvc.perform(get(base).with(jwt().jwt(t -> t.subject("member"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+        mvc.perform(post(base)
+                        .with(jwt().jwt(t -> t.subject("member")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(create("BLOCK", null, "New block", null)))
+                .andExpect(status().isNotFound());
+        mvc.perform(patch(base + "/" + blockId)
+                        .with(jwt().jwt(t -> t.subject("member")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(update(null, "Renamed", null)))
+                .andExpect(status().isNotFound());
+        mvc.perform(post(base + "/" + blockId + "/deactivate").with(jwt().jwt(t -> t.subject("member"))))
+                .andExpect(status().isNotFound());
     }
 
     private MockHttpServletRequestBuilder asOwner(MockHttpServletRequestBuilder request, String json) {
