@@ -66,8 +66,13 @@ export function useRecordAssessment(estateId: string, assetId: string) {
       return data;
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: assessmentsQueryKey(userId, estateId, assetId),
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: assessmentsQueryKey(userId, estateId, assetId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "assets", estateId],
+        }),
+      ]),
   });
 }

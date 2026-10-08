@@ -100,7 +100,10 @@ class DeviceControllerTests {
                 null,
                 now,
                 now,
-                deactivatedAt);
+                deactivatedAt,
+                0,
+                null,
+                null);
     }
 
     private DeviceRecord device(String identifier, UUID locationId, String... metrics) {

@@ -86,7 +86,10 @@ class AssetAssessmentControllerTests {
                 null,
                 now,
                 now,
-                deactivatedAt);
+                deactivatedAt,
+                0,
+                null,
+                null);
     }
 
     private AssetassessmentRecord assessment(String condition, String assessedOn, String name) {

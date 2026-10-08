@@ -204,6 +204,48 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
         return (OffsetDateTime) get(12);
     }
 
+    /**
+     * Setter for <code>public.Asset.lifecycleVersion</code>.
+     */
+    public void setLifecycleversion(Integer value) {
+        set(13, value);
+    }
+
+    /**
+     * Getter for <code>public.Asset.lifecycleVersion</code>.
+     */
+    public Integer getLifecycleversion() {
+        return (Integer) get(13);
+    }
+
+    /**
+     * Setter for <code>public.Asset.retiredOn</code>.
+     */
+    public void setRetiredon(LocalDate value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.Asset.retiredOn</code>.
+     */
+    public LocalDate getRetiredon() {
+        return (LocalDate) get(14);
+    }
+
+    /**
+     * Setter for <code>public.Asset.retirementReason</code>.
+     */
+    public void setRetirementreason(String value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.Asset.retirementReason</code>.
+     */
+    public String getRetirementreason() {
+        return (String) get(15);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -227,7 +269,7 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
     /**
      * Create a detached, initialised AssetRecord
      */
-    public AssetRecord(UUID id, UUID estateid, UUID locationid, String reference, String name, String category, LocalDate installedon, String manufacturer, String model, String serialnumber, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime deactivatedat) {
+    public AssetRecord(UUID id, UUID estateid, UUID locationid, String reference, String name, String category, LocalDate installedon, String manufacturer, String model, String serialnumber, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime deactivatedat, Integer lifecycleversion, LocalDate retiredon, String retirementreason) {
         super(Asset.ASSET);
 
         setId(id);
@@ -243,6 +285,9 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
         setCreatedat(createdat);
         setUpdatedat(updatedat);
         setDeactivatedat(deactivatedat);
+        setLifecycleversion(lifecycleversion);
+        setRetiredon(retiredon);
+        setRetirementreason(retirementreason);
         resetTouchedOnNotNull();
     }
 }

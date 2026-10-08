@@ -104,6 +104,20 @@ class LocationControllerTests {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void historicalLocationReadsRemainOwnerOnly() throws Exception {
+        var inactive = new LocationResponse(blockId, LocationType.BLOCK, null, "Former block", null, now, now, now);
+        when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(now)));
+        when(estates.findAccessible(estateId, "member")).thenReturn(Optional.of(estate(now)));
+        when(repository.listAll(estateId)).thenReturn(List.of(inactive));
+        mvc.perform(get(base).param("includeInactive", "true").with(jwt().jwt(t -> t.subject("owner"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Former block"))
+                .andExpect(jsonPath("$[0].deactivatedAt").isNotEmpty());
+        mvc.perform(get(base).param("includeInactive", "true").with(jwt().jwt(t -> t.subject("member"))))
+                .andExpect(status().isNotFound());
+    }
+
     private MockHttpServletRequestBuilder asOwner(MockHttpServletRequestBuilder request, String json) {
         return request.with(jwt().jwt(t -> t.subject("owner")))
                 .contentType(MediaType.APPLICATION_JSON)

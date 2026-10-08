@@ -13,6 +13,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 const at = "2026-09-27T00:00:00Z";
 const asset: Asset = {
+  lifecycleVersion: 0,
   id: "asset-id",
   estateId: "estate-id",
   reference: "SUNRISE-A0001",

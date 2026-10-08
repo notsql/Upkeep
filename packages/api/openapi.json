@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": { "title": "proj API", "version": "v1" },
   "servers": [
-    { "url": "http://localhost:8080", "description": "Generated server url" }
+    { "url": "http://localhost", "description": "Generated server url" }
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
@@ -402,6 +402,12 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false }
           }
         ],
         "responses": {
@@ -751,6 +757,112 @@
       }
     },
     "/estates/{estateId}/assets": {
+      "get": {
+        "tags": ["asset-controller"],
+        "operationId": "listAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LIFT",
+                "PUMP",
+                "GENERATOR",
+                "LIGHTING",
+                "FIRE_SAFETY",
+                "HVAC",
+                "ELECTRICAL",
+                "OTHER"
+              ]
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "condition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY", "UNASSESSED"]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ACTIVE",
+              "enum": ["ACTIVE", "INACTIVE", "ALL"]
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset register",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AssetResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": ["asset-controller"],
         "operationId": "createAsset",
@@ -805,6 +917,76 @@
           },
           "201": {
             "description": "Asset registered with a generated reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{id}/restore": {
+      "post": {
+        "tags": ["asset-controller"],
+        "operationId": "restoreAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RestoreAssetRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset restored",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/AssetResponse" }
@@ -1632,6 +1814,78 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{id}/retirement": {
+      "patch": {
+        "tags": ["asset-controller"],
+        "operationId": "correctAssetRetirement",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetirementCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Retirement information corrected",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health-controller"],
@@ -1725,6 +1979,73 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/EstateMemberResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{id}/lifecycle-events": {
+      "get": {
+        "tags": ["asset-controller"],
+        "operationId": "listAssetLifecycleEvents",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset lifecycle history, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetLifecycleEventResponse"
                   }
                 }
               }
@@ -2271,13 +2592,24 @@
           "serialNumber": { "type": ["string", "null"] },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
-          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" },
+          "currentCondition": {
+            "type": ["string", "null"],
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          }
         },
         "required": [
           "category",
           "createdAt",
           "estateId",
           "id",
+          "lifecycleVersion",
           "locationId",
           "locationPath",
           "name",
@@ -2285,12 +2617,40 @@
           "updatedAt"
         ]
       },
+      "RestoreAssetRequest": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "reference"]
+      },
       "DeactivateAssetRequest": {
         "type": "object",
         "properties": {
-          "reference": { "type": "string", "maxLength": 60, "minLength": 0 }
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 },
+          "retiredOn": { "type": "string", "format": "date" },
+          "retirementReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
         },
-        "required": ["reference"]
+        "required": [
+          "expectedVersion",
+          "reference",
+          "retiredOn",
+          "retirementReason"
+        ]
       },
       "CreateDeviceRequest": {
         "type": "object",
@@ -2471,6 +2831,23 @@
         },
         "required": ["category", "locationId", "name"]
       },
+      "RetirementCorrectionRequest": {
+        "type": "object",
+        "properties": {
+          "retiredOn": { "type": "string", "format": "date" },
+          "retirementReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "retiredOn", "retirementReason"]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -2489,6 +2866,35 @@
           "canInviteMembers": { "type": "boolean" }
         },
         "required": ["canInviteMembers", "email", "name", "userId"]
+      },
+      "AssetLifecycleEventResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "action": { "type": "string" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "actorUserId": { "type": "string" },
+          "previousDeactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "previousRetiredOn": { "type": ["string", "null"], "format": "date" },
+          "previousRetirementReason": { "type": ["string", "null"] },
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" }
+        },
+        "required": [
+          "action",
+          "actorUserId",
+          "id",
+          "lifecycleVersion",
+          "occurredAt"
+        ]
       },
       "PendingCouncilInvitationResponse": {
         "type": "object",

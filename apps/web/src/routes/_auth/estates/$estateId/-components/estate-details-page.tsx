@@ -122,15 +122,6 @@ export function EstateDetailsPage({
                 Edit estate
               </Link>
               {estate.data.deactivatedAt ? null : (
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  params={{ estateId }}
-                  to="/estates/$estateId/assets/new"
-                >
-                  Register asset
-                </Link>
-              )}
-              {estate.data.deactivatedAt ? null : (
                 <Button onClick={openConfirmation} variant="destructive">
                   Deactivate estate
                 </Button>
@@ -151,6 +142,29 @@ export function EstateDetailsPage({
             />
           ) : null}
           {children}
+          {estate.data.owned ? (
+            <section aria-label="Estate assets" className="mt-8 space-y-4">
+              <h2 className="font-semibold text-xl">Assets</h2>
+              <div className="flex gap-4">
+                <Link
+                  className={buttonVariants({ variant: "outline" })}
+                  params={{ estateId }}
+                  to="/estates/$estateId/assets"
+                >
+                  View assets
+                </Link>
+                {estate.data.deactivatedAt ? null : (
+                  <Link
+                    className={buttonVariants({ variant: "outline" })}
+                    params={{ estateId }}
+                    to="/estates/$estateId/assets/new"
+                  >
+                    Register asset
+                  </Link>
+                )}
+              </div>
+            </section>
+          ) : null}
         </>
       ) : null}
     </main>

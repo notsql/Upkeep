@@ -6,6 +6,7 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
@@ -28,6 +29,11 @@ public class Tables {
      * The table <code>public.AssetAssessment</code>.
      */
     public static final Assetassessment ASSETASSESSMENT = Assetassessment.ASSETASSESSMENT;
+
+    /**
+     * The table <code>public.AssetLifecycleEvent</code>.
+     */
+    public static final Assetlifecycleevent ASSETLIFECYCLEEVENT = Assetlifecycleevent.ASSETLIFECYCLEEVENT;
 
     /**
      * The table <code>public.Device</code>.
