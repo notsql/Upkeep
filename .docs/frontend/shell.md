@@ -68,3 +68,9 @@ page.
   `FieldLabel`, `FieldError`); per-field errors are `FieldError`s wired to the
   control with `aria-invalid` + `aria-describedby`, and a save failure is a
   destructive `Alert`.
+
+## Test imports
+
+The web tsconfig maps `@/*` to `src/*` and `@tests/*` to `tests/*`. Vite and
+Vitest use the same native tsconfig path resolution. Tests import application
+code through `@/` and can import shared helpers through `@tests/test-utils`.

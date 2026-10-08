@@ -46,12 +46,18 @@ const locations: Location[] = [
 ];
 const path = { params: { path: { estateId: "estate-id" } } };
 
-function serve(options: { deactivatedAt?: string; items?: Location[] } = {}) {
+function serve(
+  options: { deactivatedAt?: string; items?: Location[]; owned?: boolean } = {}
+) {
   vi.mocked(api.GET).mockImplementation(((url: string) =>
     Promise.resolve({
       data:
         url === "/estates/{id}"
-          ? { ...estate, deactivatedAt: options.deactivatedAt }
+          ? {
+              ...estate,
+              owned: options.owned ?? true,
+              deactivatedAt: options.deactivatedAt,
+            }
           : (options.items ?? locations),
       response: new Response(),
     })) as never);
@@ -75,6 +81,29 @@ describe("locations section", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     serve();
+  });
+
+  it("lets shared members browse and search without location write controls", async () => {
+    serve({ owned: false });
+    renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await screen.findByRole("listitem", { name: "Blk 101" });
+    expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Edit Blk 101" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Deactivate Blk 101" })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Add level to Blk 101" })
+    ).toBeNull();
+    fireEvent.change(
+      screen.getByRole("searchbox", { name: "Search locations" }),
+      {
+        target: { value: "Lift lobby" },
+      }
+    );
+    expect(
+      (await screen.findByRole("list", { name: "Search results" })).textContent
+    ).toContain("Lift lobby");
   });
 
   it("shows levels and common areas nested under their parents", async () => {

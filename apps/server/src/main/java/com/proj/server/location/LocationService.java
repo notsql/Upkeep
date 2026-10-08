@@ -25,8 +25,12 @@ public class LocationService {
         this.estates = estates;
     }
 
-    public List<LocationResponse> list(UUID estateId, String owner, boolean includeInactive) {
-        estates.findOwned(estateId, owner, false).orElseThrow(LocationService::estateNotFound);
+    public List<LocationResponse> list(UUID estateId, String user, boolean includeInactive) {
+        if (includeInactive) {
+            estates.findOwned(estateId, user, false).orElseThrow(LocationService::estateNotFound);
+        } else {
+            estates.findAccessible(estateId, user).orElseThrow(LocationService::estateNotFound);
+        }
         return includeInactive ? repository.listAll(estateId) : repository.listActive(estateId);
     }
 

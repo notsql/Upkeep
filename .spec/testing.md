@@ -20,6 +20,8 @@ apps/server/src/test/java/       # JUnit, standard Maven layout
 `tests/` mirrors `src/`. A test for `src/routes/thing.tsx` belongs at
 `tests/routes/thing.test.tsx`. Import the code under test through the `@/`
 alias (`@/components/loader`), never with a long relative path.
+Shared test helpers can use `@tests/test-utils`; `@tests/*` maps to `apps/web/tests/*`
+in the web tsconfig, which Vite and Vitest both resolve natively.
 
 ## Commands
 

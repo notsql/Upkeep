@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -6,6 +7,25 @@ import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
+
+function CouncilMembersLink({
+  estate,
+}: {
+  estate: components["schemas"]["EstateResponse"];
+}) {
+  if (!(estate.canInviteMembers || estate.canManageInvitationPermissions)) {
+    return null;
+  }
+  return (
+    <Link
+      className={buttonVariants({ variant: "outline" })}
+      params={{ estateId: estate.id }}
+      to="/estates/$estateId/council"
+    >
+      Council members
+    </Link>
+  );
+}
 
 export function EstateDetailsPage({
   estateId,
@@ -112,6 +132,7 @@ export function EstateDetailsPage({
               Shared with you. Only the owner can change this estate.
             </p>
           )}
+          <CouncilMembersLink estate={estate.data} />
           {confirming ? (
             <DeactivateEstateDialog
               code={estate.data.code}

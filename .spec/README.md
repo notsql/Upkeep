@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [manager-account-authorization.md](features/manager-account-authorization.md) | ID-21 | invitations verified; broader estate roles are follow-up |
 | `estate-management.md` | - | built |
 | `location-hierarchy.md` | - | built |
 | `building-assets.md` | ID-46 | draft |

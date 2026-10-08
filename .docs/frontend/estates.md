@@ -44,3 +44,12 @@ Mutations are defined inline in the screens (not in `lib/estates.ts`):
 
 All queries: `enabled` only when `useEstateSession().ready`, `retry: false`,
 errors via `estateError`.
+
+## Council invitations
+
+Estate details offers **Council members** when `EstateResponse.canInviteMembers`
+or `canManageInvitationPermissions` is true. The route is
+`estates/$estateId/council/index.tsx`. My estates mounts `InvitationAcceptance`
+for WorkOS email reconciliation and `PendingInvitations` for explicit in-app
+acceptance. See [council-invitations.md](council-invitations.md) for components,
+hooks, invalidation, and permission behavior.

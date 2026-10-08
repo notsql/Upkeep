@@ -278,3 +278,24 @@ correction, restoration, repeated lifecycle history, latest assessed condition,
 and conflicting submissions. Implementation is ready for review and commit.
 The verification notes above describe the earlier stages of testing; manual
 acceptance is now complete.
+
+## Council merge and review (2026-10-08)
+
+The resolved merge with main retains Council invitations, their status enum, and
+asset retirement together. Prisma keeps both EstateInvitation and
+AssetLifecycleEvent; their existing migrations and generated jOOQ definitions
+remain intact. Active location reads remain available to accepted members;
+includeInactive historical reads stay owner-only. Authorization regressions
+failed when choosing the retirement-only implementation, then passed with the
+combined rule and an owner-only historical-read regression.
+
+The combined OpenAPI contract was re-exported from the merged Spring application
+using isolated migrated Postgres and a temporary export harness, then the API
+types and route tree were regenerated. No Neon data or schema was changed.
+Fresh uncached workspace tests passed, including 203 Java tests, after removing
+stale compiled output restored by Nx. Formatting, Prisma validation, type checks
+and the production web build also passed.
+
+Review cleanup uses a new @tests path alias for the retirement-panel test helper
+import. The location-filter UUID check is retained: Location.id and
+Asset.locationId are PostgreSQL UUIDs, not CUIDs.

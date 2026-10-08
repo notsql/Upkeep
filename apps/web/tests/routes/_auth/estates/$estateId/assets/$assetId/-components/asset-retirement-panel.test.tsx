@@ -1,12 +1,8 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
-import {
-  renderWithProviders,
-  screen,
-  waitFor,
-} from "../../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

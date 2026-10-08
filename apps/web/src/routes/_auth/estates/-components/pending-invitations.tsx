@@ -1,0 +1,85 @@
+import type { components } from "@proj/api/schema";
+import { Button } from "@proj/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@proj/ui/components/card";
+import { useCallback } from "react";
+import {
+  useAcceptInAppInvitation,
+  usePendingCouncilInvitations,
+} from "@/lib/council-invitations";
+
+function PendingInvitation({
+  invitation,
+}: {
+  invitation: components["schemas"]["PendingCouncilInvitationResponse"];
+}) {
+  const acceptance = useAcceptInAppInvitation();
+  const accept = useCallback(
+    () => acceptance.mutate(invitation.id),
+    [acceptance, invitation.id]
+  );
+  return (
+    <li className="space-y-2 border-b py-4 last:border-b-0">
+      <p className="font-medium">{invitation.estateName}</p>
+      <p className="text-muted-foreground text-sm">
+        Expires {new Date(invitation.expiresAt).toLocaleDateString()}
+      </p>
+      <Button
+        aria-label={`Accept invitation to ${invitation.estateName}`}
+        disabled={acceptance.isPending || acceptance.isSuccess}
+        onClick={accept}
+      >
+        {acceptance.isPending ? "Accepting…" : "Accept invitation"}
+      </Button>
+      {acceptance.error ? <p role="alert">{acceptance.error.message}</p> : null}
+    </li>
+  );
+}
+
+export function PendingInvitations() {
+  const invitations = usePendingCouncilInvitations();
+  const retry = useCallback(() => {
+    invitations.refetch();
+  }, [invitations]);
+  if (invitations.error) {
+    return (
+      <div className="my-4 space-y-2">
+        <p role="alert">{invitations.error.message}</p>
+        <Button
+          disabled={invitations.isFetching}
+          onClick={retry}
+          variant="outline"
+        >
+          Retry pending invitations
+        </Button>
+      </div>
+    );
+  }
+  if (!invitations.data?.length) {
+    return null;
+  }
+  return (
+    <Card className="my-4">
+      <CardHeader>
+        <CardTitle>
+          <h2>Pending estate invitations</h2>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p>
+          Accept an invitation to gain read-only access to that estate. Your
+          existing access stays unchanged.
+        </p>
+        <ul>
+          {invitations.data.map((invitation) => (
+            <PendingInvitation invitation={invitation} key={invitation.id} />
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  );
+}
