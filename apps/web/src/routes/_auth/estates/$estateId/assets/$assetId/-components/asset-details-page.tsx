@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
@@ -5,6 +6,7 @@ import { toast } from "sonner";
 import { assetCategoryLabel, useAsset, useDeactivateAsset } from "@/lib/assets";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
+import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
 
 const NOT_RECORDED = "Not recorded";
@@ -22,10 +24,10 @@ export function AssetDetailsPage({
   const openConfirmation = useCallback(() => setConfirming(true), []);
   const closeConfirmation = useCallback(() => setConfirming(false), []);
   const confirm = useCallback(
-    async (reference: string) => {
-      await deactivate.mutateAsync(reference);
+    async (request: components["schemas"]["DeactivateAssetRequest"]) => {
+      await deactivate.mutateAsync(request);
       setConfirming(false);
-      toast.success("Asset deactivated. Its record has been preserved.");
+      toast.success("Asset retired. Its record has been preserved.");
     },
     [deactivate.mutateAsync]
   );
@@ -37,6 +39,13 @@ export function AssetDetailsPage({
         to="/estates/$estateId"
       >
         Back to estate
+      </Link>
+      <Link
+        className="ml-4 text-sm underline"
+        params={{ estateId }}
+        to="/estates/$estateId/assets"
+      >
+        Back to assets
       </Link>
       {asset.isPending ? (
         <p aria-live="polite" className="mt-6">
@@ -53,13 +62,13 @@ export function AssetDetailsPage({
           <div className="mt-6 flex items-center justify-between gap-4">
             <h1 className="font-semibold text-2xl">{asset.data.name}</h1>
             <span className="border px-3 py-1 text-sm" role="status">
-              {asset.data.deactivatedAt ? "Deactivated" : "Active"}
+              {asset.data.deactivatedAt ? "Retired" : "Active"}
             </span>
           </div>
           {asset.data.deactivatedAt ? (
             <p className="mt-4 border p-4 text-sm">
-              This asset is deactivated. Its record remains available but can no
-              longer be edited.
+              This asset is retired. Its record remains available but can no
+              longer be edited until restored.
             </p>
           ) : null}
           <dl className="my-6 grid gap-4">
@@ -102,10 +111,11 @@ export function AssetDetailsPage({
                 Edit asset
               </Link>
               <Button onClick={openConfirmation} variant="destructive">
-                Deactivate asset
+                Retire asset
               </Button>
             </div>
           )}
+          <AssetRetirementPanel asset={asset.data} />
           <AssetConditionSection
             assetId={assetId}
             canRecord={!asset.data.deactivatedAt}
@@ -119,6 +129,8 @@ export function AssetDetailsPage({
           />
           {confirming ? (
             <DeactivateAssetDialog
+              installedOn={asset.data.installedOn}
+              lifecycleVersion={asset.data.lifecycleVersion}
               name={asset.data.name}
               onCancel={closeConfirmation}
               onConfirm={confirm}

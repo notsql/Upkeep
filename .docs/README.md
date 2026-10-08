@@ -7,10 +7,12 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` is the source of truth.
 
-- [Council invitations and delegation](api/council-invitations.md): invitation,
-  member listing, delegation, acceptance, and estate capability fields.
+- [Council invitations and delegation](api/council-invitations.md): invitations,
+  member listing, delegation, acceptance and estate capability fields.
 - [Locations](api/locations.md): member-readable hierarchy and owner-only changes.
-  Other API features are not yet documented here.
+- [Assets, register and lifecycle](api/assets.md): asset search, details,
+  retirement, restoration and history.
+
 
 ## Frontend (`apps/web`)
 
@@ -21,7 +23,7 @@ same change as the code.
 | [frontend/account.md](frontend/account.md) | `/account` |
 | [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit`, estate deactivation, header `EstateSwitcher` |
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
-| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset deactivation, condition assessments |
+| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments |
 | [frontend/devices.md](frontend/devices.md) | Device list and registration on the asset details page |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate Council invitations, delegated invitation permission, and acceptance |

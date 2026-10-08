@@ -45,6 +45,7 @@ const locations: Location[] = [
 ];
 
 const asset: Asset = {
+  lifecycleVersion: 0,
   id: "asset-id",
   estateId: "estate-id",
   reference: "SUNRISE-A0001",

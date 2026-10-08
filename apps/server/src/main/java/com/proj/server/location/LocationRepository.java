@@ -30,6 +30,13 @@ public class LocationRepository {
                 .fetch(LocationRepository::response);
     }
 
+    public List<LocationResponse> listAll(UUID estateId) {
+        return db.selectFrom(LOCATION)
+                .where(LOCATION.ESTATEID.eq(estateId))
+                .orderBy(LOCATION.SORTORDER.asc().nullsLast(), DSL.lower(LOCATION.NAME), LOCATION.ID)
+                .fetch(LocationRepository::response);
+    }
+
     /** Includes deactivated locations, so callers can tell "missing" from "deactivated". */
     public Optional<LocationResponse> find(UUID id, UUID estateId) {
         return db.selectFrom(LOCATION)

@@ -51,3 +51,5 @@ Writes are inline `api` calls in `LocationsSection` (no mutation hooks):
 After any successful write: close the panel and invalidate
 `["estates", userId, "locations", estateId]`. Errors from `estateError` are
 shown in the form / confirm panel. No toasts.
+
+The asset register opts into `useLocations(estateId, true)` for inactive locations. It sends `includeInactive=true` and appends `"all"` to the query key. Ordinary pickers retain active-only defaults.

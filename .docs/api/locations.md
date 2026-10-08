@@ -44,3 +44,7 @@ Example: an authenticated owner sends POST `/estates/{estateId}/locations` with
 `{"type":"BLOCK","name":"Block A"}`. The 201 response contains the new
 `LocationResponse`. After accepting an invitation, a member can GET the same
 collection and see Block A, but cannot create, update or deactivate locations.
+
+Combined feature access: default active-location reads remain available to estate
+members. `includeInactive=true` is owner-only and returns historical locations for
+the asset register; writes remain owner-only.

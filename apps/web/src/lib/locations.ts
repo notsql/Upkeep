@@ -25,16 +25,23 @@ export function locationsQueryKey(
   return ["estates", userId, "locations", estateId] as const;
 }
 
-export function useLocations(estateId: string) {
+export function useLocations(estateId: string, includeInactive = false) {
   const { userId, ready } = useEstateSession();
   return useQuery({
-    queryKey: locationsQueryKey(userId, estateId),
+    queryKey: includeInactive
+      ? [...locationsQueryKey(userId, estateId), "all"]
+      : locationsQueryKey(userId, estateId),
     enabled: ready,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(
         "/estates/{estateId}/locations",
-        { params: { path: { estateId } } }
+        {
+          params: {
+            path: { estateId },
+            ...(includeInactive ? { query: { includeInactive: true } } : {}),
+          },
+        }
       );
       if (error || !data) {
         throw estateError(error, response.status);

@@ -46,8 +46,11 @@ public class LocationController {
     @GetMapping
     @ApiResponse(responseCode = "200", description = "The estate's active locations, siblings in display order")
     @Operation(operationId = "listLocations", summary = "List an estate's active locations")
-    public List<LocationResponse> list(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID estateId) {
-        return service.list(estateId, owner(jwt));
+    public List<LocationResponse> list(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @RequestParam(defaultValue = "false") boolean includeInactive) {
+        return service.list(estateId, owner(jwt), includeInactive);
     }
 
     @PostMapping

@@ -94,6 +94,11 @@ model Asset {
   updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
   deactivatedAt DateTime? @db.Timestamptz(6)
 
+  retiredOn DateTime? @db.Date
+  retirementReason String? @db.VarChar(2000)
+  lifecycleVersion Int @default(0)
+  lifecycleEvents AssetLifecycleEvent[]
+
   estate      Estate            @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   location    Location          @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   devices     Device[]
@@ -172,4 +177,23 @@ model EstateInvitation {
 
   @@unique([estateId, email])
   @@index([email, status])
+}
+
+model AssetLifecycleEvent {
+  id String @id @default(uuid()) @db.Uuid
+  estateId String @db.Uuid
+  assetId String @db.Uuid
+  action String @db.VarChar(20)
+  occurredAt DateTime @default(now()) @db.Timestamptz(6)
+  actorUserId String @db.VarChar(255)
+  previousDeactivatedAt DateTime? @db.Timestamptz(6)
+  previousRetiredOn DateTime? @db.Date
+  previousRetirementReason String? @db.VarChar(2000)
+  deactivatedAt DateTime? @db.Timestamptz(6)
+  retiredOn DateTime? @db.Date
+  retirementReason String? @db.VarChar(2000)
+  lifecycleVersion Int
+  asset Asset @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  @@unique([assetId, lifecycleVersion])
+  @@index([estateId, assetId])
 }

@@ -15,7 +15,8 @@ import java.util.UUID;
             "locationId",
             "locationPath",
             "createdAt",
-            "updatedAt"
+            "updatedAt",
+            "lifecycleVersion"
         })
 public record AssetResponse(
         UUID id,
@@ -34,4 +35,8 @@ public record AssetResponse(
         @Schema(nullable = true) String serialNumber,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        @Schema(nullable = true) OffsetDateTime deactivatedAt) {}
+        @Schema(nullable = true) OffsetDateTime deactivatedAt,
+        @Schema(nullable = true) LocalDate retiredOn,
+        @Schema(nullable = true) String retirementReason,
+        int lifecycleVersion,
+        @Schema(nullable = true) AssetCondition currentCondition) {}
