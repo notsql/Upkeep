@@ -64,6 +64,15 @@ cannot pass invitation permission onward or acquire asset-write access.
 
 ## Errors and lifecycle
 
+`CouncilInvitationStatus` defines the server's five local states: SENDING,
+PENDING, IN_APP, ACCEPTED and CANCELLED. The service and repository share its
+acceptance rule: only IN_APP/PENDING can activate membership. Outstanding attempts
+are SENDING/PENDING/IN_APP; other states, including unrecognized stored values,
+cannot be accepted or cancelled as outstanding attempts. Expiry is checked
+separately. Status values remain strings in PostgreSQL and the API; the Java enum
+requires no schema migration. WorkOS provider states are distinct from these
+local lifecycle states.
+
 - 400: invalid input, malformed UUID/body, missing/null permission.
 - 401: no valid signed-in identity.
 - 403: missing invitation/owner permission, or unverified/mismatched WorkOS
