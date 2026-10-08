@@ -8,6 +8,7 @@ import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 
@@ -54,6 +55,11 @@ public class Public extends SchemaImpl {
     public final Estate ESTATE = Estate.ESTATE;
 
     /**
+     * The table <code>public.EstateInvitation</code>.
+     */
+    public final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
+
+    /**
      * The table <code>public.EstateUser</code>.
      */
     public final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
@@ -83,6 +89,7 @@ public class Public extends SchemaImpl {
             Assetassessment.ASSETASSESSMENT,
             Device.DEVICE,
             Estate.ESTATE,
+            Estateinvitation.ESTATEINVITATION,
             Estateuser.ESTATEUSER,
             Location.LOCATION
         );

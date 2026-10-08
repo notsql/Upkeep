@@ -1,3 +1,7 @@
+vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
+  PendingInvitations: () => null,
+}));
+
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
@@ -9,6 +13,10 @@ import {
   waitFor,
   within,
 } from "../../../../test-utils";
+
+vi.mock("@/routes/_auth/estates/-components/invitation-acceptance", () => ({
+  InvitationAcceptance: () => null,
+}));
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

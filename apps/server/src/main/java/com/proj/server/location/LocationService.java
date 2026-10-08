@@ -25,8 +25,8 @@ public class LocationService {
         this.estates = estates;
     }
 
-    public List<LocationResponse> list(UUID estateId, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(LocationService::estateNotFound);
+    public List<LocationResponse> list(UUID estateId, String user) {
+        estates.findAccessible(estateId, user).orElseThrow(LocationService::estateNotFound);
         return repository.listActive(estateId);
     }
 
