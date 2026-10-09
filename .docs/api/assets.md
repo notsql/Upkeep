@@ -54,7 +54,7 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 - path `assetId`: uuid (required)
 - 400: Missing or invalid details, or an unsupported metric — EstateError
 - 401: Sign in required — EstateError
-- 404: Estate, asset or location not found — EstateError
+- 404: Estate, asset, location or device not found — EstateError
 - 409: Duplicate identifier, or an inactive estate, asset or location — EstateError
 - 200: The asset's devices, newest first — DeviceResponse[]
 
@@ -65,9 +65,22 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 - Body: CreateDeviceRequest
 - 400: Missing or invalid details, or an unsupported metric — EstateError
 - 401: Sign in required — EstateError
-- 404: Estate, asset or location not found — EstateError
+- 404: Estate, asset, location or device not found — EstateError
 - 409: Duplicate identifier, or an inactive estate, asset or location — EstateError
 - 201: Device registered, awaiting its first reading — DeviceResponse
+
+## POST `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential`
+
+Owner only. No body. See "Device credentials" below.
+
+- path `estateId`: uuid (required)
+- path `assetId`: uuid (required)
+- path `deviceId`: uuid (required)
+- 400: Missing or invalid details, or an unsupported metric — EstateError
+- 401: Sign in required — EstateError
+- 404: Estate, asset, location or device not found — EstateError
+- 409: Duplicate identifier, or an inactive estate, asset or location — EstateError
+- 201: New API key, shown only this once. Replaces and revokes any earlier key. — DeviceCredentialResponse
 
 ## GET `/estates/{estateId}/assets/{assetId}/assessments`
 
@@ -236,8 +249,17 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 | metrics | DeviceMetricResponse[] | yes |  |
 | reportingIntervalSeconds | int32 | yes |  |
 | lastSeenAt | date-time | no |  |
+| credentialIssuedAt | date-time | no | null until a key is issued |
 | createdAt | date-time | yes |  |
 | updatedAt | date-time | yes |  |
+
+## DeviceCredentialResponse
+
+| Field | Type | Required | Constraints |
+| --- | --- | --- | --- |
+| deviceId | uuid | yes |  |
+| apiKey | string | yes | `^upk_[A-Za-z0-9_-]{43}$`; returned only in this response |
+| issuedAt | date-time | yes |  |
 
 ## DeviceMetricResponse
 
@@ -297,6 +319,18 @@ Retirement body:
 ```
 
 After success, restore with `{"reference":"EST-A0001","expectedVersion":1}`.
+
+## Device credentials
+
+Decision 0025.
+
+- The key is `upk_` plus 32 SecureRandom bytes, base64url without padding. It is returned once and never stored, logged or returned again. `Device.credentialHash` holds its SHA-256 hex, and `credentialIssuedAt` the issue time.
+- Issuing locks the estate, then the asset (as registration does), then updates the device scoped by id, asset and estate. An unknown device, a device on another asset or estate, or an estate the caller does not own returns 404. A retired asset or inactive estate returns 409. A key issued earlier keeps working once the asset is restored.
+- Issuing again overwrites the hash, so the previous key is rejected at once. Replacement is the only way to revoke a key for now.
+- Devices call `/device-api/**` with `Authorization: Bearer upk_...`. That path has its own stateless security chain (no CORS, no CSRF, no JWT), ordered before the main one. It always requires a device key, even when the JWT issuer is unset. A missing, malformed, unknown or replaced key returns 401 `{"message":"A valid device key is required."}`. A user's JWT is never accepted there, and a device key is never accepted on manager endpoints. The authenticated principal is the device's UUID. No production `/device-api` endpoint exists yet (ID-43 adds the first).
+
+Example: `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` returns 201
+`{"deviceId":"…","apiKey":"upk_…","issuedAt":"2026-10-10T00:00:00Z"}`.
 
 ## Historical location options
 
