@@ -454,7 +454,7 @@ class AnomalyCheckControllerTests {
         List<String> readings = readings(10);
         for (int i = 5; i < 10; i++) {
             // 2.5 s between the fifth and sixth readings.
-            readings.set(i, reading(START.plusSeconds(i).plusMillis(500)));
+            readings.set(i, reading(START.plusSeconds(i).plusMillis(1500)));
         }
 
         check(batch(readings)).andExpect(status().isBadRequest());
