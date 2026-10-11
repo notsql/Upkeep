@@ -89,7 +89,7 @@ export function RecordEventDialog({
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
   // State updates are async, so a ref blocks a second submit in the same tick.
-  const submitting = useRef(false);
+  const submitting = useRef<boolean>(false);
 
   const handleChange = useCallback(
     (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

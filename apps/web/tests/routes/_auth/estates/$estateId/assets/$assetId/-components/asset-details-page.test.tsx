@@ -7,6 +7,17 @@ import {
   within,
 } from "../../../../../../../test-utils";
 
+// Sections that fetch their own data stay pending: this test is about breadcrumbs.
+vi.mock("@/lib/api", () => ({
+  api: {
+    GET: vi.fn(() => new Promise(() => undefined)),
+    POST: vi.fn(),
+    PATCH: vi.fn(),
+  },
+}));
+vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
+  useAuth: () => ({ user: { id: "owner" }, loading: false }),
+}));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
     <a href={to} {...props}>
@@ -14,10 +25,12 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
 }));
-vi.mock("@/lib/estates", () => ({
+vi.mock("@/lib/estates", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/estates")>()),
   useEstate: () => ({ data: { id: "estate", name: "Maple Grove" } }),
 }));
-vi.mock("@/lib/assets", () => ({
+vi.mock("@/lib/assets", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/assets")>()),
   useAsset: () => ({
     data: {
       id: "asset",
@@ -28,7 +41,9 @@ vi.mock("@/lib/assets", () => ({
     },
   }),
   useDeactivateAsset: () => ({ mutateAsync: vi.fn() }),
-  assetCategoryLabel: { PUMP: "Pump" },
+}));
+vi.mock("@/lib/catalogue", () => ({
+  useAssetCategories: () => ({ data: [{ code: "PUMP", label: "Pump" }] }),
 }));
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel",

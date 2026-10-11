@@ -154,9 +154,7 @@ describe("useRecordAssetEvent", () => {
     );
     await waitFor(() => {
       expect(queryClient.getQueryState(eventsKey)?.isInvalidated).toBe(true);
-      expect(queryClient.getQueryState(assetRiskKey)?.isInvalidated).toBe(
-        true
-      );
+      expect(queryClient.getQueryState(assetRiskKey)?.isInvalidated).toBe(true);
       expect(queryClient.getQueryState(estateRiskKey)?.isInvalidated).toBe(
         true
       );

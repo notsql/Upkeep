@@ -123,9 +123,7 @@ describe("useEstateFailureRisk", () => {
       data: [risk],
       response: new Response(),
     } as never);
-    const { queryClient } = renderWithProviders(
-      createElement(EstateRiskProbe)
-    );
+    const { queryClient } = renderWithProviders(createElement(EstateRiskProbe));
     await screen.findByText("Booster pump 1");
     expect(api.GET).toHaveBeenCalledWith("/estates/{estateId}/failure-risk", {
       params: { path: { estateId: "estate-id" } },
