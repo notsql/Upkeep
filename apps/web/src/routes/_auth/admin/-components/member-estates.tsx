@@ -1,7 +1,7 @@
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Label } from "@proj/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useCallback } from "react";
+import { type ReactNode, useCallback, useEffect } from "react";
 
 import { api } from "@/lib/api";
 
@@ -50,9 +50,13 @@ function EstateOption({
 export function MemberEstates({
   name,
   userId,
+  showTitle = true,
+  onPendingChange,
 }: {
   name: string;
   userId: string;
+  showTitle?: boolean;
+  onPendingChange?: (pending: boolean) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -90,6 +94,9 @@ export function MemberEstates({
       }),
   });
 
+  useEffect(() => {
+    onPendingChange?.(change.isPending);
+  }, [change.isPending, onPendingChange]);
   const { mutate } = change;
   const handleChange = useCallback(
     (estateId: string, granted: boolean) => mutate({ estateId, granted }),
@@ -100,12 +107,15 @@ export function MemberEstates({
 
   return (
     <section
-      aria-labelledby="member-estates-heading"
-      className="rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm"
+      aria-label={showTitle ? undefined : `Estates for ${name}`}
+      aria-labelledby={showTitle ? "member-estates-heading" : undefined}
+      className={showTitle ? "section-surface" : "grid gap-3"}
     >
-      <h2 className="font-semibold" id="member-estates-heading">
-        Estate access for {name}
-      </h2>
+      {showTitle ? (
+        <h2 className="font-semibold" id="member-estates-heading">
+          Estate access for {name}
+        </h2>
+      ) : null}
       <p className="mt-1 text-muted-foreground text-sm">
         {name} can view the estates ticked here. Owners always keep access to
         their own estates. Changes apply on their next request.

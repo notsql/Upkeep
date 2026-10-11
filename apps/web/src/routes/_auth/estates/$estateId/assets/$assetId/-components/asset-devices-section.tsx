@@ -1,16 +1,14 @@
-import { Button } from "@proj/ui/components/button";
-import { useCallback, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { Badge } from "@proj/ui/components/badge";
+import { buttonVariants } from "@proj/ui/components/button";
+import { Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import {
   type Device,
-  type DeviceInput,
   deviceMetrics,
   formatInterval,
   useDevices,
-  useRegisterDevice,
 } from "@/lib/devices";
 import { flattenLocations, useLocations } from "@/lib/locations";
-import { DeviceForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form";
 
 function metricSummary(device: Device): string {
   return device.metrics
@@ -20,17 +18,14 @@ function metricSummary(device: Device): string {
 
 export function AssetDevicesSection({
   assetId,
-  assetLocationId,
   canRegister,
   estateId,
 }: {
   assetId: string;
-  assetLocationId: string;
   canRegister: boolean;
   estateId: string;
 }) {
   const devices = useDevices(estateId, assetId);
-  const register = useRegisterDevice(estateId, assetId);
   const locations = useLocations(estateId);
   const paths = useMemo(
     () =>
@@ -42,36 +37,22 @@ export function AssetDevicesSection({
       ),
     [locations.data]
   );
-  const [registering, setRegistering] = useState(false);
-  const openForm = useCallback(() => setRegistering(true), []);
-  const save = useCallback(
-    async (values: DeviceInput) => {
-      await register.mutateAsync(values);
-      setRegistering(false);
-      toast.success("Device registered. It is awaiting its first reading.");
-    },
-    [register.mutateAsync]
-  );
-
   return (
-    <section aria-labelledby="devices-heading" className="mt-10">
-      <div className="flex items-center justify-between gap-4">
+    <section aria-labelledby="devices-heading" className="section-surface mt-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <h2 className="font-semibold text-xl" id="devices-heading">
           Devices
         </h2>
-        {canRegister && !registering ? (
-          <Button onClick={openForm} variant="outline">
+        {canRegister ? (
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            params={{ estateId, assetId }}
+            to="/estates/$estateId/assets/$assetId/devices/new"
+          >
             Register device
-          </Button>
+          </Link>
         ) : null}
       </div>
-      {registering ? (
-        <DeviceForm
-          defaultLocationId={assetLocationId}
-          estateId={estateId}
-          onSave={save}
-        />
-      ) : null}
       {devices.isPending ? (
         <p aria-live="polite" className="mt-4">
           Loading devices…
@@ -87,21 +68,21 @@ export function AssetDevicesSection({
           No devices are registered to this asset yet.
         </p>
       ) : null}
-      <ul className="mt-4 grid gap-4">
+      <ul aria-label="Devices" className="mt-4 grid gap-3">
         {devices.data?.map((device) => (
-          <li className="border p-4" key={device.id}>
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="font-medium">{device.identifier}</h3>
-              <span className="border px-2 py-1 text-xs">
+          <li className="rounded-lg border p-4" key={device.id}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h3 className="break-all font-medium">{device.identifier}</h3>
+              <Badge className="whitespace-normal" variant="outline">
                 {device.lastSeenAt
                   ? `Last seen ${new Date(device.lastSeenAt).toLocaleString()}`
                   : "Awaiting first reading"}
-              </span>
+              </Badge>
             </div>
             <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-muted-foreground">Model</dt>
-                <dd>{device.model}</dd>
+                <dd className="break-words">{device.model}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Location</dt>

@@ -7,6 +7,7 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
+- [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
   retirement, restoration and lifecycle history.
 - [Council invitations and delegation](api/council-invitations.md): invitation,
@@ -18,12 +19,14 @@ same change as the code.
 
 | File | Covers |
 | --- | --- |
+| [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
 | [frontend/shell.md](frontend/shell.md) | Root layout, providers, header nav, home page (`/`), and conventions shared by every feature (API client, session gate, query-key prefix, errors) |
+| [frontend/dashboard.md](frontend/dashboard.md) | Signed-in Home portfolio totals, condition breakdown, attention links and compact invitations |
 | [frontend/auth.md](frontend/auth.md) | `/login`, `/register`, `/logout`, `/api/auth/*` handlers, `_auth` guard, idle sign-out, `AuthButton`, token bridge |
 | [frontend/account.md](frontend/account.md) | `/account` |
-| [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit`, estate deactivation, header `EstateSwitcher` |
+| [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit`, directory filters and estate deactivation |
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments |
-| [frontend/devices.md](frontend/devices.md) | Device list and registration on the asset details page |
+| [frontend/devices.md](frontend/devices.md) | Device list on asset details and dedicated device registration page |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate Council invitations, delegated invitation permission, and acceptance |

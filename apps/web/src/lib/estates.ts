@@ -4,6 +4,9 @@ import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
+const INTERNAL_ERROR =
+  /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/i;
+
 export type EstateStatus = NonNullable<
   NonNullable<operations["list"]["parameters"]["query"]>["status"]
 >;
@@ -24,6 +27,11 @@ export function estateError(
   if (status === 401) {
     return new Error(
       "We could not verify your sign-in. Please try signing in again."
+    );
+  }
+  if (status >= 500 && INTERNAL_ERROR.test(error?.message ?? "")) {
+    return new Error(
+      "The service is temporarily unavailable. Please try again."
     );
   }
   return new Error(

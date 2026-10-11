@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { EstateDetailsPage } from "@/routes/_auth/estates/$estateId/-components/estate-details-page";
-import { renderWithProviders, screen } from "../../../../../test-utils";
+import { renderWithProviders, screen, within } from "../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
@@ -28,6 +28,24 @@ const estate = {
 
 describe("estate details page", () => {
   beforeEach(() => vi.resetAllMocks());
+
+  it("groups Council members with the owner's estate actions", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: {
+        ...estate,
+        canInviteMembers: true,
+        canManageInvitationPermissions: true,
+      },
+      response: new Response(),
+    });
+    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
+    const actions = within(
+      await screen.findByRole("group", { name: "Estate actions" })
+    );
+    actions.getByRole("link", { name: "Edit estate" });
+    actions.getByRole("link", { name: "Council members" });
+    actions.getByRole("button", { name: "Deactivate estate" });
+  });
 
   it("keeps inactive details and editing accessible without deactivation", async () => {
     vi.mocked(api.GET).mockResolvedValue({

@@ -151,6 +151,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/dashboard/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Summarise your estates and active assets in estates you own */
+    get: operations["summary"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates": {
     parameters: {
       query?: never;
@@ -779,6 +796,46 @@ export interface components {
       retirementReason?: string | null;
       /** Format: int32 */
       lifecycleVersion: number;
+    };
+    DashboardConditionCounts: {
+      /** Format: int64 */
+      good: number;
+      /** Format: int64 */
+      needsAttention: number;
+      /** Format: int64 */
+      faulty: number;
+      /** Format: int64 */
+      unassessed: number;
+    };
+    DashboardEstateSummary: {
+      /** Format: uuid */
+      estateId: string;
+      estateName: string;
+      estateCode: string;
+      /** Format: int64 */
+      totalActiveAssets: number;
+      /** Format: int64 */
+      needsAttentionCount: number;
+      /** Format: int64 */
+      faultyCount: number;
+    };
+    DashboardSummaryResponse: {
+      /** Format: int32 */
+      accessibleEstateCount: number;
+      /** Format: int32 */
+      activeEstateCount: number;
+      /** Format: int32 */
+      inactiveEstateCount: number;
+      /** Format: int32 */
+      activeOwnedEstateCount: number;
+      /** Format: int64 */
+      councilMemberCount: number;
+      /** Format: int64 */
+      totalActiveAssets: number;
+      conditionCounts: components["schemas"]["DashboardConditionCounts"];
+      /** Format: int32 */
+      affectedEstateCount: number;
+      estatesNeedingAttention: components["schemas"]["DashboardEstateSummary"][];
     };
     PendingCouncilInvitationResponse: {
       /** Format: uuid */
@@ -2926,6 +2983,44 @@ export interface operations {
       };
       /** @description Inactive estate, asset or location, or a conflicting change */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  summary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description User-scoped portfolio summary */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DashboardSummaryResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Summary temporarily unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };

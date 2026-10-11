@@ -149,3 +149,21 @@ describe("AssetConditionSection", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
   });
 });
+
+it("opens assessment in a dialog and cancels without recording", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [],
+    response: new Response(),
+  } as never);
+  renderSection();
+  fireEvent.click(screen.getByRole("button", { name: "Record assessment" }));
+  const dialog = await screen.findByRole("dialog", {
+    name: "Record assessment",
+  });
+  fireEvent.change(within(dialog).getByRole("textbox", { name: "Notes" }), {
+    target: { value: "Draft" },
+  });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(api.POST).not.toHaveBeenCalled();
+});

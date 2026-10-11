@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Asset = components["schemas"]["AssetResponse"];
@@ -62,9 +63,12 @@ export function useCreateAsset(estateId: string) {
     },
     onSuccess: async (data) => {
       queryClient.setQueryData(assetQueryKey(userId, estateId, data.id), data);
-      await queryClient.invalidateQueries({
-        queryKey: ["estates", userId, "assets", estateId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "assets", estateId],
+        }),
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
     },
   });
 }
@@ -110,9 +114,12 @@ export function useDeactivateAsset(estateId: string, assetId: string) {
     },
     onSuccess: async (data) => {
       queryClient.setQueryData(assetQueryKey(userId, estateId, assetId), data);
-      await queryClient.invalidateQueries({
-        queryKey: ["estates", userId, "assets", estateId],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "assets", estateId],
+        }),
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
     },
   });
 }
@@ -175,9 +182,12 @@ export function useRestoreAsset(estateId: string, assetId: string) {
     },
     onSuccess: async (data) => {
       client.setQueryData(assetQueryKey(userId, estateId, assetId), data);
-      await client.invalidateQueries({
-        queryKey: ["estates", userId, "assets", estateId],
-      });
+      await Promise.all([
+        client.invalidateQueries({
+          queryKey: ["estates", userId, "assets", estateId],
+        }),
+        client.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
     },
   });
 }

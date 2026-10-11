@@ -232,7 +232,10 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
   const openRestoration = useCallback(() => setMode("restore"), []);
   const openCorrection = useCallback(() => setMode("edit"), []);
   return (
-    <section aria-label="Asset lifecycle" className="my-8 space-y-4">
+    <section
+      aria-label="Asset lifecycle"
+      className="section-surface mt-6 space-y-3"
+    >
       {asset.deactivatedAt ? (
         <>
           <dl>
@@ -243,7 +246,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
               {asset.retirementReason ?? "Not recorded"}
             </dd>
           </dl>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             <Button onClick={openCorrection} variant="outline">
               Edit retirement information
             </Button>
@@ -262,9 +265,12 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
         </div>
       ) : null}
       {history.data?.length === 0 ? <p>No lifecycle events recorded.</p> : null}
-      <ol className="space-y-4">
+      <ol aria-label="Lifecycle events" className="grid gap-3">
         {history.data?.map((event) => (
-          <li className="border p-4" key={event.id}>
+          <li
+            className="grid gap-2 rounded-lg border p-3 text-sm"
+            key={event.id}
+          >
             <p>
               {actionLabels[event.action ?? ""] ?? event.action} ·{" "}
               {event.occurredAt
@@ -274,7 +280,9 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                 : "Not recorded"}{" "}
               (Singapore)
             </p>
-            <p>By {event.actorUserId}</p>
+            <p className="break-all text-muted-foreground">
+              By {event.actorUserId}
+            </p>
             <p>
               Previous retirement: {event.previousRetiredOn ?? "Not recorded"} —{" "}
               {event.previousRetirementReason ?? "Not recorded"}
