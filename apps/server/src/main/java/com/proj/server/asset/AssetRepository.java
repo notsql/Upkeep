@@ -36,14 +36,14 @@ public class AssetRepository {
     public AssetRecord create(UUID estateId, String reference, CreateAssetRequest request) {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         var manufacturerId = catalogue.manufacturerId(request.manufacturer());
-        var modelId = catalogue.modelId(manufacturerId, request.category().name(), request.model());
+        var modelId = catalogue.modelId(manufacturerId, request.category(), request.model());
         return db.insertInto(ASSET)
                 .set(ASSET.ID, UUID.randomUUID())
                 .set(ASSET.ESTATEID, estateId)
                 .set(ASSET.LOCATIONID, request.locationId())
                 .set(ASSET.REFERENCE, reference)
                 .set(ASSET.NAME, request.name())
-                .set(ASSET.CATEGORY, request.category().name())
+                .set(ASSET.CATEGORY, request.category())
                 .set(ASSET.INSTALLEDON, request.installedOn())
                 .set(ASSET.MANUFACTURERID, manufacturerId)
                 .set(ASSET.MODELID, modelId)
@@ -56,11 +56,11 @@ public class AssetRepository {
 
     public AssetRecord update(UUID id, UpdateAssetRequest request) {
         var manufacturerId = catalogue.manufacturerId(request.manufacturer());
-        var modelId = catalogue.modelId(manufacturerId, request.category().name(), request.model());
+        var modelId = catalogue.modelId(manufacturerId, request.category(), request.model());
         return db.update(ASSET)
                 .set(ASSET.LOCATIONID, request.locationId())
                 .set(ASSET.NAME, request.name())
-                .set(ASSET.CATEGORY, request.category().name())
+                .set(ASSET.CATEGORY, request.category())
                 .set(ASSET.INSTALLEDON, request.installedOn())
                 .set(ASSET.MANUFACTURERID, manufacturerId)
                 .set(ASSET.MODELID, modelId)

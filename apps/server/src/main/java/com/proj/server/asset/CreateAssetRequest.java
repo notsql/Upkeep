@@ -8,7 +8,7 @@ import java.util.UUID;
 
 public record CreateAssetRequest(
         @NotBlank @Size(max = 200) String name,
-        @NotNull AssetCategory category,
+        @NotNull @Size(max = 30) String category,
         @NotNull UUID locationId,
         LocalDate installedOn,
         @Size(max = 200) String manufacturer,

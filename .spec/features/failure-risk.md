@@ -469,47 +469,47 @@ not touch `apps/`, install nothing, and commit nothing.
 - [x] Run `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`, and fix `AssetRepository` and `AssetService`.
 
 ### 3. Server tests (red)
-- [ ] `AssetCategoryControllerTests`:
-  - [ ] The endpoint lists the 13 seeded categories with their labels.
-  - [ ] Creating an asset with an unknown code returns 400.
-  - [ ] Every code the server keys constants on has a seeded row.
-- [ ] `CatalogueControllerTests`:
-  - [ ] Saving an asset with a new manufacturer and model creates both. Saving another with the same names, in different case and spacing, reuses them.
-  - [ ] Names are stored and returned trimmed, single-spaced and uppercase.
-  - [ ] A model without a manufacturer returns 400.
-  - [ ] The same model name under one manufacturer in two categories creates two rows. The models lookup filters by category.
-  - [ ] The lookups filter by query, cap at 20, and return 404 for an unknown manufacturer.
-  - [ ] The existing asset controller tests still pass. The only change to them is replacing `AssetCategory` enum values with code strings, since the contract changes (a test change of its own, made before the implementation).
-- [ ] `FailureRiskCalculatorTests` (plain unit tests):
-  - [ ] The four scenarios in the Breakdown forecast table match to two decimal places.
-  - [ ] A `BREAKDOWN_REPAIR` raises `a`. A `PREVENTIVE` interval raises only `b`.
-  - [ ] Events before `installedOn`, or with a different manufacturer or model snapshot, are ignored.
-  - [ ] The basis rules hold, including `NOT_SUPPORTED` for non-pumps.
-  - [ ] The timeframe uses the 0.15 threshold.
-  - [ ] The end-of-life date and the 12-year flag.
-- [ ] `AssetEventControllerTests`:
-  - [ ] Each type returns its category (`MAINTENANCE` for both).
-  - [ ] Create and list ordering.
-  - [ ] The manufacturer and model snapshot, and `countsTowardForecast`.
-  - [ ] 400s, 404s and 409s.
-  - [ ] The recorder snapshot.
-  - [ ] A missing JWT subject is rejected.
-- [ ] `FailureRiskControllerTests`:
-  - [ ] The per-asset response.
-  - [ ] The estate list holds pumps only, in the right order.
-  - [ ] All three flag reasons, including a `CONDITION` flag from a system assessment.
-  - [ ] Deactivated assets are excluded from the list.
-  - [ ] Another owner gets 404.
-- [ ] `AnomalyFeatureTests` (unit): features match the 0b parity fixture.
-- [ ] `AnomalyCheckControllerTests`, with `apps/ml` replaced by a stub server returning fixed scores:
-  - [ ] 10 abnormal readings in a row record `NEEDS_ATTENTION` or `FAULTY`, per the median rule.
-  - [ ] 9 in a row record nothing.
-  - [ ] No duplicate when the condition is unchanged.
-  - [ ] The system identity, date and notes are correct.
-  - [ ] The 400s, 404s and 409s from Edge cases.
-  - [ ] The stub timing out, or returning 503, gives 503 and records nothing.
-- [ ] `DeviceMetric` includes `VIBRATION_ACCELERATION` with unit `g`.
-- [ ] Run the tests and confirm they fail.
+- [x] `AssetCategoryControllerTests`:
+  - [x] The endpoint lists the 13 seeded categories with their labels.
+  - [x] Creating an asset with an unknown code returns 400.
+  - [x] Every code the server keys constants on has a seeded row.
+- [x] `CatalogueControllerTests`:
+  - [x] Saving an asset with a new manufacturer and model creates both. Saving another with the same names, in different case and spacing, reuses them.
+  - [x] Names are stored and returned trimmed, single-spaced and uppercase.
+  - [x] A model without a manufacturer returns 400.
+  - [x] The same model name under one manufacturer in two categories creates two rows. The models lookup filters by category.
+  - [x] The lookups filter by query, cap at 20, and return 404 for an unknown manufacturer.
+  - [x] The existing asset controller tests still pass. The only change to them is replacing `AssetCategory` enum values with code strings, since the contract changes (a test change of its own, made before the implementation).
+- [x] `FailureRiskCalculatorTests` (plain unit tests):
+  - [x] The four scenarios in the Breakdown forecast table match to two decimal places.
+  - [x] A `BREAKDOWN_REPAIR` raises `a`. A `PREVENTIVE` interval raises only `b`.
+  - [x] Events before `installedOn`, or with a different manufacturer or model snapshot, are ignored.
+  - [x] The basis rules hold, including `NOT_SUPPORTED` for non-pumps.
+  - [x] The timeframe uses the 0.15 threshold.
+  - [x] The end-of-life date and the 12-year flag.
+- [x] `AssetEventControllerTests`:
+  - [x] Each type returns its category (`MAINTENANCE` for both).
+  - [x] Create and list ordering.
+  - [x] The manufacturer and model snapshot, and `countsTowardForecast`.
+  - [x] 400s, 404s and 409s.
+  - [x] The recorder snapshot.
+  - [x] A missing JWT subject is rejected.
+- [x] `FailureRiskControllerTests`:
+  - [x] The per-asset response.
+  - [x] The estate list holds pumps only, in the right order.
+  - [x] All three flag reasons, including a `CONDITION` flag from a system assessment.
+  - [x] Deactivated assets are excluded from the list.
+  - [x] Another owner gets 404.
+- [x] `AnomalyFeatureTests` (unit): features match the 0b parity fixture.
+- [x] `AnomalyCheckControllerTests`, with `apps/ml` replaced by a stub server returning fixed scores:
+  - [x] 10 abnormal readings in a row record `NEEDS_ATTENTION` or `FAULTY`, per the median rule.
+  - [x] 9 in a row record nothing.
+  - [x] No duplicate when the condition is unchanged.
+  - [x] The system identity, date and notes are correct.
+  - [x] The 400s, 404s and 409s from Edge cases.
+  - [x] The stub timing out, or returning 503, gives 503 and records nothing.
+- [x] `DeviceMetric` includes `VIBRATION_ACCELERATION` with unit `g`.
+- [x] Run the tests and confirm they fail.
 
 ### 4. API (green, `add-endpoint` skill)
 - [ ] Package `com.proj.server.catalogue` for the categories endpoint, the find-or-create service and the lookup controller. `AssetService` calls it on create and edit.

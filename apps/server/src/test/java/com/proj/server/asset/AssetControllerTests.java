@@ -159,7 +159,7 @@ class AssetControllerTests {
                     request.locationId(),
                     reference,
                     request.name(),
-                    request.category().name(),
+                    request.category(),
                     request.installedOn(),
                     request.serialNumber(),
                     now,
@@ -271,7 +271,7 @@ class AssetControllerTests {
                 .create(
                         estateId,
                         "SUNRISE-A0001",
-                        new CreateAssetRequest("Lift 1", AssetCategory.LIFT, lobbyId, null, null, null, "SN-1"));
+                        new CreateAssetRequest("Lift 1", "LIFT", lobbyId, null, null, null, "SN-1"));
     }
 
     @ParameterizedTest(name = "rejects {0}")
@@ -337,7 +337,7 @@ class AssetControllerTests {
     @Test
     void updatesTheFieldsAndMovesTheAssetButNeverTheReference() throws Exception {
         var moved = new UpdateAssetRequest(
-                "Lift 1A", AssetCategory.PUMP, plantRoomId, LocalDate.parse("2021-01-02"), "Grundfos", null, null);
+                "Lift 1A", "PUMP", plantRoomId, LocalDate.parse("2021-01-02"), "Grundfos", null, null);
         var stored = asset(plantRoomId, null);
         stored.setName("Lift 1A");
         stored.setCategory("PUMP");
