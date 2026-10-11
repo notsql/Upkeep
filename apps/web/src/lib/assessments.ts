@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Assessment = components["schemas"]["AssetAssessmentResponse"];
@@ -66,8 +67,14 @@ export function useRecordAssessment(estateId: string, assetId: string) {
       return data;
     },
     onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: assessmentsQueryKey(userId, estateId, assetId),
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+        queryClient.invalidateQueries({
+          queryKey: assessmentsQueryKey(userId, estateId, assetId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "assets", estateId],
+        }),
+      ]),
   });
 }

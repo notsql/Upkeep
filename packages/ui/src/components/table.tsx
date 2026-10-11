@@ -6,10 +6,13 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
     <div
       data-slot="table-container"
       className="relative w-full overflow-x-auto"
+      role="region"
+      aria-label={props["aria-label"] ? `${props["aria-label"]} table` : "Scrollable table"}
+      tabIndex={0}
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-xs", className)}
+        className={cn("w-full caption-bottom text-sm", className)}
         {...props}
       />
     </div>

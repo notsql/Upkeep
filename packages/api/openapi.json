@@ -6,6 +6,95 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/estates/{estateId}/members/{userId}/invitation-permission": {
+      "put": {
+        "tags": ["council-controller"],
+        "operationId": "permission",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationPermissionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Invitation permission saved" }
+        }
+      }
+    },
     "/api/admin/users/{userId}/estates/{estateId}": {
       "put": {
         "tags": ["estate-user-controller"],
@@ -313,6 +402,12 @@
             "in": "path",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "default": false }
           }
         ],
         "responses": {
@@ -486,7 +581,288 @@
         }
       }
     },
+    "/estates/{estateId}/council-invitations": {
+      "get": {
+        "tags": ["council-controller"],
+        "operationId": "outstanding",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Outstanding invitations, including sending and expired invitations",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CouncilInvitationResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["council-controller"],
+        "operationId": "invite",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CouncilInvitationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Invitation sent",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CouncilInvitationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets": {
+      "get": {
+        "tags": ["asset-controller"],
+        "operationId": "listAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LIFT",
+                "PUMP",
+                "GENERATOR",
+                "LIGHTING",
+                "FIRE_SAFETY",
+                "HVAC",
+                "ELECTRICAL",
+                "OTHER"
+              ]
+            }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "condition",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY", "UNASSESSED"]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ACTIVE",
+              "enum": ["ACTIVE", "INACTIVE", "ALL"]
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset register",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AssetResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": ["asset-controller"],
         "operationId": "createAsset",
@@ -541,6 +917,76 @@
           },
           "201": {
             "description": "Asset registered with a generated reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{id}/restore": {
+      "post": {
+        "tags": ["asset-controller"],
+        "operationId": "restoreAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RestoreAssetRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset restored",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/AssetResponse" }
@@ -894,6 +1340,162 @@
         }
       }
     },
+    "/council-invitations/{invitationId}/accept": {
+      "post": {
+        "tags": ["council-controller"],
+        "operationId": "acceptInApp",
+        "parameters": [
+          {
+            "name": "invitationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Explicitly accept one in-app estate invitation",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInvitationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/council-invitations/accept": {
+      "post": {
+        "tags": ["council-controller"],
+        "operationId": "accept",
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Estate memberships activated from verified WorkOS acceptances",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInvitationsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{id}": {
       "get": {
         "tags": ["estate-controller"],
@@ -1212,6 +1814,78 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{id}/retirement": {
+      "patch": {
+        "tags": ["asset-controller"],
+        "operationId": "correctAssetRetirement",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetirementCorrectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Retirement information corrected",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health-controller"],
@@ -1222,6 +1896,270 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/members": {
+      "get": {
+        "tags": ["council-controller"],
+        "operationId": "members",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Estate members and invitation permissions",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateMemberResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{id}/lifecycle-events": {
+      "get": {
+        "tags": ["asset-controller"],
+        "operationId": "listAssetLifecycleEvents",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or wrong confirmation reference",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset or location, or a conflicting change",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset lifecycle history, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetLifecycleEventResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/dashboard/summary": {
+      "get": {
+        "tags": ["dashboard-controller"],
+        "summary": "Summarise your estates and active assets in estates you own",
+        "operationId": "summary",
+        "responses": {
+          "200": {
+            "description": "User-scoped portfolio summary",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Summary temporarily unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/council-invitations": {
+      "get": {
+        "tags": ["council-controller"],
+        "operationId": "pending",
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Pending in-app invitations for the verified signed-in recipient",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PendingCouncilInvitationResponse"
+                  }
+                }
               }
             }
           }
@@ -1346,10 +2284,173 @@
           }
         }
       }
+    },
+    "/estates/{estateId}/members/{userId}": {
+      "delete": {
+        "tags": ["council-controller"],
+        "operationId": "removeMember",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Member access removed from this estate" }
+        }
+      }
+    },
+    "/estates/{estateId}/council-invitations/{invitationId}": {
+      "delete": {
+        "tags": ["council-controller"],
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "invitationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Invitation cancelled for this estate" }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "InvitationPermissionRequest": {
+        "type": "object",
+        "properties": { "canInviteMembers": { "type": "boolean" } },
+        "required": ["canInviteMembers"]
+      },
       "EstateError": {
         "type": "object",
         "properties": { "message": { "type": "string" } },
@@ -1387,7 +2488,9 @@
             "type": ["string", "null"],
             "format": "date-time"
           },
-          "owned": { "type": "boolean" }
+          "owned": { "type": "boolean" },
+          "canInviteMembers": { "type": "boolean" },
+          "canManageInvitationPermissions": { "type": "boolean" }
         },
         "required": [
           "address",
@@ -1440,6 +2543,29 @@
           "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["createdAt", "id", "name", "type", "updatedAt"]
+      },
+      "CouncilInvitationRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "minLength": 0
+          }
+        },
+        "required": ["email"]
+      },
+      "CouncilInvitationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "email": { "type": "string" },
+          "status": { "type": "string" },
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["email", "estateId", "expiresAt", "id", "status"]
       },
       "CreateAssetRequest": {
         "type": "object",
@@ -1501,13 +2627,24 @@
           "serialNumber": { "type": ["string", "null"] },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
-          "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" },
+          "currentCondition": {
+            "type": ["string", "null"],
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          }
         },
         "required": [
           "category",
           "createdAt",
           "estateId",
           "id",
+          "lifecycleVersion",
           "locationId",
           "locationPath",
           "name",
@@ -1515,12 +2652,40 @@
           "updatedAt"
         ]
       },
+      "RestoreAssetRequest": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "reference"]
+      },
       "DeactivateAssetRequest": {
         "type": "object",
         "properties": {
-          "reference": { "type": "string", "maxLength": 60, "minLength": 0 }
+          "reference": { "type": "string", "maxLength": 60, "minLength": 0 },
+          "retiredOn": { "type": "string", "format": "date" },
+          "retirementReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
         },
-        "required": ["reference"]
+        "required": [
+          "expectedVersion",
+          "reference",
+          "retiredOn",
+          "retirementReason"
+        ]
       },
       "CreateDeviceRequest": {
         "type": "object",
@@ -1653,6 +2818,16 @@
           "recordedByUserId"
         ]
       },
+      "AcceptedInvitationsResponse": {
+        "type": "object",
+        "properties": {
+          "estateIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" }
+          }
+        },
+        "required": ["estateIds"]
+      },
       "UpdateLocationRequest": {
         "type": "object",
         "properties": {
@@ -1691,6 +2866,23 @@
         },
         "required": ["category", "locationId", "name"]
       },
+      "RetirementCorrectionRequest": {
+        "type": "object",
+        "properties": {
+          "retiredOn": { "type": "string", "format": "date" },
+          "retirementReason": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 0
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "retiredOn", "retirementReason"]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -1699,6 +2891,114 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
+      },
+      "EstateMemberResponse": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "canInviteMembers": { "type": "boolean" }
+        },
+        "required": ["canInviteMembers", "email", "name", "userId"]
+      },
+      "AssetLifecycleEventResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "action": { "type": "string" },
+          "occurredAt": { "type": "string", "format": "date-time" },
+          "actorUserId": { "type": "string" },
+          "previousDeactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "previousRetiredOn": { "type": ["string", "null"], "format": "date" },
+          "previousRetirementReason": { "type": ["string", "null"] },
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" }
+        },
+        "required": [
+          "action",
+          "actorUserId",
+          "id",
+          "lifecycleVersion",
+          "occurredAt"
+        ]
+      },
+      "DashboardConditionCounts": {
+        "type": "object",
+        "properties": {
+          "good": { "type": "integer", "format": "int64" },
+          "needsAttention": { "type": "integer", "format": "int64" },
+          "faulty": { "type": "integer", "format": "int64" },
+          "unassessed": { "type": "integer", "format": "int64" }
+        },
+        "required": ["faulty", "good", "needsAttention", "unassessed"]
+      },
+      "DashboardEstateSummary": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "estateCode": { "type": "string" },
+          "totalActiveAssets": { "type": "integer", "format": "int64" },
+          "needsAttentionCount": { "type": "integer", "format": "int64" },
+          "faultyCount": { "type": "integer", "format": "int64" }
+        },
+        "required": [
+          "estateCode",
+          "estateId",
+          "estateName",
+          "faultyCount",
+          "needsAttentionCount",
+          "totalActiveAssets"
+        ]
+      },
+      "DashboardSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "accessibleEstateCount": { "type": "integer", "format": "int32" },
+          "activeEstateCount": { "type": "integer", "format": "int32" },
+          "inactiveEstateCount": { "type": "integer", "format": "int32" },
+          "activeOwnedEstateCount": { "type": "integer", "format": "int32" },
+          "councilMemberCount": { "type": "integer", "format": "int64" },
+          "totalActiveAssets": { "type": "integer", "format": "int64" },
+          "conditionCounts": {
+            "$ref": "#/components/schemas/DashboardConditionCounts"
+          },
+          "affectedEstateCount": { "type": "integer", "format": "int32" },
+          "estatesNeedingAttention": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardEstateSummary" }
+          }
+        },
+        "required": [
+          "accessibleEstateCount",
+          "activeEstateCount",
+          "activeOwnedEstateCount",
+          "affectedEstateCount",
+          "conditionCounts",
+          "councilMemberCount",
+          "estatesNeedingAttention",
+          "inactiveEstateCount",
+          "totalActiveAssets"
+        ]
+      },
+      "PendingCouncilInvitationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["estateId", "estateName", "expiresAt", "id"]
       },
       "EstateUserResponse": {
         "type": "object",

@@ -20,6 +20,8 @@ apps/server/src/test/java/       # JUnit, standard Maven layout
 `tests/` mirrors `src/`. A test for `src/routes/thing.tsx` belongs at
 `tests/routes/thing.test.tsx`. Import the code under test through the `@/`
 alias (`@/components/loader`), never with a long relative path.
+Shared test helpers can use `@tests/test-utils`; `@tests/*` maps to `apps/web/tests/*`
+in the web tsconfig, which Vite and Vitest both resolve natively.
 
 ## Commands
 
@@ -29,6 +31,30 @@ pnpm --filter web test:watch       # the red-green loop
 ```
 
 ---
+
+## Recovering stale Java build output
+
+If an HTTP test expects a DTO field present in Java source but absent from the
+response, inspect the compiled class before changing the test. For example,
+`javap apps/server/target/classes/com/proj/server/dashboard/DashboardSummaryResponse.class`
+must include `councilMemberCount()`. Outdated cached classes caused this exact
+failure on 2026-10-09; recompiling current source passed all 211 Java tests.
+
+Clean generated Java output and reset both Nx cache and workspace metadata:
+
+```bash
+MAVEN_ARGS=-o pnpm nx run server:clean --skip-nx-cache
+pnpm nx reset
+MAVEN_ARGS=-o UV_NO_SYNC=1 pnpm test
+```
+
+Use the full reset here: `nx reset --onlyCache` left task-cache records behind
+in this installed Nx version. A run reporting success with **No tests to run**
+after cached compilation is not valid regression evidence. Confirm actual
+test reports and current compiled classes. To force all tasks to execute,
+run `MAVEN_ARGS=-o UV_NO_SYNC=1 pnpm test --skip-nx-cache`.
+These commands affect generated artifacts and task metadata, not database data,
+Git changes or dependencies. Docker must still be available for Java tests.
 
 ## Test-driven development
 

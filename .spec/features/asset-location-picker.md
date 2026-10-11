@@ -40,7 +40,7 @@ None. Create and PATCH already require an active location in the same estate.
   trade-off the location hierarchy spec makes.
 - The picker matches on the **whole path**, so typing "Blk 101" lists
   everything inside that block. It filters `flattenLocations(...)` on
-  `path.join(" ")`. The existing `searchLocations` matches only a node's own
+  `path.join(" ")`. The hierarchy's existing name search matches only a node's own
   name, and returns nothing for an empty query. `locations-section.tsx` uses
   it, so leave it unchanged.
 - With an empty query, the picker lists every active location in tree order.

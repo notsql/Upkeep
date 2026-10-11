@@ -1,13 +1,16 @@
 package com.proj.server.workos;
 
 import com.proj.server.admin.AdminUserResponse;
+import com.proj.server.estate.CouncilIdentity;
 import com.workos.WorkOS;
 import com.workos.common.exceptions.WorkOSException;
+import com.workos.common.http.RequestOptions;
 import com.workos.models.SlimRole;
 import com.workos.organizationmembership.CreateUserRole;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,9 +19,65 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
-public class WorkOSService {
+public class WorkOSService implements CouncilIdentity {
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(WorkOSService.class);
     private final WorkOS client;
     private final String apiKey;
+
+    @Override
+    public Person user(String userId) {
+        return execute(() -> {
+            var user = client.getUserManagement().get(userId);
+            return new Person(
+                    user.getId(),
+                    formatName(user.getFirstName(), user.getLastName(), user.getEmail()),
+                    user.getEmail(),
+                    user.getEmailVerified());
+        });
+    }
+
+    @Override
+    public Invitation send(UUID requestId, String email, String inviterUserId) {
+        return execute(() -> {
+            try {
+                return invitationResponse(client.getUserManagement()
+                        .sendInvitation(
+                                email,
+                                null,
+                                null,
+                                7L,
+                                inviterUserId,
+                                null,
+                                RequestOptions.builder()
+                                        .idempotencyKey(requestId.toString())
+                                        .build()));
+            } catch (com.workos.common.exceptions.BadRequestException exception) {
+                if (!"user_already_exists".equals(exception.code)) throw exception;
+                return new Invitation(
+                        null,
+                        email,
+                        "existing_account",
+                        java.time.OffsetDateTime.now().plusDays(7),
+                        null,
+                        null);
+            }
+        });
+    }
+
+    @Override
+    public Invitation invitation(String invitationId) {
+        return execute(() -> invitationResponse(client.getUserManagement().getInvitation(invitationId)));
+    }
+
+    private static Invitation invitationResponse(com.workos.models.Invitation invitation) {
+        return new Invitation(
+                invitation.getId(),
+                invitation.getEmail(),
+                invitation.getState().getValue(),
+                invitation.getExpiresAt(),
+                invitation.getAcceptedUserId(),
+                invitation.getAcceptedAt());
+    }
 
     @Autowired
     public WorkOSService(@Value("${app.workos.api-key}") String apiKey) {
@@ -109,6 +168,11 @@ public class WorkOSService {
         try {
             return operation.get();
         } catch (WorkOSException exception) {
+            LOGGER.warn(
+                    "WorkOS request failed: status={}, code={}, requestId={}",
+                    exception.status,
+                    exception.code,
+                    exception.requestId);
             throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "WorkOS request failed", exception);
         }
     }

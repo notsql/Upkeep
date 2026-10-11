@@ -12,12 +12,6 @@ export interface LocationNode extends Location {
   path: string[];
 }
 
-export const locationTypeLabel: Record<LocationType, string> = {
-  BLOCK: "Block",
-  LEVEL: "Level",
-  COMMON_AREA: "Common area",
-};
-
 export function locationsQueryKey(
   userId: string | undefined,
   estateId: string
@@ -25,16 +19,23 @@ export function locationsQueryKey(
   return ["estates", userId, "locations", estateId] as const;
 }
 
-export function useLocations(estateId: string) {
+export function useLocations(estateId: string, includeInactive = false) {
   const { userId, ready } = useEstateSession();
   return useQuery({
-    queryKey: locationsQueryKey(userId, estateId),
+    queryKey: includeInactive
+      ? [...locationsQueryKey(userId, estateId), "all"]
+      : locationsQueryKey(userId, estateId),
     enabled: ready,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(
         "/estates/{estateId}/locations",
-        { params: { path: { estateId } } }
+        {
+          params: {
+            path: { estateId },
+            ...(includeInactive ? { query: { includeInactive: true } } : {}),
+          },
+        }
       );
       if (error || !data) {
         throw estateError(error, response.status);
@@ -52,7 +53,12 @@ export function buildLocationTree(locations: Location[]): LocationNode[] {
   const children = new Map<string | undefined, Location[]>();
   for (const location of locations) {
     const key = location.parentId ?? undefined;
-    children.set(key, [...(children.get(key) ?? []), location]);
+    const siblings = children.get(key);
+    if (siblings) {
+      siblings.push(location);
+    } else {
+      children.set(key, [location]);
+    }
   }
   const build = (parentId: string | undefined, path: string[]) =>
     (children.get(parentId) ?? []).map((location): LocationNode => {
@@ -75,17 +81,24 @@ export function flattenLocations(locations: Location[]): LocationNode[] {
   return flatten(buildLocationTree(locations));
 }
 
-export function searchLocations(
-  locations: Location[],
+/** Reveal matching locations with their ancestors; matching parents keep their subtree. */
+export function filterLocationTree(
+  tree: LocationNode[],
   query: string
 ): LocationNode[] {
   const needle = query.trim().toLowerCase();
   if (!needle) {
-    return [];
+    return tree;
   }
-  return flattenLocations(locations).filter((node) =>
-    node.name.toLowerCase().includes(needle)
-  );
+  const filter = (nodes: LocationNode[]): LocationNode[] =>
+    nodes.flatMap((node) => {
+      if (node.name.toLowerCase().includes(needle)) {
+        return [node];
+      }
+      const children = filter(node.children);
+      return children.length ? [{ ...node, children }] : [];
+    });
+  return filter(tree);
 }
 
 /** Levels are usually added bottom-up, so suggest one above the highest. */

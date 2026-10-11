@@ -1,15 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/page-header";
 import {
   type AssetInput,
   useAsset,
   useCreateAsset,
   useUpdateAsset,
 } from "@/lib/assets";
+import { useEstate } from "@/lib/estates";
 import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 
 export function NewAssetPage({ estateId }: { estateId: string }) {
+  const estate = useEstate(estateId);
   const create = useCreateAsset(estateId);
   const navigate = useNavigate();
   const save = useCallback(
@@ -23,8 +26,11 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
     },
     [create.mutateAsync, navigate, estateId]
   );
+  const cancel = useCallback(() => {
+    navigate({ to: "/estates/$estateId/assets", params: { estateId } });
+  }, [navigate, estateId]);
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-8">
+    <main className="page-layout max-w-3xl">
       <Link
         className="text-sm underline"
         params={{ estateId }}
@@ -32,8 +38,25 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
       >
         Back to estate
       </Link>
-      <h1 className="mt-6 font-semibold text-2xl">Register asset</h1>
-      <AssetForm estateId={estateId} onSave={save} />
+      <PageHeader
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          {
+            label: estate.data?.name ?? "Estate",
+            to: "/estates/$estateId",
+            params: { estateId },
+          },
+          {
+            label: "Assets",
+            to: "/estates/$estateId/assets",
+            params: { estateId },
+          },
+          { label: "Register asset" },
+        ]}
+        description="Add equipment and its location to this estate."
+        title="Register asset"
+      />
+      <AssetForm estateId={estateId} onCancel={cancel} onSave={save} />
     </main>
   );
 }
@@ -45,6 +68,7 @@ export function EditAssetPage({
   estateId: string;
   assetId: string;
 }) {
+  const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
   const update = useUpdateAsset(estateId, assetId);
   const navigate = useNavigate();
@@ -59,8 +83,14 @@ export function EditAssetPage({
     },
     [update.mutateAsync, navigate, estateId, assetId]
   );
+  const cancel = useCallback(() => {
+    navigate({
+      to: "/estates/$estateId/assets/$assetId",
+      params: { estateId, assetId },
+    });
+  }, [navigate, estateId, assetId]);
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-8">
+    <main className="page-layout max-w-3xl">
       <Link
         className="text-sm underline"
         params={{ estateId, assetId }}
@@ -68,7 +98,24 @@ export function EditAssetPage({
       >
         Back to asset
       </Link>
-      <h1 className="mt-6 font-semibold text-2xl">Edit asset</h1>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          {
+            label: estate.data?.name ?? "Estate",
+            to: "/estates/$estateId",
+            params: { estateId },
+          },
+          {
+            label: "Assets",
+            to: "/estates/$estateId/assets",
+            params: { estateId },
+          },
+          { label: "Edit asset" },
+        ]}
+        description="Update equipment details without changing its reference."
+        title="Edit asset"
+      />
       {asset.isPending ? (
         <p aria-live="polite" className="mt-6">
           Loading asset…
@@ -89,6 +136,7 @@ export function EditAssetPage({
           estateId={estateId}
           initialValues={asset.data}
           key={asset.data.id}
+          onCancel={cancel}
           onSave={save}
         />
       ) : null}

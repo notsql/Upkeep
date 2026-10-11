@@ -7,16 +7,22 @@ export const Route = createFileRoute("/api/auth/sign-in/")({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
-        const requestedPath = new URL(request.url).searchParams.get(
-          "returnPathname"
-        );
-        const returnPathname = sanitizeReturnTo(requestedPath);
+        const search = new URL(request.url).searchParams;
+        const invitationToken = search.get("invitation_token");
+        const returnPathname = invitationToken
+          ? "/estates"
+          : sanitizeReturnTo(search.get("returnPathname"));
 
         try {
-          const url = await getSignInUrl({ data: { returnPathname } });
+          const url = new URL(await getSignInUrl({ data: { returnPathname } }));
+          // The installed AuthKit wrapper creates PKCE state but does not expose
+          // this supported authorization parameter in its options.
+          if (invitationToken) {
+            url.searchParams.set("invitation_token", invitationToken);
+          }
 
           return new Response(null, {
-            headers: { Location: url },
+            headers: { Location: url.toString() },
             status: 307,
           });
         } catch {

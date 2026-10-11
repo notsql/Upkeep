@@ -21,6 +21,7 @@
     "noUncheckedSideEffectImports": true,
     "paths": {
       "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"],
       "@proj/ui/*": ["../../packages/ui/src/*"]
     }
   }

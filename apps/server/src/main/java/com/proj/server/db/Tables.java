@@ -6,8 +6,10 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 
@@ -29,6 +31,11 @@ public class Tables {
     public static final Assetassessment ASSETASSESSMENT = Assetassessment.ASSETASSESSMENT;
 
     /**
+     * The table <code>public.AssetLifecycleEvent</code>.
+     */
+    public static final Assetlifecycleevent ASSETLIFECYCLEEVENT = Assetlifecycleevent.ASSETLIFECYCLEEVENT;
+
+    /**
      * The table <code>public.Device</code>.
      */
     public static final Device DEVICE = Device.DEVICE;
@@ -37,6 +44,11 @@ public class Tables {
      * The table <code>public.Estate</code>.
      */
     public static final Estate ESTATE = Estate.ESTATE;
+
+    /**
+     * The table <code>public.EstateInvitation</code>.
+     */
+    public static final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
 
     /**
      * The table <code>public.EstateUser</code>.

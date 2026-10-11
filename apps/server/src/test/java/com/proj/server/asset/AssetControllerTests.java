@@ -94,7 +94,10 @@ class AssetControllerTests {
                 "SN-1",
                 now,
                 now,
-                deactivatedAt);
+                deactivatedAt,
+                0,
+                null,
+                null);
     }
 
     @BeforeEach
@@ -133,7 +136,8 @@ class AssetControllerTests {
     }
 
     private static String deactivation(String reference) {
-        return "{\"reference\":\"" + reference + "\"}";
+        return "{\"reference\":\"" + reference
+                + "\",\"retiredOn\":\"2025-01-01\",\"retirementReason\":\"Worn out\",\"expectedVersion\":0}";
     }
 
     /** Echoes the create request back as the stored row, as the database would. */
@@ -154,6 +158,9 @@ class AssetControllerTests {
                     request.serialNumber(),
                     now,
                     now,
+                    null,
+                    0,
+                    null,
                     null);
         });
     }
@@ -195,7 +202,7 @@ class AssetControllerTests {
                 .andExpect(status().isNotFound());
         verify(repository, never()).create(any(), any(), any());
         verify(repository, never()).update(any(), any());
-        verify(repository, never()).deactivate(any());
+        verify(repository, never()).transition(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -207,7 +214,7 @@ class AssetControllerTests {
                 .andExpect(status().isConflict());
         verify(repository, never()).create(any(), any(), any());
         verify(repository, never()).update(any(), any());
-        verify(repository, never()).deactivate(any());
+        verify(repository, never()).transition(any(), any(), any(), any(), any());
     }
 
     // --- Create ---
@@ -381,7 +388,8 @@ class AssetControllerTests {
 
     @Test
     void deactivatesTheAssetWhenItsExactReferenceIsTyped() throws Exception {
-        when(repository.deactivate(assetId)).thenReturn(asset(lobbyId, now));
+        when(repository.transition(any(), eq("RETIRED"), eq("owner"), any(), eq("Worn out")))
+                .thenReturn(asset(lobbyId, now));
         mvc.perform(asOwner(post(one + "/deactivate"), deactivation("SUNRISE-A0001")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(assetId.toString()))
@@ -395,17 +403,16 @@ class AssetControllerTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").isNotEmpty());
         mvc.perform(asOwner(post(one + "/deactivate"), "{}")).andExpect(status().isBadRequest());
-        verify(repository, never()).deactivate(any());
+        verify(repository, never()).transition(any(), any(), any(), any(), any());
     }
 
     @Test
-    void repeatedDeactivationKeepsTheOriginalTimestamp() throws Exception {
+    void repeatedRetirementIsRejectedWithoutChangingHistory() throws Exception {
         when(repository.find(assetId, estateId, true))
                 .thenReturn(Optional.of(asset(lobbyId, OffsetDateTime.parse("2026-01-01T00:00:00Z"))));
         mvc.perform(asOwner(post(one + "/deactivate"), deactivation("SUNRISE-A0001")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.deactivatedAt").value("2026-01-01T00:00:00Z"));
-        verify(repository, never()).deactivate(any());
+                .andExpect(status().isConflict());
+        verify(repository, never()).transition(any(), any(), any(), any(), any());
     }
 
     @Test

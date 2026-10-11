@@ -1,3 +1,5 @@
+> Superseded for ID-47 register/search delivery by [retire-assets.md](retire-assets.md). The combined agreed spec uses derived assessment conditions and owner-only access.
+
 # Asset search and details
 
 **Status:** draft

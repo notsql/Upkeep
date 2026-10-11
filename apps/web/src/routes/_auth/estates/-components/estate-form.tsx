@@ -1,17 +1,19 @@
 import type { components } from "@proj/api/schema";
-import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { Textarea } from "@proj/ui/components/textarea";
 import { type SubmitEvent, useCallback, useState } from "react";
+import { FormActions } from "@/components/form-actions";
 
 type EstateInput = components["schemas"]["EstateRequest"];
 
 export function EstateForm({
   initialValues,
   onSave,
+  onCancel,
 }: {
   initialValues?: EstateInput | components["schemas"]["EstateResponse"];
+  onCancel?: () => void;
   onSave: (values: EstateInput) => Promise<unknown>;
 }) {
   const [error, setError] = useState<string>();
@@ -48,7 +50,10 @@ export function EstateForm({
   const submitLabel = initialValues ? "Save changes" : "Create estate";
   const buttonLabel = pending ? "Saving…" : submitLabel;
   return (
-    <form className="mt-6 grid gap-5" onSubmit={handleSubmit}>
+    <form className="form-surface mt-6 grid gap-5" onSubmit={handleSubmit}>
+      <p className="text-muted-foreground text-sm">
+        All fields are required unless marked optional.
+      </p>
       <fieldset className="grid gap-5" disabled={pending}>
         <legend className="sr-only">Estate details</legend>
         <div className="grid gap-2">
@@ -110,9 +115,7 @@ export function EstateForm({
           {error}
         </p>
       ) : null}
-      <Button className="justify-self-start" disabled={pending} type="submit">
-        {buttonLabel}
-      </Button>
+      <FormActions label={buttonLabel} onCancel={onCancel} pending={pending} />
     </form>
   );
 }

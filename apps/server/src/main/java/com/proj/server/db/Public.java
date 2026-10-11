@@ -6,8 +6,10 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
+import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
 
@@ -44,6 +46,11 @@ public class Public extends SchemaImpl {
     public final Assetassessment ASSETASSESSMENT = Assetassessment.ASSETASSESSMENT;
 
     /**
+     * The table <code>public.AssetLifecycleEvent</code>.
+     */
+    public final Assetlifecycleevent ASSETLIFECYCLEEVENT = Assetlifecycleevent.ASSETLIFECYCLEEVENT;
+
+    /**
      * The table <code>public.Device</code>.
      */
     public final Device DEVICE = Device.DEVICE;
@@ -52,6 +59,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.Estate</code>.
      */
     public final Estate ESTATE = Estate.ESTATE;
+
+    /**
+     * The table <code>public.EstateInvitation</code>.
+     */
+    public final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
 
     /**
      * The table <code>public.EstateUser</code>.
@@ -81,8 +93,10 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             Asset.ASSET,
             Assetassessment.ASSETASSESSMENT,
+            Assetlifecycleevent.ASSETLIFECYCLEEVENT,
             Device.DEVICE,
             Estate.ESTATE,
+            Estateinvitation.ESTATEINVITATION,
             Estateuser.ESTATEUSER,
             Location.LOCATION
         );

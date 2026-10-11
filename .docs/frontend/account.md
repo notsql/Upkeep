@@ -17,7 +17,12 @@ loader data (`getRouteApi("/_auth").useLoaderData().user`) and shows a
 - **Name** - `firstName lastName`, or "Not provided".
 - **Email** - `user.email`.
 
-Read-only. No shadcn components.
+Read-only. Uses shared `PageHeader` with Home / Account breadcrumbs and the
+`detail-grid` summary surface. No edits or API calls are introduced.
+
+Desktop entry: Settings in the circular top-right profile menu. Mobile entry:
+Settings in the fixed mobile More menu. Settings opens
+this existing read-only profile screen; it does not introduce editable settings.
 
 ## Endpoints
 
