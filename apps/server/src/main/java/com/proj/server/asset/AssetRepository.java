@@ -85,11 +85,10 @@ public class AssetRepository {
     public java.util.List<AssetResponse> list(
             UUID estateId,
             String q,
-            AssetCategory category,
+            String category,
             UUID locationId,
             AssetConditionFilter condition,
             AssetStatus status) {
-        String categoryName = category == null ? null : category.name();
         String conditionName = condition == null ? null : condition.name();
         return db.resultQuery(
                         """
@@ -127,8 +126,8 @@ public class AssetRepository {
                         q,
                         q,
                         q,
-                        categoryName,
-                        categoryName,
+                        category,
+                        category,
                         locationId,
                         conditionName,
                         conditionName,
@@ -155,7 +154,7 @@ public class AssetRepository {
                 row.getEstateid(),
                 row.getReference(),
                 row.getName(),
-                AssetCategory.valueOf(row.getCategory()),
+                row.getCategory(),
                 row.getLocationid(),
                 path,
                 row.getInstalledon(),

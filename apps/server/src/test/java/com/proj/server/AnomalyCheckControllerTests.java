@@ -97,14 +97,14 @@ class AnomalyCheckControllerTests {
          */
         private String predictResponse() {
             String labels = scores.stream().map(s -> s >= 0.5 ? "1" : "0").collect(Collectors.joining(","));
-            String probabilities = scores.stream()
-                    .map(s -> "[" + (1 - s) + "," + s + "]")
-                    .collect(Collectors.joining(","));
+            String probabilities =
+                    scores.stream().map(s -> "[" + (1 - s) + "," + s + "]").collect(Collectors.joining(","));
             return "{\"outputs\":{\"label\":[" + labels + "],\"probabilities\":[" + probabilities + "]}}";
         }
 
         String url() {
-            return "http://" + server.getAddress().getHostString() + ":" + server.getAddress().getPort();
+            return "http://" + server.getAddress().getHostString() + ":"
+                    + server.getAddress().getPort();
         }
     }
 
@@ -323,7 +323,9 @@ class AnomalyCheckControllerTests {
     void doesNotRecordTheSameConditionTwice() throws Exception {
         ML.scores = withRunOfTen(FAULTY_RUN);
 
-        check(batch(readings(20))).andExpect(status().isOk()).andExpect(jsonPath("$.conditionRecorded").value("FAULTY"));
+        check(batch(readings(20)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conditionRecorded").value("FAULTY"));
         check(batch(readings(20)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.longestAbnormalRun").value(10))
@@ -337,7 +339,9 @@ class AnomalyCheckControllerTests {
         assessment("FAULTY", "2026-02-01");
         ML.scores = withRunOfTen(FAULTY_RUN);
 
-        check(batch(readings(20))).andExpect(status().isOk()).andExpect(jsonPath("$.conditionRecorded").isEmpty());
+        check(batch(readings(20)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conditionRecorded").isEmpty());
 
         assertEquals(1, assessments().size());
     }
@@ -349,7 +353,9 @@ class AnomalyCheckControllerTests {
         assessment("GOOD", "2026-02-01");
         ML.scores = withRunOfTen(FAULTY_RUN);
 
-        check(batch(readings(20))).andExpect(status().isOk()).andExpect(jsonPath("$.conditionRecorded").value("FAULTY"));
+        check(batch(readings(20)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.conditionRecorded").value("FAULTY"));
 
         assertEquals(3, assessments().size());
     }
@@ -383,13 +389,14 @@ class AnomalyCheckControllerTests {
     }
 
     @ParameterizedTest
-    @ValueSource(
-            strings = {"timestamp", "vibrationAcceleration", "pressure", "temperature", "flowRate", "power"})
+    @ValueSource(strings = {"timestamp", "vibrationAcceleration", "pressure", "temperature", "flowRate", "power"})
     void rejectsAMissingValue(String field) throws Exception {
         ML.scores = scores(10, 0.99);
         List<String> readings = readings(10);
         // Drop the field from the fifth reading.
-        readings.set(4, readings.get(4).replaceFirst(",?\"" + field + "\":[^,}]+", "").replace("{,", "{"));
+        readings.set(
+                4,
+                readings.get(4).replaceFirst(",?\"" + field + "\":[^,}]+", "").replace("{,", "{"));
 
         check(batch(readings)).andExpect(status().isBadRequest());
 
@@ -414,7 +421,9 @@ class AnomalyCheckControllerTests {
         List<String> readings = readings(10);
         Collections.reverse(readings);
 
-        check(batch(readings)).andExpect(status().isOk()).andExpect(jsonPath("$.readingsScored").value(10));
+        check(batch(readings))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.readingsScored").value(10));
     }
 
     @Test

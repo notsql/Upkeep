@@ -118,7 +118,10 @@ class CatalogueIntegrationTests {
         assertEquals(1, manufacturersContainingToken());
         assertEquals(1, modelsContainingToken());
 
-        create("PUMP", "  grundfos   " + token.toLowerCase(Locale.ROOT) + " ", "cr  3   " + token.toLowerCase(Locale.ROOT))
+        create(
+                        "PUMP",
+                        "  grundfos   " + token.toLowerCase(Locale.ROOT) + " ",
+                        "cr  3   " + token.toLowerCase(Locale.ROOT))
                 .andExpect(status().isCreated());
         assertEquals(1, manufacturersContainingToken());
         assertEquals(1, modelsContainingToken());
@@ -186,7 +189,9 @@ class CatalogueIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].category").value("HVAC"));
-        lookup(models, "category", "LIFT").andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        lookup(models, "category", "LIFT")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
@@ -232,7 +237,8 @@ class CatalogueIntegrationTests {
     @Test
     void theModelsLookupRejectsAnUnknownManufacturerOrCategory() throws Exception {
         var acme = manufacturer("ACME " + token);
-        lookup("/manufacturers/" + UUID.randomUUID() + "/models", "category", "PUMP").andExpect(status().isNotFound());
+        lookup("/manufacturers/" + UUID.randomUUID() + "/models", "category", "PUMP")
+                .andExpect(status().isNotFound());
         lookup("/manufacturers/" + acme + "/models", "category", "ROCKET").andExpect(status().isBadRequest());
         lookup("/manufacturers/" + acme + "/models").andExpect(status().isBadRequest());
     }

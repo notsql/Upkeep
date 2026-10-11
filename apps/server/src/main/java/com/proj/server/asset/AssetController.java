@@ -90,7 +90,7 @@ public class AssetController {
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID estateId,
             @RequestParam(required = false) String q,
-            @RequestParam(required = false) AssetCategory category,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) UUID locationId,
             @RequestParam(required = false) AssetConditionFilter condition,
             @RequestParam(defaultValue = "ACTIVE") AssetStatus status) {

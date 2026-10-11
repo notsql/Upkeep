@@ -167,7 +167,7 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `VITE_AUTH_IDLE_TIMEOUT_MINUTES` | `apps/web` | Browser inactivity before AuthKit sign-out. Defaults to `30`; keep it aligned with the WorkOS Sessions policy. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |
 | `SERVER_PORT` | `apps/server` | Defaults to `8080`. |
-| `ML_API_URL` | `apps/server` | Where Spring reaches `apps/ml`. Set by `docker-compose.yml`; not read by any code until the ML client exists. |
+| `ML_API_URL` | `apps/server` | Where Spring reaches `apps/ml`, read by `MlClient` (anomaly check, 5-second timeout). Set by `docker-compose.yml`; defaults to `http://localhost:8000` for `pnpm dev`. |
 | `ML_MODEL_PATH` | `apps/ml` | Defaults to `models/model.onnx`. |
 | `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm docker:up`. |
 

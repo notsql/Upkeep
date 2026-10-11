@@ -200,7 +200,8 @@ class FailureRiskCalculatorTests {
     @Test
     void aNonPumpIsNotSupportedAndHasNoProbabilities() {
         var lift = new RiskAsset("LIFT", daysAgo(400), null, null);
-        var forecast = calculator.forecast(lift, List.of(new RiskEvent(BREAKDOWN_REPAIR, daysAgo(10), null, null)), TODAY);
+        var forecast =
+                calculator.forecast(lift, List.of(new RiskEvent(BREAKDOWN_REPAIR, daysAgo(10), null, null)), TODAY);
         assertEquals(FailureRiskBasis.NOT_SUPPORTED, forecast.basis());
         assertNull(forecast.probability30Days());
         assertNull(forecast.probability60Days());

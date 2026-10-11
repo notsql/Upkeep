@@ -43,6 +43,7 @@ public class AssetService {
     @Transactional
     public AssetResponse create(UUID estateId, String owner, CreateAssetRequest request) {
         var estate = lockActiveEstate(estateId, owner);
+        checkCatalogue(request.category(), request.manufacturer(), request.model());
         checkLocation(estateId, request.locationId());
         var reference = "%s-A%04d".formatted(estate.code(), repository.count(estateId) + 1);
         return response(repository.create(estateId, reference, request));
@@ -55,6 +56,7 @@ public class AssetService {
         if (asset.getDeactivatedat() != null) {
             throw new AssetException(HttpStatus.CONFLICT, "This asset is deactivated and cannot be changed.");
         }
+        checkCatalogue(request.category(), request.manufacturer(), request.model());
         checkLocation(estateId, request.locationId());
         return response(repository.update(id, request));
     }
@@ -63,7 +65,7 @@ public class AssetService {
             UUID estateId,
             String owner,
             String q,
-            AssetCategory category,
+            String category,
             UUID locationId,
             AssetConditionFilter condition,
             AssetStatus status) {
@@ -139,6 +141,16 @@ public class AssetService {
             throw new AssetException(HttpStatus.CONFLICT, "This estate is inactive. Its assets cannot be changed.");
         }
         return estate;
+    }
+
+    /** The repository finds or creates the manufacturer and model; this rejects what it cannot store. */
+    private void checkCatalogue(String category, String manufacturer, String model) {
+        if (!catalogue.categoryExists(category)) {
+            throw new AssetException(HttpStatus.BAD_REQUEST, "category: unknown asset category.");
+        }
+        if (model != null && manufacturer == null) {
+            throw new AssetException(HttpStatus.BAD_REQUEST, "manufacturer: required when a model is given.");
+        }
     }
 
     private void checkLocation(UUID estateId, UUID locationId) {

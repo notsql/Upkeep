@@ -512,17 +512,17 @@ not touch `apps/`, install nothing, and commit nothing.
 - [x] Run the tests and confirm they fail.
 
 ### 4. API (green, `add-endpoint` skill)
-- [ ] Package `com.proj.server.catalogue` for the categories endpoint, the find-or-create service and the lookup controller. `AssetService` calls it on create and edit.
-- [ ] Remove the `AssetCategory` enum. Asset DTOs take and return the code as a `String`, validated against the table.
-- [ ] Package `com.proj.server.event` for events, with the `AssetEventCategory` and `AssetEventType` enums.
-- [ ] Package `com.proj.server.risk` for the calculator, the pump constants, the silent-failure set and the controller.
-- [ ] Package `com.proj.server.anomaly`:
+- [x] Package `com.proj.server.catalogue` for the categories endpoint, the find-or-create service and the lookup controller. `AssetService` calls it on create and edit.
+- [x] Remove the `AssetCategory` enum. Asset DTOs take and return the code as a `String`, validated against the table.
+- [x] Package `com.proj.server.event` for events, with the `AssetEventCategory` and `AssetEventType` enums.
+- [x] Package `com.proj.server.risk` for the calculator, the pump constants, the silent-failure set and the controller.
+- [x] Package `com.proj.server.anomaly`:
   - the feature builder and the model constants
   - an `MlClient` for `POST /predict` that reads `ML_API_URL`, with a 5-second timeout
   - the controller
-- [ ] Add `VIBRATION_ACCELERATION("g")` to `DeviceMetric`.
+- [x] Add `VIBRATION_ACCELERATION("g")` to `DeviceMetric`.
 - [ ] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
-- [ ] Update `architecture.md`: `ML_API_URL` is now read by the server.
+- [x] Update `architecture.md`: `ML_API_URL` is now read by the server.
 
 ### 5. Web tests (red)
 - [ ] `tests/lib/asset-events.test.ts` and `tests/lib/failure-risk.test.ts`:

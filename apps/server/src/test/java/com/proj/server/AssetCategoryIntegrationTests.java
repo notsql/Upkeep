@@ -122,8 +122,9 @@ class AssetCategoryIntegrationTests {
         var seeded = db.select(ASSETCATEGORY.CODE).from(ASSETCATEGORY).fetchSet(ASSETCATEGORY.CODE);
         assertTrue(
                 seeded.containsAll(AssetCategoryCodes.KEYED),
-                () -> "Codes without a seeded AssetCategory row: " + AssetCategoryCodes.KEYED.stream()
-                        .filter(code -> !seeded.contains(code))
-                        .toList());
+                () -> "Codes without a seeded AssetCategory row: "
+                        + AssetCategoryCodes.KEYED.stream()
+                                .filter(code -> !seeded.contains(code))
+                                .toList());
     }
 }

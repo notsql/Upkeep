@@ -98,12 +98,16 @@ class AssetEventIntegrationTests {
     }
 
     String manufacturerName(UUID id) {
-        return db.fetchValue("select name from \"Manufacturer\" where id = ?", id).toString();
+        return db.fetchValue("select name from \"Manufacturer\" where id = ?", id)
+                .toString();
     }
 
     void replaceUnit(UUID manufacturer, UUID model) {
         db.execute(
-                "update \"Asset\" set \"manufacturerId\" = ?::uuid, \"modelId\" = ?::uuid where id = ?", manufacturer, model, assetId);
+                "update \"Asset\" set \"manufacturerId\" = ?::uuid, \"modelId\" = ?::uuid where id = ?",
+                manufacturer,
+                model,
+                assetId);
     }
 
     static MockHttpServletRequestBuilder as(String subject, MockHttpServletRequestBuilder request) {
@@ -170,7 +174,8 @@ class AssetEventIntegrationTests {
     @Test
     void listsEventsNewestFirstByDateThenRecordedTime() throws Exception {
         mvc.perform(record(body("PREVENTIVE", "2025-01-01", "Oldest"))).andExpect(status().isCreated());
-        mvc.perform(record(body("BREAKDOWN_REPAIR", "2026-05-01", "Newest date"))).andExpect(status().isCreated());
+        mvc.perform(record(body("BREAKDOWN_REPAIR", "2026-05-01", "Newest date")))
+                .andExpect(status().isCreated());
         mvc.perform(record(body("PREVENTIVE", "2025-06-01", "Back-dated"))).andExpect(status().isCreated());
         // Two on the same date: the later-recorded one comes first.
         insertEvent("PREVENTIVE", "2024-03-01", "Same day, recorded first", "2026-01-01T00:00:00Z");
@@ -231,7 +236,8 @@ class AssetEventIntegrationTests {
     @Test
     void movingInstalledOnLaterStopsEarlierEventsCounting() throws Exception {
         mvc.perform(record(body("BREAKDOWN_REPAIR", "2024-01-01", "Before"))).andExpect(status().isCreated());
-        mvc.perform(record(body("BREAKDOWN_REPAIR", "2025-01-01", "On the day"))).andExpect(status().isCreated());
+        mvc.perform(record(body("BREAKDOWN_REPAIR", "2025-01-01", "On the day")))
+                .andExpect(status().isCreated());
         db.execute("update \"Asset\" set \"installedOn\" = '2025-01-01' where id = ?", assetId);
         mvc.perform(as("owner", get(events)))
                 .andExpect(status().isOk())
@@ -255,7 +261,8 @@ class AssetEventIntegrationTests {
         mvc.perform(record(body("PREVENTIVE", "2019-12-31", "Fine")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").isNotEmpty());
-        mvc.perform(record(body("PREVENTIVE", "2020-01-01", "On the install date"))).andExpect(status().isCreated());
+        mvc.perform(record(body("PREVENTIVE", "2020-01-01", "On the install date")))
+                .andExpect(status().isCreated());
     }
 
     @ParameterizedTest
@@ -269,7 +276,9 @@ class AssetEventIntegrationTests {
                 "{\"type\":\"PREVENTIVE\",\"occurredOn\":\"2026-09-01\"}"
             })
     void rejectsMissingOrInvalidDetails(String json) throws Exception {
-        mvc.perform(record(json)).andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").isNotEmpty());
+        mvc.perform(record(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty());
         assertNoEvents();
     }
 

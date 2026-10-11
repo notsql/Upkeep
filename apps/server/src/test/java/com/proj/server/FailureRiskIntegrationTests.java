@@ -2,8 +2,8 @@ package com.proj.server;
 
 import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.closeTo;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.hamcrest.Matchers.nullValue;
@@ -218,8 +218,7 @@ class FailureRiskIntegrationTests {
         mvc.perform(as("owner", get(one(pump))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.flagged").value(true))
-                .andExpect(
-                        jsonPath("$.flagReasons", containsInAnyOrder("CONDITION", "FAILURE_RISK", "END_OF_LIFE")));
+                .andExpect(jsonPath("$.flagReasons", containsInAnyOrder("CONDITION", "FAILURE_RISK", "END_OF_LIFE")));
     }
 
     @Test

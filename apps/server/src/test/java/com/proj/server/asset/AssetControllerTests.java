@@ -110,6 +110,9 @@ class AssetControllerTests {
     void setup() {
         when(catalogue.manufacturerName(manufacturerId)).thenReturn("Otis");
         when(catalogue.modelName(modelId)).thenReturn("Gen2");
+        // The seeded AssetCategory rows these tests use; any other code (e.g. ROCKET) is unknown.
+        when(catalogue.categoryExists("LIFT")).thenReturn(true);
+        when(catalogue.categoryExists("PUMP")).thenReturn(true);
         when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(null)));
         when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
         when(locations.find(blockId, estateId))
