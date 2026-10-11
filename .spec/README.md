@@ -37,6 +37,7 @@ code, it belongs here.
 | `building-assets.md` | ID-46 | draft |
 | `asset-location-picker.md` | ID-54 | draft |
 | `asset-search.md` | ID-47 | draft |
+| `failure-risk.md` | ID-32 | draft |
 | [ui-redesign.md](features/ui-redesign.md) | ID-93 | implemented; current iteration accepted by user; Git merge/PR review pending |
 | [portfolio-home-and-estate-directory.md](features/portfolio-home-and-estate-directory.md) | ID-93 follow-up | implemented; current iteration accepted by user; Git merge/PR review pending |
 

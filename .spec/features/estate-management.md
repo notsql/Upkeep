@@ -1,6 +1,6 @@
 # Estate management
 
-**Status:** built; asset/report creation enforcement deferred
+**Status:** built; report creation enforcement deferred
 
 ## Problem
 
@@ -47,9 +47,10 @@ validation and scoped queries. jOOQ sources are generated from the migrated Neon
 ## Out of scope
 
 Manager memberships, invitations, ownership transfer, deletion and reactivation.
-Asset/report creation does not exist yet. The acceptance criterion blocking new
-assets/reports remains pending: those future transactions must lock the estate
-row, check its active state, and insert the child record in the same transaction.
+Asset creation now enforces this criterion (see building-assets.md): it locks
+the estate row, checks its active state and inserts the asset in the same
+transaction. Report creation does not exist yet, and must do the same when it
+is built.
 
 ## Verification
 
@@ -59,5 +60,5 @@ UI tests cover forms, failure recovery, exact-code confirmation/cancellation,
 empty/error lists, status filtering, owner-keyed caches and inactive details.
 The migration and both code generators ran against the feature Neon branch.
 The owner confirmed the manual create/edit/deactivate and access-isolation checks
-passed. Database concurrency remains unverified; asset/report creation is not
-implemented.
+passed. Asset creation's estate lock is covered by `AssetControllerTests`.
+Report creation is not implemented.
