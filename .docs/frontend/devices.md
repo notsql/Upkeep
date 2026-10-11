@@ -34,7 +34,8 @@ Types: `Device` = `DeviceResponse`, `DeviceInput` = `CreateDeviceRequest`
 `DeviceMetric`.
 
 Constants: `deviceMetrics` (catalogue, in server order): `TEMPERATURE` °C,
-`HUMIDITY` %, `PRESSURE` bar, `FLOW_RATE` L/min, `VIBRATION` mm/s, `POWER` kW,
+`HUMIDITY` %, `PRESSURE` bar, `FLOW_RATE` L/min, `VIBRATION` mm/s,
+`VIBRATION_ACCELERATION` "Vibration acceleration" g, `POWER` kW,
 `ENERGY` kWh. `MAX_REPORTING_INTERVAL_SECONDS = 86_400`.
 `formatInterval(s)` gives "Every second" / "Every N seconds".
 

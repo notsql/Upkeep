@@ -13,7 +13,7 @@ are relative to `apps/web/src/`; route folders below are under
 | `$assetId/index.tsx` | `/estates/$estateId/assets/$assetId` | `estateId`, `assetId` | "Asset details" | `AssetDetailsPage` |
 | `$assetId/edit/index.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
 
-Entry point: Assets section beneath Locations on estate details. Owners have View assets and, for active estates, Register asset. Details link back to the register and estate.
+Entry point: Assets section beneath Locations on estate details. Owners have View assets and, for active estates, Register asset. Owners also get a "Failure risk" link to `/estates/$estateId/failure-risk` (see [failure-risk.md](failure-risk.md)). Details link back to the register and estate.
 
 ## Screens and components
 
@@ -21,19 +21,22 @@ Entry point: Assets section beneath Locations on estate details. Owners have Vie
 | --- | --- | --- |
 | `NewAssetPage` (`assets/-components/asset-editor-page.tsx`) | `AssetForm` with no initial values. On save: toast "Asset {reference} registered.", navigate to the new asset's details. | - |
 | `EditAssetPage` (same file) | Loads the asset. If deactivated, shows "can no longer be edited" instead of the form. On save: toast "Asset details updated.", navigate to details. | - |
-| `AssetForm` (`assets/-components/asset-form.tsx`) | Read-only "Reference" when editing. Fields: `name` (req, max 200), `category` (req, select from `assetCategoryLabel`), `locationId` (req, select of `flattenLocations` paths from `useLocations`), `installedOn` (date, optional), `manufacturer`, `model`, `serialNumber` (optional, max 200). Client-side required checks; blank optional fields are omitted from the payload. | `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` |
-| `AssetDetailsPage` (`assets/$assetId/-components/asset-details-page.tsx`) | Name, Active/Retired status, reference, category, `locationPath`, installation date, manufacturer, model, serial number ("Not recorded" when absent). While active: "Edit asset" link and "Retire asset" button. Below: `AssetConditionSection` and `AssetDevicesSection` (see [devices.md](devices.md)); both disable writes when deactivated. | `Button`, `buttonVariants` (Edit asset link) |
+| `AssetForm` (`assets/-components/asset-form.tsx`) | Read-only "Reference" when editing. Fields: `name` (req, max 200), `category` (req, select from `useAssetCategories`; placeholder "Loading categories…" while pending, error shown with `role="alert"`), `locationId` (req, select of `flattenLocations` paths from `useLocations`), `installedOn` (date, optional), `manufacturer`, `model`, `serialNumber` (optional, max 200). Manufacturer and model are `SuggestField` comboboxes (free text, max 200): typing suggests names from `useManufacturers`; model suggestions come from `useAssetModels` only once a listed manufacturer was picked and a category is set. Any text is accepted; an unlisted name is added to the catalogue on save. Client-side required checks; blank optional fields are omitted from the payload. | `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Combobox`, `ComboboxInput`, `ComboboxContent`, `ComboboxList`, `ComboboxItem` |
+| `AssetDetailsPage` (`assets/$assetId/-components/asset-details-page.tsx`) | Name, Active/Retired status, reference, category (label from `useAssetCategories`, code as fallback), `locationPath`, installation date, manufacturer, model, serial number ("Not recorded" when absent). While active: "Edit asset" link and "Retire asset" button. Below: `AssetForecastCard` (category `PUMP` only), `AssetMaintenanceSection`, `AssetConditionSection` and `AssetDevicesSection` (see [devices.md](devices.md)); writes are disabled when deactivated. | `Button`, `buttonVariants` (Edit asset link) |
 | `DeactivateAssetDialog` (`assets/$assetId/-components/deactivate-asset-dialog.tsx`) | Always-open modal; exact reference plus retirement date and trimmed reason are required. Dates default to Singapore today and cannot precede known installation or exceed today. Submits the displayed lifecycle version. Closing blocked while pending. On success: toast "Asset retired. Its record has been preserved." | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label`, `Textarea` |
-| `AssetConditionSection` (`assets/$assetId/-components/asset-condition-section.tsx`) | "Condition" section: current condition (`role="status"`, `aria-label="Current condition"`, first item of the list, or "Not assessed yet"), "Record assessment" button (when `canRecord`), and a History list (condition, assessed date, notes, recorded by and at). Record assessment opens a Dialog with Cancel; pending submission blocks dismissal. On save: close dialog, toast "Assessment recorded." | `Button`, `Dialog`, `ConditionBadge` |
+| `AssetConditionSection` (`assets/$assetId/-components/asset-condition-section.tsx`) | "Condition" section: current condition (`role="status"`, `aria-label="Current condition"`, first item of the list, or "Not assessed yet"), "Record assessment" button (when `canRecord`), and a History list (condition, assessed date, notes, recorded by and at). Assessments whose `recordedByUserId` is `system:anomaly-model` show "Recorded by Anomaly detection". Record assessment opens a Dialog with Cancel; pending submission blocks dismissal. On save: close dialog, toast "Assessment recorded." | `Button`, `Dialog`, `ConditionBadge` |
+| `AssetForecastCard` (`assets/$assetId/-components/asset-forecast-card.tsx`) | "Breakdown forecast" card from `useAssetFailureRisk`. Loading "Loading forecast…", error `role="alert"`. Flag reasons as destructive badges after "Flagged for a check:". If `noForecastReason` gives "Not supported" / "Not enough data", shows that; else Within 30/60/90 days (`formatProbability`), Recommended check (`timeframeLabel`), Breakdowns observed. Always "Expected end of life: {date or Not recorded}". See [failure-risk.md](failure-risk.md). | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `Badge` |
+| `AssetMaintenanceSection` (`assets/$assetId/-components/asset-maintenance-section.tsx`) | "Maintenance" section: "Record repair" button (when `canRecord`, i.e. not deactivated) opens `RecordEventDialog` defaulting to `BREAKDOWN_REPAIR`. Lists events: type label, `occurredOn`, a secondary "Previous unit" badge when `countsTowardForecast` is false, notes, recorded by and at. Empty: "No maintenance recorded yet." On save: close dialog, toast "Event recorded." | `Button`, `Badge` |
+| `RecordEventDialog` (`assets/$assetId/-components/record-event-dialog.tsx`) | Always-open "Record event" modal. Fields: `type` (req select, `assetEventTypeLabel`), `occurredOn` "Event date" (req, defaults to `localToday()`, not in the future), `notes` (req, max 2000, trimmed). Cancel and the close button are disabled while pending; failures keep input and show the error. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Textarea` |
 | `AssessmentForm` (`assets/$assetId/-components/assessment-form.tsx`) | Fields: `condition` (req, `GOOD` / `NEEDS_ATTENTION` / `FAULTY`), `assessedOn` (req date, defaults to `localToday()`, not in the future), `notes` (req, max 2000, trimmed). | `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Textarea` |
 
 ## Data
 
 ### `lib/assets.ts`
 
-Types: `Asset` = `AssetResponse`, `AssetInput` = `CreateAssetRequest`,
-`AssetCategory` (`LIFT`, `PUMP`, `GENERATOR`, `LIGHTING`, `FIRE_SAFETY`,
-`HVAC`, `ELECTRICAL`, `OTHER`; labels in `assetCategoryLabel`).
+Types: `Asset` = `AssetResponse`, `AssetInput` = `CreateAssetRequest`.
+Category codes and labels come from the server (`lib/catalogue.ts`); there is
+no client-side category list.
 
 Query key: `assetQueryKey(userId, estateId, assetId)` =
 `["estates", userId, "assets", estateId, assetId]`.
@@ -46,6 +49,41 @@ Query key: `assetQueryKey(userId, estateId, assetId)` =
 | `useDeactivateAsset(estateId, assetId)` | `POST /estates/{estateId}/assets/{id}/deactivate` body `{ reference, retiredOn, retirementReason, expectedVersion }` | `setQueryData(assetQueryKey(...), data)` |
 
 Every asset mutation sets the returned detail cache and invalidates `["estates", userId, "assets", estateId]`, refreshing lists and lifecycle history.
+
+### `lib/catalogue.ts`
+
+Types: `AssetCategoryOption` = `AssetCategoryResponse`, `Manufacturer` =
+`ManufacturerResponse`, `AssetModel` = `AssetModelResponse`. Helper:
+`categoryLabel(categories, code)` (label, or the code while unknown), used by
+the register table/cards.
+
+| Hook | Endpoint | Query key |
+| --- | --- | --- |
+| `useAssetCategories()` | `GET /asset-categories` (ordered by label; `staleTime: Infinity`) | `["catalogue", userId, "categories"]` |
+| `useManufacturers(query)` | `GET /manufacturers?query=` (enabled only for non-blank `query`) | `["catalogue", userId, "manufacturers", query]` |
+| `useAssetModels(manufacturerId, category, query)` | `GET /manufacturers/{manufacturerId}/models?category=&query=` (enabled once both are set) | `["catalogue", userId, "models", manufacturerId, category, query]` |
+
+Read-only; no mutations. The register filter and the `category` URL search
+param also use the server's categories: any non-blank code passes validation
+and the server rejects unknown ones. API: [api/catalogue.md](../api/catalogue.md).
+
+### `lib/asset-events.ts`
+
+Types: `AssetEvent` = `AssetEventResponse`, `AssetEventInput` =
+`CreateAssetEventRequest` (`type`, `occurredOn`, `notes`), `AssetEventType`.
+Labels: `assetEventTypeLabel` (`BREAKDOWN_REPAIR` "Breakdown repair",
+`PREVENTIVE` "Preventive maintenance").
+
+Query key: `assetEventsQueryKey(userId, estateId, assetId)` = asset detail key
+plus `"events"`.
+
+| Hook | Endpoint | On success |
+| --- | --- | --- |
+| `useAssetEvents(estateId, assetId)` | `GET /estates/{estateId}/assets/{assetId}/events` | query |
+| `useRecordAssetEvent(estateId, assetId)` | `POST /estates/{estateId}/assets/{assetId}/events` | invalidate `assetEventsQueryKey(...)` and `estateFailureRiskQueryKey(userId, estateId)` (estate and per-asset forecasts) |
+
+API: [api/asset-events.md](../api/asset-events.md). Anomaly-detection
+assessments: [api/anomaly-check.md](../api/anomaly-check.md).
 
 ### `lib/assessments.ts`
 

@@ -1,6 +1,6 @@
 # Failure risk
 
-**Status:** agreed
+**Status:** built
 **Owner:** Zheng Kai
 **Jira:** [ID-32](https://notjira.atlassian.net/browse/ID-32) (epic [ID-10](https://notjira.atlassian.net/browse/ID-10) Council Dashboard and Budgeting; method from [ID-7](https://notjira.atlassian.net/browse/ID-7))
 
@@ -521,7 +521,7 @@ not touch `apps/`, install nothing, and commit nothing.
   - an `MlClient` for `POST /predict` that reads `ML_API_URL`, with a 5-second timeout
   - the controller
 - [x] Add `VIBRATION_ACCELERATION("g")` to `DeviceMetric`.
-- [ ] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
+- [x] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
 - [x] Update `architecture.md`: `ML_API_URL` is now read by the server.
 
 ### 5. Web tests (red)
@@ -547,25 +547,25 @@ not touch `apps/`, install nothing, and commit nothing.
 - [x] Run `pnpm nx test web` and confirm the tests fail.
 
 ### 6. Web (green)
-- [ ] `src/lib/asset-events.ts`, `src/lib/failure-risk.ts` and `src/lib/catalogue.ts` (categories, manufacturers, models).
-- [ ] Replace `assetCategoryLabel` in `src/lib/assets.ts` with the categories query. The asset form, list and details page read labels from it.
-- [ ] Asset form: manufacturer and model become comboboxes that allow free text. Add shadcn `combobox` with the CLI (§4) if it is missing.
-- [ ] Asset detail page:
-  - [ ] A "Maintenance" section listing events, with the ones that don't count marked "Previous unit".
-  - [ ] A "Record repair" button opening the record-event dialog, with the type defaulting to `BREAKDOWN_REPAIR`.
-  - [ ] A forecast card, shown for pumps.
-  - [ ] System assessments in the condition history are labelled "Anomaly detection".
-- [ ] Route `_auth/estates/$estateId/failure-risk/index.tsx`, with its components in `-components/`, linked from the estate details page.
-- [ ] Use shadcn components throughout.
-- [ ] No upload screen for readings: devices and scripts call the endpoint directly.
+- [x] `src/lib/asset-events.ts`, `src/lib/failure-risk.ts` and `src/lib/catalogue.ts` (categories, manufacturers, models).
+- [x] Replace `assetCategoryLabel` in `src/lib/assets.ts` with the categories query. The asset form, list and details page read labels from it.
+- [x] Asset form: manufacturer and model become comboboxes that allow free text. Add shadcn `combobox` with the CLI (§4) if it is missing.
+- [x] Asset detail page:
+  - [x] A "Maintenance" section listing events, with the ones that don't count marked "Previous unit".
+  - [x] A "Record repair" button opening the record-event dialog, with the type defaulting to `BREAKDOWN_REPAIR`.
+  - [x] A forecast card, shown for pumps.
+  - [x] System assessments in the condition history are labelled "Anomaly detection".
+- [x] Route `_auth/estates/$estateId/failure-risk/index.tsx`, with its components in `-components/`, linked from the estate details page.
+- [x] Use shadcn components throughout.
+- [x] No upload screen for readings: devices and scripts call the endpoint directly.
 
 ### 7. Finish
-- [ ] Docs:
+- [x] Docs:
   - New: `.docs/api/catalogue.md` (categories, manufacturers, models), `.docs/api/asset-events.md`, `.docs/api/failure-risk.md`, `.docs/api/anomaly-check.md`, `.docs/frontend/failure-risk.md`.
   - Update: `.docs/frontend/assets.md`, `.docs/frontend/devices.md` and `.docs/README.md`.
-- [ ] Run `pnpm fix`, `pnpm check-types` and `pnpm test`.
-- [ ] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with the code.
-- [ ] Set this spec's status to built.
+- [x] Run `pnpm fix`, `pnpm check-types` and `pnpm test`.
+- [x] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with the code.
+- [x] Set this spec's status to built.
 
 ## Estimates and why
 
