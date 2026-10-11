@@ -6,12 +6,16 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetcategory;
+import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
+import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manufacturer;
 
 
 /**
@@ -31,9 +35,24 @@ public class Tables {
     public static final Assetassessment ASSETASSESSMENT = Assetassessment.ASSETASSESSMENT;
 
     /**
+     * The table <code>public.AssetCategory</code>.
+     */
+    public static final Assetcategory ASSETCATEGORY = Assetcategory.ASSETCATEGORY;
+
+    /**
+     * The table <code>public.AssetEvent</code>.
+     */
+    public static final Assetevent ASSETEVENT = Assetevent.ASSETEVENT;
+
+    /**
      * The table <code>public.AssetLifecycleEvent</code>.
      */
     public static final Assetlifecycleevent ASSETLIFECYCLEEVENT = Assetlifecycleevent.ASSETLIFECYCLEEVENT;
+
+    /**
+     * The table <code>public.AssetModel</code>.
+     */
+    public static final Assetmodel ASSETMODEL = Assetmodel.ASSETMODEL;
 
     /**
      * The table <code>public.Device</code>.
@@ -59,4 +78,9 @@ public class Tables {
      * The table <code>public.Location</code>.
      */
     public static final Location LOCATION = Location.LOCATION;
+
+    /**
+     * The table <code>public.Manufacturer</code>.
+     */
+    public static final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
 }

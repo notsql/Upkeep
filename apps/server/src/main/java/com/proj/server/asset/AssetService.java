@@ -1,5 +1,6 @@
 package com.proj.server.asset;
 
+import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
@@ -21,8 +22,14 @@ public class AssetService {
     private final AssetRepository repository;
     private final LocationRepository locations;
     private final EstateRepository estates;
+    private final CatalogueRepository catalogue;
 
-    public AssetService(AssetRepository repository, LocationRepository locations, EstateRepository estates) {
+    public AssetService(
+            AssetRepository repository,
+            LocationRepository locations,
+            EstateRepository estates,
+            CatalogueRepository catalogue) {
+        this.catalogue = catalogue;
         this.repository = repository;
         this.locations = locations;
         this.estates = estates;
@@ -157,7 +164,11 @@ public class AssetService {
 
     private AssetResponse response(AssetRecord row) {
         return AssetRepository.response(
-                row, locationPath(row.getEstateid(), row.getLocationid()), repository.currentCondition(row.getId()));
+                row,
+                locationPath(row.getEstateid(), row.getLocationid()),
+                catalogue.manufacturerName(row.getManufacturerid()),
+                catalogue.modelName(row.getModelid()),
+                repository.currentCondition(row.getId()));
     }
 
     private static AssetException estateNotFound() {

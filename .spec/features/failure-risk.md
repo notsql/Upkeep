@@ -409,40 +409,40 @@ Each task is self-contained. Read this spec and the named notebook first. Do
 not touch `apps/`, install nothing, and commit nothing.
 
 #### 0a. Compare the Bayesian forecast in notebook 02
-- [ ] **Goal:** add the Bayesian survival method to `notebooks/02-pump-rul.ipynb` as a baseline, evaluated the same way as the existing candidates, so the report can compare it directly with the trained models.
-- [ ] **Method:**
+- [x] **Goal:** add the Bayesian survival method to `notebooks/02-pump-rul.ipynb` as a baseline, evaluated the same way as the existing candidates, so the report can compare it directly with the trained models.
+- [x] **Method:**
   - For each failure cycle, start from a weak prior and update it **only with earlier cycles**, as the app does after each "Repaired" click.
   - Use the notebook's own time scale (hours): the 3-year pump constants above don't apply to this dataset.
   - Fit or justify the prior's `m` and `k` from the training cycles only, and state the weight `a₀` used.
-- [ ] **Report:**
+- [x] **Report:**
   - MAE on the capped hours-to-failure target, using the posterior median.
   - The 24 h / 48 h early-warning table, using P(fail within h) ≥ threshold.
   - Interval coverage, using posterior quantiles.
   - All alongside the existing rows: sensors, sensors + age, age only, mean, service-interval rule.
-- [ ] **Conclusions:** with only 7 failures, the differences are noisy. Say so plainly, and don't pick a winner on noise.
-- [ ] **Output:** update the notebook's conclusions and `artifacts/pump-rul/metrics.json`, then clear the outputs as before.
+- [x] **Conclusions:** with only 7 failures, the differences are noisy. Say so plainly, and don't pick a winner on noise.
+- [x] **Output:** update the notebook's conclusions and `artifacts/pump-rul/metrics.json`, then clear the outputs as before.
 
 #### 0b. Retrain the anomaly model on platform metrics
-- [ ] **New notebook:** `notebooks/03-pump-anomaly-platform-metrics.ipynb`. Keep 01 as the research record and reuse its split, cross-validation and held-out protocol.
-- [ ] **Inputs:** five inputs mapped from SKAB:
+- [x] **New notebook:** `notebooks/03-pump-anomaly-platform-metrics.ipynb`. Keep 01 as the research record and reuse its split, cross-validation and held-out protocol.
+- [x] **Inputs:** five inputs mapped from SKAB:
   - `Accelerometer1RMS` → vibration acceleration (g RMS)
   - `Pressure` → pressure (bar)
   - `Temperature` → temperature (°C)
   - `Volume Flow RateRMS` → flow rate (L/min; confirm SKAB's unit)
   - `Current × Voltage / 1000` → power (kW). State that this ignores power factor.
   - Drop `Accelerometer2RMS` and `Thermocouple`.
-- [ ] **Compare:** set it against notebook 01's 8-sensor result (F1 0.73). Report what was lost and whether the 5-input model is still useful.
-- [ ] **Features:** keep them computable in Spring from the readings alone: raw values and rolling mean and std over the last 10 readings. Export about 50 rows of input readings with their expected features and scores as a parity fixture for the Spring test.
-- [ ] **Export:**
+- [x] **Compare:** set it against notebook 01's 8-sensor result (F1 0.73). Report what was lost and whether the 5-input model is still useful.
+- [x] **Features:** keep them computable in Spring from the readings alone: raw values and rolling mean and std over the last 10 readings. Export about 50 rows of input readings with their expected features and scores as a parity fixture for the Spring test.
+- [x] **Export:**
   - ONNX with an sklearn parity assert.
   - `metrics.json` with the feature order, decision threshold and Faulty threshold.
   - Artifacts in `artifacts/pump-anomaly-platform/`.
-- [ ] **Simulation dataset:** save the held-out test experiments as `artifacts/pump-anomaly-platform/test-readings.csv`, for driving simulated pumps against the anomaly-check endpoint.
+- [x] **Simulation dataset:** save the held-out test experiments as `artifacts/pump-anomaly-platform/test-readings.csv`, for driving simulated pumps against the anomaly-check endpoint.
   - **Columns:** `experiment`, `timestamp`, `vibrationAcceleration`, `pressure`, `temperature`, `flowRate`, `power`, `anomaly`.
   - **Raw readings:** these are readings in platform units, not engineered features. The reading columns use the `AnomalyCheckRequest` field names, so rows can be posted as-is. `anomaly` is the ground truth, for checking what the endpoint flags.
   - **Rows:** ordered by experiment, then timestamp. List the experiments in the README.
-- [ ] **Licence:** record that SKAB is GPL-3.0 and that the model is used for education only.
-- [ ] **Hand-off:** copy `model.onnx` to `apps/ml/models/model.onnx`. It is committed with the Spring constants it matches; see Resolved.
+- [x] **Licence:** record that SKAB is GPL-3.0 and that the model is used for education only.
+- [x] **Hand-off:** copy `model.onnx` to `apps/ml/models/model.onnx`. It is committed with the Spring constants it matches; see Resolved.
 
 ### 1. Decision
 - [x] Add `.spec/decisions/0020-failure-risk-is-a-bayesian-weibull-on-repair-history.md`. It records:
@@ -454,19 +454,19 @@ not touch `apps/`, install nothing, and commit nothing.
   - that model-generated conditions are ordinary assessments under the `system:anomaly-model` identity, rather than a separate table
   - that `VIBRATION_ACCELERATION` (g) is added rather than converting to mm/s
   - that readings are scored, not stored, until ID-43
-- [ ] Add `.spec/decisions/0022-asset-categories-and-models-are-shared-tables.md`. It records:
+- [x] Add `.spec/decisions/0026-asset-categories-and-models-are-shared-tables.md`. It records:
   - why asset categories became a table: assets and models both reference them
   - why manufacturers and models are a shared catalogue, created on the fly and stored uppercase
   - that behaviour stays in code, keyed by category code
   - that the forecast's unit snapshot is catalogue IDs
 
 ### 2. Data (`add-model` skill)
-- [ ] Add `AssetCategory`, `Manufacturer`, `AssetModel` and `AssetEvent`, and change `Asset`, in `schema.prisma`.
-- [ ] Create the migration without applying it (`prisma migrate dev --create-only`, via `pnpm db:migrate -- --create-only`), then add SQL to it that:
+- [x] Add `AssetCategory`, `Manufacturer`, `AssetModel` and `AssetEvent`, and change `Asset`, in `schema.prisma`.
+- [x] Create the migration without applying it (`prisma migrate dev --create-only`, via `pnpm db:migrate -- --create-only`), then add SQL to it that:
   - seeds the 13 categories before the `Asset.category` foreign key is added
   - fills the catalogue from the existing text columns and points each asset at it, before the text columns are dropped
-- [ ] Apply it with `pnpm db:migrate`.
-- [ ] Run `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`, and fix `AssetRepository` and `AssetService`.
+- [x] Apply it with `pnpm db:migrate`.
+- [x] Run `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`, and fix `AssetRepository` and `AssetService`.
 
 ### 3. Server tests (red)
 - [ ] `AssetCategoryControllerTests`:
