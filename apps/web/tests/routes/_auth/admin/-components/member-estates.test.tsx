@@ -73,10 +73,12 @@ describe("MemberEstates", () => {
   it("grants and revokes access through the API", async () => {
     vi.mocked(api.PUT).mockResolvedValue({
       data: undefined,
+      error: undefined,
       response: new Response(null, { status: 204 }),
     });
     vi.mocked(api.DELETE).mockResolvedValue({
       data: undefined,
+      error: undefined,
       response: new Response(null, { status: 204 }),
     });
     renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
@@ -102,7 +104,10 @@ describe("MemberEstates", () => {
   });
 
   it("reports a failed change", async () => {
-    vi.mocked(api.PUT).mockResolvedValue({ error: {} });
+    vi.mocked(api.PUT).mockResolvedValue({
+      error: { message: "failed" },
+      response: new Response(null, { status: 500 }),
+    });
     renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
     fireEvent.click(await screen.findByRole("checkbox", { name: maple }));
     expect((await screen.findByRole("alert")).textContent).toContain(

@@ -7,6 +7,7 @@ import com.workos.common.exceptions.WorkOSException;
 import com.workos.common.http.RequestOptions;
 import com.workos.models.SlimRole;
 import com.workos.organizationmembership.CreateUserRole;
+import com.workos.types.OrganizationMembershipStatus;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -140,13 +141,51 @@ public class WorkOSService implements CouncilIdentity {
         });
     }
 
-    public UserRoles updateRole(String membershipId, UserRoles request) {
+    public synchronized UserRoles updateRole(String authenticatedUserId, String membershipId, UserRoles request) {
         validateRoles(request);
 
-        execute(() -> client.getOrganizationMembership()
-                .update(membershipId, new CreateUserRole.Multiple(request.roleSlugs())));
+        execute(() -> {
+            var memberships = client.getOrganizationMembership();
+            if (!request.roleSlugs().contains("admin")) {
+                var current = memberships.get(membershipId);
+                if (hasRole(current, "admin")) {
+                    if (authenticatedUserId != null && authenticatedUserId.equals(current.getUserId())) {
+                        throw new ResponseStatusException(
+                                HttpStatus.CONFLICT, "You cannot remove your own admin role.");
+                    }
+
+                    String organizationId = current.getOrganizationId();
+                    boolean anotherAdmin = false;
+                    for (var member : memberships
+                            .list(null, null, 100, null, organizationId)
+                            .autoPagingIterable()) {
+                        if (membershipId.equals(member.getId())
+                                || !organizationId.equals(member.getOrganizationId())
+                                || member.getStatus() != OrganizationMembershipStatus.Active) {
+                            continue;
+                        }
+                        if (hasRole(member, "admin")) {
+                            anotherAdmin = true;
+                            break;
+                        }
+                    }
+                    if (!anotherAdmin) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Estate must have at least 1 admin.");
+                    }
+                }
+            }
+            return memberships.update(membershipId, new CreateUserRole.Multiple(request.roleSlugs()));
+        });
 
         return request;
+    }
+
+    private static boolean hasRole(com.workos.models.OrganizationMembership membership, String roleSlug) {
+        var roles = membership.getRoles();
+        return roles == null
+                ? membership.getRole() != null
+                        && roleSlug.equals(membership.getRole().getSlug())
+                : roles.stream().anyMatch(role -> roleSlug.equals(role.getSlug()));
     }
 
     /** A user's name for display, or empty if WorkOS is unavailable. Never throws. */

@@ -7,6 +7,8 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
+- [Admin role updates](api/admin-roles.md): self-demotion and last-active-admin
+  protection for WorkOS organization roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
   retirement, restoration and lifecycle history.

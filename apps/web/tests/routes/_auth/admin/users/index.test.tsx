@@ -91,6 +91,27 @@ it("reports a failed save and keeps the saved role", async () => {
   expect(role.textContent).toContain("Viewer");
   expect(role.textContent).not.toContain("Admin");
 });
+it.each([
+  ["Estate must have at least 1 admin."],
+  ["You cannot remove your own admin role."],
+])("explains a protected role update: %s", async (message) => {
+  put.mockResolvedValue({
+    error: { message },
+    response: new Response(null, { status: 409 }),
+  });
+  renderWithProviders(<Page />);
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Estate" }),
+    "Acme"
+  );
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Role for Casey Doe" }),
+    "Admin"
+  );
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    `Unable to update role: ${message}`
+  );
+});
 it("opens a member's estate access", async () => {
   renderWithProviders(<Page />);
   await chooseOption(

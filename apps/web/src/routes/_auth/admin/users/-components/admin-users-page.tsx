@@ -57,6 +57,25 @@ interface SelectedMember {
 
 type Role = components["schemas"]["Role"];
 
+const ROLE_UPDATE_REASONS = new Set([
+  "Estate must have at least 1 admin.",
+  "You cannot remove your own admin role.",
+]);
+
+function roleUpdateError(error: unknown, status: number | undefined): Error {
+  const message =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+      ? error.message
+      : undefined;
+  if (status === 409 && message && ROLE_UPDATE_REASONS.has(message)) {
+    return new Error(`Unable to update role: ${message}`);
+  }
+  return new Error("Unable to update role");
+}
+
 interface MemberRoleSelectProps {
   currentRole: string;
   disabled: boolean;
@@ -264,13 +283,16 @@ export function AdminUsersPage() {
 
   const roleUpdate = useMutation({
     mutationFn: async ({ membershipId, role }: RoleChange) => {
-      const { error } = await api.PUT("/api/admin/users/{membershipId}/role", {
-        params: { path: { membershipId } },
-        body: { roleSlugs: [role] },
-      });
+      const { error, response } = await api.PUT(
+        "/api/admin/users/{membershipId}/role",
+        {
+          params: { path: { membershipId } },
+          body: { roleSlugs: [role] },
+        }
+      );
 
       if (error) {
-        throw new Error("Unable to update role");
+        throw roleUpdateError(error, response?.status);
       }
     },
     onSuccess: (_data, variables) =>
