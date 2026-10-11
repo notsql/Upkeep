@@ -15,7 +15,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConditionBadge } from "@/components/condition-badge";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
-import { type AssetFilters, assetCategoryLabel, useAssets } from "@/lib/assets";
+import { type AssetFilters, useAssets } from "@/lib/assets";
+import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
 import { flattenLocations, useLocations } from "@/lib/locations";
 import { useMobile } from "@/lib/use-mobile";
@@ -35,6 +36,7 @@ export function AssetRegisterPage({
 }) {
   const mobile = useMobile();
   const assets = useAssets(estateId, filters);
+  const categories = useAssetCategories();
   const estate = useEstate(estateId);
   const locations = useLocations(estateId, true);
   const [search, setSearch] = useState(filters.q ?? "");
@@ -192,7 +194,9 @@ export function AssetRegisterPage({
                     <dl className="grid gap-2 text-sm">
                       <div>
                         <dt className="text-muted-foreground">Category</dt>
-                        <dd>{assetCategoryLabel[asset.category]}</dd>
+                        <dd>
+                          {categoryLabel(categories.data, asset.category)}
+                        </dd>
                       </div>
                       <div>
                         <dt className="text-muted-foreground">Location</dt>
@@ -251,7 +255,9 @@ export function AssetRegisterPage({
                     {asset.name}
                   </Link>
                 </TableCell>
-                <TableCell>{assetCategoryLabel[asset.category]}</TableCell>
+                <TableCell>
+                  {categoryLabel(categories.data, asset.category)}
+                </TableCell>
                 <TableCell>{asset.locationPath}</TableCell>
                 <TableCell>
                   <ConditionBadge condition={asset.currentCondition} />

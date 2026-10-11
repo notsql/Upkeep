@@ -5,10 +5,13 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
-import { assetCategoryLabel, useAsset, useDeactivateAsset } from "@/lib/assets";
+import { useAsset, useDeactivateAsset } from "@/lib/assets";
+import { useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
+import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-forecast-card";
+import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
 
@@ -23,6 +26,7 @@ export function AssetDetailsPage({
 }) {
   const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
+  const categories = useAssetCategories();
   const deactivate = useDeactivateAsset(estateId, assetId);
   const [confirming, setConfirming] = useState(false);
   const openConfirmation = useCallback(() => setConfirming(true), []);
@@ -116,7 +120,11 @@ export function AssetDetailsPage({
             </div>
             <div>
               <dt className="font-medium">Category</dt>
-              <dd>{assetCategoryLabel[asset.data.category]}</dd>
+              <dd>
+                {categories.data?.find(
+                  (category) => category.code === asset.data.category
+                )?.label ?? asset.data.category}
+              </dd>
             </div>
             <div>
               <dt className="font-medium">Location</dt>
@@ -141,6 +149,14 @@ export function AssetDetailsPage({
           </dl>
           <AssetRetirementPanel asset={asset.data} />
           <AssetConditionSection
+            assetId={assetId}
+            canRecord={!asset.data.deactivatedAt}
+            estateId={estateId}
+          />
+          {asset.data.category === "PUMP" ? (
+            <AssetForecastCard assetId={assetId} estateId={estateId} />
+          ) : null}
+          <AssetMaintenanceSection
             assetId={assetId}
             canRecord={!asset.data.deactivatedAt}
             estateId={estateId}

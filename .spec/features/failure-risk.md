@@ -525,26 +525,26 @@ not touch `apps/`, install nothing, and commit nothing.
 - [x] Update `architecture.md`: `ML_API_URL` is now read by the server.
 
 ### 5. Web tests (red)
-- [ ] `tests/lib/asset-events.test.ts` and `tests/lib/failure-risk.test.ts`:
-  - [ ] Query keys include the user and estate IDs.
-  - [ ] Failed requests throw.
-  - [ ] Recording an event invalidates the asset's events and its forecasts.
-- [ ] A test for the record-event dialog:
-  - [ ] Labelled type, date and notes fields.
-  - [ ] Required errors show.
-  - [ ] Submit posts the payload.
-  - [ ] Input is kept on a server error.
-  - [ ] No double submit.
-- [ ] A test for the failure-risk page:
-  - [ ] Rows show the percentages, timeframe, end-of-life date and flag reasons.
-  - [ ] The empty state shows.
-  - [ ] `INSUFFICIENT_DATA` rows say "Not enough data".
-- [ ] The device form offers "Vibration acceleration (g)".
-- [ ] The asset form's category select lists the categories from the endpoint, and the details page shows the label.
-- [ ] The asset form's manufacturer and model fields:
-  - [ ] Suggest catalogue entries as the user types, and suggest models only for the chosen manufacturer and category.
-  - [ ] Accept a name that isn't listed and send it as text.
-- [ ] Run `pnpm nx test web` and confirm the tests fail.
+- [x] `tests/lib/asset-events.test.ts` and `tests/lib/failure-risk.test.ts`:
+  - [x] Query keys include the user and estate IDs.
+  - [x] Failed requests throw.
+  - [x] Recording an event invalidates the asset's events and its forecasts.
+- [x] A test for the record-event dialog:
+  - [x] Labelled type, date and notes fields.
+  - [x] Required errors show.
+  - [x] Submit posts the payload.
+  - [x] Input is kept on a server error.
+  - [x] No double submit.
+- [x] A test for the failure-risk page:
+  - [x] Rows show the percentages, timeframe, end-of-life date and flag reasons.
+  - [x] The empty state shows.
+  - [x] `INSUFFICIENT_DATA` rows say "Not enough data".
+- [x] The device form offers "Vibration acceleration (g)".
+- [x] The asset form's category select lists the categories from the endpoint, and the details page shows the label.
+- [x] The asset form's manufacturer and model fields:
+  - [x] Suggest catalogue entries as the user types, and suggest models only for the chosen manufacturer and category.
+  - [x] Accept a name that isn't listed and send it as text.
+- [x] Run `pnpm nx test web` and confirm the tests fail.
 
 ### 6. Web (green)
 - [ ] `src/lib/asset-events.ts`, `src/lib/failure-risk.ts` and `src/lib/catalogue.ts` (categories, manufacturers, models).

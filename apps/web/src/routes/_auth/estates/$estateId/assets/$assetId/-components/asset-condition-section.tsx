@@ -17,6 +17,9 @@ import {
 } from "@/lib/assessments";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
 
+/** The identity the server records anomaly-detection assessments under. */
+const ANOMALY_MODEL_USER_ID = "system:anomaly-model";
+
 export function AssetConditionSection({
   assetId,
   canRecord,
@@ -122,8 +125,11 @@ export function AssetConditionSection({
                   </p>
                   <p className="mt-2 whitespace-pre-wrap">{assessment.notes}</p>
                   <p className="mt-2 text-muted-foreground">
-                    Recorded by {assessment.recordedByName ?? "Unknown user"} on{" "}
-                    {new Date(assessment.recordedAt).toLocaleString()}
+                    Recorded by{" "}
+                    {assessment.recordedByUserId === ANOMALY_MODEL_USER_ID
+                      ? "Anomaly detection"
+                      : (assessment.recordedByName ?? "Unknown user")}{" "}
+                    on {new Date(assessment.recordedAt).toLocaleString()}
                   </p>
                 </li>
               ))}

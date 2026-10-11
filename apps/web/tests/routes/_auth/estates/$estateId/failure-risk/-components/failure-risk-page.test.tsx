@@ -21,6 +21,9 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 type FailureRisk = components["schemas"]["FailureRiskResponse"];
 
+const PERCENT = /\d+%/;
+const EMPTY = /no assets to forecast/i;
+
 const estate = {
   id: "estate-id",
   name: "Maple Grove",
@@ -115,13 +118,13 @@ describe("FailureRiskPage", () => {
     renderWithProviders(<FailureRiskPage estateId="estate-id" />);
     const row = await rowFor("Transfer pump 2");
     row.getByText("Not enough data");
-    expect(row.queryByText("%")).toBeNull();
+    expect(row.queryByText(PERCENT)).toBeNull();
   });
 
   it("shows an empty state when the estate has nothing to forecast", async () => {
     serve([]);
     renderWithProviders(<FailureRiskPage estateId="estate-id" />);
-    await screen.findByText(/no assets to forecast/i);
+    await screen.findByText(EMPTY);
     expect(screen.queryByRole("table")).toBeNull();
   });
 });

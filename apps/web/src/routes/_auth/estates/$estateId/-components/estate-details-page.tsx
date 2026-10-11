@@ -38,6 +38,15 @@ function EstateActions({
           Edit estate
         </Link>
       ) : null}
+      {estate.owned ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/failure-risk"
+        >
+          Failure risk
+        </Link>
+      ) : null}
       {canManageCouncil ? (
         <Link
           className={buttonVariants({ variant: "outline" })}

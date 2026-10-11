@@ -5,20 +5,7 @@ import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Asset = components["schemas"]["AssetResponse"];
-export type AssetCategory = Asset["category"];
 export type AssetInput = components["schemas"]["CreateAssetRequest"];
-
-/** Every category, in the order the form offers them. */
-export const assetCategoryLabel: Record<AssetCategory, string> = {
-  LIFT: "Lift",
-  PUMP: "Pump",
-  GENERATOR: "Generator",
-  LIGHTING: "Lighting",
-  FIRE_SAFETY: "Fire safety",
-  HVAC: "HVAC",
-  ELECTRICAL: "Electrical",
-  OTHER: "Other",
-};
 
 export function assetQueryKey(
   userId: string | undefined,

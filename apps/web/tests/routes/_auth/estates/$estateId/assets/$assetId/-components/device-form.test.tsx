@@ -88,6 +88,7 @@ describe("DeviceForm", () => {
       "Pressure (bar)",
       "Flow rate (L/min)",
       "Vibration (mm/s)",
+      "Vibration acceleration (g)",
       "Power (kW)",
       "Energy (kWh)",
     ]) {

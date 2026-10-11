@@ -1,3 +1,10 @@
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@proj/ui/components/combobox";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
@@ -16,12 +23,13 @@ import {
   useState,
 } from "react";
 import { FormActions } from "@/components/form-actions";
+import type { Asset, AssetInput } from "@/lib/assets";
 import {
-  type Asset,
-  type AssetCategory,
-  type AssetInput,
-  assetCategoryLabel,
-} from "@/lib/assets";
+  type Manufacturer,
+  useAssetCategories,
+  useAssetModels,
+  useManufacturers,
+} from "@/lib/catalogue";
 import { flattenLocations, useLocations } from "@/lib/locations";
 
 interface FormValues {
@@ -34,14 +42,6 @@ interface FormValues {
   serialNumber: string;
 }
 
-const categoryItems = [
-  { value: "", label: "Select a category" },
-  ...Object.entries(assetCategoryLabel).map(([value, label]) => ({
-    value,
-    label,
-  })),
-];
-
 type RequiredField = "name" | "category" | "locationId";
 type FieldErrors = Partial<Record<RequiredField, string>>;
 
@@ -50,10 +50,6 @@ const requiredMessages: Record<RequiredField, string> = {
   category: "Category is required.",
   locationId: "Location is required.",
 };
-
-function isCategory(value: string): value is AssetCategory {
-  return value in assetCategoryLabel;
-}
 
 function initialFormValues(asset?: Asset): FormValues {
   return {
@@ -68,7 +64,7 @@ function initialFormValues(asset?: Asset): FormValues {
 }
 
 /** Trims every field and leaves blank optional details out. */
-function toPayload(values: FormValues, category: AssetCategory): AssetInput {
+function toPayload(values: FormValues): AssetInput {
   const optional = {
     installedOn: values.installedOn.trim(),
     manufacturer: values.manufacturer.trim(),
@@ -77,12 +73,83 @@ function toPayload(values: FormValues, category: AssetCategory): AssetInput {
   };
   return {
     name: values.name.trim(),
-    category,
+    category: values.category,
     locationId: values.locationId,
     ...Object.fromEntries(
       Object.entries(optional).filter(([, value]) => value !== "")
     ),
   };
+}
+
+/**
+ * A text field that suggests catalogue names as the user types, but accepts
+ * any text: an unlisted name is added to the catalogue on save.
+ */
+function SuggestField({
+  id,
+  label,
+  name,
+  suggestions,
+  value,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  name: string;
+  onChange: (value: string) => void;
+  suggestions: string[];
+  value: string;
+}) {
+  const [open, setOpen] = useState(false);
+  // Typing opens the suggestions; base-ui alone only opens on trusted input.
+  const type = useCallback(
+    (next: string) => {
+      onChange(next);
+      setOpen(true);
+    },
+    [onChange]
+  );
+  const select = useCallback(
+    (next: string | null) => {
+      if (next !== null) {
+        onChange(next);
+      }
+      setOpen(false);
+    },
+    [onChange]
+  );
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Combobox
+        filter={null}
+        inputValue={value}
+        items={suggestions}
+        onInputValueChange={type}
+        onOpenChange={setOpen}
+        onValueChange={select}
+        open={open && suggestions.length > 0}
+        value={value}
+      >
+        <ComboboxInput
+          className="w-full"
+          id={id}
+          maxLength={200}
+          name={name}
+          showTrigger={false}
+        />
+        <ComboboxContent>
+          <ComboboxList>
+            {(item: string) => (
+              <ComboboxItem key={item} value={item}>
+                {item}
+              </ComboboxItem>
+            )}
+          </ComboboxList>
+        </ComboboxContent>
+      </Combobox>
+    </div>
+  );
 }
 
 export function AssetForm({
@@ -112,7 +179,40 @@ export function AssetForm({
     ],
     [locations.data, locations.isPending]
   );
+  const categories = useAssetCategories();
+  // The first item is the placeholder shown while nothing is chosen.
+  const categoryItems = useMemo(
+    () => [
+      {
+        value: "",
+        label: categories.isPending
+          ? "Loading categories…"
+          : "Select a category",
+      },
+      ...(categories.data ?? []).map((category) => ({
+        value: category.code,
+        label: category.label,
+      })),
+    ],
+    [categories.data, categories.isPending]
+  );
   const [values, setValues] = useState(() => initialFormValues(initialValues));
+  // The listed manufacturer the user picked; models are only suggested for it.
+  const [chosenManufacturer, setChosenManufacturer] = useState<Manufacturer>();
+  const manufacturers = useManufacturers(values.manufacturer);
+  const manufacturerId =
+    chosenManufacturer?.name === values.manufacturer
+      ? chosenManufacturer.id
+      : undefined;
+  const models = useAssetModels(manufacturerId, values.category, values.model);
+  const manufacturerNames = useMemo(
+    () => (manufacturers.data ?? []).map((manufacturer) => manufacturer.name),
+    [manufacturers.data]
+  );
+  const modelNames = useMemo(
+    () => (manufacturerId ? (models.data ?? []) : []).map((m) => m.name),
+    [manufacturerId, models.data]
+  );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -124,6 +224,23 @@ export function AssetForm({
 
   const handleLocationChange = useCallback((value: string | null) => {
     setValues((current) => ({ ...current, locationId: value ?? "" }));
+  }, []);
+
+  const handleManufacturerChange = useCallback(
+    (value: string) => {
+      setValues((current) => ({ ...current, manufacturer: value }));
+      const listed = manufacturers.data?.find(
+        (manufacturer) => manufacturer.name === value
+      );
+      if (listed) {
+        setChosenManufacturer(listed);
+      }
+    },
+    [manufacturers.data]
+  );
+
+  const handleModelChange = useCallback((value: string) => {
+    setValues((current) => ({ ...current, model: value }));
   }, []);
 
   const handleCategoryChange = useCallback((value: string | null) => {
@@ -143,17 +260,20 @@ export function AssetForm({
       if (!values.locationId) {
         missing.locationId = requiredMessages.locationId;
       }
-      if (!isCategory(values.category)) {
+      const isCategory = categoryItems.some(
+        (item) => item.value !== "" && item.value === values.category
+      );
+      if (!isCategory) {
         missing.category = requiredMessages.category;
       }
       setFieldErrors(missing);
-      if (Object.keys(missing).length > 0 || !isCategory(values.category)) {
+      if (Object.keys(missing).length > 0) {
         return;
       }
       setPending(true);
       setError(undefined);
       try {
-        await onSave(toPayload(values, values.category));
+        await onSave(toPayload(values));
       } catch (cause) {
         setError(
           cause instanceof Error
@@ -164,7 +284,7 @@ export function AssetForm({
         setPending(false);
       }
     },
-    [onSave, pending, values]
+    [categoryItems, onSave, pending, values]
   );
 
   const errorProps = (field: RequiredField) =>
@@ -238,6 +358,11 @@ export function AssetForm({
             </SelectContent>
           </Select>
           {errorText("category")}
+          {categories.error ? (
+            <p className="text-destructive text-sm" role="alert">
+              {categories.error.message}
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-location`}>Location</Label>
@@ -281,26 +406,22 @@ export function AssetForm({
             value={values.installedOn}
           />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-manufacturer`}>Manufacturer (optional)</Label>
-          <Input
-            id={`${id}-manufacturer`}
-            maxLength={200}
-            name="manufacturer"
-            onChange={handleChange}
-            value={values.manufacturer}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-model`}>Model (optional)</Label>
-          <Input
-            id={`${id}-model`}
-            maxLength={200}
-            name="model"
-            onChange={handleChange}
-            value={values.model}
-          />
-        </div>
+        <SuggestField
+          id={`${id}-manufacturer`}
+          label="Manufacturer (optional)"
+          name="manufacturer"
+          onChange={handleManufacturerChange}
+          suggestions={manufacturerNames}
+          value={values.manufacturer}
+        />
+        <SuggestField
+          id={`${id}-model`}
+          label="Model (optional)"
+          name="model"
+          onChange={handleModelChange}
+          suggestions={modelNames}
+          value={values.model}
+        />
         <div className="grid gap-2">
           <Label htmlFor={`${id}-serial-number`}>
             Serial number (optional)
