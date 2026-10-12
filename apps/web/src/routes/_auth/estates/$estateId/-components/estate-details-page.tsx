@@ -1,4 +1,5 @@
 import type { components } from "@proj/api/schema";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { FieldSet } from "@proj/ui/components/field";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -115,9 +116,9 @@ export function EstateDetailsPage({
         </p>
       ) : null}
       {estate.error ? (
-        <p className="mt-6 text-destructive" role="alert">
-          {estate.error.message}
-        </p>
+        <Alert className="mt-6" variant="destructive">
+          <AlertDescription>{estate.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       {estate.data ? (
         <>
@@ -142,10 +143,12 @@ export function EstateDetailsPage({
             title={estate.data.name}
           />
           {estate.data.deactivatedAt ? (
-            <p className="mt-4 border p-4 text-sm">
-              This estate is inactive. Existing records remain available. New
-              assets and reports are not accepted.
-            </p>
+            <Alert className="mt-4" role="note">
+              <AlertDescription>
+                This estate is inactive. Existing records remain available. New
+                assets and reports are not accepted.
+              </AlertDescription>
+            </Alert>
           ) : null}
           <dl className="detail-grid my-4">
             <div>

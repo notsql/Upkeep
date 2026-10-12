@@ -1,13 +1,21 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@proj/ui/components/dialog";
+import {
+  Field,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -37,8 +45,8 @@ interface FormValues {
   type: string;
 }
 
-type Field = keyof FormValues;
-type FieldErrors = Partial<Record<Field, string>>;
+type FieldName = keyof FormValues;
+type FieldErrors = Partial<Record<FieldName, string>>;
 
 const typeItems = [
   { value: "", label: "Select a type" },
@@ -146,15 +154,13 @@ export function RecordEventDialog({
     [onSave, today, values]
   );
 
-  const errorProps = (field: Field) =>
+  const errorProps = (field: FieldName) =>
     fieldErrors[field]
       ? { "aria-describedby": `${id}-${field}-error`, "aria-invalid": true }
       : {};
-  const errorText = (field: Field) =>
+  const errorText = (field: FieldName) =>
     fieldErrors[field] ? (
-      <p className="text-destructive text-sm" id={`${id}-${field}-error`}>
-        {fieldErrors[field]}
-      </p>
+      <FieldError id={`${id}-${field}-error`}>{fieldErrors[field]}</FieldError>
     ) : null;
 
   return (
@@ -167,10 +173,10 @@ export function RecordEventDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="mt-4 grid gap-5" noValidate onSubmit={handleSubmit}>
-          <fieldset className="grid gap-5" disabled={pending}>
-            <legend className="sr-only">Asset event</legend>
-            <div className="grid gap-2">
-              <Label htmlFor={`${id}-type`}>Type</Label>
+          <FieldSet disabled={pending}>
+            <FieldLegend className="sr-only">Asset event</FieldLegend>
+            <Field>
+              <FieldLabel htmlFor={`${id}-type`}>Type</FieldLabel>
               <Select
                 items={typeItems}
                 onValueChange={handleTypeChange}
@@ -193,9 +199,9 @@ export function RecordEventDialog({
                 </SelectContent>
               </Select>
               {errorText("type")}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor={`${id}-occurred-on`}>Event date</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-occurred-on`}>Event date</FieldLabel>
               <Input
                 {...errorProps("occurredOn")}
                 id={`${id}-occurred-on`}
@@ -207,9 +213,9 @@ export function RecordEventDialog({
                 value={values.occurredOn}
               />
               {errorText("occurredOn")}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor={`${id}-notes`}>Notes</Label>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-notes`}>Notes</FieldLabel>
               <Textarea
                 {...errorProps("notes")}
                 id={`${id}-notes`}
@@ -220,14 +226,14 @@ export function RecordEventDialog({
                 value={values.notes}
               />
               {errorText("notes")}
-            </div>
-          </fieldset>
+            </Field>
+          </FieldSet>
           {error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {error}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
           ) : null}
-          <div className="flex flex-wrap justify-end gap-2">
+          <DialogFooter>
             <Button
               disabled={pending}
               onClick={onCancel}
@@ -239,7 +245,7 @@ export function RecordEventDialog({
             <Button disabled={pending} type="submit">
               {pending ? "Saving…" : "Record event"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

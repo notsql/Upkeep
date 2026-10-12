@@ -194,6 +194,19 @@ describe("AssetForm", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
+  it("announces each missing required field as an alert", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    expect(
+      (await screen.findAllByRole("alert")).map((alert) => alert.textContent)
+    ).toEqual([
+      "Name is required.",
+      "Category is required.",
+      "Location is required.",
+    ]);
+  });
+
   it("submits every entered detail", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);

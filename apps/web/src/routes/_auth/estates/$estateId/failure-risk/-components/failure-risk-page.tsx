@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Empty } from "@proj/ui/components/empty";
 import {
@@ -88,9 +89,9 @@ export function FailureRiskPage({ estateId }: { estateId: string }) {
         </p>
       ) : null}
       {risks.error ? (
-        <p className="mt-6 text-destructive" role="alert">
-          {risks.error.message}
-        </p>
+        <Alert className="mt-6" variant="destructive">
+          <AlertDescription>{risks.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       {risks.data && risks.data.length === 0 ? (
         <Empty className="mt-6 border border-dashed bg-card" role="status">

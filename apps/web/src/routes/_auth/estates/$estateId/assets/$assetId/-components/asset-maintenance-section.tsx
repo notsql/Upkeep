@@ -1,5 +1,8 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
+import { Empty } from "@proj/ui/components/empty";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -54,33 +57,37 @@ export function AssetMaintenanceSection({
         </p>
       ) : null}
       {events.error ? (
-        <p className="mt-4 text-destructive" role="alert">
-          {events.error.message}
-        </p>
+        <Alert className="mt-4" variant="destructive">
+          <AlertDescription>{events.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       {events.data && events.data.length === 0 ? (
-        <p className="mt-4 text-muted-foreground text-sm">
+        <Empty className="mt-4 border border-dashed" role="status">
           No maintenance recorded yet.
-        </p>
+        </Empty>
       ) : null}
       {events.data?.length ? (
         <ul className="mt-4 grid gap-3">
           {events.data.map((event) => (
-            <li className="rounded-lg border p-3 text-sm" key={event.id}>
-              <p className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">
-                  {assetEventTypeLabel[event.type]}
-                </span>
-                <span>· {event.occurredOn}</span>
-                {event.countsTowardForecast ? null : (
-                  <Badge variant="secondary">Previous unit</Badge>
-                )}
-              </p>
-              <p className="mt-2 whitespace-pre-wrap">{event.notes}</p>
-              <p className="mt-2 text-muted-foreground">
-                Recorded by {event.recordedByName ?? "Unknown user"} on{" "}
-                {new Date(event.createdAt).toLocaleString()}
-              </p>
+            <li key={event.id}>
+              <Card size="sm">
+                <CardContent>
+                  <p className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">
+                      {assetEventTypeLabel[event.type]}
+                    </span>
+                    <span>· {event.occurredOn}</span>
+                    {event.countsTowardForecast ? null : (
+                      <Badge variant="secondary">Previous unit</Badge>
+                    )}
+                  </p>
+                  <p className="mt-2 whitespace-pre-wrap">{event.notes}</p>
+                  <p className="mt-2 text-muted-foreground">
+                    Recorded by {event.recordedByName ?? "Unknown user"} on{" "}
+                    {new Date(event.createdAt).toLocaleString()}
+                  </p>
+                </CardContent>
+              </Card>
             </li>
           ))}
         </ul>

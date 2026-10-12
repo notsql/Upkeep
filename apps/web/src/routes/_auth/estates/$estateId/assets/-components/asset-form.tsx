@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import {
   Combobox,
   ComboboxContent,
@@ -5,8 +6,15 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@proj/ui/components/combobox";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -119,8 +127,8 @@ function SuggestField({
     [onChange]
   );
   return (
-    <div className="grid gap-2">
-      <Label htmlFor={id}>{label}</Label>
+    <Field>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
       <Combobox
         filter={null}
         inputValue={value}
@@ -148,7 +156,7 @@ function SuggestField({
           </ComboboxList>
         </ComboboxContent>
       </Combobox>
-    </div>
+    </Field>
   );
 }
 
@@ -293,9 +301,7 @@ export function AssetForm({
       : {};
   const errorText = (field: RequiredField) =>
     fieldErrors[field] ? (
-      <p className="text-destructive text-sm" id={`${id}-${field}-error`}>
-        {fieldErrors[field]}
-      </p>
+      <FieldError id={`${id}-${field}-error`}>{fieldErrors[field]}</FieldError>
     ) : null;
 
   const submitLabel = initialValues ? "Save changes" : "Register asset";
@@ -306,23 +312,23 @@ export function AssetForm({
       noValidate
       onSubmit={handleSubmit}
     >
-      <p className="text-muted-foreground text-sm">
+      <FieldDescription>
         All fields are required unless marked optional.
-      </p>
-      <fieldset className="grid gap-5" disabled={pending}>
-        <legend className="sr-only">Asset details</legend>
+      </FieldDescription>
+      <FieldSet disabled={pending}>
+        <FieldLegend className="sr-only">Asset details</FieldLegend>
         {initialValues ? (
-          <div className="grid gap-2">
-            <Label htmlFor={`${id}-reference`}>Reference</Label>
+          <Field>
+            <FieldLabel htmlFor={`${id}-reference`}>Reference</FieldLabel>
             <Input
               id={`${id}-reference`}
               readOnly
               value={initialValues.reference}
             />
-          </div>
+          </Field>
         ) : null}
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-name`}>Name</Label>
+        <Field>
+          <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
           <Input
             {...errorProps("name")}
             id={`${id}-name`}
@@ -333,9 +339,9 @@ export function AssetForm({
             value={values.name}
           />
           {errorText("name")}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-category`}>Category</Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
           <Select
             items={categoryItems}
             onValueChange={handleCategoryChange}
@@ -359,13 +365,13 @@ export function AssetForm({
           </Select>
           {errorText("category")}
           {categories.error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {categories.error.message}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>{categories.error.message}</AlertDescription>
+            </Alert>
           ) : null}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-location`}>Location</Label>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-location`}>Location</FieldLabel>
           <Select
             items={locationItems}
             onValueChange={handleLocationChange}
@@ -389,15 +395,15 @@ export function AssetForm({
           </Select>
           {errorText("locationId")}
           {locations.error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {locations.error.message}
-            </p>
+            <Alert variant="destructive">
+              <AlertDescription>{locations.error.message}</AlertDescription>
+            </Alert>
           ) : null}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-installed-on`}>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-installed-on`}>
             Installation date (optional)
-          </Label>
+          </FieldLabel>
           <Input
             id={`${id}-installed-on`}
             name="installedOn"
@@ -405,7 +411,7 @@ export function AssetForm({
             type="date"
             value={values.installedOn}
           />
-        </div>
+        </Field>
         <SuggestField
           id={`${id}-manufacturer`}
           label="Manufacturer (optional)"
@@ -422,10 +428,10 @@ export function AssetForm({
           suggestions={modelNames}
           value={values.model}
         />
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-serial-number`}>
+        <Field>
+          <FieldLabel htmlFor={`${id}-serial-number`}>
             Serial number (optional)
-          </Label>
+          </FieldLabel>
           <Input
             id={`${id}-serial-number`}
             maxLength={200}
@@ -433,12 +439,12 @@ export function AssetForm({
             onChange={handleChange}
             value={values.serialNumber}
           />
-        </div>
-      </fieldset>
+        </Field>
+      </FieldSet>
       {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
       <FormActions label={buttonLabel} onCancel={onCancel} pending={pending} />
     </form>

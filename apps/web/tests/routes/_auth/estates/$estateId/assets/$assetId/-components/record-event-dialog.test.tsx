@@ -67,6 +67,22 @@ describe("RecordEventDialog", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
+  it("announces each missing required field as an alert", async () => {
+    renderWithProviders(
+      <RecordEventDialog onCancel={vi.fn()} onSave={vi.fn()} />
+    );
+    fireEvent.change(dateField(), { target: { value: "" } });
+    fireEvent.change(notesField(), { target: { value: "   " } });
+    fireEvent.click(submitButton());
+    expect(
+      (await screen.findAllByRole("alert")).map((alert) => alert.textContent)
+    ).toEqual([
+      "Type is required.",
+      "Event date is required.",
+      "Notes are required.",
+    ]);
+  });
+
   it("posts the type, date and trimmed notes", async () => {
     const onSave = vi.fn().mockResolvedValue(undefined);
     renderWithProviders(

@@ -1,4 +1,5 @@
 import type { components } from "@proj/api/schema";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
@@ -61,9 +62,9 @@ export function AssetDetailsPage({
         </p>
       ) : null}
       {asset.error ? (
-        <p className="mt-6 text-destructive" role="alert">
-          {asset.error.message}
-        </p>
+        <Alert className="mt-6" variant="destructive">
+          <AlertDescription>{asset.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       {asset.data ? (
         <>
@@ -108,10 +109,12 @@ export function AssetDetailsPage({
             title={asset.data.name}
           />
           {asset.data.deactivatedAt ? (
-            <p className="mt-4 border p-4 text-sm">
-              This asset is retired. Its record remains available but can no
-              longer be edited until restored.
-            </p>
+            <Alert className="mt-4" role="note">
+              <AlertDescription>
+                This asset is retired. Its record remains available but can no
+                longer be edited until restored.
+              </AlertDescription>
+            </Alert>
           ) : null}
           <dl className="detail-grid my-4">
             <div>

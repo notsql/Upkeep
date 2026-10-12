@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import {
   Card,
@@ -36,9 +37,9 @@ export function AssetForecastCard({
       <CardContent className="text-sm">
         {risk.isPending ? <p aria-live="polite">Loading forecast…</p> : null}
         {risk.error ? (
-          <p className="text-destructive" role="alert">
-            {risk.error.message}
-          </p>
+          <Alert variant="destructive">
+            <AlertDescription>{risk.error.message}</AlertDescription>
+          </Alert>
         ) : null}
         {risk.data ? (
           <>

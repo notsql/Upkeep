@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@proj/ui/components/dialog";
-import { Label } from "@proj/ui/components/label";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -37,8 +37,8 @@ function FilterSelect({
     [onChange]
   );
   return (
-    <div className="grid min-w-0 gap-2">
-      <Label>{label}</Label>
+    <Field className="min-w-0">
+      <FieldLabel>{label}</FieldLabel>
       <Select onValueChange={change} value={value}>
         <SelectTrigger aria-label={label} className="w-full">
           <SelectValue>{options[value] ?? "All"}</SelectValue>
@@ -51,7 +51,7 @@ function FilterSelect({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </Field>
   );
 }
 export function AssetFilterControls({

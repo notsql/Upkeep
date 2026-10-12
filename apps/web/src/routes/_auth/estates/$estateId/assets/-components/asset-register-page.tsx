@@ -1,7 +1,13 @@
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+} from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
+import { Empty } from "@proj/ui/components/empty";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import {
   Table,
   TableBody,
@@ -112,20 +118,22 @@ export function AssetRegisterPage({
         title="Assets"
       />
       {estate.data?.deactivatedAt ? (
-        <p className="section-surface text-muted-foreground text-sm">
-          This estate is inactive. Existing assets remain available.
-        </p>
+        <Alert role="note">
+          <AlertDescription>
+            This estate is inactive. Existing assets remain available.
+          </AlertDescription>
+        </Alert>
       ) : null}
       <div className="section-surface grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:grid-cols-3 xl:grid-cols-5">
-        <div className="grid gap-2">
-          <Label htmlFor="asset-search">Search assets</Label>
+        <Field>
+          <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
           <Input
             id="asset-search"
             onChange={changeSearch}
             placeholder="Name or reference"
             value={search}
           />
-        </div>
+        </Field>
         {mobile ? (
           <MobileAssetFilters
             filters={filters}
@@ -146,24 +154,32 @@ export function AssetRegisterPage({
         </Button>
       ) : null}
       {locations.error ? (
-        <div role="alert">
-          Locations could not be loaded.{" "}
-          <Button onClick={retryLocations}>Retry locations</Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>Locations could not be loaded.</AlertDescription>
+          <AlertAction>
+            <Button onClick={retryLocations} size="sm">
+              Retry locations
+            </Button>
+          </AlertAction>
+        </Alert>
       ) : null}
       {assets.isPending ? <p role="status">Loading assets…</p> : null}
       {assets.error ? (
-        <div role="alert">
-          {assets.error.message}
-          <Button onClick={retryAssets}>Retry assets</Button>
-        </div>
+        <Alert variant="destructive">
+          <AlertDescription>{assets.error.message}</AlertDescription>
+          <AlertAction>
+            <Button onClick={retryAssets} size="sm">
+              Retry assets
+            </Button>
+          </AlertAction>
+        </Alert>
       ) : null}
       {assets.data?.length === 0 ? (
-        <p>
+        <Empty className="border border-dashed" role="status">
           {filtered
             ? "No matching assets."
             : "No active assets yet. Choose All to include retired assets."}
-        </p>
+        </Empty>
       ) : null}
       {assets.data && assets.data.length > 0 && mobile ? (
         <ul aria-label="Assets" className="grid gap-3">
