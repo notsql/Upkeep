@@ -199,9 +199,35 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Role updated",
             "content": {
               "*/*": { "schema": { "$ref": "#/components/schemas/UserRoles" } }
+            }
+          },
+          "400": {
+            "description": "Invalid roles",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "409": {
+            "description": "Role safeguard rejected the update",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
+            }
+          },
+          "502": {
+            "description": "WorkOS request failed",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
+            }
+          },
+          "503": {
+            "description": "WorkOS is not configured",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
             }
           }
         }
@@ -2461,6 +2487,11 @@
         "properties": {
           "roleSlugs": { "type": "array", "items": { "type": "string" } }
         }
+      },
+      "AdminError": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"]
       },
       "EstateRequest": {
         "type": "object",

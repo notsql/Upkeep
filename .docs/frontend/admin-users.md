@@ -41,9 +41,12 @@ Response fields used: organization `id`, `name`; member `membershipId`,
 `userId`, `name`, `email`, `joined`, `roleSlugs`; role `slug`, `name`; estate
 access `estateId`, `name`, `code`, `owner`, `granted`, `active`.
 
-Error messages are fixed strings ("Unable to load organizations", "Unable to
-load members", "Unable to load roles", "Unable to update role", "Unable to load
-estate access", "Unable to update estate access"), not `estateError`.
+Load and estate-access errors use fixed strings ("Unable to load organizations",
+"Unable to load members", "Unable to load roles", "Unable to load estate
+access", "Unable to update estate access"), not `estateError`. Role updates use
+"Unable to update role" except for the two documented 409 safeguards, which
+append the typed `AdminError.message`: "Estate must have at least 1 admin." or
+"You cannot remove your own admin role." Unknown responses remain generic.
 
 ## Dashboard presentation
 
@@ -56,3 +59,8 @@ between presentations. The organisation picker,
 search, role selection and estate-access controls keep their current endpoints
 and restrictions. Shared colors, theme switch and responsive layout follow
 [design-system.md](design-system.md).
+
+Role updates prevent an authenticated admin from removing their own `admin`
+role and preserve at least one active WorkOS organization admin. The mutation
+alert displays the matching safe 409 reason after "Unable to update role:". See
+[role update guard](../api/admin-roles.md).

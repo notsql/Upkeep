@@ -79,6 +79,7 @@ it("lets the owner invite a council member and grant invitation permission", asy
     allowed = true;
     return Promise.resolve({
       data: undefined,
+      error: undefined,
       response: new Response(null, { status: 204 }),
     });
   });

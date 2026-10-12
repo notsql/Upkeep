@@ -508,6 +508,9 @@ export interface components {
     UserRoles: {
       roleSlugs?: string[];
     };
+    AdminError: {
+      message: string;
+    };
     EstateRequest: {
       name: string;
       code: string;
@@ -3233,13 +3236,63 @@ export interface operations {
       };
     };
     responses: {
-      /** @description OK */
+      /** @description Role updated */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "*/*": components["schemas"]["UserRoles"];
+        };
+      };
+      /** @description Invalid roles */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AdminError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Admin role required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Role safeguard rejected the update */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AdminError"];
+        };
+      };
+      /** @description WorkOS request failed */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AdminError"];
+        };
+      };
+      /** @description WorkOS is not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AdminError"];
         };
       };
     };
