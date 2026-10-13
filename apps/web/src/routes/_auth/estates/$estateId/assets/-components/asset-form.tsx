@@ -1,4 +1,3 @@
-import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
@@ -16,6 +15,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { FormActions } from "@/components/form-actions";
 import {
   type Asset,
   type AssetCategory,
@@ -89,9 +89,11 @@ export function AssetForm({
   estateId,
   initialValues,
   onSave,
+  onCancel,
 }: {
   estateId: string;
   initialValues?: Asset;
+  onCancel?: () => void;
   onSave: (values: AssetInput) => Promise<unknown>;
 }) {
   const id = useId();
@@ -179,7 +181,14 @@ export function AssetForm({
   const submitLabel = initialValues ? "Save changes" : "Register asset";
   const buttonLabel = pending ? "Saving…" : submitLabel;
   return (
-    <form className="mt-6 grid gap-5" noValidate onSubmit={handleSubmit}>
+    <form
+      className="form-surface mt-6 grid gap-5"
+      noValidate
+      onSubmit={handleSubmit}
+    >
+      <p className="text-muted-foreground text-sm">
+        All fields are required unless marked optional.
+      </p>
       <fieldset className="grid gap-5" disabled={pending}>
         <legend className="sr-only">Asset details</legend>
         {initialValues ? (
@@ -310,9 +319,7 @@ export function AssetForm({
           {error}
         </p>
       ) : null}
-      <Button className="justify-self-start" disabled={pending} type="submit">
-        {buttonLabel}
-      </Button>
+      <FormActions label={buttonLabel} onCancel={onCancel} pending={pending} />
     </form>
   );
 }

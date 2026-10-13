@@ -63,8 +63,10 @@ function validate(values: FormValues, today: string): FieldErrors {
 
 export function AssessmentForm({
   onSave,
+  onCancel,
 }: {
   onSave: (values: AssessmentInput) => Promise<unknown>;
+  onCancel?: () => void;
 }) {
   const id = useId();
   const [today] = useState(localToday);
@@ -194,7 +196,17 @@ export function AssessmentForm({
           {error}
         </p>
       ) : null}
-      <div>
+      <div className="flex flex-wrap justify-end gap-2">
+        {onCancel ? (
+          <Button
+            disabled={pending}
+            onClick={onCancel}
+            type="button"
+            variant="outline"
+          >
+            Cancel
+          </Button>
+        ) : null}
         <Button disabled={pending} type="submit">
           {pending ? "Recording…" : "Record assessment"}
         </Button>

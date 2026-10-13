@@ -79,6 +79,7 @@ it("lets the owner invite a council member and grant invitation permission", asy
     allowed = true;
     return Promise.resolve({
       data: undefined,
+      error: undefined,
       response: new Response(null, { status: 204 }),
     });
   });
@@ -224,7 +225,7 @@ it("blocks repeated submissions while sending", async () => {
   await screen.findByRole("button", { name: "Send invitation" });
 });
 
-it("tells the inviter that an existing account accepts in My estates", async () => {
+it("tells the inviter that an existing account accepts in Estates", async () => {
   vi.mocked(api.POST).mockResolvedValue({
     data: { email: "existing@example.com", status: "IN_APP" },
     response: new Response(null, { status: 201 }),
@@ -236,7 +237,7 @@ it("tells the inviter that an existing account accepts in My estates", async () 
   expect(screen.queryByRole("textbox", { name: "Name" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
   const message = await screen.findByRole("status");
-  expect(message.textContent).toContain("My estates");
+  expect(message.textContent).toContain("Estates");
   expect(message.textContent).toContain("No email was sent");
 });
 
@@ -358,4 +359,28 @@ it("does not expose owner removal controls to delegates", async () => {
   expect(
     screen.queryByRole("heading", { name: "Pending invitations" })
   ).toBeNull();
+});
+
+const ESTATES_GUIDANCE = /Existing users accept on Estates\./;
+it("uses Estates consistently in invitation guidance", async () => {
+  renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await screen.findByText(ESTATES_GUIDANCE);
+});
+it("announces when invitation permission is saving", async () => {
+  let complete: ((value: unknown) => void) | undefined;
+  vi.mocked(api.PUT).mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        complete = resolve;
+      }) as never
+  );
+  renderWithProviders(<CouncilPage estateId="estate-id" />);
+  fireEvent.click(
+    await screen.findByRole("checkbox", {
+      name: "Can invite members for Alice",
+    })
+  );
+  await screen.findByText("Saving invitation permission…");
+  complete?.({ response: new Response(null, { status: 204 }) });
+  await screen.findByText("Permission saved.");
 });

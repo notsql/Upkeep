@@ -1,29 +1,58 @@
 import type { components } from "@proj/api/schema";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import { FieldSet } from "@proj/ui/components/field";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
+import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { PageHeader } from "@/components/page-header";
 import { api } from "@/lib/api";
+import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
 
-function CouncilMembersLink({
+function EstateActions({
   estate,
+  onDeactivate,
 }: {
   estate: components["schemas"]["EstateResponse"];
+  onDeactivate: () => void;
 }) {
-  if (!(estate.canInviteMembers || estate.canManageInvitationPermissions)) {
+  const canManageCouncil =
+    estate.canInviteMembers || estate.canManageInvitationPermissions;
+  if (!(estate.owned || canManageCouncil)) {
     return null;
   }
   return (
-    <Link
-      className={buttonVariants({ variant: "outline" })}
-      params={{ estateId: estate.id }}
-      to="/estates/$estateId/council"
+    <FieldSet
+      aria-label="Estate actions"
+      className="page-actions min-w-0 flex-row gap-3"
     >
-      Council members
-    </Link>
+      {estate.owned ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/edit"
+        >
+          Edit estate
+        </Link>
+      ) : null}
+      {canManageCouncil ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/council"
+        >
+          Council members
+        </Link>
+      ) : null}
+      {estate.owned && !estate.deactivatedAt ? (
+        <Button onClick={onDeactivate} variant="destructive">
+          Deactivate estate
+        </Button>
+      ) : null}
+    </FieldSet>
   );
 }
 
@@ -56,17 +85,20 @@ export function EstateDetailsPage({
       toast.success(
         "Estate deactivated. Existing records have been preserved."
       );
-      await queryClient.invalidateQueries({
-        queryKey: ["estates", userId, "list"],
-      });
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "list"],
+        }),
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
     },
   });
   const openConfirmation = useCallback(() => setConfirming(true), []);
   const closeConfirmation = useCallback(() => setConfirming(false), []);
   return (
-    <main className="container mx-auto max-w-3xl px-4 py-8">
+    <main className="page-layout">
       <Link className="text-sm underline" to="/estates">
-        Back to my estates
+        Back to estates
       </Link>
       {estate.isPending ? (
         <p aria-live="polite" className="mt-6">
@@ -80,19 +112,33 @@ export function EstateDetailsPage({
       ) : null}
       {estate.data ? (
         <>
-          <div className="mt-6 flex items-center justify-between gap-4">
-            <h1 className="font-semibold text-2xl">{estate.data.name}</h1>
-            <span className="border px-3 py-1 text-sm" role="status">
-              {estate.data.deactivatedAt ? "Inactive" : "Active"}
-            </span>
-          </div>
+          <PageHeader
+            actions={
+              <EstateActions
+                estate={estate.data}
+                onDeactivate={openConfirmation}
+              />
+            }
+            breadcrumbs={[
+              { label: "Estates", to: "/estates" },
+              { label: estate.data.name },
+            ]}
+            description="Estate overview and management"
+            status={
+              <LifecycleStatusBadge
+                inactive={Boolean(estate.data.deactivatedAt)}
+                inactiveLabel="Inactive"
+              />
+            }
+            title={estate.data.name}
+          />
           {estate.data.deactivatedAt ? (
             <p className="mt-4 border p-4 text-sm">
               This estate is inactive. Existing records remain available. New
               assets and reports are not accepted.
             </p>
           ) : null}
-          <dl className="my-6 grid gap-4">
+          <dl className="detail-grid my-4">
             <div>
               <dt className="font-medium">Estate code</dt>
               <dd>{estate.data.code}</dd>
@@ -112,27 +158,11 @@ export function EstateDetailsPage({
               </dd>
             </div>
           </dl>
-          {estate.data.owned ? (
-            <div className="flex items-center gap-4">
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                params={{ estateId }}
-                to="/estates/$estateId/edit"
-              >
-                Edit estate
-              </Link>
-              {estate.data.deactivatedAt ? null : (
-                <Button onClick={openConfirmation} variant="destructive">
-                  Deactivate estate
-                </Button>
-              )}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-sm">
+          {estate.data.owned ? null : (
+            <p className="mb-3 text-muted-foreground text-sm">
               Shared with you. Only the owner can change this estate.
             </p>
           )}
-          <CouncilMembersLink estate={estate.data} />
           {confirming ? (
             <DeactivateEstateDialog
               code={estate.data.code}
@@ -143,9 +173,12 @@ export function EstateDetailsPage({
           ) : null}
           {children}
           {estate.data.owned ? (
-            <section aria-label="Estate assets" className="mt-8 space-y-4">
+            <section
+              aria-label="Estate assets"
+              className="section-surface mt-6 space-y-3"
+            >
               <h2 className="font-semibold text-xl">Assets</h2>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <Link
                   className={buttonVariants({ variant: "outline" })}
                   params={{ estateId }}

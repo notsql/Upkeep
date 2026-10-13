@@ -1,6 +1,6 @@
 # Building assets
 
-**Status:** draft
+**Status:** built
 **Owner:** Zheng Kai
 **Jira:** [ID-46](https://notjira.atlassian.net/browse/ID-46) (epic [ID-4](https://notjira.atlassian.net/browse/ID-4) Unified Asset Record)
 
@@ -123,41 +123,41 @@ Test-first: every test is seen failing before the phase that makes it pass
 - [x] Merge `main` (with the location hierarchy) into `feat/building-assets`.
 
 ### 1. Data (`add-model` skill)
-- [ ] Add `Asset` to `packages/db/prisma/schema/schema.prisma` as specified
+- [x] Add `Asset` to `packages/db/prisma/schema/schema.prisma` as specified
   above, along with Location's `@@unique([id, estateId])` and the
   back-relations.
-- [ ] `pnpm db:migrate`, then `pnpm db:generate`, then
+- [x] `pnpm db:migrate`, then `pnpm db:generate`, then
   `./mvnw -pl com.proj:server compile`.
 
 ### 2. Server tests (red)
-- [ ] `apps/server/src/test/java/com/proj/server/asset/AssetControllerTests.java`,
+- [x] `apps/server/src/test/java/com/proj/server/asset/AssetControllerTests.java`,
   modelled on `LocationControllerTests`:
-  - [ ] POST returns 201 with `<CODE>-A0001`. The next asset gets `A0002`.
-  - [ ] Optional fields are null when omitted. Text is trimmed.
-  - [ ] A missing name, category or location returns 400.
-  - [ ] Another owner's estate returns 404. An inactive estate returns 409.
-  - [ ] A location from another estate returns 404. An inactive location
+  - [x] POST returns 201 with `<CODE>-A0001`. The next asset gets `A0002`.
+  - [x] Optional fields are null when omitted. Text is trimmed.
+  - [x] A missing name, category or location returns 400.
+  - [x] Another owner's estate returns 404. An inactive estate returns 409.
+  - [x] A location from another estate returns 404. An inactive location
     returns 409.
-  - [ ] GET returns the location path. An unknown or foreign asset returns 404.
-  - [ ] PATCH updates the fields and can move the location. The reference is
+  - [x] GET returns the location path. An unknown or foreign asset returns 404.
+  - [x] PATCH updates the fields and can move the location. The reference is
     unchanged.
-  - [ ] PATCH with a null location returns 400. A foreign location returns 404.
+  - [x] PATCH with a null location returns 400. A foreign location returns 404.
     An inactive asset, location or estate returns 409. Another owner gets 404.
-  - [ ] Deactivating with the correct reference sets `deactivatedAt`. A wrong
+  - [x] Deactivating with the correct reference sets `deactivatedAt`. A wrong
     reference returns 400. Repeating it keeps the timestamp. The asset is still
     readable through GET. Another owner gets 404.
-  - [ ] A missing JWT subject is rejected on every endpoint.
-- [ ] Run `./mvnw -pl com.proj:server test -Dtest=AssetControllerTests` and
+  - [x] A missing JWT subject is rejected on every endpoint.
+- [x] Run `./mvnw -pl com.proj:server test -Dtest=AssetControllerTests` and
   confirm the tests fail.
 
 ### 3. API (green, using the `add-endpoint` skill)
-- [ ] Package `com.proj.server.asset`:
+- [x] Package `com.proj.server.asset`:
   - `AssetController`, `AssetService`, `AssetRepository`
   - `CreateAssetRequest`, `UpdateAssetRequest`, `DeactivateAssetRequest`,
     `AssetResponse`
   - `AssetCategory`, `AssetException`, `AssetExceptionHandler`
-- [ ] Transactions and locking as described under Edge cases.
-- [ ] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
+- [x] Transactions and locking as described under Edge cases.
+- [x] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
 
 ### 4. Web tests (red)
 - [x] `apps/web/tests/lib/assets.test.ts`: the query keys include the user and
@@ -192,10 +192,10 @@ Test-first: every test is seen failing before the phase that makes it pass
 - [x] A "Register asset" link on `estate-details-page.tsx`.
 
 ### 6. Finish
-- [ ] `pnpm fix`, `pnpm check-types`, `pnpm test`.
-- [ ] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with
+- [x] `pnpm fix`, `pnpm check-types`, `pnpm test`.
+- [x] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with
   the code.
-- [ ] Update the deferred criterion in `estate-management.md`. Set this spec's
+- [x] Update the deferred criterion in `estate-management.md`. Set this spec's
   status to built.
 
 ## Verification

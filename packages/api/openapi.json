@@ -199,9 +199,35 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "Role updated",
             "content": {
               "*/*": { "schema": { "$ref": "#/components/schemas/UserRoles" } }
+            }
+          },
+          "400": {
+            "description": "Invalid roles",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": { "description": "Admin role required" },
+          "409": {
+            "description": "Role safeguard rejected the update",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
+            }
+          },
+          "502": {
+            "description": "WorkOS request failed",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
+            }
+          },
+          "503": {
+            "description": "WorkOS is not configured",
+            "content": {
+              "*/*": { "schema": { "$ref": "#/components/schemas/AdminError" } }
             }
           }
         }
@@ -2124,6 +2150,41 @@
         }
       }
     },
+    "/dashboard/summary": {
+      "get": {
+        "tags": ["dashboard-controller"],
+        "summary": "Summarise your estates and active assets in estates you own",
+        "operationId": "summary",
+        "responses": {
+          "200": {
+            "description": "User-scoped portfolio summary",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardSummaryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Summary temporarily unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/council-invitations": {
       "get": {
         "tags": ["council-controller"],
@@ -2496,6 +2557,11 @@
         "properties": {
           "roleSlugs": { "type": "array", "items": { "type": "string" } }
         }
+      },
+      "AdminError": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"]
       },
       "EstateRequest": {
         "type": "object",
@@ -2981,6 +3047,65 @@
           "id",
           "lifecycleVersion",
           "occurredAt"
+        ]
+      },
+      "DashboardConditionCounts": {
+        "type": "object",
+        "properties": {
+          "good": { "type": "integer", "format": "int64" },
+          "needsAttention": { "type": "integer", "format": "int64" },
+          "faulty": { "type": "integer", "format": "int64" },
+          "unassessed": { "type": "integer", "format": "int64" }
+        },
+        "required": ["faulty", "good", "needsAttention", "unassessed"]
+      },
+      "DashboardEstateSummary": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "estateCode": { "type": "string" },
+          "totalActiveAssets": { "type": "integer", "format": "int64" },
+          "needsAttentionCount": { "type": "integer", "format": "int64" },
+          "faultyCount": { "type": "integer", "format": "int64" }
+        },
+        "required": [
+          "estateCode",
+          "estateId",
+          "estateName",
+          "faultyCount",
+          "needsAttentionCount",
+          "totalActiveAssets"
+        ]
+      },
+      "DashboardSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "accessibleEstateCount": { "type": "integer", "format": "int32" },
+          "activeEstateCount": { "type": "integer", "format": "int32" },
+          "inactiveEstateCount": { "type": "integer", "format": "int32" },
+          "activeOwnedEstateCount": { "type": "integer", "format": "int32" },
+          "councilMemberCount": { "type": "integer", "format": "int64" },
+          "totalActiveAssets": { "type": "integer", "format": "int64" },
+          "conditionCounts": {
+            "$ref": "#/components/schemas/DashboardConditionCounts"
+          },
+          "affectedEstateCount": { "type": "integer", "format": "int32" },
+          "estatesNeedingAttention": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DashboardEstateSummary" }
+          }
+        },
+        "required": [
+          "accessibleEstateCount",
+          "activeEstateCount",
+          "activeOwnedEstateCount",
+          "affectedEstateCount",
+          "conditionCounts",
+          "councilMemberCount",
+          "estatesNeedingAttention",
+          "inactiveEstateCount",
+          "totalActiveAssets"
         ]
       },
       "PendingCouncilInvitationResponse": {

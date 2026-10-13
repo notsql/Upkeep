@@ -28,6 +28,7 @@ import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth
 import { Route as AuthEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/index'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/new/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -130,6 +131,12 @@ const AuthEstatesEstateIdAssetsAssetIdEditIndexRoute =
     path: '/estates/$estateId/assets/$assetId/edit/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport.update({
+    id: '/estates/$estateId/assets/$assetId/devices/new/',
+    path: '/estates/$estateId/assets/$assetId/devices/new/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  '/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  '/estates/$estateId/assets/$assetId/devices/new': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -192,6 +201,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/new/'
     | '/estates/$estateId/assets/$assetId/edit/'
+    | '/estates/$estateId/assets/$assetId/devices/new/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/assets/new'
     | '/estates/$estateId/assets/$assetId/edit'
+    | '/estates/$estateId/assets/$assetId/devices/new'
   id:
     | '__root__'
     | '/'
@@ -255,6 +267,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/$assetId/'
     | '/_auth/estates/$estateId/assets/new/'
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
+    | '/_auth/estates/$estateId/assets/$assetId/devices/new/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -403,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/assets/$assetId/devices/new/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/devices/new/'
+      path: '/estates/$estateId/assets/$assetId/devices/new'
+      fullPath: '/estates/$estateId/assets/$assetId/devices/new/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
   }
 }
 
@@ -418,6 +438,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
@@ -435,6 +456,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdAssetsNewIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdEditIndexRoute,
+  AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute:
+    AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute,
 }
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(

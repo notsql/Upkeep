@@ -39,7 +39,7 @@ Repeated deactivation is idempotent; deactivated locations remain stored.
 ## Status codes and example
 
 400: invalid body/UUID/hierarchy; 401: unsigned caller; 404: inaccessible estate,
-missing location/parent, or non-owner attempting a write; 409: duplicate name
+missing location/parent, or non-owner attempting a write/historical-location read; 409: duplicate name
 or position, inactive estate/location, or active children preventing deactivation.
 
 Example: an authenticated owner sends POST `/estates/{estateId}/locations` with

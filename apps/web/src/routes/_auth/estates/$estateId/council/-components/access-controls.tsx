@@ -77,14 +77,14 @@ function OutstandingInvitation({
   );
   let delivery = "Email invitation";
   if (invitation.status === "IN_APP") {
-    delivery = "Accepts in My estates";
+    delivery = "Accepts in Estates";
   }
   if (invitation.status === "SENDING") {
     delivery = "Sending or awaiting retry";
   }
   return (
-    <li className="space-y-2 border-b py-4 last:border-b-0">
-      <p>{invitation.email}</p>
+    <li className="grid gap-2 rounded-lg border p-3">
+      <p className="break-all font-medium">{invitation.email}</p>
       <p className="text-muted-foreground text-sm">
         {delivery}
         {invitation.expiresAt
@@ -128,7 +128,7 @@ export function OwnerInvitations({ estateId }: { estateId: string }) {
           <p role="alert">{invitations.error.message}</p>
         ) : null}
         {invitations.data?.length === 0 ? <p>No pending invitations.</p> : null}
-        <ul>
+        <ul aria-label="Outstanding invitations" className="grid gap-3">
           {invitations.data?.map((invitation) => (
             <OutstandingInvitation
               estateId={estateId}
