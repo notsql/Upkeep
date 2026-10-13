@@ -1,3 +1,4 @@
+import { fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { Device } from "@/lib/devices";
@@ -6,6 +7,7 @@ import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$as
 import {
   renderWithProviders,
   screen,
+  waitFor,
   within,
 } from "../../../../../../../test-utils";
 
