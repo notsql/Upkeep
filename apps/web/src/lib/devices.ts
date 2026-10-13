@@ -20,6 +20,7 @@ export const deviceMetrics: Record<
   PRESSURE: { name: "Pressure", unit: "bar" },
   FLOW_RATE: { name: "Flow rate", unit: "L/min" },
   VIBRATION: { name: "Vibration", unit: "mm/s" },
+  VIBRATION_ACCELERATION: { name: "Vibration acceleration", unit: "g" },
   POWER: { name: "Power", unit: "kW" },
   ENERGY: { name: "Energy", unit: "kWh" },
 };

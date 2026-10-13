@@ -1,8 +1,8 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { MemberEstates } from "@/routes/_auth/admin/-components/member-estates";
-import { renderWithProviders, screen, waitFor } from "../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() },

@@ -103,6 +103,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/asset-categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetCategories"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/council-invitations": {
     parameters: {
       query?: never;
@@ -233,6 +249,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetEvents"];
+    put?: never;
+    post: operations["recordAssetEvent"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/failure-risk": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetFailureRisk"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/readings/anomaly-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["checkAssetReadings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{id}": {
     parameters: {
       query?: never;
@@ -340,6 +404,22 @@ export interface paths {
     put?: never;
     post?: never;
     delete: operations["cancel"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/failure-risk": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateFailureRisk"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -490,6 +570,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/manufacturers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listManufacturers"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/manufacturers/{manufacturerId}/models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetModels"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -584,16 +696,7 @@ export interface components {
     };
     CreateAssetRequest: {
       name: string;
-      /** @enum {string} */
-      category:
-        | "LIFT"
-        | "PUMP"
-        | "GENERATOR"
-        | "LIGHTING"
-        | "FIRE_SAFETY"
-        | "HVAC"
-        | "ELECTRICAL"
-        | "OTHER";
+      category: string;
       /** Format: uuid */
       locationId: string;
       /** Format: date */
@@ -609,16 +712,7 @@ export interface components {
       estateId: string;
       reference: string;
       name: string;
-      /** @enum {string} */
-      category:
-        | "LIFT"
-        | "PUMP"
-        | "GENERATOR"
-        | "LIGHTING"
-        | "FIRE_SAFETY"
-        | "HVAC"
-        | "ELECTRICAL"
-        | "OTHER";
+      category: string;
       /** Format: uuid */
       locationId: string;
       /** @description The location's names from its block down, e.g. "Blk 101 › Level 1 › Lift lobby" */
@@ -655,6 +749,81 @@ export interface components {
       /** Format: int32 */
       expectedVersion: number;
     };
+    AnomalyCheckRequest: {
+      /** @description 10 to 3,600 readings, at most 2 seconds apart once sorted by timestamp */
+      readings: components["schemas"]["Reading"][];
+    };
+    Reading: {
+      /** Format: date-time */
+      timestamp: string;
+      /**
+       * Format: double
+       * @description g (RMS)
+       */
+      vibrationAcceleration: number;
+      /**
+       * Format: double
+       * @description bar
+       */
+      pressure: number;
+      /**
+       * Format: double
+       * @description °C
+       */
+      temperature: number;
+      /**
+       * Format: double
+       * @description L/min
+       */
+      flowRate: number;
+      /**
+       * Format: double
+       * @description kW
+       */
+      power: number;
+    };
+    AnomalyCheckResponse: {
+      /** Format: int32 */
+      readingsScored: number;
+      /** Format: int32 */
+      abnormalReadings: number;
+      /** Format: int32 */
+      longestAbnormalRun: number;
+      /** Format: double */
+      maxScore: number;
+      /**
+       * @description The condition recorded for the longest abnormal run, or null
+       * @enum {string|null}
+       */
+      conditionRecorded?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
+    };
+    CreateAssetEventRequest: {
+      /** @enum {string} */
+      type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
+      /** Format: date */
+      occurredOn: string;
+      notes: string;
+    };
+    AssetEventResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      category: "MAINTENANCE";
+      /** @enum {string} */
+      type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
+      /** Format: date */
+      occurredOn: string;
+      notes: string;
+      assetManufacturer?: string | null;
+      assetModel?: string | null;
+      countsTowardForecast: boolean;
+      recordedByUserId: string;
+      recordedByName?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
     CreateDeviceRequest: {
       identifier: string;
       model: string;
@@ -666,6 +835,7 @@ export interface components {
         | "PRESSURE"
         | "FLOW_RATE"
         | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
         | "POWER"
         | "ENERGY"
       )[];
@@ -680,6 +850,7 @@ export interface components {
         | "PRESSURE"
         | "FLOW_RATE"
         | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
         | "POWER"
         | "ENERGY";
       unit: string;
@@ -743,16 +914,7 @@ export interface components {
     };
     UpdateAssetRequest: {
       name: string;
-      /** @enum {string} */
-      category:
-        | "LIFT"
-        | "PUMP"
-        | "GENERATOR"
-        | "LIGHTING"
-        | "FIRE_SAFETY"
-        | "HVAC"
-        | "ELECTRICAL"
-        | "OTHER";
+      category: string;
       /** Format: uuid */
       locationId: string;
       /** Format: date */
@@ -768,6 +930,19 @@ export interface components {
       /** Format: int32 */
       expectedVersion: number;
     };
+    ManufacturerResponse: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
+    AssetModelResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      manufacturerId: string;
+      category: string;
+      name: string;
+    };
     HealthResponse: {
       ok: boolean;
       database: boolean;
@@ -779,6 +954,40 @@ export interface components {
       name: string;
       email: string;
       canInviteMembers: boolean;
+    };
+    FailureRiskResponse: {
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      category: string;
+      /** @enum {string} */
+      basis:
+        | "SERVICE_INTERVAL"
+        | "ASSET_HISTORY"
+        | "INSUFFICIENT_DATA"
+        | "NOT_SUPPORTED";
+      /** Format: int32 */
+      failuresObserved: number;
+      /** Format: int32 */
+      daysSinceLastEvent?: number | null;
+      /** Format: double */
+      probability30Days?: number | null;
+      /** Format: double */
+      probability60Days?: number | null;
+      /** Format: double */
+      probability90Days?: number | null;
+      /** @enum {string|null} */
+      recommendedTimeframe?:
+        | "WITHIN_30_DAYS"
+        | "WITHIN_60_DAYS"
+        | "WITHIN_90_DAYS"
+        | "BEYOND_90_DAYS"
+        | null;
+      /** Format: date */
+      expectedEndOfLife?: string | null;
+      flagged: boolean;
+      flagReasons: ("CONDITION" | "FAILURE_RISK" | "END_OF_LIFE")[];
     };
     AssetLifecycleEventResponse: {
       /** Format: uuid */
@@ -848,6 +1057,10 @@ export interface components {
       estateName: string;
       /** Format: date-time */
       expiresAt: string;
+    };
+    AssetCategoryResponse: {
+      code: string;
+      label: string;
     };
     EstateUserResponse: {
       /** Format: uuid */
@@ -1176,6 +1389,78 @@ export interface operations {
         };
       };
       /** @description Identity provider not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  checkAssetReadings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AnomalyCheckRequest"];
+      };
+    };
+    responses: {
+      /** @description The batch was scored */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AnomalyCheckResponse"];
+        };
+      };
+      /** @description Too few or too many readings, a missing or non-finite value, or bad timestamps */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not a pump, a deactivated asset, or an inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description The anomaly model is unavailable; nothing was recorded */
       503: {
         headers: {
           [name: string]: unknown;
@@ -1734,6 +2019,47 @@ export interface operations {
       };
     };
   };
+  getAssetFailureRisk: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's breakdown forecast and flags */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["FailureRiskResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getMembers: {
     parameters: {
       query?: never;
@@ -2024,6 +2350,94 @@ export interface operations {
       };
     };
   };
+  listAssetCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every asset category, ordered by label */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetCategoryResponse"][];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listAssetEvents: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every event, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetEventResponse"][];
+        };
+      };
+      /** @description Missing or invalid details, a future date, or a date before installation */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or deactivated asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listAssetLifecycleEvents: {
     parameters: {
       query?: never;
@@ -2083,19 +2497,63 @@ export interface operations {
       };
     };
   };
+  listAssetModels: {
+    parameters: {
+      query: {
+        category: string;
+        query?: string;
+      };
+      header?: never;
+      path: {
+        manufacturerId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The manufacturer's models in the category, at most 20 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetModelResponse"][];
+        };
+      };
+      /** @description Missing or unknown category */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Manufacturer not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listAssets: {
     parameters: {
       query?: {
         q?: string;
-        category?:
-          | "LIFT"
-          | "PUMP"
-          | "GENERATOR"
-          | "LIGHTING"
-          | "FIRE_SAFETY"
-          | "HVAC"
-          | "ELECTRICAL"
-          | "OTHER";
+        category?: string;
         locationId?: string;
         condition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | "UNASSESSED";
         status?: "ACTIVE" | "INACTIVE" | "ALL";
@@ -2214,6 +2672,46 @@ export interface operations {
       };
     };
   };
+  listEstateFailureRisk: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Active assets in silent-failure categories, flagged first, then by 90-day risk */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["FailureRiskResponse"][];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listLocations: {
     parameters: {
       query?: {
@@ -2265,6 +2763,37 @@ export interface operations {
       };
       /** @description Duplicate name or level position, inactive estate or location, or active children */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listManufacturers: {
+    parameters: {
+      query?: {
+        query?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Manufacturers whose names contain the query, at most 20 */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ManufacturerResponse"][];
+        };
+      };
+      /** @description Sign in required */
+      401: {
         headers: {
           [name: string]: unknown;
         };
@@ -2695,6 +3224,69 @@ export interface operations {
         };
       };
       /** @description Missing or invalid details, or a date in the future */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or deactivated asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  recordAssetEvent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateAssetEventRequest"];
+      };
+    };
+    responses: {
+      /** @description Event recorded */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetEventResponse"];
+        };
+      };
+      /** @description Missing or invalid details, a future date, or a date before installation */
       400: {
         headers: {
           [name: string]: unknown;

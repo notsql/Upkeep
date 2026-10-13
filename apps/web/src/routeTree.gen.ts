@@ -25,6 +25,7 @@ import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-u
 import { Route as AuthEstatesEstateIdAssetsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/index'
 import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_auth/estates/$estateId/council/index'
 import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/edit/index'
+import { Route as AuthEstatesEstateIdFailureRiskIndexRouteImport } from './routes/_auth/estates/$estateId/failure-risk/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/index'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
@@ -113,6 +114,12 @@ const AuthEstatesEstateIdEditIndexRoute =
     path: '/estates/$estateId/edit/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdFailureRiskIndexRoute =
+  AuthEstatesEstateIdFailureRiskIndexRouteImport.update({
+    id: '/estates/$estateId/failure-risk/',
+    path: '/estates/$estateId/failure-risk/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdAssetsAssetIdIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdIndexRouteImport.update({
     id: '/estates/$estateId/assets/$assetId/',
@@ -154,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
+  '/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
@@ -175,6 +183,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/edit': typeof AuthEstatesEstateIdEditIndexRoute
+  '/estates/$estateId/failure-risk': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
@@ -198,6 +207,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/_auth/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/_auth/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
+  '/_auth/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/'
     | '/estates/$estateId/council/'
     | '/estates/$estateId/edit/'
+    | '/estates/$estateId/failure-risk/'
     | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/new/'
     | '/estates/$estateId/assets/$assetId/edit/'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets'
     | '/estates/$estateId/council'
     | '/estates/$estateId/edit'
+    | '/estates/$estateId/failure-risk'
     | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/assets/new'
     | '/estates/$estateId/assets/$assetId/edit'
@@ -264,6 +276,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/'
     | '/_auth/estates/$estateId/council/'
     | '/_auth/estates/$estateId/edit/'
+    | '/_auth/estates/$estateId/failure-risk/'
     | '/_auth/estates/$estateId/assets/$assetId/'
     | '/_auth/estates/$estateId/assets/new/'
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdEditIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/failure-risk/': {
+      id: '/_auth/estates/$estateId/failure-risk/'
+      path: '/estates/$estateId/failure-risk'
+      fullPath: '/estates/$estateId/failure-risk/'
+      preLoaderRoute: typeof AuthEstatesEstateIdFailureRiskIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/assets/$assetId/': {
       id: '/_auth/estates/$estateId/assets/$assetId/'
       path: '/estates/$estateId/assets/$assetId'
@@ -435,6 +455,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdAssetsIndexRoute: typeof AuthEstatesEstateIdAssetsIndexRoute
   AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
   AuthEstatesEstateIdEditIndexRoute: typeof AuthEstatesEstateIdEditIndexRoute
+  AuthEstatesEstateIdFailureRiskIndexRoute: typeof AuthEstatesEstateIdFailureRiskIndexRoute
   AuthEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
@@ -450,6 +471,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthEstatesEstateIdAssetsIndexRoute: AuthEstatesEstateIdAssetsIndexRoute,
   AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
   AuthEstatesEstateIdEditIndexRoute: AuthEstatesEstateIdEditIndexRoute,
+  AuthEstatesEstateIdFailureRiskIndexRoute:
+    AuthEstatesEstateIdFailureRiskIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdIndexRoute,
   AuthEstatesEstateIdAssetsNewIndexRoute:

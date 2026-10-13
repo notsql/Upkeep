@@ -1,7 +1,7 @@
+import { renderWithProviders, screen } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { NotFoundPage } from "@/components/not-found-page";
-import { renderWithProviders, screen } from "../test-utils";
 
 const HOME_PATH = /\/$/;
 vi.mock("@tanstack/react-router", () => ({

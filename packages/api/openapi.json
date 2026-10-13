@@ -803,19 +803,7 @@
             "name": "category",
             "in": "query",
             "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "LIFT",
-                "PUMP",
-                "GENERATOR",
-                "LIGHTING",
-                "FIRE_SAFETY",
-                "HVAC",
-                "ELECTRICAL",
-                "OTHER"
-              ]
-            }
+            "schema": { "type": "string" }
           },
           {
             "name": "locationId",
@@ -1088,6 +1076,221 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/readings/anomaly-check": {
+      "post": {
+        "tags": ["anomaly-check-controller"],
+        "operationId": "checkAssetReadings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AnomalyCheckRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Too few or too many readings, a missing or non-finite value, or bad timestamps",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not a pump, a deactivated asset, or an inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "The anomaly model is unavailable; nothing was recorded",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The batch was scored",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/events": {
+      "get": {
+        "tags": ["asset-event-controller"],
+        "operationId": "listAssetEvents",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, a future date, or a date before installation",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or deactivated asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Every event, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AssetEventResponse" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["asset-event-controller"],
+        "operationId": "recordAssetEvent",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssetEventRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, a future date, or a date before installation",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or deactivated asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Event recorded",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetEventResponse" }
               }
             }
           }
@@ -1912,6 +2115,106 @@
         }
       }
     },
+    "/manufacturers": {
+      "get": {
+        "tags": ["catalogue-controller"],
+        "operationId": "listManufacturers",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Manufacturers whose names contain the query, at most 20",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ManufacturerResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/manufacturers/{manufacturerId}/models": {
+      "get": {
+        "tags": ["catalogue-controller"],
+        "operationId": "listAssetModels",
+        "parameters": [
+          {
+            "name": "manufacturerId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The manufacturer's models in the category, at most 20",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AssetModelResponse" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or unknown category",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Manufacturer not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": ["health-controller"],
@@ -2013,6 +2316,51 @@
         }
       }
     },
+    "/estates/{estateId}/failure-risk": {
+      "get": {
+        "tags": ["failure-risk-controller"],
+        "operationId": "listEstateFailureRisk",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Active assets in silent-failure categories, flagged first, then by 90-day risk",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FailureRiskResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -2074,6 +2422,52 @@
                     "$ref": "#/components/schemas/AssetLifecycleEventResponse"
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/failure-risk": {
+      "get": {
+        "tags": ["failure-risk-controller"],
+        "operationId": "getAssetFailureRisk",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The asset's breakdown forecast and flags",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/FailureRiskResponse" }
               }
             }
           }
@@ -2184,6 +2578,35 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/PendingCouncilInvitationResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/asset-categories": {
+      "get": {
+        "tags": ["catalogue-controller"],
+        "operationId": "listAssetCategories",
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Every asset category, ordered by label",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetCategoryResponse"
                   }
                 }
               }
@@ -2602,19 +3025,7 @@
         "type": "object",
         "properties": {
           "name": { "type": "string", "maxLength": 200, "minLength": 0 },
-          "category": {
-            "type": "string",
-            "enum": [
-              "LIFT",
-              "PUMP",
-              "GENERATOR",
-              "LIGHTING",
-              "FIRE_SAFETY",
-              "HVAC",
-              "ELECTRICAL",
-              "OTHER"
-            ]
-          },
+          "category": { "type": "string", "maxLength": 30, "minLength": 0 },
           "locationId": { "type": "string", "format": "uuid" },
           "installedOn": { "type": "string", "format": "date" },
           "manufacturer": {
@@ -2634,19 +3045,7 @@
           "estateId": { "type": "string", "format": "uuid" },
           "reference": { "type": "string" },
           "name": { "type": "string" },
-          "category": {
-            "type": "string",
-            "enum": [
-              "LIFT",
-              "PUMP",
-              "GENERATOR",
-              "LIGHTING",
-              "FIRE_SAFETY",
-              "HVAC",
-              "ELECTRICAL",
-              "OTHER"
-            ]
-          },
+          "category": { "type": "string" },
           "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
@@ -2718,6 +3117,115 @@
           "retirementReason"
         ]
       },
+      "AnomalyCheckRequest": {
+        "type": "object",
+        "properties": {
+          "readings": {
+            "type": "array",
+            "description": "10 to 3,600 readings, at most 2 seconds apart once sorted by timestamp",
+            "items": { "$ref": "#/components/schemas/Reading" }
+          }
+        },
+        "required": ["readings"]
+      },
+      "Reading": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "vibrationAcceleration": {
+            "type": "number",
+            "format": "double",
+            "description": "g (RMS)"
+          },
+          "pressure": {
+            "type": "number",
+            "format": "double",
+            "description": "bar"
+          },
+          "temperature": {
+            "type": "number",
+            "format": "double",
+            "description": "°C"
+          },
+          "flowRate": {
+            "type": "number",
+            "format": "double",
+            "description": "L/min"
+          },
+          "power": { "type": "number", "format": "double", "description": "kW" }
+        },
+        "required": [
+          "flowRate",
+          "power",
+          "pressure",
+          "temperature",
+          "timestamp",
+          "vibrationAcceleration"
+        ]
+      },
+      "AnomalyCheckResponse": {
+        "type": "object",
+        "properties": {
+          "readingsScored": { "type": "integer", "format": "int32" },
+          "abnormalReadings": { "type": "integer", "format": "int32" },
+          "longestAbnormalRun": { "type": "integer", "format": "int32" },
+          "maxScore": { "type": "number", "format": "double" },
+          "conditionRecorded": {
+            "type": ["string", "null"],
+            "description": "The condition recorded for the longest abnormal run, or null",
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          }
+        },
+        "required": [
+          "abnormalReadings",
+          "longestAbnormalRun",
+          "maxScore",
+          "readingsScored"
+        ]
+      },
+      "CreateAssetEventRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["BREAKDOWN_REPAIR", "PREVENTIVE"]
+          },
+          "occurredOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string", "maxLength": 2000, "minLength": 0 }
+        },
+        "required": ["notes", "occurredOn", "type"]
+      },
+      "AssetEventResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "category": { "type": "string", "enum": ["MAINTENANCE"] },
+          "type": {
+            "type": "string",
+            "enum": ["BREAKDOWN_REPAIR", "PREVENTIVE"]
+          },
+          "occurredOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string" },
+          "assetManufacturer": { "type": ["string", "null"] },
+          "assetModel": { "type": ["string", "null"] },
+          "countsTowardForecast": { "type": "boolean" },
+          "recordedByUserId": { "type": "string" },
+          "recordedByName": { "type": ["string", "null"] },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "assetId",
+          "category",
+          "countsTowardForecast",
+          "createdAt",
+          "id",
+          "notes",
+          "occurredOn",
+          "recordedByUserId",
+          "type"
+        ]
+      },
       "CreateDeviceRequest": {
         "type": "object",
         "properties": {
@@ -2734,6 +3242,7 @@
                 "PRESSURE",
                 "FLOW_RATE",
                 "VIBRATION",
+                "VIBRATION_ACCELERATION",
                 "POWER",
                 "ENERGY"
               ]
@@ -2766,6 +3275,7 @@
               "PRESSURE",
               "FLOW_RATE",
               "VIBRATION",
+              "VIBRATION_ACCELERATION",
               "POWER",
               "ENERGY"
             ]
@@ -2872,19 +3382,7 @@
         "type": "object",
         "properties": {
           "name": { "type": "string", "maxLength": 200, "minLength": 0 },
-          "category": {
-            "type": "string",
-            "enum": [
-              "LIFT",
-              "PUMP",
-              "GENERATOR",
-              "LIGHTING",
-              "FIRE_SAFETY",
-              "HVAC",
-              "ELECTRICAL",
-              "OTHER"
-            ]
-          },
+          "category": { "type": "string", "maxLength": 30, "minLength": 0 },
           "locationId": { "type": "string", "format": "uuid" },
           "installedOn": { "type": "string", "format": "date" },
           "manufacturer": {
@@ -2914,6 +3412,24 @@
         },
         "required": ["expectedVersion", "retiredOn", "retirementReason"]
       },
+      "ManufacturerResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" }
+        },
+        "required": ["id", "name"]
+      },
+      "AssetModelResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "manufacturerId": { "type": "string", "format": "uuid" },
+          "category": { "type": "string" },
+          "name": { "type": "string" }
+        },
+        "required": ["category", "id", "manufacturerId", "name"]
+      },
       "HealthResponse": {
         "type": "object",
         "properties": {
@@ -2932,6 +3448,69 @@
           "canInviteMembers": { "type": "boolean" }
         },
         "required": ["canInviteMembers", "email", "name", "userId"]
+      },
+      "FailureRiskResponse": {
+        "type": "object",
+        "properties": {
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "category": { "type": "string" },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "SERVICE_INTERVAL",
+              "ASSET_HISTORY",
+              "INSUFFICIENT_DATA",
+              "NOT_SUPPORTED"
+            ]
+          },
+          "failuresObserved": { "type": "integer", "format": "int32" },
+          "daysSinceLastEvent": {
+            "type": ["integer", "null"],
+            "format": "int32"
+          },
+          "probability30Days": {
+            "type": ["number", "null"],
+            "format": "double"
+          },
+          "probability60Days": {
+            "type": ["number", "null"],
+            "format": "double"
+          },
+          "probability90Days": {
+            "type": ["number", "null"],
+            "format": "double"
+          },
+          "recommendedTimeframe": {
+            "type": ["string", "null"],
+            "enum": [
+              "WITHIN_30_DAYS",
+              "WITHIN_60_DAYS",
+              "WITHIN_90_DAYS",
+              "BEYOND_90_DAYS"
+            ]
+          },
+          "expectedEndOfLife": { "type": ["string", "null"], "format": "date" },
+          "flagged": { "type": "boolean" },
+          "flagReasons": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["CONDITION", "FAILURE_RISK", "END_OF_LIFE"]
+            }
+          }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "basis",
+          "category",
+          "failuresObserved",
+          "flagReasons",
+          "flagged"
+        ]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",
@@ -3030,6 +3609,14 @@
           "expiresAt": { "type": "string", "format": "date-time" }
         },
         "required": ["estateId", "estateName", "expiresAt", "id"]
+      },
+      "AssetCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "label": { "type": "string" }
+        },
+        "required": ["code", "label"]
       },
       "EstateUserResponse": {
         "type": "object",

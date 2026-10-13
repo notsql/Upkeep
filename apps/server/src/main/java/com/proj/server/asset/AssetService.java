@@ -1,5 +1,6 @@
 package com.proj.server.asset;
 
+import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
@@ -21,8 +22,14 @@ public class AssetService {
     private final AssetRepository repository;
     private final LocationRepository locations;
     private final EstateRepository estates;
+    private final CatalogueRepository catalogue;
 
-    public AssetService(AssetRepository repository, LocationRepository locations, EstateRepository estates) {
+    public AssetService(
+            AssetRepository repository,
+            LocationRepository locations,
+            EstateRepository estates,
+            CatalogueRepository catalogue) {
+        this.catalogue = catalogue;
         this.repository = repository;
         this.locations = locations;
         this.estates = estates;
@@ -36,6 +43,7 @@ public class AssetService {
     @Transactional
     public AssetResponse create(UUID estateId, String owner, CreateAssetRequest request) {
         var estate = lockActiveEstate(estateId, owner);
+        checkCatalogue(request.category(), request.manufacturer(), request.model());
         checkLocation(estateId, request.locationId());
         var reference = "%s-A%04d".formatted(estate.code(), repository.count(estateId) + 1);
         return response(repository.create(estateId, reference, request));
@@ -48,6 +56,7 @@ public class AssetService {
         if (asset.getDeactivatedat() != null) {
             throw new AssetException(HttpStatus.CONFLICT, "This asset is deactivated and cannot be changed.");
         }
+        checkCatalogue(request.category(), request.manufacturer(), request.model());
         checkLocation(estateId, request.locationId());
         return response(repository.update(id, request));
     }
@@ -56,7 +65,7 @@ public class AssetService {
             UUID estateId,
             String owner,
             String q,
-            AssetCategory category,
+            String category,
             UUID locationId,
             AssetConditionFilter condition,
             AssetStatus status) {
@@ -134,6 +143,16 @@ public class AssetService {
         return estate;
     }
 
+    /** The repository finds or creates the manufacturer and model; this rejects what it cannot store. */
+    private void checkCatalogue(String category, String manufacturer, String model) {
+        if (!catalogue.categoryExists(category)) {
+            throw new AssetException(HttpStatus.BAD_REQUEST, "category: unknown asset category.");
+        }
+        if (model != null && manufacturer == null) {
+            throw new AssetException(HttpStatus.BAD_REQUEST, "manufacturer: required when a model is given.");
+        }
+    }
+
     private void checkLocation(UUID estateId, UUID locationId) {
         var location = locations
                 .find(locationId, estateId)
@@ -157,7 +176,11 @@ public class AssetService {
 
     private AssetResponse response(AssetRecord row) {
         return AssetRepository.response(
-                row, locationPath(row.getEstateid(), row.getLocationid()), repository.currentCondition(row.getId()));
+                row,
+                locationPath(row.getEstateid(), row.getLocationid()),
+                catalogue.manufacturerName(row.getManufacturerid()),
+                catalogue.modelName(row.getModelid()),
+                repository.currentCondition(row.getId()));
     }
 
     private static AssetException estateNotFound() {

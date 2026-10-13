@@ -6,12 +6,16 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetcategory;
+import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
+import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manufacturer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,9 +50,24 @@ public class Public extends SchemaImpl {
     public final Assetassessment ASSETASSESSMENT = Assetassessment.ASSETASSESSMENT;
 
     /**
+     * The table <code>public.AssetCategory</code>.
+     */
+    public final Assetcategory ASSETCATEGORY = Assetcategory.ASSETCATEGORY;
+
+    /**
+     * The table <code>public.AssetEvent</code>.
+     */
+    public final Assetevent ASSETEVENT = Assetevent.ASSETEVENT;
+
+    /**
      * The table <code>public.AssetLifecycleEvent</code>.
      */
     public final Assetlifecycleevent ASSETLIFECYCLEEVENT = Assetlifecycleevent.ASSETLIFECYCLEEVENT;
+
+    /**
+     * The table <code>public.AssetModel</code>.
+     */
+    public final Assetmodel ASSETMODEL = Assetmodel.ASSETMODEL;
 
     /**
      * The table <code>public.Device</code>.
@@ -76,6 +95,11 @@ public class Public extends SchemaImpl {
     public final Location LOCATION = Location.LOCATION;
 
     /**
+     * The table <code>public.Manufacturer</code>.
+     */
+    public final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -93,12 +117,16 @@ public class Public extends SchemaImpl {
         return Arrays.asList(
             Asset.ASSET,
             Assetassessment.ASSETASSESSMENT,
+            Assetcategory.ASSETCATEGORY,
+            Assetevent.ASSETEVENT,
             Assetlifecycleevent.ASSETLIFECYCLEEVENT,
+            Assetmodel.ASSETMODEL,
             Device.DEVICE,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
             Estateuser.ESTATEUSER,
-            Location.LOCATION
+            Location.LOCATION,
+            Manufacturer.MANUFACTURER
         );
     }
 }

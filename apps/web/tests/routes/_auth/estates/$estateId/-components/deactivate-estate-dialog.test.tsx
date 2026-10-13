@@ -1,11 +1,7 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
-import {
-  renderWithProviders,
-  screen,
-  waitFor,
-} from "../../../../../test-utils";
 
 describe("DeactivateEstateDialog", () => {
   it("requires the exact code before submitting", async () => {

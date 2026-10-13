@@ -1,7 +1,7 @@
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { PageHeader } from "@/components/page-header";
-import { renderWithProviders, screen, within } from "../test-utils";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (

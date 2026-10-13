@@ -6,20 +6,28 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetcategory;
+import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
+import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
+import com.proj.server.db.tables.records.AssetcategoryRecord;
+import com.proj.server.db.tables.records.AsseteventRecord;
 import com.proj.server.db.tables.records.AssetlifecycleeventRecord;
+import com.proj.server.db.tables.records.AssetmodelRecord;
 import com.proj.server.db.tables.records.DeviceRecord;
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.db.tables.records.EstateinvitationRecord;
 import com.proj.server.db.tables.records.EstateuserRecord;
 import com.proj.server.db.tables.records.LocationRecord;
+import com.proj.server.db.tables.records.ManufacturerRecord;
 
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
@@ -42,19 +50,29 @@ public class Keys {
 
     public static final UniqueKey<AssetRecord> ASSET_PKEY = Internal.createUniqueKey(Asset.ASSET, DSL.name("Asset_pkey"), new TableField[] { Asset.ASSET.ID }, true);
     public static final UniqueKey<AssetassessmentRecord> ASSETASSESSMENT_PKEY = Internal.createUniqueKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_pkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ID }, true);
+    public static final UniqueKey<AssetcategoryRecord> ASSETCATEGORY_PKEY = Internal.createUniqueKey(Assetcategory.ASSETCATEGORY, DSL.name("AssetCategory_pkey"), new TableField[] { Assetcategory.ASSETCATEGORY.CODE }, true);
+    public static final UniqueKey<AsseteventRecord> ASSETEVENT_PKEY = Internal.createUniqueKey(Assetevent.ASSETEVENT, DSL.name("AssetEvent_pkey"), new TableField[] { Assetevent.ASSETEVENT.ID }, true);
     public static final UniqueKey<AssetlifecycleeventRecord> ASSETLIFECYCLEEVENT_PKEY = Internal.createUniqueKey(Assetlifecycleevent.ASSETLIFECYCLEEVENT, DSL.name("AssetLifecycleEvent_pkey"), new TableField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ID }, true);
+    public static final UniqueKey<AssetmodelRecord> ASSETMODEL_PKEY = Internal.createUniqueKey(Assetmodel.ASSETMODEL, DSL.name("AssetModel_pkey"), new TableField[] { Assetmodel.ASSETMODEL.ID }, true);
     public static final UniqueKey<DeviceRecord> DEVICE_PKEY = Internal.createUniqueKey(Device.DEVICE, DSL.name("Device_pkey"), new TableField[] { Device.DEVICE.ID }, true);
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
     public static final UniqueKey<EstateinvitationRecord> ESTATEINVITATION_PKEY = Internal.createUniqueKey(Estateinvitation.ESTATEINVITATION, DSL.name("EstateInvitation_pkey"), new TableField[] { Estateinvitation.ESTATEINVITATION.ID }, true);
     public static final UniqueKey<EstateuserRecord> ESTATEUSER_PKEY = Internal.createUniqueKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_pkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID, Estateuser.ESTATEUSER.USERID }, true);
     public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
+    public static final UniqueKey<ManufacturerRecord> MANUFACTURER_PKEY = Internal.createUniqueKey(Manufacturer.MANUFACTURER, DSL.name("Manufacturer_pkey"), new TableField[] { Manufacturer.MANUFACTURER.ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final ForeignKey<AssetRecord, AssetcategoryRecord> ASSET__ASSET_CATEGORY_FKEY = Internal.createForeignKey(Asset.ASSET, DSL.name("Asset_category_fkey"), new TableField[] { Asset.ASSET.CATEGORY }, Keys.ASSETCATEGORY_PKEY, new TableField[] { Assetcategory.ASSETCATEGORY.CODE }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<AssetRecord, EstateRecord> ASSET__ASSET_ESTATEID_FKEY = Internal.createForeignKey(Asset.ASSET, DSL.name("Asset_estateId_fkey"), new TableField[] { Asset.ASSET.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<AssetRecord, ManufacturerRecord> ASSET__ASSET_MANUFACTURERID_FKEY = Internal.createForeignKey(Asset.ASSET, DSL.name("Asset_manufacturerId_fkey"), new TableField[] { Asset.ASSET.MANUFACTURERID }, Keys.MANUFACTURER_PKEY, new TableField[] { Manufacturer.MANUFACTURER.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<AssetassessmentRecord, EstateRecord> ASSETASSESSMENT__ASSETASSESSMENT_ESTATEID_FKEY = Internal.createForeignKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_estateId_fkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<AsseteventRecord, EstateRecord> ASSETEVENT__ASSETEVENT_ESTATEID_FKEY = Internal.createForeignKey(Assetevent.ASSETEVENT, DSL.name("AssetEvent_estateId_fkey"), new TableField[] { Assetevent.ASSETEVENT.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<AsseteventRecord, ManufacturerRecord> ASSETEVENT__ASSETEVENT_MANUFACTURERID_FKEY = Internal.createForeignKey(Assetevent.ASSETEVENT, DSL.name("AssetEvent_manufacturerId_fkey"), new TableField[] { Assetevent.ASSETEVENT.MANUFACTURERID }, Keys.MANUFACTURER_PKEY, new TableField[] { Manufacturer.MANUFACTURER.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<AssetmodelRecord, AssetcategoryRecord> ASSETMODEL__ASSETMODEL_CATEGORY_FKEY = Internal.createForeignKey(Assetmodel.ASSETMODEL, DSL.name("AssetModel_category_fkey"), new TableField[] { Assetmodel.ASSETMODEL.CATEGORY }, Keys.ASSETCATEGORY_PKEY, new TableField[] { Assetcategory.ASSETCATEGORY.CODE }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<AssetmodelRecord, ManufacturerRecord> ASSETMODEL__ASSETMODEL_MANUFACTURERID_FKEY = Internal.createForeignKey(Assetmodel.ASSETMODEL, DSL.name("AssetModel_manufacturerId_fkey"), new TableField[] { Assetmodel.ASSETMODEL.MANUFACTURERID }, Keys.MANUFACTURER_PKEY, new TableField[] { Manufacturer.MANUFACTURER.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<DeviceRecord, EstateRecord> DEVICE__DEVICE_ESTATEID_FKEY = Internal.createForeignKey(Device.DEVICE, DSL.name("Device_estateId_fkey"), new TableField[] { Device.DEVICE.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateinvitationRecord, EstateRecord> ESTATEINVITATION__ESTATEINVITATION_ESTATEID_FKEY = Internal.createForeignKey(Estateinvitation.ESTATEINVITATION, DSL.name("EstateInvitation_estateId_fkey"), new TableField[] { Estateinvitation.ESTATEINVITATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateuserRecord, EstateRecord> ESTATEUSER__ESTATEUSER_ESTATEID_FKEY = Internal.createForeignKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_estateId_fkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);

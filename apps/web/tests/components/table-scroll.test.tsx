@@ -4,8 +4,8 @@ import {
   TableCell,
   TableRow,
 } from "@proj/ui/components/table";
+import { renderWithProviders, screen } from "@tests/test-utils";
 import { expect, it } from "vitest";
-import { renderWithProviders, screen } from "../test-utils";
 
 it("gives a wide table a labelled keyboard-reachable scroll region", () => {
   renderWithProviders(

@@ -54,6 +54,12 @@ beforeEach(() => {
         response: new Response(),
       } as never);
     }
+    if (path === "/asset-categories") {
+      return Promise.resolve({
+        data: [{ code: "PUMP", label: "Pump" }],
+        response: new Response(),
+      } as never);
+    }
     return Promise.resolve({
       data:
         path === "/estates/{id}"
@@ -91,7 +97,7 @@ it("opens asset details by tapping the location within a single whole-card link"
   const contents = within(card);
   expect(contents.queryAllByRole("link")).toHaveLength(0);
   expect(contents.queryAllByRole("button")).toHaveLength(0);
-  contents.getByText("Pump");
+  await contents.findByText("Pump");
   contents.getByText("Faulty");
   contents.getByText("Active");
   fireEvent.click(contents.getByText("Block A › Level 1 › Pump room"));

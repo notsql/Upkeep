@@ -82,12 +82,12 @@ class AssetAssessmentControllerTests {
                 "PUMP",
                 null,
                 null,
-                null,
-                null,
                 now,
                 now,
                 deactivatedAt,
                 0,
+                null,
+                null,
                 null,
                 null);
     }

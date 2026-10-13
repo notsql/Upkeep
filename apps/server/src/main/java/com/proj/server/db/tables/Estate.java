@@ -9,6 +9,7 @@ import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Asset.AssetPath;
 import com.proj.server.db.tables.Assetassessment.AssetassessmentPath;
+import com.proj.server.db.tables.Assetevent.AsseteventPath;
 import com.proj.server.db.tables.Device.DevicePath;
 import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
 import com.proj.server.db.tables.Estateuser.EstateuserPath;
@@ -216,6 +217,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _assetassessment = new AssetassessmentPath(this, null, Keys.ASSETASSESSMENT__ASSETASSESSMENT_ESTATEID_FKEY.getInverseKey());
 
         return _assetassessment;
+    }
+
+    private transient AsseteventPath _assetevent;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.AssetEvent</code>
+     * table
+     */
+    public AsseteventPath assetevent() {
+        if (_assetevent == null)
+            _assetevent = new AsseteventPath(this, null, Keys.ASSETEVENT__ASSETEVENT_ESTATEID_FKEY.getInverseKey());
+
+        return _assetevent;
     }
 
     private transient DevicePath _device;

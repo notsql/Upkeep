@@ -11,6 +11,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.config.SecurityConfig;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.estate.EstateRepository;
@@ -57,6 +58,9 @@ class AssetControllerTests {
     EstateRepository estates;
 
     @MockitoBean
+    CatalogueRepository catalogue;
+
+    @MockitoBean
     JwtDecoder jwtDecoder;
 
     private final UUID estateId = UUID.fromString("ac514a8e-c643-4a59-aa93-30138327f039");
@@ -66,6 +70,8 @@ class AssetControllerTests {
     private final UUID lobbyId = UUID.fromString("00000000-0000-0000-0000-00000000000a");
     private final UUID plantRoomId = UUID.fromString("00000000-0000-0000-0000-0000000000aa");
     private final UUID foreignId = UUID.fromString("00000000-0000-0000-0000-0000000000ff");
+    private final UUID manufacturerId = UUID.fromString("00000000-0000-0000-0000-0000000000d1");
+    private final UUID modelId = UUID.fromString("00000000-0000-0000-0000-0000000000d2");
     private final OffsetDateTime now = OffsetDateTime.parse("2026-09-27T00:00:00Z");
     private final String base = "/estates/" + estateId + "/assets";
     private final String one = base + "/" + assetId;
@@ -89,19 +95,24 @@ class AssetControllerTests {
                 "Lift 1",
                 "LIFT",
                 LocalDate.parse("2020-05-01"),
-                "Otis",
-                "Gen2",
                 "SN-1",
                 now,
                 now,
                 deactivatedAt,
                 0,
                 null,
-                null);
+                null,
+                manufacturerId,
+                modelId);
     }
 
     @BeforeEach
     void setup() {
+        when(catalogue.manufacturerName(manufacturerId)).thenReturn("Otis");
+        when(catalogue.modelName(modelId)).thenReturn("Gen2");
+        // The seeded AssetCategory rows these tests use; any other code (e.g. ROCKET) is unknown.
+        when(catalogue.categoryExists("LIFT")).thenReturn(true);
+        when(catalogue.categoryExists("PUMP")).thenReturn(true);
         when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(null)));
         when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
         when(locations.find(blockId, estateId))
@@ -151,15 +162,15 @@ class AssetControllerTests {
                     request.locationId(),
                     reference,
                     request.name(),
-                    request.category().name(),
+                    request.category(),
                     request.installedOn(),
-                    request.manufacturer(),
-                    request.model(),
                     request.serialNumber(),
                     now,
                     now,
                     null,
                     0,
+                    null,
+                    null,
                     null,
                     null);
         });
@@ -263,7 +274,7 @@ class AssetControllerTests {
                 .create(
                         estateId,
                         "SUNRISE-A0001",
-                        new CreateAssetRequest("Lift 1", AssetCategory.LIFT, lobbyId, null, null, null, "SN-1"));
+                        new CreateAssetRequest("Lift 1", "LIFT", lobbyId, null, null, null, "SN-1"));
     }
 
     @ParameterizedTest(name = "rejects {0}")
@@ -329,7 +340,7 @@ class AssetControllerTests {
     @Test
     void updatesTheFieldsAndMovesTheAssetButNeverTheReference() throws Exception {
         var moved = new UpdateAssetRequest(
-                "Lift 1A", AssetCategory.PUMP, plantRoomId, LocalDate.parse("2021-01-02"), "Grundfos", null, null);
+                "Lift 1A", "PUMP", plantRoomId, LocalDate.parse("2021-01-02"), "Grundfos", null, null);
         var stored = asset(plantRoomId, null);
         stored.setName("Lift 1A");
         stored.setCategory("PUMP");

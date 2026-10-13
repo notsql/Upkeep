@@ -1,4 +1,6 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +18,9 @@ import {
   useRecordAssessment,
 } from "@/lib/assessments";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
+
+/** The identity the server records anomaly-detection assessments under. */
+const ANOMALY_MODEL_USER_ID = "system:anomaly-model";
 
 export function AssetConditionSection({
   assetId,
@@ -71,9 +76,9 @@ export function AssetConditionSection({
           </p>
         ) : null}
         {assessments.error ? (
-          <p className="mt-4 text-destructive" role="alert">
-            {assessments.error.message}
-          </p>
+          <Alert className="mt-4" variant="destructive">
+            <AlertDescription>{assessments.error.message}</AlertDescription>
+          </Alert>
         ) : null}
         {assessments.data ? (
           <p
@@ -112,19 +117,25 @@ export function AssetConditionSection({
             <h3 className="mt-6 font-medium">History</h3>
             <ul className="mt-2 grid gap-3">
               {assessments.data.map((assessment) => (
-                <li
-                  className="rounded-lg border p-3 text-sm"
-                  key={assessment.id}
-                >
-                  <p>
-                    <ConditionBadge condition={assessment.condition} /> ·
-                    assessed {assessment.assessedOn}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap">{assessment.notes}</p>
-                  <p className="mt-2 text-muted-foreground">
-                    Recorded by {assessment.recordedByName ?? "Unknown user"} on{" "}
-                    {new Date(assessment.recordedAt).toLocaleString()}
-                  </p>
+                <li key={assessment.id}>
+                  <Card size="sm">
+                    <CardContent>
+                      <p>
+                        <ConditionBadge condition={assessment.condition} /> ·
+                        assessed {assessment.assessedOn}
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap">
+                        {assessment.notes}
+                      </p>
+                      <p className="mt-2 text-muted-foreground">
+                        Recorded by{" "}
+                        {assessment.recordedByUserId === ANOMALY_MODEL_USER_ID
+                          ? "Anomaly detection"
+                          : (assessment.recordedByName ?? "Unknown user")}{" "}
+                        on {new Date(assessment.recordedAt).toLocaleString()}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </li>
               ))}
             </ul>

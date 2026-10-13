@@ -1,7 +1,7 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen } from "@tests/test-utils";
 import { expect, it, vi } from "vitest";
 import { FormActions } from "@/components/form-actions";
-import { renderWithProviders, screen } from "../test-utils";
 
 it("offers cancellation without submitting and blocks actions during a save", () => {
   const cancel = vi.fn();

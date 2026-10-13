@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { type AssetFilters, assetCategoryLabel } from "@/lib/assets";
+import type { AssetFilters } from "@/lib/assets";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
 
 const UUID_PATTERN =
@@ -8,10 +8,10 @@ const UUID_PATTERN =
 function validateSearch(search: Record<string, unknown>): AssetFilters {
   return {
     q: typeof search.q === "string" ? search.q.trim() || undefined : undefined,
+    // The server rejects an unknown category, so any code passes through here.
     category:
-      typeof search.category === "string" &&
-      Object.hasOwn(assetCategoryLabel, search.category)
-        ? (search.category as AssetFilters["category"])
+      typeof search.category === "string"
+        ? search.category.trim() || undefined
         : undefined,
     locationId:
       typeof search.locationId === "string" &&

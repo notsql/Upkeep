@@ -6,7 +6,7 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 
 - path `estateId`: uuid (required)
 - query `q`: string (optional)
-- query `category`: LIFT / PUMP / GENERATOR / LIGHTING / FIRE_SAFETY / HVAC / ELECTRICAL / OTHER (optional)
+- query `category`: string (optional)
 - query `locationId`: uuid (optional)
 - query `condition`: GOOD / NEEDS_ATTENTION / FAULTY / UNASSESSED (optional)
 - query `status`: ACTIVE / INACTIVE / ALL (optional)
@@ -169,7 +169,7 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 | estateId | uuid | yes |  |
 | reference | string | yes |  |
 | name | string | yes |  |
-| category | LIFT / PUMP / GENERATOR / LIGHTING / FIRE_SAFETY / HVAC / ELECTRICAL / OTHER | yes |  |
+| category | string | yes |  |
 | locationId | uuid | yes |  |
 | locationPath | string | yes |  |
 | installedOn | date | no |  |
@@ -197,7 +197,7 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
 | name | string | yes | minLength=0, maxLength=200 |
-| category | LIFT / PUMP / GENERATOR / LIGHTING / FIRE_SAFETY / HVAC / ELECTRICAL / OTHER | yes |  |
+| category | string | yes | minLength=0, maxLength=30 |
 | locationId | uuid | yes |  |
 | installedOn | date | no |  |
 | manufacturer | string | no | minLength=0, maxLength=200 |
@@ -272,7 +272,7 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
 | name | string | yes | minLength=0, maxLength=200 |
-| category | LIFT / PUMP / GENERATOR / LIGHTING / FIRE_SAFETY / HVAC / ELECTRICAL / OTHER | yes |  |
+| category | string | yes | minLength=0, maxLength=30 |
 | locationId | uuid | yes |  |
 | installedOn | date | no |  |
 | manufacturer | string | no | minLength=0, maxLength=200 |
@@ -287,6 +287,8 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 - Retirement requires exact reference, a trimmed nonblank reason (max 2000), date and expectedVersion. Date must be no later than Singapore today and no earlier than known installation.
 - Corrections require a retired asset. Restoration requires a retired asset and exact reference, clears current retirement metadata and retains the same identity/history.
 - Every lifecycle transition increments version and atomically records actor, timestamp and before/after snapshots. Stale version or invalid state returns 409. Legacy retired rows retain null metadata without fabricated events.
+- `category` is a code from the `AssetCategory` table (list them with `GET /asset-categories`, see `catalogue.md`); an unknown code returns 400 "category: unknown asset category." The list filter takes the same codes.
+- `manufacturer` and `model` are free text backed by the shared catalogue: on save they are normalised (trimmed, whitespace collapsed, uppercased) and found-or-created, so responses return the catalogue name. A model without a manufacturer returns 400 "manufacturer: required when a model is given." Changing them makes earlier events stop counting toward the failure forecast (`asset-events.md`).
 - Ordinary asset edits remain blocked while retired. Device/assessment history remains attached; replacements are independent assets.
 
 Example: `GET /estates/{estateId}/assets?q=pump&condition=FAULTY&status=ALL`.

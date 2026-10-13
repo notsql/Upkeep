@@ -1,16 +1,17 @@
+import type { components } from "@proj/api/schema";
 import { fireEvent } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "@/lib/api";
-import type { Asset } from "@/lib/assets";
-import type { Location } from "@/lib/locations";
-import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 import {
   chooseOption,
   renderWithProviders,
   screen,
   waitFor,
   within,
-} from "../../../../../../test-utils";
+} from "@tests/test-utils";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "@/lib/api";
+import type { Asset } from "@/lib/assets";
+import type { Location } from "@/lib/locations";
+import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
@@ -61,11 +62,26 @@ const asset: Asset = {
   updatedAt: at,
 };
 
+type AssetCategory = components["schemas"]["AssetCategoryResponse"];
+// The server orders categories by label.
+const categories: AssetCategory[] = [
+  { code: "LIFT", label: "Lift" },
+  { code: "OTHER", label: "Other" },
+  { code: "PUMP", label: "Pump" },
+];
+
 function serveLocations() {
-  vi.mocked(api.GET).mockResolvedValue({
-    data: locations,
-    response: new Response(),
-  } as never);
+  const data: Record<string, unknown> = {
+    "/estates/{estateId}/locations": locations,
+    "/asset-categories": categories,
+    "/manufacturers": [],
+    "/manufacturers/{manufacturerId}/models": [],
+  };
+  vi.mocked(api.GET).mockImplementation(((path: string) =>
+    Promise.resolve({
+      data: data[path],
+      response: new Response(),
+    })) as never);
 }
 
 /** Resolves once the location options have arrived. */
@@ -94,12 +110,13 @@ function installedOnField() {
   return screen.getByLabelText<HTMLInputElement>(INSTALLED_ON_LABEL);
 }
 function manufacturerField() {
-  return screen.getByRole<HTMLInputElement>("textbox", {
+  // Manufacturer and model are comboboxes that also accept free text.
+  return screen.getByRole<HTMLInputElement>("combobox", {
     name: MANUFACTURER_LABEL,
   });
 }
 function modelField() {
-  return screen.getByRole<HTMLInputElement>("textbox", { name: MODEL_LABEL });
+  return screen.getByRole<HTMLInputElement>("combobox", { name: MODEL_LABEL });
 }
 function serialNumberField() {
   return screen.getByRole<HTMLInputElement>("textbox", {
@@ -137,13 +154,8 @@ describe("AssetForm", () => {
     await locationsLoaded();
     expect(await optionLabels(categoryField())).toEqual([
       "Lift",
-      "Pump",
-      "Generator",
-      "Lighting",
-      "Fire safety",
-      "HVAC",
-      "Electrical",
       "Other",
+      "Pump",
     ]);
   });
 
@@ -180,6 +192,19 @@ describe("AssetForm", () => {
       description: REQUIRED,
     });
     expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("announces each missing required field as an alert", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    expect(
+      (await screen.findAllByRole("alert")).map((alert) => alert.textContent)
+    ).toEqual([
+      "Name is required.",
+      "Category is required.",
+      "Location is required.",
+    ]);
   });
 
   it("submits every entered detail", async () => {
@@ -278,7 +303,7 @@ describe("AssetForm", () => {
     expect(reference.value).toBe("SUNRISE-A0001");
     expect(reference.readOnly).toBe(true);
     expect(nameField().value).toBe("Lift A");
-    within(categoryField()).getByText("Lift");
+    await waitFor(() => within(categoryField()).getByText("Lift"));
     await waitFor(() =>
       within(locationField()).getByText("Blk 101 › Level 1 › Lift lobby")
     );

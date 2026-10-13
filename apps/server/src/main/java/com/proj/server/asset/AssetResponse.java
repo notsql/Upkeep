@@ -23,7 +23,7 @@ public record AssetResponse(
         UUID estateId,
         String reference,
         String name,
-        AssetCategory category,
+        String category,
         UUID locationId,
 
         @Schema(description = "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\"")

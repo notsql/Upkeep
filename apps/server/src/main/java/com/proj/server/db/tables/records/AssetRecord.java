@@ -121,129 +121,129 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
     }
 
     /**
-     * Setter for <code>public.Asset.manufacturer</code>.
-     */
-    public void setManufacturer(String value) {
-        set(7, value);
-    }
-
-    /**
-     * Getter for <code>public.Asset.manufacturer</code>.
-     */
-    public String getManufacturer() {
-        return (String) get(7);
-    }
-
-    /**
-     * Setter for <code>public.Asset.model</code>.
-     */
-    public void setModel(String value) {
-        set(8, value);
-    }
-
-    /**
-     * Getter for <code>public.Asset.model</code>.
-     */
-    public String getModel() {
-        return (String) get(8);
-    }
-
-    /**
      * Setter for <code>public.Asset.serialNumber</code>.
      */
     public void setSerialnumber(String value) {
-        set(9, value);
+        set(7, value);
     }
 
     /**
      * Getter for <code>public.Asset.serialNumber</code>.
      */
     public String getSerialnumber() {
-        return (String) get(9);
+        return (String) get(7);
     }
 
     /**
      * Setter for <code>public.Asset.createdAt</code>.
      */
     public void setCreatedat(OffsetDateTime value) {
-        set(10, value);
+        set(8, value);
     }
 
     /**
      * Getter for <code>public.Asset.createdAt</code>.
      */
     public OffsetDateTime getCreatedat() {
-        return (OffsetDateTime) get(10);
+        return (OffsetDateTime) get(8);
     }
 
     /**
      * Setter for <code>public.Asset.updatedAt</code>.
      */
     public void setUpdatedat(OffsetDateTime value) {
-        set(11, value);
+        set(9, value);
     }
 
     /**
      * Getter for <code>public.Asset.updatedAt</code>.
      */
     public OffsetDateTime getUpdatedat() {
-        return (OffsetDateTime) get(11);
+        return (OffsetDateTime) get(9);
     }
 
     /**
      * Setter for <code>public.Asset.deactivatedAt</code>.
      */
     public void setDeactivatedat(OffsetDateTime value) {
-        set(12, value);
+        set(10, value);
     }
 
     /**
      * Getter for <code>public.Asset.deactivatedAt</code>.
      */
     public OffsetDateTime getDeactivatedat() {
-        return (OffsetDateTime) get(12);
+        return (OffsetDateTime) get(10);
     }
 
     /**
      * Setter for <code>public.Asset.lifecycleVersion</code>.
      */
     public void setLifecycleversion(Integer value) {
-        set(13, value);
+        set(11, value);
     }
 
     /**
      * Getter for <code>public.Asset.lifecycleVersion</code>.
      */
     public Integer getLifecycleversion() {
-        return (Integer) get(13);
+        return (Integer) get(11);
     }
 
     /**
      * Setter for <code>public.Asset.retiredOn</code>.
      */
     public void setRetiredon(LocalDate value) {
-        set(14, value);
+        set(12, value);
     }
 
     /**
      * Getter for <code>public.Asset.retiredOn</code>.
      */
     public LocalDate getRetiredon() {
-        return (LocalDate) get(14);
+        return (LocalDate) get(12);
     }
 
     /**
      * Setter for <code>public.Asset.retirementReason</code>.
      */
     public void setRetirementreason(String value) {
-        set(15, value);
+        set(13, value);
     }
 
     /**
      * Getter for <code>public.Asset.retirementReason</code>.
      */
     public String getRetirementreason() {
-        return (String) get(15);
+        return (String) get(13);
+    }
+
+    /**
+     * Setter for <code>public.Asset.manufacturerId</code>.
+     */
+    public void setManufacturerid(UUID value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.Asset.manufacturerId</code>.
+     */
+    public UUID getManufacturerid() {
+        return (UUID) get(14);
+    }
+
+    /**
+     * Setter for <code>public.Asset.modelId</code>.
+     */
+    public void setModelid(UUID value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.Asset.modelId</code>.
+     */
+    public UUID getModelid() {
+        return (UUID) get(15);
     }
 
     // -------------------------------------------------------------------------
@@ -269,7 +269,7 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
     /**
      * Create a detached, initialised AssetRecord
      */
-    public AssetRecord(UUID id, UUID estateid, UUID locationid, String reference, String name, String category, LocalDate installedon, String manufacturer, String model, String serialnumber, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime deactivatedat, Integer lifecycleversion, LocalDate retiredon, String retirementreason) {
+    public AssetRecord(UUID id, UUID estateid, UUID locationid, String reference, String name, String category, LocalDate installedon, String serialnumber, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime deactivatedat, Integer lifecycleversion, LocalDate retiredon, String retirementreason, UUID manufacturerid, UUID modelid) {
         super(Asset.ASSET);
 
         setId(id);
@@ -279,8 +279,6 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
         setName(name);
         setCategory(category);
         setInstalledon(installedon);
-        setManufacturer(manufacturer);
-        setModel(model);
         setSerialnumber(serialnumber);
         setCreatedat(createdat);
         setUpdatedat(updatedat);
@@ -288,6 +286,8 @@ public class AssetRecord extends UpdatableRecordImpl<AssetRecord> {
         setLifecycleversion(lifecycleversion);
         setRetiredon(retiredon);
         setRetirementreason(retirementreason);
+        setManufacturerid(manufacturerid);
+        setModelid(modelid);
         resetTouchedOnNotNull();
     }
 }
