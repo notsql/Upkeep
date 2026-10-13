@@ -38,7 +38,6 @@ public class Indexes {
     public static final Index ASSETLIFECYCLEEVENT_ASSETID_LIFECYCLEVERSION_KEY = Internal.createIndex(DSL.name("AssetLifecycleEvent_assetId_lifecycleVersion_key"), Assetlifecycleevent.ASSETLIFECYCLEEVENT, new OrderField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ASSETID, Assetlifecycleevent.ASSETLIFECYCLEEVENT.LIFECYCLEVERSION }, true);
     public static final Index ASSETLIFECYCLEEVENT_ESTATEID_ASSETID_IDX = Internal.createIndex(DSL.name("AssetLifecycleEvent_estateId_assetId_idx"), Assetlifecycleevent.ASSETLIFECYCLEEVENT, new OrderField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ESTATEID, Assetlifecycleevent.ASSETLIFECYCLEEVENT.ASSETID }, false);
     public static final Index DEVICE_ASSETID_IDX = Internal.createIndex(DSL.name("Device_assetId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ASSETID }, false);
-    public static final Index DEVICE_CREDENTIALHASH_KEY = Internal.createIndex(DSL.name("Device_credentialHash_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.CREDENTIALHASH }, true);
     public static final Index DEVICE_ESTATEID_IDX = Internal.createIndex(DSL.name("Device_estateId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ESTATEID }, false);
     public static final Index DEVICE_IDENTIFIER_KEY = Internal.createIndex(DSL.name("Device_identifier_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.IDENTIFIER }, true);
     public static final Index DEVICE_LOCATIONID_IDX = Internal.createIndex(DSL.name("Device_locationId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.LOCATIONID }, false);
