@@ -1,13 +1,9 @@
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { Device } from "@/lib/devices";
 import type { Location } from "@/lib/locations";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
-import {
-  renderWithProviders,
-  screen,
-  within,
-} from "../../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn(), POST: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({

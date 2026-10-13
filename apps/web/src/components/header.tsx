@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
+import { AuthButton } from "@/components/auth-button";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-import { AuthButton } from "./auth-button";
 
 export default function Header() {
   return (

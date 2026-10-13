@@ -1,14 +1,14 @@
 import { fireEvent } from "@testing-library/react";
 import { mockMobileViewport } from "@tests/mock-viewport";
-import type { ReactNode } from "react";
-import { beforeEach, expect, it, vi } from "vitest";
-import { Route } from "@/routes/_auth/admin/users";
 import {
   chooseOption,
   renderWithProviders,
   screen,
   waitFor,
-} from "../../../../test-utils";
+} from "@tests/test-utils";
+import type { ReactNode } from "react";
+import { beforeEach, expect, it, vi } from "vitest";
+import { Route } from "@/routes/_auth/admin/users";
 
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),

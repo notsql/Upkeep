@@ -1,8 +1,8 @@
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { EstateDetailsPage } from "@/routes/_auth/estates/$estateId/-components/estate-details-page";
-import { renderWithProviders, screen, within } from "../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

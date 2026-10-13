@@ -1,4 +1,5 @@
 import type { components } from "@proj/api/schema";
+import { renderWithProviders, screen } from "@tests/test-utils";
 import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
@@ -8,7 +9,6 @@ import {
   useAssetFailureRisk,
   useEstateFailureRisk,
 } from "@/lib/failure-risk";
-import { renderWithProviders, screen } from "../test-utils";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({

@@ -1,13 +1,8 @@
 import { fireEvent, render } from "@testing-library/react";
+import { chooseOption, screen, waitFor, within } from "@tests/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { localToday } from "@/lib/assessments";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
-import {
-  chooseOption,
-  screen,
-  waitFor,
-  within,
-} from "../../../../../../../test-utils";
 
 const REQUIRED = /required/i;
 

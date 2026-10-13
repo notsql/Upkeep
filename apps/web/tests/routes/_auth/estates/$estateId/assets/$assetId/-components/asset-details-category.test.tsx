@@ -1,7 +1,7 @@
+import { renderWithProviders, screen } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { AssetDetailsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
-import { renderWithProviders, screen } from "../../../../../../../test-utils";
 
 // Sections that fetch their own data stay pending: this test is about the label.
 vi.mock("@/lib/api", () => ({

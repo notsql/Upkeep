@@ -1,17 +1,17 @@
 import { fireEvent } from "@testing-library/react";
 import { mockMobileViewport } from "@tests/mock-viewport";
-import { chooseOption } from "@tests/test-utils";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import { type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { AssetFilters } from "@/lib/assets";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
-import {
-  renderWithProviders,
-  screen,
-  waitFor,
-  within,
-} from "../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

@@ -1,5 +1,6 @@
 import type { components } from "@proj/api/schema";
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
@@ -12,7 +13,6 @@ import {
   assetFailureRiskQueryKey,
   estateFailureRiskQueryKey,
 } from "@/lib/failure-risk";
-import { renderWithProviders, screen, waitFor } from "../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

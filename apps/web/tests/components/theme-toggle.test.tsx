@@ -1,7 +1,7 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { beforeEach, expect, it } from "vitest";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { renderWithProviders, screen, waitFor } from "../test-utils";
 
 beforeEach(() => localStorage.clear());
 it("switches modes and saves the selected preference", async () => {

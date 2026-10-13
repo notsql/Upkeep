@@ -1,14 +1,10 @@
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import {
   EditAssetPage,
   NewAssetPage,
 } from "@/routes/_auth/estates/$estateId/assets/-components/asset-editor-page";
-import {
-  renderWithProviders,
-  screen,
-  within,
-} from "../../../../../../test-utils";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (

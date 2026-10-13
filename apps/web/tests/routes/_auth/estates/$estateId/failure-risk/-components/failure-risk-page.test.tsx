@@ -1,13 +1,9 @@
 import type { components } from "@proj/api/schema";
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { FailureRiskPage } from "@/routes/_auth/estates/$estateId/failure-risk/-components/failure-risk-page";
-import {
-  renderWithProviders,
-  screen,
-  within,
-} from "../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@tanstack/react-router", () => ({

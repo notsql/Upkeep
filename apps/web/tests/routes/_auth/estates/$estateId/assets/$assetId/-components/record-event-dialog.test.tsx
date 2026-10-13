@@ -1,14 +1,14 @@
 import { fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import { localToday } from "@/lib/assessments";
-import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/record-event-dialog";
 import {
   chooseOption,
   renderWithProviders,
   screen,
   waitFor,
   within,
-} from "../../../../../../../test-utils";
+} from "@tests/test-utils";
+import { describe, expect, it, vi } from "vitest";
+import { localToday } from "@/lib/assessments";
+import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/record-event-dialog";
 
 const REQUIRED = /required/i;
 

@@ -1,7 +1,7 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-form";
-import { renderWithProviders, screen, waitFor } from "../../../../test-utils";
 
 describe("EstateForm", () => {
   it("collects the identifying details and submits them", async () => {

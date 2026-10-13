@@ -1,16 +1,16 @@
 import type { components } from "@proj/api/schema";
 import { fireEvent } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "@/lib/api";
-import type { Location } from "@/lib/locations";
-import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 import {
   chooseOption,
   renderWithProviders,
   screen,
   waitFor,
   within,
-} from "../../../../../../test-utils";
+} from "@tests/test-utils";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "@/lib/api";
+import type { Location } from "@/lib/locations";
+import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

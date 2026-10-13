@@ -10,9 +10,9 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "next-themes";
 import { AppShell } from "@/components/app-shell";
-import { AuthProvider } from "../components/auth-provider";
+import { AuthProvider } from "@/components/auth-provider";
 
-import appCss from "../index.css?url";
+import appCss from "@/index.css?url";
 
 export interface RouterAppContext {
   queryClient: QueryClient;

@@ -1,8 +1,8 @@
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { createElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { type Asset, assetQueryKey, useAsset } from "@/lib/assets";
-import { renderWithProviders, screen, waitFor } from "../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
