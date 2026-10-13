@@ -31,5 +31,8 @@ public record DeviceResponse(
         @Schema(nullable = true, description = "When the device last sent a valid reading. Null until its first.")
         OffsetDateTime lastSeenAt,
 
+        @Schema(nullable = true, description = "When the device's current API key was issued. Null if it has none.")
+        OffsetDateTime credentialIssuedAt,
+
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt) {}

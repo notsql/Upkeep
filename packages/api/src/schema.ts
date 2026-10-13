@@ -216,6 +216,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["issueDeviceCredential"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{id}": {
     parameters: {
       query?: never;
@@ -683,10 +699,23 @@ export interface components {
        * @description When the device last sent a valid reading. Null until its first.
        */
       lastSeenAt?: string | null;
+      /**
+       * Format: date-time
+       * @description When the device's current API key was issued. Null if it has none.
+       */
+      credentialIssuedAt?: string | null;
       /** Format: date-time */
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    DeviceCredentialResponse: {
+      /** Format: uuid */
+      deviceId: string;
+      /** @description The device's API key. Returned only here, once; it is never stored or shown again. */
+      apiKey: string;
+      /** Format: date-time */
+      issuedAt: string;
     };
     CreateAssetAssessmentRequest: {
       /** @enum {string} */
@@ -1847,6 +1876,66 @@ export interface operations {
       };
     };
   };
+  issueDeviceCredential: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+        deviceId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description New API key, shown only this once. Replaces and revokes any earlier key. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DeviceCredentialResponse"];
+        };
+      };
+      /** @description Missing or invalid details, or an unsupported metric */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate, asset, location or device not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate identifier, or an inactive estate, asset or location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   list: {
     parameters: {
       query?: {
@@ -2134,7 +2223,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Estate, asset or location not found */
+      /** @description Estate, asset, location or device not found */
       404: {
         headers: {
           [name: string]: unknown;
@@ -2715,7 +2804,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Estate, asset or location not found */
+      /** @description Estate, asset, location or device not found */
       404: {
         headers: {
           [name: string]: unknown;

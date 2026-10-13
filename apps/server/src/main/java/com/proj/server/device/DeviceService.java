@@ -65,6 +65,29 @@ public class DeviceService {
         return response(repository.create(estateId, assetId, request));
     }
 
+    /**
+     * Same lock order as registration, then overwrites the device's key hash. The
+     * plaintext key goes only into the response.
+     */
+    @Transactional
+    public DeviceCredentialResponse issueCredential(UUID estateId, UUID assetId, UUID deviceId, String owner) {
+        var estate = estates.findOwned(estateId, owner, true).orElseThrow(DeviceService::estateNotFound);
+        if (estate.deactivatedAt() != null) {
+            throw new DeviceException(
+                    HttpStatus.CONFLICT, "This estate is inactive. Device credentials cannot be issued.");
+        }
+        var asset = assets.find(assetId, estateId, true).orElseThrow(DeviceService::assetNotFound);
+        if (asset.getDeactivatedat() != null) {
+            throw new DeviceException(
+                    HttpStatus.CONFLICT, "This asset is retired. Device credentials cannot be issued.");
+        }
+        var key = DeviceKeys.generate();
+        var issuedAt = repository
+                .replaceCredential(deviceId, assetId, estateId, DeviceKeys.hash(key))
+                .orElseThrow(() -> new DeviceException(HttpStatus.NOT_FOUND, "Device not found."));
+        return new DeviceCredentialResponse(deviceId, key, issuedAt);
+    }
+
     static String duplicateMessage(String identifier) {
         return "A device with identifier \"%s\" is already registered. Check the identifier on the device's label."
                 .formatted(identifier);
@@ -85,6 +108,7 @@ public class DeviceService {
                 metrics,
                 row.getReportingintervalseconds(),
                 row.getLastseenat(),
+                row.getCredentialissuedat(),
                 row.getCreatedat(),
                 row.getUpdatedat());
     }

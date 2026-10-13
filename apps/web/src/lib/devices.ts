@@ -6,6 +6,8 @@ import { estateError, useEstateSession } from "@/lib/estates";
 export type Device = components["schemas"]["DeviceResponse"];
 export type DeviceInput = components["schemas"]["CreateDeviceRequest"];
 export type DeviceMetric = DeviceInput["metrics"][number];
+export type DeviceCredential =
+  components["schemas"]["DeviceCredentialResponse"];
 
 /**
  * The server's metric catalogue, in its order (decision 0016). Units are shown
@@ -65,6 +67,28 @@ export function useRegisterDevice(estateId: string, assetId: string) {
       const { data, error, response } = await api.POST(
         "/estates/{estateId}/assets/{assetId}/devices",
         { params: { path: { estateId, assetId } }, body }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: devicesQueryKey(userId, estateId, assetId),
+      }),
+  });
+}
+
+/** The response carries the plaintext key; it is never cached or refetched. */
+export function useIssueDeviceCredential(estateId: string, assetId: string) {
+  const { userId } = useEstateSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (deviceId: string): Promise<DeviceCredential> => {
+      const { data, error, response } = await api.POST(
+        "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential",
+        { params: { path: { estateId, assetId, deviceId } } }
       );
       if (error || !data) {
         throw estateError(error, response.status);
