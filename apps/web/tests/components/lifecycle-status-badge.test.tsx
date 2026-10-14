@@ -1,6 +1,6 @@
+import { renderWithProviders, screen } from "@tests/test-utils";
 import { expect, it } from "vitest";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
-import { renderWithProviders, screen } from "../test-utils";
 
 it.each([
   [false, "Inactive", "Active"],

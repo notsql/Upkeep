@@ -1,6 +1,6 @@
 # Failure risk
 
-**Status:** agreed
+**Status:** built
 **Owner:** Zheng Kai
 **Jira:** [ID-32](https://notjira.atlassian.net/browse/ID-32) (epic [ID-10](https://notjira.atlassian.net/browse/ID-10) Council Dashboard and Budgeting; method from [ID-7](https://notjira.atlassian.net/browse/ID-7))
 
@@ -409,40 +409,40 @@ Each task is self-contained. Read this spec and the named notebook first. Do
 not touch `apps/`, install nothing, and commit nothing.
 
 #### 0a. Compare the Bayesian forecast in notebook 02
-- [ ] **Goal:** add the Bayesian survival method to `notebooks/02-pump-rul.ipynb` as a baseline, evaluated the same way as the existing candidates, so the report can compare it directly with the trained models.
-- [ ] **Method:**
+- [x] **Goal:** add the Bayesian survival method to `notebooks/02-pump-rul.ipynb` as a baseline, evaluated the same way as the existing candidates, so the report can compare it directly with the trained models.
+- [x] **Method:**
   - For each failure cycle, start from a weak prior and update it **only with earlier cycles**, as the app does after each "Repaired" click.
   - Use the notebook's own time scale (hours): the 3-year pump constants above don't apply to this dataset.
   - Fit or justify the prior's `m` and `k` from the training cycles only, and state the weight `a₀` used.
-- [ ] **Report:**
+- [x] **Report:**
   - MAE on the capped hours-to-failure target, using the posterior median.
   - The 24 h / 48 h early-warning table, using P(fail within h) ≥ threshold.
   - Interval coverage, using posterior quantiles.
   - All alongside the existing rows: sensors, sensors + age, age only, mean, service-interval rule.
-- [ ] **Conclusions:** with only 7 failures, the differences are noisy. Say so plainly, and don't pick a winner on noise.
-- [ ] **Output:** update the notebook's conclusions and `artifacts/pump-rul/metrics.json`, then clear the outputs as before.
+- [x] **Conclusions:** with only 7 failures, the differences are noisy. Say so plainly, and don't pick a winner on noise.
+- [x] **Output:** update the notebook's conclusions and `artifacts/pump-rul/metrics.json`, then clear the outputs as before.
 
 #### 0b. Retrain the anomaly model on platform metrics
-- [ ] **New notebook:** `notebooks/03-pump-anomaly-platform-metrics.ipynb`. Keep 01 as the research record and reuse its split, cross-validation and held-out protocol.
-- [ ] **Inputs:** five inputs mapped from SKAB:
+- [x] **New notebook:** `notebooks/03-pump-anomaly-platform-metrics.ipynb`. Keep 01 as the research record and reuse its split, cross-validation and held-out protocol.
+- [x] **Inputs:** five inputs mapped from SKAB:
   - `Accelerometer1RMS` → vibration acceleration (g RMS)
   - `Pressure` → pressure (bar)
   - `Temperature` → temperature (°C)
   - `Volume Flow RateRMS` → flow rate (L/min; confirm SKAB's unit)
   - `Current × Voltage / 1000` → power (kW). State that this ignores power factor.
   - Drop `Accelerometer2RMS` and `Thermocouple`.
-- [ ] **Compare:** set it against notebook 01's 8-sensor result (F1 0.73). Report what was lost and whether the 5-input model is still useful.
-- [ ] **Features:** keep them computable in Spring from the readings alone: raw values and rolling mean and std over the last 10 readings. Export about 50 rows of input readings with their expected features and scores as a parity fixture for the Spring test.
-- [ ] **Export:**
+- [x] **Compare:** set it against notebook 01's 8-sensor result (F1 0.73). Report what was lost and whether the 5-input model is still useful.
+- [x] **Features:** keep them computable in Spring from the readings alone: raw values and rolling mean and std over the last 10 readings. Export about 50 rows of input readings with their expected features and scores as a parity fixture for the Spring test.
+- [x] **Export:**
   - ONNX with an sklearn parity assert.
   - `metrics.json` with the feature order, decision threshold and Faulty threshold.
   - Artifacts in `artifacts/pump-anomaly-platform/`.
-- [ ] **Simulation dataset:** save the held-out test experiments as `artifacts/pump-anomaly-platform/test-readings.csv`, for driving simulated pumps against the anomaly-check endpoint.
+- [x] **Simulation dataset:** save the held-out test experiments as `artifacts/pump-anomaly-platform/test-readings.csv`, for driving simulated pumps against the anomaly-check endpoint.
   - **Columns:** `experiment`, `timestamp`, `vibrationAcceleration`, `pressure`, `temperature`, `flowRate`, `power`, `anomaly`.
   - **Raw readings:** these are readings in platform units, not engineered features. The reading columns use the `AnomalyCheckRequest` field names, so rows can be posted as-is. `anomaly` is the ground truth, for checking what the endpoint flags.
   - **Rows:** ordered by experiment, then timestamp. List the experiments in the README.
-- [ ] **Licence:** record that SKAB is GPL-3.0 and that the model is used for education only.
-- [ ] **Hand-off:** copy `model.onnx` to `apps/ml/models/model.onnx`. It is committed with the Spring constants it matches; see Resolved.
+- [x] **Licence:** record that SKAB is GPL-3.0 and that the model is used for education only.
+- [x] **Hand-off:** copy `model.onnx` to `apps/ml/models/model.onnx`. It is committed with the Spring constants it matches; see Resolved.
 
 ### 1. Decision
 - [x] Add `.spec/decisions/0020-failure-risk-is-a-bayesian-weibull-on-repair-history.md`. It records:
@@ -454,118 +454,118 @@ not touch `apps/`, install nothing, and commit nothing.
   - that model-generated conditions are ordinary assessments under the `system:anomaly-model` identity, rather than a separate table
   - that `VIBRATION_ACCELERATION` (g) is added rather than converting to mm/s
   - that readings are scored, not stored, until ID-43
-- [ ] Add `.spec/decisions/0022-asset-categories-and-models-are-shared-tables.md`. It records:
+- [x] Add `.spec/decisions/0026-asset-categories-and-models-are-shared-tables.md`. It records:
   - why asset categories became a table: assets and models both reference them
   - why manufacturers and models are a shared catalogue, created on the fly and stored uppercase
   - that behaviour stays in code, keyed by category code
   - that the forecast's unit snapshot is catalogue IDs
 
 ### 2. Data (`add-model` skill)
-- [ ] Add `AssetCategory`, `Manufacturer`, `AssetModel` and `AssetEvent`, and change `Asset`, in `schema.prisma`.
-- [ ] Create the migration without applying it (`prisma migrate dev --create-only`, via `pnpm db:migrate -- --create-only`), then add SQL to it that:
+- [x] Add `AssetCategory`, `Manufacturer`, `AssetModel` and `AssetEvent`, and change `Asset`, in `schema.prisma`.
+- [x] Create the migration without applying it (`prisma migrate dev --create-only`, via `pnpm db:migrate -- --create-only`), then add SQL to it that:
   - seeds the 13 categories before the `Asset.category` foreign key is added
   - fills the catalogue from the existing text columns and points each asset at it, before the text columns are dropped
-- [ ] Apply it with `pnpm db:migrate`.
-- [ ] Run `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`, and fix `AssetRepository` and `AssetService`.
+- [x] Apply it with `pnpm db:migrate`.
+- [x] Run `pnpm db:generate`, then `./mvnw -pl com.proj:server compile`, and fix `AssetRepository` and `AssetService`.
 
 ### 3. Server tests (red)
-- [ ] `AssetCategoryControllerTests`:
-  - [ ] The endpoint lists the 13 seeded categories with their labels.
-  - [ ] Creating an asset with an unknown code returns 400.
-  - [ ] Every code the server keys constants on has a seeded row.
-- [ ] `CatalogueControllerTests`:
-  - [ ] Saving an asset with a new manufacturer and model creates both. Saving another with the same names, in different case and spacing, reuses them.
-  - [ ] Names are stored and returned trimmed, single-spaced and uppercase.
-  - [ ] A model without a manufacturer returns 400.
-  - [ ] The same model name under one manufacturer in two categories creates two rows. The models lookup filters by category.
-  - [ ] The lookups filter by query, cap at 20, and return 404 for an unknown manufacturer.
-  - [ ] The existing asset controller tests still pass. The only change to them is replacing `AssetCategory` enum values with code strings, since the contract changes (a test change of its own, made before the implementation).
-- [ ] `FailureRiskCalculatorTests` (plain unit tests):
-  - [ ] The four scenarios in the Breakdown forecast table match to two decimal places.
-  - [ ] A `BREAKDOWN_REPAIR` raises `a`. A `PREVENTIVE` interval raises only `b`.
-  - [ ] Events before `installedOn`, or with a different manufacturer or model snapshot, are ignored.
-  - [ ] The basis rules hold, including `NOT_SUPPORTED` for non-pumps.
-  - [ ] The timeframe uses the 0.15 threshold.
-  - [ ] The end-of-life date and the 12-year flag.
-- [ ] `AssetEventControllerTests`:
-  - [ ] Each type returns its category (`MAINTENANCE` for both).
-  - [ ] Create and list ordering.
-  - [ ] The manufacturer and model snapshot, and `countsTowardForecast`.
-  - [ ] 400s, 404s and 409s.
-  - [ ] The recorder snapshot.
-  - [ ] A missing JWT subject is rejected.
-- [ ] `FailureRiskControllerTests`:
-  - [ ] The per-asset response.
-  - [ ] The estate list holds pumps only, in the right order.
-  - [ ] All three flag reasons, including a `CONDITION` flag from a system assessment.
-  - [ ] Deactivated assets are excluded from the list.
-  - [ ] Another owner gets 404.
-- [ ] `AnomalyFeatureTests` (unit): features match the 0b parity fixture.
-- [ ] `AnomalyCheckControllerTests`, with `apps/ml` replaced by a stub server returning fixed scores:
-  - [ ] 10 abnormal readings in a row record `NEEDS_ATTENTION` or `FAULTY`, per the median rule.
-  - [ ] 9 in a row record nothing.
-  - [ ] No duplicate when the condition is unchanged.
-  - [ ] The system identity, date and notes are correct.
-  - [ ] The 400s, 404s and 409s from Edge cases.
-  - [ ] The stub timing out, or returning 503, gives 503 and records nothing.
-- [ ] `DeviceMetric` includes `VIBRATION_ACCELERATION` with unit `g`.
-- [ ] Run the tests and confirm they fail.
+- [x] `AssetCategoryControllerTests`:
+  - [x] The endpoint lists the 13 seeded categories with their labels.
+  - [x] Creating an asset with an unknown code returns 400.
+  - [x] Every code the server keys constants on has a seeded row.
+- [x] `CatalogueControllerTests`:
+  - [x] Saving an asset with a new manufacturer and model creates both. Saving another with the same names, in different case and spacing, reuses them.
+  - [x] Names are stored and returned trimmed, single-spaced and uppercase.
+  - [x] A model without a manufacturer returns 400.
+  - [x] The same model name under one manufacturer in two categories creates two rows. The models lookup filters by category.
+  - [x] The lookups filter by query, cap at 20, and return 404 for an unknown manufacturer.
+  - [x] The existing asset controller tests still pass. The only change to them is replacing `AssetCategory` enum values with code strings, since the contract changes (a test change of its own, made before the implementation).
+- [x] `FailureRiskCalculatorTests` (plain unit tests):
+  - [x] The four scenarios in the Breakdown forecast table match to two decimal places.
+  - [x] A `BREAKDOWN_REPAIR` raises `a`. A `PREVENTIVE` interval raises only `b`.
+  - [x] Events before `installedOn`, or with a different manufacturer or model snapshot, are ignored.
+  - [x] The basis rules hold, including `NOT_SUPPORTED` for non-pumps.
+  - [x] The timeframe uses the 0.15 threshold.
+  - [x] The end-of-life date and the 12-year flag.
+- [x] `AssetEventControllerTests`:
+  - [x] Each type returns its category (`MAINTENANCE` for both).
+  - [x] Create and list ordering.
+  - [x] The manufacturer and model snapshot, and `countsTowardForecast`.
+  - [x] 400s, 404s and 409s.
+  - [x] The recorder snapshot.
+  - [x] A missing JWT subject is rejected.
+- [x] `FailureRiskControllerTests`:
+  - [x] The per-asset response.
+  - [x] The estate list holds pumps only, in the right order.
+  - [x] All three flag reasons, including a `CONDITION` flag from a system assessment.
+  - [x] Deactivated assets are excluded from the list.
+  - [x] Another owner gets 404.
+- [x] `AnomalyFeatureTests` (unit): features match the 0b parity fixture.
+- [x] `AnomalyCheckControllerTests`, with `apps/ml` replaced by a stub server returning fixed scores:
+  - [x] 10 abnormal readings in a row record `NEEDS_ATTENTION` or `FAULTY`, per the median rule.
+  - [x] 9 in a row record nothing.
+  - [x] No duplicate when the condition is unchanged.
+  - [x] The system identity, date and notes are correct.
+  - [x] The 400s, 404s and 409s from Edge cases.
+  - [x] The stub timing out, or returning 503, gives 503 and records nothing.
+- [x] `DeviceMetric` includes `VIBRATION_ACCELERATION` with unit `g`.
+- [x] Run the tests and confirm they fail.
 
 ### 4. API (green, `add-endpoint` skill)
-- [ ] Package `com.proj.server.catalogue` for the categories endpoint, the find-or-create service and the lookup controller. `AssetService` calls it on create and edit.
-- [ ] Remove the `AssetCategory` enum. Asset DTOs take and return the code as a `String`, validated against the table.
-- [ ] Package `com.proj.server.event` for events, with the `AssetEventCategory` and `AssetEventType` enums.
-- [ ] Package `com.proj.server.risk` for the calculator, the pump constants, the silent-failure set and the controller.
-- [ ] Package `com.proj.server.anomaly`:
+- [x] Package `com.proj.server.catalogue` for the categories endpoint, the find-or-create service and the lookup controller. `AssetService` calls it on create and edit.
+- [x] Remove the `AssetCategory` enum. Asset DTOs take and return the code as a `String`, validated against the table.
+- [x] Package `com.proj.server.event` for events, with the `AssetEventCategory` and `AssetEventType` enums.
+- [x] Package `com.proj.server.risk` for the calculator, the pump constants, the silent-failure set and the controller.
+- [x] Package `com.proj.server.anomaly`:
   - the feature builder and the model constants
   - an `MlClient` for `POST /predict` that reads `ML_API_URL`, with a 5-second timeout
   - the controller
-- [ ] Add `VIBRATION_ACCELERATION("g")` to `DeviceMetric`.
-- [ ] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
-- [ ] Update `architecture.md`: `ML_API_URL` is now read by the server.
+- [x] Add `VIBRATION_ACCELERATION("g")` to `DeviceMetric`.
+- [x] Make the tests pass, then run `pnpm api:generate` and `pnpm check-types`.
+- [x] Update `architecture.md`: `ML_API_URL` is now read by the server.
 
 ### 5. Web tests (red)
-- [ ] `tests/lib/asset-events.test.ts` and `tests/lib/failure-risk.test.ts`:
-  - [ ] Query keys include the user and estate IDs.
-  - [ ] Failed requests throw.
-  - [ ] Recording an event invalidates the asset's events and its forecasts.
-- [ ] A test for the record-event dialog:
-  - [ ] Labelled type, date and notes fields.
-  - [ ] Required errors show.
-  - [ ] Submit posts the payload.
-  - [ ] Input is kept on a server error.
-  - [ ] No double submit.
-- [ ] A test for the failure-risk page:
-  - [ ] Rows show the percentages, timeframe, end-of-life date and flag reasons.
-  - [ ] The empty state shows.
-  - [ ] `INSUFFICIENT_DATA` rows say "Not enough data".
-- [ ] The device form offers "Vibration acceleration (g)".
-- [ ] The asset form's category select lists the categories from the endpoint, and the details page shows the label.
-- [ ] The asset form's manufacturer and model fields:
-  - [ ] Suggest catalogue entries as the user types, and suggest models only for the chosen manufacturer and category.
-  - [ ] Accept a name that isn't listed and send it as text.
-- [ ] Run `pnpm nx test web` and confirm the tests fail.
+- [x] `tests/lib/asset-events.test.ts` and `tests/lib/failure-risk.test.ts`:
+  - [x] Query keys include the user and estate IDs.
+  - [x] Failed requests throw.
+  - [x] Recording an event invalidates the asset's events and its forecasts.
+- [x] A test for the record-event dialog:
+  - [x] Labelled type, date and notes fields.
+  - [x] Required errors show.
+  - [x] Submit posts the payload.
+  - [x] Input is kept on a server error.
+  - [x] No double submit.
+- [x] A test for the failure-risk page:
+  - [x] Rows show the percentages, timeframe, end-of-life date and flag reasons.
+  - [x] The empty state shows.
+  - [x] `INSUFFICIENT_DATA` rows say "Not enough data".
+- [x] The device form offers "Vibration acceleration (g)".
+- [x] The asset form's category select lists the categories from the endpoint, and the details page shows the label.
+- [x] The asset form's manufacturer and model fields:
+  - [x] Suggest catalogue entries as the user types, and suggest models only for the chosen manufacturer and category.
+  - [x] Accept a name that isn't listed and send it as text.
+- [x] Run `pnpm nx test web` and confirm the tests fail.
 
 ### 6. Web (green)
-- [ ] `src/lib/asset-events.ts`, `src/lib/failure-risk.ts` and `src/lib/catalogue.ts` (categories, manufacturers, models).
-- [ ] Replace `assetCategoryLabel` in `src/lib/assets.ts` with the categories query. The asset form, list and details page read labels from it.
-- [ ] Asset form: manufacturer and model become comboboxes that allow free text. Add shadcn `combobox` with the CLI (§4) if it is missing.
-- [ ] Asset detail page:
-  - [ ] A "Maintenance" section listing events, with the ones that don't count marked "Previous unit".
-  - [ ] A "Record repair" button opening the record-event dialog, with the type defaulting to `BREAKDOWN_REPAIR`.
-  - [ ] A forecast card, shown for pumps.
-  - [ ] System assessments in the condition history are labelled "Anomaly detection".
-- [ ] Route `_auth/estates/$estateId/failure-risk/index.tsx`, with its components in `-components/`, linked from the estate details page.
-- [ ] Use shadcn components throughout.
-- [ ] No upload screen for readings: devices and scripts call the endpoint directly.
+- [x] `src/lib/asset-events.ts`, `src/lib/failure-risk.ts` and `src/lib/catalogue.ts` (categories, manufacturers, models).
+- [x] Replace `assetCategoryLabel` in `src/lib/assets.ts` with the categories query. The asset form, list and details page read labels from it.
+- [x] Asset form: manufacturer and model become comboboxes that allow free text. Add shadcn `combobox` with the CLI (§4) if it is missing.
+- [x] Asset detail page:
+  - [x] A "Maintenance" section listing events, with the ones that don't count marked "Previous unit".
+  - [x] A "Record repair" button opening the record-event dialog, with the type defaulting to `BREAKDOWN_REPAIR`.
+  - [x] A forecast card, shown for pumps.
+  - [x] System assessments in the condition history are labelled "Anomaly detection".
+- [x] Route `_auth/estates/$estateId/failure-risk/index.tsx`, with its components in `-components/`, linked from the estate details page.
+- [x] Use shadcn components throughout.
+- [x] No upload screen for readings: devices and scripts call the endpoint directly.
 
 ### 7. Finish
-- [ ] Docs:
+- [x] Docs:
   - New: `.docs/api/catalogue.md` (categories, manufacturers, models), `.docs/api/asset-events.md`, `.docs/api/failure-risk.md`, `.docs/api/anomaly-check.md`, `.docs/frontend/failure-risk.md`.
   - Update: `.docs/frontend/assets.md`, `.docs/frontend/devices.md` and `.docs/README.md`.
-- [ ] Run `pnpm fix`, `pnpm check-types` and `pnpm test`.
-- [ ] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with the code.
-- [ ] Set this spec's status to built.
+- [x] Run `pnpm fix`, `pnpm check-types` and `pnpm test`.
+- [x] Commit the migration, jOOQ sources, `openapi.json` and `schema.ts` with the code.
+- [x] Set this spec's status to built.
 
 ## Estimates and why
 

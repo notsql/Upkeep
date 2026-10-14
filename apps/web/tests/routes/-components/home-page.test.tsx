@@ -1,9 +1,9 @@
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import Header from "@/components/header";
 import { api } from "@/lib/api";
 import { HomePage } from "@/routes/-components/home-page";
-import { renderWithProviders, screen, within } from "../../test-utils";
 
 const CREATE_ACCOUNT = /^(Register|Create account)$/;
 

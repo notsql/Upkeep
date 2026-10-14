@@ -1,13 +1,9 @@
 import { fireEvent, within } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { CouncilPage } from "@/routes/_auth/estates/$estateId/council/-components/council-page";
-import {
-  renderWithProviders,
-  screen,
-  waitFor,
-} from "../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() },

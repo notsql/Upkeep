@@ -1,8 +1,8 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app-shell";
-import { renderWithProviders, screen, within } from "../test-utils";
 
 const { state } = vi.hoisted(() => ({
   state: {

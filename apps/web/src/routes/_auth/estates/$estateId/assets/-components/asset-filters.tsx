@@ -8,7 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@proj/ui/components/dialog";
-import { Label } from "@proj/ui/components/label";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,8 @@ import {
 } from "@proj/ui/components/select";
 import { useCallback, useState } from "react";
 import { conditionLabel } from "@/lib/assessments";
-import { type AssetFilters, assetCategoryLabel } from "@/lib/assets";
+import type { AssetFilters } from "@/lib/assets";
+import { useAssetCategories } from "@/lib/catalogue";
 
 function FilterSelect({
   label,
@@ -36,8 +37,8 @@ function FilterSelect({
     [onChange]
   );
   return (
-    <div className="grid min-w-0 gap-2">
-      <Label>{label}</Label>
+    <Field className="min-w-0">
+      <FieldLabel>{label}</FieldLabel>
       <Select onValueChange={change} value={value}>
         <SelectTrigger aria-label={label} className="w-full">
           <SelectValue>{options[value] ?? "All"}</SelectValue>
@@ -50,7 +51,7 @@ function FilterSelect({
           ))}
         </SelectContent>
       </Select>
-    </div>
+    </Field>
   );
 }
 export function AssetFilterControls({
@@ -62,11 +63,15 @@ export function AssetFilterControls({
   onChange: (filters: AssetFilters) => void;
   locations: Record<string, string>;
 }) {
+  const categories = useAssetCategories();
+  const categoryOptions = Object.fromEntries(
+    (categories.data ?? []).map((item) => [item.code, item.label])
+  );
   const category = useCallback(
     (value: string) =>
       onChange({
         ...filters,
-        category: (value as AssetFilters["category"]) || undefined,
+        category: value || undefined,
       }),
     [filters, onChange]
   );
@@ -92,7 +97,7 @@ export function AssetFilterControls({
       <FilterSelect
         label="Category"
         onChange={category}
-        options={{ "": "All categories", ...assetCategoryLabel }}
+        options={{ "": "All categories", ...categoryOptions }}
         value={filters.category ?? ""}
       />
       <FilterSelect

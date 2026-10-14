@@ -1,14 +1,18 @@
 import type { components } from "@proj/api/schema";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
-import { assetCategoryLabel, useAsset, useDeactivateAsset } from "@/lib/assets";
+import { useAsset, useDeactivateAsset } from "@/lib/assets";
+import { useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
+import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-forecast-card";
+import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
 
@@ -23,6 +27,7 @@ export function AssetDetailsPage({
 }) {
   const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
+  const categories = useAssetCategories();
   const deactivate = useDeactivateAsset(estateId, assetId);
   const [confirming, setConfirming] = useState(false);
   const openConfirmation = useCallback(() => setConfirming(true), []);
@@ -57,9 +62,9 @@ export function AssetDetailsPage({
         </p>
       ) : null}
       {asset.error ? (
-        <p className="mt-6 text-destructive" role="alert">
-          {asset.error.message}
-        </p>
+        <Alert className="mt-6" variant="destructive">
+          <AlertDescription>{asset.error.message}</AlertDescription>
+        </Alert>
       ) : null}
       {asset.data ? (
         <>
@@ -104,10 +109,12 @@ export function AssetDetailsPage({
             title={asset.data.name}
           />
           {asset.data.deactivatedAt ? (
-            <p className="mt-4 border p-4 text-sm">
-              This asset is retired. Its record remains available but can no
-              longer be edited until restored.
-            </p>
+            <Alert className="mt-4" role="note">
+              <AlertDescription>
+                This asset is retired. Its record remains available but can no
+                longer be edited until restored.
+              </AlertDescription>
+            </Alert>
           ) : null}
           <dl className="detail-grid my-4">
             <div>
@@ -116,7 +123,11 @@ export function AssetDetailsPage({
             </div>
             <div>
               <dt className="font-medium">Category</dt>
-              <dd>{assetCategoryLabel[asset.data.category]}</dd>
+              <dd>
+                {categories.data?.find(
+                  (category) => category.code === asset.data.category
+                )?.label ?? asset.data.category}
+              </dd>
             </div>
             <div>
               <dt className="font-medium">Location</dt>
@@ -141,6 +152,14 @@ export function AssetDetailsPage({
           </dl>
           <AssetRetirementPanel asset={asset.data} />
           <AssetConditionSection
+            assetId={assetId}
+            canRecord={!asset.data.deactivatedAt}
+            estateId={estateId}
+          />
+          {asset.data.category === "PUMP" ? (
+            <AssetForecastCard assetId={assetId} estateId={estateId} />
+          ) : null}
+          <AssetMaintenanceSection
             assetId={assetId}
             canRecord={!asset.data.deactivatedAt}
             estateId={estateId}

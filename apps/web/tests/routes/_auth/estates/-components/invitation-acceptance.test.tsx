@@ -1,8 +1,8 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { InvitationAcceptance } from "@/routes/_auth/estates/-components/invitation-acceptance";
-import { renderWithProviders, screen, waitFor } from "../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({ api: { POST: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({

@@ -1,17 +1,17 @@
 import { fireEvent } from "@testing-library/react";
 import { mockMobileViewport } from "@tests/mock-viewport";
-import { chooseOption } from "@tests/test-utils";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import { type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { AssetFilters } from "@/lib/assets";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
-import {
-  renderWithProviders,
-  screen,
-  waitFor,
-  within,
-} from "../../../../../../test-utils";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
@@ -167,23 +167,29 @@ function MobileRegister() {
 
 it("shows complete mobile cards and switches to a table without refetching", async () => {
   const resize = mockMobileViewport();
+  const dataFor = (path: string): unknown[] => {
+    if (path === "/estates/{estateId}/assets") {
+      return [
+        {
+          id: "a",
+          reference: "E-A0001",
+          name: "Water pump",
+          category: "PUMP",
+          locationPath: "Block A › Level 1 › Pump room",
+          currentCondition: "FAULTY",
+          lifecycleVersion: 0,
+        },
+      ];
+    }
+    if (path === "/asset-categories") {
+      return [{ code: "PUMP", label: "Pump" }];
+    }
+    return [];
+  };
   vi.mocked(api.GET).mockImplementation(
     async (path) =>
       ({
-        data:
-          path === "/estates/{estateId}/assets"
-            ? [
-                {
-                  id: "a",
-                  reference: "E-A0001",
-                  name: "Water pump",
-                  category: "PUMP",
-                  locationPath: "Block A › Level 1 › Pump room",
-                  currentCondition: "FAULTY",
-                  lifecycleVersion: 0,
-                },
-              ]
-            : [],
+        data: dataFor(path),
         response: new Response(),
       }) as never
   );
@@ -199,7 +205,7 @@ it("shows complete mobile cards and switches to a table without refetching", asy
   expect(cards.getAllByRole("link")).toHaveLength(1);
   within(card).getByText("Water pump");
   within(card).getByText("E-A0001");
-  cards.getByText("Pump");
+  await cards.findByText("Pump");
   cards.getByText("Block A › Level 1 › Pump room");
   cards.getByText("Faulty");
   cards.getByText("Active");

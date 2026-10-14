@@ -7,6 +7,8 @@ public enum DeviceMetric {
     PRESSURE("bar"),
     FLOW_RATE("L/min"),
     VIBRATION("mm/s"),
+    /** RMS acceleration, the unit the anomaly model was trained on (decision 0021). */
+    VIBRATION_ACCELERATION("g"),
     POWER("kW"),
     ENERGY("kWh");
 

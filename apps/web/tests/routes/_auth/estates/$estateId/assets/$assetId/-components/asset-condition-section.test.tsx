@@ -1,15 +1,15 @@
 import { fireEvent } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { api } from "@/lib/api";
-import type { Assessment } from "@/lib/assessments";
-import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import {
   chooseOption,
   renderWithProviders,
   screen,
   waitFor,
   within,
-} from "../../../../../../../test-utils";
+} from "@tests/test-utils";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "@/lib/api";
+import type { Assessment } from "@/lib/assessments";
+import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn(), POST: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({

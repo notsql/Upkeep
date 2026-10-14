@@ -11,7 +11,7 @@ import java.util.UUID;
 /** Full replacement of an asset's editable details. The reference is never editable, so it is not a field here. */
 public record UpdateAssetRequest(
         @NotBlank @Size(max = 200) String name,
-        @NotNull AssetCategory category,
+        @NotNull @Size(max = 30) String category,
         @NotNull UUID locationId,
         LocalDate installedOn,
         @Size(max = 200) String manufacturer,

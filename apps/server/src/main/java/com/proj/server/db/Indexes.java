@@ -6,12 +6,15 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
+import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manufacturer;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -33,10 +36,16 @@ public class Indexes {
     public static final Index ASSET_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("Asset_estateId_reference_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID, Asset.ASSET.REFERENCE }, true);
     public static final Index ASSET_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Asset_id_estateId_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ID, Asset.ASSET.ESTATEID }, true);
     public static final Index ASSET_LOCATIONID_IDX = Internal.createIndex(DSL.name("Asset_locationId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.LOCATIONID }, false);
+    public static final Index ASSET_MODELID_IDX = Internal.createIndex(DSL.name("Asset_modelId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.MODELID }, false);
     public static final Index ASSETASSESSMENT_ASSETID_ASSESSEDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetAssessment_assetId_assessedOn_createdAt_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ASSETID, Assetassessment.ASSETASSESSMENT.ASSESSEDON, Assetassessment.ASSETASSESSMENT.CREATEDAT }, false);
     public static final Index ASSETASSESSMENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetAssessment_estateId_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ESTATEID }, false);
+    public static final Index ASSETEVENT_ASSETID_OCCURREDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetEvent_assetId_occurredOn_createdAt_idx"), Assetevent.ASSETEVENT, new OrderField[] { Assetevent.ASSETEVENT.ASSETID, Assetevent.ASSETEVENT.OCCURREDON, Assetevent.ASSETEVENT.CREATEDAT }, false);
+    public static final Index ASSETEVENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetEvent_estateId_idx"), Assetevent.ASSETEVENT, new OrderField[] { Assetevent.ASSETEVENT.ESTATEID }, false);
     public static final Index ASSETLIFECYCLEEVENT_ASSETID_LIFECYCLEVERSION_KEY = Internal.createIndex(DSL.name("AssetLifecycleEvent_assetId_lifecycleVersion_key"), Assetlifecycleevent.ASSETLIFECYCLEEVENT, new OrderField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ASSETID, Assetlifecycleevent.ASSETLIFECYCLEEVENT.LIFECYCLEVERSION }, true);
     public static final Index ASSETLIFECYCLEEVENT_ESTATEID_ASSETID_IDX = Internal.createIndex(DSL.name("AssetLifecycleEvent_estateId_assetId_idx"), Assetlifecycleevent.ASSETLIFECYCLEEVENT, new OrderField[] { Assetlifecycleevent.ASSETLIFECYCLEEVENT.ESTATEID, Assetlifecycleevent.ASSETLIFECYCLEEVENT.ASSETID }, false);
+    public static final Index ASSETMODEL_ID_MANUFACTURERID_CATEGORY_KEY = Internal.createIndex(DSL.name("AssetModel_id_manufacturerId_category_key"), Assetmodel.ASSETMODEL, new OrderField[] { Assetmodel.ASSETMODEL.ID, Assetmodel.ASSETMODEL.MANUFACTURERID, Assetmodel.ASSETMODEL.CATEGORY }, true);
+    public static final Index ASSETMODEL_ID_MANUFACTURERID_KEY = Internal.createIndex(DSL.name("AssetModel_id_manufacturerId_key"), Assetmodel.ASSETMODEL, new OrderField[] { Assetmodel.ASSETMODEL.ID, Assetmodel.ASSETMODEL.MANUFACTURERID }, true);
+    public static final Index ASSETMODEL_MANUFACTURERID_CATEGORY_NAME_KEY = Internal.createIndex(DSL.name("AssetModel_manufacturerId_category_name_key"), Assetmodel.ASSETMODEL, new OrderField[] { Assetmodel.ASSETMODEL.MANUFACTURERID, Assetmodel.ASSETMODEL.CATEGORY, Assetmodel.ASSETMODEL.NAME }, true);
     public static final Index DEVICE_ASSETID_IDX = Internal.createIndex(DSL.name("Device_assetId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ASSETID }, false);
     public static final Index DEVICE_CREDENTIALHASH_KEY = Internal.createIndex(DSL.name("Device_credentialHash_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.CREDENTIALHASH }, true);
     public static final Index DEVICE_ESTATEID_IDX = Internal.createIndex(DSL.name("Device_estateId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ESTATEID }, false);
@@ -52,4 +61,5 @@ public class Indexes {
     public static final Index LOCATION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_ID_TYPE_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_type_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.TYPE, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_PARENTID_IDX = Internal.createIndex(DSL.name("Location_parentId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.PARENTID }, false);
+    public static final Index MANUFACTURER_NAME_KEY = Internal.createIndex(DSL.name("Manufacturer_name_key"), Manufacturer.MANUFACTURER, new OrderField[] { Manufacturer.MANUFACTURER.NAME }, true);
 }

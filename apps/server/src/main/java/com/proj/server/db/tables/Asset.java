@@ -7,7 +7,9 @@ package com.proj.server.db.tables;
 import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
+import com.proj.server.db.tables.Assetcategory.AssetcategoryPath;
 import com.proj.server.db.tables.Estate.EstatePath;
+import com.proj.server.db.tables.Manufacturer.ManufacturerPath;
 import com.proj.server.db.tables.records.AssetRecord;
 
 import java.time.LocalDate;
@@ -98,16 +100,6 @@ public class Asset extends TableImpl<AssetRecord> {
     public final TableField<AssetRecord, LocalDate> INSTALLEDON = createField(DSL.name("installedOn"), SQLDataType.LOCALDATE, this, "");
 
     /**
-     * The column <code>public.Asset.manufacturer</code>.
-     */
-    public final TableField<AssetRecord, String> MANUFACTURER = createField(DSL.name("manufacturer"), SQLDataType.VARCHAR(200), this, "");
-
-    /**
-     * The column <code>public.Asset.model</code>.
-     */
-    public final TableField<AssetRecord, String> MODEL = createField(DSL.name("model"), SQLDataType.VARCHAR(200), this, "");
-
-    /**
      * The column <code>public.Asset.serialNumber</code>.
      */
     public final TableField<AssetRecord, String> SERIALNUMBER = createField(DSL.name("serialNumber"), SQLDataType.VARCHAR(200), this, "");
@@ -141,6 +133,16 @@ public class Asset extends TableImpl<AssetRecord> {
      * The column <code>public.Asset.retirementReason</code>.
      */
     public final TableField<AssetRecord, String> RETIREMENTREASON = createField(DSL.name("retirementReason"), SQLDataType.VARCHAR(2000), this, "");
+
+    /**
+     * The column <code>public.Asset.manufacturerId</code>.
+     */
+    public final TableField<AssetRecord, UUID> MANUFACTURERID = createField(DSL.name("manufacturerId"), SQLDataType.UUID, this, "");
+
+    /**
+     * The column <code>public.Asset.modelId</code>.
+     */
+    public final TableField<AssetRecord, UUID> MODELID = createField(DSL.name("modelId"), SQLDataType.UUID, this, "");
 
     private Asset(Name alias, Table<AssetRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
@@ -211,7 +213,7 @@ public class Asset extends TableImpl<AssetRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.ASSET_ESTATEID_IDX, Indexes.ASSET_ESTATEID_REFERENCE_KEY, Indexes.ASSET_ID_ESTATEID_KEY, Indexes.ASSET_LOCATIONID_IDX);
+        return Arrays.asList(Indexes.ASSET_ESTATEID_IDX, Indexes.ASSET_ESTATEID_REFERENCE_KEY, Indexes.ASSET_ID_ESTATEID_KEY, Indexes.ASSET_LOCATIONID_IDX, Indexes.ASSET_MODELID_IDX);
     }
 
     @Override
@@ -221,7 +223,20 @@ public class Asset extends TableImpl<AssetRecord> {
 
     @Override
     public List<ForeignKey<AssetRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.ASSET__ASSET_ESTATEID_FKEY);
+        return Arrays.asList(Keys.ASSET__ASSET_CATEGORY_FKEY, Keys.ASSET__ASSET_ESTATEID_FKEY, Keys.ASSET__ASSET_MANUFACTURERID_FKEY);
+    }
+
+    private transient AssetcategoryPath _assetcategory;
+
+    /**
+     * Get the implicit join path to the <code>public.AssetCategory</code>
+     * table.
+     */
+    public AssetcategoryPath assetcategory() {
+        if (_assetcategory == null)
+            _assetcategory = new AssetcategoryPath(this, Keys.ASSET__ASSET_CATEGORY_FKEY, null);
+
+        return _assetcategory;
     }
 
     private transient EstatePath _estate;
@@ -234,6 +249,18 @@ public class Asset extends TableImpl<AssetRecord> {
             _estate = new EstatePath(this, Keys.ASSET__ASSET_ESTATEID_FKEY, null);
 
         return _estate;
+    }
+
+    private transient ManufacturerPath _manufacturer;
+
+    /**
+     * Get the implicit join path to the <code>public.Manufacturer</code> table.
+     */
+    public ManufacturerPath manufacturer() {
+        if (_manufacturer == null)
+            _manufacturer = new ManufacturerPath(this, Keys.ASSET__ASSET_MANUFACTURERID_FKEY, null);
+
+        return _manufacturer;
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.proj.server.asset;
 
 import static com.proj.server.db.tables.Asset.ASSET;
 
+import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.db.tables.records.AssetRecord;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -14,9 +15,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class AssetRepository {
     private final DSLContext db;
+    private final CatalogueRepository catalogue;
 
-    public AssetRepository(DSLContext db) {
+    public AssetRepository(DSLContext db, CatalogueRepository catalogue) {
         this.db = db;
+        this.catalogue = catalogue;
     }
 
     /** Includes deactivated assets, so callers can tell "missing" from "deactivated". */
@@ -32,16 +35,18 @@ public class AssetRepository {
 
     public AssetRecord create(UUID estateId, String reference, CreateAssetRequest request) {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
+        var manufacturerId = catalogue.manufacturerId(request.manufacturer());
+        var modelId = catalogue.modelId(manufacturerId, request.category(), request.model());
         return db.insertInto(ASSET)
                 .set(ASSET.ID, UUID.randomUUID())
                 .set(ASSET.ESTATEID, estateId)
                 .set(ASSET.LOCATIONID, request.locationId())
                 .set(ASSET.REFERENCE, reference)
                 .set(ASSET.NAME, request.name())
-                .set(ASSET.CATEGORY, request.category().name())
+                .set(ASSET.CATEGORY, request.category())
                 .set(ASSET.INSTALLEDON, request.installedOn())
-                .set(ASSET.MANUFACTURER, request.manufacturer())
-                .set(ASSET.MODEL, request.model())
+                .set(ASSET.MANUFACTURERID, manufacturerId)
+                .set(ASSET.MODELID, modelId)
                 .set(ASSET.SERIALNUMBER, request.serialNumber())
                 .set(ASSET.CREATEDAT, now)
                 .set(ASSET.UPDATEDAT, now)
@@ -50,13 +55,15 @@ public class AssetRepository {
     }
 
     public AssetRecord update(UUID id, UpdateAssetRequest request) {
+        var manufacturerId = catalogue.manufacturerId(request.manufacturer());
+        var modelId = catalogue.modelId(manufacturerId, request.category(), request.model());
         return db.update(ASSET)
                 .set(ASSET.LOCATIONID, request.locationId())
                 .set(ASSET.NAME, request.name())
-                .set(ASSET.CATEGORY, request.category().name())
+                .set(ASSET.CATEGORY, request.category())
                 .set(ASSET.INSTALLEDON, request.installedOn())
-                .set(ASSET.MANUFACTURER, request.manufacturer())
-                .set(ASSET.MODEL, request.model())
+                .set(ASSET.MANUFACTURERID, manufacturerId)
+                .set(ASSET.MODELID, modelId)
                 .set(ASSET.SERIALNUMBER, request.serialNumber())
                 .set(ASSET.UPDATEDAT, OffsetDateTime.now(ZoneOffset.UTC))
                 .where(ASSET.ID.eq(id))
@@ -78,11 +85,10 @@ public class AssetRepository {
     public java.util.List<AssetResponse> list(
             UUID estateId,
             String q,
-            AssetCategory category,
+            String category,
             UUID locationId,
             AssetConditionFilter condition,
             AssetStatus status) {
-        String categoryName = category == null ? null : category.name();
         String conditionName = condition == null ? null : condition.name();
         return db.resultQuery(
                         """
@@ -95,8 +101,10 @@ public class AssetRepository {
                 union all
                 select l.id from "Location" l join descendants d on l."parentId"=d.id where l."estateId"=?
             )
-            select a.*, p.path, c.condition current_condition
+            select a.*, p.path, c.condition current_condition, mf.name manufacturer_name, am.name model_name
             from "Asset" a join paths p on p.id=a."locationId"
+            left join "Manufacturer" mf on mf.id=a."manufacturerId"
+            left join "AssetModel" am on am.id=a."modelId"
             left join lateral (
                 select condition from "AssetAssessment" where "assetId"=a.id
                 order by "assessedOn" desc, "createdAt" desc, id limit 1
@@ -118,8 +126,8 @@ public class AssetRepository {
                         q,
                         q,
                         q,
-                        categoryName,
-                        categoryName,
+                        category,
+                        category,
                         locationId,
                         conditionName,
                         conditionName,
@@ -133,22 +141,25 @@ public class AssetRepository {
                     return response(
                             row.into(ASSET),
                             row.get("path", String.class),
+                            row.get("manufacturer_name", String.class),
+                            row.get("model_name", String.class),
                             value == null ? null : AssetCondition.valueOf(value));
                 });
     }
 
-    static AssetResponse response(AssetRecord row, String path, AssetCondition condition) {
+    static AssetResponse response(
+            AssetRecord row, String path, String manufacturer, String model, AssetCondition condition) {
         return new AssetResponse(
                 row.getId(),
                 row.getEstateid(),
                 row.getReference(),
                 row.getName(),
-                AssetCategory.valueOf(row.getCategory()),
+                row.getCategory(),
                 row.getLocationid(),
                 path,
                 row.getInstalledon(),
-                row.getManufacturer(),
-                row.getModel(),
+                manufacturer,
+                model,
                 row.getSerialnumber(),
                 row.getCreatedat(),
                 row.getUpdatedat(),

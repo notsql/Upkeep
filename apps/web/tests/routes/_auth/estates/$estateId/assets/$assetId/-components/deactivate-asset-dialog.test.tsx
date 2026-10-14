@@ -1,11 +1,7 @@
 import { fireEvent } from "@testing-library/react";
+import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
-import {
-  renderWithProviders,
-  screen,
-  waitFor,
-} from "../../../../../../../test-utils";
 
 describe("DeactivateAssetDialog", () => {
   it("keeps confirm disabled until the exact reference is typed", async () => {
