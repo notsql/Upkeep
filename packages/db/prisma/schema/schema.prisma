@@ -196,6 +196,9 @@ model Device {
   metrics                  String[]  @db.VarChar(30)
   reportingIntervalSeconds Int
   lastSeenAt               DateTime? @db.Timestamptz(6)
+  // SHA-256 hex of the device's API key; the key itself is never stored (decision 0025).
+  credentialHash           String?   @unique @db.Char(64)
+  credentialIssuedAt       DateTime? @db.Timestamptz(6)
   createdAt                DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt                DateTime  @updatedAt @db.Timestamptz(6)
 

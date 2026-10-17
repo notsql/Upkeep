@@ -1333,7 +1333,7 @@
             }
           },
           "404": {
-            "description": "Estate, asset or location not found",
+            "description": "Estate, asset, location or device not found",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1404,7 +1404,7 @@
             }
           },
           "404": {
-            "description": "Estate, asset or location not found",
+            "description": "Estate, asset, location or device not found",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1424,6 +1424,76 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/DeviceResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
+      "post": {
+        "tags": ["device-controller"],
+        "operationId": "issueDeviceCredential",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, or an unsupported metric",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset, location or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "New API key, shown only this once. Replaces and revokes any earlier key.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCredentialResponse"
+                }
               }
             }
           }
@@ -3303,6 +3373,11 @@
             "format": "date-time",
             "description": "When the device last sent a valid reading. Null until its first."
           },
+          "credentialIssuedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device's current API key was issued. Null if it has none."
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
@@ -3318,6 +3393,18 @@
           "reportingIntervalSeconds",
           "updatedAt"
         ]
+      },
+      "DeviceCredentialResponse": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "format": "uuid" },
+          "apiKey": {
+            "type": "string",
+            "description": "The device's API key. Returned only here, once; it is never stored or shown again."
+          },
+          "issuedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["apiKey", "deviceId", "issuedAt"]
       },
       "CreateAssetAssessmentRequest": {
         "type": "object",

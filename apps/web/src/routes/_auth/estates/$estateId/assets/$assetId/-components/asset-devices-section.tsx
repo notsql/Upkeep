@@ -9,6 +9,7 @@ import {
   useDevices,
 } from "@/lib/devices";
 import { flattenLocations, useLocations } from "@/lib/locations";
+import { DeviceCredential } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-credential";
 
 function metricSummary(device: Device): string {
   return device.metrics
@@ -99,6 +100,12 @@ export function AssetDevicesSection({
                 <dd>{formatInterval(device.reportingIntervalSeconds)}</dd>
               </div>
             </dl>
+            <DeviceCredential
+              assetId={assetId}
+              canManage={canRegister}
+              device={device}
+              estateId={estateId}
+            />
           </li>
         ))}
       </ul>

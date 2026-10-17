@@ -58,6 +58,11 @@ Non-negotiable. Breaking one of these is a bug even if the code works.
     spec in `.spec/features/` (the `/new-feature-spec` command). Stop and get
     it agreed by a human before writing code. Bug fixes and changes confined
     to one file skip this, but still start with a failing test (rule 7).
+13. **Never commit.** Humans make every commit. Leave your changes uncommitted
+    in the working tree and tell the human what is ready to commit. This
+    also means no `git commit`, `git commit --amend`, `git merge`,
+    `git rebase`, `git cherry-pick`, `git revert` or `git push` on your own
+    initiative. Where a workflow below says "commit", that is the human's step.
 
 Rules 4-6 are explained in `.spec/decisions/`.
 

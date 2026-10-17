@@ -6,6 +6,7 @@ import com.proj.server.db.tables.records.DeviceRecord;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.springframework.stereotype.Repository;
@@ -45,5 +46,30 @@ public class DeviceRepository {
                 .set(DEVICE.UPDATEDAT, now)
                 .returning()
                 .fetchSingle();
+    }
+
+    /** Through the unique index on the hash (decision 0025). */
+    public Optional<UUID> findIdByCredentialHash(String credentialHash) {
+        return db.select(DEVICE.ID)
+                .from(DEVICE)
+                .where(DEVICE.CREDENTIALHASH.eq(credentialHash))
+                .fetchOptional(DEVICE.ID);
+    }
+
+    /**
+     * Overwrites the device's key hash, which revokes any earlier key. Scoped by
+     * asset and estate, so a device elsewhere is simply not found. Returns the
+     * issue time, or empty when no such device.
+     */
+    public Optional<OffsetDateTime> replaceCredential(
+            UUID deviceId, UUID assetId, UUID estateId, String credentialHash) {
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        return db.update(DEVICE)
+                .set(DEVICE.CREDENTIALHASH, credentialHash)
+                .set(DEVICE.CREDENTIALISSUEDAT, now)
+                .set(DEVICE.UPDATEDAT, now)
+                .where(DEVICE.ID.eq(deviceId), DEVICE.ASSETID.eq(assetId), DEVICE.ESTATEID.eq(estateId))
+                .returning(DEVICE.CREDENTIALISSUEDAT)
+                .fetchOptional(DEVICE.CREDENTIALISSUEDAT);
     }
 }

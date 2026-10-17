@@ -47,6 +47,7 @@ public class Indexes {
     public static final Index ASSETMODEL_ID_MANUFACTURERID_KEY = Internal.createIndex(DSL.name("AssetModel_id_manufacturerId_key"), Assetmodel.ASSETMODEL, new OrderField[] { Assetmodel.ASSETMODEL.ID, Assetmodel.ASSETMODEL.MANUFACTURERID }, true);
     public static final Index ASSETMODEL_MANUFACTURERID_CATEGORY_NAME_KEY = Internal.createIndex(DSL.name("AssetModel_manufacturerId_category_name_key"), Assetmodel.ASSETMODEL, new OrderField[] { Assetmodel.ASSETMODEL.MANUFACTURERID, Assetmodel.ASSETMODEL.CATEGORY, Assetmodel.ASSETMODEL.NAME }, true);
     public static final Index DEVICE_ASSETID_IDX = Internal.createIndex(DSL.name("Device_assetId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ASSETID }, false);
+    public static final Index DEVICE_CREDENTIALHASH_KEY = Internal.createIndex(DSL.name("Device_credentialHash_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.CREDENTIALHASH }, true);
     public static final Index DEVICE_ESTATEID_IDX = Internal.createIndex(DSL.name("Device_estateId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.ESTATEID }, false);
     public static final Index DEVICE_IDENTIFIER_KEY = Internal.createIndex(DSL.name("Device_identifier_key"), Device.DEVICE, new OrderField[] { Device.DEVICE.IDENTIFIER }, true);
     public static final Index DEVICE_LOCATIONID_IDX = Internal.createIndex(DSL.name("Device_locationId_idx"), Device.DEVICE, new OrderField[] { Device.DEVICE.LOCATIONID }, false);

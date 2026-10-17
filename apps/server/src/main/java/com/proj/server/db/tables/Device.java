@@ -116,6 +116,16 @@ public class Device extends TableImpl<DeviceRecord> {
      */
     public final TableField<DeviceRecord, OffsetDateTime> UPDATEDAT = createField(DSL.name("updatedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "");
 
+    /**
+     * The column <code>public.Device.credentialHash</code>.
+     */
+    public final TableField<DeviceRecord, String> CREDENTIALHASH = createField(DSL.name("credentialHash"), SQLDataType.CHAR(64), this, "");
+
+    /**
+     * The column <code>public.Device.credentialIssuedAt</code>.
+     */
+    public final TableField<DeviceRecord, OffsetDateTime> CREDENTIALISSUEDAT = createField(DSL.name("credentialIssuedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
+
     private Device(Name alias, Table<DeviceRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -185,7 +195,7 @@ public class Device extends TableImpl<DeviceRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.DEVICE_ASSETID_IDX, Indexes.DEVICE_ESTATEID_IDX, Indexes.DEVICE_IDENTIFIER_KEY, Indexes.DEVICE_LOCATIONID_IDX);
+        return Arrays.asList(Indexes.DEVICE_ASSETID_IDX, Indexes.DEVICE_CREDENTIALHASH_KEY, Indexes.DEVICE_ESTATEID_IDX, Indexes.DEVICE_IDENTIFIER_KEY, Indexes.DEVICE_LOCATIONID_IDX);
     }
 
     @Override

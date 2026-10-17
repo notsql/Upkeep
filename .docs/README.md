@@ -11,7 +11,8 @@ same change as the code.
   protection for WorkOS organization roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
-  retirement, restoration and lifecycle history.
+  retirement, restoration and lifecycle history, plus device registration,
+  device credentials and `/device-api` authentication.
 - [Council invitations and delegation](api/council-invitations.md): invitation,
   member listing, delegation, acceptance, and estate capability fields.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
