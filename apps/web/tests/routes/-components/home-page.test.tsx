@@ -1,3 +1,9 @@
+import {
+  mixedAccess,
+  residentAccess,
+  unassignedAccess,
+  workspaceAccess,
+} from "@tests/fixtures/access";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -5,10 +11,16 @@ import Header from "@/components/header";
 import { api } from "@/lib/api";
 import { HomePage } from "@/routes/-components/home-page";
 
+let access:
+  | typeof mixedAccess
+  | typeof workspaceAccess
+  | typeof unassignedAccess = workspaceAccess;
+
 const CREATE_ACCOUNT = /^(Register|Create account)$/;
+const NO_ASSIGNMENT = /no estate assigned|awaiting.*assignment/i;
 
 const { auth } = vi.hoisted(() => ({
-  auth: { user: null as { id: string } | null, loading: false },
+  auth: { user: null as { id: string } | null, role: "user", loading: false },
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => auth,
@@ -36,15 +48,76 @@ vi.mock("@/lib/api", () => ({
 }));
 
 beforeEach(() => {
+  access = workspaceAccess;
+  vi.mocked(api.GET).mockClear();
   auth.user = null;
   auth.loading = false;
+  auth.role = "user";
+  vi.mocked(api.GET).mockImplementation((path: string) => {
+    const responses: Record<string, unknown> = {
+      "/access/context": access,
+      "/health": { ok: true, database: true },
+      "/dashboard/summary": {
+        accessibleEstateCount: 0,
+        activeEstateCount: 0,
+        inactiveEstateCount: 0,
+        activeOwnedEstateCount: 0,
+        totalActiveAssets: 0,
+        councilMemberCount: 0,
+        conditionCounts: {
+          good: 0,
+          needsAttention: 0,
+          faulty: 0,
+          unassessed: 0,
+        },
+        affectedEstateCount: 0,
+        estatesNeedingAttention: [],
+      },
+    };
+    return Promise.resolve({
+      data: responses[path] ?? [],
+      response: new Response(),
+    }) as never;
+  });
+});
+it("never loads the management dashboard for database resident-only access with an ordinary WorkOS role", async () => {
+  auth.user = { id: "resident-a" };
+  auth.role = "user";
+  access = residentAccess;
+  renderWithProviders(<HomePage />);
+
+  await screen.findByRole("link", { name: "Report a fault" });
+
+  const calls = vi.mocked(api.GET).mock.calls as unknown[][];
+  expect(calls.some((call) => call[0] === "/dashboard/summary")).toBe(false);
+  expect(screen.queryByRole("link", { name: "Accessible estates" })).toBeNull();
+});
+
+it("does not start management queries while estate access is being resolved", () => {
+  auth.user = { id: "resident-a" };
   vi.mocked(api.GET).mockImplementation(
-    async (path) =>
-      ({
-        data: path === "/health" ? { ok: true, database: true } : [],
-        response: new Response(),
-      }) as never
+    (() => new Promise(() => undefined)) as never
   );
+  renderWithProviders(<HomePage />);
+  expect(
+    vi
+      .mocked(api.GET)
+      .mock.calls.some((call) => call[0] === "/dashboard/summary")
+  ).toBe(false);
+  expect(screen.queryByRole("link", { name: "Accessible estates" })).toBeNull();
+});
+
+it("explains an unassigned account without loading estate management data", async () => {
+  auth.user = { id: "unassigned" };
+  access = unassignedAccess;
+  renderWithProviders(<HomePage />);
+  await screen.findByText(NO_ASSIGNMENT);
+  expect(
+    vi
+      .mocked(api.GET)
+      .mock.calls.some((call) => call[0] === "/dashboard/summary")
+  ).toBe(false);
+  expect(screen.queryByRole("link", { name: "Accessible estates" })).toBeNull();
 });
 it("offers one account-creation action and consistent Sign in labels across the home page", () => {
   renderWithProviders(
@@ -64,36 +137,41 @@ it("offers one account-creation action and consistent Sign in labels across the 
   expect(screen.queryByRole("link", { name: "Log in" })).toBeNull();
   expect(screen.getAllByRole("link", { name: "Sign in" })).toHaveLength(2);
 });
-it("gives signed-in users a clear route to Estates", async () => {
-  auth.user = { id: "owner" };
-  vi.mocked(api.GET).mockImplementation(
-    async (path) =>
-      ({
-        data:
-          path === "/dashboard/summary"
-            ? {
-                accessibleEstateCount: 1,
-                activeEstateCount: 1,
-                inactiveEstateCount: 0,
-                activeOwnedEstateCount: 1,
-                totalActiveAssets: 0,
-                councilMemberCount: 0,
-                conditionCounts: {
-                  good: 0,
-                  needsAttention: 0,
-                  faulty: 0,
-                  unassessed: 0,
-                },
-                affectedEstateCount: 0,
-                estatesNeedingAttention: [],
-              }
-            : [],
+it.each(["user", "resident"])(
+  "lets a mixed estate-role account load its management dashboard despite WorkOS role %s",
+  async (role) => {
+    auth.user = { id: "owner" };
+    auth.role = role;
+    access = mixedAccess;
+    vi.mocked(api.GET).mockImplementation((path: string) => {
+      const responses: Record<string, unknown> = {
+        "/access/context": access,
+        "/dashboard/summary": {
+          accessibleEstateCount: 1,
+          activeEstateCount: 1,
+          inactiveEstateCount: 0,
+          activeOwnedEstateCount: 1,
+          totalActiveAssets: 0,
+          councilMemberCount: 0,
+          conditionCounts: {
+            good: 0,
+            needsAttention: 0,
+            faulty: 0,
+            unassessed: 0,
+          },
+          affectedEstateCount: 0,
+          estatesNeedingAttention: [],
+        },
+      };
+      return Promise.resolve({
+        data: responses[path] ?? [],
         response: new Response(),
-      }) as never
-  );
-  renderWithProviders(<HomePage />);
-  await screen.findByRole("link", { name: "Accessible estates" });
-  expect(screen.queryByRole("link", { name: "Browse estates" })).toBeNull();
-  screen.getByRole("link", { name: "Accessible estates" });
-  expect(screen.queryByRole("link", { name: "Create account" })).toBeNull();
-});
+      }) as never;
+    });
+    renderWithProviders(<HomePage />);
+    await screen.findByRole("link", { name: "Accessible estates" });
+    expect(screen.queryByRole("link", { name: "Browse estates" })).toBeNull();
+    screen.getByRole("link", { name: "Accessible estates" });
+    expect(screen.queryByRole("link", { name: "Create account" })).toBeNull();
+  }
+);

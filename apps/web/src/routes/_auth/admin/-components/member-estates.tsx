@@ -145,11 +145,18 @@ export function MemberEstates({
           <li key={estate.estateId}>
             <EstateOption
               checked={estate.owner || estate.granted}
-              disabled={estate.owner || change.isPending}
+              disabled={
+                estate.owner ||
+                estate.canManageGrant === false ||
+                change.isPending
+              }
               estateId={estate.estateId}
               onChange={handleChange}
             >
               {estate.name} ({estate.code}){estate.owner ? " · Owner" : ""}
+              {estate.membershipRole === "RESIDENT"
+                ? " · Resident assignment (read-only)"
+                : ""}
               {estate.active ? "" : " · Inactive"}
             </EstateOption>
           </li>

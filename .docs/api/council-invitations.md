@@ -208,3 +208,5 @@ records compatibility with older invitations and fresh invitation attempts.
 
 [ADR 0024](../../.spec/decisions/0024-invitation-permission-revocation-affects-future-invites.md)
 records permission revocation versus removal and explicit cancellation.
+
+Resident authorization: estate member lists, invitation delegation, inviter checks and removal include MEMBER/COUNCIL rows only. A RESIDENT row grants no management access, even when the same account owns another estate. Invitation acceptance rejects a resident row in the target estate with 409, preserving both the membership and pending invitation; acceptance in another estate remains allowed. Same-estate resident/owner conflicts fail closed.

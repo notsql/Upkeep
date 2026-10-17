@@ -34,6 +34,8 @@ describe("MemberEstates", () => {
           active: true,
           owner: false,
           granted: false,
+          membershipRole: null,
+          canManageGrant: true,
         },
         {
           estateId: "oak",
@@ -42,6 +44,8 @@ describe("MemberEstates", () => {
           active: false,
           owner: false,
           granted: true,
+          membershipRole: "COUNCIL",
+          canManageGrant: true,
         },
         {
           estateId: "pine",
@@ -50,6 +54,8 @@ describe("MemberEstates", () => {
           active: true,
           owner: true,
           granted: false,
+          membershipRole: null,
+          canManageGrant: false,
         },
       ],
     });
@@ -112,6 +118,52 @@ describe("MemberEstates", () => {
     fireEvent.click(await screen.findByRole("checkbox", { name: maple }));
     expect((await screen.findByRole("alert")).textContent).toContain(
       "Unable to update estate access"
+    );
+  });
+
+  it("shows a resident assignment as read-only while permitting a management grant in another estate", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: [
+        {
+          estateId: "maple",
+          name: "Maple Grove",
+          code: "MG-001",
+          active: true,
+          owner: false,
+          granted: false,
+          membershipRole: "RESIDENT",
+          canManageGrant: false,
+        },
+        {
+          estateId: "oak",
+          name: "Oak Park",
+          code: "OP-001",
+          active: true,
+          owner: false,
+          granted: false,
+          membershipRole: null,
+          canManageGrant: true,
+        },
+      ],
+    } as never);
+    vi.mocked(api.PUT).mockResolvedValue({
+      data: undefined,
+      error: undefined,
+      response: new Response(null, { status: 204 }),
+    });
+    renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
+    const resident = await screen.findByRole("checkbox", { name: maple });
+    expect(isDisabled(resident)).toBe(true);
+    fireEvent.click(resident);
+    expect(api.PUT).not.toHaveBeenCalled();
+    expect(api.DELETE).not.toHaveBeenCalled();
+    const other = screen.getByRole("checkbox", { name: oak });
+    expect(isDisabled(other)).toBe(false);
+    fireEvent.click(other);
+    await waitFor(() =>
+      expect(api.PUT).toHaveBeenCalledWith(path, {
+        params: { path: { userId: "usr_1", estateId: "oak" } },
+      })
     );
   });
 });

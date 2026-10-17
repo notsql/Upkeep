@@ -3,6 +3,7 @@ package com.proj.server.estate;
 import static com.proj.server.db.tables.Estate.ESTATE;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 
+import com.proj.server.access.AccessService;
 import com.proj.server.db.tables.records.EstateRecord;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -11,8 +12,9 @@ import java.util.Optional;
 import java.util.UUID;
 import org.jooq.Condition;
 import org.jooq.DSLContext;
-import org.jooq.impl.DSL;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 @Repository
 public class EstateRepository {
@@ -37,6 +39,7 @@ public class EstateRepository {
     }
 
     public Optional<EstateResponse> findAccessible(UUID id, String user) {
+        denyResident(id, user);
         return db.selectFrom(ESTATE)
                 .where(ESTATE.ID.eq(id).and(accessibleTo(user)))
                 .fetchOptional()
@@ -44,6 +47,7 @@ public class EstateRepository {
     }
 
     public Optional<EstateResponse> findOwned(UUID id, String owner, boolean lock) {
+        denyResident(id, owner);
         var query = db.selectFrom(ESTATE).where(ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner)));
         return (lock ? query.forUpdate().fetchOptional() : query.fetchOptional()).map(row -> response(row, owner));
     }
@@ -95,10 +99,14 @@ public class EstateRepository {
 
     // Estates the user owns, or has been granted by an admin (decision 0012).
     private static Condition accessibleTo(String user) {
-        return ESTATE.OWNERUSERID
-                .eq(user)
-                .or(ESTATE.ID.in(
-                        DSL.select(ESTATEUSER.ESTATEID).from(ESTATEUSER).where(ESTATEUSER.USERID.eq(user))));
+        return AccessService.managementEstates(user);
+    }
+
+    private void denyResident(UUID id, String user) {
+        if (db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(AccessService.residentEstate(user)))) {
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Resident membership does not grant management access.");
+        }
     }
 
     private EstateResponse response(EstateRecord row, String user) {
@@ -121,6 +129,7 @@ public class EstateRepository {
                                                 .ESTATEID
                                                 .eq(row.getId())
                                                 .and(ESTATEUSER.USERID.eq(user))
+                                                .and(AccessService.managementMembership())
                                                 .and(ESTATEUSER.CANINVITEMEMBERS.isTrue()))),
                 row.getOwneruserid().equals(user));
     }

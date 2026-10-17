@@ -21,6 +21,8 @@ same change as the code.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Locations](api/locations.md): member-readable active hierarchy, owner-only
   historical reads and changes. Other API features are not yet documented here.
+- [Access projection and admin estate grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
+- [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
 
 ## Frontend (`apps/web`)
 
@@ -38,3 +40,4 @@ same change as the code.
 | [frontend/devices.md](frontend/devices.md) | Device list on asset details and dedicated device registration page |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate Council invitations, delegated invitation permission, and acceptance |
+| [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |

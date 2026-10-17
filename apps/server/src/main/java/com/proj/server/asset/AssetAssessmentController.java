@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/estates/{estateId}/assets/{assetId}/assessments")
 @ApiResponses({
     @ApiResponse(
+            responseCode = "403",
+            description = "Resident membership does not grant management access",
+            content = @Content(schema = @Schema(implementation = EstateError.class))),
+    @ApiResponse(
             responseCode = "400",
             description = "Missing or invalid details, or a date in the future",
             content = @Content(schema = @Schema(implementation = EstateError.class))),

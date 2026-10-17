@@ -87,3 +87,5 @@ active assets (one Good, one Faulty, one without assessments):
   }]
 }
 ```
+
+Estate access excludes RESIDENT memberships and same-estate resident/owner conflicts. Only ownership or current MEMBER/COUNCIL memberships contribute estate counts. Council-member counts omit resident rows. A mixed account sees only the estates where it holds management access.

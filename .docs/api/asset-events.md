@@ -2,6 +2,8 @@
 
 Contract: `packages/api/openapi.json`. All event endpoints require bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing estate or asset returns 404. Events are append-only: there is no update or delete.
 
+A same-estate RESIDENT membership takes precedence over conflicting ownership and returns 403. Residency in another estate does not block an owner. MEMBER/COUNCIL membership or platform-admin authority alone does not grant access. Spring Security explicitly allows only the GET and POST operations below.
+
 ## GET `/estates/{estateId}/assets/{assetId}/events`
 
 - path `estateId`: uuid (required)

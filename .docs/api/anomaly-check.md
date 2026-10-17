@@ -2,6 +2,8 @@
 
 Contract: `packages/api/openapi.json`. Requires bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing estate or asset returns 404. The browser calls only this endpoint; the server calls the internal `apps/ml` service to score the batch. Readings are scored, not stored.
 
+A same-estate RESIDENT membership takes precedence over conflicting ownership and returns 403 before inference. Residency in another estate does not block an owner. MEMBER/COUNCIL membership or platform-admin authority alone does not grant access. Spring Security explicitly admits this POST operation; unlisted actions remain denied.
+
 ## POST `/estates/{estateId}/assets/{assetId}/readings/anomaly-check`
 
 - path `estateId`: uuid (required)

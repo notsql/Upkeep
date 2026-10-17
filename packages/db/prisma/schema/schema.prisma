@@ -25,6 +25,7 @@ model Estate {
   devices       Device[]
   assessments   AssetAssessment[]
   invitations   EstateInvitation[]
+  issueReports  IssueReport[]
   events        AssetEvent[]
 
   @@index([ownerUserId])
@@ -49,11 +50,12 @@ model Location {
   updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
   deactivatedAt DateTime? @db.Timestamptz(6)
 
-  estate   Estate     @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  parent   Location?  @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
-  children Location[] @relation("LocationTree")
-  assets   Asset[]
-  devices  Device[]
+  estate       Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  parent       Location?     @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
+  children     Location[]    @relation("LocationTree")
+  assets       Asset[]
+  devices      Device[]
+  issueReports IssueReport[]
 
   @@unique([id, type, estateId])
   @@unique([id, estateId])
@@ -74,6 +76,38 @@ model EstateUser {
 
   @@id([estateId, userId])
   @@index([userId])
+}
+
+model IssueReport {
+  id                String   @id @default(uuid()) @db.Uuid
+  submittedByUserId String   @db.VarChar(255)
+  estateId          String   @db.Uuid
+  locationId        String   @db.Uuid
+  title             String   @db.VarChar(150)
+  description       String   @db.VarChar(2500)
+  status            String   @default("SUBMITTED") @db.VarChar(20)
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(6)
+
+  estate   Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  images   IssueReportImage[]
+
+  @@index([submittedByUserId, createdAt, id])
+  @@index([estateId])
+}
+
+model IssueReportImage {
+  id          String   @id @default(uuid()) @db.Uuid
+  reportId    String   @db.Uuid
+  storageKey  String   @unique @db.VarChar(500)
+  contentType String   @db.VarChar(50)
+  sizeBytes   Int
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  report IssueReport @relation(fields: [reportId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([reportId])
 }
 
 // A piece of equipment in an estate. `reference` is assigned by the server as

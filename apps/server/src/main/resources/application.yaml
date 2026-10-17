@@ -1,4 +1,8 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 17MB
   application:
     name: server
 
@@ -47,6 +51,11 @@ app:
     # Server-side secret for the WorkOS API (GET /users). Unlike the issuer
     # below, a blank default is safe: nothing auto-configures off it.
     api-key: ${WORKOS_API_KEY:}
+  r2:
+    endpoint: ${S3_ENDPOINT:}
+    access-id: ${R2_ACCESS_ID:}
+    secret-access-key: ${R2_SECRET_ACCESS_KEY:}
+    bucket-name: ${R2_BUCKET_NAME:}
 
 # WorkOS AuthKit is intentionally NOT configured here, and the issuer must not
 # be given an empty default: Spring's resource-server auto-configuration keys
