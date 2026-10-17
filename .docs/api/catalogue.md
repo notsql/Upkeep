@@ -2,6 +2,8 @@
 
 Contract: `packages/api/openapi.json`. Read-only lookups shared by all estates; they hold no estate data, so any signed-in user (bearer JWT) can read them, with no estate ownership check. Missing authentication returns 401.
 
+This includes resident and unassigned accounts. Spring Security explicitly allows the three GET operations below; unsupported methods and unknown nested actions remain denied.
+
 ## GET `/asset-categories`
 
 - 401: Sign in required — EstateError

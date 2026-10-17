@@ -46,3 +46,5 @@ Example: an authenticated owner sends POST `/estates/{estateId}/locations` with
 `{"type":"BLOCK","name":"Block A"}`. The 201 response contains the new
 `LocationResponse`. After accepting an invitation, a member can GET the same
 collection and see Block A, but cannot create, update or deactivate locations.
+
+A resident membership in the target estate returns 403 on management requests, including a conflicting owner/RESIDENT row. Management access in another estate does not change this restriction. Unrelated estates retain 404.

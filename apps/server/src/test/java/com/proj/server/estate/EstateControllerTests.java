@@ -39,6 +39,9 @@ class EstateControllerTests {
     @MockitoBean
     JwtDecoder jwtDecoder;
 
+    @MockitoBean
+    com.proj.server.access.AccessService access;
+
     private final UUID id = UUID.fromString("ac514a8e-c643-4a59-aa93-30138327f039");
     private final OffsetDateTime now = OffsetDateTime.parse("2026-09-25T00:00:00Z");
     private final String body = """
@@ -57,6 +60,9 @@ class EstateControllerTests {
 
     @BeforeEach
     void setup() {
+        when(access.context("owner", false))
+                .thenReturn(new com.proj.server.access.AppAccessResponse(
+                        true, true, false, false, false, null, java.util.List.of()));
         when(repository.findOwned(id, "owner", false)).thenReturn(Optional.of(estate(null)));
         when(repository.findOwned(id, "owner", true)).thenReturn(Optional.of(estate(null)));
     }

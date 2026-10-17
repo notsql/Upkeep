@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
@@ -155,7 +156,7 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.ESTATEUSER_USERID_IDX);
+        return Arrays.asList(Indexes.ESTATEUSER_ONE_RESIDENT_ESTATE, Indexes.ESTATEUSER_USERID_IDX);
     }
 
     @Override
@@ -178,6 +179,14 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
             _estate = new EstatePath(this, Keys.ESTATEUSER__ESTATEUSER_ESTATEID_FKEY, null);
 
         return _estate;
+    }
+
+    @Override
+    public List<Check<EstateuserRecord>> getChecks() {
+        return Arrays.asList(
+            Internal.createCheck(this, DSL.name("EstateUser_resident_invitation_check"), "((((role)::text <> 'RESIDENT'::text) OR (NOT \"canInviteMembers\")))", true),
+            Internal.createCheck(this, DSL.name("EstateUser_role_check"), "(((role)::text = ANY ((ARRAY['MEMBER'::character varying, 'COUNCIL'::character varying, 'RESIDENT'::character varying])::text[])))", true)
+        );
     }
 
     @Override

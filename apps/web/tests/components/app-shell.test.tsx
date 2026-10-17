@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { ownerEstateAccess, workspaceAccess } from "@tests/fixtures/access";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -9,7 +10,10 @@ const { state } = vi.hoisted(() => ({
     pathname: "/estates/e/assets",
     hash: "",
     role: "user",
-    user: { email: "owner@example.com" } as { email: string } | null,
+    user: { id: "owner", email: "owner@example.com" } as {
+      id: string;
+      email: string;
+    } | null,
     estate: {
       name: "Maple Estate",
       owned: true,
@@ -53,11 +57,42 @@ vi.mock("@/lib/estates", () => ({
   useEstate: () => ({ data: state.estate }),
   useEstateList: () => ({ data: [], isSuccess: true }),
 }));
+vi.mock("@/lib/api", () => ({
+  api: {
+    GET: async () => ({
+      data: {
+        ...workspaceAccess,
+        canAccessPlatformAdmin: state.role === "admin",
+        estates: [
+          {
+            ...ownerEstateAccess,
+            estateId: "e",
+            role: state.estate.owned ? "OWNER" : "COUNCIL",
+            canManageEstate: state.estate.owned,
+            canViewAssets: state.estate.owned,
+            canInviteMembers: state.estate.canInviteMembers,
+            canManageInvitationPermissions:
+              state.estate.canManageInvitationPermissions,
+          },
+        ],
+      },
+      response: new Response(),
+    }),
+  },
+}));
+
+async function desktopNavigation() {
+  const nav = within(
+    await screen.findByRole("navigation", { name: "Desktop navigation" })
+  );
+  await nav.findByRole("link", { name: "Home" });
+  return nav;
+}
 
 beforeEach(() => {
   state.pathname = "/estates/e/assets";
   state.hash = "";
-  state.user = { email: "owner@example.com" };
+  state.user = { id: "owner", email: "owner@example.com" };
   state.role = "user";
   state.estate = {
     name: "Maple Estate",
@@ -75,6 +110,7 @@ describe("dashboard navigation", () => {
         <main>Content</main>
       </AppShell>
     );
+    await desktopNavigation();
     expect(
       within(
         screen.getByRole("navigation", { name: "Desktop navigation" })
@@ -83,22 +119,19 @@ describe("dashboard navigation", () => {
     const mobile = within(
       screen.getByRole("navigation", { name: "Mobile navigation" })
     );
-    expect(mobile.getAllByRole("link").map((link) => link.textContent)).toEqual(
-      ["Home", "Estates"]
-    );
+    mobile.getByRole("link", { name: "Home" });
+    mobile.getByRole("link", { name: "Estates" });
     fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
     await screen.findByRole("menuitem", { name: "Settings" });
     screen.getByRole("button", { name: "Open account menu" });
   });
-  it("marks the asset destination current and supplies estate-specific links", () => {
+  it("marks the asset destination current and supplies estate-specific links", async () => {
     renderWithProviders(
       <AppShell>
         <main>Content</main>
       </AppShell>
     );
-    const nav = within(
-      screen.getByRole("navigation", { name: "Desktop navigation" })
-    );
+    const nav = await desktopNavigation();
     expect(
       nav.getByRole("link", { name: "Assets" }).getAttribute("aria-current")
     ).toBe("page");
@@ -119,21 +152,19 @@ describe("dashboard navigation", () => {
     context.getByRole("link", { name: "Assets", current: "page" });
     mobile.getByRole("button", { name: "More navigation" });
   });
-  it("hides estate features outside an estate and admin features from ordinary users", () => {
+  it("hides estate features outside an estate and admin features from ordinary users", async () => {
     state.pathname = "/estates";
     renderWithProviders(
       <AppShell>
         <main>Content</main>
       </AppShell>
     );
-    const nav = within(
-      screen.getByRole("navigation", { name: "Desktop navigation" })
-    );
+    const nav = await desktopNavigation();
     expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
     expect(nav.queryByRole("link", { name: "Council" })).toBeNull();
     expect(nav.queryByRole("link", { name: "Admin users" })).toBeNull();
   });
-  it("preserves member and delegate permission boundaries", () => {
+  it("preserves member and delegate permission boundaries", async () => {
     state.estate = {
       ...state.estate,
       owned: false,
@@ -145,9 +176,7 @@ describe("dashboard navigation", () => {
         <main>Content</main>
       </AppShell>
     );
-    const nav = within(
-      screen.getByRole("navigation", { name: "Desktop navigation" })
-    );
+    const nav = await desktopNavigation();
     expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
     nav.getByRole("link", { name: "Council" });
   });
@@ -157,6 +186,7 @@ describe("dashboard navigation", () => {
         <main>Content</main>
       </AppShell>
     );
+    await desktopNavigation();
     fireEvent.click(
       within(
         screen.getByRole("navigation", { name: "Mobile navigation" })

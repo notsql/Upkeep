@@ -141,6 +141,7 @@ public class WorkOSService implements CouncilIdentity {
         });
     }
 
+    // TODO: leave all role management to neon
     public synchronized UserRoles updateRole(String authenticatedUserId, String membershipId, UserRoles request) {
         validateRoles(request);
 
@@ -224,9 +225,9 @@ public class WorkOSService implements CouncilIdentity {
 
     private static void validateRoles(UserRoles request) {
         if (request.roleSlugs() == null
-                || request.roleSlugs().isEmpty()
+                || request.roleSlugs().size() != 1
                 || request.roleSlugs().stream().anyMatch(role -> role == null || role.isBlank())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "At least one role is required");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Exactly one role is required");
         }
     }
 

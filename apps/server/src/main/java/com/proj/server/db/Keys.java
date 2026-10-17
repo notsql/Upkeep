@@ -14,6 +14,8 @@ import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.records.AssetRecord;
@@ -26,6 +28,8 @@ import com.proj.server.db.tables.records.DeviceRecord;
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.db.tables.records.EstateinvitationRecord;
 import com.proj.server.db.tables.records.EstateuserRecord;
+import com.proj.server.db.tables.records.IssuereportRecord;
+import com.proj.server.db.tables.records.IssuereportimageRecord;
 import com.proj.server.db.tables.records.LocationRecord;
 import com.proj.server.db.tables.records.ManufacturerRecord;
 
@@ -58,6 +62,8 @@ public class Keys {
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
     public static final UniqueKey<EstateinvitationRecord> ESTATEINVITATION_PKEY = Internal.createUniqueKey(Estateinvitation.ESTATEINVITATION, DSL.name("EstateInvitation_pkey"), new TableField[] { Estateinvitation.ESTATEINVITATION.ID }, true);
     public static final UniqueKey<EstateuserRecord> ESTATEUSER_PKEY = Internal.createUniqueKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_pkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID, Estateuser.ESTATEUSER.USERID }, true);
+    public static final UniqueKey<IssuereportRecord> ISSUEREPORT_PKEY = Internal.createUniqueKey(Issuereport.ISSUEREPORT, DSL.name("IssueReport_pkey"), new TableField[] { Issuereport.ISSUEREPORT.ID }, true);
+    public static final UniqueKey<IssuereportimageRecord> ISSUEREPORTIMAGE_PKEY = Internal.createUniqueKey(Issuereportimage.ISSUEREPORTIMAGE, DSL.name("IssueReportImage_pkey"), new TableField[] { Issuereportimage.ISSUEREPORTIMAGE.ID }, true);
     public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
     public static final UniqueKey<ManufacturerRecord> MANUFACTURER_PKEY = Internal.createUniqueKey(Manufacturer.MANUFACTURER, DSL.name("Manufacturer_pkey"), new TableField[] { Manufacturer.MANUFACTURER.ID }, true);
 
@@ -76,5 +82,7 @@ public class Keys {
     public static final ForeignKey<DeviceRecord, EstateRecord> DEVICE__DEVICE_ESTATEID_FKEY = Internal.createForeignKey(Device.DEVICE, DSL.name("Device_estateId_fkey"), new TableField[] { Device.DEVICE.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateinvitationRecord, EstateRecord> ESTATEINVITATION__ESTATEINVITATION_ESTATEID_FKEY = Internal.createForeignKey(Estateinvitation.ESTATEINVITATION, DSL.name("EstateInvitation_estateId_fkey"), new TableField[] { Estateinvitation.ESTATEINVITATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateuserRecord, EstateRecord> ESTATEUSER__ESTATEUSER_ESTATEID_FKEY = Internal.createForeignKey(Estateuser.ESTATEUSER, DSL.name("EstateUser_estateId_fkey"), new TableField[] { Estateuser.ESTATEUSER.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<IssuereportRecord, EstateRecord> ISSUEREPORT__ISSUEREPORT_ESTATEID_FKEY = Internal.createForeignKey(Issuereport.ISSUEREPORT, DSL.name("IssueReport_estateId_fkey"), new TableField[] { Issuereport.ISSUEREPORT.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<IssuereportimageRecord, IssuereportRecord> ISSUEREPORTIMAGE__ISSUEREPORTIMAGE_REPORTID_FKEY = Internal.createForeignKey(Issuereportimage.ISSUEREPORTIMAGE, DSL.name("IssueReportImage_reportId_fkey"), new TableField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, Keys.ISSUEREPORT_PKEY, new TableField[] { Issuereport.ISSUEREPORT.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<LocationRecord, EstateRecord> LOCATION__LOCATION_ESTATEID_FKEY = Internal.createForeignKey(Location.LOCATION, DSL.name("Location_estateId_fkey"), new TableField[] { Location.LOCATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
 }

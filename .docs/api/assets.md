@@ -326,6 +326,7 @@ After success, restore with `{"reference":"EST-A0001","expectedVersion":1}`.
 
 Decision 0025.
 
+- `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` is explicitly allowed through the JWT security chain for authenticated callers. The service enforces estate ownership; unsupported methods and nested credential actions remain denied.
 - The key is `upk_` plus 32 SecureRandom bytes, base64url without padding. It is returned once and never stored, logged or returned again. `Device.credentialHash` holds its SHA-256 hex, and `credentialIssuedAt` the issue time.
 - Issuing locks the estate, then the asset (as registration does), then updates the device scoped by id, asset and estate. An unknown device, a device on another asset or estate, or an estate the caller does not own returns 404. A retired asset or inactive estate returns 409. A key issued earlier keeps working once the asset is restored.
 - Issuing again overwrites the hash, so the previous key is rejected at once. Replacement is the only way to revoke a key for now.
@@ -337,3 +338,5 @@ Example: `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credentia
 ## Historical location options
 
 `GET /estates/{estateId}/locations?includeInactive=true` returns all owner-visible locations (200 LocationResponse[]); omission/false retains active-only behavior. 401 unsigned, 404 foreign/missing estate. The UI computes hierarchical paths from parentId. LocationResponse contains required id/estateId (UUID), type (BLOCK/LEVEL/COMMON_AREA), name (string), createdAt/updatedAt (date-time), and nullable parentId (UUID), sortOrder (integer), deactivatedAt (date-time).
+
+A resident membership in the target estate returns 403 on management requests, including a conflicting owner/RESIDENT row. Management access in another estate does not change this restriction. Unrelated estates retain 404.

@@ -3,8 +3,12 @@ package com.proj.server.config;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.List;
+import java.util.Set;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,5 +34,33 @@ public class OpenApiConfig {
                                         .scheme("bearer")
                                         .bearerFormat("JWT")))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME));
+    }
+
+    @Bean
+    OpenApiCustomizer nullableResidentEstate() {
+        return openApi -> {
+            var context = openApi.getComponents().getSchemas().get("ResidentContextResponse");
+            if (context != null) {
+                // Swagger's nullable annotation places `type: null` beside a
+                // $ref in OpenAPI 3.1, which generators read as a plain ref.
+                context.getProperties()
+                        .put(
+                                "estate",
+                                new Schema<>()
+                                        .oneOf(List.of(
+                                                new Schema<>().$ref("#/components/schemas/EstateLabel"),
+                                                new Schema<>().types(Set.of("null")))));
+            }
+            var access = openApi.getComponents().getSchemas().get("AppAccessResponse");
+            if (access != null) {
+                access.getProperties()
+                        .put(
+                                "residentEstate",
+                                new Schema<>()
+                                        .oneOf(List.of(
+                                                new Schema<>().$ref("#/components/schemas/EstateLabel"),
+                                                new Schema<>().types(Set.of("null")))));
+            }
+        };
     }
 }

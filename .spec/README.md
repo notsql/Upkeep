@@ -31,6 +31,9 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [management-endpoint-security-regression.md](features/management-endpoint-security-regression.md) | - | built; explicit endpoint authorization and regression tests verified |
+| [resident-fault-reporting.md](features/resident-fault-reporting.md) | - | draft; awaiting agreement |
+| [resident-estate-user-authorization.md](features/resident-estate-user-authorization.md) | - | draft pivot plan; policy decisions resolved, implementation pending |
 | [manager-account-authorization.md](features/manager-account-authorization.md) | ID-21 | invitations verified; broader estate roles are follow-up |
 | `estate-management.md` | - | built |
 | `location-hierarchy.md` | - | built |

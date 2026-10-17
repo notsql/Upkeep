@@ -41,6 +41,10 @@ public class EstateUserController {
     @PutMapping("/{estateId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponse(responseCode = "204", description = "User added")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Resident membership requires explicit conversion",
+            content = @Content(schema = @Schema(implementation = EstateError.class)))
     @Operation(summary = "Add a user to an estate")
     public void addEstateUser(@PathVariable String userId, @PathVariable UUID estateId) {
         service.add(userId, estateId);
@@ -49,6 +53,10 @@ public class EstateUserController {
     @DeleteMapping("/{estateId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponse(responseCode = "204", description = "User removed")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Resident membership cannot be removed through management grants",
+            content = @Content(schema = @Schema(implementation = EstateError.class)))
     @Operation(summary = "Remove a user from an estate")
     public void removeEstateUser(@PathVariable String userId, @PathVariable UUID estateId) {
         service.remove(userId, estateId);

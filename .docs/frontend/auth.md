@@ -14,7 +14,7 @@ are relative to `apps/web/src/`.
 | `routes/api/auth/sign-in/index.tsx` | `GET /api/auth/sign-in` | server handler | Sanitises `returnPathname`; when `invitation_token` is present, forwards it on the AuthKit authorization URL and returns to `/estates`. Preserves PKCE/state. Responds 307. On failure 303 to `/login?error=auth_unavailable`. |
 | `routes/api/auth/sign-up/index.tsx` | `GET /api/auth/sign-up` | server handler | 307 to `getSignUpUrl` with `returnPathname: "/account"`. On failure 303 to `/register?error=auth_unavailable`. |
 | `routes/api/auth/callback/index.tsx` | `GET /api/auth/callback` | server handler | `handleCallbackRoute`; on error redirects to `/login?error=auth_failed`. |
-| `routes/_auth/route.tsx` | pathless layout `_auth` | guard | Loader: `getAuth()`; no user throws `redirect({ href: buildSignInPath(location.href) })`. Returns `{ user }` as loader data (read by `/account`). Component is `Outlet`. Every route under `routes/_auth/` is behind this guard. |
+| `routes/_auth/route.tsx` | pathless layout `_auth` | guard | `beforeLoad` authenticates and awaits Spring access before management child loaders run; no user redirects to the same-origin sign-in path. Resident estate deep links redirect to `/reports/new`; other estate permissions remain independent. Reporting/account routes need authentication only. Returns `{ user }` as loader data (read by `/account`). Component is `Outlet`. Every route under `routes/_auth/` is behind this guard. |
 
 The login and register pages are a shadcn `Card` (`role="region"` named by the
 `<h1>` inside `CardTitle`; `CardHeader`, `CardDescription`, `CardContent`). The
@@ -46,9 +46,7 @@ the API client, never by hand.
 
 ## Roles
 
-`useAuth().role === "admin"` shows Admin users in desktop navigation and mobile
-More; the
-`/admin/users` loader enforces it (see [admin-users.md](admin-users.md)).
+Spring's `GET /access/context` drives navigation, Home and protected estate routes. WorkOS remains the authority for platform admin access; estate permissions come from current `EstateUser` rows and estate ownership. A JWT resident claim neither grants reporting access nor removes management access in another estate. The My reports navigation destination requires a current Resident membership; direct access to owned historical reports remains available after membership deletion. See [resident-reports.md](resident-reports.md) and [API access](../api/access.md).
 
 ## Council invitation sign-in
 

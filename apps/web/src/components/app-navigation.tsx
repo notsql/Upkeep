@@ -6,12 +6,14 @@ import {
   DropdownMenuTrigger,
 } from "@proj/ui/components/dropdown-menu";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import {
   Building2,
+  ClipboardList,
+  ClipboardPenLine,
   Home,
   Layers,
   LayoutDashboard,
+  LogOut,
   type LucideIcon,
   MoreHorizontal,
   ShieldCheck,
@@ -19,13 +21,18 @@ import {
   Users,
 } from "lucide-react";
 import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
+import { useAppAccess } from "@/lib/access";
 import { useEstate } from "@/lib/estates";
 
 const ESTATE_PATH = /^\/estates\/([^/]+)/;
+const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/;
 type Destination =
   | "/"
   | "/estates"
   | "/account"
+  | "/reports"
+  | "/reports/new"
+  | "/logout"
   | "/admin/users"
   | "/estates/$estateId"
   | "/estates/$estateId/assets"
@@ -39,13 +46,63 @@ interface NavigationItem {
 }
 
 function useNavigation() {
-  const { role } = useAuth();
+  const access = useAppAccess();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
   const candidate = pathname.match(ESTATE_PATH)?.[1];
-  const estateId = candidate && candidate !== "new" ? candidate : undefined;
+  const permission = access.data?.estates.find(
+    (item) => item.estateId === candidate
+  );
+  const estateId =
+    candidate && candidate !== "new" && permission?.canViewManagement
+      ? candidate
+      : undefined;
   const estate = useEstate(estateId);
+  const reporting: NavigationItem = {
+    label: "Report a fault",
+    to: "/reports/new",
+    icon: ClipboardPenLine,
+    active: pathname.startsWith("/reports/new"),
+  };
+  const history: NavigationItem = {
+    label: "My reports",
+    to: "/reports",
+    icon: ClipboardList,
+    active:
+      pathname === "/reports" ||
+      (REPORT_DETAIL_PATH.test(pathname) &&
+        !pathname.startsWith("/reports/new")),
+  };
+  if (!access.data || access.isError) {
+    return {
+      desktop: [],
+      local: [],
+      primary: [],
+      overflow: [],
+      estateId: undefined,
+      estateName: undefined,
+    };
+  }
+  if (!access.data.canEnterWorkspace) {
+    const signOut: NavigationItem = {
+      label: "Sign out",
+      to: "/logout",
+      icon: LogOut,
+      active: false,
+    };
+    const destinations = access.data.hasResidentMembership
+      ? [reporting, history, signOut]
+      : [reporting, signOut];
+    return {
+      desktop: destinations,
+      local: [],
+      primary: destinations,
+      overflow: [],
+      estateId: undefined,
+      estateName: undefined,
+    };
+  }
   const home: NavigationItem = {
     label: "Home",
     to: "/",
@@ -74,7 +131,7 @@ function useNavigation() {
       active: pathname.startsWith("/account"),
     },
   ];
-  if (role === "admin") {
+  if (access.data.canAccessPlatformAdmin) {
     const admin: NavigationItem = {
       label: "Admin users",
       to: "/admin/users",
@@ -94,7 +151,7 @@ function useNavigation() {
       icon: LayoutDashboard,
       active: pathname === base || pathname === `${base}/`,
     });
-    if (estate.data?.owned) {
+    if (permission?.canViewAssets) {
       local.push({
         label: "Assets",
         to: "/estates/$estateId/assets",
@@ -104,8 +161,8 @@ function useNavigation() {
       });
     }
     if (
-      estate.data?.canInviteMembers ||
-      estate.data?.canManageInvitationPermissions
+      permission?.canInviteMembers ||
+      permission?.canManageInvitationPermissions
     ) {
       local.push({
         label: "Council",
@@ -115,6 +172,10 @@ function useNavigation() {
         active: pathname.startsWith(`${base}/council`),
       });
     }
+  }
+  if (access.data.hasResidentMembership) {
+    desktop.push(reporting, history);
+    overflow.push(reporting, history);
   }
   return {
     desktop,

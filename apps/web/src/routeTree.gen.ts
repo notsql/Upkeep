@@ -16,9 +16,12 @@ import { Route as LogoutIndexRouteImport } from './routes/logout/index'
 import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as AuthAccountIndexRouteImport } from './routes/_auth/account/index'
 import { Route as AuthEstatesIndexRouteImport } from './routes/_auth/estates/index'
+import { Route as AuthReportsIndexRouteImport } from './routes/_auth/reports/index'
 import { Route as AuthAdminUsersIndexRouteImport } from './routes/_auth/admin/users/index'
 import { Route as AuthEstatesEstateIdIndexRouteImport } from './routes/_auth/estates/$estateId/index'
 import { Route as AuthEstatesNewIndexRouteImport } from './routes/_auth/estates/new/index'
+import { Route as AuthReportsReportIdIndexRouteImport } from './routes/_auth/reports/$reportId/index'
+import { Route as AuthReportsNewIndexRouteImport } from './routes/_auth/reports/new/index'
 import { Route as ApiAuthCallbackIndexRouteImport } from './routes/api/auth/callback/index'
 import { Route as ApiAuthSignInIndexRouteImport } from './routes/api/auth/sign-in/index'
 import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-up/index'
@@ -65,6 +68,11 @@ const AuthEstatesIndexRoute = AuthEstatesIndexRouteImport.update({
   path: '/estates/',
   getParentRoute: () => AuthRouteRoute,
 } as any)
+const AuthReportsIndexRoute = AuthReportsIndexRouteImport.update({
+  id: '/reports/',
+  path: '/reports/',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
 const AuthAdminUsersIndexRoute = AuthAdminUsersIndexRouteImport.update({
   id: '/admin/users/',
   path: '/admin/users/',
@@ -79,6 +87,17 @@ const AuthEstatesEstateIdIndexRoute =
 const AuthEstatesNewIndexRoute = AuthEstatesNewIndexRouteImport.update({
   id: '/estates/new/',
   path: '/estates/new/',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthReportsReportIdIndexRoute =
+  AuthReportsReportIdIndexRouteImport.update({
+    id: '/reports/$reportId/',
+    path: '/reports/$reportId/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthReportsNewIndexRoute = AuthReportsNewIndexRouteImport.update({
+  id: '/reports/new/',
+  path: '/reports/new/',
   getParentRoute: () => AuthRouteRoute,
 } as any)
 const ApiAuthCallbackIndexRoute = ApiAuthCallbackIndexRouteImport.update({
@@ -152,9 +171,12 @@ export interface FileRoutesByFullPath {
   '/register/': typeof RegisterIndexRoute
   '/account/': typeof AuthAccountIndexRoute
   '/estates/': typeof AuthEstatesIndexRoute
+  '/reports/': typeof AuthReportsIndexRoute
   '/admin/users/': typeof AuthAdminUsersIndexRoute
   '/estates/$estateId/': typeof AuthEstatesEstateIdIndexRoute
   '/estates/new/': typeof AuthEstatesNewIndexRoute
+  '/reports/$reportId/': typeof AuthReportsReportIdIndexRoute
+  '/reports/new/': typeof AuthReportsNewIndexRoute
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
@@ -174,9 +196,12 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/account': typeof AuthAccountIndexRoute
   '/estates': typeof AuthEstatesIndexRoute
+  '/reports': typeof AuthReportsIndexRoute
   '/admin/users': typeof AuthAdminUsersIndexRoute
   '/estates/$estateId': typeof AuthEstatesEstateIdIndexRoute
   '/estates/new': typeof AuthEstatesNewIndexRoute
+  '/reports/$reportId': typeof AuthReportsReportIdIndexRoute
+  '/reports/new': typeof AuthReportsNewIndexRoute
   '/api/auth/callback': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up': typeof ApiAuthSignUpIndexRoute
@@ -198,9 +223,12 @@ export interface FileRoutesById {
   '/register/': typeof RegisterIndexRoute
   '/_auth/account/': typeof AuthAccountIndexRoute
   '/_auth/estates/': typeof AuthEstatesIndexRoute
+  '/_auth/reports/': typeof AuthReportsIndexRoute
   '/_auth/admin/users/': typeof AuthAdminUsersIndexRoute
   '/_auth/estates/$estateId/': typeof AuthEstatesEstateIdIndexRoute
   '/_auth/estates/new/': typeof AuthEstatesNewIndexRoute
+  '/_auth/reports/$reportId/': typeof AuthReportsReportIdIndexRoute
+  '/_auth/reports/new/': typeof AuthReportsNewIndexRoute
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
@@ -222,9 +250,12 @@ export interface FileRouteTypes {
     | '/register/'
     | '/account/'
     | '/estates/'
+    | '/reports/'
     | '/admin/users/'
     | '/estates/$estateId/'
     | '/estates/new/'
+    | '/reports/$reportId/'
+    | '/reports/new/'
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
@@ -244,9 +275,12 @@ export interface FileRouteTypes {
     | '/register'
     | '/account'
     | '/estates'
+    | '/reports'
     | '/admin/users'
     | '/estates/$estateId'
     | '/estates/new'
+    | '/reports/$reportId'
+    | '/reports/new'
     | '/api/auth/callback'
     | '/api/auth/sign-in'
     | '/api/auth/sign-up'
@@ -267,9 +301,12 @@ export interface FileRouteTypes {
     | '/register/'
     | '/_auth/account/'
     | '/_auth/estates/'
+    | '/_auth/reports/'
     | '/_auth/admin/users/'
     | '/_auth/estates/$estateId/'
     | '/_auth/estates/new/'
+    | '/_auth/reports/$reportId/'
+    | '/_auth/reports/new/'
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
@@ -345,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/reports/': {
+      id: '/_auth/reports/'
+      path: '/reports'
+      fullPath: '/reports/'
+      preLoaderRoute: typeof AuthReportsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/admin/users/': {
       id: '/_auth/admin/users/'
       path: '/admin/users'
@@ -364,6 +408,20 @@ declare module '@tanstack/react-router' {
       path: '/estates/new'
       fullPath: '/estates/new/'
       preLoaderRoute: typeof AuthEstatesNewIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/reports/$reportId/': {
+      id: '/_auth/reports/$reportId/'
+      path: '/reports/$reportId'
+      fullPath: '/reports/$reportId/'
+      preLoaderRoute: typeof AuthReportsReportIdIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/reports/new/': {
+      id: '/_auth/reports/new/'
+      path: '/reports/new'
+      fullPath: '/reports/new/'
+      preLoaderRoute: typeof AuthReportsNewIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/api/auth/callback/': {
@@ -449,9 +507,12 @@ declare module '@tanstack/react-router' {
 interface AuthRouteRouteChildren {
   AuthAccountIndexRoute: typeof AuthAccountIndexRoute
   AuthEstatesIndexRoute: typeof AuthEstatesIndexRoute
+  AuthReportsIndexRoute: typeof AuthReportsIndexRoute
   AuthAdminUsersIndexRoute: typeof AuthAdminUsersIndexRoute
   AuthEstatesEstateIdIndexRoute: typeof AuthEstatesEstateIdIndexRoute
   AuthEstatesNewIndexRoute: typeof AuthEstatesNewIndexRoute
+  AuthReportsReportIdIndexRoute: typeof AuthReportsReportIdIndexRoute
+  AuthReportsNewIndexRoute: typeof AuthReportsNewIndexRoute
   AuthEstatesEstateIdAssetsIndexRoute: typeof AuthEstatesEstateIdAssetsIndexRoute
   AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
   AuthEstatesEstateIdEditIndexRoute: typeof AuthEstatesEstateIdEditIndexRoute
@@ -465,9 +526,12 @@ interface AuthRouteRouteChildren {
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthAccountIndexRoute: AuthAccountIndexRoute,
   AuthEstatesIndexRoute: AuthEstatesIndexRoute,
+  AuthReportsIndexRoute: AuthReportsIndexRoute,
   AuthAdminUsersIndexRoute: AuthAdminUsersIndexRoute,
   AuthEstatesEstateIdIndexRoute: AuthEstatesEstateIdIndexRoute,
   AuthEstatesNewIndexRoute: AuthEstatesNewIndexRoute,
+  AuthReportsReportIdIndexRoute: AuthReportsReportIdIndexRoute,
+  AuthReportsNewIndexRoute: AuthReportsNewIndexRoute,
   AuthEstatesEstateIdAssetsIndexRoute: AuthEstatesEstateIdAssetsIndexRoute,
   AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
   AuthEstatesEstateIdEditIndexRoute: AuthEstatesEstateIdEditIndexRoute,

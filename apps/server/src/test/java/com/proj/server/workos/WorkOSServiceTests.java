@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.workos.WorkOS;
@@ -46,6 +47,16 @@ class WorkOSServiceTests {
 
         assertEquals(List.of("admin"), result.roleSlugs());
         verify(memberships).update("om_test", new CreateUserRole.Multiple(List.of("admin")));
+    }
+
+    @Test
+    void rejectsMultipleWorkosRolesBeforeCallingWorkos() {
+        var exception = assertThrows(
+                ResponseStatusException.class,
+                () -> service.updateRole("user_actor", "om_test", new UserRoles(List.of("resident", "admin"))));
+
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(memberships);
     }
 
     @Test
