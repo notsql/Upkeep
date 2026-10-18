@@ -195,7 +195,7 @@ public class Device extends TableImpl<DeviceRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.DEVICE_ASSETID_IDX, Indexes.DEVICE_CREDENTIALHASH_KEY, Indexes.DEVICE_ESTATEID_IDX, Indexes.DEVICE_IDENTIFIER_KEY, Indexes.DEVICE_LOCATIONID_IDX);
+        return Arrays.asList(Indexes.DEVICE_ASSETID_IDX, Indexes.DEVICE_CREDENTIALHASH_KEY, Indexes.DEVICE_ESTATEID_IDX, Indexes.DEVICE_ID_ESTATEID_KEY, Indexes.DEVICE_IDENTIFIER_KEY, Indexes.DEVICE_LOCATIONID_IDX);
     }
 
     @Override

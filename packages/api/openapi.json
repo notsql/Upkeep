@@ -1639,6 +1639,62 @@
         }
       }
     },
+    "/device-api/readings": {
+      "post": {
+        "tags": ["device-reading-controller"],
+        "operationId": "submitReading",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateReadingRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Reading stored",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ReadingResponse" }
+              }
+            }
+          },
+          "200": {
+            "description": "An identical reading was already stored; nothing changed and it is returned",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ReadingResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed reading; the message names the field and the problem",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, unknown or replaced device key",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/council-invitations/{invitationId}/accept": {
       "post": {
         "tags": ["council-controller"],
@@ -3444,6 +3500,92 @@
           "notes",
           "recordedAt",
           "recordedByUserId"
+        ]
+      },
+      "CreateReadingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "A JSON number, at most 12 digits before the decimal point. Rounded half-up to 6 decimal places. Strings are not converted.",
+            "example": 21.5
+          },
+          "unit": {
+            "type": "string",
+            "description": "Exactly the catalogue unit for the metric",
+            "example": "°C"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 with a UTC offset, at most 5 minutes after the server's time",
+            "example": "2026-10-17T14:30:00+08:00"
+          }
+        },
+        "required": ["measuredAt", "metric", "unit", "value"]
+      },
+      "ReadingResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "deviceId": { "type": "string", "format": "uuid" },
+          "assetId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The device's asset when the reading arrived"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "As stored: rounded to 6 decimal places"
+          },
+          "unit": { "type": "string" },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "In UTC"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the server first stored the reading. A retry returns the original time."
+          }
+        },
+        "required": [
+          "assetId",
+          "deviceId",
+          "id",
+          "measuredAt",
+          "metric",
+          "receivedAt",
+          "unit",
+          "value"
         ]
       },
       "AcceptedInvitationsResponse": {

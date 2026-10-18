@@ -18,6 +18,7 @@ same change as the code.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
+- [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Locations](api/locations.md): member-readable active hierarchy, owner-only
   historical reads and changes. Other API features are not yet documented here.

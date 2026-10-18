@@ -184,6 +184,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/device-api/readings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["submitReading"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates": {
     parameters: {
       query?: never;
@@ -250,6 +266,21 @@ export interface paths {
     trace?: never;
   };
   "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["issueDeviceCredential"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/events": {
     parameters: {
       query?: never;
@@ -291,7 +322,6 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    post: operations["issueDeviceCredential"];
     post: operations["checkAssetReadings"];
     delete?: never;
     options?: never;
@@ -916,6 +946,68 @@ export interface components {
       recordedByName?: string | null;
       /** Format: date-time */
       recordedAt: string;
+    };
+    CreateReadingRequest: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /**
+       * @description A JSON number, at most 12 digits before the decimal point. Rounded half-up to 6 decimal places. Strings are not converted.
+       * @example 21.5
+       */
+      value: number;
+      /**
+       * @description Exactly the catalogue unit for the metric
+       * @example °C
+       */
+      unit: string;
+      /**
+       * Format: date-time
+       * @description ISO-8601 with a UTC offset, at most 5 minutes after the server's time
+       * @example 2026-10-17T14:30:00+08:00
+       */
+      measuredAt: string;
+    };
+    ReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      deviceId: string;
+      /**
+       * Format: uuid
+       * @description The device's asset when the reading arrived
+       */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /** @description As stored: rounded to 6 decimal places */
+      value: number;
+      unit: string;
+      /**
+       * Format: date-time
+       * @description In UTC
+       */
+      measuredAt: string;
+      /**
+       * Format: date-time
+       * @description When the server first stored the reading. A retry returns the original time.
+       */
+      receivedAt: string;
     };
     AcceptedInvitationsResponse: {
       estateIds: string[];
@@ -3652,6 +3744,66 @@ export interface operations {
         };
       };
       /** @description Inactive estate, asset or location, or a conflicting change */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  submitReading: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateReadingRequest"];
+      };
+    };
+    responses: {
+      /** @description An identical reading was already stored; nothing changed and it is returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingResponse"];
+        };
+      };
+      /** @description Reading stored */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingResponse"];
+        };
+      };
+      /** @description Malformed reading; the message names the field and the problem */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing, malformed, unknown or replaced device key */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive */
       409: {
         headers: {
           [name: string]: unknown;
