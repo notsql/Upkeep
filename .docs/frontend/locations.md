@@ -15,14 +15,16 @@ device forms (see [assets.md](assets.md), [devices.md](devices.md)).
 | Type | Label | Allowed parent | Extra field |
 | --- | --- | --- | --- |
 | `BLOCK` | Block | none (top level); never moved | - |
-| `LEVEL` | Level | a block | `sortOrder` ("Position", integer, unique in block; bottom-up, e.g. B1 = -1) |
+| `LEVEL` | Level | a block | `sortOrder` ("Position", integer, unique in block; bottom-up, e.g. B1 = -1). Shown highest first in the tree and pickers. |
 | `COMMON_AREA` | Common area | a block or a level | - |
 
 ## Screens and components
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `LocationsSection` (`estates/$estateId/-components/locations-section.tsx`) | "Locations" section. Search box (filters by name and reveals a matching hierarchy with parent context). Otherwise a nested tree (`ul aria-label="Location hierarchy"`). Owners and shared members can browse/search. Write controls and panels only when the estate has loaded, `owned` is true, and it is active. Actions per node: "Add level" (blocks), "Add common area" (blocks and levels), "Edit", "Deactivate"; plus a top "Add block" button. One Dialog at a time for create/edit/deactivate; pending submissions prevent dismissal. Blocks are distinct surfaces; branches start collapsed and whole name/count buttons expand/collapse children. Each node has an Actions DropdownMenu; search results reveal parents and retain allowed actions. Internal subcomponents: `LocationTree`, `LocationItem`, `LocationActions`, `PanelView`, `DeactivateLocation` (dialog confirmation: "It stays on record... cannot be changed or reactivated"). | `Button`, `Input`, `Label`, `DropdownMenu`, `Dialog` |
+| `LocationsSection` (`estates/$estateId/-components/locations-section.tsx`) | "Locations" section. Search box (filters by name and reveals a matching hierarchy with parent context). Otherwise a nested tree (`ul aria-label="Location hierarchy"`). Owners and shared members can browse/search. Write controls and panels only when the estate has loaded, `owned` is true, and it is active. Actions per node: "Add levels" (blocks: opens `AddLevelsTabs`), "Add common area" (blocks and levels), "Edit", "Deactivate"; plus a top "Add block" button. One Dialog at a time for create/edit/deactivate; pending submissions prevent dismissal. Blocks are distinct surfaces; branches start collapsed and whole name/count buttons expand/collapse children. Each node has an Actions DropdownMenu; search results reveal parents and retain allowed actions. Internal subcomponents: `LocationTree`, `LocationItem`, `LocationActions`, `PanelView`, `DeactivateLocation` (dialog confirmation: "It stays on record... cannot be changed or reactivated"). | `Button`, `Input`, `Label`, `DropdownMenu`, `Dialog` |
+| `AddLevelsTabs` (internal to `locations-section.tsx`) | Body of the "Add levels to {block}" dialog. shadcn `Tabs`, default tab "Range of floors" (`AddFloorsForm`), alternative tab "One custom level" (`LocationForm` titled "Add level to {block}", position defaulting to `nextLevelPosition`). Hidden tab content is unmounted. | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` |
+| `AddFloorsForm` (`estates/$estateId/-components/add-floors-form.tsx`) | Form "Add floors to {block}" (ID-99), in the "Range of floors" tab. Fields "Lowest floor" and "Highest floor" accept `B2`, `L25` or a bare number (above ground); no floor 0; at most `MAX_FLOORS` (50). Previews the floors highest first in `ul aria-label="Floors to add"`, marking ones the block already has (same position or name among its active levels) as "already exists, will be skipped". On success it stays open and shows a `role="status"` summary of created and skipped names with a "Done" button that closes the dialog. Errors from `estateError` show in `role="alert"`; the range is kept. | `Button`, `Input`, `Label` |
 | `LocationForm` (`estates/$estateId/-components/location-form.tsx`) | Dialog form (`aria-label` = title, e.g. "Add level to Block A", "Edit Level 2"). Fields: `name` (req, max 200); `sortOrder` "Position" for levels (new levels default to `nextLevelPosition`); "Inside" parent select when editing a level or common area (options from `flattenLocations`, filtered to allowed parent types). | `Button`, `Input`, `Label`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem` |
 
 ## Data (`lib/locations.ts`)
@@ -34,10 +36,11 @@ block down).
 | Hook / helper | Endpoint / purpose | Query key |
 | --- | --- | --- |
 | `useLocations(estateId)` | `GET /estates/{estateId}/locations` (flat list, server-ordered) | `locationsQueryKey(userId, estateId)` = `["estates", userId, "locations", estateId]` |
-| `buildLocationTree(list)` | Nest by `parentId`, keeping server sibling order | - |
+| `buildLocationTree(list)` | Nest by `parentId`, keeping server sibling order except levels, which are listed highest floor first (… L2, L1, B1, B2 …) | - |
 | `flattenLocations(list)` | Depth-first list with `path`; feeds every location select | - |
 | `filterLocationTree(tree, query)` | Filter the existing tree by trimmed, case-insensitive name; retain ancestors and all descendants of matching parents. Blank search returns the full tree. Does not mutate its input. | - |
 | `nextLevelPosition(list, blockId)` | Highest level `sortOrder` in the block + 1, else 1 | - |
+| `parseFloor(text)` / `floorName(floor)` / `floorRange(lowest, highest)` / `MAX_FLOORS` | Floor text ("B2", "L25", "25") to a number and back (`L<n>` / `B<n>`), every floor highest first without 0, and the 50-floor limit | - |
 
 Writes are inline `api` calls in `LocationsSection` (no mutation hooks):
 
@@ -46,9 +49,11 @@ Writes are inline `api` calls in `LocationsSection` (no mutation hooks):
 | Create | `POST /estates/{estateId}/locations` | `{ type, name, parentId?, sortOrder? (LEVEL only) }` |
 | Edit | `PATCH /estates/{estateId}/locations/{id}` | `{ name, parentId?, sortOrder? (LEVEL only) }` |
 | Deactivate | `POST /estates/{estateId}/locations/{id}/deactivate` | none |
+| Add floors | `POST /estates/{estateId}/locations/{blockId}/floors` | `{ lowestFloor, highestFloor }` |
 
 After any successful write: close the dialog and invalidate
-`["estates", userId, "locations", estateId]`. Errors from `estateError` are
+`["estates", userId, "locations", estateId]`. Add floors invalidates the same
+key but keeps the dialog open to show its result until "Done". Errors from `estateError` are
 shown in the form / confirmation dialog. No toasts.
 
 The owner-only asset register opts into `useLocations(estateId, true)` for inactive locations. It sends `includeInactive=true` and appends `"all"` to the query key. The server restricts this option to owners. Ordinary pickers and the member-readable estate hierarchy retain active-only defaults.

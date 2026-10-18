@@ -39,7 +39,9 @@ in light mode, and 9.58:1 green / 7.76:1 red in dark mode.
 The existing font stack is retained. Page titles are 28px (32px at sm), section
 headings 20px, shared card/dialog titles 18px and ordinary controls/table content
 14–16px. Spacing uses the existing 4/8/12/16/24/32px Tailwind scale. Surface radius
-is 12px; inputs and controls use rounded corners. The existing shadcn Button
+is 12px; inputs and controls use rounded corners. shadcn primitives get their
+radius from `[data-slot]` rules in `index.css`, not from the components (which
+ship square); tab lists match controls and the active tab nests inside them. The existing shadcn Button
 variants supply rounded 14px controls, a 44px default/large height and smaller
 compact actions. Do not rely on color alone for status or selected navigation.
 

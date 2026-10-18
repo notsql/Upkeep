@@ -20,7 +20,7 @@ same change as the code.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Locations](api/locations.md): member-readable active hierarchy, owner-only
-  historical reads and changes. Other API features are not yet documented here.
+  historical reads and changes, and bulk floors (ID-99). Other API features are not yet documented here.
 
 ## Frontend (`apps/web`)
 

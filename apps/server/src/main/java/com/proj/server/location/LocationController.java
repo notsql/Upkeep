@@ -76,6 +76,17 @@ public class LocationController {
         return service.update(estateId, id, owner(jwt), request);
     }
 
+    @PostMapping("/{blockId}/floors")
+    @ApiResponse(responseCode = "200", description = "Floors added; floors the block already had are listed as skipped")
+    @Operation(operationId = "addFloors", summary = "Add a range of floors (levels) to a block")
+    public AddFloorsResponse addFloors(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID blockId,
+            @Valid @RequestBody AddFloorsRequest request) {
+        return service.addFloors(estateId, blockId, owner(jwt), request);
+    }
+
     @PostMapping("/{id}/deactivate")
     @ApiResponse(responseCode = "200", description = "Location deactivated")
     @Operation(operationId = "deactivateLocation")

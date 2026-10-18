@@ -14,6 +14,12 @@ import {
 } from "@proj/ui/components/dropdown-menu";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@proj/ui/components/tabs";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
 import { type ChangeEvent, useCallback, useId, useMemo, useState } from "react";
@@ -31,14 +37,23 @@ import {
   useLocations,
 } from "@/lib/locations";
 import {
+  AddFloorsForm,
+  type AddFloorsResult,
+} from "@/routes/_auth/estates/$estateId/-components/add-floors-form";
+import {
   LocationForm,
   type LocationFormValues,
   type ParentOption,
 } from "@/routes/_auth/estates/$estateId/-components/location-form";
 
 type Panel =
-  | { kind: "create"; type: LocationType; parent?: LocationNode }
+  | {
+      kind: "create";
+      type: Exclude<LocationType, "LEVEL">;
+      parent?: LocationNode;
+    }
   | { kind: "edit"; node: LocationNode }
+  | { kind: "levels"; node: LocationNode }
   | { kind: "deactivate"; node: LocationNode };
 
 const typeNoun: Record<LocationType, string> = {
@@ -57,7 +72,20 @@ function panelTitle(panel?: Panel): string {
   if (panel.kind === "edit") {
     return `Edit ${panel.node.name}`;
   }
+  if (panel.kind === "levels") {
+    return `Add levels to ${panel.node.name}`;
+  }
   return `Deactivate ${panel.node.name}?`;
+}
+
+function dialogDescription(panel?: Panel): string {
+  if (panel?.kind === "deactivate") {
+    return "Review the effect before confirming.";
+  }
+  if (panel?.kind === "levels") {
+    return "Add a range of floors in one go, or one level with its own name.";
+  }
+  return "Enter the location details below.";
 }
 
 const EMPTY: Location[] = [];
@@ -195,6 +223,34 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     [estateId, saved]
   );
 
+  // The dialog stays open to show what was created and skipped; Done closes it.
+  const addFloors = useCallback(
+    async (
+      node: LocationNode,
+      lowestFloor: number,
+      highestFloor: number
+    ): Promise<AddFloorsResult> => {
+      const { data, error, response } = await api.POST(
+        "/estates/{estateId}/locations/{blockId}/floors",
+        {
+          params: { path: { estateId, blockId: node.id } },
+          body: { lowestFloor, highestFloor },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      await queryClient.invalidateQueries({
+        queryKey: locationsQueryKey(userId, estateId),
+      });
+      return {
+        created: data.created.map((level) => level.name),
+        skipped: data.skipped,
+      };
+    },
+    [estateId, queryClient, userId]
+  );
+
   const deactivate = useCallback(
     async (node: LocationNode) => {
       const { error, response } = await api.POST(
@@ -213,6 +269,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     panel && canEdit ? (
       <PanelView
         items={items}
+        onAddFloors={addFloors}
         onCancel={close}
         onCreate={create}
         onDeactivate={deactivate}
@@ -296,11 +353,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
           >
             <DialogHeader>
               <DialogTitle>{dialogTitle}</DialogTitle>
-              <DialogDescription>
-                {panel?.kind === "deactivate"
-                  ? "Review the effect before confirming."
-                  : "Enter the location details below."}
-              </DialogDescription>
+              <DialogDescription>{dialogDescription(panel)}</DialogDescription>
             </DialogHeader>
             {panelView}
           </DialogContent>
@@ -456,8 +509,8 @@ function LocationActions({
   node: LocationNode;
   onPanel: (panel: Panel) => void;
 }) {
-  const addLevel = useCallback(
-    () => onPanel({ kind: "create", type: "LEVEL", parent: node }),
+  const addLevels = useCallback(
+    () => onPanel({ kind: "levels", node }),
     [node, onPanel]
   );
   const addCommonArea = useCallback(
@@ -490,10 +543,10 @@ function LocationActions({
       <DropdownMenuContent align="end">
         {node.type === "BLOCK" ? (
           <DropdownMenuItem
-            aria-label={`Add level to ${node.name}`}
-            onClick={addLevel}
+            aria-label={`Add levels to ${node.name}`}
+            onClick={addLevels}
           >
-            Add level
+            Add levels
           </DropdownMenuItem>
         ) : null}
         {node.type === "COMMON_AREA" ? null : (
@@ -523,6 +576,7 @@ function PanelView({
   onPendingChange,
   panel,
   items,
+  onAddFloors,
   onCreate,
   onUpdate,
   onDeactivate,
@@ -531,6 +585,11 @@ function PanelView({
   onPendingChange: (pending: boolean) => void;
   panel: Panel;
   items: Location[];
+  onAddFloors: (
+    node: LocationNode,
+    lowestFloor: number,
+    highestFloor: number
+  ) => Promise<AddFloorsResult>;
   onCreate: (type: LocationType, values: LocationFormValues) => Promise<void>;
   onUpdate: (node: LocationNode, values: LocationFormValues) => Promise<void>;
   onDeactivate: (node: LocationNode) => Promise<void>;
@@ -544,9 +603,19 @@ function PanelView({
       if (panel.kind === "create") {
         return onCreate(panel.type, values);
       }
+      if (panel.kind === "levels") {
+        return onCreate("LEVEL", values);
+      }
       return Promise.resolve();
     },
     [panel, onCreate, onUpdate]
+  );
+  const saveFloors = useCallback(
+    (lowest: number, highest: number) =>
+      panel.kind === "levels"
+        ? onAddFloors(panel.node, lowest, highest)
+        : Promise.resolve({ created: [], skipped: [] }),
+    [panel, onAddFloors]
   );
   const confirm = useCallback(
     () =>
@@ -555,6 +624,19 @@ function PanelView({
         : Promise.resolve(),
     [panel, onDeactivate]
   );
+  if (panel.kind === "levels") {
+    const { node } = panel;
+    return (
+      <AddLevelsTabs
+        block={node}
+        items={items}
+        onCancel={onCancel}
+        onPendingChange={onPendingChange}
+        onSaveFloors={saveFloors}
+        onSaveLevel={save}
+      />
+    );
+  }
   if (panel.kind === "deactivate") {
     return (
       <DeactivateLocation
@@ -581,21 +663,69 @@ function PanelView({
       />
     );
   }
-  const { type, parent } = panel;
-  const suggestedPosition =
-    type === "LEVEL" && parent
-      ? nextLevelPosition(items, parent.id)
-      : undefined;
+  // Blocks and common areas; levels are added through AddLevelsTabs.
+  const { parent } = panel;
   return (
     <LocationForm
       initialParentId={parent?.id}
-      initialSortOrder={suggestedPosition}
       onCancel={onCancel}
       onPendingChange={onPendingChange}
       onSave={save}
-      showPosition={type === "LEVEL"}
+      showPosition={false}
       title={panelTitle(panel)}
     />
+  );
+}
+
+/**
+ * One "Add levels" dialog with two ways in: a standard range of floors (ID-99),
+ * or one level with its own name and position, such as "Roof" or "Mezzanine".
+ */
+function AddLevelsTabs({
+  block,
+  items,
+  onSaveFloors,
+  onSaveLevel,
+  onCancel,
+  onPendingChange,
+}: {
+  block: LocationNode;
+  items: Location[];
+  onSaveFloors: (lowest: number, highest: number) => Promise<AddFloorsResult>;
+  onSaveLevel: (values: LocationFormValues) => Promise<unknown>;
+  onCancel: () => void;
+  onPendingChange: (pending: boolean) => void;
+}) {
+  return (
+    <Tabs defaultValue="range">
+      <TabsList className="w-full">
+        <TabsTrigger value="range">Range of floors</TabsTrigger>
+        <TabsTrigger value="custom">One custom level</TabsTrigger>
+      </TabsList>
+      <TabsContent value="range">
+        <AddFloorsForm
+          existingLevels={items.filter(
+            (item) => item.type === "LEVEL" && item.parentId === block.id
+          )}
+          onCancel={onCancel}
+          onDone={onCancel}
+          onPendingChange={onPendingChange}
+          onSave={onSaveFloors}
+          title={`Add floors to ${block.name}`}
+        />
+      </TabsContent>
+      <TabsContent value="custom">
+        <LocationForm
+          initialParentId={block.id}
+          initialSortOrder={nextLevelPosition(items, block.id)}
+          onCancel={onCancel}
+          onPendingChange={onPendingChange}
+          onSave={onSaveLevel}
+          showPosition
+          title={`Add level to ${block.name}`}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }
 

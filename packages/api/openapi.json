@@ -607,6 +607,77 @@
         }
       }
     },
+    "/estates/{estateId}/locations/{blockId}/floors": {
+      "post": {
+        "tags": ["location-controller"],
+        "summary": "Add a range of floors (levels) to a block",
+        "operationId": "addFloors",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "blockId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddFloorsRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or hierarchy shape",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name or level position, inactive estate or location, or active children",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Floors added; floors the block already had are listed as skipped",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AddFloorsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/council-invitations": {
       "get": {
         "tags": ["council-controller"],
@@ -3067,6 +3138,38 @@
           "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["createdAt", "id", "name", "type", "updatedAt"]
+      },
+      "AddFloorsRequest": {
+        "type": "object",
+        "properties": {
+          "lowestFloor": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The lowest floor: negative for basements (B2 = -2), never 0"
+          },
+          "highestFloor": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The highest floor: L25 = 25, never 0"
+          }
+        },
+        "required": ["highestFloor", "lowestFloor"]
+      },
+      "AddFloorsResponse": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "The levels created, highest floor first",
+            "items": { "$ref": "#/components/schemas/LocationResponse" }
+          },
+          "skipped": {
+            "type": "array",
+            "description": "Names of floors the block already had, highest first",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["created", "skipped"]
       },
       "CouncilInvitationRequest": {
         "type": "object",
