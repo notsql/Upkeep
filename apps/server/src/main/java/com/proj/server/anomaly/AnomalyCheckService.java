@@ -20,20 +20,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 /**
- * Scores a batch of readings with apps/ml and records a condition assessment for a long enough abnormal run
- * (decision 0021). Readings are scored, not stored. No row is locked while apps/ml is called.
+ * Scores a batch of readings with the anomaly model and records a condition assessment for a long enough abnormal run
+ * (decision 0021). Readings are scored, not stored. No row is locked while the model runs.
  */
 @Service
 public class AnomalyCheckService {
     private final AnomalyFeatureBuilder features;
-    private final MlClient ml;
+    private final AnomalyScorer ml;
     private final EstateRepository estates;
     private final AssetRepository assets;
     private final AssetAssessmentRepository assessments;
 
     public AnomalyCheckService(
             AnomalyFeatureBuilder features,
-            MlClient ml,
+            AnomalyScorer ml,
             EstateRepository estates,
             AssetRepository assets,
             AssetAssessmentRepository assessments) {

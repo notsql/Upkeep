@@ -1,8 +1,8 @@
 package com.proj.server.anomaly;
 
-/** apps/ml is unreachable, timed out, has no model loaded, or answered in an unexpected shape. */
-class MlUnavailableException extends RuntimeException {
-    MlUnavailableException(String message, Throwable cause) {
+/** Running the anomaly model failed or produced output in an unexpected shape. */
+public class MlUnavailableException extends RuntimeException {
+    public MlUnavailableException(String message, Throwable cause) {
         super(message, cause);
     }
 }

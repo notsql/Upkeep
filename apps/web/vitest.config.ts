@@ -4,8 +4,8 @@ import { defineConfig } from "vitest/config";
 /**
  * Deliberately separate from vite.config.ts.
  *
- * The app config loads the TanStack Start and Nitro plugins, which exist to
- * build an SSR server. Component tests run in jsdom and don't need any of
+ * The app config loads the TanStack Start and Cloudflare plugins, which exist to
+ * build the SSR Worker. Component tests run in jsdom and don't need any of
  * that - loading it only slows the suite down and drags server-side concerns
  * into unit tests. React transform and path aliases are all that's required.
  */
