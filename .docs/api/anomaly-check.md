@@ -1,6 +1,6 @@
 # Anomaly check API
 
-Contract: `packages/api/openapi.json`. Requires bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing estate or asset returns 404. The browser calls only this endpoint; the server calls the internal `apps/ml` service to score the batch. Readings are scored, not stored.
+Contract: `packages/api/openapi.json`. Requires bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing estate or asset returns 404. The browser calls only this endpoint; the server scores the batch in process with the ONNX model bundled in its jar (`apps/server/src/main/resources/anomaly/model.onnx`, decision 0028). Readings are scored, not stored.
 
 ## POST `/estates/{estateId}/assets/{assetId}/readings/anomaly-check`
 
@@ -51,8 +51,8 @@ Contract: `packages/api/openapi.json`. Requires bearer JWT and estate ownership.
 
 - Pumps only, active estate and active asset; otherwise 409 ("Anomaly detection is only available for pumps.", or the inactive-estate / deactivated-asset message).
 - Batch validation (400): 10 to 3,600 readings; every reading needs a `timestamp` and a finite value for all five metrics; timestamps must be unique; after sorting by timestamp, consecutive readings must be at most 2 seconds apart. Malformed JSON returns 400 "Invalid readings. Each needs a timestamp and a finite value for every metric."
-- Readings may arrive in any order; the server sorts them before scoring. Each reading gets a score from `apps/ml`; a score >= 0.51 is abnormal.
-- If `apps/ml` is unreachable, errors, or returns the wrong number of scores, the response is 503 and nothing is recorded. No row is locked while `apps/ml` is called.
+- Readings may arrive in any order; the server sorts them before scoring. Each reading gets a score from the anomaly model; a score >= 0.51 is abnormal.
+- If inference fails or returns the wrong number of scores, the response is 503 and nothing is recorded. No row is locked while the model runs.
 - A run of 10 or more consecutive abnormal readings records a condition assessment: `FAULTY` when the run's median score is >= 0.98, else `NEEDS_ATTENTION`. It is only recorded when it differs from the asset's current condition. The assessment is dated to the run's last timestamp (UTC), recorded by `system:anomaly-model` named "Anomaly detection", with notes giving the run length, time span, median and maximum scores. `conditionRecorded` is that condition, or null when none was recorded.
 - A recorded NEEDS_ATTENTION or FAULTY condition shows up as the `CONDITION` flag in `failure-risk.md`.
 

@@ -1,11 +1,14 @@
 # 0012 - CI runs against an ephemeral Postgres, never Neon
 
-**Status:** accepted
+**Status:** superseded in part by 0019 - `pr-checks.yml` no longer runs a
+Postgres service or `pnpm db:deploy`; context tests start their own
+Testcontainers Postgres and replay the migration SQL. "CI never connects to
+Neon" still stands.
 
 ## Context
 
-CI (`.github/workflows/ci.yml`) runs `pnpm check-types`, `pnpm test` and
-`pnpm build` on every push to any branch and on every PR targeting `main`.
+CI (`.github/workflows/pr-checks.yml`) runs `pnpm check-types`, `pnpm test` and
+`pnpm build` on every PR targeting `dev` or `main` (0029).
 
 `pnpm build` needs no database: the jOOQ classes and `schema.ts` are committed
 (0008). `pnpm test` does - `@SpringBootTest` boots the full context against
@@ -19,9 +22,10 @@ branch" rule exists to prevent.
 ## Decision
 
 - **Each CI run gets a fresh `postgres:18` service container** (the version in
-  the stack table), migrated with `pnpm db:deploy`. No database secrets are
-  stored in GitHub.
+  the stack table), migrated with `pnpm db:deploy`. The CI job holds no
+  database secrets (the separate migrate-on-merge workflow does - see 0027).
 - **CI never connects to Neon.** Not the shared branch, not a per-run branch.
+  Only merged migrations reach Neon, via `migrate.yml` (0027).
 - WorkOS variables are left unset, so the API runs in its open, unauthenticated
   mode for tests.
 

@@ -12,6 +12,7 @@ apps/web            TanStack Start (React 19, Vite) on :3001
    |  HTTP + CORS + bearer token
    v
 apps/server         Spring Boot 4 (Java 25) on :8080  <-- all business logic
+                    (also runs the ONNX anomaly model in process, decision 0028)
    |
    |  JDBC
    v
@@ -167,14 +168,38 @@ Each app reads its own `.env`; see the `.env.example` next to each one.
 | `VITE_AUTH_IDLE_TIMEOUT_MINUTES` | `apps/web` | Browser inactivity before AuthKit sign-out. Defaults to `30`; keep it aligned with the WorkOS Sessions policy. |
 | `ANTHROPIC_API_KEY` | `apps/server` | Only if the Spring AI integration is used. |
 | `SERVER_PORT` | `apps/server` | Defaults to `8080`. |
-| `ML_API_URL` | `apps/server` | Where Spring reaches `apps/ml`, read by `MlClient` (anomaly check, 5-second timeout). Set by `docker-compose.yml`; defaults to `http://localhost:8000` for `pnpm dev`. |
-| `ML_MODEL_PATH` | `apps/ml` | Defaults to `models/model.onnx`. |
-| `VITE_API_URL`, `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm docker:up`. |
+| `CORS_ALLOWED_ORIGINS` | root `.env` | Compose interpolation only, for `pnpm docker:up`. |
 
 Spring imports the server's `.env` because the Nx Maven executor does not
 reliably forward it to Java. The JWT environment post-processor maps nonblank
 issuer/audience keys before auto-configuration, preserving explicit overrides.
 See [decision 0011](decisions/0011-map-dotenv-jwt-settings-before-autoconfiguration.md).
+
+## Deployment
+
+Decision 0029, spec `features/deployment.md`. No custom domain:
+
+| Piece | Runs as | Config |
+| --- | --- | --- |
+| `apps/web` | Cloudflare Worker `web` on `*.workers.dev` (`@cloudflare/vite-plugin`, `nodejs_compat`), deployed by Workers Builds | `apps/web/wrangler.jsonc` |
+| `apps/server` | Cloud Run service `api` in `asia-southeast1` on `*.run.app`, image from `apps/server/Dockerfile`, deployed by GitHub Actions | `.github/workflows/deploy.yml` |
+| Postgres | Neon `prd` branch | Infisical `prd`, `/packages/db` |
+
+Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
+
+| Event | What happens |
+| --- | --- |
+| PR into `dev` or `main` | `pr-checks.yml`: no database, no migrations; context tests use Testcontainers (0019) |
+| Push to `dev` | `migrate.yml` migrates Neon `dev` (Infisical `dev`) |
+| Push to `main` | `migrate.yml` migrates Neon `prd` (Infisical `prd`); `deploy.yml` deploys `api` if `apps/server/**` or `pom.xml` changed; Workers Builds deploys `web` if its watch paths changed |
+
+Runtime secrets live in Infisical `prd`: `/apps/web` syncs to the `web`
+Worker's secrets, `/apps/server` to GCP Secret Manager, which Cloud Run reads
+at deploy time. `deploy.yml` authenticates to GCP with Workload Identity
+Federation (no key in GitHub). `api` scales to zero (request-based billing,
+startup CPU boost, startup probe on `GET /health`, JDK AOT cache in the image),
+so the first request after idle waits for Spring to boot. `VITE_API_URL` is a
+Workers Builds build variable.
 
 ## Testing
 
@@ -183,12 +208,12 @@ See [decision 0011](decisions/0011-map-dotenv-jwt-settings-before-autoconfigurat
 | `apps/web` | Vitest + Testing Library, jsdom | `pnpm test`, `pnpm --filter web test:watch` |
 | `apps/server` | JUnit via Surefire | `pnpm test` |
 
-`pnpm test` runs both through Nx, with caching. Web tests live in
+`pnpm test` runs them all through Nx, with caching. Web tests live in
 `apps/web/tests/`, mirroring `src/`. **See `testing.md` for the TDD workflow.**
 
 Web tests use `apps/web/vitest.config.ts`, which is intentionally *not*
-`vite.config.ts`: the app config loads the TanStack Start and Nitro plugins to
-build an SSR server, which component tests neither need nor should depend on.
+`vite.config.ts`: the app config loads the TanStack Start and Cloudflare plugins
+to build the SSR Worker, which component tests neither need nor should depend on.
 
 ## Known sharp edges
 

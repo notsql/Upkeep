@@ -2,25 +2,22 @@ package com.proj.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.sun.net.httpserver.HttpServer;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
+import com.proj.server.anomaly.AnomalyScorer;
+import com.proj.server.anomaly.MlUnavailableException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +30,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -42,9 +37,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * POST /estates/{estateId}/assets/{assetId}/readings/anomaly-check against a real (Testcontainers) database, because
- * recording an assessment and the no-duplicate rule depend on stored state. apps/ml is replaced by a JDK HttpServer
- * that answers {@code POST /predict} in apps/ml's shape with scores the test chooses; its URL is injected as
- * {@code ML_API_URL}.
+ * recording an assessment and the no-duplicate rule depend on stored state. The ONNX model is replaced by a mock
+ * {@link AnomalyScorer} that returns the scores each test chooses.
  */
 @SpringBootTest(properties = "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app")
 @AutoConfigureMockMvc
@@ -52,76 +46,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class AnomalyCheckControllerTests {
 
-    /** Stand-in for apps/ml. Tests set its behaviour in {@link #setup()} and per test. */
-    static final class MlStub {
-        final HttpServer server;
-        volatile List<Double> scores = List.of();
-        volatile int status = 200;
-        volatile long delayMillis = 0;
-        volatile String lastBody;
-        volatile int calls;
-
-        MlStub() throws IOException {
-            server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
-            server.setExecutor(Executors.newCachedThreadPool());
-            server.createContext("/predict", exchange -> {
-                try (InputStream in = exchange.getRequestBody()) {
-                    lastBody = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                }
-                calls++;
-                if (delayMillis > 0) {
-                    try {
-                        Thread.sleep(delayMillis);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-                String body = status == 200 ? predictResponse() : "{\"detail\":\"No model is loaded\"}";
-                byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                try {
-                    exchange.sendResponseHeaders(status, bytes.length);
-                    try (OutputStream out = exchange.getResponseBody()) {
-                        out.write(bytes);
-                    }
-                } catch (IOException ignored) {
-                    // The client gave up (timeout test); nothing to answer.
-                }
-            });
-            server.start();
-        }
-
-        /**
-         * apps/ml's /predict response for the ONNX model: {"outputs":{"label":[..],"probabilities":[[p0,p1],..]}},
-         * column 1 being the anomaly probability.
-         */
-        private String predictResponse() {
-            String labels = scores.stream().map(s -> s >= 0.5 ? "1" : "0").collect(Collectors.joining(","));
-            String probabilities =
-                    scores.stream().map(s -> "[" + (1 - s) + "," + s + "]").collect(Collectors.joining(","));
-            return "{\"outputs\":{\"label\":[" + labels + "],\"probabilities\":[" + probabilities + "]}}";
-        }
-
-        String url() {
-            return "http://" + server.getAddress().getHostString() + ":"
-                    + server.getAddress().getPort();
-        }
-    }
-
-    static final MlStub ML = startStub();
-
-    private static MlStub startStub() {
-        try {
-            return new MlStub();
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not start the apps/ml stub", e);
-        }
-    }
-
-    @DynamicPropertySource
-    static void mlApiUrl(DynamicPropertyRegistry registry) {
-        registry.add("ML_API_URL", ML::url);
-    }
+    @MockitoBean
+    AnomalyScorer scorer;
 
     @Autowired
     MockMvc mvc;
@@ -141,12 +67,6 @@ class AnomalyCheckControllerTests {
 
     @BeforeEach
     void setup() {
-        ML.scores = List.of();
-        ML.status = 200;
-        ML.delayMillis = 0;
-        ML.lastBody = null;
-        ML.calls = 0;
-
         estateId = UUID.randomUUID();
         locationId = UUID.randomUUID();
         pumpId = UUID.randomUUID();
@@ -206,6 +126,12 @@ class AnomalyCheckControllerTests {
         return "{\"readings\":[" + String.join(",", readings) + "]}";
     }
 
+    /** The mock model answers every batch with these scores, one per reading. */
+    private void score(List<Double> scores) {
+        given(scorer.scores(any()))
+                .willReturn(scores.stream().mapToDouble(Double::doubleValue).toArray());
+    }
+
     private static List<Double> scores(int n, double score) {
         return new ArrayList<>(Collections.nCopies(n, score));
     }
@@ -252,7 +178,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void tenAbnormalReadingsInARowWithAMedianBelowFaultyRecordNeedsAttention() throws Exception {
-        ML.scores = withRunOfTen(NEEDS_ATTENTION_RUN);
+        score(withRunOfTen(NEEDS_ATTENTION_RUN));
 
         check(batch(readings(20)))
                 .andExpect(status().isOk())
@@ -265,12 +191,12 @@ class AnomalyCheckControllerTests {
         List<Record> recorded = assessments();
         assertEquals(1, recorded.size());
         assertEquals("NEEDS_ATTENTION", recorded.getFirst().get("condition", String.class));
-        assertTrue(ML.lastBody.contains("\"inputs\"") && ML.lastBody.contains("\"input\""), ML.lastBody);
+        verify(scorer).scores(argThat((double[][] features) -> features.length == 20 && features[0].length == 15));
     }
 
     @Test
     void tenAbnormalReadingsInARowWithAMedianReachingFaultyRecordFaulty() throws Exception {
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check(batch(readings(20)))
                 .andExpect(status().isOk())
@@ -284,7 +210,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void recordsAsTheAnomalyModelDatedTheRunsLastReadingWithTheRunInTheNotes() throws Exception {
-        ML.scores = withRunOfTen(NEEDS_ATTENTION_RUN);
+        score(withRunOfTen(NEEDS_ATTENTION_RUN));
 
         check(batch(readings(20))).andExpect(status().isOk());
 
@@ -307,7 +233,7 @@ class AnomalyCheckControllerTests {
         List<Double> scores = scores(20, 0.99);
         scores.set(0, LOW);
         scores.set(10, LOW);
-        ML.scores = scores;
+        score(scores);
 
         check(batch(readings(20)))
                 .andExpect(status().isOk())
@@ -321,7 +247,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void doesNotRecordTheSameConditionTwice() throws Exception {
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check(batch(readings(20)))
                 .andExpect(status().isOk())
@@ -337,7 +263,7 @@ class AnomalyCheckControllerTests {
     @Test
     void doesNotDuplicateAPersonsCurrentAssessment() throws Exception {
         assessment("FAULTY", "2026-02-01");
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check(batch(readings(20)))
                 .andExpect(status().isOk())
@@ -351,7 +277,7 @@ class AnomalyCheckControllerTests {
         // FAULTY in the past, but the current (latest) condition is GOOD.
         assessment("FAULTY", "2026-01-01");
         assessment("GOOD", "2026-02-01");
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check(batch(readings(20)))
                 .andExpect(status().isOk())
@@ -365,7 +291,7 @@ class AnomalyCheckControllerTests {
     @ParameterizedTest
     @ValueSource(ints = {10, 3600})
     void acceptsBatchesAtTheSizeLimits(int size) throws Exception {
-        ML.scores = scores(size, LOW);
+        score(scores(size, LOW));
 
         check(batch(readings(size)))
                 .andExpect(status().isOk())
@@ -376,7 +302,7 @@ class AnomalyCheckControllerTests {
     @ParameterizedTest
     @ValueSource(ints = {0, 9, 3601})
     void rejectsBatchesOutsideTheSizeLimits(int size) throws Exception {
-        ML.scores = scores(size, 0.99);
+        score(scores(size, 0.99));
 
         check(batch(readings(size))).andExpect(status().isBadRequest());
 
@@ -391,7 +317,7 @@ class AnomalyCheckControllerTests {
     @ParameterizedTest
     @ValueSource(strings = {"timestamp", "vibrationAcceleration", "pressure", "temperature", "flowRate", "power"})
     void rejectsAMissingValue(String field) throws Exception {
-        ML.scores = scores(10, 0.99);
+        score(scores(10, 0.99));
         List<String> readings = readings(10);
         // Drop the field from the fifth reading.
         readings.set(
@@ -406,7 +332,7 @@ class AnomalyCheckControllerTests {
     @ParameterizedTest
     @ValueSource(strings = {"null", "1e999", "-1e999", "\"NaN\"", "\"Infinity\""})
     void rejectsANullOrNonFiniteValue(String value) throws Exception {
-        ML.scores = scores(10, 0.99);
+        score(scores(10, 0.99));
         List<String> readings = readings(10);
         readings.set(4, readings.get(4).replace("\"pressure\":0.38", "\"pressure\":" + value));
 
@@ -417,7 +343,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void sortsReadingsByTimestampBeforeChecking() throws Exception {
-        ML.scores = scores(10, LOW);
+        score(scores(10, LOW));
         List<String> readings = readings(10);
         Collections.reverse(readings);
 
@@ -428,7 +354,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void rejectsDuplicateTimestamps() throws Exception {
-        ML.scores = scores(10, 0.99);
+        score(scores(10, 0.99));
         List<String> readings = readings(10);
         readings.set(5, reading(START.plusSeconds(4)));
 
@@ -439,7 +365,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void acceptsAGapOfTwoSeconds() throws Exception {
-        ML.scores = scores(10, LOW);
+        score(scores(10, LOW));
         List<String> readings = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
             readings.add(reading(START.plusSeconds(2L * i)));
@@ -450,7 +376,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void rejectsAGapOverTwoSeconds() throws Exception {
-        ML.scores = scores(10, 0.99);
+        score(scores(10, 0.99));
         List<String> readings = readings(10);
         for (int i = 5; i < 10; i++) {
             // 2.5 s between the fifth and sixth readings.
@@ -466,7 +392,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void anotherUserGetsNotFound() throws Exception {
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check("outsider", estateId, pumpId, batch(readings(20))).andExpect(status().isNotFound());
 
@@ -475,7 +401,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void unknownEstateOrAssetIsNotFound() throws Exception {
-        ML.scores = scores(10, LOW);
+        score(scores(10, LOW));
 
         check("owner", UUID.randomUUID(), pumpId, batch(readings(10))).andExpect(status().isNotFound());
         check("owner", estateId, UUID.randomUUID(), batch(readings(10))).andExpect(status().isNotFound());
@@ -491,7 +417,7 @@ class AnomalyCheckControllerTests {
 
     @Test
     void aNonPumpAssetIsAConflict() throws Exception {
-        ML.scores = scores(10, LOW);
+        score(scores(10, LOW));
 
         check("owner", estateId, liftId, batch(readings(10))).andExpect(status().isConflict());
     }
@@ -499,7 +425,7 @@ class AnomalyCheckControllerTests {
     @Test
     void aDeactivatedAssetIsAConflict() throws Exception {
         db.execute("update \"Asset\" set \"deactivatedAt\" = now() where id = ?", pumpId);
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check(batch(readings(20))).andExpect(status().isConflict());
 
@@ -509,33 +435,22 @@ class AnomalyCheckControllerTests {
     @Test
     void anInactiveEstateIsAConflict() throws Exception {
         db.execute("update \"Estate\" set \"deactivatedAt\" = now() where id = ?", estateId);
-        ML.scores = withRunOfTen(FAULTY_RUN);
+        score(withRunOfTen(FAULTY_RUN));
 
         check(batch(readings(20))).andExpect(status().isConflict());
 
         assertEquals(0, assessments().size());
     }
 
-    // ---- apps/ml failing ----------------------------------------------------------------------------------------
+    // ---- inference failing -------------------------------------------------------------------------------------
 
     @Test
-    void mlServiceUnavailableGivesServiceUnavailableAndRecordsNothing() throws Exception {
-        ML.status = 503;
+    void inferenceFailingGivesServiceUnavailableAndRecordsNothing() throws Exception {
+        given(scorer.scores(any())).willThrow(new MlUnavailableException("The anomaly model failed.", null));
 
         check(batch(readings(20))).andExpect(status().isServiceUnavailable());
 
-        assertEquals(1, ML.calls, "the batch was sent to apps/ml");
-        assertEquals(0, assessments().size());
-    }
-
-    @Test
-    void mlServiceTimeoutGivesServiceUnavailableAndRecordsNothing() throws Exception {
-        // Over the 5-second timeout.
-        ML.scores = withRunOfTen(FAULTY_RUN);
-        ML.delayMillis = 6_500;
-
-        check(batch(readings(20))).andExpect(status().isServiceUnavailable());
-
+        verify(scorer).scores(any());
         assertEquals(0, assessments().size());
     }
 }
