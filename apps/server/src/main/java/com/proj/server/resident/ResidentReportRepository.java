@@ -2,28 +2,29 @@ package com.proj.server.resident;
 
 import static com.proj.server.db.tables.Estate.ESTATE;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
+import static com.proj.server.db.tables.Issuereport.ISSUEREPORT;
+import static com.proj.server.db.tables.Issuereportimage.ISSUEREPORTIMAGE;
+import static com.proj.server.db.tables.Location.LOCATION;
+import static org.jooq.impl.DSL.concatWs;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.row;
 
+import com.proj.server.db.tables.Location;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.jooq.Record;
+import org.jooq.SelectJoinStep;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class ResidentReportRepository {
-    private static final String REPORT_SELECT = """
-            select r.id, r.title, r.description, r.status, r."createdAt" as created_at,
-                   r."updatedAt" as updated_at, r."locationId" as location_id,
-                   e.name as estate_name,
-                   concat_ws(' › ', grandparent.name, parent.name, location.name) as location_label
-            from "IssueReport" r
-            join "Estate" e on e.id=r."estateId"
-            join "Location" location on location.id=r."locationId"
-            left join "Location" parent on parent.id=location."parentId"
-            left join "Location" grandparent on grandparent.id=parent."parentId"
-            """;
+    private static final Location PARENT = LOCATION.as("parent");
+    private static final Location GRANDPARENT = LOCATION.as("grandparent");
+    private static final Field<String> LOCATION_LABEL = concatWs(" › ", GRANDPARENT.NAME, PARENT.NAME, LOCATION.NAME);
 
     private final DSLContext db;
 
@@ -50,66 +51,76 @@ public class ResidentReportRepository {
     }
 
     public List<ResidentLocationResponse> activeLocations(UUID estateId) {
-        return db.fetch("""
-                select location.id, location.type, location.name,
-                       location."parentId" as parent_id, location."sortOrder" as sort_order
-                from "Location" location
-                left join "Location" parent on parent.id=location."parentId"
-                left join "Location" grandparent on grandparent.id=parent."parentId"
-                where location."estateId"=? and location."deactivatedAt" is null
-                  and (parent.id is null or parent."deactivatedAt" is null)
-                  and (grandparent.id is null or grandparent."deactivatedAt" is null)
-                order by location.type, location."sortOrder" nulls last, location.name, location.id
-                """, estateId)
+        return db.select(LOCATION.ID, LOCATION.TYPE, LOCATION.NAME, LOCATION.PARENTID, LOCATION.SORTORDER)
+                .from(LOCATION)
+                .leftJoin(PARENT)
+                .on(PARENT.ID.eq(LOCATION.PARENTID))
+                .leftJoin(GRANDPARENT)
+                .on(GRANDPARENT.ID.eq(PARENT.PARENTID))
+                .where(LOCATION.ESTATEID
+                        .eq(estateId)
+                        .and(LOCATION.DEACTIVATEDAT.isNull())
+                        .and(PARENT.ID.isNull().or(PARENT.DEACTIVATEDAT.isNull()))
+                        .and(GRANDPARENT.ID.isNull().or(GRANDPARENT.DEACTIVATEDAT.isNull())))
+                .orderBy(LOCATION.TYPE, LOCATION.SORTORDER.asc().nullsLast(), LOCATION.NAME, LOCATION.ID)
+                .fetch()
                 .map(row -> new ResidentLocationResponse(
-                        row.get("id", UUID.class),
-                        row.get("type", String.class),
-                        row.get("name", String.class),
-                        row.get("parent_id", UUID.class),
-                        row.get("sort_order", Integer.class)));
+                        row.value1(), row.value2(), row.value3(), row.value4(), row.value5()));
     }
 
     public boolean activeReportLocation(UUID estateId, UUID locationId) {
-        return db.fetchOne("""
-                select 1 from "Location" location
-                left join "Location" parent on parent.id=location."parentId"
-                left join "Location" grandparent on grandparent.id=parent."parentId"
-                where location.id=? and location."estateId"=?
-                  and location.type in ('LEVEL', 'COMMON_AREA')
-                  and location."deactivatedAt" is null
-                  and parent."deactivatedAt" is null
-                  and (grandparent.id is null or grandparent."deactivatedAt" is null)
-                """, locationId, estateId) != null;
+        return db.fetchExists(db.selectOne()
+                .from(LOCATION)
+                .leftJoin(PARENT)
+                .on(PARENT.ID.eq(LOCATION.PARENTID))
+                .leftJoin(GRANDPARENT)
+                .on(GRANDPARENT.ID.eq(PARENT.PARENTID))
+                .where(LOCATION.ID
+                        .eq(locationId)
+                        .and(LOCATION.ESTATEID.eq(estateId))
+                        .and(LOCATION.TYPE.in("LEVEL", "COMMON_AREA"))
+                        .and(LOCATION.DEACTIVATEDAT.isNull())
+                        .and(PARENT.DEACTIVATEDAT.isNull())
+                        .and(GRANDPARENT.ID.isNull().or(GRANDPARENT.DEACTIVATEDAT.isNull()))));
     }
 
     public void create(UUID id, String userId, UUID estateId, UUID locationId, String title, String description) {
-        db.execute("""
-                insert into "IssueReport" (id, "submittedByUserId", "estateId", "locationId",
-                    title, description, status, "createdAt", "updatedAt")
-                values (?, ?, ?, ?, ?, ?, 'SUBMITTED', now(), now())
-                """, id, userId, estateId, locationId, title, description);
+        db.insertInto(ISSUEREPORT)
+                .set(ISSUEREPORT.ID, id)
+                .set(ISSUEREPORT.SUBMITTEDBYUSERID, userId)
+                .set(ISSUEREPORT.ESTATEID, estateId)
+                .set(ISSUEREPORT.LOCATIONID, locationId)
+                .set(ISSUEREPORT.TITLE, title)
+                .set(ISSUEREPORT.DESCRIPTION, description)
+                .set(ISSUEREPORT.STATUS, "SUBMITTED")
+                .set(ISSUEREPORT.CREATEDAT, currentOffsetDateTime())
+                .set(ISSUEREPORT.UPDATEDAT, currentOffsetDateTime())
+                .execute();
     }
 
     public void addImage(UUID id, UUID reportId, String storageKey, String contentType, int sizeBytes) {
-        db.execute(
-                "insert into \"IssueReportImage\" (id, \"reportId\", \"storageKey\", \"contentType\", \"sizeBytes\") values (?, ?, ?, ?, ?)",
-                id,
-                reportId,
-                storageKey,
-                contentType,
-                sizeBytes);
+        db.insertInto(ISSUEREPORTIMAGE)
+                .set(ISSUEREPORTIMAGE.ID, id)
+                .set(ISSUEREPORTIMAGE.REPORTID, reportId)
+                .set(ISSUEREPORTIMAGE.STORAGEKEY, storageKey)
+                .set(ISSUEREPORTIMAGE.CONTENTTYPE, contentType)
+                .set(ISSUEREPORTIMAGE.SIZEBYTES, sizeBytes)
+                .execute();
     }
 
     public Optional<IssueReportDetailResponse> detail(String userId, UUID reportId) {
-        var row = db.fetchOne(REPORT_SELECT + " where r.id=? and r.\"submittedByUserId\"=?", reportId, userId);
+        var row = reportSelect()
+                .where(ISSUEREPORT.ID.eq(reportId).and(ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId)))
+                .fetchOne();
         if (row == null) {
             return Optional.empty();
         }
-        var images = db.fetch(
-                        "select id, \"contentType\" as content_type from \"IssueReportImage\" where \"reportId\"=? order by \"createdAt\", id",
-                        reportId)
-                .map(image -> new IssueReportDetailResponse.ReportImage(
-                        image.get("id", UUID.class), image.get("content_type", String.class)));
+        var images = db.select(ISSUEREPORTIMAGE.ID, ISSUEREPORTIMAGE.CONTENTTYPE)
+                .from(ISSUEREPORTIMAGE)
+                .where(ISSUEREPORTIMAGE.REPORTID.eq(reportId))
+                .orderBy(ISSUEREPORTIMAGE.CREATEDAT, ISSUEREPORTIMAGE.ID)
+                .fetch()
+                .map(image -> new IssueReportDetailResponse.ReportImage(image.value1(), image.value2()));
         var summary = summary(row);
         return Optional.of(new IssueReportDetailResponse(
                 summary.id(),
@@ -124,42 +135,68 @@ public class ResidentReportRepository {
     }
 
     public List<IssueReportSummaryResponse> list(String userId, OffsetDateTime beforeTime, UUID beforeId, int limit) {
-        String condition = beforeTime == null
-                ? " where r.\"submittedByUserId\"=?"
-                : " where r.\"submittedByUserId\"=? and (r.\"createdAt\", r.id) < (?::timestamptz, ?::uuid)";
-        String sql = REPORT_SELECT + condition + " order by r.\"createdAt\" desc, r.id desc limit ?";
-        var rows =
-                beforeTime == null ? db.fetch(sql, userId, limit) : db.fetch(sql, userId, beforeTime, beforeId, limit);
-        return rows.map(ResidentReportRepository::summary);
+        var condition = ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId);
+        if (beforeTime != null) {
+            condition = condition.and(row(ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID).lt(beforeTime, beforeId));
+        }
+        return reportSelect()
+                .where(condition)
+                .orderBy(ISSUEREPORT.CREATEDAT.desc(), ISSUEREPORT.ID.desc())
+                .limit(limit)
+                .fetch()
+                .map(ResidentReportRepository::summary);
     }
 
     public Optional<StoredImage> image(String userId, UUID reportId, UUID imageId) {
-        var row = db.fetchOne("""
-                select image."storageKey" as storage_key, image."contentType" as content_type
-                from "IssueReportImage" image
-                join "IssueReport" report on report.id=image."reportId"
-                where report.id=? and report."submittedByUserId"=? and image.id=?
-                """, reportId, userId, imageId);
-        return Optional.ofNullable(row)
-                .map(record -> new StoredImage(
-                        record.get("storage_key", String.class), record.get("content_type", String.class)));
+        return db.select(ISSUEREPORTIMAGE.STORAGEKEY, ISSUEREPORTIMAGE.CONTENTTYPE)
+                .from(ISSUEREPORTIMAGE)
+                .join(ISSUEREPORT)
+                .on(ISSUEREPORT.ID.eq(ISSUEREPORTIMAGE.REPORTID))
+                .where(ISSUEREPORT
+                        .ID
+                        .eq(reportId)
+                        .and(ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId))
+                        .and(ISSUEREPORTIMAGE.ID.eq(imageId)))
+                .fetchOptional()
+                .map(record -> new StoredImage(record.value1(), record.value2()));
     }
 
     public boolean hasStorageKey(String key) {
-        return db.fetchOne("select 1 from \"IssueReportImage\" where \"storageKey\"=?", key) != null;
+        return db.fetchExists(ISSUEREPORTIMAGE, ISSUEREPORTIMAGE.STORAGEKEY.eq(key));
+    }
+
+    private SelectJoinStep<?> reportSelect() {
+        return db.select(
+                        ISSUEREPORT.ID,
+                        ISSUEREPORT.TITLE,
+                        ISSUEREPORT.DESCRIPTION,
+                        ISSUEREPORT.STATUS,
+                        ISSUEREPORT.CREATEDAT,
+                        ISSUEREPORT.UPDATEDAT,
+                        ISSUEREPORT.LOCATIONID,
+                        ESTATE.NAME,
+                        LOCATION_LABEL)
+                .from(ISSUEREPORT)
+                .join(ESTATE)
+                .on(ESTATE.ID.eq(ISSUEREPORT.ESTATEID))
+                .join(LOCATION)
+                .on(LOCATION.ID.eq(ISSUEREPORT.LOCATIONID))
+                .leftJoin(PARENT)
+                .on(PARENT.ID.eq(LOCATION.PARENTID))
+                .leftJoin(GRANDPARENT)
+                .on(GRANDPARENT.ID.eq(PARENT.PARENTID));
     }
 
     private static IssueReportSummaryResponse summary(Record row) {
         return new IssueReportSummaryResponse(
-                row.get("id", UUID.class),
-                row.get("title", String.class),
-                row.get("description", String.class),
-                row.get("estate_name", String.class),
-                new IssueReportSummaryResponse.ReportLocation(
-                        row.get("location_id", UUID.class), row.get("location_label", String.class)),
-                row.get("status", String.class),
-                row.get("created_at", OffsetDateTime.class),
-                row.get("updated_at", OffsetDateTime.class));
+                row.get(ISSUEREPORT.ID),
+                row.get(ISSUEREPORT.TITLE),
+                row.get(ISSUEREPORT.DESCRIPTION),
+                row.get(ESTATE.NAME),
+                new IssueReportSummaryResponse.ReportLocation(row.get(ISSUEREPORT.LOCATIONID), row.get(LOCATION_LABEL)),
+                row.get(ISSUEREPORT.STATUS),
+                row.get(ISSUEREPORT.CREATEDAT),
+                row.get(ISSUEREPORT.UPDATEDAT));
     }
 
     public record StoredImage(String key, String contentType) {}

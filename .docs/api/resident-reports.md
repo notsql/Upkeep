@@ -17,6 +17,8 @@ Creation requires an active resident membership and active estate. List, detail 
 
 Storage keys, other residents' data and management notes never appear in these DTOs.
 
+`ResidentReportRepository` uses the generated jOOQ tables and typed DSL for every query and insert, including location ancestry, ownership filters and `(createdAt, id)` cursor comparisons. Report timestamps are database-generated, and image metadata retains its database creation-time default. Prisma remains the schema and migration authority.
+
 ## Endpoints
 
 | Method and path | Request | Success | Errors |
