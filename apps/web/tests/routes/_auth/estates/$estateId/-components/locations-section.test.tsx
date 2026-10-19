@@ -98,7 +98,7 @@ describe("locations section", () => {
       screen.queryByRole("button", { name: "Deactivate Blk 101" })
     ).toBeNull();
     expect(
-      screen.queryByRole("button", { name: "Add level to Blk 101" })
+      screen.queryByRole("button", { name: "Add levels to Blk 101" })
     ).toBeNull();
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Search locations" }),
@@ -182,11 +182,14 @@ describe("locations section", () => {
     );
   });
 
-  it("adds a level to a block, suggesting the next position up", async () => {
+  it("adds one custom level to a block, suggesting the next position up", async () => {
     succeed("POST");
     renderWithProviders(<LocationsSection estateId="estate-id" />);
-    await selectAction("Blk 101", "Add level to Blk 101");
-    const form = screen.getByRole("form", { name: "Add level to Blk 101" });
+    await selectAction("Blk 101", "Add levels to Blk 101");
+    fireEvent.click(screen.getByRole("tab", { name: "One custom level" }));
+    const form = await screen.findByRole("form", {
+      name: "Add level to Blk 101",
+    });
     const position = within(form).getByRole("spinbutton", {
       name: "Position",
     }) as HTMLInputElement;
@@ -201,6 +204,94 @@ describe("locations section", () => {
         body: { type: "LEVEL", parentId: "b1", name: "Level 3", sortOrder: 3 },
       })
     );
+  });
+
+  it("adds a range of floors to a block and shows the result", async () => {
+    vi.mocked(api.POST).mockResolvedValue({
+      data: {
+        created: [
+          location("l4", "LEVEL", "L4", "b1", 4),
+          location("l3", "LEVEL", "L3", "b1", 3),
+        ],
+        skipped: [],
+      },
+      response: new Response(),
+    } as never);
+    renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await selectAction("Blk 101", "Add levels to Blk 101");
+    const form = screen.getByRole("form", { name: "Add floors to Blk 101" });
+    fireEvent.change(
+      within(form).getByRole("textbox", { name: "Lowest floor" }),
+      {
+        target: { value: "L3" },
+      }
+    );
+    fireEvent.change(
+      within(form).getByRole("textbox", { name: "Highest floor" }),
+      {
+        target: { value: "L4" },
+      }
+    );
+    fireEvent.click(within(form).getByRole("button", { name: "Add floors" }));
+    await waitFor(() =>
+      expect(api.POST).toHaveBeenCalledWith(
+        "/estates/{estateId}/locations/{blockId}/floors",
+        {
+          params: { path: { estateId: "estate-id", blockId: "b1" } },
+          body: { lowestFloor: 3, highestFloor: 4 },
+        }
+      )
+    );
+    expect((await screen.findByRole("status")).textContent).toContain(
+      "Added 2 floors: L4, L3."
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("offers one Add levels action, on blocks only", async () => {
+    renderWithProviders(<LocationsSection estateId="estate-id" />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Actions for Blk 101" })
+    );
+    await screen.findByRole("menuitem", { name: "Add levels to Blk 101" });
+    expect(
+      screen.queryByRole("menuitem", { name: "Add level to Blk 101" })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", { name: "Add floors to Blk 101" })
+    ).toBeNull();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Expand Blk 101" })
+    );
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Actions for Level 1" })
+    );
+    await screen.findByRole("menuitem", { name: "Edit Level 1" });
+    expect(
+      screen.queryByRole("menuitem", { name: "Add levels to Level 1" })
+    ).toBeNull();
+  });
+
+  it("opens Add levels on a range of floors, with one custom level as the alternative", async () => {
+    renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await selectAction("Blk 101", "Add levels to Blk 101");
+    const dialog = await screen.findByRole("dialog", {
+      name: "Add levels to Blk 101",
+    });
+    expect(
+      within(dialog)
+        .getByRole("tab", { name: "Range of floors" })
+        .getAttribute("aria-selected")
+    ).toBe("true");
+    within(dialog).getByRole("form", { name: "Add floors to Blk 101" });
+    fireEvent.click(
+      within(dialog).getByRole("tab", { name: "One custom level" })
+    );
+    await within(dialog).findByRole("form", { name: "Add level to Blk 101" });
+    expect(
+      within(dialog).queryByRole("form", { name: "Add floors to Blk 101" })
+    ).toBeNull();
   });
 
   it("adds a common area to a level", async () => {
@@ -328,9 +419,9 @@ it("can collapse location children and cancel a location dialog without saving",
   );
   fireEvent.click(screen.getByRole("button", { name: "Expand Blk 101" }));
   await screen.findByRole("listitem", { name: "Level 1" });
-  await selectAction("Blk 101", "Add level to Blk 101");
+  await selectAction("Blk 101", "Add levels to Blk 101");
   const dialog = await screen.findByRole("dialog", {
-    name: "Add level to Blk 101",
+    name: "Add levels to Blk 101",
   });
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(screen.queryByRole("dialog")).toBeNull();

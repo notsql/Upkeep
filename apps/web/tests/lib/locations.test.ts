@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildLocationTree,
   filterLocationTree,
+  floorName,
+  floorRange,
   type Location,
   nextLevelPosition,
+  parseFloor,
 } from "@/lib/locations";
 
 const at = "2026-09-27T00:00:00Z";
@@ -29,13 +32,13 @@ const locations: Location[] = [
 ];
 
 describe("buildLocationTree", () => {
-  it("nests levels and common areas under their parents, keeping sibling order", () => {
+  it("nests levels and common areas under their parents, levels highest floor first", () => {
     const tree = buildLocationTree(locations);
     expect(tree.map((node) => node.name)).toEqual(["Blk 101", "Blk 102"]);
     expect(tree[0].children.map((node) => node.name)).toEqual([
-      "B1",
-      "Level 1",
       "Level 2",
+      "Level 1",
+      "B1",
       "Lift",
     ]);
     expect(tree[0].children[1].children.map((node) => node.name)).toEqual([
@@ -77,9 +80,9 @@ describe("filterLocationTree", () => {
     ]);
     // Filtering must not remove siblings from the full tree used by counts.
     expect(tree[0].children.map((node) => node.name)).toEqual([
-      "B1",
-      "Level 1",
       "Level 2",
+      "Level 1",
+      "B1",
       "Lift",
     ]);
   });
@@ -98,5 +101,34 @@ describe("filterLocationTree", () => {
       []
     );
     expect(filterLocationTree([], "Lift")).toEqual([]);
+  });
+});
+
+describe("floors", () => {
+  it("reads L and B floors, and a bare number as above ground", () => {
+    expect(parseFloor("L25")).toBe(25);
+    expect(parseFloor(" l3 ")).toBe(3);
+    expect(parseFloor("12")).toBe(12);
+    expect(parseFloor("B2")).toBe(-2);
+    expect(parseFloor("b1")).toBe(-1);
+  });
+
+  it("rejects floor 0 and anything that is not a floor", () => {
+    for (const text of ["", "L0", "B0", "0", "X", "L-1", "1.5", "L 2"]) {
+      expect(parseFloor(text)).toBeUndefined();
+    }
+  });
+
+  it("names floors L1, L2 above ground and B1, B2 below", () => {
+    expect(floorName(1)).toBe("L1");
+    expect(floorName(25)).toBe("L25");
+    expect(floorName(-1)).toBe("B1");
+    expect(floorName(-3)).toBe("B3");
+  });
+
+  it("lists a range highest first with no floor 0", () => {
+    expect(floorRange(-2, 3)).toEqual([3, 2, 1, -1, -2]);
+    expect(floorRange(1, 1)).toEqual([1]);
+    expect(floorRange(-25, 25)).toHaveLength(50);
   });
 });

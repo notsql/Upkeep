@@ -61,6 +61,16 @@ public class LocationRepository {
                 LOCATION, active(excludeId).and(LOCATION.PARENTID.eq(blockId)).and(LOCATION.SORTORDER.eq(sortOrder)));
     }
 
+    /** A block's active levels, for bulk floor creation to skip the ones it already has. */
+    public List<LocationResponse> listActiveLevels(UUID blockId) {
+        return db.selectFrom(LOCATION)
+                .where(LOCATION.PARENTID
+                        .eq(blockId)
+                        .and(LOCATION.TYPE.eq(LocationType.LEVEL.name()))
+                        .and(LOCATION.DEACTIVATEDAT.isNull()))
+                .fetch(LocationRepository::response);
+    }
+
     public boolean hasActiveChildren(UUID id) {
         return db.fetchExists(LOCATION, active(null).and(LOCATION.PARENTID.eq(id)));
     }

@@ -250,6 +250,21 @@ export interface paths {
     trace?: never;
   };
   "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["issueDeviceCredential"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/events": {
     parameters: {
       query?: never;
@@ -291,7 +306,6 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    post: operations["issueDeviceCredential"];
     post: operations["checkAssetReadings"];
     delete?: never;
     options?: never;
@@ -438,6 +452,23 @@ export interface paths {
     get: operations["listLocations"];
     put?: never;
     post: operations["createLocation"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/locations/{blockId}/floors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add a range of floors (levels) to a block */
+    post: operations["addFloors"];
     delete?: never;
     options?: never;
     head?: never;
@@ -681,6 +712,24 @@ export interface components {
       updatedAt: string;
       /** Format: date-time */
       deactivatedAt?: string | null;
+    };
+    AddFloorsRequest: {
+      /**
+       * Format: int32
+       * @description The lowest floor: negative for basements (B2 = -2), never 0
+       */
+      lowestFloor: number;
+      /**
+       * Format: int32
+       * @description The highest floor: L25 = 25, never 0
+       */
+      highestFloor: number;
+    };
+    AddFloorsResponse: {
+      /** @description The levels created, highest floor first */
+      created: components["schemas"]["LocationResponse"][];
+      /** @description Names of floors the block already had, highest first */
+      skipped: string[];
     };
     CouncilInvitationRequest: {
       /** Format: email */
@@ -1321,6 +1370,69 @@ export interface operations {
       };
       /** @description Estate not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  addFloors: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        blockId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AddFloorsRequest"];
+      };
+    };
+    responses: {
+      /** @description Floors added; floors the block already had are listed as skipped */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AddFloorsResponse"];
+        };
+      };
+      /** @description Invalid request or hierarchy shape */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or location not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate name or level position, inactive estate or location, or active children */
+      409: {
         headers: {
           [name: string]: unknown;
         };
