@@ -62,3 +62,5 @@ Example: an authenticated owner sends POST `/estates/{estateId}/locations` with
 `LocationResponse`. POST `/estates/{estateId}/locations/{blockId}/floors` with
 `{"lowestFloor":-2,"highestFloor":3}` creates L3, L2, L1, B1 and B2. After accepting an invitation, a member can GET the same
 collection and see Block A, but cannot create, update or deactivate locations.
+
+A resident membership in the target estate returns 403 on management requests, including a conflicting owner/RESIDENT row. Management access in another estate does not change this restriction. Unrelated estates retain 404.

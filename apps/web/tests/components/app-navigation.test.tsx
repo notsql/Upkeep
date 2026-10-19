@@ -9,6 +9,14 @@ import {
 } from "@tanstack/react-router";
 import { act, fireEvent } from "@testing-library/react";
 import {
+  councilEstateAccess,
+  mixedAccess,
+  ownerEstateAccess,
+  residentAccess,
+  unassignedAccess,
+  workspaceAccess,
+} from "@tests/fixtures/access";
+import {
   renderWithProviders,
   screen,
   waitFor,
@@ -17,6 +25,12 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { AppNavigation, EstateNavigation } from "@/components/app-navigation";
 import { api } from "@/lib/api";
+
+let accessOverride:
+  | typeof mixedAccess
+  | typeof workspaceAccess
+  | typeof unassignedAccess
+  | undefined;
 
 const { auth, listeners } = vi.hoisted(() => ({
   auth: { user: { id: "owner" }, role: "user", loading: false },
@@ -96,6 +110,8 @@ async function setup(
     "/estates/$estateId",
     "/estates/$estateId/assets",
     "/estates/$estateId/council",
+    "/reports/new",
+    "/reports",
   ].map((path) =>
     createRoute({ getParentRoute: () => root, path, component: Destination })
   );
@@ -107,6 +123,22 @@ async function setup(
   return { router, ...renderWithProviders(<RouterProvider router={router} />) };
 }
 function getEstates(path: string, options?: unknown) {
+  if (path === "/access/context") {
+    return Promise.resolve({
+      data: accessOverride ?? {
+        ...workspaceAccess,
+        estates:
+          auth.user.id === "owner"
+            ? [
+                { ...ownerEstateAccess, estateId: "maple" },
+                { ...councilEstateAccess, canInviteMembers: false },
+                { ...ownerEstateAccess, estateId: "inactive" },
+              ]
+            : [councilEstateAccess],
+      },
+      response: new Response(),
+    } as never);
+  }
   const id = (options as { params?: { path?: { id?: string } } } | undefined)
     ?.params?.path?.id;
   const estates = auth.user.id === "owner" ? [maple, oak, inactive] : [oak];
@@ -119,9 +151,137 @@ function getEstates(path: string, options?: unknown) {
   } as never);
 }
 beforeEach(() => {
+  vi.mocked(api.GET).mockClear();
+  accessOverride = undefined;
   auth.user = { id: "owner" };
+  auth.role = "user";
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   vi.mocked(api.GET).mockImplementation(getEstates);
+});
+
+it("shows resident navigation from database access while WorkOS has an ordinary user role", async () => {
+  accessOverride = residentAccess;
+  auth.user = { id: "resident-a" };
+  auth.role = "user";
+  await setup("/reports/new");
+
+  await Promise.all(
+    ["Desktop navigation", "Mobile navigation"].map(async (name) => {
+      const navigation = within(screen.getByRole("navigation", { name }));
+      expect(
+        (
+          await navigation.findByRole("link", { name: "Report a fault" })
+        ).getAttribute("href")
+      ).toBe("/reports/new");
+      expect(
+        navigation
+          .getByRole("link", { name: "My reports" })
+          .getAttribute("href")
+      ).toBe("/reports");
+      expect(navigation.queryByRole("link", { name: "Home" })).toBeNull();
+      expect(navigation.queryByRole("link", { name: "Estates" })).toBeNull();
+      expect(
+        navigation.queryByRole("link", { name: "Admin users" })
+      ).toBeNull();
+    })
+  );
+  expect(
+    vi.mocked(api.GET).mock.calls.some((call) => call[0] === "/estates")
+  ).toBe(false);
+});
+
+it("shows reporting and management navigation together for different estate roles", async () => {
+  accessOverride = mixedAccess;
+  auth.user = { id: "mixed-user" };
+  auth.role = "resident"; // This stale WorkOS claim must not hide B's permissions.
+  await setup("/estates/oak/council");
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  await desktop.findByRole("link", { name: "Estates" });
+  desktop.getByRole("link", { name: "Home" });
+  desktop.getByRole("link", { name: "Report a fault" });
+  desktop.getByRole("link", { name: "My reports" });
+  desktop.getByRole("link", { name: "Council" });
+  expect(desktop.queryByRole("link", { name: "Assets" })).toBeNull();
+  const mobile = within(
+    screen.getByRole("navigation", { name: "Mobile navigation" })
+  );
+  const mobileHistory = mobile.queryByRole("link", { name: "My reports" });
+  if (mobileHistory) {
+    expect(mobileHistory.getAttribute("href")).toBe("/reports");
+  } else {
+    fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
+    const history = await screen.findByRole("menuitem", { name: "My reports" });
+    expect(history.getAttribute("href")).toBe("/reports");
+  }
+});
+
+it("hides My reports after the resident membership is deleted", async () => {
+  accessOverride = unassignedAccess;
+  auth.user = { id: "former-resident" };
+  await setup("/reports");
+  await Promise.all(
+    ["Desktop navigation", "Mobile navigation"].map(async (name) => {
+      const navigation = within(screen.getByRole("navigation", { name }));
+      await navigation.findByRole("link", { name: "Sign out" });
+      expect(navigation.queryByRole("link", { name: "My reports" })).toBeNull();
+      expect(navigation.queryByRole("link", { name: "Estates" })).toBeNull();
+    })
+  );
+});
+
+it.each([false, true])(
+  "hides My reports without Resident membership (platform admin: %s)",
+  async (canAccessPlatformAdmin) => {
+    accessOverride = { ...workspaceAccess, canAccessPlatformAdmin };
+    await setup("/estates/oak");
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    await desktop.findByRole("link", { name: "Estates" });
+    expect(desktop.queryByRole("link", { name: "My reports" })).toBeNull();
+    const mobile = within(
+      screen.getByRole("navigation", { name: "Mobile navigation" })
+    );
+    expect(mobile.queryByRole("link", { name: "My reports" })).toBeNull();
+    fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
+    await screen.findByRole("menuitem", { name: "Settings" });
+    expect(screen.queryByRole("menuitem", { name: "My reports" })).toBeNull();
+  }
+);
+
+it("shows no management links while the database access lookup is pending", async () => {
+  let finish: (() => void) | undefined;
+  vi.mocked(api.GET).mockImplementation(((path: string) =>
+    path === "/access/context"
+      ? new Promise((resolve) => {
+          finish = () =>
+            resolve({ data: residentAccess, response: new Response() });
+        })
+      : getEstates(path)) as never);
+  try {
+    await setup("/reports/new");
+    expect(screen.queryByRole("link", { name: "Estates" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Home" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "My reports" })).toBeNull();
+  } finally {
+    finish?.();
+  }
+});
+
+it("hides My reports when the access lookup fails", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    error: { message: "Unavailable" },
+    response: new Response(null, { status: 503 }),
+  } as never);
+  const { queryClient } = await setup("/reports");
+  await waitFor(() =>
+    expect(queryClient.getQueryState(["owner", "app-access"])?.status).toBe(
+      "error"
+    )
+  );
+  expect(screen.queryByRole("link", { name: "My reports" })).toBeNull();
 });
 
 it("switches from desktop assets to a shared estate overview with that estate's permissions", async () => {
@@ -159,7 +319,7 @@ it("switches from desktop assets to a shared estate overview with that estate's 
 it("offers inactive accessible estates above mobile estate links and opens their overview", async () => {
   const { router } = await setup("/estates/maple/council");
   const local = within(
-    screen.getByRole("navigation", { name: "Estate navigation" })
+    await screen.findByRole("navigation", { name: "Estate navigation" })
   );
   fireEvent.click(
     await local.findByRole("button", { name: "Switch estate: Maple Estate" })
@@ -178,10 +338,9 @@ it("offers inactive accessible estates above mobile estate links and opens their
   const global = within(
     screen.getByRole("navigation", { name: "Mobile navigation" })
   );
-  expect(global.getAllByRole("link").map((link) => link.textContent)).toEqual([
-    "Home",
-    "Estates",
-  ]);
+  global.getByRole("link", { name: "Home" });
+  global.getByRole("link", { name: "Estates" });
+  expect(global.queryByRole("link", { name: "Assets" })).toBeNull();
 });
 
 it("shows a retry on list failure without changing the current estate", async () => {

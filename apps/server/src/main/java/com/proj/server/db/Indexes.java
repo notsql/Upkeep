@@ -13,6 +13,8 @@ import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 
@@ -56,7 +58,12 @@ public class Indexes {
     public static final Index ESTATEINVITATION_EMAIL_STATUS_IDX = Internal.createIndex(DSL.name("EstateInvitation_email_status_idx"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.EMAIL, Estateinvitation.ESTATEINVITATION.STATUS }, false);
     public static final Index ESTATEINVITATION_ESTATEID_EMAIL_KEY = Internal.createIndex(DSL.name("EstateInvitation_estateId_email_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.ESTATEID, Estateinvitation.ESTATEINVITATION.EMAIL }, true);
     public static final Index ESTATEINVITATION_PROVIDERINVITATIONID_KEY = Internal.createIndex(DSL.name("EstateInvitation_providerInvitationId_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.PROVIDERINVITATIONID }, true);
+    public static final Index ESTATEUSER_ONE_RESIDENT_ESTATE = Internal.createIndex(DSL.name("EstateUser_one_resident_estate"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, true);
     public static final Index ESTATEUSER_USERID_IDX = Internal.createIndex(DSL.name("EstateUser_userId_idx"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, false);
+    public static final Index ISSUEREPORT_ESTATEID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID }, false);
+    public static final Index ISSUEREPORT_SUBMITTEDBYUSERID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_submittedByUserId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.SUBMITTEDBYUSERID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
+    public static final Index ISSUEREPORTIMAGE_REPORTID_IDX = Internal.createIndex(DSL.name("IssueReportImage_reportId_idx"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, false);
+    public static final Index ISSUEREPORTIMAGE_STORAGEKEY_KEY = Internal.createIndex(DSL.name("IssueReportImage_storageKey_key"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.STORAGEKEY }, true);
     public static final Index LOCATION_ESTATEID_IDX = Internal.createIndex(DSL.name("Location_estateId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.ESTATEID }, false);
     public static final Index LOCATION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_ID_TYPE_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_type_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.TYPE, Location.LOCATION.ESTATEID }, true);

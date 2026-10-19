@@ -18,6 +18,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // Base UI interaction tests exceed Vitest's five-second default timeout
+    // when many jsdom workers compete with the Java suite for CPU.
+    maxWorkers: 2,
     include: ["tests/**/*.{test,spec}.{ts,tsx}"],
     // Undo spies/stubs between tests so state can't leak across them.
     restoreMocks: true,

@@ -9,6 +9,7 @@ import static com.proj.server.estate.CouncilInvitationStatus.IN_APP;
 import static com.proj.server.estate.CouncilInvitationStatus.PENDING;
 import static com.proj.server.estate.CouncilInvitationStatus.SENDING;
 
+import com.proj.server.access.AccessService;
 import com.proj.server.db.tables.records.EstateinvitationRecord;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -35,13 +36,18 @@ public class CouncilRepository {
                         .ESTATEID
                         .eq(estateId)
                         .and(ESTATEUSER.USERID.eq(userId))
+                        .and(AccessService.managementMembership())
                         .and(ESTATEUSER.CANINVITEMEMBERS.isTrue()));
     }
 
     public boolean setPermission(UUID estateId, String userId, boolean allowed) {
         return db.update(ESTATEUSER)
                         .set(ESTATEUSER.CANINVITEMEMBERS, allowed)
-                        .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(userId)))
+                        .where(ESTATEUSER
+                                .ESTATEID
+                                .eq(estateId)
+                                .and(ESTATEUSER.USERID.eq(userId))
+                                .and(AccessService.managementMembership()))
                         .execute()
                 == 1;
     }
@@ -49,7 +55,7 @@ public class CouncilRepository {
     public List<Member> members(UUID estateId) {
         return db.select(ESTATEUSER.USERID, ESTATEUSER.CANINVITEMEMBERS)
                 .from(ESTATEUSER)
-                .where(ESTATEUSER.ESTATEID.eq(estateId))
+                .where(ESTATEUSER.ESTATEID.eq(estateId).and(AccessService.managementMembership()))
                 .orderBy(ESTATEUSER.CREATEDAT, ESTATEUSER.USERID)
                 .fetch(row -> new Member(row.value1(), row.value2()));
     }
@@ -156,7 +162,11 @@ public class CouncilRepository {
                 .fetch();
         db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId)).forUpdate().fetchSingle();
         int removed = db.deleteFrom(ESTATEUSER)
-                .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(userId)))
+                .where(ESTATEUSER
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(ESTATEUSER.USERID.eq(userId))
+                        .and(AccessService.managementMembership()))
                 .execute();
         if (removed == 0) return false;
         db.update(ESTATEINVITATION)
@@ -232,7 +242,20 @@ public class CouncilRepository {
                         ESTATEUSER
                                 .ESTATEID
                                 .eq(estate.getId())
-                                .and(ESTATEUSER.USERID.eq(invitation.getInviteruserid())))) return false;
+                                .and(ESTATEUSER.USERID.eq(invitation.getInviteruserid()))
+                                .and(AccessService.managementMembership()))) return false;
+        if (db.fetchExists(
+                ESTATEUSER,
+                ESTATEUSER
+                        .ESTATEID
+                        .eq(estate.getId())
+                        .and(ESTATEUSER.USERID.eq(userId))
+                        .and(ESTATEUSER.ROLE.eq("RESIDENT")))) {
+            if (explicit)
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "A resident assignment cannot be converted by an invitation.");
+            return false;
+        }
         db.insertInto(ESTATEUSER)
                 .set(ESTATEUSER.ESTATEID, estate.getId())
                 .set(ESTATEUSER.USERID, userId)

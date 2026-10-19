@@ -50,6 +50,8 @@ Query key: `devicesQueryKey(userId, estateId, assetId)` =
 | `useRegisterDevice(estateId, assetId)` | `POST /estates/{estateId}/assets/{assetId}/devices` | invalidate `devicesQueryKey(...)` |
 | `useIssueDeviceCredential(estateId, assetId)`, `mutate(deviceId)` | `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` | invalidate `devicesQueryKey(...)` |
 
+Credential generation and replacement use the generated API contract. Spring's JWT security chain explicitly permits this POST endpoint, and the service enforces estate ownership.
+
 Also reads `useLocations(estateId)` (key `["estates", userId, "locations",
 estateId]`) for the location select and path labels. All queries:
 `enabled: ready`, `retry: false`, errors via `estateError`.

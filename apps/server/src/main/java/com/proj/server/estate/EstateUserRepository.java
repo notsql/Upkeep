@@ -25,7 +25,8 @@ public class EstateUserRepository {
                         ESTATE.CODE,
                         ESTATE.DEACTIVATEDAT,
                         ESTATE.OWNERUSERID,
-                        ESTATEUSER.USERID)
+                        ESTATEUSER.USERID,
+                        ESTATEUSER.ROLE)
                 .from(ESTATE)
                 .leftJoin(ESTATEUSER)
                 .on(ESTATEUSER.ESTATEID.eq(ESTATE.ID).and(ESTATEUSER.USERID.eq(userId)))
@@ -36,14 +37,33 @@ public class EstateUserRepository {
                         row.get(ESTATE.CODE),
                         row.get(ESTATE.DEACTIVATEDAT) == null,
                         userId.equals(row.get(ESTATE.OWNERUSERID)),
-                        row.get(ESTATEUSER.USERID) != null));
+                        "MEMBER".equals(row.get(ESTATEUSER.ROLE)) || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)),
+                        row.get(ESTATEUSER.ROLE),
+                        !"RESIDENT".equals(row.get(ESTATEUSER.ROLE))));
     }
 
     public boolean estateExists(UUID estateId) {
         return db.fetchExists(ESTATE, ESTATE.ID.eq(estateId));
     }
 
+    private void protectResident(UUID estateId, String userId) {
+        if (db.fetchExists(
+                ESTATEUSER,
+                ESTATEUSER
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(ESTATEUSER.USERID.eq(userId))
+                        .and(ESTATEUSER.ROLE.eq("RESIDENT")))) {
+            throw new EstateException(
+                    org.springframework.http.HttpStatus.CONFLICT,
+                    "Resident assignments require an explicit role conversion.");
+        }
+    }
+
+    @org.springframework.transaction.annotation.Transactional
     public void add(UUID estateId, String userId) {
+        db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId)).forUpdate().fetch();
+        protectResident(estateId, userId);
         db.insertInto(ESTATEUSER)
                 .set(ESTATEUSER.ESTATEID, estateId)
                 .set(ESTATEUSER.USERID, userId)
@@ -52,9 +72,16 @@ public class EstateUserRepository {
                 .execute();
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void remove(UUID estateId, String userId) {
+        db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId)).forUpdate().fetch();
+        protectResident(estateId, userId);
         db.deleteFrom(ESTATEUSER)
-                .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(userId)))
+                .where(ESTATEUSER
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(ESTATEUSER.USERID.eq(userId))
+                        .and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL")))
                 .execute();
     }
 }
