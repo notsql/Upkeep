@@ -1,11 +1,11 @@
 [project]
 name = "ml-research"
 version = "0.0.0"
-description = "ML experiments - trains and exports the models apps/ml serves"
+description = "ML experiments - trains and exports the models apps/server runs"
 requires-python = ">=3.13"
 # Deliberately minimal: add what an experiment actually needs (torch,
-# scikit-learn, ...) and run `uv sync`. This environment is separate from
-# apps/ml on purpose - training dependencies stay out of the serving image.
+# scikit-learn, ...) and run `uv sync`. Training dependencies stay out of the
+# serving image.
 dependencies = [
     "numpy>=2.4.0",
     "jupyterlab>=4.5.0",
