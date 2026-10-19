@@ -1,10 +1,9 @@
-name: CI
+name: PR checks
 
 on:
-  push:
-    branches: ["**"]
+  # feat/* -> dev -> main: both hops are checked.
   pull_request:
-    branches: [main]
+    branches: [dev, main]
 
 permissions:
   contents: read
@@ -61,12 +60,6 @@ jobs:
           distribution: temurin
           java-version: "25"
           cache: maven
-
-      # apps/ml has a pytest target, so `pnpm test` needs uv + Python.
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v6
-        with:
-          enable-cache: true
 
       # prisma.config.ts reads packages/db/.env
       - name: Write env files

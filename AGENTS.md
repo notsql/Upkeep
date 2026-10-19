@@ -24,7 +24,7 @@ Non-negotiable. Breaking one of these is a bug even if the code works.
 5. **Only Prisma changes the database's shape.** Schema lives in
    `packages/db/prisma/schema/schema.prisma`. Spring never migrates.
 6. **Never hand-write API types in the frontend.** Regenerate the contract.
-7. **Tests first (TDD).** Every behaviour change - web, server or ml - starts
+7. **Tests first (TDD).** Every behaviour change - web or server - starts
    with a failing test that you run and see fail, then the implementation.
    See §5 "Tests" and `.spec/testing.md`.
 8. **Folder-based routing.** Web routes nest as directories under
@@ -77,16 +77,18 @@ something in. Equally, do not leave dependencies behind that nothing imports.
 | --- | --- | --- | --- |
 | Frontend | TanStack Start, React 19, Vite, Tailwind 4 | `apps/web` | 3001 |
 | Backend | Spring Boot 4, Java 25, Maven | `apps/server` | 8080 |
-| Inference | FastAPI, onnxruntime, uv | `apps/ml` | 8000 |
+| Inference | onnxruntime (Java), in process | `apps/server` | - |
 | Contract | springdoc -> `openapi-typescript` -> `openapi-fetch` | `packages/api` | - |
 | Database | Postgres 18, Prisma 7 | `packages/db` | 5432 |
 | Orchestration | Nx 23 + `@nx/maven`, pnpm workspaces | root | - |
-| Testing | Vitest + Testing Library (web), JUnit (server), pytest (ml) | - | - |
+| Testing | Vitest + Testing Library (web), JUnit (server) | - | - |
+| Hosting | Cloudflare Worker `web` (Workers Builds); Spring on Cloud Run `api` (GitHub Actions `deploy.yml`) | `apps/web/wrangler.jsonc`, `.github/workflows/deploy.yml` | - |
 | Data fetching | React Query over the generated client | `apps/web` | - |
 
-The browser calls Spring **directly** (CORS, not a proxy). `apps/ml` is
-internal: only `apps/server` calls it, so the browser's API surface stays the
-generated contract. See `.spec/decisions/0007-*`.
+The browser calls Spring **directly** (CORS, not a proxy), so the browser's
+API surface stays the generated contract. Spring runs the anomaly model itself
+with onnxruntime's Java library; there is no separate inference service. See
+`.spec/decisions/0028-*`.
 
 ---
 
@@ -96,19 +98,19 @@ Run everything from the repo root.
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | web + API + inference together (no database setup) |
+| `pnpm dev` | web + API together (no database setup) |
 | `pnpm db:migrate` | Create a migration from the schema and apply it |
 | `pnpm db:deploy` | Apply pending migrations to whatever `DATABASE_URL` points at |
 | `pnpm db:generate` | Regenerate the Prisma client and the jOOQ classes |
-| `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
+| `pnpm dev:web` / `pnpm dev:server` | One side only |
 | `pnpm build` | Builds everything, Java included |
 | `pnpm test` | All tests |
 | `pnpm check-types` | TypeScript across the workspace |
-| `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Ruff (ml), Spotless (server) |
+| `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Spotless (server) |
 | `pnpm db:reset` | Drop, recreate, replay migrations |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm api:generate` | **Regenerate the API contract** (see §4) |
-| `pnpm docker:up` | Full stack in Docker |
+| `pnpm docker:up` | The API's container image, run in Docker |
 
 Java directly, when you need it: `./mvnw -pl com.proj:server <phase>` from the
 repo root. The wrapper is at the root, not in `apps/server` - `@nx/maven`
@@ -131,8 +133,16 @@ See `.spec/decisions/0018-*`.
 
 **Nx runs tasks; Docker runs services.** The dev database is Neon; everything else
 runs natively through Nx (`pnpm dev`). The
-`web` and `server` services in `docker-compose.yml` are for deployment parity -
-do not `docker compose up` the full stack just to develop or to check a change.
+`server` service in `docker-compose.yml` builds the same image Cloud Run
+runs - do not `docker compose up` it just to develop or to check a
+change.
+
+**Deploys come from `main`, never by hand.** Branch flow is `feat/*` -> PR
+into `dev` -> PR `dev` into `main`. A push to `dev` migrates Neon `dev`; a push
+to `main` migrates Neon `prd`, `deploy.yml` deploys `api` to Cloud Run and
+Workers Builds deploys `web`, with no ordering between them - so migrations must be compatible with the code
+already running (expand now, contract in a later PR). See
+`.spec/decisions/0029-*`.
 
 ---
 
@@ -267,18 +277,6 @@ points at the compiler API, this is why** - the fix is to pin
 `packages/api` to `typescript: ^5.9.3` in its own `package.json`, which is
 supported because pnpm isolates each package's `node_modules`.
 
-### Python (`apps/ml`)
-
-- `uv` manages the environment; dependencies go in `apps/ml/pyproject.toml`,
-  **not** the pnpm `catalog:`. As with everything else, edit the manifest and
-  tell the human to run `uv sync` - do not install on your own initiative.
-- Pydantic models for request and response bodies. Configuration through
-  `pydantic-settings` (`ML_*`), never bare `os.environ`.
-- Keep the service model-agnostic: `/predict` reads the loaded session's
-  signature. Swapping the `.onnx` should not need a code change.
-- Tests in `apps/ml/tests`, run with `uv run pytest`. Build fixture models in
-  the test rather than checking a binary in.
-
 ### Java
 
 - Constructor injection. No `@Autowired` on fields.
@@ -316,7 +314,7 @@ and what not to test. The essentials:
     bug in the component, not a reason to reach for `querySelector`.
   - Never assert on a fixed delay - use `findBy*` or `waitFor`.
   - `apps/web/vitest.config.ts` is deliberately separate from
-    `vite.config.ts`: tests must not load the TanStack Start and Nitro SSR
+    `vite.config.ts`: tests must not load the TanStack Start and Cloudflare SSR
     plugins.
 - **Java:** tests live in `apps/server/src/test/java`. `@SpringBootTest` for
   context-level tests, plain unit tests for logic. Context tests start a
@@ -340,11 +338,12 @@ and what not to test. The essentials:
 | Change the API's OpenAPI metadata | `apps/server/.../config/OpenApiConfig.java` |
 | Add an env var | `packages/env/src/*.ts`, the matching `.env.example`, **and** the matching Infisical `dev` folder, e.g. `/apps/server` (a human adds the value) |
 | Change Nx targets for Java | `apps/server/project.json` |
-| Serve or swap the ONNX model | `apps/ml/` (drop the file at `apps/ml/models/`) |
+| Serve or swap the ONNX model | `apps/server/src/main/resources/anomaly/model.onnx`, plus `AnomalyModel`'s constants and the parity fixture |
 | Train, evaluate or explore a model | `ml-research/` - not `apps/` |
 | Write a web test | `apps/web/tests/`, mirroring `src/` |
 | Configure web tests | `apps/web/vitest.config.ts`, `apps/web/tests/setup.ts` |
 | Bump a shared dependency version | the `catalog:` in `pnpm-workspace.yaml` |
+| Change how web or the API is hosted | `apps/web/wrangler.jsonc`, `.github/workflows/deploy.yml`, `apps/server/Dockerfile` (decision 0029) |
 
 ---
 

@@ -1,0 +1,85 @@
+name: Deploy API
+
+# Builds apps/server's image and deploys it to Cloud Run on every push to main
+# that touches the server. The web app deploys separately via Workers Builds.
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/server/**
+      - pom.xml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Lets the job mint a GitHub OIDC token for Workload Identity Federation.
+  id-token: write
+
+concurrency:
+  group: deploy-api-prd
+  cancel-in-progress: false
+
+env:
+  REGION: asia-southeast1
+  IMAGE: asia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/proj/api:${{ github.sha }}
+
+jobs:
+  deploy:
+    name: Deploy api to Cloud Run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+
+      # Build context is the repo root: the Dockerfile needs the root pom.xml
+      # and Maven wrapper.
+      - name: Build and push image
+        run: |
+          docker build -f apps/server/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: api
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}
+          # JAVA_TOOL_OPTIONS is Cloud Run only, so local compose keeps the JVM
+          # defaults: let the heap use 60% of the 2 GiB limit (default 25%),
+          # leaving the rest for onnxruntime's native memory and the JVM.
+          env_vars: |-
+            CORS_ALLOWED_ORIGINS=${{ vars.WEB_URL }}
+            JAVA_TOOL_OPTIONS=-XX:MaxRAMPercentage=60
+          env_vars_update_strategy: overwrite
+          secrets: |-
+            SPRING_DATASOURCE_URL=SPRING_DATASOURCE_URL:latest
+            SPRING_DATASOURCE_USERNAME=SPRING_DATASOURCE_USERNAME:latest
+            SPRING_DATASOURCE_PASSWORD=SPRING_DATASOURCE_PASSWORD:latest
+            WORKOS_API_KEY=WORKOS_API_KEY:latest
+            SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:latest
+            SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES=SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES:latest
+          secrets_update_strategy: overwrite
+          flags: >-
+            --service-account=${{ vars.GCP_API_RUNTIME_SA }}
+            --port=8080
+            --cpu=1
+            --memory=2Gi
+            --cpu-boost
+            --concurrency=80
+            --min-instances=0
+            --max-instances=2
+            --startup-probe=httpGet.path=/health,httpGet.port=8080,periodSeconds=5,failureThreshold=24,timeoutSeconds=3

@@ -12,13 +12,12 @@ Prisma-owned schema, orchestrated by Nx.
 | --- | --- | --- | --- |
 | Frontend | TanStack Start, React 19, Vite, Tailwind 4 | `apps/web` | 3001 |
 | Backend | Spring Boot 4, Java 25, Maven | `apps/server` | 8080 |
-| Inference | FastAPI, onnxruntime, uv | `apps/ml` | 8000 |
 | Contract | springdoc -> OpenAPI -> typed TS client | `packages/api` | - |
 | Database | Postgres 18, Prisma 7 | `packages/db` | 5432 |
 
 The browser calls the Spring API directly over CORS. The web app has no
-database access; `apps/server` is the only thing that talks to Postgres, and
-the only thing that calls the `apps/ml` inference service.
+database access; `apps/server` is the only thing that talks to Postgres. It
+also runs the anomaly model in process with onnxruntime for Java (decision 0028).
 
 ## Prerequisites
 
@@ -28,7 +27,6 @@ the only thing that calls the `apps/ml` inference service.
 | **pnpm 12** | Workspace package manager (version pinned by `packageManager` in `package.json`). |
 | **Node 22+** | Required by Vite 8 and Vitest 5. |
 | **Docker** | Runs Postgres. Nothing else in the dev loop needs it. |
-| **uv** | Runs the Python inference service (`brew install uv`). |
 
 Maven is *not* a prerequisite - use `./mvnw` at the repo root. It lives at the
 root rather than in `apps/server` because `@nx/maven` runs Maven from the
@@ -63,12 +61,7 @@ Get the Neon connection strings from the team (see
 pnpm install         # also generates Prisma Client (postinstall)
 ```
 
-**3. Add a model for the inference service.**
-
-Drop an ONNX file at `apps/ml/models/model.onnx` - `apps/ml` refuses to boot
-without one. See [`apps/ml/README.md`](apps/ml/README.md).
-
-**4. Run everything.**
+**3. Run everything.**
 
 ```bash
 pnpm dev
@@ -79,15 +72,13 @@ pnpm dev
 | App | <http://localhost:3001> |
 | API | <http://localhost:8080> |
 | Swagger UI | <http://localhost:8080/swagger-ui> |
-| Inference (internal) | <http://localhost:8000> |
 
 ## Day-to-day development
 
 ```bash
-pnpm dev             # web + API + ML
+pnpm dev             # web + API
 pnpm dev:web         # or one side only: :3001
 pnpm dev:server      # :8080
-pnpm dev:ml          # :8000
 ```
 
 After pulling, if someone added a migration, apply it:
@@ -154,7 +145,6 @@ folder and jOOQ classes with step 1, `openapi.json` and `schema.ts` with step
 | --- | --- |
 | `apps/web` | Vitest + Testing Library, jsdom |
 | `apps/server` | JUnit via Surefire |
-| `apps/ml` | pytest (`cd apps/ml && uv run pytest`) |
 
 ```bash
 pnpm test                          # everything, cached by Nx
@@ -202,24 +192,24 @@ applies it to the shared database.
 **jOOQ reads the same database as the app** - `pnpm db:generate` uses the
 `SPRING_DATASOURCE_*` values in `apps/server/.env`, so point that file at your
 Neon branch while changing the schema. Nothing in the dev loop needs Docker;
-`docker-compose.yml` is for deployment parity.
+`docker-compose.yml` runs the image Cloud Run runs.
 
 ## Scripts
 
 | Command | Does |
 | --- | --- |
-| `pnpm dev` | web + API + inference |
-| `pnpm dev:web` / `pnpm dev:server` / `pnpm dev:ml` | One side only |
+| `pnpm dev` | web + API |
+| `pnpm dev:web` / `pnpm dev:server` | One side only |
 | `pnpm build` | Everything, Java included |
-| `pnpm test` | All tests: web (Vitest), server (JUnit), ml (pytest) |
+| `pnpm test` | All tests: web (Vitest), server (JUnit) |
 | `pnpm --filter web test:watch` | Web tests in watch mode |
 | `pnpm check-types` | TypeScript across the workspace |
-| `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Ruff (ml), Spotless (server) |
+| `pnpm check` / `pnpm fix` | Lint + format: Ultracite (TS), Spotless (server) |
 | `pnpm api:generate` | Regenerate the API contract |
 | `pnpm db:deploy` | Apply pending migrations |
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:reset` | Drop and re-migrate |
-| `pnpm docker:up` / `pnpm docker:down` / `pnpm docker:logs` | Full stack in Docker |
+| `pnpm docker:up` / `pnpm docker:down` / `pnpm docker:logs` | The API's container image in Docker |
 
 Java directly: `./mvnw -pl com.proj:server <phase>` from the repo root.
 
@@ -238,8 +228,7 @@ and session policy. The API is open while its JWT issuer is unset.
 proj/
 ├── apps/
 │   ├── web/          # TanStack Start frontend
-│   ├── server/       # Spring Boot API
-│   └── ml/           # FastAPI ONNX inference (internal)
+│   └── server/       # Spring Boot API
 ├── packages/
 │   ├── api/          # generated OpenAPI types + typed client
 │   ├── db/           # Prisma schema, migrations, client
@@ -267,13 +256,47 @@ Design tokens are in `packages/ui/src/styles/globals.css`.
 
 ## Docker
 
-Development needs no Docker (Neon). The full stack is for deployment and production parity:
+Development needs no Docker (Neon). Compose builds and runs the API image that
+Cloud Run runs, against Neon:
 
 ```bash
-pnpm docker:up      # build and start web + server + ml (against Neon)
+pnpm docker:up      # build and start server
 pnpm docker:logs
 pnpm docker:down
 ```
 
-`VITE_API_URL` is baked into the web bundle at build time, so it must be the
-URL the **browser** will use - never a Docker-internal hostname.
+## Deployment
+
+Decision
+[0029](.spec/decisions/0029-deploy-web-to-workers-and-api-to-cloud-run.md):
+`apps/web` is the Cloudflare Worker `web` (`*.workers.dev`, deployed by
+Workers Builds), and Spring is the Cloud Run service `api` in
+`asia-southeast1` (`*.run.app`, deployed by `.github/workflows/deploy.yml`).
+Production data is Neon's `prd` branch.
+
+Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
+
+- A PR into `dev` or `main` runs the PR checks.
+- A push to `dev` migrates Neon `dev`. Nothing deploys.
+- A push to `main` migrates Neon `prd`; `deploy.yml` deploys `api` when
+  `apps/server/**` or `pom.xml` changed, and Workers Builds deploys `web` when
+  `apps/web/**` or `packages/{api,ui,env}/**` changed. There is no deploy
+  command to run by hand (`deploy.yml` can be re-run manually, e.g. after a
+  secret rotation).
+
+`deploy.yml` logs in to GCP with Workload Identity Federation, so GitHub holds
+no key, only these repository variables:
+
+| Variable | Value |
+| --- | --- |
+| `GCP_PROJECT_ID` | The GCP project ID |
+| `GCP_WIF_PROVIDER` | `projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>` |
+| `GCP_DEPLOY_SA` | Deployer service account email |
+| `GCP_API_RUNTIME_SA` | Service account the `api` service runs as |
+| `WEB_URL` | `https://web.<account>.workers.dev` (the API's CORS origin) |
+
+Runtime secrets come from Infisical `prd`: `/apps/server` is synced to GCP
+Secret Manager, `/apps/web` to the `web` Worker.
+
+`VITE_API_URL` is baked into the web bundle at build time (a Workers Builds
+build variable), so it must be the URL the **browser** uses.

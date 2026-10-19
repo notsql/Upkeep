@@ -17,7 +17,6 @@
     "db:reset": "nx run-many -t db:reset --projects=@proj/db",
     "db:studio": "nx run-many -t db:studio --projects=@proj/db",
     "dev": "nx run-many -t dev",
-    "dev:ml": "nx run-many -t dev --projects=ml",
     "dev:server": "nx run-many -t dev --projects=server",
     "dev:web": "nx run-many -t dev --projects=web",
     "docker:build": "docker compose build",
