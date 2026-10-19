@@ -1,6 +1,9 @@
 # 0012 - CI runs against an ephemeral Postgres, never Neon
 
-**Status:** accepted
+**Status:** superseded in part by 0019 - `pr-checks.yml` no longer runs a
+Postgres service or `pnpm db:deploy`; context tests start their own
+Testcontainers Postgres and replay the migration SQL. "CI never connects to
+Neon" still stands.
 
 ## Context
 

@@ -14,29 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
-    # Ephemeral Postgres for @SpringBootTest. jOOQ classes are committed, so the
-    # build itself needs no database.
-    # NEVER point CI at the shared Neon DB: CI runs on unmerged branches.
-    services:
-      postgres:
-        image: postgres:18
-        env:
-          POSTGRES_USER: proj
-          POSTGRES_PASSWORD: proj
-          POSTGRES_DB: proj
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U proj"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
+    # No database and no migrations: CI runs on unmerged branches, and Neon is
+    # migrated only by pushes to dev/main. Context tests start their own
+    # Postgres via Testcontainers (Docker is on the runner) and replay the
+    # migration SQL into it (0019). jOOQ classes are committed, so the build
+    # needs no database either.
     env:
-      DATABASE_URL: postgresql://proj:proj@localhost:5432/proj
-      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/proj
-      SPRING_DATASOURCE_USERNAME: proj
-      SPRING_DATASOURCE_PASSWORD: proj
       # WorkOS vars are deliberately unset: JWT validation stays off in CI.
       NX_NO_CLOUD: "true"
 
@@ -61,15 +44,12 @@ jobs:
           java-version: "25"
           cache: maven
 
-      # prisma.config.ts reads packages/db/.env
-      - name: Write env files
-        run: echo "DATABASE_URL=${DATABASE_URL}" > packages/db/.env
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Apply migrations
-        run: pnpm db:deploy
+      # Fails on unformatted or unlinted code; run `pnpm fix` locally and commit.
+      - name: check
+        run: pnpm check
 
       - name: check-types
         run: pnpm check-types

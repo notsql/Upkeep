@@ -189,7 +189,7 @@ Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
 
 | Event | What happens |
 | --- | --- |
-| PR into `dev` or `main` | `pr-checks.yml` against an ephemeral Postgres (0012) |
+| PR into `dev` or `main` | `pr-checks.yml`: no database, no migrations; context tests use Testcontainers (0019) |
 | Push to `dev` | `migrate.yml` migrates Neon `dev` (Infisical `dev`) |
 | Push to `main` | `migrate.yml` migrates Neon `prd` (Infisical `prd`); `deploy.yml` deploys `api` if `apps/server/**` or `pom.xml` changed; Workers Builds deploys `web` if its watch paths changed |
 
