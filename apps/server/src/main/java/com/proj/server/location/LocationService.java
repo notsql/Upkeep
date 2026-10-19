@@ -1,7 +1,10 @@
 package com.proj.server.location;
 
 import com.proj.server.estate.EstateRepository;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -49,6 +52,72 @@ public class LocationService {
         var parentType = checkPlacement(estateId, location.type(), request.parentId(), request.sortOrder());
         checkUnique(estateId, location.type(), request.parentId(), request.name(), request.sortOrder(), id);
         return repository.update(id, request, parentType);
+    }
+
+    /** Floors per request. Most condo and HDB blocks have 50 storeys or fewer. */
+    static final int MAX_FLOORS = 50;
+
+    /**
+     * Adds every floor from lowest to highest, skipping 0 and any floor the block already has
+     * (an active level with the same position or name). One transaction: all or nothing.
+     */
+    @Transactional
+    public AddFloorsResponse addFloors(UUID estateId, UUID blockId, String owner, AddFloorsRequest request) {
+        var floors = floorRange(request.lowestFloor(), request.highestFloor());
+        lockActiveEstate(estateId, owner);
+        var block = repository.find(blockId, estateId).orElseThrow(LocationService::locationNotFound);
+        if (block.type() != LocationType.BLOCK) {
+            throw badRequest("Floors can only be added to a block.");
+        }
+        if (block.deactivatedAt() != null) {
+            throw new LocationException(HttpStatus.CONFLICT, "This location is deactivated and cannot be changed.");
+        }
+        var existing = repository.listActiveLevels(blockId);
+        var takenPositions = new HashSet<Integer>();
+        var takenNames = new HashSet<String>();
+        for (var level : existing) {
+            takenPositions.add(level.sortOrder());
+            takenNames.add(level.name().toLowerCase(Locale.ROOT));
+        }
+        var created = new ArrayList<LocationResponse>();
+        var skipped = new ArrayList<String>();
+        for (var floor : floors) {
+            var name = floorName(floor);
+            if (takenPositions.contains(floor) || takenNames.contains(name.toLowerCase(Locale.ROOT))) {
+                skipped.add(name);
+                continue;
+            }
+            created.add(repository.create(
+                    estateId, new CreateLocationRequest(LocationType.LEVEL, blockId, name, floor), LocationType.BLOCK));
+        }
+        return new AddFloorsResponse(created, skipped);
+    }
+
+    /** Highest floor first, with no floor 0. */
+    private static List<Integer> floorRange(int lowest, int highest) {
+        if (lowest == 0 || highest == 0) {
+            throw badRequest("There is no floor 0. B1 sits directly below L1.");
+        }
+        if (lowest > highest) {
+            throw badRequest("The lowest floor must not be above the highest floor.");
+        }
+        // Both ends are non-zero, so the range spans 0 exactly when they differ in sign.
+        long count = (long) highest - lowest + 1 - (lowest < 0 && highest > 0 ? 1 : 0);
+        if (count > MAX_FLOORS) {
+            throw badRequest("Add at most " + MAX_FLOORS + " floors at a time.");
+        }
+        var floors = new ArrayList<Integer>();
+        for (int floor = highest; floor >= lowest; floor--) {
+            if (floor != 0) {
+                floors.add(floor);
+            }
+        }
+        return floors;
+    }
+
+    /** L1, L2, ... above ground; B1, B2, ... below. */
+    static String floorName(int floor) {
+        return floor > 0 ? "L" + floor : "B" + -floor;
     }
 
     @Transactional

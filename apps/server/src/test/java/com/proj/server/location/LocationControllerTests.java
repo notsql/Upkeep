@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -355,5 +356,136 @@ class LocationControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.deactivatedAt").value("2026-01-01T00:00:00Z"));
         verify(repository, never()).deactivate(any());
+    }
+
+    // --- Bulk floors (ID-99) ---
+
+    private final String floors = base + "/" + blockId + "/floors";
+
+    private static String range(Integer lowest, Integer highest) {
+        return "{\"lowestFloor\":%s,\"highestFloor\":%s}".formatted(lowest, highest);
+    }
+
+    private LocationResponse existingLevel(String name, int position) {
+        return new LocationResponse(UUID.randomUUID(), LocationType.LEVEL, blockId, name, position, now, now, null);
+    }
+
+    /** Echoes each created level back as the stored row, as the database would. */
+    private void createEchoesLevels() {
+        when(repository.create(eq(estateId), any(), eq(LocationType.BLOCK))).thenAnswer(call -> {
+            CreateLocationRequest request = call.getArgument(1);
+            return new LocationResponse(
+                    UUID.randomUUID(),
+                    request.type(),
+                    request.parentId(),
+                    request.name(),
+                    request.sortOrder(),
+                    now,
+                    now,
+                    null);
+        });
+    }
+
+    @Test
+    void addsEveryFloorInTheRangeNamedByFloorWithNoFloorZero() throws Exception {
+        createEchoesLevels();
+        mvc.perform(asOwner(post(floors), range(-2, 3)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.created.length()").value(5))
+                .andExpect(jsonPath("$.created[*].name")
+                        .value(org.hamcrest.Matchers.contains("L3", "L2", "L1", "B1", "B2")))
+                .andExpect(jsonPath("$.created[*].sortOrder").value(org.hamcrest.Matchers.contains(3, 2, 1, -1, -2)))
+                .andExpect(jsonPath("$.created[*].type")
+                        .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is("LEVEL"))))
+                .andExpect(jsonPath("$.created[*].parentId")
+                        .value(org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(blockId.toString()))))
+                .andExpect(jsonPath("$.skipped.length()").value(0));
+        verify(repository, times(5)).create(eq(estateId), any(), eq(LocationType.BLOCK));
+    }
+
+    @Test
+    void skipsFloorsTheBlockAlreadyHasByPositionOrName() throws Exception {
+        createEchoesLevels();
+        // Position 2 is taken by "Ground"; the name L3 is taken (case-insensitively) at another position.
+        when(repository.listActiveLevels(blockId))
+                .thenReturn(List.of(existingLevel("Ground", 2), existingLevel("l3", 9)));
+        mvc.perform(asOwner(post(floors), range(1, 3)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.created[*].name").value(org.hamcrest.Matchers.contains("L1")))
+                .andExpect(jsonPath("$.skipped").value(org.hamcrest.Matchers.contains("L3", "L2")));
+        verify(repository, times(1)).create(eq(estateId), any(), eq(LocationType.BLOCK));
+    }
+
+    @Test
+    void addingFloorsTheBlockAlreadyHasIsNotAnError() throws Exception {
+        when(repository.listActiveLevels(blockId)).thenReturn(List.of(existingLevel("L1", 1), existingLevel("B1", -1)));
+        mvc.perform(asOwner(post(floors), range(-1, 1)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.created.length()").value(0))
+                .andExpect(jsonPath("$.skipped").value(org.hamcrest.Matchers.contains("L1", "B1")));
+        verify(repository, never()).create(any(), any(), any());
+    }
+
+    @Test
+    void acceptsFiftyFloorsInOneRequest() throws Exception {
+        createEchoesLevels();
+        // B25 to L25 is 50 floors, because there is no floor 0.
+        mvc.perform(asOwner(post(floors), range(-25, 25)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.created.length()").value(50));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "0, 5, There is no floor 0. B1 sits directly below L1.",
+        "-2, 0, There is no floor 0. B1 sits directly below L1.",
+        "5, 1, The lowest floor must not be above the highest floor.",
+        "1, 51, Add at most 50 floors at a time.",
+        "-25, 26, Add at most 50 floors at a time."
+    })
+    void rejectsRangesThatAreInvalidOrTooLarge(int lowest, int highest, String message) throws Exception {
+        mvc.perform(asOwner(post(floors), range(lowest, highest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(message));
+        verify(repository, never()).create(any(), any(), any());
+    }
+
+    @Test
+    void rejectsAMissingEndOfTheRange() throws Exception {
+        mvc.perform(asOwner(post(floors), range(1, null))).andExpect(status().isBadRequest());
+        verify(repository, never()).create(any(), any(), any());
+    }
+
+    @Test
+    void addsFloorsOnlyToABlock() throws Exception {
+        mvc.perform(asOwner(post(base + "/" + levelId + "/floors"), range(1, 3)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Floors can only be added to a block."));
+        verify(repository, never()).create(any(), any(), any());
+    }
+
+    @Test
+    void rejectsFloorsOnADeactivatedBlockOrInAnInactiveEstate() throws Exception {
+        when(repository.find(blockId, estateId))
+                .thenReturn(Optional.of(
+                        new LocationResponse(blockId, LocationType.BLOCK, null, "Node", null, now, now, now)));
+        mvc.perform(asOwner(post(floors), range(1, 3))).andExpect(status().isConflict());
+
+        when(repository.find(blockId, estateId)).thenReturn(Optional.of(block));
+        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(now)));
+        mvc.perform(asOwner(post(floors), range(1, 3))).andExpect(status().isConflict());
+        verify(repository, never()).create(any(), any(), any());
+    }
+
+    @Test
+    void hidesOtherOwnersEstatesAndUnknownBlocksWhenAddingFloors() throws Exception {
+        mvc.perform(post(floors)
+                        .with(jwt().jwt(t -> t.subject("member")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(range(1, 3)))
+                .andExpect(status().isNotFound());
+        mvc.perform(asOwner(post(base + "/" + UUID.randomUUID() + "/floors"), range(1, 3)))
+                .andExpect(status().isNotFound());
+        verify(repository, never()).create(any(), any(), any());
     }
 }

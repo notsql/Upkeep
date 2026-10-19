@@ -47,7 +47,7 @@ export function useLocations(estateId: string, includeInactive = false) {
 
 /**
  * Nests the flat list the API returns. Sibling order is the server's
- * (levels by position, everything else by name), so it is kept as-is.
+ * (everything but levels by name), except that levels are shown highest first.
  */
 export function buildLocationTree(locations: Location[]): LocationNode[] {
   const children = new Map<string | undefined, Location[]>();
@@ -61,15 +61,64 @@ export function buildLocationTree(locations: Location[]): LocationNode[] {
     }
   }
   const build = (parentId: string | undefined, path: string[]) =>
-    (children.get(parentId) ?? []).map((location): LocationNode => {
-      const nodePath = [...path, location.name];
-      return {
-        ...location,
-        path: nodePath,
-        children: build(location.id, nodePath),
-      };
-    });
+    levelsHighestFirst(children.get(parentId) ?? []).map(
+      (location): LocationNode => {
+        const nodePath = [...path, location.name];
+        return {
+          ...location,
+          path: nodePath,
+          children: build(location.id, nodePath),
+        };
+      }
+    );
   return build(undefined, []);
+}
+
+/**
+ * Levels read top to bottom, like a building: … L2, L1, B1, B2 …. The server
+ * lists them lowest first; other siblings keep the server's order.
+ */
+function levelsHighestFirst(siblings: Location[]): Location[] {
+  const levels = siblings
+    .filter((location) => location.type === "LEVEL")
+    .sort((a, b) => (b.sortOrder ?? 0) - (a.sortOrder ?? 0));
+  const others = siblings.filter((location) => location.type !== "LEVEL");
+  return [...levels, ...others];
+}
+
+/** Floors per bulk request (ID-99). Most condo and HDB blocks have 50 storeys or fewer. */
+export const MAX_FLOORS = 50;
+
+const FLOOR = /^[LB]?\d+$/;
+const FLOOR_LETTER = /^[LB]/;
+
+/** "L25" or "25" is 25, "B2" is -2. Floor 0 and anything else is undefined. */
+export function parseFloor(text: string): number | undefined {
+  const value = text.trim().toUpperCase();
+  if (!FLOOR.test(value)) {
+    return;
+  }
+  const number = Number(value.replace(FLOOR_LETTER, ""));
+  if (number === 0) {
+    return;
+  }
+  return value.startsWith("B") ? -number : number;
+}
+
+/** L1, L2, … above ground; B1, B2, … below. */
+export function floorName(floor: number): string {
+  return floor > 0 ? `L${floor}` : `B${-floor}`;
+}
+
+/** Every floor from highest to lowest, with no floor 0. */
+export function floorRange(lowest: number, highest: number): number[] {
+  const floors: number[] = [];
+  for (let floor = highest; floor >= lowest; floor -= 1) {
+    if (floor !== 0) {
+      floors.push(floor);
+    }
+  }
+  return floors;
 }
 
 function flatten(nodes: LocationNode[]): LocationNode[] {
