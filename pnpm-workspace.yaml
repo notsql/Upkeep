@@ -29,9 +29,13 @@ catalog:
   openapi-typescript: ^7.13.0
   "@workos-inc/node": ^10.14.0
   "@workos/authkit-tanstack-react-start": ^0.11.1
+  "@cloudflare/vite-plugin": ^1.64.0
+  wrangler: ^4.151.1
 minimumReleaseAgeExclude:
   - '@tanstack/history@1.162.2'
   - '@tanstack/router-core@1.171.28'
   - bidi-js@1.1.0
   - tldts-core@7.4.12
   - tldts@7.4.12
+  - miniflare@5.20261012.1-beta
+  - wrangler@4.151.1

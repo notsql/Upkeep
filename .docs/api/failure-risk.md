@@ -2,6 +2,8 @@
 
 Contract: `packages/api/openapi.json`. Both endpoints require bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing estate or asset returns 404; a malformed UUID returns 400 "Invalid failure-risk request.". Read-only: forecasts are derived on every read from asset events and never stored.
 
+A same-estate RESIDENT membership takes precedence over conflicting ownership and returns 403. Residency in another estate does not block an owner. MEMBER/COUNCIL membership or platform-admin authority alone does not grant access. Both GET operations below are explicitly admitted by Spring Security.
+
 ## GET `/estates/{estateId}/assets/{assetId}/failure-risk`
 
 - path `estateId`: uuid (required)

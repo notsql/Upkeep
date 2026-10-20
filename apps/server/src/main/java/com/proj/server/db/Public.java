@@ -11,9 +11,12 @@ import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
+import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 
@@ -75,6 +78,11 @@ public class Public extends SchemaImpl {
     public final Device DEVICE = Device.DEVICE;
 
     /**
+     * The table <code>public.DeviceReading</code>.
+     */
+    public final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
+
+    /**
      * The table <code>public.Estate</code>.
      */
     public final Estate ESTATE = Estate.ESTATE;
@@ -88,6 +96,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.EstateUser</code>.
      */
     public final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
+
+    /**
+     * The table <code>public.IssueReport</code>.
+     */
+    public final Issuereport ISSUEREPORT = Issuereport.ISSUEREPORT;
+
+    /**
+     * The table <code>public.IssueReportImage</code>.
+     */
+    public final Issuereportimage ISSUEREPORTIMAGE = Issuereportimage.ISSUEREPORTIMAGE;
 
     /**
      * The table <code>public.Location</code>.
@@ -122,9 +140,12 @@ public class Public extends SchemaImpl {
             Assetlifecycleevent.ASSETLIFECYCLEEVENT,
             Assetmodel.ASSETMODEL,
             Device.DEVICE,
+            Devicereading.DEVICEREADING,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
             Estateuser.ESTATEUSER,
+            Issuereport.ISSUEREPORT,
+            Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
             Manufacturer.MANUFACTURER
         );

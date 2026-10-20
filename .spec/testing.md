@@ -45,14 +45,14 @@ Clean generated Java output and reset both Nx cache and workspace metadata:
 ```bash
 MAVEN_ARGS=-o pnpm nx run server:clean --skip-nx-cache
 pnpm nx reset
-MAVEN_ARGS=-o UV_NO_SYNC=1 pnpm test
+MAVEN_ARGS=-o pnpm test
 ```
 
 Use the full reset here: `nx reset --onlyCache` left task-cache records behind
 in this installed Nx version. A run reporting success with **No tests to run**
 after cached compilation is not valid regression evidence. Confirm actual
 test reports and current compiled classes. To force all tasks to execute,
-run `MAVEN_ARGS=-o UV_NO_SYNC=1 pnpm test --skip-nx-cache`.
+run `MAVEN_ARGS=-o pnpm test --skip-nx-cache`.
 These commands affect generated artifacts and task metadata, not database data,
 Git changes or dependencies. Docker must still be available for Java tests.
 

@@ -21,7 +21,21 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/* \
   && useradd --system --create-home spring
+
+# Unpack the fat jar into plain jars (no nested-jar unpacking at startup), then
+# record a JDK AOT cache from a training run that stops once the context has
+# refreshed. Both cut Spring's cold start, which matters on Cloud Run where the
+# service scales to zero. The training run never connects to the database:
+# the datasource values below only satisfy property placeholders.
+COPY --from=build /workspace/app.jar /tmp/app.jar
+RUN java -Djarmode=tools -jar /tmp/app.jar extract --destination /app/application \
+  && rm /tmp/app.jar \
+  && SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/training \
+     SPRING_DATASOURCE_USERNAME=training SPRING_DATASOURCE_PASSWORD=training \
+     java -XX:AOTCacheOutput=/app/application/app.aot \
+       -Dspring.context.exit=onRefresh -jar /app/application/app.jar \
+  && chown -R spring /app
+
 USER spring
-COPY --from=build /workspace/app.jar app.jar
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-XX:AOTCache=/app/application/app.aot", "-jar", "/app/application/app.jar"]

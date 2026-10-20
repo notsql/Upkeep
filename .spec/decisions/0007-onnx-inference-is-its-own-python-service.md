@@ -2,7 +2,8 @@
 
 ## Status
 
-Accepted.
+Superseded by [0028](0028-anomaly-model-runs-in-process-in-spring.md). Its
+`ml-research/` boundary carries over there.
 
 ## Context
 

@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/estates/{estateId}/locations")
 @ApiResponses({
     @ApiResponse(
+            responseCode = "403",
+            description = "Resident membership does not grant management access",
+            content = @Content(schema = @Schema(implementation = EstateError.class))),
+    @ApiResponse(
             responseCode = "400",
             description = "Invalid request or hierarchy shape",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
@@ -74,6 +78,17 @@ public class LocationController {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateLocationRequest request) {
         return service.update(estateId, id, owner(jwt), request);
+    }
+
+    @PostMapping("/{blockId}/floors")
+    @ApiResponse(responseCode = "200", description = "Floors added; floors the block already had are listed as skipped")
+    @Operation(operationId = "addFloors", summary = "Add a range of floors (levels) to a block")
+    public AddFloorsResponse addFloors(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID blockId,
+            @Valid @RequestBody AddFloorsRequest request) {
+        return service.addFloors(estateId, blockId, owner(jwt), request);
     }
 
     @PostMapping("/{id}/deactivate")

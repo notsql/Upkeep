@@ -108,7 +108,7 @@ class DeviceControllerTests {
 
     private DeviceRecord device(String identifier, UUID locationId, String... metrics) {
         return new DeviceRecord(
-                deviceId, estateId, assetId, locationId, identifier, "PT-100", metrics, 60, null, now, now);
+                deviceId, estateId, assetId, locationId, identifier, "PT-100", metrics, 60, null, now, now, null, null);
     }
 
     @BeforeEach
@@ -152,7 +152,9 @@ class DeviceControllerTests {
                     request.reportingIntervalSeconds(),
                     null,
                     now,
-                    now);
+                    now,
+                    null,
+                    null);
         });
     }
 

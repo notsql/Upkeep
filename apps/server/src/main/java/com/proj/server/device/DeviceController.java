@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/estates/{estateId}/assets/{assetId}/devices")
 @ApiResponses({
     @ApiResponse(
+            responseCode = "403",
+            description = "Resident membership does not grant management access",
+            content = @Content(schema = @Schema(implementation = EstateError.class))),
+    @ApiResponse(
             responseCode = "400",
             description = "Missing or invalid details, or an unsupported metric",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
@@ -27,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "404",
-            description = "Estate, asset or location not found",
+            description = "Estate, asset, location or device not found",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "409",
@@ -59,6 +63,20 @@ public class DeviceController {
             @PathVariable UUID assetId,
             @Valid @RequestBody CreateDeviceRequest request) {
         return service.register(estateId, assetId, owner(jwt), request);
+    }
+
+    @PostMapping("/{deviceId}/credential")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponse(
+            responseCode = "201",
+            description = "New API key, shown only this once. Replaces and revokes any earlier key.")
+    @Operation(operationId = "issueDeviceCredential")
+    public DeviceCredentialResponse issueCredential(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID assetId,
+            @PathVariable UUID deviceId) {
+        return service.issueCredential(estateId, assetId, deviceId, owner(jwt));
     }
 
     private static String owner(Jwt jwt) {

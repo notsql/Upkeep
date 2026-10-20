@@ -115,6 +115,15 @@
           }
         ],
         "responses": {
+          "204": { "description": "User added" },
+          "409": {
+            "description": "Resident membership requires explicit conversion",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -132,8 +141,7 @@
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
-          },
-          "204": { "description": "User added" }
+          }
         }
       },
       "delete": {
@@ -155,6 +163,15 @@
           }
         ],
         "responses": {
+          "204": { "description": "User removed" },
+          "409": {
+            "description": "Resident membership cannot be removed through management grants",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -172,8 +189,7 @@
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
-          },
-          "204": { "description": "User removed" }
+          }
         }
       }
     },
@@ -233,6 +249,127 @@
         }
       }
     },
+    "/resident/reports": {
+      "get": {
+        "tags": ["resident-report-controller"],
+        "operationId": "listResidentReports",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own report history",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueReportPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["resident-report-controller"],
+        "operationId": "createResidentReport",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIssueReportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Report submitted",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueReportDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid title, description, image or location",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Active resident membership required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "413": {
+            "description": "Upload too large",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported image type",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Image storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates": {
       "get": {
         "tags": ["estate-controller"],
@@ -251,6 +388,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -308,6 +453,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -374,6 +527,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -437,6 +598,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or hierarchy shape",
             "content": {
@@ -502,6 +671,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or hierarchy shape",
             "content": {
@@ -564,6 +741,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or hierarchy shape",
             "content": {
@@ -601,6 +786,77 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/LocationResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/locations/{blockId}/floors": {
+      "post": {
+        "tags": ["location-controller"],
+        "summary": "Add a range of floors (levels) to a block",
+        "operationId": "addFloors",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "blockId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AddFloorsRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or hierarchy shape",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or location not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate name or level position, inactive estate or location, or active children",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Floors added; floors the block already had are listed as skipped",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AddFloorsResponse" }
               }
             }
           }
@@ -832,6 +1088,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -897,6 +1161,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -967,6 +1239,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -1039,6 +1319,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -1316,6 +1604,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Missing or invalid details, or an unsupported metric",
             "content": {
@@ -1333,7 +1629,7 @@
             }
           },
           "404": {
-            "description": "Estate, asset or location not found",
+            "description": "Estate, asset, location or device not found",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1387,6 +1683,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Missing or invalid details, or an unsupported metric",
             "content": {
@@ -1404,7 +1708,7 @@
             }
           },
           "404": {
-            "description": "Estate, asset or location not found",
+            "description": "Estate, asset, location or device not found",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1430,6 +1734,76 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
+      "post": {
+        "tags": ["device-controller"],
+        "operationId": "issueDeviceCredential",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Missing or invalid details, or an unsupported metric",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset, location or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "New API key, shown only this once. Replaces and revokes any earlier key.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCredentialResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/assessments": {
       "get": {
         "tags": ["asset-assessment-controller"],
@@ -1449,6 +1823,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Missing or invalid details, or a date in the future",
             "content": {
@@ -1524,6 +1906,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Missing or invalid details, or a date in the future",
             "content": {
@@ -1563,6 +1953,62 @@
                 "schema": {
                   "$ref": "#/components/schemas/AssetAssessmentResponse"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-api/readings": {
+      "post": {
+        "tags": ["device-reading-controller"],
+        "operationId": "submitReading",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateReadingRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Reading stored",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ReadingResponse" }
+              }
+            }
+          },
+          "200": {
+            "description": "An identical reading was already stored; nothing changed and it is returned",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ReadingResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed reading; the message names the field and the problem",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, unknown or replaced device key",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           }
@@ -1738,6 +2184,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -1800,6 +2254,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request",
             "content": {
@@ -1870,6 +2332,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or hierarchy shape",
             "content": {
@@ -1932,6 +2402,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -2000,6 +2478,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -2072,6 +2558,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -2109,6 +2603,177 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/AssetResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resident/reports/{reportId}": {
+      "get": {
+        "tags": ["resident-report-controller"],
+        "operationId": "getResidentReport",
+        "parameters": [
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Own report details",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueReportDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Report not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resident/reports/{reportId}/images/{imageId}": {
+      "get": {
+        "tags": ["resident-report-controller"],
+        "operationId": "getResidentReportImage",
+        "parameters": [
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "image/jpeg": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/png": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Report image not found",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Image storage unavailable",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resident/locations": {
+      "get": {
+        "tags": ["resident-report-controller"],
+        "operationId": "residentLocations",
+        "responses": {
+          "200": {
+            "description": "Active locations in the assigned estate",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ResidentLocationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resident/context": {
+      "get": {
+        "tags": ["resident-report-controller"],
+        "operationId": "residentContext",
+        "responses": {
+          "200": {
+            "description": "Assigned resident estate",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResidentContextResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           }
@@ -2380,6 +3045,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or wrong confirmation reference",
             "content": {
@@ -2734,6 +3407,38 @@
         }
       }
     },
+    "/access/context": {
+      "get": {
+        "tags": ["access-controller"],
+        "operationId": "getAppAccess",
+        "responses": {
+          "200": {
+            "description": "Current caller's independent estate capabilities",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AppAccessResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Access lookup unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}": {
       "delete": {
         "tags": ["council-controller"],
@@ -2916,6 +3621,63 @@
         "properties": { "message": { "type": "string" } },
         "required": ["message"]
       },
+      "CreateIssueReportRequest": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "maxLength": 50, "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 },
+          "locationId": { "type": "string", "format": "uuid" },
+          "images": {
+            "type": "array",
+            "items": { "type": "string", "format": "binary" }
+          }
+        },
+        "required": ["description", "locationId", "title"]
+      },
+      "IssueReportDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "maxLength": 150, "minLength": 1 },
+          "description": { "type": "string" },
+          "estateName": { "type": "string" },
+          "location": { "$ref": "#/components/schemas/ReportLocation" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "images": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportImage" }
+          }
+        },
+        "required": [
+          "createdAt",
+          "description",
+          "estateName",
+          "id",
+          "images",
+          "location",
+          "status",
+          "title",
+          "updatedAt"
+        ]
+      },
+      "ReportImage": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "contentType": { "type": "string" }
+        },
+        "required": ["contentType", "id"]
+      },
+      "ReportLocation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "label": { "type": "string" }
+        },
+        "required": ["id", "label"]
+      },
       "EstateRequest": {
         "type": "object",
         "properties": {
@@ -2997,6 +3759,38 @@
           "deactivatedAt": { "type": ["string", "null"], "format": "date-time" }
         },
         "required": ["createdAt", "id", "name", "type", "updatedAt"]
+      },
+      "AddFloorsRequest": {
+        "type": "object",
+        "properties": {
+          "lowestFloor": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The lowest floor: negative for basements (B2 = -2), never 0"
+          },
+          "highestFloor": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The highest floor: L25 = 25, never 0"
+          }
+        },
+        "required": ["highestFloor", "lowestFloor"]
+      },
+      "AddFloorsResponse": {
+        "type": "object",
+        "properties": {
+          "created": {
+            "type": "array",
+            "description": "The levels created, highest floor first",
+            "items": { "$ref": "#/components/schemas/LocationResponse" }
+          },
+          "skipped": {
+            "type": "array",
+            "description": "Names of floors the block already had, highest first",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["created", "skipped"]
       },
       "CouncilInvitationRequest": {
         "type": "object",
@@ -3303,6 +4097,11 @@
             "format": "date-time",
             "description": "When the device last sent a valid reading. Null until its first."
           },
+          "credentialIssuedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device's current API key was issued. Null if it has none."
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
@@ -3318,6 +4117,18 @@
           "reportingIntervalSeconds",
           "updatedAt"
         ]
+      },
+      "DeviceCredentialResponse": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "format": "uuid" },
+          "apiKey": {
+            "type": "string",
+            "description": "The device's API key. Returned only here, once; it is never stored or shown again."
+          },
+          "issuedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["apiKey", "deviceId", "issuedAt"]
       },
       "CreateAssetAssessmentRequest": {
         "type": "object",
@@ -3357,6 +4168,92 @@
           "notes",
           "recordedAt",
           "recordedByUserId"
+        ]
+      },
+      "CreateReadingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "A JSON number, at most 12 digits before the decimal point. Rounded half-up to 6 decimal places. Strings are not converted.",
+            "example": 21.5
+          },
+          "unit": {
+            "type": "string",
+            "description": "Exactly the catalogue unit for the metric",
+            "example": "°C"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO-8601 with a UTC offset, at most 5 minutes after the server's time",
+            "example": "2026-10-17T14:30:00+08:00"
+          }
+        },
+        "required": ["measuredAt", "metric", "unit", "value"]
+      },
+      "ReadingResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "deviceId": { "type": "string", "format": "uuid" },
+          "assetId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The device's asset when the reading arrived"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "As stored: rounded to 6 decimal places"
+          },
+          "unit": { "type": "string" },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "In UTC"
+          },
+          "receivedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the server first stored the reading. A retry returns the original time."
+          }
+        },
+        "required": [
+          "assetId",
+          "deviceId",
+          "id",
+          "measuredAt",
+          "metric",
+          "receivedAt",
+          "unit",
+          "value"
         ]
       },
       "AcceptedInvitationsResponse": {
@@ -3411,6 +4308,74 @@
           }
         },
         "required": ["expectedVersion", "retiredOn", "retirementReason"]
+      },
+      "IssueReportPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueReportSummaryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
+      },
+      "IssueReportSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "maxLength": 150, "minLength": 1 },
+          "description": { "type": "string" },
+          "estateName": { "type": "string" },
+          "location": { "$ref": "#/components/schemas/ReportLocation" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "createdAt",
+          "description",
+          "estateName",
+          "id",
+          "location",
+          "status",
+          "title",
+          "updatedAt"
+        ]
+      },
+      "ResidentLocationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": { "type": "string" },
+          "name": { "type": "string" },
+          "parentId": { "type": ["string", "null"], "format": "uuid" },
+          "sortOrder": { "type": ["integer", "null"], "format": "int32" }
+        },
+        "required": ["id", "name", "parentId", "sortOrder", "type"]
+      },
+      "EstateLabel": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" }
+        },
+        "required": ["id", "name"]
+      },
+      "ResidentContextResponse": {
+        "type": "object",
+        "properties": {
+          "estate": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/EstateLabel" },
+              { "type": "null" }
+            ]
+          },
+          "canSubmit": { "type": "boolean" }
+        },
+        "required": ["canSubmit", "estate"]
       },
       "ManufacturerResponse": {
         "type": "object",
@@ -3626,9 +4591,22 @@
           "code": { "type": "string" },
           "active": { "type": "boolean" },
           "owner": { "type": "boolean" },
-          "granted": { "type": "boolean" }
+          "granted": { "type": "boolean" },
+          "membershipRole": {
+            "type": ["string", "null"],
+            "enum": ["MEMBER", "COUNCIL", "RESIDENT"]
+          },
+          "canManageGrant": { "type": "boolean" }
         },
-        "required": ["active", "code", "estateId", "granted", "name", "owner"]
+        "required": [
+          "active",
+          "canManageGrant",
+          "code",
+          "estateId",
+          "granted",
+          "name",
+          "owner"
+        ]
       },
       "Role": {
         "type": "object",
@@ -3657,6 +4635,59 @@
           "id": { "type": "string" },
           "name": { "type": "string" }
         }
+      },
+      "AppAccessResponse": {
+        "type": "object",
+        "properties": {
+          "canEnterWorkspace": { "type": "boolean" },
+          "canCreateEstate": { "type": "boolean" },
+          "canAccessPlatformAdmin": { "type": "boolean" },
+          "hasResidentMembership": { "type": "boolean" },
+          "canSubmitReport": { "type": "boolean" },
+          "residentEstate": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/EstateLabel" },
+              { "type": "null" }
+            ]
+          },
+          "estates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EstateAccessResponse" }
+          }
+        },
+        "required": [
+          "canAccessPlatformAdmin",
+          "canCreateEstate",
+          "canEnterWorkspace",
+          "canSubmitReport",
+          "estates",
+          "hasResidentMembership",
+          "residentEstate"
+        ]
+      },
+      "EstateAccessResponse": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "role": {
+            "type": "string",
+            "enum": ["OWNER", "MEMBER", "COUNCIL", "RESIDENT"]
+          },
+          "canViewManagement": { "type": "boolean" },
+          "canManageEstate": { "type": "boolean" },
+          "canViewAssets": { "type": "boolean" },
+          "canInviteMembers": { "type": "boolean" },
+          "canManageInvitationPermissions": { "type": "boolean" }
+        },
+        "required": [
+          "canInviteMembers",
+          "canManageEstate",
+          "canManageInvitationPermissions",
+          "canViewAssets",
+          "canViewManagement",
+          "estateId",
+          "role"
+        ]
       }
     },
     "securitySchemes": {

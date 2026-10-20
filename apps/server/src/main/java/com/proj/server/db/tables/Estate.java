@@ -13,6 +13,7 @@ import com.proj.server.db.tables.Assetevent.AsseteventPath;
 import com.proj.server.db.tables.Device.DevicePath;
 import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
 import com.proj.server.db.tables.Estateuser.EstateuserPath;
+import com.proj.server.db.tables.Issuereport.IssuereportPath;
 import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
@@ -269,6 +270,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _estateuser = new EstateuserPath(this, null, Keys.ESTATEUSER__ESTATEUSER_ESTATEID_FKEY.getInverseKey());
 
         return _estateuser;
+    }
+
+    private transient IssuereportPath _issuereport;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.IssueReport</code>
+     * table
+     */
+    public IssuereportPath issuereport() {
+        if (_issuereport == null)
+            _issuereport = new IssuereportPath(this, null, Keys.ISSUEREPORT__ISSUEREPORT_ESTATEID_FKEY.getInverseKey());
+
+        return _issuereport;
     }
 
     private transient LocationPath _location;

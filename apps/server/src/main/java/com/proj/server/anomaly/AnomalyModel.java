@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  * Constants copied from ml-research/artifacts/pump-anomaly-platform/metrics.json. They must change together
- * with apps/ml/models/model.onnx.
+ * with apps/server/src/main/resources/anomaly/model.onnx.
  */
 public final class AnomalyModel {
     public static final List<String> FEATURE_ORDER = List.of(

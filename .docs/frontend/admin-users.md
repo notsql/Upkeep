@@ -41,12 +41,9 @@ Response fields used: organization `id`, `name`; member `membershipId`,
 `userId`, `name`, `email`, `joined`, `roleSlugs`; role `slug`, `name`; estate
 access `estateId`, `name`, `code`, `owner`, `granted`, `active`.
 
-Load and estate-access errors use fixed strings ("Unable to load organizations",
-"Unable to load members", "Unable to load roles", "Unable to load estate
-access", "Unable to update estate access"), not `estateError`. Role updates use
-"Unable to update role" except for the two documented 409 safeguards, which
-append the typed `AdminError.message`: "Estate must have at least 1 admin." or
-"You cannot remove your own admin role." Unknown responses remain generic.
+Error messages are fixed strings ("Unable to load organizations", "Unable to
+load members", "Unable to load roles", "Unable to update role", "Unable to load
+estate access", "Unable to update estate access"), not `estateError`.
 
 ## Dashboard presentation
 
@@ -60,7 +57,4 @@ search, role selection and estate-access controls keep their current endpoints
 and restrictions. Shared colors, theme switch and responsive layout follow
 [design-system.md](design-system.md).
 
-Role updates prevent an authenticated admin from removing their own `admin`
-role and preserve at least one active WorkOS organization admin. The mutation
-alert displays the matching safe 409 reason after "Unable to update role:". See
-[role update guard](../api/admin-roles.md).
+Resident rows have `membershipRole = RESIDENT`, `granted = false` and `canManageGrant = false`. `MemberEstates` labels these as Resident assignment (read-only) and disables their checkboxes. Other estate grants remain editable. A generic PUT/DELETE targeting a resident row returns 409. This UI does not provision, remove or convert resident memberships. The generated contract includes `membershipRole` and `canManageGrant`; see [API access](../api/access.md).

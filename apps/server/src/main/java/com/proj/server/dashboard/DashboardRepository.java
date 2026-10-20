@@ -19,14 +19,15 @@ public class DashboardRepository {
                 with accessible as (
                     select e.*, e."ownerUserId"=? owned
                     from "Estate" e
-                    where e."ownerUserId"=? or exists (
-                        select 1 from "EstateUser" u where u."estateId"=e.id and u."userId"=?
-                    )
+                    where not exists (select 1 from "EstateUser" r where r."estateId"=e.id and r."userId"=? and r.role='RESIDENT')
+                      and (e."ownerUserId"=? or exists (
+                        select 1 from "EstateUser" u where u."estateId"=e.id and u."userId"=? and u.role in ('MEMBER', 'COUNCIL')
+                    ))
                 )
                 select e.id, e.name, e.code, e.owned, e."deactivatedAt" is null active,
                     (select count(distinct m."userId") from "EstateUser" m
                         join accessible o on o.id=m."estateId"
-                        where o.owned and o."deactivatedAt" is null and m."userId"<>?) members,
+                        where o.owned and o."deactivatedAt" is null and m."userId"<>? and m.role in ('MEMBER', 'COUNCIL')) members,
                     count(a.id) total,
                     count(a.id) filter (where c.condition='GOOD') good,
                     count(a.id) filter (where c.condition='NEEDS_ATTENTION') attention,
@@ -40,7 +41,7 @@ public class DashboardRepository {
                     order by "assessedOn" desc, "createdAt" desc, id limit 1
                 ) c on true
                 group by e.id, e.name, e.code, e.owned, e."deactivatedAt"
-                """, user, user, user, user).fetch();
+                """, user, user, user, user, user).fetch();
         var estates = rows.map(row -> new EstateCounts(
                 row.get("id", UUID.class),
                 row.get("name", String.class),

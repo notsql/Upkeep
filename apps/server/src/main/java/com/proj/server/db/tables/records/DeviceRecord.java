@@ -175,6 +175,34 @@ public class DeviceRecord extends UpdatableRecordImpl<DeviceRecord> {
         return (OffsetDateTime) get(10);
     }
 
+    /**
+     * Setter for <code>public.Device.credentialHash</code>.
+     */
+    public void setCredentialhash(String value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.Device.credentialHash</code>.
+     */
+    public String getCredentialhash() {
+        return (String) get(11);
+    }
+
+    /**
+     * Setter for <code>public.Device.credentialIssuedAt</code>.
+     */
+    public void setCredentialissuedat(OffsetDateTime value) {
+        set(12, value);
+    }
+
+    /**
+     * Getter for <code>public.Device.credentialIssuedAt</code>.
+     */
+    public OffsetDateTime getCredentialissuedat() {
+        return (OffsetDateTime) get(12);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -198,7 +226,7 @@ public class DeviceRecord extends UpdatableRecordImpl<DeviceRecord> {
     /**
      * Create a detached, initialised DeviceRecord
      */
-    public DeviceRecord(UUID id, UUID estateid, UUID assetid, UUID locationid, String identifier, String model, String[] metrics, Integer reportingintervalseconds, OffsetDateTime lastseenat, OffsetDateTime createdat, OffsetDateTime updatedat) {
+    public DeviceRecord(UUID id, UUID estateid, UUID assetid, UUID locationid, String identifier, String model, String[] metrics, Integer reportingintervalseconds, OffsetDateTime lastseenat, OffsetDateTime createdat, OffsetDateTime updatedat, String credentialhash, OffsetDateTime credentialissuedat) {
         super(Device.DEVICE);
 
         setId(id);
@@ -212,6 +240,8 @@ public class DeviceRecord extends UpdatableRecordImpl<DeviceRecord> {
         setLastseenat(lastseenat);
         setCreatedat(createdat);
         setUpdatedat(updatedat);
+        setCredentialhash(credentialhash);
+        setCredentialissuedat(credentialissuedat);
         resetTouchedOnNotNull();
     }
 }

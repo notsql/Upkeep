@@ -24,6 +24,7 @@ and uses the same Sign in wording as the home action.
 Public Home uses `useHealth()` from `lib/health.ts`: key `["health"]`,
 `GET /health`, real `ok`/`database` availability with loading/error feedback.
 Signed-in Home mounts the portfolio dashboard described in [dashboard.md](dashboard.md).
+Home awaits Spring access in `beforeLoad`. Resident-only accounts redirect to `/reports/new`; unassigned accounts see an awaiting-assignment explanation. Mixed accounts retain their management dashboard. Direct `HomePage` rendering waits for access before mounting management queries. Navigation uses target-estate capabilities and shows My reports only with a current Resident membership.
 It uses the authenticated summary endpoint and a separate compact invitation
 query. Estate browsing, creation and invitation acceptance remain on Estates.
 Public auth remains Sign in/Create account.
@@ -38,20 +39,11 @@ existing auth controls. Authenticated workspace navigation lives in AppNavigatio
 
 `components/app-navigation.tsx` subscribes to the router pathname rather than
 the whole location and uses the session-gated, cached `useEstate(estateId)` query.
-Desktop destinations are Home and Estates, plus Admin users for
-`role === "admin"`. Account is reached through Settings in the top-right
-profile menu, rather than a sidebar item. On estate routes,
-Overview appears, with Locations as a section of that screen rather than a
-separate destination; Assets requires `owned`; Council
-requires `canInviteMembers || canManageInvitationPermissions`. This preserves
-current server permissions. `/estates/new` has no estate context.
+The access projection enables Home and Estates for management-capable accounts and Admin users for platform admins. Resident-only accounts see Report a fault, My reports and Sign out; unassigned accounts see Report a fault and Sign out. Mixed accounts see reporting and management links together. My reports is hidden without a current Resident membership, including in mobile More; existing owned history remains readable by direct URL after membership deletion. Account is reached through Settings in the profile menu.
 
-Desktop navigation is a 240px fixed sidebar at widths >=768px. Below 768px,
-the bottom app bar always exposes Home / Estates / More. More is a shadcn
-DropdownMenu with Settings and admin-only Admin users. Estate pages additionally
-show a mobile `EstateNavigation` section with the estate switcher above Overview /
-permitted Assets / Council links inside the workspace content. These are routed
-links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
+Target-estate capabilities control Overview, Assets and Council. The estate detail query and switcher mount only after the projection grants management access to that estate. Assets requires `canViewAssets`; Council requires `canInviteMembers || canManageInvitationPermissions`. `/estates/new` has no estate context.
+
+Desktop navigation is a 240px sidebar at widths >=768px. Management-capable accounts get mobile Home / Estates / More, with reporting links in More; resident-only/unassigned accounts get the reporting links directly. EstateNavigation shows the authorized estate switcher and local destinations. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
 has no estate selector. Context comes from the route, named breadcrumbs, headings
 and desktop sidebar. The obsolete header `EstateSwitcher` and its remembered-estate
 storage logic remain removed. Navigation links use exact router matching

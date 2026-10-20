@@ -1,10 +1,14 @@
 package com.proj.server.config;
 
+import com.proj.server.access.AccessService;
 import java.util.List;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -44,7 +48,7 @@ public class SecurityConfig {
     private String issuer;
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, ObjectProvider<AccessService> access) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
@@ -59,10 +63,89 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll()
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/resident/context",
+                                "/resident/locations",
+                                "/resident/reports",
+                                "/resident/reports/{reportId}",
+                                "/resident/reports/{reportId}/images/{imageId}")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.POST, "/resident/reports")
+                        .authenticated()
+                        .requestMatchers("/resident/**")
+                        .denyAll()
                         .requestMatchers("/users", "/users/**", "/api/admin/users", "/api/admin/users/**")
                         .hasRole("admin")
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/access/context",
+                                "/asset-categories",
+                                "/manufacturers",
+                                "/manufacturers/{manufacturerId}/models",
+                                "/estates",
+                                "/dashboard/summary",
+                                "/council-invitations",
+                                "/estates/{estateId}",
+                                "/estates/{estateId}/locations",
+                                "/estates/{estateId}/assets",
+                                "/estates/{estateId}/assets/{id}",
+                                "/estates/{estateId}/assets/{id}/lifecycle-events",
+                                "/estates/{estateId}/assets/{assetId}/devices",
+                                "/estates/{estateId}/assets/{assetId}/assessments",
+                                "/estates/{estateId}/assets/{assetId}/events",
+                                "/estates/{estateId}/assets/{assetId}/failure-risk",
+                                "/estates/{estateId}/failure-risk",
+                                "/estates/{estateId}/members",
+                                "/estates/{estateId}/council-invitations")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.POST, "/estates")
+                        .access((authentication, context) -> {
+                            var principal = authentication.get();
+                            boolean admin = principal.getAuthorities().stream()
+                                    .anyMatch(authority ->
+                                            authority.getAuthority().equals("ROLE_admin"));
+                            var resolver = access.getIfAvailable();
+                            boolean allowed = principal.isAuthenticated()
+                                    && !(principal instanceof AnonymousAuthenticationToken)
+                                    && resolver != null
+                                    && resolver.context(principal.getName(), admin)
+                                            .canCreateEstate();
+                            return new AuthorizationDecision(allowed);
+                        })
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                "/council-invitations/accept",
+                                "/council-invitations/{invitationId}/accept",
+                                "/estates/{estateId}/deactivate",
+                                "/estates/{estateId}/locations",
+                                "/estates/{estateId}/locations/{id}/deactivate",
+                                "/estates/{estateId}/assets",
+                                "/estates/{estateId}/assets/{id}/deactivate",
+                                "/estates/{estateId}/assets/{id}/restore",
+                                "/estates/{estateId}/assets/{assetId}/devices",
+                                "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential",
+                                "/estates/{estateId}/assets/{assetId}/assessments",
+                                "/estates/{estateId}/assets/{assetId}/events",
+                                "/estates/{estateId}/assets/{assetId}/readings/anomaly-check",
+                                "/estates/{estateId}/council-invitations")
+                        .authenticated()
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/estates/{estateId}",
+                                "/estates/{estateId}/locations/{id}",
+                                "/estates/{estateId}/assets/{id}",
+                                "/estates/{estateId}/assets/{id}/retirement")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/members/{userId}/invitation-permission")
+                        .authenticated()
+                        .requestMatchers(
+                                HttpMethod.DELETE,
+                                "/estates/{estateId}/members/{userId}",
+                                "/estates/{estateId}/council-invitations/{invitationId}")
+                        .authenticated()
                         .anyRequest()
-                        .authenticated())
+                        .denyAll())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(roleConverter())));
         return http.build();
     }

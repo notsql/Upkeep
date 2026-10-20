@@ -11,9 +11,12 @@ import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
+import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 
@@ -60,6 +63,11 @@ public class Tables {
     public static final Device DEVICE = Device.DEVICE;
 
     /**
+     * The table <code>public.DeviceReading</code>.
+     */
+    public static final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
+
+    /**
      * The table <code>public.Estate</code>.
      */
     public static final Estate ESTATE = Estate.ESTATE;
@@ -73,6 +81,16 @@ public class Tables {
      * The table <code>public.EstateUser</code>.
      */
     public static final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
+
+    /**
+     * The table <code>public.IssueReport</code>.
+     */
+    public static final Issuereport ISSUEREPORT = Issuereport.ISSUEREPORT;
+
+    /**
+     * The table <code>public.IssueReportImage</code>.
+     */
+    public static final Issuereportimage ISSUEREPORTIMAGE = Issuereportimage.ISSUEREPORTIMAGE;
 
     /**
      * The table <code>public.Location</code>.

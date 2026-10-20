@@ -25,8 +25,8 @@ model Estate {
   devices       Device[]
   assessments   AssetAssessment[]
   invitations   EstateInvitation[]
+  issueReports  IssueReport[]
   events        AssetEvent[]
-  readings      Reading[]
 
   @@index([ownerUserId])
 }
@@ -50,11 +50,12 @@ model Location {
   updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
   deactivatedAt DateTime? @db.Timestamptz(6)
 
-  estate   Estate     @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  parent   Location?  @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
-  children Location[] @relation("LocationTree")
-  assets   Asset[]
-  devices  Device[]
+  estate       Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  parent       Location?     @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
+  children     Location[]    @relation("LocationTree")
+  assets       Asset[]
+  devices      Device[]
+  issueReports IssueReport[]
 
   @@unique([id, type, estateId])
   @@unique([id, estateId])
@@ -75,6 +76,38 @@ model EstateUser {
 
   @@id([estateId, userId])
   @@index([userId])
+}
+
+model IssueReport {
+  id                String   @id @default(uuid()) @db.Uuid
+  submittedByUserId String   @db.VarChar(255)
+  estateId          String   @db.Uuid
+  locationId        String   @db.Uuid
+  title             String   @db.VarChar(150)
+  description       String   @db.VarChar(2500)
+  status            String   @default("SUBMITTED") @db.VarChar(20)
+  createdAt         DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @db.Timestamptz(6)
+
+  estate   Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  images   IssueReportImage[]
+
+  @@index([submittedByUserId, createdAt, id])
+  @@index([estateId])
+}
+
+model IssueReportImage {
+  id          String   @id @default(uuid()) @db.Uuid
+  reportId    String   @db.Uuid
+  storageKey  String   @unique @db.VarChar(500)
+  contentType String   @db.VarChar(50)
+  sizeBytes   Int
+  createdAt   DateTime @default(now()) @db.Timestamptz(6)
+
+  report IssueReport @relation(fields: [reportId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([reportId])
 }
 
 // A piece of equipment in an estate. `reference` is assigned by the server as
@@ -107,9 +140,9 @@ model Asset {
   manufacturer  Manufacturer?     @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   model         AssetModel?       @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
   devices       Device[]
+  readings      DeviceReading[]
   assessments   AssetAssessment[]
   events        AssetEvent[]
-  readings      Reading[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -198,39 +231,43 @@ model Device {
   metrics                  String[]  @db.VarChar(30)
   reportingIntervalSeconds Int
   lastSeenAt               DateTime? @db.Timestamptz(6)
+  // SHA-256 hex of the device's API key; the key itself is never stored (decision 0025).
+  credentialHash           String?   @unique @db.Char(64)
+  credentialIssuedAt       DateTime? @db.Timestamptz(6)
   createdAt                DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt                DateTime  @updatedAt @db.Timestamptz(6)
 
-  estate   Estate   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  asset    Asset    @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  location Location @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  readings Reading[]
+  estate   Estate          @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset    Asset           @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  location Location        @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  readings DeviceReading[]
 
+  @@unique([id, estateId])
   @@index([estateId])
   @@index([assetId])
   @@index([locationId])
 }
 
-// One measured value of one metric on an asset. Append-only: no updatedAt.
-// `deviceId` null means a manual reading. `metric` is a catalogue name, as in
-// Device.metrics. There is deliberately no unique on (assetId, metric,
-// recordedAt): duplicates must be storable so they can be flagged.
-model Reading {
+// One measurement a device submitted (ID-43). Append-only: no updatedAt. A
+// reading is identified by device, metric and `measuredAt` (decision 0028), so
+// a retry cannot store it twice. `assetId` is the device's asset when the
+// reading arrived. There is no unit column: the metric fixes it (decision 0016).
+// The composite foreign keys carry `estateId`, so Postgres rejects a reading
+// whose device or asset belongs to another estate.
+model DeviceReading {
   id         String   @id @default(uuid()) @db.Uuid
+  deviceId   String   @db.Uuid
   estateId   String   @db.Uuid
   assetId    String   @db.Uuid
-  deviceId   String?  @db.Uuid
   metric     String   @db.VarChar(30)
-  recordedAt DateTime @db.Timestamptz(6)
-  value      Float
-  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+  value      Decimal  @db.Decimal(18, 6)
+  measuredAt DateTime @db.Timestamptz(6)
+  receivedAt DateTime @db.Timestamptz(6)
 
-  estate Estate  @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  asset  Asset   @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  device Device? @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  device Device @relation(fields: [deviceId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  asset  Asset  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
-  @@index([assetId, metric, recordedAt])
-  @@index([estateId])
+  @@unique([deviceId, metric, measuredAt])
 }
 
 // One condition assessment of an asset (decision 0017). Append-only: rows are

@@ -31,6 +31,9 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [management-endpoint-security-regression.md](features/management-endpoint-security-regression.md) | - | built; explicit endpoint authorization and regression tests verified |
+| [resident-fault-reporting.md](features/resident-fault-reporting.md) | - | draft; awaiting agreement |
+| [resident-estate-user-authorization.md](features/resident-estate-user-authorization.md) | - | draft pivot plan; policy decisions resolved, implementation pending |
 | [manager-account-authorization.md](features/manager-account-authorization.md) | ID-21 | invitations verified; broader estate roles are follow-up |
 | `estate-management.md` | - | built |
 | `location-hierarchy.md` | - | built |
@@ -38,6 +41,7 @@ code, it belongs here.
 | `asset-location-picker.md` | ID-54 | draft |
 | `asset-search.md` | ID-47 | draft |
 | `failure-risk.md` | ID-32 | draft |
+| [suspect-readings.md](features/suspect-readings.md) | ID-67 | draft; awaiting review |
 | [ui-redesign.md](features/ui-redesign.md) | ID-93 | implemented; current iteration accepted by user; Git merge/PR review pending |
 | [portfolio-home-and-estate-directory.md](features/portfolio-home-and-estate-directory.md) | ID-93 follow-up | implemented; current iteration accepted by user; Git merge/PR review pending |
 

@@ -1,0 +1,61 @@
+name: PR checks
+
+on:
+  # feat/* -> dev -> main: both hops are checked.
+  pull_request:
+    branches: [dev, main]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: Build, type-check, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    # No database and no migrations: CI runs on unmerged branches, and Neon is
+    # migrated only by pushes to dev/main. Context tests start their own
+    # Postgres via Testcontainers (Docker is on the runner) and replay the
+    # migration SQL into it (0019). jOOQ classes are committed, so the build
+    # needs no database either.
+    env:
+      # WorkOS vars are deliberately unset: JWT validation stays off in CI.
+      NX_NO_CLOUD: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # Version comes from "packageManager" in the root package.json.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: lts/*
+          cache: pnpm
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Fails on unformatted or unlinted code; run `pnpm fix` locally and commit.
+      - name: check
+        run: pnpm check
+
+      - name: check-types
+        run: pnpm check-types
+
+      - name: test
+        run: pnpm test
+
+      - name: build
+        run: pnpm build

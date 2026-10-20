@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { Building2, Layers, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { useAppAccess } from "@/lib/access";
 import { useHealth } from "@/lib/health";
 import { WorkspaceHome } from "@/routes/-components/workspace-home";
 
@@ -41,7 +42,41 @@ function SystemStatus() {
 }
 export function HomePage() {
   const { user, loading } = useAuth();
-  if (user && !loading) {
+  const access = useAppAccess();
+  if (user && !loading && access.isPending) {
+    return (
+      <main className="page-layout">
+        <p role="status">Loading your access…</p>
+      </main>
+    );
+  }
+  if (user && !loading && access.isError) {
+    return (
+      <main className="page-layout">
+        <Alert role="alert" variant="destructive">
+          <AlertDescription>{access.error.message}</AlertDescription>
+        </Alert>
+      </main>
+    );
+  }
+  if (user && !loading && access.data && !access.data.canEnterWorkspace) {
+    return (
+      <main className="page-layout">
+        <PageHeader
+          description={
+            access.data.canSubmitReport
+              ? "Report an issue in your assigned estate."
+              : "You have no estate assigned. Awaiting assignment by your estate manager."
+          }
+          title="Report a fault"
+        />
+        <Link className={buttonVariants()} to="/reports/new">
+          Report a fault
+        </Link>
+      </main>
+    );
+  }
+  if (user && !loading && access.data?.canEnterWorkspace) {
     return <WorkspaceHome />;
   }
   return (

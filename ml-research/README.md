@@ -1,6 +1,6 @@
 # ml-research
 
-Where the ML work happens before it becomes a service: data exploration,
+Where the ML work happens before it ships in the API: data exploration,
 training, evaluation, and exporting a model to ONNX.
 
 This folder is deliberately **outside** `apps/` and `packages/`. Those are
@@ -13,23 +13,24 @@ experiment must never be able to break the build.
 
 ```
 ml-research/       experiments, training, evaluation   ->  produces model.onnx
-apps/ml/           serves exactly one model            ->  consumes model.onnx
+apps/server/       runs exactly one model in process   ->  consumes model.onnx
 ```
 
-The `.onnx` file is the entire interface between them. `apps/ml` never imports
-from here, and nothing here imports from `apps/ml`.
+The `.onnx` file is the entire interface between them (decision 0028).
+`apps/server` never imports from here, and nothing here imports from
+`apps/server`.
 
 To ship a model, export it and copy it across:
 
 ```bash
-cp ml-research/artifacts/<experiment>/model.onnx apps/ml/models/model.onnx
-pnpm dev:ml
-curl localhost:8000/model    # confirm the signature is what you expect
+cp ml-research/artifacts/<experiment>/model.onnx apps/server/src/main/resources/anomaly/model.onnx
 ```
 
-`apps/ml` reads the model's input and output signature at runtime, so a new
-model needs no code change there - but a changed signature *is* a breaking
-change for whoever calls `/predict`. Check `GET /model` before and after.
+Spring feeds the model a float32 `input` of shape `[n, 15]` and reads column 1
+of its `probabilities` output. In the same change, update `AnomalyModel`'s
+constants from the experiment's `metrics.json` and copy its `parity-fixture.json`
+to `apps/server/src/test/resources/anomaly/`; `AnomalyScorerTests` checks the
+model against it. A changed signature needs a code change in `AnomalyScorer`.
 
 ## Layout
 
@@ -46,8 +47,8 @@ your notebook where a dataset came from so someone else can fetch the same one.
 
 ## Environment
 
-`uv`, same as `apps/ml`, but a separate environment - research pulls in heavy
-training dependencies that have no business in a serving image.
+`uv`, in its own environment - research pulls in heavy training dependencies
+that have no business in the serving image.
 
 ```bash
 cd ml-research
