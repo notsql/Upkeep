@@ -1,6 +1,6 @@
 # Suspect readings
 
-**Status:** agreed
+**Status:** built
 **Owner:** Zheng Kai
 **Jira:** [ID-67](https://notjira.atlassian.net/browse/ID-67) (epic [ID-5](https://notjira.atlassian.net/browse/ID-5) Telemetry Ingestion); also lays the minimum of [ID-60](https://notjira.atlassian.net/browse/ID-60) Browse raw sensor readings
 
@@ -146,15 +146,16 @@ table: the catalogue is already fixed in code (decision 0016).
     so the UI never hard-codes a range.
 
 Status codes: 400 for an unknown `metric` or `flag`, `from` not before `to`,
-or `size` out of bounds; 401 unauthenticated; 404 for a foreign or missing
+or `size` out of bounds; 401 unauthenticated; 403 for a resident of the
+estate; 404 for a foreign or missing
 estate or asset.
 
 ## Frontend
 
 - Route: `apps/web/src/routes/_auth/estates/$estateId/assets/$assetId/readings/index.tsx`,
   with its components in `readings/-components/`. Linked from the asset page.
-- Hooks in `apps/web/src/lib/readings.ts`; query key starts with the user's ID,
-  then `["readings", estateId, assetId, filters]`.
+- Hooks in `apps/web/src/lib/readings.ts`; query key is the asset's key
+  (`assetQueryKey`, which carries the user's ID) plus `["readings", filters]`.
 - shadcn `Table`, `Select` (metric), date-time inputs, `Badge` per flag,
   a "Suspect only" toggle and pagination controls. Filters live in the URL
   search params so a filtered view can be shared.
@@ -205,9 +206,9 @@ Build in order, test-first.
 - [x] Server: `validMin`/`validMax` on `DeviceMetric` (unit test per bound).
 - [x] Server: `GET .../readings` - ownership, filters, pagination
       (Testcontainers tests per Behaviour line).
-- [ ] Server: flags - `OUT_OF_RANGE`, then `DUPLICATE_TIMESTAMP`, then `GAP`,
+- [x] Server: flags - `OUT_OF_RANGE`, then `DUPLICATE_TIMESTAMP`, then `GAP`,
       and the `flag` filter; `pnpm api:generate`.
-- [ ] Web: `lib/readings.ts` and the readings route: table, filters,
+- [x] Web: `lib/readings.ts` and the readings route: table, filters,
       badges, empty states, pagination; link from the asset page.
-- [ ] Docs: `.docs/api/readings.md`, `.docs/frontend/readings.md`,
+- [x] Docs: `.docs/api/readings.md`, `.docs/frontend/readings.md`,
       `.docs/README.md`, the `.spec/README.md` status row.
