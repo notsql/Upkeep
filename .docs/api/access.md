@@ -1,39 +1,51 @@
-# Access projection and admin estate grants
+# Access projection and retired global grants
 
-The generated `packages/api/openapi.json` is authoritative. JWTs prove identity; Spring reads current estate memberships on every request. Only WorkOS platform administration uses the admin authority. An unassigned account cannot create estates or submit reports. Its own historical reports remain readable.
+Source of truth: packages/api/openapi.json. JWTs supply identity; current Neon
+membership/ownership supplies authority. WorkOS admin claims grant no application
+platform or estate powers.
 
-| Method/path | Request | Response | Status/auth |
-| --- | --- | --- | --- |
-| `GET /access/context` | None | `AppAccessResponse` | 200; authenticated JWT subject; 401 missing/invalid identity, 503 database lookup unavailable. `Cache-Control: private, no-store`. |
-| `GET /api/admin/users/{userId}/estates` | User subject path | `EstateUserResponse[]` for all estates | 200; platform admin only; 401/403 |
-| `PUT /api/admin/users/{userId}/estates/{estateId}` | User subject, estate UUID paths; no body | Empty | 204; platform admin; 401/403, 404 unknown estate, 409 resident row requires explicit conversion |
-| `DELETE /api/admin/users/{userId}/estates/{estateId}` | Same paths; no body | Empty | 204; platform admin; 401/403, 409 resident row protected |
+GET `/access/context` takes no body and returns 200 AppAccessResponse for an
+authenticated subject. Missing identity returns 401; database failure returns 503
+EstateError { message: string }. Cache-Control is private, no-store.
 
-`AppAccessResponse` fields: `canEnterWorkspace: boolean`, `canCreateEstate: boolean`, `canAccessPlatformAdmin: boolean`, `hasResidentMembership: boolean`, `canSubmitReport: boolean`, `residentEstate: { id: UUID, name: string } | null`, `estates: EstateAccessResponse[]`.
+AppAccessResponse fields: canEnterWorkspace/canCreateEstate/canAccessPlatformAdmin/
+hasResidentMembership/canSubmitReport: boolean; residentEstates: { id: UUID,
+name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is false.
 
-`EstateAccessResponse`: `estateId: UUID`, `role: OWNER | MEMBER | COUNCIL | RESIDENT`, `canViewManagement: boolean`, `canManageEstate: boolean`, `canViewAssets: boolean`, `canInviteMembers: boolean`, `canManageInvitationPermissions: boolean`. OWNER is derived from `Estate.ownerUserId`. MEMBER/COUNCIL retain management reads; assets and mutations remain owner-only. RESIDENT takes precedence over conflicting ownership in the same estate and grants no management capability. Active resident membership enables submission; deactivation disables it. Residency elsewhere does not remove management/platform admin permissions.
+EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
+CREW; canViewManagement/canManageEstate/canViewAssets/canInviteMembers/
+canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports: boolean. Owners project as MANAGER; ownership is
+separate. Managers manage estate-local invitations/roles; inactive estates cannot
+receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
+no management access. Asset visibility and other management mutations retain
+existing individual service guards; broader operations remain separate features.
 
-`EstateUserResponse`: `estateId: UUID`, `name: string`, `code: string`, `active: boolean`, `owner: boolean`, `granted: boolean`, `membershipRole: MEMBER | COUNCIL | RESIDENT | null`, `canManageGrant: boolean`. `granted` means a management grant. Resident rows are read-only in this API; trusted manual provisioning handles assignment, moves and deletion.
+Every authenticated subject has `canCreateEstate=true`, regardless of existing
+membership or WorkOS role claims. Creation records the authenticated subject's
+ownership and MANAGER membership atomically in the new estate. Other assignments
+are preserved. `canEnterWorkspace` still requires an existing management or
+report-responder capability. An unassigned response has `canCreateEstate=true`,
+all other booleans false and both collections empty. Account migration remains deferred.
 
-Example access response for an unassigned caller:
+Legacy `/api/admin/users/**` and `/users/**` routes are denied by SecurityConfig,
+including provider admins and local development. Legacy contracts remain in
+OpenAPI for compatibility, not authorization. EstateUserService also rejects old
+global list/add/remove operations. Use [estate member/invitation APIs](council-invitations.md).
 
-```json
-{"canEnterWorkspace":false,"canCreateEstate":false,"canAccessPlatformAdmin":false,"hasResidentMembership":false,"canSubmitReport":false,"residentEstate":null,"estates":[]}
-```
+residentEstates contains active RESIDENT assignments. Reporting explicitly selects
+and validates one estate; missing membership never promotes an account. Historical
+report reads remain submitter-only after revocation. Unknown business methods and
+routes remain denied by the final SecurityConfig rule.
 
-Estate-specific management reads reject resident rows with 403 and unrelated estates with 404. Queries filter unknown membership roles out of management grants. Unknown business routes/actions are denied at Spring's security boundary. Report reads remain submitter-only, regardless of estate ownership or platform administration.
+`canViewFaultReports` requires current MANAGER/CREW membership, including inactive
+estate history. `canRelocateFaultReports` additionally requires an active estate.
+All other roles project both false; owner/Resident conflicts remain false. Crew
+report access sets `canEnterWorkspace=true` while `canViewManagement` and other
+management capabilities remain false. `estateName` labels report estate choices
+without requiring Crew to call management estate endpoints. See [estate-reports.md](estate-reports.md).
 
-Spring Security explicitly admits the following existing operations for authenticated callers; the estate services still enforce owner-only access through `EstateRepository.findOwned`:
-
-| Method | Path | Access |
-| --- | --- | --- |
-| GET | `/asset-categories` | Any authenticated user |
-| GET | `/manufacturers` | Any authenticated user |
-| GET | `/manufacturers/{manufacturerId}/models` | Any authenticated user |
-| GET / POST | `/estates/{estateId}/assets/{assetId}/events` | Estate owner |
-| GET | `/estates/{estateId}/assets/{assetId}/failure-risk` | Estate owner |
-| GET | `/estates/{estateId}/failure-risk` | Estate owner |
-| POST | `/estates/{estateId}/assets/{assetId}/readings/anomaly-check` | Estate owner |
-| POST | `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` | Estate owner; issue or replace a device key |
-
-Catalogue lookups contain no estate data, so resident and unassigned accounts may read them. Estate operations reject a same-estate resident membership even when ownership conflicts, while residency elsewhere does not block legitimate ownership. MEMBER/COUNCIL membership and platform-admin authority alone do not grant access to these owner-only operations. The matchers are method-specific; unsupported methods and unknown nested actions remain denied by the final `denyAll()` rule. Missing or invalid authentication returns 401 when JWT authentication is configured.
+`canManageEstate` grants detail editing to the current owner or MANAGER in that
+estate, including inactive estates. Council/Member/Crew/Resident/unassigned users
+cannot edit; Manager authority in another estate is insufficient. Deactivation
+and ownership transfer independently require current ownership. Transfer keeps
+the former owner's MANAGER membership and editing capability. See [estates.md](estates.md).

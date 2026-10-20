@@ -17,7 +17,6 @@ let access:
   | typeof unassignedAccess = workspaceAccess;
 
 const CREATE_ACCOUNT = /^(Register|Create account)$/;
-const NO_ASSIGNMENT = /no estate assigned|awaiting.*assignment/i;
 
 const { auth } = vi.hoisted(() => ({
   auth: { user: null as { id: string } | null, role: "user", loading: false },
@@ -107,11 +106,15 @@ it("does not start management queries while estate access is being resolved", ()
   expect(screen.queryByRole("link", { name: "Accessible estates" })).toBeNull();
 });
 
-it("explains an unassigned account without loading estate management data", async () => {
+it("offers an unassigned account its first estate without loading estate management data", async () => {
   auth.user = { id: "unassigned" };
   access = unassignedAccess;
   renderWithProviders(<HomePage />);
-  await screen.findByText(NO_ASSIGNMENT);
+  expect(
+    (await screen.findByRole("link", { name: "Create estate" })).getAttribute(
+      "href"
+    )
+  ).toBe("/estates/new");
   expect(
     vi
       .mocked(api.GET)

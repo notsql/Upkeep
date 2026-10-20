@@ -45,6 +45,16 @@ class CouncilControllerTests {
     private final UUID estateId = UUID.fromString("ac514a8e-c643-4a59-aa93-30138327f039");
 
     @Test
+    void accessStorageFailureDeniesMemberAdministrationWithAControlledError() throws Exception {
+        when(estates.findAccessible(estateId, "manager"))
+                .thenThrow(new org.springframework.dao.DataAccessResourceFailureException("database unavailable"));
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(
+                                "/estates/" + estateId + "/members")
+                        .with(jwt().jwt(token -> token.subject("manager"))))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
     void verifiedRecipientCanExplicitlyAcceptAnOlderEmailInvitation() throws Exception {
         var id = UUID.randomUUID();
         var row = new com.proj.server.db.tables.records.EstateinvitationRecord();
@@ -80,6 +90,7 @@ class CouncilControllerTests {
         row.setEmail("member@example.com");
         row.setInviteruserid("owner");
         row.setStatus("SENDING");
+        row.setRole("COUNCIL");
         when(council.sent(org.mockito.ArgumentMatchers.eq(row.getId()), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(true);
         when(council.reserve(
@@ -127,7 +138,7 @@ class CouncilControllerTests {
     }
 
     @Test
-    void onlyOwnerCanGrantInvitationPermission() throws Exception {
+    void evenOwnersCannotRestoreRetiredInvitationDelegation() throws Exception {
         when(council.setPermission(estateId, "member", true)).thenReturn(true);
         var now = OffsetDateTime.now();
         when(estates.findAccessible(estateId, "owner"))
@@ -137,7 +148,7 @@ class CouncilControllerTests {
                         .with(jwt().jwt(t -> t.subject("owner")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"canInviteMembers\":true}"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isForbidden());
     }
 
     @Test

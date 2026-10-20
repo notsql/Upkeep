@@ -1,14 +1,10 @@
 package com.proj.server.config;
 
-import com.proj.server.access.AccessService;
 import java.util.List;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -48,14 +44,18 @@ public class SecurityConfig {
     private String issuer;
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, ObjectProvider<AccessService> access) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         if (issuer.isBlank()) {
             // Local development: no identity provider configured.
-            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http.authorizeHttpRequests(
+                    auth -> auth.requestMatchers("/api/admin/users", "/api/admin/users/**", "/users", "/users/**")
+                            .denyAll()
+                            .anyRequest()
+                            .permitAll());
             return http.build();
         }
 
@@ -76,7 +76,7 @@ public class SecurityConfig {
                         .requestMatchers("/resident/**")
                         .denyAll()
                         .requestMatchers("/users", "/users/**", "/api/admin/users", "/api/admin/users/**")
-                        .hasRole("admin")
+                        .denyAll()
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/access/context",
@@ -88,6 +88,9 @@ public class SecurityConfig {
                                 "/council-invitations",
                                 "/estates/{estateId}",
                                 "/estates/{estateId}/locations",
+                                "/estates/{estateId}/reports",
+                                "/estates/{estateId}/reports/{reportId}",
+                                "/estates/{estateId}/reports/{reportId}/images/{imageId}",
                                 "/estates/{estateId}/assets",
                                 "/estates/{estateId}/assets/{id}",
                                 "/estates/{estateId}/assets/{id}/lifecycle-events",
@@ -100,23 +103,12 @@ public class SecurityConfig {
                                 "/estates/{estateId}/council-invitations")
                         .authenticated()
                         .requestMatchers(HttpMethod.POST, "/estates")
-                        .access((authentication, context) -> {
-                            var principal = authentication.get();
-                            boolean admin = principal.getAuthorities().stream()
-                                    .anyMatch(authority ->
-                                            authority.getAuthority().equals("ROLE_admin"));
-                            var resolver = access.getIfAvailable();
-                            boolean allowed = principal.isAuthenticated()
-                                    && !(principal instanceof AnonymousAuthenticationToken)
-                                    && resolver != null
-                                    && resolver.context(principal.getName(), admin)
-                                            .canCreateEstate();
-                            return new AuthorizationDecision(allowed);
-                        })
+                        .authenticated()
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
                                 "/council-invitations/{invitationId}/accept",
+                                "/estates/{estateId}/ownership-transfer",
                                 "/estates/{estateId}/deactivate",
                                 "/estates/{estateId}/locations",
                                 "/estates/{estateId}/locations/{id}/deactivate",
@@ -137,7 +129,12 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{id}",
                                 "/estates/{estateId}/assets/{id}/retirement")
                         .authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/members/{userId}/invitation-permission")
+                        .requestMatchers(HttpMethod.PATCH, "/estates/{estateId}/reports/{reportId}/location")
+                        .authenticated()
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/estates/{estateId}/members/{userId}/invitation-permission",
+                                "/estates/{estateId}/members/{userId}/role")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,

@@ -4,7 +4,7 @@ import type { LocationNode, LocationType } from "@/lib/locations";
 export type Panel =
   | {
       kind: "create";
-      type: Exclude<LocationType, "LEVEL">;
+      type: LocationType;
       parent?: LocationNode;
     }
   | { kind: "edit"; node: LocationNode }

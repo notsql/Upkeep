@@ -1,15 +1,9 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
+import { ReportCard } from "@/components/reports/report-card";
 import { useReportList } from "@/lib/reports";
 
 export const Route = createFileRoute("/_auth/reports/")({
@@ -55,47 +49,11 @@ function MyReportsPage() {
       ) : null}
       <div className="grid gap-4">
         {reports.data?.items?.map((report) => (
-          <Card key={report.id}>
-            <CardHeader>
-              <CardTitle>
-                <h2 className="wrap-anywhere font-semibold">
-                  <a href={`/reports/${report.id}`}>{report.title}</a>
-                </h2>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                <dl className="flex flex-wrap gap-x-1">
-                  <dt className="font-semibold">Estate name:</dt>
-                  <dd className="wrap-anywhere">{report.estateName}</dd>
-                </dl>
-                <dl className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-                  <div className="flex min-w-0 flex-wrap gap-x-1">
-                    <dt className="font-semibold">Location:</dt>
-                    <dd className="wrap-anywhere italic">
-                      {report.location?.label}
-                    </dd>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <dt className="font-semibold">Status:</dt>
-                    <dd>
-                      <Badge className="w-fit">{report.status}</Badge>
-                    </dd>
-                  </div>
-                </dl>
-                <dl className="flex flex-wrap gap-x-1">
-                  <dt className="font-semibold">Submission time:</dt>
-                  <dd>
-                    <time dateTime={report.createdAt}>
-                      {report.createdAt
-                        ? new Date(report.createdAt).toLocaleString()
-                        : ""}
-                    </time>
-                  </dd>
-                </dl>
-              </div>
-            </CardContent>
-          </Card>
+          <ReportCard
+            key={report.id}
+            report={report}
+            title={<a href={`/reports/${report.id}`}>{report.title}</a>}
+          />
         ))}
       </div>
       {reports.data ? (

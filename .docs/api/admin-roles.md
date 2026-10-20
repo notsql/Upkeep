@@ -1,3 +1,8 @@
+> These legacy global WorkOS role endpoints are retired at the Spring Security
+> boundary and return 403 to authenticated callers. Their generated DTOs remain
+> for compatibility; current role management uses estate-scoped Neon APIs in
+> [council-invitations.md](council-invitations.md). The text below is the legacy contract.
+
 # Admin role updates
 
 `PUT /api/admin/users/{membershipId}/role` requires admin authentication.

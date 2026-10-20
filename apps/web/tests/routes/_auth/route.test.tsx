@@ -8,7 +8,10 @@ import {
   RouterProvider,
 } from "@tanstack/react-router";
 import {
+  councilEstateAccess,
+  crewEstateAccess,
   mixedAccess,
+  ownerEstateAccess,
   residentAccess,
   unassignedAccess,
 } from "@tests/fixtures/access";
@@ -65,10 +68,14 @@ function routerFor(path: string) {
     },
   });
   const management = [
+    "/invitations",
     "/estates",
+    "/estates/new",
     "/estates/$estateId",
     "/estates/$estateId/assets",
     "/estates/$estateId/council",
+    "/estates/$estateId/reports",
+    "/estates/$estateId/reports/$reportId",
     "/admin/users",
   ].map((destination) =>
     createRoute({
@@ -112,12 +119,7 @@ beforeEach(() => {
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
 });
 
-it.each([
-  "/estates",
-  "/estates/maple",
-  "/estates/maple/assets",
-  "/estates/maple/council",
-])(
+it.each(["/estates/maple", "/estates/maple/assets", "/estates/maple/council"])(
   "redirects database resident-only access from %s before its child loader runs",
   async (path) => {
     const router = routerFor(path);
@@ -194,12 +196,74 @@ it("does not start a management child loader when access lookup fails", async ()
   expect(managementLoader).not.toHaveBeenCalled();
 });
 
-it("does not start estate management for an unassigned account", async () => {
+it("does not start an existing estate screen for an unassigned account", async () => {
   get.mockResolvedValue({ data: unassignedAccess, response: new Response() });
-  const router = routerFor("/estates");
+  const router = routerFor("/estates/private-estate");
   await router.load();
   expect(managementLoader).not.toHaveBeenCalled();
 });
+
+it.each(
+  [
+    { account: "unassigned", access: unassignedAccess },
+    { account: "Resident", access: residentAccess },
+    {
+      account: "Crew",
+      access: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [crewEstateAccess],
+      },
+    },
+    {
+      account: "Council",
+      access: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [councilEstateAccess],
+      },
+    },
+  ].flatMap((account) =>
+    ["/estates", "/estates/", "/estates/new", "/estates/new/"].map((path) => ({
+      ...account,
+      path,
+    }))
+  )
+)("allows a $account account to open $path", async ({ access, path }) => {
+  get.mockResolvedValue({ data: access, response: new Response() });
+  const router = routerFor(path);
+  await router.load();
+  renderWithProviders(<RouterProvider router={router} />);
+  await screen.findByRole("heading", { name: "Management page" });
+  expect(router.state.location.pathname).toBe(path);
+  expect(managementLoader).toHaveBeenCalled();
+});
+
+it.each(["/estates/new", "/estates/new/"])(
+  "does not bypass a denied creation capability at %s",
+  async (path) => {
+    get.mockResolvedValue({
+      data: { ...mixedAccess, canCreateEstate: false },
+      response: new Response(),
+    });
+    const router = routerFor(path);
+    await router.load();
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it.each(["/estates", "/estates/new"])(
+  "does not start %s when the access lookup fails",
+  async (path) => {
+    get.mockResolvedValue({
+      error: { message: "Access unavailable" },
+      response: new Response(null, { status: 503 }),
+    });
+    const router = routerFor(path);
+    await router.load();
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
 
 it.each(["/reports", "/reports/report-1", "/reports/new"])(
   "allows authenticated reporting route %s after the membership row is deleted",
@@ -227,4 +291,80 @@ it("keeps platform admin entry independent of residency in another estate", asyn
   await router.load();
   renderWithProviders(<RouterProvider router={router} />);
   await screen.findByRole("heading", { name: "Management page" });
+});
+
+it("allows an unassigned account to open invitations without workspace access", async () => {
+  get.mockResolvedValue({ data: unassignedAccess, response: new Response() });
+  const router = routerFor("/invitations");
+  await router.load();
+  expect(router.state.location.pathname).toBe("/invitations");
+  renderWithProviders(<RouterProvider router={router} />);
+  await screen.findByRole("heading", { name: "Management page" });
+});
+
+it.each([ownerEstateAccess, crewEstateAccess])(
+  "allows a $role responder to open report detail without general management permission",
+  async (permission) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [{ ...permission, estateId: "oak" }],
+      },
+      response: new Response(),
+    });
+    const router = routerFor("/estates/oak/reports/report-1");
+    await router.load();
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+    expect(managementLoader).toHaveBeenCalled();
+  }
+);
+
+it.each(["/estates/oak/reports", "/estates/oak/reports/report-1"])(
+  "blocks council report route %s before any child query loader starts",
+  async (path) => {
+    get.mockResolvedValue({ data: mixedAccess, response: new Response() });
+    const router = routerFor(path);
+    await router.load();
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it("uses the requested estate's report capability rather than manager rights in another estate", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...mixedAccess,
+      estates: mixedAccess.estates.map((estate) => ({
+        ...estate,
+        canViewFaultReports: estate.estateId === "pine",
+      })),
+    },
+    response: new Response(),
+  });
+  const router = routerFor("/estates/oak/reports");
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
+});
+
+it("does not let a WorkOS admin claim bypass a missing report capability", async () => {
+  getAuth.mockResolvedValue({
+    user: { id: "platform-admin" },
+    role: "admin",
+    accessToken: "admin-token",
+  });
+  get.mockResolvedValue({
+    data: {
+      ...mixedAccess,
+      canAccessPlatformAdmin: true,
+      estates: mixedAccess.estates.map((estate) => ({
+        ...estate,
+        canViewFaultReports: false,
+      })),
+    },
+    response: new Response(),
+  });
+  const router = routerFor("/estates/pine/reports/report-1");
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
 });

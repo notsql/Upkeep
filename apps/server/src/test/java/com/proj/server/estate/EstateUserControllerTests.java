@@ -2,13 +2,11 @@ package com.proj.server.estate;
 
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.proj.server.config.SecurityConfig;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,38 +55,10 @@ class EstateUserControllerTests {
     }
 
     @Test
-    void listsEveryEstateWithTheUsersAccess() throws Exception {
-        when(repository.listForUser("user_1"))
-                .thenReturn(List.of(
-                        new EstateUserResponse(estateId, "Maple Grove", "MG-001", true, false, true),
-                        new EstateUserResponse(UUID.randomUUID(), "Oak Park", "OP-001", false, true, false)));
-        mvc.perform(get(path).with(admin()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].estateId").value(estateId.toString()))
-                .andExpect(jsonPath("$[0].granted").value(true))
-                .andExpect(jsonPath("$[1].owner").value(true))
-                .andExpect(jsonPath("$[1].active").value(false));
-    }
-
-    @Test
-    void addsAUserToAnExistingEstate() throws Exception {
-        when(repository.estateExists(estateId)).thenReturn(true);
-        mvc.perform(put(path + "/" + estateId).with(admin())).andExpect(status().isNoContent());
-        verify(repository).add(estateId, "user_1");
-    }
-
-    @Test
-    void rejectsAddingAUserToAnUnknownEstate() throws Exception {
-        when(repository.estateExists(estateId)).thenReturn(false);
-        mvc.perform(put(path + "/" + estateId).with(admin()))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Estate not found."));
-        verify(repository, never()).add(estateId, "user_1");
-    }
-
-    @Test
-    void removesAUserFromAnEstate() throws Exception {
-        mvc.perform(delete(path + "/" + estateId).with(admin())).andExpect(status().isNoContent());
-        verify(repository).remove(estateId, "user_1");
+    void providerAdminsCannotListAllEstatesOrChangeMembershipThroughRetiredGrants() throws Exception {
+        mvc.perform(get(path).with(admin())).andExpect(status().isForbidden());
+        mvc.perform(put(path + "/" + estateId).with(admin())).andExpect(status().isForbidden());
+        mvc.perform(delete(path + "/" + estateId).with(admin())).andExpect(status().isForbidden());
+        org.mockito.Mockito.verifyNoInteractions(repository);
     }
 }

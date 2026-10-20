@@ -5,6 +5,11 @@ Signed-in `/` mounts `routes/-components/workspace-home.tsx` through
 `routes/index.tsx`; signed-out Home retains Sign in/Create account and System
 status. Private dashboard requests wait for the browser/session gate.
 
+The portfolio mounts only with `canEnterWorkspace`. An unassigned account instead
+gets Create estate and Report a fault on Home, without dashboard requests.
+After first creation, access refresh enables the new owner's workspace and the
+existing dashboard invalidation updates portfolio counts.
+
 ## Screen
 
 `WorkspaceHome` uses PageHeader, shadcn Card/Button/Alert with existing lucide icons.

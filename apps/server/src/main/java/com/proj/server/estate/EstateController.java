@@ -62,6 +62,7 @@ public class EstateController {
     }
 
     @PostMapping
+    @Operation(summary = "Create an estate as any signed-in user; become its owner and Manager")
     @ApiResponse(responseCode = "201", description = "Estate created")
     public ResponseEntity<EstateResponse> create(
             @AuthenticationPrincipal Jwt jwt, @Valid @RequestBody EstateRequest request) {
@@ -70,6 +71,7 @@ public class EstateController {
     }
 
     @PatchMapping("/{id}")
+    @Operation(summary = "Update estate details as the current owner or an assigned Manager")
     @ApiResponse(responseCode = "200", description = "Estate updated")
     public EstateResponse update(
             @AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @Valid @RequestBody EstateRequest request) {
@@ -77,6 +79,7 @@ public class EstateController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @Operation(summary = "Deactivate an estate as its current owner")
     @ApiResponse(responseCode = "200", description = "Estate deactivated")
     public EstateResponse deactivate(
             @AuthenticationPrincipal Jwt jwt,

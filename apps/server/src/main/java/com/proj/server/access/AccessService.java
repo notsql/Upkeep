@@ -19,7 +19,17 @@ public class AccessService {
     }
 
     public static Condition managementMembership() {
-        return ESTATEUSER.ROLE.in("MEMBER", "COUNCIL");
+        return ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "MANAGER");
+    }
+
+    public static Condition managerEstates(String user) {
+        return residentEstate(user)
+                .not()
+                .and(ESTATE.OWNERUSERID
+                        .eq(user)
+                        .or(ESTATE.ID.in(DSL.select(ESTATEUSER.ESTATEID)
+                                .from(ESTATEUSER)
+                                .where(ESTATEUSER.USERID.eq(user).and(ESTATEUSER.ROLE.eq("MANAGER"))))));
     }
 
     public static Condition residentEstate(String user) {
@@ -49,39 +59,47 @@ public class AccessService {
                 .from(ESTATE)
                 .leftJoin(ESTATEUSER)
                 .on(ESTATEUSER.ESTATEID.eq(ESTATE.ID).and(ESTATEUSER.USERID.eq(user)))
-                .where(ESTATE.OWNERUSERID.eq(user).or(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "RESIDENT")))
+                .where(ESTATE.OWNERUSERID
+                        .eq(user)
+                        .or(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "RESIDENT", "MANAGER", "CREW")))
                 .orderBy(ESTATE.ID)
                 .fetch();
         var capabilities = rows.map(row -> {
             boolean resident = "RESIDENT".equals(row.get(ESTATEUSER.ROLE));
             boolean owner = !resident && user.equals(row.get(ESTATE.OWNERUSERID));
+            boolean manager = !resident && (owner || "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
             boolean management = !resident
                     && (owner
+                            || manager
                             || "MEMBER".equals(row.get(ESTATEUSER.ROLE))
                             || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)));
             boolean active = row.get(ESTATE.DEACTIVATEDAT) == null;
+            boolean responder = "MANAGER".equals(row.get(ESTATEUSER.ROLE)) || "CREW".equals(row.get(ESTATEUSER.ROLE));
             return new AppAccessResponse.EstateAccessResponse(
                     row.get(ESTATE.ID),
-                    resident ? "RESIDENT" : owner ? "OWNER" : row.get(ESTATEUSER.ROLE),
+                    row.get(ESTATE.NAME),
+                    resident ? "RESIDENT" : manager ? "MANAGER" : row.get(ESTATEUSER.ROLE),
                     management,
+                    manager,
                     owner,
-                    owner,
-                    active && management && (owner || Boolean.TRUE.equals(row.get(ESTATEUSER.CANINVITEMEMBERS))),
-                    owner);
+                    active && manager,
+                    manager,
+                    responder,
+                    responder && active);
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)
-                .findFirst()
                 .map(row -> new ResidentContextResponse.EstateLabel(row.get(ESTATE.ID), row.get(ESTATE.NAME)))
-                .orElse(null);
-        boolean workspace =
-                admin || capabilities.stream().anyMatch(AppAccessResponse.EstateAccessResponse::canViewManagement);
+                .toList();
+        boolean manager = capabilities.stream().anyMatch(AppAccessResponse.EstateAccessResponse::canManageEstate);
+        boolean workspace = manager
+                || capabilities.stream().anyMatch(estate -> estate.canViewManagement() || estate.canViewFaultReports());
         return new AppAccessResponse(
                 workspace,
-                workspace,
-                admin,
+                true,
+                false,
                 capabilities.stream().anyMatch(estate -> "RESIDENT".equals(estate.role())),
-                assigned != null,
+                !assigned.isEmpty(),
                 assigned,
                 capabilities);
     }

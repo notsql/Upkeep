@@ -65,6 +65,7 @@ class EstateControllerTests {
                         true, true, false, false, false, null, java.util.List.of()));
         when(repository.findOwned(id, "owner", false)).thenReturn(Optional.of(estate(null)));
         when(repository.findOwned(id, "owner", true)).thenReturn(Optional.of(estate(null)));
+        when(repository.isManager(id, "owner")).thenReturn(true);
     }
 
     @Test
@@ -117,6 +118,24 @@ class EstateControllerTests {
                 .andExpect(jsonPath("$[0].deactivatedAt").isNotEmpty())
                 .andExpect(jsonPath("$[0].owned").value(true))
                 .andExpect(jsonPath("$[1].owned").value(false));
+    }
+
+    @Test
+    void assignedManagerCanEditDetailsWithoutBecomingOwner() throws Exception {
+        when(repository.isManager(id, "manager")).thenReturn(true);
+        when(repository.findAccessible(id, "manager")).thenReturn(Optional.of(estate(null, false)));
+        when(repository.update(eq(id), eq("manager"), any())).thenReturn(estate(null, false));
+        mvc.perform(patch("/estates/" + id)
+                        .with(jwt().jwt(t -> t.subject("manager")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.owned").value(false));
+        mvc.perform(post("/estates/" + id + "/deactivate")
+                        .with(jwt().jwt(t -> t.subject("manager")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"MG-001\"}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

@@ -4,6 +4,7 @@ import {
   type Location,
   type LocationNode,
   type LocationType,
+  nextLevelPosition,
 } from "@/lib/locations";
 import type { AddFloorsResult } from "@/routes/_auth/estates/$estateId/-components/add-floors-form";
 import { AddLevelsTabs } from "@/routes/_auth/estates/$estateId/-components/add-levels-tabs";
@@ -109,15 +110,20 @@ export function PanelView({
       />
     );
   }
-  // Blocks and common areas; levels are added through AddLevelsTabs.
+  // Managers add one level; owners also have the bulk-floor dialog.
   const { parent } = panel;
   return (
     <LocationForm
       initialParentId={parent?.id}
+      initialSortOrder={
+        panel.type === "LEVEL" && parent
+          ? nextLevelPosition(items, parent.id)
+          : undefined
+      }
       onCancel={onCancel}
       onPendingChange={onPendingChange}
       onSave={save}
-      showPosition={false}
+      showPosition={panel.type === "LEVEL"}
       title={panelTitle(panel)}
     />
   );

@@ -1,46 +1,68 @@
-import type { components } from "@proj/api/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Button } from "@proj/ui/components/button";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
-import { api } from "@/lib/api";
-import { dashboardQueryKey } from "@/lib/dashboard";
-import { estateError, useEstate, useEstateSession } from "@/lib/estates";
+import { useAppAccess } from "@/lib/access";
+import { useEstate, useSaveEstate } from "@/lib/estates";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-form";
+
+function EstateCreationStatus({
+  createdEstate,
+  refreshAccess,
+}: Pick<ReturnType<typeof useSaveEstate>, "createdEstate" | "refreshAccess">) {
+  const { mutate, isError } = refreshAccess;
+  const retry = useCallback(() => {
+    if (createdEstate) {
+      mutate(createdEstate);
+    }
+  }, [createdEstate, mutate]);
+  if (!createdEstate) {
+    return null;
+  }
+  if (isError) {
+    return (
+      <Alert className="mt-6" role="alert" variant="destructive">
+        <AlertDescription>
+          Estate created, but we could not refresh your access or open the
+          estate. Try again to continue.
+          <Button onClick={retry} variant="outline">
+            Retry access
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  return (
+    <p aria-live="polite" className="mt-6" role="status">
+      Estate created. Refreshing your access…
+    </p>
+  );
+}
 
 export function EstateEditorPage({ estateId }: { estateId?: string }) {
   const estate = useEstate(estateId);
-  const { userId } = useEstateSession();
-  const queryClient = useQueryClient();
+  const access = useAppAccess();
+  const canEditDetails = Boolean(
+    !estateId ||
+      estate.data?.owned ||
+      access.data?.estates.some(
+        (assignment) =>
+          assignment.estateId === estateId && assignment.canManageEstate
+      )
+  );
+  const showPermissionError =
+    estateId && estate.data && !canEditDetails && !access.isPending;
+  const waitingForPermissions =
+    estate.data && !canEditDetails && access.isPending;
   const navigate = useNavigate();
-  const save = useMutation({
-    mutationFn: async (body: components["schemas"]["EstateRequest"]) => {
-      const { data, error, response } = estateId
-        ? await api.PATCH("/estates/{id}", {
-            params: { path: { id: estateId } },
-            body,
-          })
-        : await api.POST("/estates", { body });
-      if (error || !data) {
-        throw estateError(error, response.status);
-      }
-      return data;
-    },
-    onSuccess: async (data) => {
-      queryClient.setQueryData(["estates", userId, "details", data.id], data);
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["estates", userId, "list"],
-        }),
-        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
-      ]);
-      toast.success(estateId ? "Estate details updated." : "Estate created.");
-      await navigate({
-        to: "/estates/$estateId",
-        params: { estateId: data.id },
-      });
-    },
+  const save = useSaveEstate(estateId, async (data) => {
+    toast.success(estateId ? "Estate details updated." : "Estate created.");
+    await navigate({
+      to: "/estates/$estateId",
+      params: { estateId: data.id },
+    });
   });
   const cancel = useCallback(() => {
     navigate(
@@ -62,22 +84,34 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
         description="Keep estate identity and address details organised."
         title={estateId ? "Edit estate" : "Create estate"}
       />
-      {estateId && estate.isPending ? (
+      {estateId && (estate.isPending || waitingForPermissions) ? (
         <p aria-live="polite" className="mt-6">
           Loading estate…
         </p>
       ) : null}
       {estateId && estate.error ? (
-        <p className="mt-6 text-destructive" role="alert">
-          {estate.error.message}
-        </p>
+        <Alert className="mt-6" variant="destructive">
+          <AlertDescription>{estate.error.message}</AlertDescription>
+        </Alert>
+      ) : null}
+      {showPermissionError ? (
+        <Alert className="mt-6" variant="destructive">
+          <AlertDescription>
+            {access.error?.message ??
+              "Only the owner or an assigned Manager can edit estate details."}
+          </AlertDescription>
+        </Alert>
       ) : null}
       {estate.data?.deactivatedAt ? (
         <p className="mt-4 text-muted-foreground">
           This estate is inactive. Editing its details will not reactivate it.
         </p>
       ) : null}
-      {!estateId || estate.data ? (
+      <EstateCreationStatus
+        createdEstate={save.createdEstate}
+        refreshAccess={save.refreshAccess}
+      />
+      {!save.createdEstate && (!estateId || (estate.data && canEditDetails)) ? (
         <EstateForm
           initialValues={estateId ? estate.data : undefined}
           key={estate.data?.id ?? "new"}

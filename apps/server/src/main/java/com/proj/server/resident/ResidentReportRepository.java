@@ -7,7 +7,11 @@ import static com.proj.server.db.tables.Issuereportimage.ISSUEREPORTIMAGE;
 import static com.proj.server.db.tables.Location.LOCATION;
 import static org.jooq.impl.DSL.concatWs;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.name;
 import static org.jooq.impl.DSL.row;
+import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.when;
 
 import com.proj.server.db.tables.Location;
 import java.time.OffsetDateTime;
@@ -32,8 +36,8 @@ public class ResidentReportRepository {
         this.db = db;
     }
 
-    public Optional<ResidentContextResponse.EstateLabel> activeAssignment(String userId, boolean lock) {
-        var query = db.select(ESTATE.ID, ESTATE.NAME)
+    public List<ResidentContextResponse.EstateLabel> activeAssignments(String userId) {
+        return db.select(ESTATE.ID, ESTATE.NAME)
                 .from(ESTATEUSER)
                 .join(ESTATE)
                 .on(ESTATE.ID.eq(ESTATEUSER.ESTATEID))
@@ -41,8 +45,25 @@ public class ResidentReportRepository {
                         .USERID
                         .eq(userId)
                         .and(ESTATEUSER.ROLE.eq("RESIDENT"))
+                        .and(ESTATE.DEACTIVATEDAT.isNull()))
+                .orderBy(ESTATE.NAME, ESTATE.ID)
+                .fetch(row -> new ResidentContextResponse.EstateLabel(row.value1(), row.value2()));
+    }
+
+    public Optional<ResidentContextResponse.EstateLabel> activeAssignment(String userId, UUID estateId, boolean lock) {
+        if (lock)
+            db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId)).forUpdate().fetch();
+        var query = db.select(ESTATE.ID, ESTATE.NAME)
+                .from(ESTATEUSER)
+                .join(ESTATE)
+                .on(ESTATE.ID.eq(ESTATEUSER.ESTATEID))
+                .where(ESTATEUSER
+                        .USERID
+                        .eq(userId)
+                        .and(ESTATEUSER.ESTATEID.eq(estateId))
+                        .and(ESTATEUSER.ROLE.eq("RESIDENT"))
                         .and(ESTATE.DEACTIVATEDAT.isNull()));
-        return (lock ? query.forUpdate().of(ESTATEUSER, ESTATE).fetchOptional() : query.fetchOptional())
+        return (lock ? query.forUpdate().of(ESTATEUSER).fetchOptional() : query.fetchOptional())
                 .map(row -> new ResidentContextResponse.EstateLabel(row.value1(), row.value2()));
     }
 
@@ -109,15 +130,24 @@ public class ResidentReportRepository {
     }
 
     public Optional<IssueReportDetailResponse> detail(String userId, UUID reportId) {
-        var row = reportSelect()
+        return detail(reportSelect()
                 .where(ISSUEREPORT.ID.eq(reportId).and(ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId)))
-                .fetchOne();
+                .fetchOne());
+    }
+
+    public Optional<IssueReportDetailResponse> estateDetail(UUID estateId, UUID reportId) {
+        return detail(reportSelect()
+                .where(ISSUEREPORT.ID.eq(reportId).and(ISSUEREPORT.ESTATEID.eq(estateId)))
+                .fetchOne());
+    }
+
+    private Optional<IssueReportDetailResponse> detail(Record row) {
         if (row == null) {
             return Optional.empty();
         }
         var images = db.select(ISSUEREPORTIMAGE.ID, ISSUEREPORTIMAGE.CONTENTTYPE)
                 .from(ISSUEREPORTIMAGE)
-                .where(ISSUEREPORTIMAGE.REPORTID.eq(reportId))
+                .where(ISSUEREPORTIMAGE.REPORTID.eq(row.get(ISSUEREPORT.ID)))
                 .orderBy(ISSUEREPORTIMAGE.CREATEDAT, ISSUEREPORTIMAGE.ID)
                 .fetch()
                 .map(image -> new IssueReportDetailResponse.ReportImage(image.value1(), image.value2()));
@@ -156,6 +186,65 @@ public class ResidentReportRepository {
                         .ID
                         .eq(reportId)
                         .and(ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId))
+                        .and(ISSUEREPORTIMAGE.ID.eq(imageId)))
+                .fetchOptional()
+                .map(record -> new StoredImage(record.value1(), record.value2()));
+    }
+
+    public List<IssueReportSummaryResponse> estateList(
+            UUID estateId,
+            UUID locationId,
+            UUID blockId,
+            Integer minLevelPosition,
+            Integer maxLevelPosition,
+            OffsetDateTime beforeTime,
+            UUID beforeId,
+            int limit) {
+        var condition = ISSUEREPORT.ESTATEID.eq(estateId);
+        if (locationId != null) {
+            var child = LOCATION.as("child");
+            var subtreeId = field(name("subtree", "id"), UUID.class);
+            var subtree = name("subtree")
+                    .fields("id")
+                    .as(db.select(LOCATION.ID)
+                            .from(LOCATION)
+                            .where(LOCATION.ID.eq(locationId).and(LOCATION.ESTATEID.eq(estateId)))
+                            .unionAll(db.select(child.ID)
+                                    .from(child)
+                                    .join(table(name("subtree")))
+                                    .on(child.PARENTID.eq(subtreeId))
+                                    .where(child.ESTATEID.eq(estateId))));
+            condition = condition.and(ISSUEREPORT.LOCATIONID.in(
+                    db.withRecursive(subtree).select(subtreeId).from(subtree)));
+        }
+        if (blockId != null) {
+            condition = condition.and(
+                    LOCATION.ID.eq(blockId).or(PARENT.ID.eq(blockId)).or(GRANDPARENT.ID.eq(blockId)));
+        }
+        var levelPosition =
+                when(LOCATION.TYPE.eq("LEVEL"), LOCATION.SORTORDER).when(PARENT.TYPE.eq("LEVEL"), PARENT.SORTORDER);
+        if (minLevelPosition != null) condition = condition.and(levelPosition.ge(minLevelPosition));
+        if (maxLevelPosition != null) condition = condition.and(levelPosition.le(maxLevelPosition));
+        if (beforeTime != null) {
+            condition = condition.and(row(ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID).lt(beforeTime, beforeId));
+        }
+        return reportSelect()
+                .where(condition)
+                .orderBy(ISSUEREPORT.CREATEDAT.desc(), ISSUEREPORT.ID.desc())
+                .limit(limit)
+                .fetch()
+                .map(ResidentReportRepository::summary);
+    }
+
+    public Optional<StoredImage> estateImage(UUID estateId, UUID reportId, UUID imageId) {
+        return db.select(ISSUEREPORTIMAGE.STORAGEKEY, ISSUEREPORTIMAGE.CONTENTTYPE)
+                .from(ISSUEREPORTIMAGE)
+                .join(ISSUEREPORT)
+                .on(ISSUEREPORT.ID.eq(ISSUEREPORTIMAGE.REPORTID))
+                .where(ISSUEREPORT
+                        .ID
+                        .eq(reportId)
+                        .and(ISSUEREPORT.ESTATEID.eq(estateId))
                         .and(ISSUEREPORTIMAGE.ID.eq(imageId)))
                 .fetchOptional()
                 .map(record -> new StoredImage(record.value1(), record.value2()));

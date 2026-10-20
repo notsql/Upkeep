@@ -69,7 +69,9 @@ context comes from route/breadcrumbs/content/sidebar. On estate pages, a shadcn
 estate DropdownMenu replaces the sidebar estate heading and sits above mobile
 estate links. It lists accessible estates by name/code, labels inactive entries,
 and opens the chosen estate's Overview. The header stays compact. Estates remains
-the directory for browsing/searching/creating estates; see [shell.md](shell.md).
+the directory for browsing/searching/creating estates and appears in desktop and
+mobile navigation for every authenticated account. Unassigned users can create
+their first estate without workspace access; see [shell.md](shell.md).
 Locations remains a section within Overview; it has no separate navigation item. All destinations are real links with
 visible text/icons; selected links have `aria-current="page"` and heavier text.
 Exact router matching ignores filter search parameters and prevents

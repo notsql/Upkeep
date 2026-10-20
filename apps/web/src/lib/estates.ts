@@ -1,8 +1,9 @@
 import type { components, operations } from "@proj/api/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { dashboardQueryKey } from "@/lib/dashboard";
 
 const INTERNAL_ERROR =
   /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/i;
@@ -73,4 +74,60 @@ export function useEstateList(status: EstateStatus) {
       return data;
     },
   });
+}
+
+export function useSaveEstate(
+  estateId: string | undefined,
+  onSaved: (estate: components["schemas"]["EstateResponse"]) => Promise<void>
+) {
+  const { userId } = useEstateSession();
+  const queryClient = useQueryClient();
+  const [createdEstate, setCreatedEstate] =
+    useState<components["schemas"]["EstateResponse"]>();
+  const refreshAccess = useMutation({
+    mutationFn: async (data: components["schemas"]["EstateResponse"]) => {
+      await queryClient.cancelQueries({
+        queryKey: [userId, "app-access"],
+        exact: true,
+      });
+      await queryClient.refetchQueries(
+        { queryKey: [userId, "app-access"], exact: true },
+        { throwOnError: true }
+      );
+      await onSaved(data);
+    },
+  });
+  const save = useMutation({
+    mutationFn: async (body: components["schemas"]["EstateRequest"]) => {
+      const { data, error, response } = estateId
+        ? await api.PATCH("/estates/{id}", {
+            params: { path: { id: estateId } },
+            body,
+          })
+        : await api.POST("/estates", { body });
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: async (data) => {
+      if (!estateId) {
+        setCreatedEstate(data);
+      }
+      queryClient.setQueryData(["estates", userId, "details", data.id], data);
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["estates", userId, "list"],
+        }),
+        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
+      ]);
+      if (estateId) {
+        await onSaved(data);
+        return;
+      }
+      // Creation committed; refresh failures have their own visible retry state.
+      await refreshAccess.mutateAsync(data).catch(() => undefined);
+    },
+  });
+  return { ...save, createdEstate, refreshAccess };
 }

@@ -11,6 +11,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice(assignableTypes = {EstateController.class, EstateUserController.class, CouncilController.class})
 public class EstateExceptionHandler {
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    ResponseEntity<EstateError> unavailable() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new EstateError("Estate access is temporarily unavailable."));
+    }
+
     @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
     ResponseEntity<EstateError> responseStatus(org.springframework.web.server.ResponseStatusException error) {
         return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));

@@ -1,3 +1,5 @@
+import type { components } from "@proj/api/schema";
+import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import {
   Card,
@@ -5,76 +7,153 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import { Checkbox } from "@proj/ui/components/checkbox";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import { Link } from "@tanstack/react-router";
 import { type FormEvent, useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import {
   useCouncilInvitation,
   useEstateMembers,
-  useInvitationPermission,
+  useTransferOwnership,
+  useUpdateEstateRole,
 } from "@/lib/council-invitations";
-import { useEstate } from "@/lib/estates";
+import { useEstate, useEstateSession } from "@/lib/estates";
+import { AccessConfirmation } from "@/routes/_auth/estates/$estateId/council/-components/access-confirmation";
 import {
   OwnerInvitations,
   RemoveMemberButton,
 } from "@/routes/_auth/estates/$estateId/council/-components/access-controls";
 
-function MemberPermission({
-  estateId,
-  userId,
-  name,
-  email,
-  allowed,
+type Role = NonNullable<
+  components["schemas"]["CouncilInvitationRequest"]["role"]
+>;
+const roles: { value: Role; label: string }[] = [
+  { value: "COUNCIL", label: "Council member" },
+  { value: "RESIDENT", label: "Resident" },
+  { value: "MANAGER", label: "Manager (Admin)" },
+  { value: "CREW", label: "Crew" },
+];
+
+function RolePicker({
+  value,
+  onChange,
+  label,
+  disabled = false,
 }: {
-  estateId: string;
-  userId: string;
-  name: string;
-  email: string;
-  allowed: boolean;
+  value: string;
+  onChange: (role: Role | null) => void;
+  label: string;
+  disabled?: boolean;
 }) {
-  const permission = useInvitationPermission(estateId);
   const change = useCallback(
-    (checked: boolean) => {
-      permission.mutate({
-        memberId: userId,
-        body: { canInviteMembers: checked },
-      });
-    },
-    [permission, userId]
+    (selected: string | null) =>
+      onChange(roles.find((role) => role.value === selected)?.value ?? null),
+    [onChange]
   );
   return (
+    <Select
+      disabled={disabled}
+      items={roles}
+      onValueChange={change}
+      value={value}
+    >
+      <SelectTrigger aria-label={label}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {roles.map((role) => (
+          <SelectItem key={role.value} value={role.value}>
+            {role.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function MemberPermission({
+  estateId,
+  member,
+  canTransfer,
+}: {
+  estateId: string;
+  member: components["schemas"]["EstateMemberResponse"];
+  canTransfer: boolean;
+}) {
+  const { userId } = useEstateSession();
+  const update = useUpdateEstateRole(estateId);
+  const transfer = useTransferOwnership(estateId);
+  const [confirmTransfer, setConfirmTransfer] = useState(false);
+  const change = useCallback(
+    (role: Role | null) => {
+      if (role) {
+        update.mutate({ memberId: member.userId, body: { role } });
+      }
+    },
+    [member.userId, update]
+  );
+  const showTransfer = useCallback(() => setConfirmTransfer(true), []);
+  const closeTransfer = useCallback(() => setConfirmTransfer(false), []);
+  const confirm = useCallback(
+    () => transfer.mutateAsync(member.userId),
+    [member.userId, transfer]
+  );
+  const self = userId === member.userId;
+  return (
     <li className="grid gap-3 rounded-lg border p-3">
-      <p className="break-words font-medium">{name}</p>
-      <p className="break-all text-muted-foreground text-sm">{email}</p>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={allowed}
-          disabled={permission.isPending}
-          id={`invite-${userId}`}
-          onCheckedChange={change}
+      <p className="break-words font-medium">{member.name}</p>
+      <p className="break-all text-muted-foreground text-sm">{member.email}</p>
+      {member.owner ? <Badge>Owner</Badge> : null}
+      <p>
+        {roles.find((role) => role.value === member.role)?.label ?? member.role}
+      </p>
+      {self || member.owner ? (
+        <p className="text-muted-foreground text-sm">
+          {member.owner
+            ? "Transfer ownership before changing this member’s access."
+            : "Another Manager must change or remove your access."}
+        </p>
+      ) : (
+        <>
+          <RolePicker
+            disabled={update.isPending}
+            label={`Role for ${member.name}`}
+            onChange={change}
+            value={member.role}
+          />
+          <RemoveMemberButton
+            email={member.email}
+            estateId={estateId}
+            memberId={member.userId}
+          />
+        </>
+      )}
+      {update.isPending ? <p role="status">Saving role…</p> : null}
+      {update.isSuccess ? <p role="status">Role saved.</p> : null}
+      {update.error ? <p role="alert">{update.error.message}</p> : null}
+      {canTransfer && !self && !member.owner && member.role === "MANAGER" ? (
+        <Button onClick={showTransfer} variant="outline">
+          Transfer ownership to {member.name}
+        </Button>
+      ) : null}
+      {confirmTransfer ? (
+        <AccessConfirmation
+          confirmLabel="Transfer ownership"
+          description="They will become the estate owner. You will remain a Manager, and ownership powers will pass to them."
+          email={member.email}
+          keepLabel="Keep ownership"
+          onClose={closeTransfer}
+          onConfirm={confirm}
+          title="Transfer estate ownership?"
         />
-        <Label htmlFor={`invite-${userId}`}>
-          Can invite members for {name}
-        </Label>
-      </div>
-      <RemoveMemberButton email={email} estateId={estateId} memberId={userId} />
-      {permission.isPending ? (
-        <p className="text-muted-foreground text-sm" role="status">
-          Saving invitation permission…
-        </p>
-      ) : null}
-      {permission.isSuccess ? (
-        <p className="text-muted-foreground text-sm" role="status">
-          Permission saved.
-        </p>
-      ) : null}
-      {permission.error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {permission.error.message}
-        </p>
       ) : null}
     </li>
   );
@@ -83,6 +162,7 @@ function MemberPermission({
 function CouncilInvitationForm({ estateId }: { estateId: string }) {
   const invitation = useCouncilInvitation(estateId);
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role | null>("COUNCIL");
   const submit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -90,7 +170,7 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
         return;
       }
       invitation.mutate(
-        { email: email.trim() },
+        { email: email.trim(), role: role ?? "COUNCIL" },
         {
           onSuccess: () => {
             setEmail("");
@@ -98,7 +178,7 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
         }
       );
     },
-    [email, invitation]
+    [email, invitation, role]
   );
   const changeEmail = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) =>
@@ -109,13 +189,13 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
     <Card>
       <CardHeader>
         <CardTitle>
-          <h2>Invite a council member</h2>
+          <h2>Invite an estate member</h2>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="mb-4 text-muted-foreground text-sm">
           New users receive an email invitation. Existing users accept on
-          Estates. Existing accounts keep their current access.
+          Invitations. Existing accounts keep their current access.
         </p>
         <form
           className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
@@ -133,6 +213,12 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
               value={email}
             />
           </div>
+          <RolePicker
+            disabled={invitation.isPending}
+            label="Invitation role"
+            onChange={setRole}
+            value={role ?? "COUNCIL"}
+          />
           <Button
             disabled={invitation.isPending || !email.trim()}
             type="submit"
@@ -147,7 +233,7 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
           {invitation.data ? (
             <p className="sm:col-span-2" role="status">
               {invitation.data.status === "IN_APP"
-                ? `Invitation created for ${invitation.data.email}. They can accept it on Estates. No email was sent.`
+                ? `Invitation created for ${invitation.data.email}. They can accept it on Invitations. No email was sent.`
                 : `Invitation sent to ${invitation.data.email}. Access starts after they accept it.`}
             </p>
           ) : null}
@@ -195,10 +281,10 @@ export function CouncilPage({ estateId }: { estateId: string }) {
             to: "/estates/$estateId",
             params: { estateId },
           },
-          { label: "Council members" },
+          { label: "Estate members" },
         ]}
         description={`Invitations and estate access for ${estate.data.name}.`}
-        title="Council members"
+        title="Estate members"
       />
       <div className="grid items-start gap-4 lg:grid-cols-2">
         {estate.data.canInviteMembers ? (
@@ -212,12 +298,12 @@ export function CouncilPage({ estateId }: { estateId: string }) {
         <Card>
           <CardHeader>
             <CardTitle>
-              <h2>Invitation permissions</h2>
+              <h2>Estate roles</h2>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm">
-              Choose who can invite Council members. Only you can change these
+              Choose who can invite Estate members. Only you can change these
               permissions.
             </p>
             {members.isPending ? <p>Loading members…</p> : null}
@@ -230,12 +316,10 @@ export function CouncilPage({ estateId }: { estateId: string }) {
             <ul className="mt-4 grid gap-3 sm:grid-cols-2">
               {members.data?.map((member) => (
                 <MemberPermission
-                  allowed={member.canInviteMembers}
-                  email={member.email}
+                  canTransfer={estate.data.owned}
                   estateId={estateId}
                   key={member.userId}
-                  name={member.name}
-                  userId={member.userId}
+                  member={member}
                 />
               ))}
             </ul>

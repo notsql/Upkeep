@@ -62,8 +62,9 @@ public class ResidentReportController {
                 description = "Sign in required",
                 content = @Content(schema = @Schema(implementation = EstateError.class)))
     })
-    public List<ResidentLocationResponse> locations(@AuthenticationPrincipal Jwt principal) {
-        return reports.locations(subject(principal));
+    public List<ResidentLocationResponse> locations(
+            @AuthenticationPrincipal Jwt principal, @RequestParam UUID estateId) {
+        return reports.locations(subject(principal), estateId);
     }
 
     @PostMapping(value = "/reports", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -98,7 +99,12 @@ public class ResidentReportController {
     public ResponseEntity<IssueReportDetailResponse> create(
             @AuthenticationPrincipal Jwt principal, @Valid @ModelAttribute CreateIssueReportRequest request) {
         var created = reports.create(
-                subject(principal), request.title(), request.description(), request.locationId(), request.images());
+                subject(principal),
+                request.estateId(),
+                request.title(),
+                request.description(),
+                request.locationId(),
+                request.images());
         return ResponseEntity.created(URI.create("/resident/reports/" + created.id()))
                 .body(created);
     }
@@ -186,8 +192,9 @@ public class ResidentReportController {
         return principal.getSubject();
     }
 
-    @Schema(requiredProperties = {"title", "description", "locationId"})
+    @Schema(requiredProperties = {"estateId", "title", "description", "locationId"})
     public record CreateIssueReportRequest(
+            @NotNull UUID estateId,
             @NotBlank @Schema(minLength = 1, maxLength = 50) String title,
 
             @NotBlank String description,

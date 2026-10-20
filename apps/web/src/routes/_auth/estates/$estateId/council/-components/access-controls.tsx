@@ -77,7 +77,7 @@ function OutstandingInvitation({
   );
   let delivery = "Email invitation";
   if (invitation.status === "IN_APP") {
-    delivery = "Accepts in Estates";
+    delivery = "Accepts on Invitations";
   }
   if (invitation.status === "SENDING") {
     delivery = "Sending or awaiting retry";
@@ -86,7 +86,7 @@ function OutstandingInvitation({
     <li className="grid gap-2 rounded-lg border p-3">
       <p className="break-all font-medium">{invitation.email}</p>
       <p className="text-muted-foreground text-sm">
-        {delivery}
+        {invitation.role} · {delivery}
         {invitation.expiresAt
           ? ` · Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`
           : ""}

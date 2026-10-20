@@ -136,7 +136,7 @@ describe("dashboard navigation", () => {
       nav.getByRole("link", { name: "Assets" }).getAttribute("aria-current")
     ).toBe("page");
     expect(
-      nav.getByRole<HTMLAnchorElement>("link", { name: "Council" }).href
+      nav.getByRole<HTMLAnchorElement>("link", { name: "Estate members" }).href
     ).toContain("/estates/e/council");
     screen.getByRole("link", { name: "Skip to content" });
     const mobile = within(
@@ -161,7 +161,7 @@ describe("dashboard navigation", () => {
     );
     const nav = await desktopNavigation();
     expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
-    expect(nav.queryByRole("link", { name: "Council" })).toBeNull();
+    expect(nav.queryByRole("link", { name: "Estate members" })).toBeNull();
     expect(nav.queryByRole("link", { name: "Admin users" })).toBeNull();
   });
   it("preserves member and delegate permission boundaries", async () => {
@@ -178,7 +178,7 @@ describe("dashboard navigation", () => {
     );
     const nav = await desktopNavigation();
     expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
-    nav.getByRole("link", { name: "Council" });
+    nav.getByRole("link", { name: "Estate members" });
   });
   it("keeps Settings in mobile More without duplicating the Locations section", async () => {
     renderWithProviders(

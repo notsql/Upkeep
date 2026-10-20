@@ -3,6 +3,12 @@
 Paths are relative to `apps/web/src/`. Every route here sits under
 `routes/_auth/` and requires a signed-in user.
 
+Every signed-in account can open the directory and creation form, including
+`/estates/` and `/estates/new/`, without `canEnterWorkspace`. Creation still checks
+`canCreateEstate`; all estate-specific routes retain target-estate capability
+guards. Resident-only, Crew-only and unassigned accounts can see an empty directory
+with Create estate. Back, breadcrumb and Cancel on creation all lead to this directory.
+
 ## Routes
 
 | File | URL | Params | Title | Renders |
@@ -17,9 +23,9 @@ Paths are relative to `apps/web/src/`. Every route here sits under
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
 | `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/code/address, Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you), Create estate and a grid of whole-card details links with name, code, address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty`, `Button`, `Input`, `Label`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
-| `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create or edit. When editing, loads the estate and notes that editing an inactive estate does not reactivate it. On save: toast, navigate to `/estates/$estateId`. | - |
+| `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create or edit. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an alert and Retry access. | `Alert`, `AlertDescription`, `Button` |
 | `EstateForm` (`estates/-components/estate-form.tsx`) | Fields: `name` (req, max 200), `code` (req, max 50, "Saved in uppercase"), `address` (req, max 500), `postalCode` (req, max 20), `description` (optional, max 2000). Submit "Create estate" / "Save changes". | `Button`, `Input`, `Label`, `Textarea` |
-| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, code, address, postal code, description. Owner-only actions: "Edit estate" link and, while active, "Deactivate estate" button. Non-owners see "Shared with you. Only the owner can change this estate." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
+| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, code, address, postal code, description. Owners and target-estate Managers get "Edit estate", including inactive estates. Only the current owner gets "Deactivate estate" while active. Other roles see "Shared with you. Only the owner or an assigned Manager can edit estate details." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
 | `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the estate `code` exactly to enable "Deactivate estate". Closing is blocked while pending. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label` |
 
 ## Data (`lib/estates.ts`)
@@ -32,17 +38,32 @@ operation's `status` query param). Request body `EstateRequest`, response
 | --- | --- | --- | --- |
 | `useEstateList(status)` | `GET /estates?status=` | `["estates", userId, "list", status]` | `EstateListPage` |
 | `useEstate(estateId?)` | `GET /estates/{id}` | `["estates", userId, "details", estateId]` (disabled without `estateId`) | editor, details, `LocationsSection`, contextual app navigation |
+| `useAppAccess()` (`lib/access.ts`) | `GET /access/context` | `[userId, "app-access"]` | editor and details resolve `canManageEstate` for the exact estate ID; ownership still uses `EstateResponse.owned` |
 
-Mutations are defined inline in the screens (not in `lib/estates.ts`):
+Create/edit mutations use `useSaveEstate` in `lib/estates.ts`. Deactivation
+remains inline in the details screen:
 
 | Where | Endpoint | On success |
 | --- | --- | --- |
-| `EstateEditorPage` save (create) | `POST /estates` | `setQueryData(["estates", userId, "details", data.id])`; invalidate `["estates", userId, "list"]` (all statuses) and `["estates", userId, "dashboard"]`; toast "Estate created."; navigate to details |
-| `EstateEditorPage` save (edit) | `PATCH /estates/{id}` | same; toast "Estate details updated." |
+| `useSaveEstate` from `EstateEditorPage` (create) | `POST /estates`, then `GET /access/context` | Retain `createdEstate`; `setQueryData(["estates", userId, "details", data.id])`; invalidate `["estates", userId, "list"]` (all statuses) and `["estates", userId, "dashboard"]`; cancel any older access lookup and refetch `[userId, "app-access"]` with errors propagated; screen callback toasts "Estate created." and navigates to details through the route access guard |
+| `useSaveEstate` from `EstateEditorPage` (edit) | `PATCH /estates/{id}` | same; toast "Estate details updated." |
 | `EstateDetailsPage` deactivate | `POST /estates/{id}/deactivate` body `{ code }` | `setQueryData(["estates", userId, "details", estateId])`; close dialog; toast; invalidate `["estates", userId, "list"]` and `["estates", userId, "dashboard"]` |
 
 All queries: `enabled` only when `useEstateSession().ready`, `retry: false`,
 errors via `estateError`.
+
+`useSaveEstate.refreshAccess` tracks refresh/navigation progress and errors after
+the POST has succeeded. A failure shows that the estate was created and offers
+Retry access; retry refetches permissions and opens the retained estate ID without
+another POST. A rejected POST keeps the original form/input. Editing retains its
+existing save flow and does not require the creation refresh step.
+
+Editing and deactivation are separate permissions. Ownership transfer invalidates
+estate and app-access queries through `lib/council-invitations.ts`; the former
+owner keeps the edit link/form through their retained MANAGER membership and
+loses deactivation and transfer controls. Council/Member/Crew/Resident/unassigned
+users and Managers of other estates have no editing controls. The API rechecks
+authority on save, including after membership removal/demotion.
 
 ## Council invitations
 

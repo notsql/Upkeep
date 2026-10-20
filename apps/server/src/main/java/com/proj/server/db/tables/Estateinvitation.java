@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
@@ -116,6 +117,11 @@ public class Estateinvitation extends TableImpl<EstateinvitationRecord> {
      */
     public final TableField<EstateinvitationRecord, String> ACCEPTEDUSERID = createField(DSL.name("acceptedUserId"), SQLDataType.VARCHAR(255), this, "");
 
+    /**
+     * The column <code>public.EstateInvitation.role</code>.
+     */
+    public final TableField<EstateinvitationRecord, String> ROLE = createField(DSL.name("role"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'COUNCIL'::character varying"), SQLDataType.VARCHAR)), this, "");
+
     private Estateinvitation(Name alias, Table<EstateinvitationRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -208,6 +214,13 @@ public class Estateinvitation extends TableImpl<EstateinvitationRecord> {
             _estate = new EstatePath(this, Keys.ESTATEINVITATION__ESTATEINVITATION_ESTATEID_FKEY, null);
 
         return _estate;
+    }
+
+    @Override
+    public List<Check<EstateinvitationRecord>> getChecks() {
+        return Arrays.asList(
+            Internal.createCheck(this, DSL.name("EstateInvitation_role_check"), "(((role)::text = ANY ((ARRAY['COUNCIL'::character varying, 'RESIDENT'::character varying, 'MANAGER'::character varying, 'CREW'::character varying])::text[])))", true)
+        );
     }
 
     @Override

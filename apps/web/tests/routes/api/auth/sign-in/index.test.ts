@@ -31,7 +31,7 @@ it("preserves PKCE and forwards the invitation token to hosted authentication", 
   expect(url.searchParams.get("state")).toBe("sealed");
   expect(url.searchParams.get("code_challenge")).toBe("pkce");
   expect(getSignInUrl).toHaveBeenCalledWith({
-    data: { returnPathname: "/estates" },
+    data: { returnPathname: "/invitations" },
   });
 });
 it("retains the requested safe destination for ordinary sign-in", async () => {

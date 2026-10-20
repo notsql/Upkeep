@@ -8,6 +8,7 @@ import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
@@ -15,14 +16,16 @@ import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-compon
 
 function EstateActions({
   estate,
+  canEditDetails,
   onDeactivate,
 }: {
   estate: components["schemas"]["EstateResponse"];
+  canEditDetails: boolean;
   onDeactivate: () => void;
 }) {
   const canManageCouncil =
     estate.canInviteMembers || estate.canManageInvitationPermissions;
-  if (!(estate.owned || canManageCouncil)) {
+  if (!(estate.owned || canEditDetails || canManageCouncil)) {
     return null;
   }
   return (
@@ -30,7 +33,7 @@ function EstateActions({
       aria-label="Estate actions"
       className="page-actions min-w-0 flex-row gap-3"
     >
-      {estate.owned ? (
+      {canEditDetails ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
           params={{ estateId: estate.id }}
@@ -54,7 +57,7 @@ function EstateActions({
           params={{ estateId: estate.id }}
           to="/estates/$estateId/council"
         >
-          Council members
+          Estate members
         </Link>
       ) : null}
       {estate.owned && !estate.deactivatedAt ? (
@@ -75,6 +78,14 @@ export function EstateDetailsPage({
   children?: ReactNode;
 }) {
   const estate = useEstate(estateId);
+  const access = useAppAccess();
+  const canEditDetails = Boolean(
+    estate.data?.owned ||
+      access.data?.estates.some(
+        (assignment) =>
+          assignment.estateId === estateId && assignment.canManageEstate
+      )
+  );
   const { userId } = useEstateSession();
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
@@ -125,6 +136,7 @@ export function EstateDetailsPage({
           <PageHeader
             actions={
               <EstateActions
+                canEditDetails={canEditDetails}
                 estate={estate.data}
                 onDeactivate={openConfirmation}
               />
@@ -170,9 +182,10 @@ export function EstateDetailsPage({
               </dd>
             </div>
           </dl>
-          {estate.data.owned ? null : (
+          {canEditDetails ? null : (
             <p className="mb-3 text-muted-foreground text-sm">
-              Shared with you. Only the owner can change this estate.
+              Shared with you. Only the owner or an assigned Manager can edit
+              estate details.
             </p>
           )}
           {confirming ? (

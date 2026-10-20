@@ -11,6 +11,16 @@ export const Route = createFileRoute("/")({
     if (user && access?.hasResidentMembership && !access.canEnterWorkspace) {
       throw redirect({ href: "/reports/new" });
     }
+    const reportEstate = access?.estates.find(
+      (estate) => estate.canViewFaultReports
+    );
+    if (
+      user &&
+      reportEstate &&
+      !access?.estates.some((estate) => estate.canViewManagement)
+    ) {
+      throw redirect({ href: `/estates/${reportEstate.estateId}/reports` });
+    }
   },
   head: () => ({ meta: [{ title: "UpKeep — Estate workspace" }] }),
 });

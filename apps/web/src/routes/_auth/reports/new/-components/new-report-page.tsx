@@ -1,16 +1,9 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
-import { useResidentContext, useResidentLocations } from "@/lib/reports";
+import { useResidentContext } from "@/lib/reports";
 import { NewReportForm } from "@/routes/_auth/reports/new/-components/new-report-form";
 
 export function NewReportPage() {
   const context = useResidentContext();
-  const locations = useResidentLocations();
 
   return (
     <main className="page-layout">
@@ -34,27 +27,7 @@ export function NewReportPage() {
         </Alert>
       ) : null}
       {context.data?.canSubmit ? (
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <CardTitle>{context.data.estate?.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {locations.isPending ? (
-              <p role="status">Loading locations…</p>
-            ) : null}
-            {locations.isError ? (
-              <Alert role="alert" variant="destructive">
-                <AlertDescription>
-                  Unable to load locations. Please try again.
-                </AlertDescription>
-              </Alert>
-            ) : null}
-            <NewReportForm
-              disabled={locations.isPending || locations.isError}
-              locations={locations.data ?? []}
-            />
-          </CardContent>
-        </Card>
+        <NewReportForm estates={context.data.estates} />
       ) : null}
     </main>
   );

@@ -8,6 +8,16 @@ Authorization and assignment decisions are superseded by the approved
 The original WorkOS resident-role and ResidentAssignment sections below are
 historical planning context; the reporting content, image limits and ownership
 requirements continue to apply.
+
+**Planned policy revision (2026-10-18):** the
+[estate role draft](estate-role-invitations.md) adds multi-estate resident
+assignments and selected-estate submission, with manager invitation/role
+management. Current Manager/Crew staff editing is limited to report location
+under [fault report locations](fault-report-locations.md), preserving all other
+report information and images apart from the correction's `updatedAt`. Broader
+report editing/deletion is outside that work. These planned staff APIs do not
+broaden the resident's submitter-only history endpoints.
+The changes have not been implemented.
 **Owner:** unassigned
 
 ## Problem

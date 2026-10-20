@@ -156,7 +156,7 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.ESTATEUSER_ONE_RESIDENT_ESTATE, Indexes.ESTATEUSER_USERID_IDX);
+        return Arrays.asList(Indexes.ESTATEUSER_USERID_IDX);
     }
 
     @Override
@@ -185,7 +185,7 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
     public List<Check<EstateuserRecord>> getChecks() {
         return Arrays.asList(
             Internal.createCheck(this, DSL.name("EstateUser_resident_invitation_check"), "((((role)::text <> 'RESIDENT'::text) OR (NOT \"canInviteMembers\")))", true),
-            Internal.createCheck(this, DSL.name("EstateUser_role_check"), "(((role)::text = ANY ((ARRAY['MEMBER'::character varying, 'COUNCIL'::character varying, 'RESIDENT'::character varying])::text[])))", true)
+            Internal.createCheck(this, DSL.name("EstateUser_role_check"), "(((role)::text = ANY ((ARRAY['MEMBER'::character varying, 'COUNCIL'::character varying, 'RESIDENT'::character varying, 'MANAGER'::character varying, 'CREW'::character varying])::text[])))", true)
         );
     }
 
