@@ -4,6 +4,7 @@ import com.proj.server.asset.AssetRepository;
 import com.proj.server.device.DeviceMetric;
 import com.proj.server.estate.EstateRepository;
 import java.time.OffsetDateTime;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ public class AssetReadingService {
             DeviceMetric metric,
             OffsetDateTime from,
             OffsetDateTime to,
+            Set<ReadingFlagType> flags,
             int page,
             int size) {
         if (page < 0) {
@@ -47,10 +49,10 @@ public class AssetReadingService {
         assets.find(assetId, estateId, false)
                 .orElseThrow(() -> new ReadingException(HttpStatus.NOT_FOUND, "Asset not found."));
         return new AssetReadingPage(
-                repository.list(assetId, metric, from, to, page, size),
+                repository.list(assetId, metric, from, to, flags, page, size),
                 page,
                 size,
-                repository.count(assetId, metric, from, to));
+                repository.count(assetId, metric, from, to, flags));
     }
 
     private static ReadingException badRequest(String message) {

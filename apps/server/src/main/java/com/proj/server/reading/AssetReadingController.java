@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,11 +26,15 @@ import org.springframework.web.bind.annotation.RestController;
 @ApiResponses({
     @ApiResponse(
             responseCode = "400",
-            description = "Unknown metric, a malformed time, from not before to, or page or size out of range",
+            description = "Unknown metric or flag, a malformed time, from not before to, or page or size out of range",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "401",
             description = "Sign in required",
+            content = @Content(schema = @Schema(implementation = EstateError.class))),
+    @ApiResponse(
+            responseCode = "403",
+            description = "Resident membership does not grant management access",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "404",
@@ -52,9 +58,15 @@ public class AssetReadingController {
             @RequestParam(required = false) DeviceMetric metric,
             @Parameter(description = "Inclusive") @RequestParam(required = false) OffsetDateTime from,
             @Parameter(description = "Exclusive") @RequestParam(required = false) OffsetDateTime to,
+            @Parameter(description = "Repeatable; lists readings carrying any of them") @RequestParam(required = false)
+                    List<ReadingFlagType> flag,
             @Parameter(description = "Starts at 0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "1 to 200") @RequestParam(defaultValue = "50") int size) {
-        return service.list(estateId, assetId, owner(jwt), metric, from, to, page, size);
+        return service.list(estateId, assetId, owner(jwt), metric, from, to, flags(flag), page, size);
+    }
+
+    private static EnumSet<ReadingFlagType> flags(List<ReadingFlagType> flag) {
+        return flag == null || flag.isEmpty() ? EnumSet.noneOf(ReadingFlagType.class) : EnumSet.copyOf(flag);
     }
 
     private static String owner(Jwt jwt) {
