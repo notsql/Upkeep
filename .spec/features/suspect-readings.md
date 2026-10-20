@@ -203,7 +203,7 @@ Build in order, test-first.
 - [x] DB: `(assetId, metric, measuredAt)` index on `DeviceReading`,
       `pnpm db:migrate`, `pnpm db:generate`.
 - [x] Server: `validMin`/`validMax` on `DeviceMetric` (unit test per bound).
-- [ ] Server: `GET .../readings` - ownership, filters, pagination
+- [x] Server: `GET .../readings` - ownership, filters, pagination
       (Testcontainers tests per Behaviour line).
 - [ ] Server: flags - `OUT_OF_RANGE`, then `DUPLICATE_TIMESTAMP`, then `GAP`,
       and the `flag` filter; `pnpm api:generate`.

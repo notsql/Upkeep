@@ -4,4925 +4,5006 @@
  */
 
 export interface paths {
-  "/access/context": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/members/{userId}/invitation-permission": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["permission"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getAppAccess"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/users/{membershipId}/role": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/{userId}/estates/{estateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Add a user to an estate */
+        put: operations["addEstateUser"];
+        post?: never;
+        /** Remove a user from an estate */
+        delete: operations["removeEstateUser"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put: operations["updateRole"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/users/{userId}/estates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/{membershipId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateRole"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List every estate and whether the user is assigned to it */
-    get: operations["listUserEstates"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/users/{userId}/estates/{estateId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/resident/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listResidentReports"];
+        put?: never;
+        post: operations["createResidentReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    /** Add a user to an estate */
-    put: operations["addEstateUser"];
-    post?: never;
-    /** Remove a user from an estate */
-    delete: operations["removeEstateUser"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/users/organization/{organizationId}/members": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List your estates */
+        get: operations["list"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getMembers"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/users/organization/{organizationId}/roles": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getOrganizationRoles"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/users/organization/all": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List an estate's active locations */
+        get: operations["listLocations"];
+        put?: never;
+        post: operations["createLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getOrganizations"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/asset-categories": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/locations/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deactivateLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listAssetCategories"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/council-invitations": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/locations/{blockId}/floors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a range of floors (levels) to a block */
+        post: operations["addFloors"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["pending"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/council-invitations/{invitationId}/accept": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/council-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["outstanding"];
+        put?: never;
+        post: operations["invite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["acceptInApp"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/council-invitations/accept": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssets"];
+        put?: never;
+        post: operations["createAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["accept"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/dashboard/summary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["restoreAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Summarise your estates and active assets in estates you own */
-    get: operations["summary"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/device-api/readings": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["deactivateAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["submitReading"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/readings/anomaly-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["checkAssetReadings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List your estates */
-    get: operations["list"];
-    put?: never;
-    post: operations["create"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssetEvents"];
+        put?: never;
+        post: operations["recordAssetEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listAssets"];
-    put?: never;
-    post: operations["createAsset"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{assetId}/assessments": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/devices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listDevices"];
+        put?: never;
+        post: operations["registerDevice"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listAssetAssessments"];
-    put?: never;
-    post: operations["recordAssetAssessment"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{assetId}/devices": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["issueDeviceCredential"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listDevices"];
-    put?: never;
-    post: operations["registerDevice"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/assessments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssetAssessments"];
+        put?: never;
+        post: operations["recordAssetAssessment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["issueDeviceCredential"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{assetId}/events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/device-api/readings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["submitReading"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listAssetEvents"];
-    put?: never;
-    post: operations["recordAssetEvent"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{assetId}/failure-risk": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/council-invitations/{invitationId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["acceptInApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getAssetFailureRisk"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{assetId}/readings/anomaly-check": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/council-invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["checkAssetReadings"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update"];
+        trace?: never;
     };
-    get: operations["getAsset"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations["updateAsset"];
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{id}/deactivate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/locations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateLocation"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["deactivateAsset"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{id}/lifecycle-events": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAsset"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateAsset"];
+        trace?: never;
     };
-    get: operations["listAssetLifecycleEvents"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{id}/retirement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["correctAssetRetirement"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["restoreAsset"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/assets/{id}/retirement": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/resident/reports/{reportId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getResidentReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations["correctAssetRetirement"];
-    trace?: never;
-  };
-  "/estates/{estateId}/council-invitations": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/resident/reports/{reportId}/images/{imageId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getResidentReportImage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["outstanding"];
-    put?: never;
-    post: operations["invite"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/council-invitations/{invitationId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/resident/locations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["residentLocations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: operations["cancel"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/failure-risk": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/resident/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["residentContext"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listEstateFailureRisk"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/locations": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/manufacturers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listManufacturers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List an estate's active locations */
-    get: operations["listLocations"];
-    put?: never;
-    post: operations["createLocation"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/locations/{blockId}/floors": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/manufacturers/{manufacturerId}/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssetModels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Add a range of floors (levels) to a block */
-    post: operations["addFloors"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/locations/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["health"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations["updateLocation"];
-    trace?: never;
-  };
-  "/estates/{estateId}/locations/{id}/deactivate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["members"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["deactivateLocation"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/members": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/failure-risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listEstateFailureRisk"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["members"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/members/{userId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{id}/lifecycle-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssetLifecycleEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete: operations["removeMember"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{estateId}/members/{userId}/invitation-permission": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/readings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssetReadings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put: operations["permission"];
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/estates/{id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/assets/{assetId}/failure-risk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAssetFailureRisk"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch: operations["update"];
-    trace?: never;
-  };
-  "/estates/{id}/deactivate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/dashboard/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Summarise your estates and active assets in estates you own */
+        get: operations["summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post: operations["deactivate"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/health": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/council-invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["health"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/manufacturers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/asset-categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAssetCategories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listManufacturers"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/manufacturers/{manufacturerId}/models": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/{userId}/estates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List every estate and whether the user is assigned to it */
+        get: operations["listUserEstates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listAssetModels"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/resident/context": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/organization/{organizationId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrganizationRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["residentContext"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/resident/locations": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/organization/{organizationId}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["residentLocations"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/resident/reports": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/admin/users/organization/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getOrganizations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["listResidentReports"];
-    put?: never;
-    post: operations["createResidentReport"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/resident/reports/{reportId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/access/context": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAppAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getResidentReport"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/resident/reports/{reportId}/images/{imageId}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/estates/{estateId}/members/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["removeMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get: operations["getResidentReportImage"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/estates/{estateId}/council-invitations/{invitationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  headers: never;
-  parameters: never;
-  pathItems: never;
-  requestBodies: never;
-  responses: never;
-  schemas: {
-    InvitationPermissionRequest: {
-      canInviteMembers: boolean;
+    schemas: {
+        InvitationPermissionRequest: {
+            canInviteMembers: boolean;
+        };
+        EstateError: {
+            message: string;
+        };
+        UserRoles: {
+            roleSlugs?: string[];
+        };
+        AdminError: {
+            message: string;
+        };
+        CreateIssueReportRequest: {
+            title: string;
+            description: string;
+            /** Format: uuid */
+            locationId: string;
+            images?: string[];
+        };
+        IssueReportDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            estateName: string;
+            location: components["schemas"]["ReportLocation"];
+            status: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            images: components["schemas"]["ReportImage"][];
+        };
+        ReportImage: {
+            /** Format: uuid */
+            id: string;
+            contentType: string;
+        };
+        ReportLocation: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+        };
+        EstateRequest: {
+            name: string;
+            code: string;
+            address: string;
+            postalCode: string;
+            description?: string;
+        };
+        EstateResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            code: string;
+            address: string;
+            postalCode: string;
+            description?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deactivatedAt?: string | null;
+            owned: boolean;
+            canInviteMembers?: boolean;
+            canManageInvitationPermissions?: boolean;
+        };
+        DeactivateEstateRequest: {
+            code: string;
+        };
+        CreateLocationRequest: {
+            /** @enum {string} */
+            type: "BLOCK" | "LEVEL" | "COMMON_AREA";
+            /** Format: uuid */
+            parentId?: string;
+            name: string;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        LocationResponse: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "BLOCK" | "LEVEL" | "COMMON_AREA";
+            /** Format: uuid */
+            parentId?: string | null;
+            name: string;
+            /**
+             * Format: int32
+             * @description A level's position in its block, lowest first
+             */
+            sortOrder?: number | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deactivatedAt?: string | null;
+        };
+        AddFloorsRequest: {
+            /**
+             * Format: int32
+             * @description The lowest floor: negative for basements (B2 = -2), never 0
+             */
+            lowestFloor: number;
+            /**
+             * Format: int32
+             * @description The highest floor: L25 = 25, never 0
+             */
+            highestFloor: number;
+        };
+        AddFloorsResponse: {
+            /** @description The levels created, highest floor first */
+            created: components["schemas"]["LocationResponse"][];
+            /** @description Names of floors the block already had, highest first */
+            skipped: string[];
+        };
+        CouncilInvitationRequest: {
+            /** Format: email */
+            email: string;
+        };
+        CouncilInvitationResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            estateId: string;
+            email: string;
+            status: string;
+            /** Format: date-time */
+            expiresAt: string | null;
+        };
+        CreateAssetRequest: {
+            name: string;
+            category: string;
+            /** Format: uuid */
+            locationId: string;
+            /** Format: date */
+            installedOn?: string;
+            manufacturer?: string;
+            model?: string;
+            serialNumber?: string;
+        };
+        AssetResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            estateId: string;
+            reference: string;
+            name: string;
+            category: string;
+            /** Format: uuid */
+            locationId: string;
+            /** @description The location's names from its block down, e.g. "Blk 101 › Level 1 › Lift lobby" */
+            locationPath: string;
+            /** Format: date */
+            installedOn?: string | null;
+            manufacturer?: string | null;
+            model?: string | null;
+            serialNumber?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: date-time */
+            deactivatedAt?: string | null;
+            /** Format: date */
+            retiredOn?: string | null;
+            retirementReason?: string | null;
+            /** Format: int32 */
+            lifecycleVersion: number;
+            /** @enum {string|null} */
+            currentCondition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
+        };
+        RestoreAssetRequest: {
+            reference: string;
+            /** Format: int32 */
+            expectedVersion: number;
+        };
+        DeactivateAssetRequest: {
+            reference: string;
+            /** Format: date */
+            retiredOn: string;
+            retirementReason: string;
+            /** Format: int32 */
+            expectedVersion: number;
+        };
+        AnomalyCheckRequest: {
+            /** @description 10 to 3,600 readings, at most 2 seconds apart once sorted by timestamp */
+            readings: components["schemas"]["Reading"][];
+        };
+        Reading: {
+            /** Format: date-time */
+            timestamp: string;
+            /**
+             * Format: double
+             * @description g (RMS)
+             */
+            vibrationAcceleration: number;
+            /**
+             * Format: double
+             * @description bar
+             */
+            pressure: number;
+            /**
+             * Format: double
+             * @description °C
+             */
+            temperature: number;
+            /**
+             * Format: double
+             * @description L/min
+             */
+            flowRate: number;
+            /**
+             * Format: double
+             * @description kW
+             */
+            power: number;
+        };
+        AnomalyCheckResponse: {
+            /** Format: int32 */
+            readingsScored: number;
+            /** Format: int32 */
+            abnormalReadings: number;
+            /** Format: int32 */
+            longestAbnormalRun: number;
+            /** Format: double */
+            maxScore: number;
+            /**
+             * @description The condition recorded for the longest abnormal run, or null
+             * @enum {string|null}
+             */
+            conditionRecorded?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
+        };
+        CreateAssetEventRequest: {
+            /** @enum {string} */
+            type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
+            /** Format: date */
+            occurredOn: string;
+            notes: string;
+        };
+        AssetEventResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            assetId: string;
+            /** @enum {string} */
+            category: "MAINTENANCE";
+            /** @enum {string} */
+            type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
+            /** Format: date */
+            occurredOn: string;
+            notes: string;
+            assetManufacturer?: string | null;
+            assetModel?: string | null;
+            countsTowardForecast: boolean;
+            recordedByUserId: string;
+            recordedByName?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        CreateDeviceRequest: {
+            identifier: string;
+            model: string;
+            /** Format: uuid */
+            locationId: string;
+            metrics: ("TEMPERATURE" | "HUMIDITY" | "PRESSURE" | "FLOW_RATE" | "VIBRATION" | "VIBRATION_ACCELERATION" | "POWER" | "ENERGY")[];
+            /** Format: int32 */
+            reportingIntervalSeconds: number;
+        };
+        DeviceMetricResponse: {
+            /** @enum {string} */
+            metric: "TEMPERATURE" | "HUMIDITY" | "PRESSURE" | "FLOW_RATE" | "VIBRATION" | "VIBRATION_ACCELERATION" | "POWER" | "ENERGY";
+            unit: string;
+        };
+        DeviceResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            estateId: string;
+            /** Format: uuid */
+            assetId: string;
+            /** Format: uuid */
+            locationId: string;
+            identifier: string;
+            model: string;
+            metrics: components["schemas"]["DeviceMetricResponse"][];
+            /** Format: int32 */
+            reportingIntervalSeconds: number;
+            /**
+             * Format: date-time
+             * @description When the device last sent a valid reading. Null until its first.
+             */
+            lastSeenAt?: string | null;
+            /**
+             * Format: date-time
+             * @description When the device's current API key was issued. Null if it has none.
+             */
+            credentialIssuedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        DeviceCredentialResponse: {
+            /** Format: uuid */
+            deviceId: string;
+            /** @description The device's API key. Returned only here, once; it is never stored or shown again. */
+            apiKey: string;
+            /** Format: date-time */
+            issuedAt: string;
+        };
+        CreateAssetAssessmentRequest: {
+            /** @enum {string} */
+            condition: "GOOD" | "NEEDS_ATTENTION" | "FAULTY";
+            /** Format: date */
+            assessedOn: string;
+            notes: string;
+        };
+        AssetAssessmentResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            assetId: string;
+            /** @enum {string} */
+            condition: "GOOD" | "NEEDS_ATTENTION" | "FAULTY";
+            /** Format: date */
+            assessedOn: string;
+            notes: string;
+            recordedByUserId: string;
+            /** @description The recorder's name when they recorded it. Null if WorkOS was unavailable. */
+            recordedByName?: string | null;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        CreateReadingRequest: {
+            /** @enum {string} */
+            metric: "TEMPERATURE" | "HUMIDITY" | "PRESSURE" | "FLOW_RATE" | "VIBRATION" | "VIBRATION_ACCELERATION" | "POWER" | "ENERGY";
+            /**
+             * @description A JSON number, at most 12 digits before the decimal point. Rounded half-up to 6 decimal places. Strings are not converted.
+             * @example 21.5
+             */
+            value: number;
+            /**
+             * @description Exactly the catalogue unit for the metric
+             * @example °C
+             */
+            unit: string;
+            /**
+             * Format: date-time
+             * @description ISO-8601 with a UTC offset, at most 5 minutes after the server's time
+             * @example 2026-10-17T14:30:00+08:00
+             */
+            measuredAt: string;
+        };
+        ReadingResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            deviceId: string;
+            /**
+             * Format: uuid
+             * @description The device's asset when the reading arrived
+             */
+            assetId: string;
+            /** @enum {string} */
+            metric: "TEMPERATURE" | "HUMIDITY" | "PRESSURE" | "FLOW_RATE" | "VIBRATION" | "VIBRATION_ACCELERATION" | "POWER" | "ENERGY";
+            /** @description As stored: rounded to 6 decimal places */
+            value: number;
+            unit: string;
+            /**
+             * Format: date-time
+             * @description In UTC
+             */
+            measuredAt: string;
+            /**
+             * Format: date-time
+             * @description When the server first stored the reading. A retry returns the original time.
+             */
+            receivedAt: string;
+        };
+        AcceptedInvitationsResponse: {
+            estateIds: string[];
+        };
+        UpdateLocationRequest: {
+            /** Format: uuid */
+            parentId?: string;
+            name: string;
+            /** Format: int32 */
+            sortOrder?: number;
+        };
+        UpdateAssetRequest: {
+            name: string;
+            category: string;
+            /** Format: uuid */
+            locationId: string;
+            /** Format: date */
+            installedOn?: string;
+            manufacturer?: string;
+            model?: string;
+            serialNumber?: string;
+        };
+        RetirementCorrectionRequest: {
+            /** Format: date */
+            retiredOn: string;
+            retirementReason: string;
+            /** Format: int32 */
+            expectedVersion: number;
+        };
+        IssueReportPageResponse: {
+            items: components["schemas"]["IssueReportSummaryResponse"][];
+            nextCursor: string | null;
+        };
+        IssueReportSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: string;
+            estateName: string;
+            location: components["schemas"]["ReportLocation"];
+            status: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        ResidentLocationResponse: {
+            /** Format: uuid */
+            id: string;
+            type: string;
+            name: string;
+            /** Format: uuid */
+            parentId: string | null;
+            /** Format: int32 */
+            sortOrder: number | null;
+        };
+        EstateLabel: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        ResidentContextResponse: {
+            estate: components["schemas"]["EstateLabel"] | null;
+            canSubmit: boolean;
+        };
+        ManufacturerResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        AssetModelResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            manufacturerId: string;
+            category: string;
+            name: string;
+        };
+        HealthResponse: {
+            ok: boolean;
+            database: boolean;
+            /** Format: date-time */
+            timestamp: string;
+        };
+        EstateMemberResponse: {
+            userId: string;
+            name: string;
+            email: string;
+            canInviteMembers: boolean;
+        };
+        FailureRiskResponse: {
+            /** Format: uuid */
+            assetId: string;
+            assetReference: string;
+            assetName: string;
+            category: string;
+            /** @enum {string} */
+            basis: "SERVICE_INTERVAL" | "ASSET_HISTORY" | "INSUFFICIENT_DATA" | "NOT_SUPPORTED";
+            /** Format: int32 */
+            failuresObserved: number;
+            /** Format: int32 */
+            daysSinceLastEvent?: number | null;
+            /** Format: double */
+            probability30Days?: number | null;
+            /** Format: double */
+            probability60Days?: number | null;
+            /** Format: double */
+            probability90Days?: number | null;
+            /** @enum {string|null} */
+            recommendedTimeframe?: "WITHIN_30_DAYS" | "WITHIN_60_DAYS" | "WITHIN_90_DAYS" | "BEYOND_90_DAYS" | null;
+            /** Format: date */
+            expectedEndOfLife?: string | null;
+            flagged: boolean;
+            flagReasons: ("CONDITION" | "FAILURE_RISK" | "END_OF_LIFE")[];
+        };
+        AssetLifecycleEventResponse: {
+            /** Format: uuid */
+            id: string;
+            action: string;
+            /** Format: date-time */
+            occurredAt: string;
+            actorUserId: string;
+            /** Format: date-time */
+            previousDeactivatedAt?: string | null;
+            /** Format: date */
+            previousRetiredOn?: string | null;
+            previousRetirementReason?: string | null;
+            /** Format: date-time */
+            deactivatedAt?: string | null;
+            /** Format: date */
+            retiredOn?: string | null;
+            retirementReason?: string | null;
+            /** Format: int32 */
+            lifecycleVersion: number;
+        };
+        AssetReadingPage: {
+            items: components["schemas"]["AssetReadingResponse"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /**
+             * Format: int64
+             * @description How many readings match the filters, across all pages
+             */
+            totalItems: number;
+        };
+        AssetReadingResponse: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: date-time
+             * @description In UTC
+             */
+            measuredAt: string;
+            /** @enum {string} */
+            metric: "TEMPERATURE" | "HUMIDITY" | "PRESSURE" | "FLOW_RATE" | "VIBRATION" | "VIBRATION_ACCELERATION" | "POWER" | "ENERGY";
+            unit: string;
+            /** @description As stored: rounded to 6 decimal places */
+            value: number;
+            /** Format: uuid */
+            deviceId: string;
+            deviceIdentifier: string;
+        };
+        DashboardConditionCounts: {
+            /** Format: int64 */
+            good: number;
+            /** Format: int64 */
+            needsAttention: number;
+            /** Format: int64 */
+            faulty: number;
+            /** Format: int64 */
+            unassessed: number;
+        };
+        DashboardEstateSummary: {
+            /** Format: uuid */
+            estateId: string;
+            estateName: string;
+            estateCode: string;
+            /** Format: int64 */
+            totalActiveAssets: number;
+            /** Format: int64 */
+            needsAttentionCount: number;
+            /** Format: int64 */
+            faultyCount: number;
+        };
+        DashboardSummaryResponse: {
+            /** Format: int32 */
+            accessibleEstateCount: number;
+            /** Format: int32 */
+            activeEstateCount: number;
+            /** Format: int32 */
+            inactiveEstateCount: number;
+            /** Format: int32 */
+            activeOwnedEstateCount: number;
+            /** Format: int64 */
+            councilMemberCount: number;
+            /** Format: int64 */
+            totalActiveAssets: number;
+            conditionCounts: components["schemas"]["DashboardConditionCounts"];
+            /** Format: int32 */
+            affectedEstateCount: number;
+            estatesNeedingAttention: components["schemas"]["DashboardEstateSummary"][];
+        };
+        PendingCouncilInvitationResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            estateId: string;
+            estateName: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        AssetCategoryResponse: {
+            code: string;
+            label: string;
+        };
+        EstateUserResponse: {
+            /** Format: uuid */
+            estateId: string;
+            name: string;
+            code: string;
+            active: boolean;
+            owner: boolean;
+            granted: boolean;
+            /** @enum {string|null} */
+            membershipRole?: "MEMBER" | "COUNCIL" | "RESIDENT" | null;
+            canManageGrant: boolean;
+        };
+        Role: {
+            id?: string;
+            slug?: string;
+            name?: string;
+            description?: string;
+            permissions?: string[];
+        };
+        AdminUserResponse: {
+            membershipId?: string;
+            userId?: string;
+            name?: string;
+            email?: string;
+            joined?: string;
+            roleSlugs?: string[];
+        };
+        Organization: {
+            id?: string;
+            name?: string;
+        };
+        AppAccessResponse: {
+            canEnterWorkspace: boolean;
+            canCreateEstate: boolean;
+            canAccessPlatformAdmin: boolean;
+            hasResidentMembership: boolean;
+            canSubmitReport: boolean;
+            residentEstate: components["schemas"]["EstateLabel"] | null;
+            estates: components["schemas"]["EstateAccessResponse"][];
+        };
+        EstateAccessResponse: {
+            /** Format: uuid */
+            estateId: string;
+            /** @enum {string} */
+            role: "OWNER" | "MEMBER" | "COUNCIL" | "RESIDENT";
+            canViewManagement: boolean;
+            canManageEstate: boolean;
+            canViewAssets: boolean;
+            canInviteMembers: boolean;
+            canManageInvitationPermissions: boolean;
+        };
     };
-    EstateError: {
-      message: string;
-    };
-    UserRoles: {
-      roleSlugs?: string[];
-    };
-    AdminError: {
-      message: string;
-    };
-    CreateIssueReportRequest: {
-      title: string;
-      description: string;
-      /** Format: uuid */
-      locationId: string;
-      images?: string[];
-    };
-    IssueReportDetailResponse: {
-      /** Format: uuid */
-      id: string;
-      title: string;
-      description: string;
-      estateName: string;
-      location: components["schemas"]["ReportLocation"];
-      status: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-      images: components["schemas"]["ReportImage"][];
-    };
-    ReportImage: {
-      /** Format: uuid */
-      id: string;
-      contentType: string;
-    };
-    ReportLocation: {
-      /** Format: uuid */
-      id: string;
-      label: string;
-    };
-    EstateRequest: {
-      name: string;
-      code: string;
-      address: string;
-      postalCode: string;
-      description?: string;
-    };
-    EstateResponse: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-      code: string;
-      address: string;
-      postalCode: string;
-      description?: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-      /** Format: date-time */
-      deactivatedAt?: string | null;
-      owned: boolean;
-      canInviteMembers?: boolean;
-      canManageInvitationPermissions?: boolean;
-    };
-    DeactivateEstateRequest: {
-      code: string;
-    };
-    CreateLocationRequest: {
-      /** @enum {string} */
-      type: "BLOCK" | "LEVEL" | "COMMON_AREA";
-      /** Format: uuid */
-      parentId?: string;
-      name: string;
-      /** Format: int32 */
-      sortOrder?: number;
-    };
-    LocationResponse: {
-      /** Format: uuid */
-      id: string;
-      /** @enum {string} */
-      type: "BLOCK" | "LEVEL" | "COMMON_AREA";
-      /** Format: uuid */
-      parentId?: string | null;
-      name: string;
-      /**
-       * Format: int32
-       * @description A level's position in its block, lowest first
-       */
-      sortOrder?: number | null;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-      /** Format: date-time */
-      deactivatedAt?: string | null;
-    };
-    AddFloorsRequest: {
-      /**
-       * Format: int32
-       * @description The lowest floor: negative for basements (B2 = -2), never 0
-       */
-      lowestFloor: number;
-      /**
-       * Format: int32
-       * @description The highest floor: L25 = 25, never 0
-       */
-      highestFloor: number;
-    };
-    AddFloorsResponse: {
-      /** @description The levels created, highest floor first */
-      created: components["schemas"]["LocationResponse"][];
-      /** @description Names of floors the block already had, highest first */
-      skipped: string[];
-    };
-    CouncilInvitationRequest: {
-      /** Format: email */
-      email: string;
-    };
-    CouncilInvitationResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      email: string;
-      status: string;
-      /** Format: date-time */
-      expiresAt: string | null;
-    };
-    CreateAssetRequest: {
-      name: string;
-      category: string;
-      /** Format: uuid */
-      locationId: string;
-      /** Format: date */
-      installedOn?: string;
-      manufacturer?: string;
-      model?: string;
-      serialNumber?: string;
-    };
-    AssetResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      reference: string;
-      name: string;
-      category: string;
-      /** Format: uuid */
-      locationId: string;
-      /** @description The location's names from its block down, e.g. "Blk 101 › Level 1 › Lift lobby" */
-      locationPath: string;
-      /** Format: date */
-      installedOn?: string | null;
-      manufacturer?: string | null;
-      model?: string | null;
-      serialNumber?: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-      /** Format: date-time */
-      deactivatedAt?: string | null;
-      /** Format: date */
-      retiredOn?: string | null;
-      retirementReason?: string | null;
-      /** Format: int32 */
-      lifecycleVersion: number;
-      /** @enum {string|null} */
-      currentCondition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
-    };
-    RestoreAssetRequest: {
-      reference: string;
-      /** Format: int32 */
-      expectedVersion: number;
-    };
-    DeactivateAssetRequest: {
-      reference: string;
-      /** Format: date */
-      retiredOn: string;
-      retirementReason: string;
-      /** Format: int32 */
-      expectedVersion: number;
-    };
-    AnomalyCheckRequest: {
-      /** @description 10 to 3,600 readings, at most 2 seconds apart once sorted by timestamp */
-      readings: components["schemas"]["Reading"][];
-    };
-    Reading: {
-      /** Format: date-time */
-      timestamp: string;
-      /**
-       * Format: double
-       * @description g (RMS)
-       */
-      vibrationAcceleration: number;
-      /**
-       * Format: double
-       * @description bar
-       */
-      pressure: number;
-      /**
-       * Format: double
-       * @description °C
-       */
-      temperature: number;
-      /**
-       * Format: double
-       * @description L/min
-       */
-      flowRate: number;
-      /**
-       * Format: double
-       * @description kW
-       */
-      power: number;
-    };
-    AnomalyCheckResponse: {
-      /** Format: int32 */
-      readingsScored: number;
-      /** Format: int32 */
-      abnormalReadings: number;
-      /** Format: int32 */
-      longestAbnormalRun: number;
-      /** Format: double */
-      maxScore: number;
-      /**
-       * @description The condition recorded for the longest abnormal run, or null
-       * @enum {string|null}
-       */
-      conditionRecorded?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
-    };
-    CreateAssetEventRequest: {
-      /** @enum {string} */
-      type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
-      /** Format: date */
-      occurredOn: string;
-      notes: string;
-    };
-    AssetEventResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      assetId: string;
-      /** @enum {string} */
-      category: "MAINTENANCE";
-      /** @enum {string} */
-      type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
-      /** Format: date */
-      occurredOn: string;
-      notes: string;
-      assetManufacturer?: string | null;
-      assetModel?: string | null;
-      countsTowardForecast: boolean;
-      recordedByUserId: string;
-      recordedByName?: string | null;
-      /** Format: date-time */
-      createdAt: string;
-    };
-    CreateDeviceRequest: {
-      identifier: string;
-      model: string;
-      /** Format: uuid */
-      locationId: string;
-      metrics: (
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY"
-      )[];
-      /** Format: int32 */
-      reportingIntervalSeconds: number;
-    };
-    DeviceMetricResponse: {
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      unit: string;
-    };
-    DeviceResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      /** Format: uuid */
-      assetId: string;
-      /** Format: uuid */
-      locationId: string;
-      identifier: string;
-      model: string;
-      metrics: components["schemas"]["DeviceMetricResponse"][];
-      /** Format: int32 */
-      reportingIntervalSeconds: number;
-      /**
-       * Format: date-time
-       * @description When the device last sent a valid reading. Null until its first.
-       */
-      lastSeenAt?: string | null;
-      /**
-       * Format: date-time
-       * @description When the device's current API key was issued. Null if it has none.
-       */
-      credentialIssuedAt?: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    DeviceCredentialResponse: {
-      /** Format: uuid */
-      deviceId: string;
-      /** @description The device's API key. Returned only here, once; it is never stored or shown again. */
-      apiKey: string;
-      /** Format: date-time */
-      issuedAt: string;
-    };
-    CreateAssetAssessmentRequest: {
-      /** @enum {string} */
-      condition: "GOOD" | "NEEDS_ATTENTION" | "FAULTY";
-      /** Format: date */
-      assessedOn: string;
-      notes: string;
-    };
-    AssetAssessmentResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      assetId: string;
-      /** @enum {string} */
-      condition: "GOOD" | "NEEDS_ATTENTION" | "FAULTY";
-      /** Format: date */
-      assessedOn: string;
-      notes: string;
-      recordedByUserId: string;
-      /** @description The recorder's name when they recorded it. Null if WorkOS was unavailable. */
-      recordedByName?: string | null;
-      /** Format: date-time */
-      recordedAt: string;
-    };
-    CreateReadingRequest: {
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      /**
-       * @description A JSON number, at most 12 digits before the decimal point. Rounded half-up to 6 decimal places. Strings are not converted.
-       * @example 21.5
-       */
-      value: number;
-      /**
-       * @description Exactly the catalogue unit for the metric
-       * @example °C
-       */
-      unit: string;
-      /**
-       * Format: date-time
-       * @description ISO-8601 with a UTC offset, at most 5 minutes after the server's time
-       * @example 2026-10-17T14:30:00+08:00
-       */
-      measuredAt: string;
-    };
-    ReadingResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      deviceId: string;
-      /**
-       * Format: uuid
-       * @description The device's asset when the reading arrived
-       */
-      assetId: string;
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      /** @description As stored: rounded to 6 decimal places */
-      value: number;
-      unit: string;
-      /**
-       * Format: date-time
-       * @description In UTC
-       */
-      measuredAt: string;
-      /**
-       * Format: date-time
-       * @description When the server first stored the reading. A retry returns the original time.
-       */
-      receivedAt: string;
-    };
-    AcceptedInvitationsResponse: {
-      estateIds: string[];
-    };
-    UpdateLocationRequest: {
-      /** Format: uuid */
-      parentId?: string;
-      name: string;
-      /** Format: int32 */
-      sortOrder?: number;
-    };
-    UpdateAssetRequest: {
-      name: string;
-      category: string;
-      /** Format: uuid */
-      locationId: string;
-      /** Format: date */
-      installedOn?: string;
-      manufacturer?: string;
-      model?: string;
-      serialNumber?: string;
-    };
-    RetirementCorrectionRequest: {
-      /** Format: date */
-      retiredOn: string;
-      retirementReason: string;
-      /** Format: int32 */
-      expectedVersion: number;
-    };
-    IssueReportPageResponse: {
-      items: components["schemas"]["IssueReportSummaryResponse"][];
-      nextCursor: string | null;
-    };
-    IssueReportSummaryResponse: {
-      /** Format: uuid */
-      id: string;
-      title: string;
-      description: string;
-      estateName: string;
-      location: components["schemas"]["ReportLocation"];
-      status: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    ResidentLocationResponse: {
-      /** Format: uuid */
-      id: string;
-      type: string;
-      name: string;
-      /** Format: uuid */
-      parentId: string | null;
-      /** Format: int32 */
-      sortOrder: number | null;
-    };
-    EstateLabel: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-    };
-    ResidentContextResponse: {
-      estate: components["schemas"]["EstateLabel"] | null;
-      canSubmit: boolean;
-    };
-    ManufacturerResponse: {
-      /** Format: uuid */
-      id: string;
-      name: string;
-    };
-    AssetModelResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      manufacturerId: string;
-      category: string;
-      name: string;
-    };
-    HealthResponse: {
-      ok: boolean;
-      database: boolean;
-      /** Format: date-time */
-      timestamp: string;
-    };
-    EstateMemberResponse: {
-      userId: string;
-      name: string;
-      email: string;
-      canInviteMembers: boolean;
-    };
-    FailureRiskResponse: {
-      /** Format: uuid */
-      assetId: string;
-      assetReference: string;
-      assetName: string;
-      category: string;
-      /** @enum {string} */
-      basis:
-        | "SERVICE_INTERVAL"
-        | "ASSET_HISTORY"
-        | "INSUFFICIENT_DATA"
-        | "NOT_SUPPORTED";
-      /** Format: int32 */
-      failuresObserved: number;
-      /** Format: int32 */
-      daysSinceLastEvent?: number | null;
-      /** Format: double */
-      probability30Days?: number | null;
-      /** Format: double */
-      probability60Days?: number | null;
-      /** Format: double */
-      probability90Days?: number | null;
-      /** @enum {string|null} */
-      recommendedTimeframe?:
-        | "WITHIN_30_DAYS"
-        | "WITHIN_60_DAYS"
-        | "WITHIN_90_DAYS"
-        | "BEYOND_90_DAYS"
-        | null;
-      /** Format: date */
-      expectedEndOfLife?: string | null;
-      flagged: boolean;
-      flagReasons: ("CONDITION" | "FAILURE_RISK" | "END_OF_LIFE")[];
-    };
-    AssetLifecycleEventResponse: {
-      /** Format: uuid */
-      id: string;
-      action: string;
-      /** Format: date-time */
-      occurredAt: string;
-      actorUserId: string;
-      /** Format: date-time */
-      previousDeactivatedAt?: string | null;
-      /** Format: date */
-      previousRetiredOn?: string | null;
-      previousRetirementReason?: string | null;
-      /** Format: date-time */
-      deactivatedAt?: string | null;
-      /** Format: date */
-      retiredOn?: string | null;
-      retirementReason?: string | null;
-      /** Format: int32 */
-      lifecycleVersion: number;
-    };
-    DashboardConditionCounts: {
-      /** Format: int64 */
-      good: number;
-      /** Format: int64 */
-      needsAttention: number;
-      /** Format: int64 */
-      faulty: number;
-      /** Format: int64 */
-      unassessed: number;
-    };
-    DashboardEstateSummary: {
-      /** Format: uuid */
-      estateId: string;
-      estateName: string;
-      estateCode: string;
-      /** Format: int64 */
-      totalActiveAssets: number;
-      /** Format: int64 */
-      needsAttentionCount: number;
-      /** Format: int64 */
-      faultyCount: number;
-    };
-    DashboardSummaryResponse: {
-      /** Format: int32 */
-      accessibleEstateCount: number;
-      /** Format: int32 */
-      activeEstateCount: number;
-      /** Format: int32 */
-      inactiveEstateCount: number;
-      /** Format: int32 */
-      activeOwnedEstateCount: number;
-      /** Format: int64 */
-      councilMemberCount: number;
-      /** Format: int64 */
-      totalActiveAssets: number;
-      conditionCounts: components["schemas"]["DashboardConditionCounts"];
-      /** Format: int32 */
-      affectedEstateCount: number;
-      estatesNeedingAttention: components["schemas"]["DashboardEstateSummary"][];
-    };
-    PendingCouncilInvitationResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      estateName: string;
-      /** Format: date-time */
-      expiresAt: string;
-    };
-    AssetCategoryResponse: {
-      code: string;
-      label: string;
-    };
-    EstateUserResponse: {
-      /** Format: uuid */
-      estateId: string;
-      name: string;
-      code: string;
-      active: boolean;
-      owner: boolean;
-      granted: boolean;
-      /** @enum {string|null} */
-      membershipRole?: "MEMBER" | "COUNCIL" | "RESIDENT" | null;
-      canManageGrant: boolean;
-    };
-    Role: {
-      id?: string;
-      slug?: string;
-      name?: string;
-      description?: string;
-      permissions?: string[];
-    };
-    AdminUserResponse: {
-      membershipId?: string;
-      userId?: string;
-      name?: string;
-      email?: string;
-      joined?: string;
-      roleSlugs?: string[];
-    };
-    Organization: {
-      id?: string;
-      name?: string;
-    };
-    AppAccessResponse: {
-      canEnterWorkspace: boolean;
-      canCreateEstate: boolean;
-      canAccessPlatformAdmin: boolean;
-      hasResidentMembership: boolean;
-      canSubmitReport: boolean;
-      residentEstate: components["schemas"]["EstateLabel"] | null;
-      estates: components["schemas"]["EstateAccessResponse"][];
-    };
-    EstateAccessResponse: {
-      /** Format: uuid */
-      estateId: string;
-      /** @enum {string} */
-      role: "OWNER" | "MEMBER" | "COUNCIL" | "RESIDENT";
-      canViewManagement: boolean;
-      canManageEstate: boolean;
-      canViewAssets: boolean;
-      canInviteMembers: boolean;
-      canManageInvitationPermissions: boolean;
-    };
-  };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  accept: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Estate memberships activated from verified WorkOS acceptances */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AcceptedInvitationsResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  acceptInApp: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        invitationId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Explicitly accept one in-app estate invitation */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AcceptedInvitationsResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  addEstateUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description User added */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Admin role required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership requires explicit conversion */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  addFloors: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        blockId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AddFloorsRequest"];
-      };
-    };
-    responses: {
-      /** @description Floors added; floors the block already had are listed as skipped */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AddFloorsResponse"];
-        };
-      };
-      /** @description Invalid request or hierarchy shape */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate name or level position, inactive estate or location, or active children */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  cancel: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        invitationId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Invitation cancelled for this estate */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  checkAssetReadings: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AnomalyCheckRequest"];
-      };
-    };
-    responses: {
-      /** @description The batch was scored */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AnomalyCheckResponse"];
-        };
-      };
-      /** @description Too few or too many readings, a missing or non-finite value, or bad timestamps */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Not a pump, a deactivated asset, or an inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description The anomaly model is unavailable; nothing was recorded */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  correctAssetRetirement: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RetirementCorrectionRequest"];
-      };
-    };
-    responses: {
-      /** @description Retirement information corrected */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  create: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["EstateRequest"];
-      };
-    };
-    responses: {
-      /** @description Estate created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate estate code */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  createAsset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateAssetRequest"];
-      };
-    };
-    responses: {
-      /** @description Asset registered with a generated reference */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  createLocation: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateLocationRequest"];
-      };
-    };
-    responses: {
-      /** @description Location created */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["LocationResponse"];
-        };
-      };
-      /** @description Invalid request or hierarchy shape */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate name or level position, inactive estate or location, or active children */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  createResidentReport: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: {
-      content: {
-        "multipart/form-data": components["schemas"]["CreateIssueReportRequest"];
-      };
-    };
-    responses: {
-      /** @description Report submitted */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["IssueReportDetailResponse"];
-        };
-      };
-      /** @description Invalid title, description, image or location */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Active resident membership required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Upload too large */
-      413: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Unsupported image type */
-      415: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Image storage unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  deactivate: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DeactivateEstateRequest"];
-      };
-    };
-    responses: {
-      /** @description Estate deactivated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate estate code */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  deactivateAsset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DeactivateAssetRequest"];
-      };
-    };
-    responses: {
-      /** @description Asset deactivated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  deactivateLocation: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Location deactivated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["LocationResponse"];
-        };
-      };
-      /** @description Invalid request or hierarchy shape */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate name or level position, inactive estate or location, or active children */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Estate details */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate estate code */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  getAppAccess: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Current caller's independent estate capabilities */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AppAccessResponse"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Access lookup unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  getAsset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Asset details, including deactivated assets */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  getAssetFailureRisk: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The asset's breakdown forecast and flags */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["FailureRiskResponse"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  getMembers: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        organizationId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AdminUserResponse"][];
-        };
-      };
-    };
-  };
-  getOrganizationRoles: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        organizationId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["Role"][];
-        };
-      };
-    };
-  };
-  getOrganizations: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["Organization"][];
-        };
-      };
-    };
-  };
-  getResidentReport: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        reportId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Own report details */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["IssueReportDetailResponse"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Report not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  getResidentReportImage: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        reportId: string;
-        imageId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "image/jpeg": string;
-          "image/png": string;
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Report image not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Image storage unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  health: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["HealthResponse"];
-        };
-      };
-    };
-  };
-  invite: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CouncilInvitationRequest"];
-      };
-    };
-    responses: {
-      /** @description Invitation sent */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["CouncilInvitationResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  issueDeviceCredential: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-        deviceId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description New API key, shown only this once. Replaces and revokes any earlier key. */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["DeviceCredentialResponse"];
-        };
-      };
-      /** @description Missing or invalid details, or an unsupported metric */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset, location or device not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate identifier, or an inactive estate, asset or location */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  list: {
-    parameters: {
-      query?: {
-        status?: "ACTIVE" | "INACTIVE" | "ALL";
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Your estates */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateResponse"][];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate estate code */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listAssetAssessments: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Every assessment, current condition first */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetAssessmentResponse"][];
-        };
-      };
-      /** @description Missing or invalid details, or a date in the future */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate or deactivated asset */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listAssetCategories: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Every asset category, ordered by label */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetCategoryResponse"][];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listAssetEvents: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Every event, newest first */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetEventResponse"][];
-        };
-      };
-      /** @description Missing or invalid details, a future date, or a date before installation */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate or deactivated asset */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listAssetLifecycleEvents: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Asset lifecycle history, newest first */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetLifecycleEventResponse"][];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listAssetModels: {
-    parameters: {
-      query: {
-        category: string;
-        query?: string;
-      };
-      header?: never;
-      path: {
-        manufacturerId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The manufacturer's models in the category, at most 20 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetModelResponse"][];
-        };
-      };
-      /** @description Missing or unknown category */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Manufacturer not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listAssets: {
-    parameters: {
-      query?: {
-        q?: string;
-        category?: string;
-        locationId?: string;
-        condition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | "UNASSESSED";
-        status?: "ACTIVE" | "INACTIVE" | "ALL";
-      };
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Asset register */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"][];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listDevices: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The asset's devices, newest first */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["DeviceResponse"][];
-        };
-      };
-      /** @description Missing or invalid details, or an unsupported metric */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset, location or device not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate identifier, or an inactive estate, asset or location */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listEstateFailureRisk: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Active assets in silent-failure categories, flagged first, then by 90-day risk */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["FailureRiskResponse"][];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listLocations: {
-    parameters: {
-      query?: {
-        includeInactive?: boolean;
-      };
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description The estate's active locations, siblings in display order */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["LocationResponse"][];
-        };
-      };
-      /** @description Invalid request or hierarchy shape */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate name or level position, inactive estate or location, or active children */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listManufacturers: {
-    parameters: {
-      query?: {
-        query?: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Manufacturers whose names contain the query, at most 20 */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ManufacturerResponse"][];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listResidentReports: {
-    parameters: {
-      query?: {
-        cursor?: string;
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Own report history */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["IssueReportPageResponse"];
-        };
-      };
-      /** @description Invalid cursor or limit */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listUserEstates: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Every estate and whether the user is assigned to it */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateUserResponse"][];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Admin role required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  members: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Estate members and invitation permissions */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateMemberResponse"][];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  outstanding: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Outstanding invitations, including sending and expired invitations */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["CouncilInvitationResponse"][];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  pending: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Pending in-app invitations for the verified signed-in recipient */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["PendingCouncilInvitationResponse"][];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  permission: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["InvitationPermissionRequest"];
-      };
-    };
-    responses: {
-      /** @description Invitation permission saved */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  recordAssetAssessment: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateAssetAssessmentRequest"];
-      };
-    };
-    responses: {
-      /** @description Assessment recorded */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetAssessmentResponse"];
-        };
-      };
-      /** @description Missing or invalid details, or a date in the future */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate or deactivated asset */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  recordAssetEvent: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateAssetEventRequest"];
-      };
-    };
-    responses: {
-      /** @description Event recorded */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetEventResponse"];
-        };
-      };
-      /** @description Missing or invalid details, a future date, or a date before installation */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or asset not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate or deactivated asset */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  registerDevice: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        assetId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateDeviceRequest"];
-      };
-    };
-    responses: {
-      /** @description Device registered, awaiting its first reading */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["DeviceResponse"];
-        };
-      };
-      /** @description Missing or invalid details, or an unsupported metric */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset, location or device not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate identifier, or an inactive estate, asset or location */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  removeEstateUser: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        userId: string;
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description User removed */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Admin role required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership cannot be removed through management grants */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  removeMember: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        userId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Member access removed from this estate */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Insufficient estate permissions */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or member not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate invitation or inactive estate */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Identity provider not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  residentContext: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Assigned resident estate */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ResidentContextResponse"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  residentLocations: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Active locations in the assigned estate */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ResidentLocationResponse"][];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  restoreAsset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["RestoreAssetRequest"];
-      };
-    };
-    responses: {
-      /** @description Asset restored */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  submitReading: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["CreateReadingRequest"];
-      };
-    };
-    responses: {
-      /** @description An identical reading was already stored; nothing changed and it is returned */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ReadingResponse"];
-        };
-      };
-      /** @description Reading stored */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["ReadingResponse"];
-        };
-      };
-      /** @description Malformed reading; the message names the field and the problem */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Missing, malformed, unknown or replaced device key */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  summary: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description User-scoped portfolio summary */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["DashboardSummaryResponse"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Summary temporarily unavailable */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  update: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["EstateRequest"];
-      };
-    };
-    responses: {
-      /** @description Estate updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateResponse"];
-        };
-      };
-      /** @description Invalid request */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate estate code */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  updateAsset: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateAssetRequest"];
-      };
-    };
-    responses: {
-      /** @description Asset updated or moved */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AssetResponse"];
-        };
-      };
-      /** @description Invalid request or wrong confirmation reference */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate, asset or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inactive estate, asset or location, or a conflicting change */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  updateLocation: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UpdateLocationRequest"];
-      };
-    };
-    responses: {
-      /** @description Location renamed, reordered or moved */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["LocationResponse"];
-        };
-      };
-      /** @description Invalid request or hierarchy shape */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Resident membership does not grant management access */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Estate or location not found */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Duplicate name or level position, inactive estate or location, or active children */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  updateRole: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        membershipId: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["UserRoles"];
-      };
-    };
-    responses: {
-      /** @description Role updated */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["UserRoles"];
-        };
-      };
-      /** @description Invalid roles */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AdminError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Admin role required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Role safeguard rejected the update */
-      409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AdminError"];
-        };
-      };
-      /** @description WorkOS request failed */
-      502: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AdminError"];
-        };
-      };
-      /** @description WorkOS is not configured */
-      503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["AdminError"];
-        };
-      };
+    permission: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationPermissionRequest"];
+            };
+        };
+        responses: {
+            /** @description Invitation permission saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    addEstateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User added */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership requires explicit conversion */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    removeEstateUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User removed */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership cannot be removed through management grants */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    updateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                membershipId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserRoles"];
+            };
+        };
+        responses: {
+            /** @description Role updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["UserRoles"];
+                };
+            };
+            /** @description Invalid roles */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AdminError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Role safeguard rejected the update */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AdminError"];
+                };
+            };
+            /** @description WorkOS request failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AdminError"];
+                };
+            };
+            /** @description WorkOS is not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AdminError"];
+                };
+            };
+        };
+    };
+    listResidentReports: {
+        parameters: {
+            query?: {
+                cursor?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Own report history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IssueReportPageResponse"];
+                };
+            };
+            /** @description Invalid cursor or limit */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    createResidentReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["CreateIssueReportRequest"];
+            };
+        };
+        responses: {
+            /** @description Report submitted */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IssueReportDetailResponse"];
+                };
+            };
+            /** @description Invalid title, description, image or location */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Active resident membership required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Upload too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Unsupported image type */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Image storage unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    list: {
+        parameters: {
+            query?: {
+                status?: "ACTIVE" | "INACTIVE" | "ALL";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Your estates */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateResponse"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate estate code */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstateRequest"];
+            };
+        };
+        responses: {
+            /** @description Estate created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate estate code */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateEstateRequest"];
+            };
+        };
+        responses: {
+            /** @description Estate deactivated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate estate code */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listLocations: {
+        parameters: {
+            query?: {
+                includeInactive?: boolean;
+            };
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The estate's active locations, siblings in display order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LocationResponse"][];
+                };
+            };
+            /** @description Invalid request or hierarchy shape */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate name or level position, inactive estate or location, or active children */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    createLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateLocationRequest"];
+            };
+        };
+        responses: {
+            /** @description Location created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LocationResponse"];
+                };
+            };
+            /** @description Invalid request or hierarchy shape */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate name or level position, inactive estate or location, or active children */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    deactivateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Location deactivated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LocationResponse"];
+                };
+            };
+            /** @description Invalid request or hierarchy shape */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate name or level position, inactive estate or location, or active children */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    addFloors: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                blockId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddFloorsRequest"];
+            };
+        };
+        responses: {
+            /** @description Floors added; floors the block already had are listed as skipped */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AddFloorsResponse"];
+                };
+            };
+            /** @description Invalid request or hierarchy shape */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate name or level position, inactive estate or location, or active children */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    outstanding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Outstanding invitations, including sending and expired invitations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CouncilInvitationResponse"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    invite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CouncilInvitationRequest"];
+            };
+        };
+        responses: {
+            /** @description Invitation sent */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CouncilInvitationResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssets: {
+        parameters: {
+            query?: {
+                q?: string;
+                category?: string;
+                locationId?: string;
+                condition?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | "UNASSESSED";
+                status?: "ACTIVE" | "INACTIVE" | "ALL";
+            };
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Asset register */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"][];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    createAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssetRequest"];
+            };
+        };
+        responses: {
+            /** @description Asset registered with a generated reference */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    restoreAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreAssetRequest"];
+            };
+        };
+        responses: {
+            /** @description Asset restored */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    deactivateAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeactivateAssetRequest"];
+            };
+        };
+        responses: {
+            /** @description Asset deactivated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    checkAssetReadings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnomalyCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description The batch was scored */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AnomalyCheckResponse"];
+                };
+            };
+            /** @description Too few or too many readings, a missing or non-finite value, or bad timestamps */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Not a pump, a deactivated asset, or an inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description The anomaly model is unavailable; nothing was recorded */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssetEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every event, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetEventResponse"][];
+                };
+            };
+            /** @description Missing or invalid details, a future date, or a date before installation */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate or deactivated asset */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    recordAssetEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssetEventRequest"];
+            };
+        };
+        responses: {
+            /** @description Event recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetEventResponse"];
+                };
+            };
+            /** @description Missing or invalid details, a future date, or a date before installation */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate or deactivated asset */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listDevices: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The asset's devices, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DeviceResponse"][];
+                };
+            };
+            /** @description Missing or invalid details, or an unsupported metric */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset, location or device not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate identifier, or an inactive estate, asset or location */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    registerDevice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateDeviceRequest"];
+            };
+        };
+        responses: {
+            /** @description Device registered, awaiting its first reading */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DeviceResponse"];
+                };
+            };
+            /** @description Missing or invalid details, or an unsupported metric */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset, location or device not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate identifier, or an inactive estate, asset or location */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    issueDeviceCredential: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+                deviceId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description New API key, shown only this once. Replaces and revokes any earlier key. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DeviceCredentialResponse"];
+                };
+            };
+            /** @description Missing or invalid details, or an unsupported metric */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset, location or device not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate identifier, or an inactive estate, asset or location */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssetAssessments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every assessment, current condition first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetAssessmentResponse"][];
+                };
+            };
+            /** @description Missing or invalid details, or a date in the future */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate or deactivated asset */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    recordAssetAssessment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAssetAssessmentRequest"];
+            };
+        };
+        responses: {
+            /** @description Assessment recorded */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetAssessmentResponse"];
+                };
+            };
+            /** @description Missing or invalid details, or a date in the future */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate or deactivated asset */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    submitReading: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateReadingRequest"];
+            };
+        };
+        responses: {
+            /** @description An identical reading was already stored; nothing changed and it is returned */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReadingResponse"];
+                };
+            };
+            /** @description Reading stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReadingResponse"];
+                };
+            };
+            /** @description Malformed reading; the message names the field and the problem */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Missing, malformed, unknown or replaced device key */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    acceptInApp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Explicitly accept one in-app estate invitation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AcceptedInvitationsResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estate memberships activated from verified WorkOS acceptances */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AcceptedInvitationsResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estate details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate estate code */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EstateRequest"];
+            };
+        };
+        responses: {
+            /** @description Estate updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateResponse"];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate estate code */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    updateLocation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateLocationRequest"];
+            };
+        };
+        responses: {
+            /** @description Location renamed, reordered or moved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LocationResponse"];
+                };
+            };
+            /** @description Invalid request or hierarchy shape */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate name or level position, inactive estate or location, or active children */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    getAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Asset details, including deactivated assets */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    updateAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAssetRequest"];
+            };
+        };
+        responses: {
+            /** @description Asset updated or moved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    correctAssetRetirement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RetirementCorrectionRequest"];
+            };
+        };
+        responses: {
+            /** @description Retirement information corrected */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    getResidentReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Own report details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["IssueReportDetailResponse"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Report not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    getResidentReportImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reportId: string;
+                imageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": components["schemas"]["EstateError"];
+                    "image/png": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Report image not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": components["schemas"]["EstateError"];
+                    "image/png": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Image storage unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": components["schemas"]["EstateError"];
+                    "image/png": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    residentLocations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active locations in the assigned estate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResidentLocationResponse"][];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    residentContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assigned resident estate */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResidentContextResponse"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listManufacturers: {
+        parameters: {
+            query?: {
+                query?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Manufacturers whose names contain the query, at most 20 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ManufacturerResponse"][];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssetModels: {
+        parameters: {
+            query: {
+                category: string;
+                query?: string;
+            };
+            header?: never;
+            path: {
+                manufacturerId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The manufacturer's models in the category, at most 20 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetModelResponse"][];
+                };
+            };
+            /** @description Missing or unknown category */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Manufacturer not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    health: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    members: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Estate members and invitation permissions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateMemberResponse"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listEstateFailureRisk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Active assets in silent-failure categories, flagged first, then by 90-day risk */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FailureRiskResponse"][];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssetLifecycleEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Asset lifecycle history, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetLifecycleEventResponse"][];
+                };
+            };
+            /** @description Invalid request or wrong confirmation reference */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Resident membership does not grant management access */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate, asset or location not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Inactive estate, asset or location, or a conflicting change */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssetReadings: {
+        parameters: {
+            query?: {
+                metric?: "TEMPERATURE" | "HUMIDITY" | "PRESSURE" | "FLOW_RATE" | "VIBRATION" | "VIBRATION_ACCELERATION" | "POWER" | "ENERGY";
+                /** @description Inclusive */
+                from?: string;
+                /** @description Exclusive */
+                to?: string;
+                /** @description Starts at 0 */
+                page?: number;
+                /** @description 1 to 200 */
+                size?: number;
+            };
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of the asset's readings, newest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetReadingPage"];
+                };
+            };
+            /** @description Unknown metric, a malformed time, from not before to, or page or size out of range */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    getAssetFailureRisk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                assetId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The asset's breakdown forecast and flags */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FailureRiskResponse"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or asset not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User-scoped portfolio summary */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DashboardSummaryResponse"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Summary temporarily unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pending in-app invitations for the verified signed-in recipient */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PendingCouncilInvitationResponse"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listAssetCategories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every asset category, ordered by label */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AssetCategoryResponse"][];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    listUserEstates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Every estate and whether the user is assigned to it */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateUserResponse"][];
+                };
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Admin role required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Estate not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    getOrganizationRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Role"][];
+                };
+            };
+        };
+    };
+    getMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                organizationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AdminUserResponse"][];
+                };
+            };
+        };
+    };
+    getOrganizations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Organization"][];
+                };
+            };
+        };
+    };
+    getAppAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Current caller's independent estate capabilities */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["AppAccessResponse"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Access lookup unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    removeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Member access removed from this estate */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
+    };
+    cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                estateId: string;
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation cancelled for this estate */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Sign in required */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Insufficient estate permissions */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Estate or member not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Duplicate invitation or inactive estate */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+            /** @description Identity provider not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EstateError"];
+                };
+            };
+        };
     };
-  };
 }
