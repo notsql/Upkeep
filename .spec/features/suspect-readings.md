@@ -12,11 +12,11 @@ instant, or a pump "temperature" of 900 °C all look like ordinary rows. Acting
 on them means booking callouts for faults that are really data faults, or
 missing real ones hidden in a gap.
 
-Today nothing stores readings at all: the anomaly check scores a batch and
-discards it (`.docs/api/anomaly-check.md`), and there is no reading browser.
-So this story also builds the minimum both need - a `Reading` table and an
-asset's reading list - and the flags on top. Everything else ID-60 asks for
-(and every way of writing readings) stays with its own story.
+Devices now store readings in `DeviceReading` (ID-43, `.docs/api/device-readings.md`),
+but nobody can see them: there is no reading browser. So this story builds the
+minimum of one - an asset's reading list - and the flags on top. Everything
+else ID-60 asks for, and every other way of writing readings, stays with its
+own story.
 
 ## Behaviour
 
@@ -27,8 +27,8 @@ asset's reading list - and the flags on top. Everything else ID-60 asks for
   `to` exclusive), and the filters combine.
 - The list is paginated: `page` starts at 0, `size` defaults to 50 and is at
   most 200. The response gives the total number of matching readings.
-- Each reading shows its timestamp, metric, value with the metric's unit, and
-  the identifier of the device that sent it, or "Manual" when there is none.
+- Each reading shows its measured time, metric, value with the metric's unit,
+  and the identifier of the device that sent it.
 - An asset with no readings shows a "no readings yet" state; filters that
   match nothing show a different "no readings match these filters" state.
 - An unknown asset, or an estate the caller does not own, returns 404. A
@@ -41,30 +41,33 @@ moment. Nothing is written when a flag is raised or cleared.
 
 **Gaps**
 
-- A sensor reading is flagged `GAP` when the previous sensor reading for the
-  same asset and metric is more than **1.5 ×** its device's
-  `reportingIntervalSeconds` earlier.
+- A reading is flagged `GAP` when the previous reading for the same asset and
+  metric is more than **1.5 ×** its device's `reportingIntervalSeconds`
+  earlier, comparing `measuredAt`.
 - A reading exactly 1.5 × the interval after the previous one is not flagged.
 - The flag is on the reading that *ends* the gap, and carries the gap's length
   in seconds.
 - The earliest stored reading for an asset and metric is never flagged `GAP`.
 - The interval used is that of the device that sent the reading, measured
-  against the previous sensor reading from any device on that asset and
-  metric.
-- Manual readings (no device) are never flagged `GAP`, and are skipped when
-  looking for a sensor reading's predecessor.
-- When a late reading is stored inside a gap, the reading that ended the gap
-  is no longer flagged the next time the list loads.
+  against the previous reading from any device on that asset and metric.
+- When a late reading is stored inside a gap (devices resend buffered
+  readings out of order, decision 0028), the reading that ended the gap is no
+  longer flagged the next time the list loads.
 
 **Duplicate timestamps**
 
-- Every reading that shares its asset, metric and timestamp with at least one
-  other reading is flagged `DUPLICATE_TIMESTAMP` - all of them, not all but
+- A device can never store two readings of one metric at one instant: the
+  unique index on `(deviceId, metric, measuredAt)` makes a retry idempotent and
+  a different value a 409 (decision 0028). So a duplicate here is always
+  **two different devices** on the same asset reporting the same metric at the
+  same `measuredAt` - for example a replacement sensor registered before the
+  old one was removed.
+- Every reading that shares its asset, metric and `measuredAt` with at least
+  one other reading is flagged `DUPLICATE_TIMESTAMP` - all of them, not all but
   the first.
 - Timestamps are compared at stored precision (microseconds). Readings one
   millisecond apart are not duplicates.
-- Duplicates are flagged whether the values are equal or different, and
-  whichever devices (or none) recorded them.
+- Duplicates are flagged whether the values are equal or different.
 
 **Out of range**
 
@@ -83,8 +86,11 @@ moment. Nothing is written when a flag is raised or cleared.
 
 - A reading below the minimum or above the maximum is flagged
   `OUT_OF_RANGE`. A value equal to either bound is not.
-- Out-of-range readings are stored and listed, not rejected. Future write
-  paths (ID-43, ID-62, ID-63) reject only malformed or non-finite values.
+- Out-of-range readings are stored and listed, not rejected. ID-43 already
+  accepts them (decision 0028: an extreme reading may be the fault), and later
+  write paths (ID-62, ID-63) must do the same.
+- Values are compared as stored (`numeric(18,6)`), so a bound is exact: a
+  temperature of `150.000000` is in range, `150.000001` is not.
 
 **In the list**
 
@@ -104,26 +110,22 @@ moment. Nothing is written when a flag is raised or cleared.
 
 ## Data
 
-New Prisma model `Reading`, append-only (no `updatedAt`, never updated or
-deleted by this story):
+Readings are ID-43's `DeviceReading` table; this story adds no table and
+writes nothing.
 
-| Field | Type | Notes |
+| Field | Type | Used for |
 | --- | --- | --- |
 | `id` | uuid | |
-| `estateId` | uuid | |
-| `assetId` | uuid | Composite FK `(assetId, estateId)` → `Asset`, like `Device`. |
-| `deviceId` | uuid, nullable | FK → `Device`. Null means a manual reading. |
-| `metric` | varchar(30) | Catalogue name, as in `Device.metrics`. |
-| `recordedAt` | timestamptz(6) | When the value was measured. |
-| `value` | double precision | |
-| `createdAt` | timestamptz(6) | When the row was stored. |
+| `deviceId` | uuid | Device identifier and reporting interval. Never null. |
+| `estateId`, `assetId` | uuid | The asset the device was on when the reading arrived. |
+| `metric` | varchar(30) | Catalogue name. |
+| `value` | numeric(18,6) | Out-of-range check. |
+| `measuredAt` | timestamptz(6) | Ordering, time filter, gaps, duplicates. |
+| `receivedAt` | timestamptz(6) | Not shown. |
 
-Indexes: `(assetId, metric, recordedAt)` for the list and the flag window
-queries; `(estateId)`.
-
-**No unique constraint on `(assetId, metric, recordedAt)`** - otherwise
-duplicates can never be stored and flagged. ID-62 must stop re-imports
-duplicating rows some other way (for example by import batch).
+One migration: add `@@index([assetId, metric, measuredAt])` to
+`DeviceReading`. The existing unique index leads with `deviceId`, so it cannot
+serve the list or the flag window queries, which go by asset.
 
 Valid ranges live on the `DeviceMetric` enum next to each unit, not in a
 table: the catalogue is already fixed in code (decision 0016).
@@ -132,10 +134,13 @@ table: the catalogue is already fixed in code (decision 0016).
 
 | Method | Path | Request | Response | Auth |
 | --- | --- | --- | --- | --- |
-| GET | /estates/{estateId}/assets/{assetId}/readings | query: `metric?`, `from?`, `to?`, `flag?` (repeatable), `page?` (default 0), `size?` (default 50, max 200) | 200 ReadingPage | Owner |
+| GET | /estates/{estateId}/assets/{assetId}/readings | query: `metric?`, `from?`, `to?`, `flag?` (repeatable), `page?` (default 0), `size?` (default 50, max 200) | 200 AssetReadingPage | Owner |
 
-- `ReadingPage { items: ReadingResponse[], page: int32, size: int32, totalItems: int64 }`
-- `ReadingResponse { id: uuid, recordedAt: date-time, metric: string, unit: string, value: double, deviceId?: uuid, deviceIdentifier?: string, flags: ReadingFlagResponse[] }`
+- `AssetReadingPage { items: AssetReadingResponse[], page: int32, size: int32, totalItems: int64 }`
+- `AssetReadingResponse { id: uuid, measuredAt: date-time, metric: DeviceMetric, unit: string, value: number, deviceId: uuid, deviceIdentifier: string, flags: ReadingFlagResponse[] }`
+  - Named `AssetReading*` because ID-43's `ReadingResponse` (the device-API
+    reply) already exists in `com.proj.server.reading`. `value` is a decimal,
+    as in that response.
 - `ReadingFlagResponse { type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE", gapSeconds?: int64, validMin?: double, validMax?: double }`
   - `gapSeconds` only on `GAP`; `validMin`/`validMax` only on `OUT_OF_RANGE`,
     so the UI never hard-codes a range.
@@ -156,6 +161,8 @@ estate or asset.
 
 ## Edge cases
 
+- **Device moved.** A reading keeps the `assetId` it arrived with, so it
+  stays in the old asset's list after its device moves (ID-43).
 - **Clock jitter.** The 1.5 × margin means a 60 s sensor reporting at 61 s is
   not flagged; one reporting at 91 s is.
 - **Device interval changed.** The current interval is used for all past
@@ -170,12 +177,14 @@ estate or asset.
 - **Duplicates across pages.** Two duplicate readings can land on different
   pages; both are flagged because flags come from all stored readings, not
   the page.
+- **Same device, same instant.** Impossible by decision 0028, so a single
+  device never produces `DUPLICATE_TIMESTAMP`.
 
 ## Out of scope
 
-- **Writing readings** - live ingest (ID-43), CSV import (ID-62), manual entry
-  (ID-63). Until one lands, rows exist only in tests or by hand in Prisma
-  Studio.
+- **Writing readings.** Live ingest is ID-43 (built); CSV import (ID-62) and
+  manual entry (ID-63) are their own stories. Manual readings need a nullable
+  `deviceId` or their own table, and ID-63 decides how they are flagged.
 - The rest of ID-60: filtering across assets, and the performance target on a
   month of data. If query-time flags miss it, the fallback is a stored flag
   column recomputed on insert, recorded as a decision.
@@ -191,8 +200,9 @@ estate or asset.
 
 Build in order, test-first.
 
-- [ ] DB: `Reading` model, `pnpm db:migrate`, `pnpm db:generate`.
-- [ ] Server: `validMin`/`validMax` on `DeviceMetric` (unit test per bound).
+- [x] DB: `(assetId, metric, measuredAt)` index on `DeviceReading`,
+      `pnpm db:migrate`, `pnpm db:generate`.
+- [x] Server: `validMin`/`validMax` on `DeviceMetric` (unit test per bound).
 - [ ] Server: `GET .../readings` - ownership, filters, pagination
       (Testcontainers tests per Behaviour line).
 - [ ] Server: flags - `OUT_OF_RANGE`, then `DUPLICATE_TIMESTAMP`, then `GAP`,
