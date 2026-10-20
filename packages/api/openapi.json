@@ -3497,6 +3497,127 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/readings": {
+      "get": {
+        "tags": ["asset-reading-controller"],
+        "operationId": "listAssetReadings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "VIBRATION_ACCELERATION",
+                "POWER",
+                "ENERGY"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Inclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Exclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "flag",
+            "in": "query",
+            "description": "Repeatable; lists readings carrying any of them",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Starts at 0",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "1 to 200",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 50 }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Unknown metric or flag, a malformed time, from not before to, or page or size out of range",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "One page of the asset's readings, newest first",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/AssetReadingPage" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/failure-risk": {
       "get": {
         "tags": ["failure-risk-controller"],
@@ -5115,6 +5236,94 @@
           "lifecycleVersion",
           "occurredAt"
         ]
+      },
+      "AssetReadingPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AssetReadingResponse" }
+          },
+          "page": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "totalItems": {
+            "type": "integer",
+            "format": "int64",
+            "description": "How many readings match the filters, across all pages"
+          }
+        },
+        "required": ["items", "page", "size", "totalItems"]
+      },
+      "AssetReadingResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "In UTC"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": { "type": "string" },
+          "value": {
+            "type": "number",
+            "description": "As stored: rounded to 6 decimal places"
+          },
+          "deviceId": { "type": "string", "format": "uuid" },
+          "deviceIdentifier": { "type": "string" },
+          "flags": {
+            "type": "array",
+            "description": "Empty when nothing is suspect",
+            "items": { "$ref": "#/components/schemas/ReadingFlagResponse" }
+          }
+        },
+        "required": [
+          "deviceId",
+          "deviceIdentifier",
+          "flags",
+          "id",
+          "measuredAt",
+          "metric",
+          "unit",
+          "value"
+        ]
+      },
+      "ReadingFlagResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+          },
+          "gapSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "description": "GAP only: whole seconds since the previous reading of this metric on the asset"
+          },
+          "validMin": {
+            "type": "number",
+            "format": "double",
+            "description": "OUT_OF_RANGE only: the metric's inclusive minimum"
+          },
+          "validMax": {
+            "type": "number",
+            "format": "double",
+            "description": "OUT_OF_RANGE only: the metric's inclusive maximum"
+          }
+        },
+        "required": ["type"]
       },
       "DashboardConditionCounts": {
         "type": "object",

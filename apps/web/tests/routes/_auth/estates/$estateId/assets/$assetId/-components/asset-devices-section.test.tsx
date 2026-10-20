@@ -130,6 +130,14 @@ it("links to a dedicated device form from the asset", () => {
   expect(screen.queryByRole("textbox", { name: "Identifier" })).toBeNull();
 });
 
+it("links to the asset's readings, even on a deactivated asset", () => {
+  serve();
+  renderSection(false);
+  expect(
+    screen.getByRole<HTMLAnchorElement>("link", { name: "Readings" }).href
+  ).toContain("/estates/estate-id/assets/asset-id/readings");
+});
+
 describe("AssetDevicesSection credentials", () => {
   const CREDENTIAL_PATH =
     "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential";

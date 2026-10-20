@@ -94,6 +94,7 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/devices",
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
+                                "/estates/{estateId}/assets/{assetId}/readings",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
                                 "/estates/{estateId}/failure-risk",
                                 "/estates/{estateId}/flatline-policies",

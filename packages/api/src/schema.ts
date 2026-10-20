@@ -329,6 +329,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/readings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetReadings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/readings/anomaly-check": {
     parameters: {
       query?: never;
@@ -1489,6 +1505,64 @@ export interface components {
       retirementReason?: string | null;
       /** Format: int32 */
       lifecycleVersion: number;
+    };
+    AssetReadingPage: {
+      items: components["schemas"]["AssetReadingResponse"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /**
+       * Format: int64
+       * @description How many readings match the filters, across all pages
+       */
+      totalItems: number;
+    };
+    AssetReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /**
+       * Format: date-time
+       * @description In UTC
+       */
+      measuredAt: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** @description As stored: rounded to 6 decimal places */
+      value: number;
+      /** Format: uuid */
+      deviceId: string;
+      deviceIdentifier: string;
+      /** @description Empty when nothing is suspect */
+      flags: components["schemas"]["ReadingFlagResponse"][];
+    };
+    ReadingFlagResponse: {
+      /** @enum {string} */
+      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE";
+      /**
+       * Format: int64
+       * @description GAP only: whole seconds since the previous reading of this metric on the asset
+       */
+      gapSeconds?: number;
+      /**
+       * Format: double
+       * @description OUT_OF_RANGE only: the metric's inclusive minimum
+       */
+      validMin?: number;
+      /**
+       * Format: double
+       * @description OUT_OF_RANGE only: the metric's inclusive maximum
+       */
+      validMax?: number;
     };
     DashboardConditionCounts: {
       /** Format: int64 */
@@ -3511,6 +3585,85 @@ export interface operations {
         };
       };
       /** @description Manufacturer not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listAssetReadings: {
+    parameters: {
+      query?: {
+        metric?:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+        /** @description Inclusive */
+        from?: string;
+        /** @description Exclusive */
+        to?: string;
+        /** @description Repeatable; lists readings carrying any of them */
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+        /** @description Starts at 0 */
+        page?: number;
+        /** @description 1 to 200 */
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description One page of the asset's readings, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetReadingPage"];
+        };
+      };
+      /** @description Unknown metric or flag, a malformed time, from not before to, or page or size out of range */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
       404: {
         headers: {
           [name: string]: unknown;

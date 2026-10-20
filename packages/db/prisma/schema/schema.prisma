@@ -271,6 +271,7 @@ model DeviceReading {
   asset  Asset  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([deviceId, metric, measuredAt])
+  @@index([assetId, metric, measuredAt])
 }
 
 // Shared detection settings for a metric within one estate (ID-68).

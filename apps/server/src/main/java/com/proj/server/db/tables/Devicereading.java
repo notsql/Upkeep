@@ -133,7 +133,7 @@ public class Devicereading extends TableImpl<DevicereadingRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.DEVICEREADING_DEVICEID_METRIC_MEASUREDAT_KEY);
+        return Arrays.asList(Indexes.DEVICEREADING_ASSETID_METRIC_MEASUREDAT_IDX, Indexes.DEVICEREADING_DEVICEID_METRIC_MEASUREDAT_KEY);
     }
 
     @Override
