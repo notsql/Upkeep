@@ -11,6 +11,7 @@ import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
+import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
@@ -60,6 +61,11 @@ public class Tables {
      * The table <code>public.Device</code>.
      */
     public static final Device DEVICE = Device.DEVICE;
+
+    /**
+     * The table <code>public.DeviceReading</code>.
+     */
+    public static final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
 
     /**
      * The table <code>public.Estate</code>.

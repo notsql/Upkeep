@@ -1,8 +1,8 @@
-# 0026 - Readings are idempotent per device, metric and timestamp
+# 0028 - Readings are idempotent per device, metric and timestamp
 
 ## Status
 
-Proposed.
+Accepted.
 
 ## Decision
 
@@ -17,7 +17,10 @@ unique index.
 - Valid readings that arrive out of order are accepted.
 
 Values are stored as `numeric(18, 6)` and compared as decimals, never as
-floating-point numbers.
+floating-point numbers. A value with more than 6 decimal places is rounded
+half-up to 6 before it is stored or compared, never rejected: device firmware
+routinely prints doubles such as `0.30000000000000004`, and no sensor resolves
+below a millionth of its unit.
 
 Validation checks the shape of the payload. It does not judge whether a value
 is plausible.
@@ -31,6 +34,8 @@ Rejected:
   round-trip through JSON differently, would count as conflicts.
 - **Range checks on values.** An extreme reading may be the fault the system
   exists to catch.
+- **Rejecting values with more than 6 decimal places.** It would turn away
+  ordinary firmware output for a formatting reason.
 
 ## Consequences
 
