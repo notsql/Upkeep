@@ -26,6 +26,7 @@ model Estate {
   assessments   AssetAssessment[]
   invitations   EstateInvitation[]
   events        AssetEvent[]
+  readings      Reading[]
 
   @@index([ownerUserId])
 }
@@ -108,6 +109,7 @@ model Asset {
   devices       Device[]
   assessments   AssetAssessment[]
   events        AssetEvent[]
+  readings      Reading[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -202,10 +204,33 @@ model Device {
   estate   Estate   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   asset    Asset    @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   location Location @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  readings Reading[]
 
   @@index([estateId])
   @@index([assetId])
   @@index([locationId])
+}
+
+// One measured value of one metric on an asset. Append-only: no updatedAt.
+// `deviceId` null means a manual reading. `metric` is a catalogue name, as in
+// Device.metrics. There is deliberately no unique on (assetId, metric,
+// recordedAt): duplicates must be storable so they can be flagged.
+model Reading {
+  id         String   @id @default(uuid()) @db.Uuid
+  estateId   String   @db.Uuid
+  assetId    String   @db.Uuid
+  deviceId   String?  @db.Uuid
+  metric     String   @db.VarChar(30)
+  recordedAt DateTime @db.Timestamptz(6)
+  value      Float
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate  @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset  Asset   @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([assetId, metric, recordedAt])
+  @@index([estateId])
 }
 
 // One condition assessment of an asset (decision 0017). Append-only: rows are
