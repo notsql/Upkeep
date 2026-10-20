@@ -2,7 +2,7 @@ name: Migrate
 
 # Applies merged migrations to Neon. A push to dev migrates the dev branch; a
 # push to main migrates prd. Work-in-progress migrations never reach either
-# (0012, 0027, 0029).
+# (0012, 0027, 0029, 0031).
 on:
   push:
     branches: [dev, main]
@@ -12,8 +12,6 @@ on:
 
 permissions:
   contents: read
-  # Lets the job mint a GitHub OIDC token to log in to Infisical.
-  id-token: write
 
 # Never run two migrations against the same database at once. One group per
 # environment, so a dev migration never queues behind a prd one.
@@ -26,11 +24,16 @@ jobs:
     name: Apply migrations to Neon (${{ github.ref_name == 'main' && 'prd' || 'dev' }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # main -> GitHub environment prd (Neon prd branch); dev -> dev.
+    environment: ${{ github.ref_name == 'main' && 'prd' || 'dev' }}
 
     env:
       NX_NO_CLOUD: "true"
-      # main -> Infisical prd (Neon prd branch); dev -> Infisical dev.
-      INFISICAL_ENV: ${{ github.ref_name == 'main' && 'prd' || 'dev' }}
+      # Synced into the environment from Infisical's /packages/db folder by an
+      # Infisical GitHub Secret Sync (0031). It must be Neon's direct
+      # (non -pooler) URL: migrate deploy takes an advisory lock PgBouncer does
+      # not support.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
     # Every command runs from the repo root, like the root `pnpm db:*` scripts.
     defaults:
@@ -40,20 +43,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
-
-      # Exports DATABASE_URL from Infisical's /packages/db folder in the
-      # branch's environment (dev is the one `pnpm db:migrate` reads locally). It must be Neon's direct (non -pooler)
-      # URL: migrate deploy takes an advisory lock PgBouncer does not support.
-      - name: Load secrets from Infisical
-        uses: Infisical/secrets-action@v1.0.18
-        with:
-          method: oidc
-          identity-id: ${{ vars.INFISICAL_IDENTITY_ID }}
-          # Same project .infisical.json links the repo to.
-          project-id: 99a44146-8e32-44c2-a271-828a2e61a50a
-          env-slug: ${{ env.INFISICAL_ENV }}
-          secret-path: /packages/db
-          secret-name: DATABASE_URL
 
       # Version comes from "packageManager" in the root package.json.
       - name: Set up pnpm
