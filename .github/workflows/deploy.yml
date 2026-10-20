@@ -21,7 +21,7 @@ concurrency:
 
 env:
   REGION: asia-southeast1
-  IMAGE: asia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/proj/api:${{ github.sha }}
+  IMAGE: asia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/upkeep-ar-prd/api:${{ github.sha }}
 
 jobs:
   deploy:
