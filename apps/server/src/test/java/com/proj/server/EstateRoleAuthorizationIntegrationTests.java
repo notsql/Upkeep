@@ -2,7 +2,10 @@ package com.proj.server;
 
 import static com.proj.server.db.tables.Assetassessment.ASSETASSESSMENT;
 import static com.proj.server.db.tables.Assetevent.ASSETEVENT;
+import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -209,26 +212,161 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     @Test
-    void unassignedAccountReceivesNoEstateCapabilities() throws Exception {
+    void unassignedAccountCanCreateWithoutExistingEstateCapabilities() throws Exception {
         mvc.perform(get("/access/context")).andExpect(status().isUnauthorized());
-        for (var role : new String[] {"user", "resident"}) {
+        for (var role : new String[] {"user", "resident", "admin"}) {
             mvc.perform(asUser(get("/access/context"), "unassigned", role))
                     .andExpect(status().isOk())
                     .andExpect(header().string("Cache-Control", "private, no-store"))
                     .andExpect(jsonPath("$.canEnterWorkspace").value(false))
-                    .andExpect(jsonPath("$.canCreateEstate").value(false))
+                    .andExpect(jsonPath("$.canCreateEstate").value(true))
                     .andExpect(jsonPath("$.canAccessPlatformAdmin").value(false))
                     .andExpect(jsonPath("$.hasResidentMembership").value(false))
                     .andExpect(jsonPath("$.canSubmitReport").value(false))
-                    .andExpect(jsonPath("$.residentEstate").value((Object) null))
+                    .andExpect(jsonPath("$.residentEstates").isEmpty())
                     .andExpect(jsonPath("$.estates").isEmpty());
+        }
+    }
+
+    static Stream<Arguments> estateCreators() {
+        return Stream.of("UNASSIGNED", "RESIDENT", "CREW", "COUNCIL", "MEMBER", "MANAGER", "OWNER")
+                .flatMap(membership ->
+                        Stream.of("user", "resident", "admin").map(claim -> Arguments.of(membership, claim)));
+    }
+
+    @ParameterizedTest(name = "{0} can create with WorkOS role {1}")
+    @MethodSource("estateCreators")
+    void anyAccountCanCreateItsOwnEstateWithoutChangingExistingAssignments(String role, String claim) throws Exception {
+        var previous = estate("Existing estate", role.equals("OWNER") ? "creator" : "previous-owner");
+        if (!role.equals("UNASSIGNED") && !role.equals("OWNER")) {
+            membership("creator", previous, role);
+        }
+        var pending = invitation(previous, "previous-owner", "pending@example.com");
+        var previousEstate = db.fetch("select * from \"Estate\" where id=?", previous);
+        var previousMembers = db.fetch("select * from \"EstateUser\" where \"estateId\"=?", previous);
+        var previousInvitation = db.fetch("select * from \"EstateInvitation\" where id=?", pending);
+        int count = db.fetchCount(ESTATE);
+
+        mvc.perform(asUser(post("/estates"), "creator", claim)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {"name":" New Estate ","code":" self-001 ","address":" New Road ",
+                             "postalCode":" 123456 ","ownerUserId":"attacker","role":"RESIDENT"}
+                            """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("New Estate"))
+                .andExpect(jsonPath("$.code").value("SELF-001"))
+                .andExpect(jsonPath("$.owned").value(true));
+
+        var created = db.select(ESTATE.ID)
+                .from(ESTATE)
+                .where(ESTATE.CODE.eq("SELF-001"))
+                .fetchSingle(ESTATE.ID);
+        assertEquals(count + 1, db.fetchCount(ESTATE));
+        assertEquals("creator", db.fetchValue("select \"ownerUserId\" from \"Estate\" where id=?", created));
+        assertEquals(
+                "MANAGER",
+                db.fetchValue(
+                        "select role from \"EstateUser\" where \"estateId\"=? and \"userId\"='creator'", created));
+        assertEquals(1, db.fetchCount(ESTATEUSER, ESTATEUSER.ESTATEID.eq(created)));
+        assertEquals(previousEstate, db.fetch("select * from \"Estate\" where id=?", previous));
+        assertEquals(previousMembers, db.fetch("select * from \"EstateUser\" where \"estateId\"=?", previous));
+        assertEquals(previousInvitation, db.fetch("select * from \"EstateInvitation\" where id=?", pending));
+
+        mvc.perform(asUser(get("/access/context"), "creator", claim))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canEnterWorkspace").value(true))
+                .andExpect(jsonPath("$.canCreateEstate").value(true))
+                .andExpect(jsonPath("$.estates[?(@.estateId == '" + created + "')].canManageEstate")
+                        .value(org.hamcrest.Matchers.contains(true)));
+        mvc.perform(asUser(get("/estates/" + created), "creator", claim))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.owned").value(true));
+
+        if (role.equals("RESIDENT")) {
+            mvc.perform(asUser(get("/estates/" + previous), "creator", claim)).andExpect(status().isForbidden());
+            mvc.perform(asUser(get("/resident/context"), "creator", claim))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.canSubmit").value(true))
+                    .andExpect(jsonPath("$.estates[0].id").value(previous.toString()));
+        }
+        if (role.equals("RESIDENT") || role.equals("CREW") || role.equals("COUNCIL") || role.equals("MEMBER")) {
             mvc.perform(
-                            asUser(post("/estates"), "unassigned", role)
+                            asUser(patch("/estates/" + previous), "creator", claim)
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(
-                                            "{\"name\":\"Estate\",\"code\":\"NEW\",\"address\":\"Road\",\"postalCode\":\"123456\"}"))
+                                            "{\"name\":\"Changed\",\"code\":\"CHANGED\",\"address\":\"Road\",\"postalCode\":\"123456\"}"))
+                    .andExpect(status().is(role.equals("CREW") ? 404 : 403));
+            mvc.perform(asUser(post("/estates/" + previous + "/council-invitations"), "creator", claim)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"new@example.com\",\"role\":\"MANAGER\"}"))
                     .andExpect(status().isForbidden());
         }
+        var unrelated = estate("Unrelated", "unrelated-owner");
+        mvc.perform(asUser(get("/estates/" + unrelated), "creator", claim)).andExpect(status().isNotFound());
+    }
+
+    @ParameterizedTest(name = "{0} creation eligibility with WorkOS role {1}")
+    @MethodSource("estateCreators")
+    void creationEligibilityDoesNotDependOnMembershipOrWorkosClaims(String role, String claim) throws Exception {
+        if (!role.equals("UNASSIGNED")) {
+            var assigned = estate("Assigned estate", role.equals("OWNER") ? "creator" : "someone-else");
+            if (!role.equals("OWNER")) {
+                membership("creator", assigned, role);
+            }
+        }
+        mvc.perform(asUser(get("/access/context"), "creator", claim))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.canCreateEstate").value(true))
+                .andExpect(
+                        jsonPath("$.canEnterWorkspace").value(!role.equals("UNASSIGNED") && !role.equals("RESIDENT")))
+                .andExpect(jsonPath("$.canAccessPlatformAdmin").value(false));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"UNASSIGNED", "RESIDENT", "CREW"})
+    void directoryDoesNotExposeNonManagementAssignments(String role) throws Exception {
+        var assigned = estate("Assigned estate", "other-owner");
+        if (!role.equals("UNASSIGNED")) {
+            membership("creator", assigned, role);
+        }
+        mvc.perform(asUser(get("/estates"), "creator", "user"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void firstEstateCreationStillRejectsAnonymousAndBlankSubjects() throws Exception {
+        var body = "{\"name\":\"Estate\",\"code\":\"FIRST\",\"address\":\"Road\",\"postalCode\":\"123456\"}";
+        int count = db.fetchCount(ESTATE);
+        mvc.perform(post("/estates").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(asUser(post("/estates"), " ", "user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isUnauthorized());
+        assertEquals(count, db.fetchCount(ESTATE));
+    }
+
+    @Test
+    void newlyEligibleAccountReceivesValidationAndDuplicateErrors() throws Exception {
+        var existing = estate("Existing", "other-owner");
+        db.execute("update \"Estate\" set code='TAKEN', \"deactivatedAt\"=now() where id=?", existing);
+        int estatesBefore = db.fetchCount(ESTATE);
+        int membersBefore = db.fetchCount(ESTATEUSER);
+        mvc.perform(asUser(post("/estates"), "creator", "user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\" \",\"code\":\"NEW\",\"address\":\"Road\",\"postalCode\":\"123456\"}"))
+                .andExpect(status().isBadRequest());
+        assertEquals(estatesBefore, db.fetchCount(ESTATE));
+        assertEquals(membersBefore, db.fetchCount(ESTATEUSER));
+        mvc.perform(
+                        asUser(post("/estates"), "creator", "user")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"name\":\"Estate\",\"code\":\" taken \",\"address\":\"Road\",\"postalCode\":\"123456\"}"))
+                .andExpect(status().isConflict());
     }
 
     @ParameterizedTest
@@ -274,8 +412,8 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(jsonPath("$.canEnterWorkspace").value(true))
                 .andExpect(jsonPath("$.canCreateEstate").value(true))
                 .andExpect(jsonPath("$.canSubmitReport").value(true))
-                .andExpect(jsonPath("$.residentEstate.id").value(a.toString()))
-                .andExpect(jsonPath("$.residentEstate.address").doesNotExist())
+                .andExpect(jsonPath("$.residentEstates[0].id").value(a.toString()))
+                .andExpect(jsonPath("$.residentEstates[0].address").doesNotExist())
                 .andExpect(jsonPath("$.estates.length()").value(3))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + a + "')].role")
                         .value(org.hamcrest.Matchers.contains("RESIDENT")))
@@ -286,7 +424,7 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + b + "')].canViewAssets")
                         .value(org.hamcrest.Matchers.contains(false)))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + c + "')].role")
-                        .value(org.hamcrest.Matchers.contains("OWNER")))
+                        .value(org.hamcrest.Matchers.contains("MANAGER")))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + c + "')].canViewAssets")
                         .value(org.hamcrest.Matchers.contains(true)))
                 .andExpect(jsonPath("$.estates[*].address").isEmpty())
@@ -294,7 +432,7 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     @Test
-    void managementCollectionsExcludeResidentEstatesAndResidentMemberCounts() throws Exception {
+    void managementCollectionsExcludeResidentEstatesWhileManagersCanListAllEstateMembers() throws Exception {
         var a = estate("Resident estate", "owner-a");
         var b = estate("Council estate", "owner-b");
         var c = estate("Owned estate", "mixed-user");
@@ -306,6 +444,10 @@ class EstateRoleAuthorizationIntegrationTests {
                 .thenReturn(
                         new CouncilIdentity.Person("council-person", "Council Person", "council@example.com", true));
 
+        when(identity.user("resident-person"))
+                .thenReturn(new CouncilIdentity.Person("resident-person", "Resident", "resident@example.com", true));
+        when(identity.user("mixed-user"))
+                .thenReturn(new CouncilIdentity.Person("mixed-user", "Manager", "manager@example.com", true));
         mvc.perform(asUser(get("/estates"), "mixed-user", "user"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -316,8 +458,9 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(jsonPath("$.councilMemberCount").value(1));
         mvc.perform(asUser(get("/estates/" + c + "/members"), "mixed-user", "user"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].userId").value("council-person"));
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[?(@.userId == 'resident-person')].role")
+                        .value(org.hamcrest.Matchers.contains("RESIDENT")));
     }
 
     @Test
@@ -372,12 +515,12 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     @Test
-    void platformAdminAccessIsIndependentButAnAdminClaimDoesNotGrantEstateManagement() throws Exception {
+    void providerAdminClaimsDoNotGrantGlobalOrEstateManagementAccess() throws Exception {
         var a = estate("Resident estate", "owner-a");
         var b = estate("Other estate", "owner-b");
         membership("mixed-user", a, "RESIDENT");
         mvc.perform(asUser(get("/api/admin/users/mixed-user/estates"), "mixed-user", "admin"))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
         mvc.perform(asUser(get("/estates/" + a), "mixed-user", "admin")).andExpect(status().isForbidden());
         mvc.perform(asUser(get("/estates/" + b), "mixed-user", "admin")).andExpect(status().isNotFound());
         mvc.perform(asUser(get("/api/admin/users/mixed-user/estates"), "mixed-user", "user"))
@@ -385,30 +528,25 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     @Test
-    void genericAdminGrantsCannotConvertAResidentRowButMayGrantAnotherEstate() throws Exception {
+    void genericAdminGrantsAreRetiredAndPreserveEveryExistingMembership() throws Exception {
         var a = estate("Resident estate", "owner-a");
         var b = estate("Other estate", "owner-b");
         membership("resident-a", a, "RESIDENT");
         for (var request : new MockHttpServletRequestBuilder[] {
-            put("/api/admin/users/resident-a/estates/" + a), delete("/api/admin/users/resident-a/estates/" + a)
-        }) {
-            mvc.perform(asUser(request, "platform-admin", "admin")).andExpect(status().isConflict());
-        }
+            put("/api/admin/users/resident-a/estates/" + a), delete("/api/admin/users/resident-a/estates/" + a),
+            put("/api/admin/users/resident-a/estates/" + b), get("/api/admin/users/resident-a/estates")
+        }) mvc.perform(asUser(request, "platform-admin", "admin")).andExpect(status().isForbidden());
         assertEquals(
                 "RESIDENT",
                 db.fetchValue("select role from \"EstateUser\" where \"estateId\"=? and \"userId\"='resident-a'", a));
-        mvc.perform(asUser(put("/api/admin/users/resident-a/estates/" + b), "platform-admin", "admin"))
-                .andExpect(status().isNoContent());
-        mvc.perform(asUser(get("/api/admin/users/resident-a/estates"), "platform-admin", "admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.estateId == '" + a + "')].membershipRole")
-                        .value(org.hamcrest.Matchers.contains("RESIDENT")))
-                .andExpect(jsonPath("$[?(@.estateId == '" + a + "')].granted")
-                        .value(org.hamcrest.Matchers.contains(false)))
-                .andExpect(jsonPath("$[?(@.estateId == '" + a + "')].canManageGrant")
-                        .value(org.hamcrest.Matchers.contains(false)))
-                .andExpect(jsonPath("$[?(@.estateId == '" + b + "')].membershipRole")
-                        .value(org.hamcrest.Matchers.contains("MEMBER")));
+        assertFalse(db.fetchExists(
+                org.jooq.impl.DSL.table("\"EstateUser\""),
+                org.jooq
+                        .impl
+                        .DSL
+                        .field("\"estateId\"")
+                        .eq(b)
+                        .and(org.jooq.impl.DSL.field("\"userId\"").eq("resident-a"))));
     }
 
     @Test
@@ -434,11 +572,16 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     @Test
-    void databaseRejectsTwoResidentEstatesForOneUser() {
+    void databaseAllowsResidentMembershipInTwoEstates() {
         var a = estate("Resident estate", "owner-a");
         var b = estate("Second estate", "owner-b");
         membership("resident-a", a, "RESIDENT");
-        assertThrows(DataAccessException.class, () -> membership("resident-a", b, "RESIDENT"));
+        membership("resident-a", b, "RESIDENT");
+        assertEquals(
+                2,
+                db.fetchCount(
+                        org.jooq.impl.DSL.table("\"EstateUser\""),
+                        org.jooq.impl.DSL.field("\"userId\"").eq("resident-a")));
     }
 
     @Test
@@ -491,7 +634,7 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     @Test
-    void residentElsewhereCanInviteThroughTheirCouncilDelegationWithoutDelegatingOnward() throws Exception {
+    void residentElsewhereCannotInviteThroughLegacyCouncilDelegation() throws Exception {
         var a = estate("Resident estate", "owner-a");
         var b = estate("Council estate", "owner-b");
         membership("mixed-user", a, "RESIDENT");
@@ -517,7 +660,7 @@ class EstateRoleAuthorizationIntegrationTests {
         mvc.perform(asUser(post("/estates/" + b + "/council-invitations"), "mixed-user", "resident")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"new@example.com\"}"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isForbidden());
         mvc.perform(asUser(
                                 put("/estates/" + b + "/members/other-council/invitation-permission"),
                                 "mixed-user",

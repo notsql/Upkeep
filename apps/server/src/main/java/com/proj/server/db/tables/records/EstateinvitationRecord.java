@@ -175,6 +175,20 @@ public class EstateinvitationRecord extends UpdatableRecordImpl<Estateinvitation
         return (String) get(10);
     }
 
+    /**
+     * Setter for <code>public.EstateInvitation.role</code>.
+     */
+    public void setRole(String value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.EstateInvitation.role</code>.
+     */
+    public String getRole() {
+        return (String) get(11);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -198,7 +212,7 @@ public class EstateinvitationRecord extends UpdatableRecordImpl<Estateinvitation
     /**
      * Create a detached, initialised EstateinvitationRecord
      */
-    public EstateinvitationRecord(UUID id, UUID estateid, String name, String email, String inviteruserid, String providerinvitationid, String status, OffsetDateTime createdat, OffsetDateTime expiresat, OffsetDateTime acceptedat, String accepteduserid) {
+    public EstateinvitationRecord(UUID id, UUID estateid, String name, String email, String inviteruserid, String providerinvitationid, String status, OffsetDateTime createdat, OffsetDateTime expiresat, OffsetDateTime acceptedat, String accepteduserid, String role) {
         super(Estateinvitation.ESTATEINVITATION);
 
         setId(id);
@@ -212,6 +226,7 @@ public class EstateinvitationRecord extends UpdatableRecordImpl<Estateinvitation
         setExpiresat(expiresat);
         setAcceptedat(acceptedat);
         setAccepteduserid(accepteduserid);
+        setRole(role);
         resetTouchedOnNotNull();
     }
 }

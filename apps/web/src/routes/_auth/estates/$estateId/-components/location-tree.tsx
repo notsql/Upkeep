@@ -40,6 +40,7 @@ export function locationSummaries(tree: LocationNode[]): Map<string, string> {
 
 export function LocationTree({
   tree,
+  canCreate,
   canEdit,
   onPanel,
   summaries,
@@ -49,6 +50,7 @@ export function LocationTree({
   query,
 }: {
   tree: LocationNode[];
+  canCreate: boolean;
   canEdit: boolean;
   onPanel: (panel: Panel) => void;
   summaries: Map<string, string>;
@@ -63,7 +65,7 @@ export function LocationTree({
         {searching
           ? `No locations match “${query.trim()}”.`
           : "No locations yet."}
-        {!searching && canEdit ? " Add a block to start." : ""}
+        {!searching && canCreate ? " Add a block to start." : ""}
       </p>
     );
   }
@@ -74,6 +76,7 @@ export function LocationTree({
     >
       {tree.map((node) => (
         <LocationItem
+          canCreate={canCreate}
           canEdit={canEdit}
           expandedIds={expandedIds}
           key={node.id}
@@ -90,6 +93,7 @@ export function LocationTree({
 
 function LocationItem({
   node,
+  canCreate,
   canEdit,
   onPanel,
   summaries,
@@ -98,6 +102,7 @@ function LocationItem({
   searching,
 }: {
   node: LocationNode;
+  canCreate: boolean;
   canEdit: boolean;
   onPanel: (panel: Panel) => void;
   summaries: Map<string, string>;
@@ -153,13 +158,21 @@ function LocationItem({
             {title}
           </div>
         )}
-        {canEdit ? <LocationActions node={node} onPanel={onPanel} /> : null}
+        {canEdit || (canCreate && node.type !== "COMMON_AREA") ? (
+          <LocationActions
+            canCreate={canCreate}
+            canEdit={canEdit}
+            node={node}
+            onPanel={onPanel}
+          />
+        ) : null}
       </div>
       {node.children.length ? (
         <ul className="mt-2 grid gap-2" hidden={!expanded} id={childrenId}>
           {expanded
             ? node.children.map((child) => (
                 <LocationItem
+                  canCreate={canCreate}
                   canEdit={canEdit}
                   expandedIds={expandedIds}
                   key={child.id}
@@ -179,13 +192,21 @@ function LocationItem({
 
 function LocationActions({
   node,
+  canCreate,
+  canEdit,
   onPanel,
 }: {
   node: LocationNode;
+  canCreate: boolean;
+  canEdit: boolean;
   onPanel: (panel: Panel) => void;
 }) {
   const addLevels = useCallback(
     () => onPanel({ kind: "levels", node }),
+    [node, onPanel]
+  );
+  const addLevel = useCallback(
+    () => onPanel({ kind: "create", type: "LEVEL", parent: node }),
     [node, onPanel]
   );
   const addCommonArea = useCallback(
@@ -216,32 +237,36 @@ function LocationActions({
         <MoreHorizontal aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {node.type === "BLOCK" ? (
+        {node.type === "BLOCK" && canCreate ? (
           <DropdownMenuItem
-            aria-label={`Add levels to ${node.name}`}
-            onClick={addLevels}
+            aria-label={`Add ${canEdit ? "levels" : "level"} to ${node.name}`}
+            onClick={canEdit ? addLevels : addLevel}
           >
-            Add levels
+            {canEdit ? "Add levels" : "Add level"}
           </DropdownMenuItem>
         ) : null}
-        {node.type === "COMMON_AREA" ? null : (
+        {canCreate && node.type !== "COMMON_AREA" ? (
           <DropdownMenuItem
             aria-label={`Add common area to ${node.name}`}
             onClick={addCommonArea}
           >
             Add common area
           </DropdownMenuItem>
-        )}
-        <DropdownMenuItem aria-label={`Edit ${node.name}`} onClick={edit}>
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          aria-label={`Deactivate ${node.name}`}
-          className="text-destructive"
-          onClick={deactivate}
-        >
-          Deactivate
-        </DropdownMenuItem>
+        ) : null}
+        {canEdit ? (
+          <>
+            <DropdownMenuItem aria-label={`Edit ${node.name}`} onClick={edit}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              aria-label={`Deactivate ${node.name}`}
+              className="text-destructive"
+              onClick={deactivate}
+            >
+              Deactivate
+            </DropdownMenuItem>
+          </>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

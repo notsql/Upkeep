@@ -1,10 +1,34 @@
 import type { components } from "@proj/api/schema";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Location = components["schemas"]["LocationResponse"];
 export type LocationType = Location["type"];
+
+export function useCreateLocation(
+  estateId: string,
+  onCreated: () => Promise<void>
+) {
+  return useMutation({
+    mutationFn: async (
+      body: components["schemas"]["CreateLocationRequest"]
+    ) => {
+      const { data, error, response } = await api.POST(
+        "/estates/{estateId}/locations",
+        {
+          params: { path: { estateId } },
+          body,
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: onCreated,
+  });
+}
 
 export interface LocationNode extends Location {
   children: LocationNode[];

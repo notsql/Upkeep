@@ -45,7 +45,7 @@ export function useCouncilInvitation(estateId: string) {
   });
 }
 
-export function useInvitationPermission(estateId: string) {
+export function useUpdateEstateRole(estateId: string) {
   const { userId } = useEstateSession();
   const client = useQueryClient();
   return useMutation({
@@ -54,26 +54,48 @@ export function useInvitationPermission(estateId: string) {
       body,
     }: {
       memberId: string;
-      body: components["schemas"]["InvitationPermissionRequest"];
+      body: components["schemas"]["UpdateEstateRoleRequest"];
     }) => {
-      const { error, response } = await api.PUT(
-        "/estates/{estateId}/members/{userId}/invitation-permission",
-        { params: { path: { estateId, userId: memberId } }, body }
+      const { data, error, response } = await api.PUT(
+        "/estates/{estateId}/members/{userId}/role",
+        {
+          params: { path: { estateId, userId: memberId } },
+          body,
+        }
       );
-      if (error) {
+      if (error || !data) {
         throw estateError(error, response.status);
       }
+      return data;
     },
-    onSuccess: async () => {
-      await Promise.all([
-        client.invalidateQueries({
-          queryKey: [userId, "estate-members", estateId],
-        }),
-        client.invalidateQueries({
-          queryKey: ["estates", userId, "details", estateId],
-        }),
-      ]);
+    onSuccess: () =>
+      client.invalidateQueries({
+        predicate: (query) => query.queryKey.includes(userId),
+      }),
+  });
+}
+
+export function useTransferOwnership(estateId: string) {
+  const { userId } = useEstateSession();
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (newOwnerUserId: string) => {
+      const { data, error, response } = await api.POST(
+        "/estates/{estateId}/ownership-transfer",
+        {
+          params: { path: { estateId } },
+          body: { newOwnerUserId },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
     },
+    onSuccess: () =>
+      client.invalidateQueries({
+        predicate: (query) => query.queryKey.includes(userId),
+      }),
   });
 }
 
@@ -94,6 +116,8 @@ export function useAcceptCouncilInvitations() {
       if (data.estateIds.length > 0) {
         await Promise.all([
           client.invalidateQueries({ queryKey: ["estates", userId] }),
+          client.invalidateQueries({ queryKey: [userId, "app-access"] }),
+          client.invalidateQueries({ queryKey: [userId, "resident-context"] }),
           client.invalidateQueries({
             queryKey: [userId, "council-invitations"],
           }),
@@ -139,6 +163,8 @@ export function useAcceptInAppInvitation() {
       await Promise.all([
         client.invalidateQueries({ queryKey: [userId, "council-invitations"] }),
         client.invalidateQueries({ queryKey: ["estates", userId] }),
+        client.invalidateQueries({ queryKey: [userId, "app-access"] }),
+        client.invalidateQueries({ queryKey: [userId, "resident-context"] }),
       ]);
     },
   });
@@ -205,6 +231,8 @@ export function useRemoveEstateMember(estateId: string) {
           queryKey: [userId, "estate-invitations", estateId],
         }),
         client.invalidateQueries({ queryKey: ["estates", userId] }),
+        client.invalidateQueries({ queryKey: [userId, "app-access"] }),
+        client.invalidateQueries({ queryKey: [userId, "resident-context"] }),
       ]);
     },
   });

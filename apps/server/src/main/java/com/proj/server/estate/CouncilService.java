@@ -24,20 +24,19 @@ public class CouncilService {
         this.identity = identity;
     }
 
-    private EstateResponse access(UUID id, String user, boolean ownerOnly) {
+    private EstateResponse access(UUID id, String user) {
+        if (council.hasMembership(id, user) && !council.canInvite(id, user)) {
+            throw error(HttpStatus.FORBIDDEN, "Only Managers can manage estate invitations and roles.");
+        }
         var estate =
                 estates.findAccessible(id, user).orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Estate not found."));
-        if (!estate.owned() && (ownerOnly || !council.canInvite(id, user)))
-            throw error(
-                    HttpStatus.FORBIDDEN,
-                    ownerOnly
-                            ? "Only the estate owner can manage invitation permissions."
-                            : "You cannot invite members to this estate.");
+        if (!estate.owned() && !council.canInvite(id, user))
+            throw error(HttpStatus.FORBIDDEN, "Only Managers can manage estate invitations and roles.");
         return estate;
     }
 
     public CouncilInvitationResponse invite(UUID estateId, String user, CouncilInvitationRequest request) {
-        var estate = access(estateId, user, false);
+        var estate = access(estateId, user);
         if (estate.deactivatedAt() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         var owner = identity.user(council.ownerUserId(estateId));
         if (owner.email().equalsIgnoreCase(request.email()))
@@ -60,46 +59,73 @@ public class CouncilService {
                 estateId,
                 row.getEmail(),
                 "existing_account".equals(invitation.state()) ? IN_APP.name() : PENDING.name(),
-                invitation.expiresAt());
+                invitation.expiresAt(),
+                EstateRole.valueOf(row.getRole()));
     }
 
     public List<CouncilInvitationResponse> outstanding(UUID estateId, String user) {
-        access(estateId, user, true);
+        access(estateId, user);
         return council.outstanding(estateId);
     }
 
     public void cancel(UUID estateId, String user, UUID invitationId) {
-        access(estateId, user, true);
-        council.cancel(estateId, invitationId);
+        access(estateId, user);
+        council.cancel(estateId, invitationId, user);
     }
 
     public void removeMember(UUID estateId, String user, String member) {
-        access(estateId, user, true);
-        if (council.ownerUserId(estateId).equals(member))
-            throw error(HttpStatus.CONFLICT, "The estate owner cannot remove their own access.");
+        access(estateId, user);
+        if (council.ownerUserId(estateId).equals(member) || user.equals(member))
+            throw error(
+                    HttpStatus.CONFLICT,
+                    "Transfer ownership before removing the owner. Managers cannot remove themselves.");
         if (council.members(estateId).stream()
                 .noneMatch(existing -> existing.userId().equals(member)))
             throw error(HttpStatus.NOT_FOUND, "Estate member not found.");
         var person = identity.user(member);
-        if (!council.removeMember(estateId, member, person.email().toLowerCase(Locale.ROOT)))
+        if (!council.removeMember(estateId, member, person.email().toLowerCase(Locale.ROOT), user))
             throw error(HttpStatus.NOT_FOUND, "Estate member not found.");
     }
 
     public List<EstateMemberResponse> members(UUID estateId, String user) {
-        access(estateId, user, true);
+        access(estateId, user);
         return council.members(estateId).stream()
                 .map(member -> {
                     var person = identity.user(member.userId());
                     return new EstateMemberResponse(
-                            member.userId(), person.name(), person.email(), member.canInviteMembers());
+                            member.userId(),
+                            person.name(),
+                            person.email(),
+                            member.canInviteMembers(),
+                            member.role(),
+                            council.ownerUserId(estateId).equals(member.userId()));
                 })
                 .toList();
     }
 
     public void permission(UUID estateId, String user, String member, boolean allowed) {
-        access(estateId, user, true);
-        if (!council.setPermission(estateId, member, allowed))
-            throw error(HttpStatus.NOT_FOUND, "Estate member not found.");
+        throw error(HttpStatus.FORBIDDEN, "Invitation delegation has been retired. Only Managers can invite.");
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public EstateMemberResponse updateRole(UUID estateId, String actor, String target, EstateRole role) {
+        access(estateId, actor);
+        var person = identity.user(target);
+        council.updateRole(estateId, actor, target, role);
+        return new EstateMemberResponse(
+                target,
+                person.name(),
+                person.email(),
+                role == EstateRole.MANAGER,
+                role.name(),
+                council.ownerUserId(estateId).equals(target));
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public EstateResponse transferOwnership(UUID estateId, String actor, String target) {
+        access(estateId, actor);
+        council.transferOwnership(estateId, actor, target);
+        return estates.findAccessible(estateId, actor).orElseThrow();
     }
 
     private CouncilIdentity.Person verifiedPerson(String user) {

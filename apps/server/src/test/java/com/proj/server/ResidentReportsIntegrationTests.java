@@ -106,12 +106,23 @@ class ResidentReportsIntegrationTests {
 
     private MockMultipartHttpServletRequestBuilder submission(String userId, UUID locationId, String description) {
         var request = multipart("/resident/reports");
+        var selectedEstate = db.fetchValue(
+                "select \"estateId\" from \"EstateUser\" where \"userId\"=? and role='RESIDENT' limit 1", userId);
+        if (selectedEstate == null)
+            selectedEstate = db.fetchValue("select \"estateId\" from \"Location\" where id=?", locationId);
+        request.param("estateId", selectedEstate == null ? UUID.randomUUID().toString() : selectedEstate.toString());
         request.param("title", "Fault title");
         request.param("locationId", locationId.toString());
         request.param("description", description);
         request.with(jwt().jwt(token -> token.subject(userId).claim("role", "user"))
                 .authorities(new SimpleGrantedAuthority("ROLE_user")));
         return request;
+    }
+
+    private UUID selectedEstateId(String user) {
+        var selected = db.fetchValue(
+                "select \"estateId\" from \"EstateUser\" where \"userId\"=? and role='RESIDENT' limit 1", user);
+        return selected == null ? UUID.randomUUID() : (UUID) selected;
     }
 
     @Test
@@ -126,6 +137,7 @@ class ResidentReportsIntegrationTests {
             var request = multipart("/resident/reports")
                     .param("description", "Leaking pipe")
                     .param("locationId", level.toString())
+                    .param("estateId", e.toString())
                     .file(new MockMultipartFile("images", "fault.png", "image/png", bytes.toByteArray()));
             if (title != null) request.param("title", title);
             mvc.perform(request.with(jwt().jwt(token -> token.subject("resident-a"))
@@ -147,6 +159,7 @@ class ResidentReportsIntegrationTests {
                             .param("title", "  " + title + "  ")
                             .param("description", "Water pooling near the lift")
                             .param("locationId", level.toString())
+                            .param("estateId", e.toString())
                             .with(jwt().jwt(token -> token.subject("resident-a"))
                                     .authorities(new SimpleGrantedAuthority("ROLE_user"))))
                     .andExpect(status().isCreated())
@@ -194,10 +207,15 @@ class ResidentReportsIntegrationTests {
 
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estate.id").value(assignedEstate.toString()))
-                .andExpect(jsonPath("$.estate.name").value("ASSIGNED Estate"))
+                .andExpect(jsonPath("$.estates[0].id").value(assignedEstate.toString()))
+                .andExpect(jsonPath("$.estates[0].name").value("ASSIGNED Estate"))
                 .andExpect(jsonPath("$.canSubmit").value(true));
-        mvc.perform(asUser(get("/resident/locations"), "resident-a"))
+        mvc.perform(asUser(
+                        get("/resident/locations")
+                                .param(
+                                        "estateId",
+                                        selectedEstateId("resident-a").toString()),
+                        "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == '" + block + "')].type").value(hasItem("BLOCK")))
                 .andExpect(jsonPath("$[?(@.id == '" + level + "')].parentId").value(hasItem(block.toString())))
@@ -212,9 +230,15 @@ class ResidentReportsIntegrationTests {
         var level = location(e, "LEVEL", block, "BLOCK", false);
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estate").value((Object) null))
+                .andExpect(jsonPath("$.estates").isEmpty())
                 .andExpect(jsonPath("$.canSubmit").value(false));
-        mvc.perform(asUser(get("/resident/locations"), "resident-a")).andExpect(status().isForbidden());
+        mvc.perform(asUser(
+                        get("/resident/locations")
+                                .param(
+                                        "estateId",
+                                        selectedEstateId("resident-a").toString()),
+                        "resident-a"))
+                .andExpect(status().isForbidden());
         mvc.perform(submission("resident-a", level, "Leaking pipe")).andExpect(status().isForbidden());
     }
 
@@ -227,7 +251,6 @@ class ResidentReportsIntegrationTests {
 
         var response = mvc.perform(submission("resident-a", level, "Leaking pipe")
                         .param("submittedByUserId", "attacker")
-                        .param("estateId", UUID.randomUUID().toString())
                         .param("status", "RESOLVED"))
                 .andExpect(status().isCreated())
                 .andExpect(header().exists("Location"))
@@ -306,7 +329,7 @@ class ResidentReportsIntegrationTests {
                 0L, db.fetchValue("select count(*) from \"EstateUser\" where \"userId\"='resident-a'", Long.class));
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estate").value((Object) null))
+                .andExpect(jsonPath("$.estates").isEmpty())
                 .andExpect(jsonPath("$.canSubmit").value(false));
 
         mvc.perform(asUser(get("/resident/reports/" + oldReport), "resident-a"))
@@ -331,7 +354,7 @@ class ResidentReportsIntegrationTests {
 
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estate.id").value(newEstate.toString()));
+                .andExpect(jsonPath("$.estates[0].id").value(newEstate.toString()));
         mvc.perform(asUser(get("/resident/reports/" + historical), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("Old home fault"));
@@ -438,7 +461,8 @@ class ResidentReportsIntegrationTests {
             var request = multipart("/resident/reports")
                     .param("title", "Fault title")
                     .param("description", "Not assigned")
-                    .param("locationId", level.toString());
+                    .param("locationId", level.toString())
+                    .param("estateId", e.toString());
             request.with(jwt().jwt(token -> token.subject("unassigned").claim("role", role))
                     .authorities(new SimpleGrantedAuthority("ROLE_" + role)));
             mvc.perform(request).andExpect(status().isForbidden());
@@ -454,11 +478,10 @@ class ResidentReportsIntegrationTests {
         var level = location(e, "LEVEL", block, "BLOCK", false);
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estate").value((Object) null))
+                .andExpect(jsonPath("$.estates").isEmpty())
                 .andExpect(jsonPath("$.canSubmit").value(false));
-        mvc.perform(asUser(get("/resident/locations"), "resident-a"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+        mvc.perform(asUser(get("/resident/locations").param("estateId", e.toString()), "resident-a"))
+                .andExpect(status().isForbidden());
         mvc.perform(submission("resident-a", level, "Inactive estate")).andExpect(status().isForbidden());
     }
 
@@ -481,6 +504,7 @@ class ResidentReportsIntegrationTests {
                         .param("title", "Fault title")
                         .param("description", "Assigned now")
                         .param("locationId", level.toString())
+                        .param("estateId", e.toString())
                         .with(token))
                 .andExpect(status().isCreated());
         db.execute("delete from \"EstateUser\" where \"userId\"='resident-a' and role='RESIDENT'");
@@ -491,6 +515,7 @@ class ResidentReportsIntegrationTests {
                         .param("title", "Fault title")
                         .param("description", "Removed now")
                         .param("locationId", level.toString())
+                        .param("estateId", e.toString())
                         .with(token))
                 .andExpect(status().isForbidden());
     }

@@ -25,6 +25,12 @@ function PendingInvitation({
   return (
     <li className="space-y-2 border-b py-4 last:border-b-0">
       <p className="font-medium">{invitation.estateName}</p>
+      <p>
+        Offered role:{" "}
+        {invitation.role === "MANAGER"
+          ? "Manager (Admin)"
+          : invitation.role?.toLowerCase()}
+      </p>
       <p className="text-muted-foreground text-sm">
         Expires {new Date(invitation.expiresAt).toLocaleDateString()}
       </p>
@@ -71,7 +77,7 @@ export function PendingInvitations() {
       </CardHeader>
       <CardContent>
         <p>
-          Accept an invitation to gain read-only access to that estate. Your
+          Accept an invitation to gain the offered role in that estate. Your
           existing access stays unchanged.
         </p>
         <ul>

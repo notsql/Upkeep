@@ -40,14 +40,16 @@ export function useResidentContext() {
   });
 }
 
-export function useResidentLocations() {
+export function useResidentLocations(estateId?: string) {
   const userId = useResidentId();
   return useQuery({
-    queryKey: [userId, "resident-locations"],
-    enabled: !!userId,
+    queryKey: [userId, "resident-locations", estateId],
+    enabled: !!userId && !!estateId,
     retry: false,
     queryFn: async () => {
-      const { data, error } = await api.GET("/resident/locations");
+      const { data, error } = await api.GET("/resident/locations", {
+        params: { query: { estateId: estateId ?? "" } },
+      });
       if (error || !data) {
         throw reportError(error, "Unable to load locations.");
       }
@@ -62,6 +64,7 @@ export function useCreateReport() {
   return useMutation({
     retry: false,
     mutationFn: async ({
+      estateId,
       title,
       description,
       locationId,
@@ -70,6 +73,7 @@ export function useCreateReport() {
       images: File[];
     }) => {
       const body = new FormData();
+      body.append("estateId", estateId);
       body.append("title", title);
       body.append("description", description);
       body.append("locationId", locationId);

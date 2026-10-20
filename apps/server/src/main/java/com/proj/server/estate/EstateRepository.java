@@ -18,6 +18,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Repository
 public class EstateRepository {
+    public boolean isReportResponder(UUID estateId, String user) {
+        return db.fetchExists(
+                ESTATEUSER,
+                ESTATEUSER
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(ESTATEUSER.USERID.eq(user))
+                        .and(ESTATEUSER.ROLE.in("MANAGER", "CREW")));
+    }
+
     private final DSLContext db;
 
     public EstateRepository(DSLContext db) {
@@ -52,25 +62,52 @@ public class EstateRepository {
         return (lock ? query.forUpdate().fetchOptional() : query.fetchOptional()).map(row -> response(row, owner));
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public EstateResponse create(String owner, EstateRequest request) {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
-        return response(
-                db.insertInto(ESTATE)
-                        .set(ESTATE.ID, UUID.randomUUID())
-                        .set(ESTATE.OWNERUSERID, owner)
-                        .set(ESTATE.NAME, request.name())
-                        .set(ESTATE.CODE, request.code())
-                        .set(ESTATE.ADDRESS, request.address())
-                        .set(ESTATE.POSTALCODE, request.postalCode())
-                        .set(ESTATE.DESCRIPTION, request.description())
-                        .set(ESTATE.CREATEDAT, now)
-                        .set(ESTATE.UPDATEDAT, now)
-                        .returning()
-                        .fetchSingle(),
-                owner);
+        var row = db.insertInto(ESTATE)
+                .set(ESTATE.ID, UUID.randomUUID())
+                .set(ESTATE.OWNERUSERID, owner)
+                .set(ESTATE.NAME, request.name())
+                .set(ESTATE.CODE, request.code())
+                .set(ESTATE.ADDRESS, request.address())
+                .set(ESTATE.POSTALCODE, request.postalCode())
+                .set(ESTATE.DESCRIPTION, request.description())
+                .set(ESTATE.CREATEDAT, now)
+                .set(ESTATE.UPDATEDAT, now)
+                .returning()
+                .fetchSingle();
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, row.getId())
+                .set(ESTATEUSER.USERID, owner)
+                .set(ESTATEUSER.ROLE, "MANAGER")
+                .set(ESTATEUSER.CREATEDAT, now)
+                .execute();
+        return response(row, owner);
     }
 
-    public EstateResponse update(UUID id, String owner, EstateRequest request) {
+    // Membership changes and ownership transfers lock this same row before writing.
+    // Check editing authority after acquiring it, using the current membership.
+    public void lock(UUID id) {
+        db.select(ESTATE.ID)
+                .from(ESTATE)
+                .where(ESTATE.ID.eq(id))
+                .forUpdate()
+                .fetchOptional()
+                .orElseThrow(() -> new EstateException(HttpStatus.NOT_FOUND, "Estate not found."));
+    }
+
+    public Optional<EstateResponse> findAccessibleForUpdate(UUID id, String user) {
+        // Lock first, then resolve access from current membership after any wait.
+        return db.select(ESTATE.ID)
+                .from(ESTATE)
+                .where(ESTATE.ID.eq(id))
+                .forUpdate()
+                .fetchOptional()
+                .flatMap(ignored -> findAccessible(id, user));
+    }
+
+    public EstateResponse update(UUID id, String user, EstateRequest request) {
         return response(
                 db.update(ESTATE)
                         .set(ESTATE.NAME, request.name())
@@ -79,10 +116,10 @@ public class EstateRepository {
                         .set(ESTATE.POSTALCODE, request.postalCode())
                         .set(ESTATE.DESCRIPTION, request.description())
                         .set(ESTATE.UPDATEDAT, OffsetDateTime.now(ZoneOffset.UTC))
-                        .where(ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner)))
+                        .where(ESTATE.ID.eq(id).and(AccessService.managerEstates(user)))
                         .returning()
                         .fetchSingle(),
-                owner);
+                user);
     }
 
     public EstateResponse deactivate(UUID id, String owner) {
@@ -121,16 +158,11 @@ public class EstateRepository {
                 row.getUpdatedat(),
                 row.getDeactivatedat(),
                 row.getOwneruserid().equals(user),
-                row.getDeactivatedat() == null
-                        && (row.getOwneruserid().equals(user)
-                                || db.fetchExists(
-                                        ESTATEUSER,
-                                        ESTATEUSER
-                                                .ESTATEID
-                                                .eq(row.getId())
-                                                .and(ESTATEUSER.USERID.eq(user))
-                                                .and(AccessService.managementMembership())
-                                                .and(ESTATEUSER.CANINVITEMEMBERS.isTrue()))),
-                row.getOwneruserid().equals(user));
+                row.getDeactivatedat() == null && isManager(row.getId(), user),
+                isManager(row.getId(), user));
+    }
+
+    public boolean isManager(UUID estateId, String user) {
+        return db.fetchExists(ESTATE, ESTATE.ID.eq(estateId).and(AccessService.managerEstates(user)));
     }
 }

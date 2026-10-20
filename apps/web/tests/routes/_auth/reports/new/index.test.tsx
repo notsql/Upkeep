@@ -65,7 +65,7 @@ beforeEach(() => {
     if (path === "/resident/context") {
       return Promise.resolve({
         data: {
-          estate: { id: estateId, name: "Maple Estate" },
+          estates: [{ id: estateId, name: "Maple Estate" }],
           canSubmit: true,
         },
       });
@@ -119,7 +119,7 @@ it("shows only the assigned estate and requires description and a level or commo
   expect(body.get("description")).toBe("Leaking pipe");
   expect(body.get("title")).toBe("Leaking pipe");
   expect(body.get("locationId")).toBe(levelId);
-  expect(body.has("estateId")).toBe(false);
+  expect(body.get("estateId")).toBe(estateId);
   await waitFor(() => expect(navigate).toHaveBeenCalled());
 });
 
@@ -127,7 +127,7 @@ it("explains missing assignment and prevents submission", async () => {
   get.mockImplementation((path: string) => {
     const responses: Record<string, unknown> = {
       "/access/context": unassignedAccess,
-      "/resident/context": { estate: null, canSubmit: false },
+      "/resident/context": { estates: [], canSubmit: false },
       "/resident/locations": [],
     };
     return Promise.resolve({ data: responses[path] });
@@ -279,4 +279,41 @@ it("requires a nonblank title of at most 50 characters before submitting", async
   expect((post.mock.calls[0][1].body as FormData).get("title")).toBe(
     "x".repeat(50)
   );
+});
+
+it("lets a multi-estate resident choose an estate and clears the old location selection", async () => {
+  const original = get.getMockImplementation();
+  get.mockImplementation((path: string, options?: unknown) =>
+    path === "/resident/context"
+      ? Promise.resolve({
+          data: {
+            estates: [
+              { id: estateId, name: "Maple Estate" },
+              { id: "other", name: "Other Estate" },
+            ],
+            canSubmit: true,
+          },
+        })
+      : original?.(path, options)
+  );
+  renderWithProviders(<Page />);
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Estate" }),
+    "Maple Estate"
+  );
+  await chooseOption(screen.getByRole("combobox", { name: BLOCK }), "Block A");
+  await chooseOption(screen.getByRole("combobox", { name: LEVEL }), "Level 2");
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Estate" }),
+    "Other Estate"
+  );
+  await waitFor(() =>
+    expect(get).toHaveBeenCalledWith("/resident/locations", {
+      params: { query: { estateId: "other" } },
+    })
+  );
+  expect(
+    screen.getByRole("combobox", { name: LEVEL }).textContent
+  ).not.toContain("Level 2");
+  expect(post).not.toHaveBeenCalled();
 });

@@ -16,7 +16,9 @@ export const Route = createFileRoute("/_auth")({
     if (
       path === "/reports" ||
       path.startsWith("/reports/") ||
-      path === "/account"
+      path === "/account" ||
+      path === "/invitations" ||
+      path === "/invitations/"
     ) {
       const user = await getSessionIdentity();
       if (!user) {
@@ -34,6 +36,15 @@ export const Route = createFileRoute("/_auth")({
       throw new Error("Unable to resolve access.");
     }
     context.queryClient.setQueryData([user.id, "app-access"], access);
+    if (path === "/estates" || path === "/estates/") {
+      return { user };
+    }
+    if (path === "/estates/new" || path === "/estates/new/") {
+      if (!access.canCreateEstate) {
+        throw notFound();
+      }
+      return { user };
+    }
     if (path.startsWith("/admin")) {
       if (!access.canAccessPlatformAdmin) {
         throw notFound();
@@ -44,9 +55,6 @@ export const Route = createFileRoute("/_auth")({
       throw redirect({ href: "/reports/new" });
     }
     guardEstatePath(path, access);
-    if (path === "/estates/new" && !access.canCreateEstate) {
-      throw notFound();
-    }
     return { user };
   },
   loader: ({ context }) => ({ user: context.user }),
@@ -61,6 +69,12 @@ function guardEstatePath(
     const estate = access.estates.find((item) => item.estateId === estateId);
     if (estate?.role === "RESIDENT") {
       throw redirect({ href: "/reports/new" });
+    }
+    if (feature === "reports") {
+      if (!estate?.canViewFaultReports) {
+        throw notFound();
+      }
+      return;
     }
     if (!estate?.canViewManagement) {
       throw notFound();

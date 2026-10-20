@@ -29,6 +29,9 @@ public class LocationService {
     }
 
     public List<LocationResponse> list(UUID estateId, String user, boolean includeInactive) {
+        if (estates.isReportResponder(estateId, user)) {
+            return includeInactive ? repository.listAll(estateId) : repository.listActive(estateId);
+        }
         if (includeInactive) {
             estates.findOwned(estateId, user, false).orElseThrow(LocationService::estateNotFound);
         } else {
@@ -38,8 +41,8 @@ public class LocationService {
     }
 
     @Transactional
-    public LocationResponse create(UUID estateId, String owner, CreateLocationRequest request) {
-        lockActiveEstate(estateId, owner);
+    public LocationResponse create(UUID estateId, String user, CreateLocationRequest request) {
+        lockActiveEstateForCreation(estateId, user);
         var parentType = checkPlacement(estateId, request.type(), request.parentId(), request.sortOrder());
         checkUnique(estateId, request.type(), request.parentId(), request.name(), request.sortOrder(), null);
         return repository.create(estateId, request, parentType);
@@ -132,6 +135,17 @@ public class LocationService {
                     HttpStatus.CONFLICT, "Deactivate the locations inside \"" + location.name() + "\" first.");
         }
         return repository.deactivate(id);
+    }
+
+    private void lockActiveEstateForCreation(UUID estateId, String user) {
+        var estate = estates.findAccessibleForUpdate(estateId, user).orElseThrow(LocationService::estateNotFound);
+        if (!estates.isManager(estateId, user)) {
+            throw estateNotFound();
+        }
+        if (estate.deactivatedAt() != null) {
+            throw new LocationException(
+                    HttpStatus.CONFLICT, "This estate is inactive. Its locations cannot be changed.");
+        }
     }
 
     private void lockActiveEstate(UUID estateId, String owner) {

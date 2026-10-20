@@ -96,6 +96,8 @@ model IssueReport {
 
   @@index([submittedByUserId, createdAt, id])
   @@index([estateId])
+  @@index([estateId, createdAt, id])
+  @@index([estateId, locationId, createdAt, id])
 }
 
 model IssueReportImage {
@@ -352,6 +354,7 @@ model AssetLifecycleEvent {
 // Estate-local Council invitations; WorkOS owns identity and email delivery.
 model EstateInvitation {
   id                   String    @id @default(uuid()) @db.Uuid
+  role                 String    @default("COUNCIL") @db.VarChar(20)
   estateId             String    @db.Uuid
   name                 String    @db.VarChar(200)
   email                String    @db.VarChar(254)

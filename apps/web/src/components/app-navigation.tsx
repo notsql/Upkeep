@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Button } from "@proj/ui/components/button";
 import {
   DropdownMenu,
@@ -21,6 +22,7 @@ import {
   Users,
 } from "lucide-react";
 import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
+import { ReportEstateSwitcher } from "@/components/reports/report-estate-switcher";
 import { useAppAccess } from "@/lib/access";
 import { useEstate } from "@/lib/estates";
 
@@ -29,6 +31,7 @@ const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/;
 type Destination =
   | "/"
   | "/estates"
+  | "/invitations"
   | "/account"
   | "/reports"
   | "/reports/new"
@@ -36,6 +39,7 @@ type Destination =
   | "/admin/users"
   | "/estates/$estateId"
   | "/estates/$estateId/assets"
+  | "/estates/$estateId/reports"
   | "/estates/$estateId/council";
 interface NavigationItem {
   active: boolean;
@@ -55,15 +59,25 @@ function useNavigation() {
     (item) => item.estateId === candidate
   );
   const estateId =
-    candidate && candidate !== "new" && permission?.canViewManagement
+    candidate &&
+    candidate !== "new" &&
+    (permission?.canViewManagement || permission?.canViewFaultReports)
       ? candidate
       : undefined;
-  const estate = useEstate(estateId);
+  const estate = useEstate(
+    permission?.canViewManagement ? estateId : undefined
+  );
   const reporting: NavigationItem = {
     label: "Report a fault",
     to: "/reports/new",
     icon: ClipboardPenLine,
     active: pathname.startsWith("/reports/new"),
+  };
+  const invitations: NavigationItem = {
+    label: "Invitations",
+    to: "/invitations",
+    icon: Users,
+    active: pathname.startsWith("/invitations"),
   };
   const history: NavigationItem = {
     label: "My reports",
@@ -73,6 +87,16 @@ function useNavigation() {
       pathname === "/reports" ||
       (REPORT_DETAIL_PATH.test(pathname) &&
         !pathname.startsWith("/reports/new")),
+  };
+  const estates: NavigationItem = {
+    label: "Estates",
+    to: "/estates",
+    icon: Building2,
+    active:
+      pathname === "/estates" ||
+      pathname === "/estates/" ||
+      pathname === "/estates/new" ||
+      pathname === "/estates/new/",
   };
   if (!access.data || access.isError) {
     return {
@@ -92,8 +116,8 @@ function useNavigation() {
       active: false,
     };
     const destinations = access.data.hasResidentMembership
-      ? [reporting, history, signOut]
-      : [reporting, signOut];
+      ? [estates, reporting, history, invitations, signOut]
+      : [estates, reporting, invitations, signOut];
     return {
       desktop: destinations,
       local: [],
@@ -109,21 +133,13 @@ function useNavigation() {
     icon: Home,
     active: pathname === "/",
   };
-  const estates: NavigationItem = {
-    label: "Estates",
-    to: "/estates",
-    icon: Building2,
-    active:
-      pathname === "/estates" ||
-      pathname === "/estates/" ||
-      pathname === "/estates/new",
-  };
-  const desktop = [home, estates];
+  const desktop = [home, estates, invitations];
   const primary = [
     home,
     { ...estates, active: pathname.startsWith("/estates") },
   ];
   const overflow: NavigationItem[] = [
+    invitations,
     {
       label: "Settings",
       to: "/account",
@@ -141,16 +157,71 @@ function useNavigation() {
     desktop.push(admin);
     overflow.push(admin);
   }
+  const local = estateDestinations(estateId, permission, pathname);
+  const responderEntry = reportDestination(access.data.estates, permission);
+  if (responderEntry) {
+    desktop.push(responderEntry);
+    overflow.push(responderEntry);
+  }
+  if (access.data.hasResidentMembership) {
+    desktop.push(reporting, history);
+    overflow.push(reporting, history);
+  }
+  return {
+    desktop,
+    local,
+    primary,
+    overflow,
+    estateId,
+    estateName: estate.data?.name ?? permission?.estateName,
+  };
+}
+function reportDestination(
+  estates: components["schemas"]["EstateAccessResponse"][],
+  permission: components["schemas"]["EstateAccessResponse"] | undefined
+): NavigationItem | undefined {
+  if (permission?.canViewFaultReports) {
+    return;
+  }
+  const estate = estates.find((item) => item.canViewFaultReports);
+  if (!estate) {
+    return;
+  }
+  return {
+    label: "Respond to faults",
+    to: "/estates/$estateId/reports",
+    estateId: estate.estateId,
+    icon: ClipboardList,
+    active: false,
+  };
+}
+
+function estateDestinations(
+  estateId: string | undefined,
+  permission: components["schemas"]["EstateAccessResponse"] | undefined,
+  pathname: string
+): NavigationItem[] {
   const local: NavigationItem[] = [];
-  if (estateId) {
+  if (estateId && permission) {
     const base = `/estates/${estateId}`;
-    local.push({
-      label: "Overview",
-      to: "/estates/$estateId",
-      estateId,
-      icon: LayoutDashboard,
-      active: pathname === base || pathname === `${base}/`,
-    });
+    if (permission?.canViewManagement) {
+      local.push({
+        label: "Overview",
+        to: "/estates/$estateId",
+        estateId,
+        icon: LayoutDashboard,
+        active: pathname === base || pathname === `${base}/`,
+      });
+    }
+    if (permission?.canViewFaultReports) {
+      local.push({
+        label: "Fault reports",
+        to: "/estates/$estateId/reports",
+        estateId,
+        icon: ClipboardList,
+        active: pathname.startsWith(`${base}/reports`),
+      });
+    }
     if (permission?.canViewAssets) {
       local.push({
         label: "Assets",
@@ -165,7 +236,7 @@ function useNavigation() {
       permission?.canManageInvitationPermissions
     ) {
       local.push({
-        label: "Council",
+        label: "Estate members",
         to: "/estates/$estateId/council",
         estateId,
         icon: Users,
@@ -173,18 +244,7 @@ function useNavigation() {
       });
     }
   }
-  if (access.data.hasResidentMembership) {
-    desktop.push(reporting, history);
-    overflow.push(reporting, history);
-  }
-  return {
-    desktop,
-    local,
-    primary,
-    overflow,
-    estateId,
-    estateName: estate.data?.name,
-  };
+  return local;
 }
 function DestinationLink({
   item,
@@ -259,6 +319,32 @@ function OverflowNavigation({ items }: { items: NavigationItem[] }) {
     </DropdownMenu>
   );
 }
+function NavigationEstateSwitcher({
+  estateId,
+  estateName,
+}: {
+  estateId: string;
+  estateName?: string;
+}) {
+  const access = useAppAccess();
+  const reporting = useRouterState({
+    select: (state) => state.location.pathname.split("/")[3] === "reports",
+  });
+  const permission = access.data?.estates.find(
+    (estate) => estate.estateId === estateId
+  );
+  if (permission?.canViewManagement && !reporting) {
+    return (
+      <EstateContextSwitcher estateId={estateId} estateName={estateName} />
+    );
+  }
+  return (
+    <ReportEstateSwitcher
+      estateId={estateId}
+      estates={access.data?.estates ?? []}
+    />
+  );
+}
 export function AppNavigation() {
   const { desktop, local, primary, overflow, estateId, estateName } =
     useNavigation();
@@ -277,7 +363,7 @@ export function AppNavigation() {
           {estateId ? (
             <>
               <div className="mt-6 mb-2">
-                <EstateContextSwitcher
+                <NavigationEstateSwitcher
                   estateId={estateId}
                   estateName={estateName}
                 />
@@ -309,7 +395,7 @@ export function EstateNavigation() {
   }
   return (
     <nav aria-label="Estate navigation" className="estate-navigation">
-      <EstateContextSwitcher estateId={estateId} estateName={estateName} />
+      <NavigationEstateSwitcher estateId={estateId} estateName={estateName} />
       <div className="flex flex-wrap gap-2">
         {local.map((item) => (
           <DestinationLink contextual item={item} key={item.label} />

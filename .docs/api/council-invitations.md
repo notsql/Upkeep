@@ -1,212 +1,105 @@
-# Council invitations and delegation
+# Estate invitations, roles and ownership
 
-Source of truth: `packages/api/openapi.json`. Spring owns estate authorization
-and persistence; WorkOS owns identities and new-account invitation emails.
-Organization roles are never changed by these endpoints.
+Source of truth: `packages/api/openapi.json`. Existing Council URLs are retained.
+Current Neon membership/ownership supplies authority; WorkOS supplies identities,
+verified email and invitation delivery. Organization roles are never assigned.
 
 ## Endpoints
 
-All endpoints require a signed-in JWT subject, including when the development
-resource-server configuration is disabled. The signed-in subject determines
-permissions; request bodies cannot select a role or inviter.
+Every endpoint requires a real JWT subject, including local development. Manager
+means MANAGER in the target estate; existing owners retain ownership-derived
+Manager authority. Non-manager members receive 403; unrelated estates return 404.
 
-| Method | Path | Request | Success | Authorization |
-| --- | --- | --- | --- | --- |
-| POST | `/estates/{estateId}/council-invitations` | `CouncilInvitationRequest` | 201 `CouncilInvitationResponse` | Estate owner or estate member with `canInviteMembers` |
-| GET | `/estates/{estateId}/council-invitations` | none | 200 `CouncilInvitationResponse[]` | Estate owner |
-| DELETE | `/estates/{estateId}/council-invitations/{invitationId}` | none | 204, no body | Estate owner |
-| DELETE | `/estates/{estateId}/members/{userId}` | none | 204, no body | Estate owner; cannot remove owner |
-| GET | `/estates/{estateId}/members` | none | 200 `EstateMemberResponse[]` | Estate owner |
-| PUT | `/estates/{estateId}/members/{userId}/invitation-permission` | `InvitationPermissionRequest` | 204, no body | Estate owner |
-| GET | `/council-invitations` | none | 200 `PendingCouncilInvitationResponse[]` | Signed-in user with verified matching WorkOS email |
-| POST | `/council-invitations/{invitationId}/accept` | none | 200 `AcceptedInvitationsResponse` | Verified recipient explicitly accepting that in-app invitation |
-| POST | `/council-invitations/accept` | none | 200 `AcceptedInvitationsResponse` | Signed-in recipient; server verifies WorkOS identity and acceptance |
+| Method | Path | Request | Success / authority |
+| --- | --- | --- | --- |
+| POST | `/estates/{estateId}/council-invitations` | CouncilInvitationRequest | 201 CouncilInvitationResponse; Manager, active estate |
+| GET | `/estates/{estateId}/council-invitations` | None | 200 CouncilInvitationResponse[]; Manager |
+| DELETE | `/estates/{estateId}/council-invitations/{invitationId}` | None | 204; Manager; cancellation is idempotent |
+| GET | `/estates/{estateId}/members` | None | 200 EstateMemberResponse[]; Manager, all roles and owner |
+| PUT | `/estates/{estateId}/members/{userId}/role` | UpdateEstateRoleRequest | 200 EstateMemberResponse; Manager, ownership/self-demotion guards |
+| DELETE | `/estates/{estateId}/members/{userId}` | None | 204; another Manager, ownership guards |
+| POST | `/estates/{estateId}/ownership-transfer` | TransferOwnershipRequest | 200 EstateResponse; current owner only |
+| GET | `/council-invitations` | None | 200 PendingCouncilInvitationResponse[]; verified matching recipient |
+| POST | `/council-invitations/{invitationId}/accept` | None | 200 AcceptedInvitationsResponse; explicit verified recipient acceptance |
+| POST | `/council-invitations/accept` | None | 200 AcceptedInvitationsResponse; provider-verified recipient acceptance |
 
-`estateId` and `invitationId` are UUIDs; `userId` is the existing member's WorkOS user ID. Owners
-are implicit members and are not added to the list unless an explicit grant
-exists. Names and emails in the member list come from WorkOS.
+estateId/invitationId are UUIDs. userId/newOwnerUserId are WorkOS subjects.
+The legacy member `/invitation-permission` PUT is retired and returns 403.
+Its contract remains in OpenAPI for compatibility.
 
 ## DTOs
 
-- `CouncilInvitationRequest`: `email: string` (trimmed, lowercased, valid email, nonblank, max 254).
-- `CouncilInvitationResponse`: `id: UUID`, `estateId: UUID`, `email: string`, `status: string` (`SENDING`, `PENDING` for email, `IN_APP` for existing
-  accounts), `expiresAt: ISO datetime | null` (null before dispatch finalization).
-  No invitation token or setup link is returned to the inviter.
-- `EstateMemberResponse`: `userId: string`, `name: string`, `email: string`,
-  `canInviteMembers: boolean`.
-- `InvitationPermissionRequest`: `canInviteMembers: boolean` (required;
-  null is invalid). Updating the same value is idempotent.
-- `AcceptedInvitationsResponse`: `estateIds: UUID[]`, containing only estates
-  activated in this call. The email reconciliation endpoint can return an empty
-  list; successful explicit in-app acceptance returns one estate ID.
-- `PendingCouncilInvitationResponse`: `id: UUID`, `estateId: UUID`,
-  `estateName: string`, `expiresAt: ISO datetime`.
-- Errors: `EstateError { message: string }` for controller/advice errors.
-  Security-filter 401 responses may have no JSON body.
+| DTO | Fields |
+| --- | --- |
+| CouncilInvitationRequest | email: string (trimmed/lowercased, valid/nonblank, max 254), role?: EstateRole |
+| CouncilInvitationResponse | id: UUID, estateId: UUID, email: string, status: string, expiresAt: datetime or null, role: EstateRole |
+| PendingCouncilInvitationResponse | id: UUID, estateId: UUID, estateName: string, expiresAt: datetime, role: EstateRole |
+| EstateMemberResponse | userId/name/email: string, role: EstateRole or legacy MEMBER, owner: boolean, canInviteMembers: boolean |
+| UpdateEstateRoleRequest | role: EstateRole, required/non-null |
+| TransferOwnershipRequest | newOwnerUserId: string, nonblank, max 255 |
+| AcceptedInvitationsResponse | estateIds: UUID[], activated in this call |
+| EstateResponse | id: UUID; name/code/address/postalCode: string; description: string or null; createdAt/updatedAt: datetime; deactivatedAt: datetime or null; owned/canInviteMembers/canManageInvitationPermissions: boolean |
+| EstateError | message: string |
 
-Example invitation:
+EstateRole contains MANAGER, COUNCIL, RESIDENT and CREW. Manager/Admin is one
+choice, sent as MANAGER. Omitted invitation role defaults to COUNCIL; explicit
+null, OWNER, ADMIN, MEMBER and unknown values return 400. Ownership is separate.
+Member names/emails come from WorkOS. The owner appears even without a legacy
+explicit membership. canInviteMembers is derived from MANAGER, never delegation.
 
-```http
-POST /estates/4c05c636-496e-43f5-bdd8-0751d82e95a7/council-invitations
-Authorization: Bearer <token>
-Content-Type: application/json
+Example: POST an email with role CREW. The 201 response includes CREW and PENDING
+(email) or IN_APP (existing account). Sending grants no membership. GET pending
+offers includes estate, role and expiry. POST the offer ID with no body activates
+exactly its stored role and returns the activated estate ID.
 
-{"email":"alice@example.com"}
-```
+## Lifecycle and safeguards
 
-```json
-{"id":"7c4b1311-83de-4cc4-9532-0ddafbe9c067","estateId":"4c05c636-496e-43f5-bdd8-0751d82e95a7","email":"alice@example.com","status":"PENDING","expiresAt":"2026-10-12T08:00:00Z"}
-```
+One current slot exists per estate/normalized email across roles. Persist the
+selected role before dispatch. SENDING retries retain UUID, role, sender and
+payload. Changing sender/role returns 409; cancel before replacing an offer.
+Cancelled attempts, and accepted attempts after removal, can be replaced with
+a fresh UUID and cleared provider metadata. Old callbacks cannot activate or
+finalize a replacement. Old invitation rows backfill to COUNCIL.
 
-Example delegation: PUT the member permission endpoint with
-`{"canInviteMembers":true}`. Only the estate owner can do this. A delegate
-cannot pass invitation permission onward or acquire asset-write access.
+WorkOS sends new-account email invitations with seven-day expiry. Only its
+user_already_exists rejection falls back to IN_APP, seven-day expiry and no email.
+Other errors preserve SENDING for retry. Listing never grants access. Explicit
+acceptance admits PENDING/IN_APP only, verifies matching email and identity,
+checks expiry and returns 409 on replay. Automatic email reconciliation excludes
+IN_APP and verifies provider ID, accepted user, email and acceptance time.
 
-## Errors and lifecycle
+Activation locks invitation then estate, requires an active estate and current
+inviter Manager authority, inserts the stored role and consumes the offer. An
+existing target-estate membership, including an identical role, causes explicit
+409; provider reconciliation leaves it untouched. Other-estate memberships stay
+intact. Residents can accept multiple estates.
 
-`CouncilInvitationStatus` defines the server's five local states: SENDING,
-PENDING, IN_APP, ACCEPTED and CANCELLED. The service and repository share its
-acceptance rule: only IN_APP/PENDING can activate membership. Outstanding attempts
-are SENDING/PENDING/IN_APP; other states, including unrecognized stored values,
-cannot be accepted or cancelled as outstanding attempts. Expiry is checked
-separately. Status values remain strings in PostgreSQL and the API; the Java enum
-requires no schema migration. WorkOS provider states are distinct from these
-local lifecycle states.
+Manager removal/demotion cancels outstanding invitations they sent. Removal also
+cancels invitations addressed to their current profile email. Accepted recipients
+retain independent memberships. Dispatch finalization cannot overwrite cancellation.
+Writes recheck current authority using the invitation-before-estate lock order.
 
-- 400: invalid input, malformed UUID/body, missing/null permission.
-- 401: no valid signed-in identity.
-- 403: missing invitation/owner permission, or unverified/mismatched WorkOS
-  identity for in-app listing/acceptance.
-- 404: inaccessible/missing estate or member; invitation belongs to another
-  recipient or is missing (including an ID replaced by a fresh invitation).
-- 409: inactive estate, already a member (including owner), duplicate invitation,
-  unavailable in-app acceptance (expired, consumed, or inviter removed),
-  owner self-removal, cancelling an accepted invitation, or dispatch finalization
-  after another request changed the invitation.
-- 502: WorkOS failure or malformed provider invitation.
-- 503: missing WorkOS configuration.
+Managers cannot remove/demote themselves. Another same-estate Manager can do so;
+the current owner must transfer first. Transfer requires a different existing
+MANAGER in that estate, never creates/promotes the recipient, and atomically
+changes ownerUserId while retaining both Manager memberships. New estate creation
+atomically records ownership and MANAGER membership. Inactive estates permit
+member administration/cancellation, but reject new offers and activation.
 
-An invitation reserves a unique `(estateId, normalized email)` row before
-contacting WorkOS. `SENDING` retries reuse its UUID as the provider idempotency
-key and retain the original inviter/payload; email dispatch success moves it to
-`PENDING`. A delivery error does not activate membership. WorkOS emails use a
-seven-day expiry. Provider acceptance of dispatch is not proof of email delivery.
+The former owner retains estate-detail editing through their MANAGER membership.
+Only the new current owner may deactivate or transfer ownership again; Manager
+membership alone never grants either action. See [estates.md](estates.md).
 
-WorkOS `user_already_exists` during send is handled as an in-app invitation:
-`IN_APP`, no provider ID, seven-day expiry, no email. The failed SENDING row can
-be retried normally into this state. Other WorkOS errors remain failures.
-GET `/council-invitations` lists that verified recipient's unexpired IN_APP and PENDING
-rows on active estates. Listing never grants access. POST to the UUID-specific
-accept endpoint activates only that invitation; state and expiry are checked
-under the invitation lock. Replayed acceptance returns 409. No separate invitation token is needed:
-the authenticated WorkOS identity and verified matching email authorize it.
+400 invalid input/role/UUID; 401 missing identity; 403 insufficient authority,
+unverified identity or retired delegation; 404 inaccessible/missing resource;
+409 duplicate/existing membership, inactive/expired/consumed offer, changed retry,
+self-removal/demotion, protected owner or ineligible transfer; 502 provider failure;
+503 missing provider configuration or access storage unavailable. Cancelled emails may still permit account
+registration, never estate activation.
 
-Example: GET `/council-invitations` returns
-`[{"id":"7c4b1311-83de-4cc4-9532-0ddafbe9c067","estateId":"4c05c636-496e-43f5-bdd8-0751d82e95a7","estateName":"Maple Grove","expiresAt":"2026-10-12T08:00:00Z"}]`.
-POST `/council-invitations/7c4b1311-83de-4cc4-9532-0ddafbe9c067/accept`
-returns `{"estateIds":["4c05c636-496e-43f5-bdd8-0751d82e95a7"]}`.
-Both require a bearer token; POST has no request body.
-
-The existing email acceptance sweep excludes IN_APP rows.
-Email acceptance reads the recipient's identity directly from WorkOS, requires a
-verified matching email, then reads each matching local pending invitation by
-its provider ID. Only accepted invitations with the same accepted user ID,
-matching email/ID, and acceptance between local creation and provider expiry
-can activate. An invitation accepted on time can be reconciled later. Pending,
-late-accepted, mismatched, or unverified cases return no activation.
-
-Activation locks the invitation and estate in a transaction, rejects inactive
-estates or an inviter who is no longer the owner or a member, inserts Council membership
-with invitation permission false, and marks the invitation accepted. Revoking invitation
-permission alone preserves previously sent invitations. Existing
-grants and roles remain unchanged. Members can browse the
-[location hierarchy](locations.md); location writes remain owner-only.
-Broader estate-role permissions are follow-up work: asset details, assessment
-history and device-list reads still
-require ownership in their services. Council membership does not yet grant
-those reads.
-Concurrent/repeated activation does not
-duplicate membership. Deleting an estate grant deletes its delegated permission.
-
-## Owner cancellation and member removal
-
-The owner list returns SENDING/PENDING/IN_APP rows for this estate, including
-expired invitations. It omits accepted/cancelled rows and does not resolve
-recipient profiles through WorkOS. Example GET
-`/estates/{estateId}/council-invitations` returns an array of the invitation DTO
-shown above; a failed dispatch can have `status: "SENDING", expiresAt: null`.
-
-DELETE `/estates/{estateId}/council-invitations/{invitationId}` takes no body and
-returns 204. Pending invitations become CANCELLED, and repeating cancellation
-returns 204. Missing/cross-estate IDs return 404; accepted rows return 409.
-Cancellation remains available on inactive estates. It prevents local estate
-activation even if an already-sent WorkOS email still permits registration.
-A provider response cannot revive a row cancelled during dispatch.
-
-DELETE `/estates/{estateId}/members/{userId}` takes no body and returns 204.
-The owner cannot remove themselves (409); a missing member returns 404.
-WorkOS supplies the member's current email, then a transaction locks invitation
-rows and the estate, removes that grant/delegation, and cancels outstanding
-invitations for that email or sent by that member in this estate. Existing
-accepted rows remain consumed; their recipients keep their own memberships. No account,
-organization role, other-estate grant or estate record is deleted. Provider
-lookup failure leaves membership unchanged. Concurrent acceptance cannot restore
-the removed grant from an already-pending invitation.
-
-These endpoints require owner authority, including on inactive estates. A
-delegate receives 403; an unrelated caller receives 404. Subsequent API calls
-check current access; another browser's previously rendered content may remain
-until it refetches.
-
-Re-inviting a cancelled address, or an accepted recipient after member removal,
-reuses the estate/email slot with a fresh UUID, inviter and creation time;
-old provider and acceptance metadata are cleared. Old IDs and provider callbacks
-cannot activate or finalize the replacement. Current memberships and outstanding
-invitations still return 409. Cancel an expired pending invitation before inviting
-again. Failed SENDING dispatches can be retried with their current delivery key.
-No manual deletion or migration is needed for older test invitations; the row
-represents the current attempt, not a permanent invitation audit history.
-
-## Estate response extension
-
-`EstateResponse` from the existing estate endpoints now includes
-`canInviteMembers: boolean` and `canManageInvitationPermissions: boolean`.
-The first is true only for an active estate's owner or delegated member; the
-second is true only for its owner. These booleans guide UI visibility; every
-write independently checks current server-side permissions.
-
-## Configuration and verification
-
-Use the existing server `WORKOS_API_KEY`; no new secret is introduced. In the
-WorkOS application's **Redirects**, set the **User invitation URL** to the web
-app's `/api/auth/sign-in` (locally `http://localhost:3001/api/auth/sign-in`).
-Keep WorkOS invitation email delivery enabled. This route preserves PKCE,
-forwards `invitation_token` to hosted authentication, and returns invitees to
-`/estates`; that screen calls the acceptance endpoint. Existing account roles
-are preserved because invitations contain neither organization ID nor role.
-
-Invitations use email only. WorkOS is the source of the accepted user's
-identity/name; inviting never sets or renames a profile. The legacy database
-name column remains for compatibility but is not exposed or read for invitations;
-new attempts store an empty value.
-No real invitation emails are sent by automated tests.
-
-Unhandled WorkOS failures retain the generic `WorkOS request failed` response. The
-server logs the provider HTTP status, error code, and request ID for diagnosis;
-it does not log the raw provider response or exception message.
-
-## Design references
-
-[ADR 0020](../../.spec/decisions/0020-council-invitations-are-estate-scoped.md)
-records estate scoping and delegation;
-[ADR 0021](../../.spec/decisions/0021-existing-accounts-use-in-app-invitations.md)
-records the existing-account delivery decision and its tradeoff;
-[ADR 0022](../../.spec/decisions/0022-owners-can-cancel-invitations-and-remove-members.md)
-records owner cancellation/removal and its concurrency rules;
-[ADR 0023](../../.spec/decisions/0023-reconcile-old-invitations-and-allow-reinvitation.md)
-records compatibility with older invitations and fresh invitation attempts.
-
-[ADR 0024](../../.spec/decisions/0024-invitation-permission-revocation-affects-future-invites.md)
-records permission revocation versus removal and explicit cancellation.
-
-Resident authorization: estate member lists, invitation delegation, inviter checks and removal include MEMBER/COUNCIL rows only. A RESIDENT row grants no management access, even when the same account owns another estate. Invitation acceptance rejects a resident row in the target estate with 409, preserving both the membership and pending invitation; acceptance in another estate remains allowed. Same-estate resident/owner conflicts fail closed.
+EstateResponse retains canInviteMembers (active Manager) and the legacy name
+canManageInvitationPermissions (Manager member/role administration). No account
+is reclassified. Asset editing and staff report/location APIs are separate work.
+Configure WorkOS User invitation URL as `/api/auth/sign-in`; AuthKit preserves
+PKCE/state and returns to `/invitations`. Tests never send real invitation emails.
+See [ADR 0028](../../.spec/decisions/0028-estate-role-invitations.md).

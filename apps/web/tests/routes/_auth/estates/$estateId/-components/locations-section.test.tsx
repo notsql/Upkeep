@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { ownerEstateAccess, unassignedAccess } from "@tests/fixtures/access";
 import {
   chooseOption,
   renderWithProviders,
@@ -51,10 +52,44 @@ const locations: Location[] = [
 const path = { params: { path: { estateId: "estate-id" } } };
 
 function serve(
-  options: { deactivatedAt?: string; items?: Location[]; owned?: boolean } = {}
+  options: {
+    deactivatedAt?: string;
+    items?: Location[];
+    owned?: boolean;
+    role?: string;
+    assignmentId?: string;
+    accessState?: "loading" | "error";
+  } = {}
 ) {
-  vi.mocked(api.GET).mockImplementation(((url: string) =>
-    Promise.resolve({
+  vi.mocked(api.GET).mockImplementation(((url: string) => {
+    if (url === "/access/context") {
+      if (options.accessState === "loading") {
+        return new Promise(() => undefined);
+      }
+      if (options.accessState === "error") {
+        return Promise.resolve({
+          error: { message: "Unavailable" },
+          response: new Response(null, { status: 503 }),
+        });
+      }
+      return Promise.resolve({
+        data: {
+          ...unassignedAccess,
+          estates: options.role
+            ? [
+                {
+                  ...ownerEstateAccess,
+                  role: options.role,
+                  estateId: options.assignmentId ?? estate.id,
+                  canManageEstate: options.role === "MANAGER",
+                },
+              ]
+            : [],
+        },
+        response: new Response(),
+      });
+    }
+    return Promise.resolve({
       data:
         url === "/estates/{id}"
           ? {
@@ -64,7 +99,8 @@ function serve(
             }
           : (options.items ?? locations),
       response: new Response(),
-    })) as never);
+    });
+  }) as never);
 }
 
 function succeed(method: "POST" | "PATCH") {
@@ -87,6 +123,102 @@ describe("locations section", () => {
     auth.user = { id: "owner" };
     serve();
   });
+
+  it.each([
+    ["BLOCK", undefined, "Add block"],
+    ["LEVEL", "Blk 101", "Add level to Blk 101"],
+    ["COMMON_AREA", "Blk 101", "Add common area to Blk 101"],
+    ["COMMON_AREA", "Level 2", "Add common area to Level 2"],
+  ] as const)(
+    "lets an assigned Manager create %s using %s",
+    async (type, parent, action) => {
+      serve({ owned: false, role: "MANAGER" });
+      succeed("POST");
+      renderWithProviders(<LocationsSection estateId={estate.id} />);
+      if (parent) {
+        await selectAction(parent, action);
+      } else {
+        fireEvent.click(await screen.findByRole("button", { name: action }));
+      }
+      const form = await screen.findByRole("form", { name: action });
+      fireEvent.change(within(form).getByRole("textbox", { name: "Name" }), {
+        target: { value: "New location" },
+      });
+      fireEvent.click(within(form).getByRole("button", { name: "Save" }));
+      const body = {
+        type,
+        name: "New location",
+        ...(parent ? { parentId: parent === "Level 2" ? "l2" : "b1" } : {}),
+        ...(type === "LEVEL" ? { sortOrder: 3 } : {}),
+      };
+      await waitFor(() =>
+        expect(api.POST).toHaveBeenCalledWith("/estates/{estateId}/locations", {
+          ...path,
+          body,
+        })
+      );
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    }
+  );
+
+  it("keeps location editing and deactivation hidden from assigned Managers", async () => {
+    serve({ owned: false, role: "MANAGER" });
+    renderWithProviders(<LocationsSection estateId={estate.id} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Actions for Blk 101" })
+    );
+    await screen.findByRole("menuitem", { name: "Add level to Blk 101" });
+    screen.getByRole("menuitem", { name: "Add common area to Blk 101" });
+    expect(screen.queryByRole("menuitem", { name: "Edit Blk 101" })).toBeNull();
+    expect(
+      screen.queryByRole("menuitem", { name: "Deactivate Blk 101" })
+    ).toBeNull();
+  });
+
+  it.each([
+    "COUNCIL",
+    "MEMBER",
+    "CREW",
+    "RESIDENT",
+    "unassigned",
+    "other-estate Manager",
+    "inactive Manager",
+  ])("hides creation controls for %s", async (role) => {
+    serve({
+      owned: false,
+      role: role.includes("Manager") ? "MANAGER" : role,
+      assignmentId: role === "other-estate Manager" ? "other" : estate.id,
+      deactivatedAt: role === "inactive Manager" ? at : undefined,
+    });
+    renderWithProviders(<LocationsSection estateId={estate.id} />);
+    await screen.findByRole("listitem", { name: "Blk 101" });
+    expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+    expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
+  });
+
+  it("closes a Manager's create dialog when their permission is revoked", async () => {
+    serve({ owned: false, role: "MANAGER" });
+    const { queryClient } = renderWithProviders(
+      <LocationsSection estateId={estate.id} />
+    );
+    fireEvent.click(await screen.findByRole("button", { name: "Add block" }));
+    await screen.findByRole("dialog", { name: "Add block" });
+    queryClient.setQueryData(["owner", "app-access"], unassignedAccess);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+    expect(api.POST).not.toHaveBeenCalled();
+  });
+
+  it.each(["loading", "error"] as const)(
+    "hides non-owner creation controls when permissions are %s",
+    async (accessState) => {
+      serve({ owned: false, role: "MANAGER", accessState });
+      renderWithProviders(<LocationsSection estateId={estate.id} />);
+      await screen.findByRole("listitem", { name: "Blk 101" });
+      expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+      expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
+    }
+  );
 
   it("lets shared members browse and search without location write controls", async () => {
     serve({ owned: false });

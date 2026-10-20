@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { unassignedAccess } from "@tests/fixtures/access";
 import {
   renderWithProviders,
   screen,
@@ -52,19 +53,21 @@ beforeEach(() => {
   vi.resetAllMocks();
   count = 1;
   estateName = "Maple Grove";
-  vi.mocked(api.GET).mockImplementation(
-    async (path) =>
-      ({
-        data:
-          path === "/dashboard/summary"
-            ? {
-                activeEstateCount: count,
-                estatesNeedingAttention: [{ estateName }],
-              }
-            : estate,
+  vi.mocked(api.GET).mockImplementation((path) => {
+    if (path === "/dashboard/summary") {
+      return Promise.resolve({
+        data: {
+          activeEstateCount: count,
+          estatesNeedingAttention: [{ estateName }],
+        },
         response: new Response(),
-      }) as never
-  );
+      }) as never;
+    }
+    return Promise.resolve({
+      data: path === "/access/context" ? unassignedAccess : estate,
+      response: new Response(),
+    }) as never;
+  });
   vi.mocked(api.POST).mockImplementation(() => {
     count = 2;
     return Promise.resolve({ data: estate, response: new Response() }) as never;

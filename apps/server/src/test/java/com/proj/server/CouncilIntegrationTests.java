@@ -78,15 +78,19 @@ class CouncilIntegrationTests {
     }
 
     void invite(String user) throws Exception {
+        invite(user, "PENDING");
+    }
+
+    void invite(String user, String expectedStatus) throws Exception {
         mvc.perform(
                         post(path() + "/council-invitations")
                                 .with(jwt().jwt(t -> t.subject(user)))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(
-                                        "{\"name\":\" Council Member \",\"email\":\" MEMBER@example.com \",\"role\":\"admin\",\"canInviteMembers\":true}"))
+                                        "{\"name\":\" Council Member \",\"email\":\" MEMBER@example.com \",\"role\":\"COUNCIL\",\"canInviteMembers\":true}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("member@example.com"))
-                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.status").value(expectedStatus))
                 .andExpect(jsonPath("$.token").doesNotExist());
     }
 
@@ -96,6 +100,18 @@ class CouncilIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"canInviteMembers\":" + allowed + "}"))
                 .andExpect(status().is(status));
+    }
+
+    void manager(String user) {
+        db.execute("update \"EstateUser\" set role='MANAGER' where \"estateId\"=? and \"userId\"=?", estateId, user);
+    }
+
+    void role(String user, String role) throws Exception {
+        mvc.perform(put(path() + "/members/" + user + "/role")
+                        .with(jwt().jwt(t -> t.subject("owner")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"role\":\"" + role + "\"}"))
+                .andExpect(status().isOk());
     }
 
     UUID inviteExisting() throws Exception {
@@ -250,9 +266,11 @@ class CouncilIntegrationTests {
     }
 
     @Test
-    void cancellationAndRemovalAreOwnerOnlyAndScopedToOneEstate() throws Exception {
+    void cancellationAndRemovalRequireManagersAndAreScopedToOneEstate() throws Exception {
         UUID id = inviteExisting();
-        permission("owner", true, 204);
+        db.execute(
+                "update \"EstateUser\" set \"canInviteMembers\"=true where \"estateId\"=? and \"userId\"='delegate'",
+                estateId);
         mvc.perform(get(path() + "/council-invitations").with(jwt().jwt(t -> t.subject("delegate"))))
                 .andExpect(status().isForbidden());
         mvc.perform(delete(path() + "/council-invitations/" + id).with(jwt().jwt(t -> t.subject("delegate"))))
@@ -429,7 +447,7 @@ class CouncilIntegrationTests {
     }
 
     @Test
-    void inAppAcceptancePreservesExistingPermissionAndRejectsInactiveEstate() throws Exception {
+    void inAppAcceptanceRejectsExistingMembershipAndInactiveEstate() throws Exception {
         UUID id = inviteExisting();
         members.add(estateId, "recipient");
         db.execute(
@@ -437,7 +455,7 @@ class CouncilIntegrationTests {
                 estateId,
                 "recipient");
         mvc.perform(post("/council-invitations/" + id + "/accept").with(jwt().jwt(t -> t.subject("recipient"))))
-                .andExpect(status().isOk());
+                .andExpect(status().isConflict());
         var grant = db.fetchOne(
                 "select role, \"canInviteMembers\" from \"EstateUser\" where \"estateId\" = ? and \"userId\" = ?",
                 estateId,
@@ -490,29 +508,20 @@ class CouncilIntegrationTests {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void revokingPermissionPreservesPreviouslySentInvitations(boolean inApp) throws Exception {
-        permission("owner", true, 204);
-        if (inApp) {
+    void demotingManagerCancelsPreviouslySentInvitations(boolean inApp) throws Exception {
+        manager("delegate");
+        if (inApp)
             when(identity.send(any(), anyString(), anyString()))
                     .thenReturn(new CouncilIdentity.Invitation(
                             null, "member@example.com", "existing_account", expires, null, null));
-        }
-        mvc.perform(post(path() + "/council-invitations")
-                        .with(jwt().jwt(t -> t.subject("delegate")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Member\",\"email\":\"member@example.com\"}"))
-                .andExpect(status().isCreated());
-        UUID id = db.fetchOne("select id from \"EstateInvitation\" where \"estateId\" = ?", estateId)
+        invite("delegate", inApp ? "IN_APP" : "PENDING");
+        UUID id = db.fetchOne("select id from \"EstateInvitation\" where \"estateId\"=?", estateId)
                 .get(0, UUID.class);
-        permission("owner", false, 204);
-        mvc.perform(post(path() + "/council-invitations")
-                        .with(jwt().jwt(t -> t.subject("delegate")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Other\",\"email\":\"other@example.com\"}"))
-                .andExpect(status().isForbidden());
+        role("delegate", "COUNCIL");
+        assertEquals("CANCELLED", db.fetchValue("select status from \"EstateInvitation\" where id=?", id));
         if (inApp) {
             mvc.perform(post("/council-invitations/" + id + "/accept").with(jwt().jwt(t -> t.subject("recipient"))))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isConflict());
         } else {
             when(identity.invitation(anyString()))
                     .thenAnswer(call -> new CouncilIdentity.Invitation(
@@ -524,18 +533,15 @@ class CouncilIntegrationTests {
                             OffsetDateTime.now()));
             mvc.perform(post("/council-invitations/accept").with(jwt().jwt(t -> t.subject("recipient"))))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.estateIds[0]").value(estateId.toString()));
+                    .andExpect(jsonPath("$.estateIds").isEmpty());
         }
-        assertTrue(estates.findAccessible(estateId, "recipient").isPresent());
-        mvc.perform(delete(path() + "/members/delegate").with(jwt().jwt(t -> t.subject("owner"))))
-                .andExpect(status().isNoContent());
-        assertTrue(estates.findAccessible(estateId, "recipient").isPresent());
+        assertTrue(estates.findAccessible(estateId, "recipient").isEmpty());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"PENDING", "IN_APP", "SENDING"})
     void removingInviterCancelsOutstandingInvitations(String state) throws Exception {
-        permission("owner", true, 204);
+        manager("delegate");
         invite("delegate");
         UUID id = db.fetchOne("select id from \"EstateInvitation\" where \"estateId\" = ?", estateId)
                 .get(0, UUID.class);
@@ -558,14 +564,14 @@ class CouncilIntegrationTests {
     }
 
     @Test
-    void ownerDelegatesAndRevokesOnlyWithinTheirEstate() throws Exception {
-        permission("owner", true, 204);
+    void managersInviteAndDemotionRevokesAuthorityWithinTheirEstate() throws Exception {
+        manager("delegate");
         mvc.perform(get(path() + "/members").with(jwt().jwt(t -> t.subject("owner"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].canInviteMembers").value(true));
         permission("delegate", true, 403);
         invite("delegate");
-        permission("owner", false, 204);
+        role("delegate", "COUNCIL");
         mvc.perform(post(path() + "/council-invitations")
                         .with(jwt().jwt(t -> t.subject("delegate")))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -576,9 +582,9 @@ class CouncilIntegrationTests {
     }
 
     @Test
-    void removingMembershipAlsoRemovesDelegation() throws Exception {
-        permission("owner", true, 204);
-        members.remove(estateId, "delegate");
+    void readdingALegacyMemberDoesNotRestoreManagerAuthority() throws Exception {
+        manager("delegate");
+        db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='delegate'", estateId);
         members.add(estateId, "delegate");
         mvc.perform(get(path()).with(jwt().jwt(t -> t.subject("delegate"))))
                 .andExpect(status().isOk())
@@ -679,7 +685,7 @@ class CouncilIntegrationTests {
 
     @Test
     void inactiveEstateAndRemovedInviterCannotActivateMembership() throws Exception {
-        permission("owner", true, 204);
+        manager("delegate");
         invite("delegate");
         when(identity.invitation(anyString()))
                 .thenAnswer(call -> new CouncilIdentity.Invitation(
@@ -689,12 +695,12 @@ class CouncilIntegrationTests {
                         expires,
                         "recipient",
                         OffsetDateTime.now()));
-        members.remove(estateId, "delegate");
+        db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='delegate'", estateId);
         mvc.perform(post("/council-invitations/accept").with(jwt().jwt(t -> t.subject("recipient"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estateIds").isEmpty());
         members.add(estateId, "delegate");
-        permission("owner", true, 204);
+        manager("delegate");
         estates.deactivate(estateId, "owner");
         mvc.perform(post("/council-invitations/accept").with(jwt().jwt(t -> t.subject("recipient"))))
                 .andExpect(status().isOk())

@@ -7,14 +7,14 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
-- [Admin role updates](api/admin-roles.md): self-demotion and last-active-admin
-  protection for WorkOS organization roles.
+- [Admin role updates](api/admin-roles.md): retired global WorkOS organization-role contracts; use estate-local roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
+- [Estates](api/estates.md): creation by any authenticated account, estate details, owner/assigned-Manager editing and owner-only deactivation.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
   retirement, restoration and lifecycle history, plus device registration,
   device credentials and `/device-api` authentication.
-- [Council invitations and delegation](api/council-invitations.md): invitation,
-  member listing, delegation, acceptance, and estate capability fields.
+- [Estate invitations, roles and ownership](api/council-invitations.md): invitation,
+  member roles, ownership transfer, acceptance and estate capability fields.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
@@ -22,10 +22,11 @@ same change as the code.
 - [Asset readings](api/readings.md): an owner's paginated, filterable list of an asset's readings with GAP, DUPLICATE_TIMESTAMP and OUT_OF_RANGE flags.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
-- [Locations](api/locations.md): member-readable active hierarchy, owner-only
-  historical reads and changes. Other API features are not yet documented here.
-- [Access projection and admin estate grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
+- [Locations](api/locations.md): member/responder-readable hierarchy, owner/responder
+  historical reads, owner/assigned-Manager creation and owner-only editing/deactivation.
+- [Access projection and retired global grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
 - [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
+- [Estate fault reports](api/estate-reports.md): Manager/Crew report reads, block/level-position and subtree filtering, private images and location correction.
 
 ## Frontend (`apps/web`)
 
@@ -43,5 +44,6 @@ same change as the code.
 | [frontend/devices.md](frontend/devices.md) | Device list on asset details and dedicated device registration page |
 | [frontend/readings.md](frontend/readings.md) | `/estates/$estateId/assets/$assetId/readings`: reading list, metric/time/suspect filters, flag badges, pagination |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
-| [frontend/council-invitations.md](frontend/council-invitations.md) | Estate Council invitations, delegated invitation permission, and acceptance |
+| [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer and /invitations |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
+| [frontend/estate-reports.md](frontend/estate-reports.md) | Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |

@@ -176,7 +176,7 @@ public class Issuereport extends TableImpl<IssuereportRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.ISSUEREPORT_ESTATEID_IDX, Indexes.ISSUEREPORT_SUBMITTEDBYUSERID_CREATEDAT_ID_IDX);
+        return Arrays.asList(Indexes.ISSUEREPORT_ESTATEID_CREATEDAT_ID_IDX, Indexes.ISSUEREPORT_ESTATEID_IDX, Indexes.ISSUEREPORT_ESTATEID_LOCATIONID_CREATEDAT_ID_IDX, Indexes.ISSUEREPORT_SUBMITTEDBYUSERID_CREATEDAT_ID_IDX);
     }
 
     @Override

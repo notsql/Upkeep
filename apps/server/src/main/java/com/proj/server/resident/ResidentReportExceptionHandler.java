@@ -1,6 +1,7 @@
 package com.proj.server.resident;
 
 import com.proj.server.estate.EstateError;
+import com.proj.server.report.EstateReportController;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,14 +12,18 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-@RestControllerAdvice(assignableTypes = ResidentReportController.class)
+@RestControllerAdvice(assignableTypes = {ResidentReportController.class, EstateReportController.class})
 public class ResidentReportExceptionHandler {
     @ExceptionHandler(ResidentReportException.class)
     ResponseEntity<EstateError> report(ResidentReportException error) {
         return ResponseEntity.status(error.status()).body(new EstateError(error.getMessage()));
     }
 
-    @ExceptionHandler({MissingServletRequestParameterException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+        MissingServletRequestParameterException.class,
+        MethodArgumentTypeMismatchException.class,
+        org.springframework.http.converter.HttpMessageNotReadableException.class
+    })
     ResponseEntity<EstateError> invalidRequest() {
         return ResponseEntity.badRequest().body(new EstateError("Invalid report request."));
     }

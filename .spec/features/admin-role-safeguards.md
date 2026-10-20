@@ -3,6 +3,16 @@
 **Status:** built
 **Owner:** unassigned
 
+**Planned policy revision (2026-10-18):** the user confirmed Manager and Admin
+are the same role. The [Neon authority draft](neon-role-management.md) replaces
+the provider-role editor with estate-scoped role management. The safeguards
+below describe the existing WorkOS implementation; their estate-local successor
+preserves at least one owner and blocks Manager self-removal/self-demotion.
+Only another same-estate Manager may remove/demote a non-owner Manager. The
+current owner must transfer ownership to another existing same-estate Manager
+before removal/demotion. These confirmed rules remain planned until implemented;
+existing-account migration is deferred.
+
 ## Problem
 
 An application admin can currently remove their own WorkOS organization admin
