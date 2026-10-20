@@ -15,6 +15,11 @@ Scenarios:
   demo    One of each case, then exits: a new reading (201), an identical retry
           (200), a conflicting value (409), a wrong unit (400), a late reading
           from 10 minutes ago (201) and a reading 10 minutes in the future (400).
+  flatline  Buffered constant readings spanning --flatline-minutes, without
+            waiting. Set --interval to the registered reporting interval and
+            configure the same metric threshold in Sensors first.
+  recovery  One changed reading now, to clear the previous constant run when
+            the configured tolerance is smaller than the change (5 units).
 
 The device must be registered for every metric sent, or the server answers 400.
 """
@@ -126,6 +131,23 @@ def demo(url: str, key: str, metric: str) -> None:
     send(url, key, reading(metric, base, at + timedelta(minutes=10)))
 
 
+def flatline(url: str, key: str, metric: str, interval: float, minutes: int) -> None:
+    if interval <= 0 or minutes < 1:
+        raise ValueError("Interval and flatline duration must be positive.")
+    end = now()
+    at = end - timedelta(minutes=minutes)
+    print("Sending buffered unchanged measurements. Review this sensor in Sensors:")
+    while at < end:
+        send(url, key, reading(metric, METRICS[metric][1], at))
+        at = min(at + timedelta(seconds=interval), end)
+    send(url, key, reading(metric, METRICS[metric][1], end))
+
+
+def recovery(url: str, key: str, metric: str) -> None:
+    print("Sending a changed measurement. Refresh Sensors to review the new run:")
+    send(url, key, reading(metric, METRICS[metric][1] + 5, now()))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -140,7 +162,8 @@ def main() -> None:
         default=os.environ.get("UPKEEP_DEVICE_KEY"),
         help="Device API key. Defaults to $UPKEEP_DEVICE_KEY, kept out of history.",
     )
-    parser.add_argument("--scenario", choices=["stream", "demo"], default="stream")
+    parser.add_argument("--scenario", choices=["stream", "demo", "flatline", "recovery"], default="stream")
+    parser.add_argument("--flatline-minutes", type=int, default=5, help="Threshold to demonstrate with buffered constant readings (default: 5)")
     parser.add_argument(
         "--metric",
         action="append",
@@ -161,10 +184,16 @@ def main() -> None:
     if not args.key:
         parser.error("no device key: set UPKEEP_DEVICE_KEY or pass --key")
     metrics = args.metric or ["TEMPERATURE"]
+    if args.scenario == "flatline" and (args.interval <= 0 or not 1 <= args.flatline_minutes <= 43200):
+        parser.error("flatline needs a positive interval and a threshold from 1 to 43200 minutes")
 
     try:
         if args.scenario == "demo":
             demo(args.url, args.key, metrics[0])
+        elif args.scenario == "flatline":
+            flatline(args.url, args.key, metrics[0], args.interval, args.flatline_minutes)
+        elif args.scenario == "recovery":
+            recovery(args.url, args.key, metrics[0])
         else:
             stream(args.url, args.key, metrics, args.interval, args.count)
     except KeyboardInterrupt:

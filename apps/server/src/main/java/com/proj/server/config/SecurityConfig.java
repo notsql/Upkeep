@@ -96,6 +96,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
                                 "/estates/{estateId}/failure-risk",
+                                "/estates/{estateId}/flatline-policies",
+                                "/estates/{estateId}/flatlined-sensors",
                                 "/estates/{estateId}/members",
                                 "/estates/{estateId}/council-invitations")
                         .authenticated()
@@ -120,6 +122,7 @@ public class SecurityConfig {
                                 "/estates/{estateId}/deactivate",
                                 "/estates/{estateId}/locations",
                                 "/estates/{estateId}/locations/{id}/deactivate",
+                                "/estates/{estateId}/locations/{blockId}/floors",
                                 "/estates/{estateId}/assets",
                                 "/estates/{estateId}/assets/{id}/deactivate",
                                 "/estates/{estateId}/assets/{id}/restore",
@@ -128,6 +131,7 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings/anomaly-check",
+                                "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}",
                                 "/estates/{estateId}/council-invitations")
                         .authenticated()
                         .requestMatchers(
@@ -137,7 +141,10 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{id}",
                                 "/estates/{estateId}/assets/{id}/retirement")
                         .authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/members/{userId}/invitation-permission")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/estates/{estateId}/members/{userId}/invitation-permission",
+                                "/estates/{estateId}/flatline-policies/{metric}")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,

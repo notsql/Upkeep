@@ -95,6 +95,108 @@
         }
       }
     },
+    "/estates/{estateId}/flatline-policies/{metric}": {
+      "put": {
+        "tags": ["flatline-controller"],
+        "operationId": "setPolicy",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "metric",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "VIBRATION_ACCELERATION",
+                "POWER",
+                "ENERGY"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetFlatlinePolicyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate role does not allow this operation",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, retired asset, or conflicting sensor configuration",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Sensor data is unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Saved estate metric policy",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlatlinePolicyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/{userId}/estates/{estateId}": {
       "put": {
         "tags": ["estate-user-controller"],
@@ -820,6 +922,14 @@
           "required": true
         },
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Invalid request or hierarchy shape",
             "content": {
@@ -857,6 +967,114 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/AddFloorsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}": {
+      "post": {
+        "tags": ["flatline-controller"],
+        "operationId": "pause",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "metric",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "VIBRATION_ACCELERATION",
+                "POWER",
+                "ENERGY"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFlatlinePauseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate role does not allow this operation",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, retired asset, or conflicting sensor configuration",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Sensor data is unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Finite maintenance pause; expiry retained as a fresh-start cutoff",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlatlinePauseResponse"
+                }
               }
             }
           }
@@ -1759,6 +1977,14 @@
           }
         ],
         "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "400": {
             "description": "Missing or invalid details, or an unsupported metric",
             "content": {
@@ -2981,6 +3207,176 @@
         }
       }
     },
+    "/estates/{estateId}/flatlined-sensors": {
+      "get": {
+        "tags": ["flatline-controller"],
+        "operationId": "review",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "view",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "REVIEW",
+              "enum": ["REVIEW", "ALL"]
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 25 }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate role does not allow this operation",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, retired asset, or conflicting sensor configuration",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Sensor data is unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Derived sensor monitoring review, filtered before pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlatlineReviewResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/flatline-policies": {
+      "get": {
+        "tags": ["flatline-controller"],
+        "operationId": "policies",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate role does not allow this operation",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, retired asset, or conflicting sensor configuration",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Sensor data is unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "All metric policies and estate sensor permissions",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlatlinePoliciesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/failure-risk": {
       "get": {
         "tags": ["failure-risk-controller"],
@@ -3610,6 +4006,45 @@
         "properties": { "message": { "type": "string" } },
         "required": ["message"]
       },
+      "SetFlatlinePolicyRequest": {
+        "type": "object",
+        "properties": {
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 43200,
+            "minimum": 1
+          },
+          "tolerance": {
+            "type": "number",
+            "maximum": 999999999999.999999,
+            "minimum": 0
+          }
+        },
+        "required": ["durationMinutes", "tolerance"]
+      },
+      "FlatlinePolicyResponse": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": { "type": "string" },
+          "durationMinutes": { "type": ["integer", "null"], "format": "int32" },
+          "tolerance": { "type": "number" }
+        },
+        "required": ["durationMinutes", "metric", "tolerance", "unit"]
+      },
       "UserRoles": {
         "type": "object",
         "properties": {
@@ -3791,6 +4226,47 @@
           }
         },
         "required": ["created", "skipped"]
+      },
+      "CreateFlatlinePauseRequest": {
+        "type": "object",
+        "properties": {
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 10080,
+            "minimum": 1
+          }
+        },
+        "required": ["durationMinutes"]
+      },
+      "FlatlinePauseResponse": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "format": "uuid" },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "pausedAt": { "type": "string", "format": "date-time" },
+          "resumesAt": { "type": "string", "format": "date-time" },
+          "pausedByUserId": { "type": "string" }
+        },
+        "required": [
+          "deviceId",
+          "metric",
+          "pausedAt",
+          "pausedByUserId",
+          "resumesAt"
+        ]
       },
       "CouncilInvitationRequest": {
         "type": "object",
@@ -4413,6 +4889,140 @@
           "canInviteMembers": { "type": "boolean" }
         },
         "required": ["canInviteMembers", "email", "name", "userId"]
+      },
+      "FlatlineEvidenceResponse": {
+        "type": "object",
+        "properties": {
+          "unchangedSince": { "type": "string", "format": "date-time" },
+          "lastReadingAt": { "type": "string", "format": "date-time" },
+          "observedDurationSeconds": { "type": "integer", "format": "int64" },
+          "minimumValue": { "type": "number" },
+          "maximumValue": { "type": "number" },
+          "latestValue": { "type": "number" }
+        },
+        "required": [
+          "lastReadingAt",
+          "latestValue",
+          "maximumValue",
+          "minimumValue",
+          "observedDurationSeconds",
+          "unchangedSince"
+        ]
+      },
+      "FlatlineReviewResponse": {
+        "type": "object",
+        "properties": {
+          "checkedAt": { "type": "string", "format": "date-time" },
+          "canManage": { "type": "boolean" },
+          "estateActive": { "type": "boolean" },
+          "hasSensorReadings": { "type": "boolean" },
+          "page": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "totalElements": { "type": "integer", "format": "int64" },
+          "sensors": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SensorMonitoringResponse" }
+          }
+        },
+        "required": [
+          "canManage",
+          "checkedAt",
+          "estateActive",
+          "hasSensorReadings",
+          "page",
+          "sensors",
+          "size",
+          "totalElements"
+        ]
+      },
+      "SensorMonitoringResponse": {
+        "type": "object",
+        "properties": {
+          "deviceId": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "deviceIdentifier": { "type": "string" },
+          "assetName": { "type": "string" },
+          "assetReference": { "type": "string" },
+          "assetLocationPath": { "type": "string" },
+          "deviceLocationPath": { "type": "string" },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": { "type": "string" },
+          "state": {
+            "type": "string",
+            "enum": [
+              "NOT_CONFIGURED",
+              "NO_DATA",
+              "WAITING_FOR_READINGS",
+              "MONITORING",
+              "FLATLINED",
+              "PAUSED"
+            ]
+          },
+          "lastReadingAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          },
+          "lastValue": { "type": ["number", "null"] },
+          "thresholdMinutes": {
+            "type": ["integer", "null"],
+            "format": "int32"
+          },
+          "tolerance": { "type": "number" },
+          "flatline": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/FlatlineEvidenceResponse" },
+              { "type": "null" }
+            ]
+          },
+          "pause": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/FlatlinePauseResponse" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "assetId",
+          "assetLocationPath",
+          "assetName",
+          "assetReference",
+          "deviceId",
+          "deviceIdentifier",
+          "deviceLocationPath",
+          "flatline",
+          "lastReadingAt",
+          "lastValue",
+          "metric",
+          "pause",
+          "state",
+          "thresholdMinutes",
+          "tolerance",
+          "unit"
+        ]
+      },
+      "FlatlinePoliciesResponse": {
+        "type": "object",
+        "properties": {
+          "canManage": { "type": "boolean" },
+          "estateActive": { "type": "boolean" },
+          "policies": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/FlatlinePolicyResponse" }
+          }
+        },
+        "required": ["canManage", "estateActive", "policies"]
       },
       "FailureRiskResponse": {
         "type": "object",

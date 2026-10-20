@@ -457,6 +457,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["pause"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/failure-risk": {
     parameters: {
       query?: never;
@@ -465,6 +481,54 @@ export interface paths {
       cookie?: never;
     };
     get: operations["listEstateFailureRisk"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/flatline-policies": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["policies"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/flatline-policies/{metric}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setPolicy"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/flatlined-sensors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["review"];
     put?: never;
     post?: never;
     delete?: never;
@@ -762,6 +826,27 @@ export interface components {
     EstateError: {
       message: string;
     };
+    SetFlatlinePolicyRequest: {
+      /** Format: int32 */
+      durationMinutes: number;
+      tolerance: number;
+    };
+    FlatlinePolicyResponse: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** Format: int32 */
+      durationMinutes: number | null;
+      tolerance: number;
+    };
     UserRoles: {
       roleSlugs?: string[];
     };
@@ -873,6 +958,29 @@ export interface components {
       created: components["schemas"]["LocationResponse"][];
       /** @description Names of floors the block already had, highest first */
       skipped: string[];
+    };
+    CreateFlatlinePauseRequest: {
+      /** Format: int32 */
+      durationMinutes: number;
+    };
+    FlatlinePauseResponse: {
+      /** Format: uuid */
+      deviceId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /** Format: date-time */
+      pausedAt: string;
+      /** Format: date-time */
+      resumesAt: string;
+      pausedByUserId: string;
     };
     CouncilInvitationRequest: {
       /** Format: email */
@@ -1259,6 +1367,74 @@ export interface components {
       name: string;
       email: string;
       canInviteMembers: boolean;
+    };
+    FlatlineEvidenceResponse: {
+      /** Format: date-time */
+      unchangedSince: string;
+      /** Format: date-time */
+      lastReadingAt: string;
+      /** Format: int64 */
+      observedDurationSeconds: number;
+      minimumValue: number;
+      maximumValue: number;
+      latestValue: number;
+    };
+    FlatlineReviewResponse: {
+      /** Format: date-time */
+      checkedAt: string;
+      canManage: boolean;
+      estateActive: boolean;
+      hasSensorReadings: boolean;
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalElements: number;
+      sensors: components["schemas"]["SensorMonitoringResponse"][];
+    };
+    SensorMonitoringResponse: {
+      /** Format: uuid */
+      deviceId: string;
+      /** Format: uuid */
+      assetId: string;
+      deviceIdentifier: string;
+      assetName: string;
+      assetReference: string;
+      assetLocationPath: string;
+      deviceLocationPath: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** @enum {string} */
+      state:
+        | "NOT_CONFIGURED"
+        | "NO_DATA"
+        | "WAITING_FOR_READINGS"
+        | "MONITORING"
+        | "FLATLINED"
+        | "PAUSED";
+      /** Format: date-time */
+      lastReadingAt: string | null;
+      lastValue: number | null;
+      /** Format: int32 */
+      thresholdMinutes: number | null;
+      tolerance: number;
+      flatline: components["schemas"]["FlatlineEvidenceResponse"] | null;
+      pause: components["schemas"]["FlatlinePauseResponse"] | null;
+    };
+    FlatlinePoliciesResponse: {
+      canManage: boolean;
+      estateActive: boolean;
+      policies: components["schemas"]["FlatlinePolicyResponse"][];
     };
     FailureRiskResponse: {
       /** Format: uuid */
@@ -1688,6 +1864,15 @@ export interface operations {
       };
       /** @description Sign in required */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
         headers: {
           [name: string]: unknown;
         };
@@ -2964,6 +3149,15 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
       /** @description Estate, asset, location or device not found */
       404: {
         headers: {
@@ -3873,6 +4067,96 @@ export interface operations {
       };
     };
   };
+  pause: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        deviceId: string;
+        metric:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateFlatlinePauseRequest"];
+      };
+    };
+    responses: {
+      /** @description Finite maintenance pause; expiry retained as a fresh-start cutoff */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["FlatlinePauseResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate role does not allow this operation */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or device not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired asset, or conflicting sensor configuration */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sensor data is unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   pending: {
     parameters: {
       query?: never;
@@ -4034,6 +4318,82 @@ export interface operations {
         };
       };
       /** @description Identity provider not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  policies: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description All metric policies and estate sensor permissions */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["FlatlinePoliciesResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate role does not allow this operation */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or device not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired asset, or conflicting sensor configuration */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sensor data is unavailable */
       503: {
         headers: {
           [name: string]: unknown;
@@ -4527,6 +4887,175 @@ export interface operations {
       };
       /** @description Inactive estate, asset or location, or a conflicting change */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  review: {
+    parameters: {
+      query?: {
+        view?: "REVIEW" | "ALL";
+        page?: number;
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Derived sensor monitoring review, filtered before pagination */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["FlatlineReviewResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate role does not allow this operation */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or device not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired asset, or conflicting sensor configuration */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sensor data is unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        metric:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetFlatlinePolicyRequest"];
+      };
+    };
+    responses: {
+      /** @description Saved estate metric policy */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["FlatlinePolicyResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate role does not allow this operation */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or device not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired asset, or conflicting sensor configuration */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sensor data is unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };

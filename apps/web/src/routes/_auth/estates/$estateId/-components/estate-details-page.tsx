@@ -8,6 +8,7 @@ import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
@@ -16,13 +17,15 @@ import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-compon
 function EstateActions({
   estate,
   onDeactivate,
+  canViewSensors,
 }: {
   estate: components["schemas"]["EstateResponse"];
   onDeactivate: () => void;
+  canViewSensors: boolean;
 }) {
   const canManageCouncil =
     estate.canInviteMembers || estate.canManageInvitationPermissions;
-  if (!(estate.owned || canManageCouncil)) {
+  if (!(estate.owned || canManageCouncil || canViewSensors)) {
     return null;
   }
   return (
@@ -30,6 +33,15 @@ function EstateActions({
       aria-label="Estate actions"
       className="page-actions min-w-0 flex-row gap-3"
     >
+      {canViewSensors ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/sensors"
+        >
+          Device monitoring
+        </Link>
+      ) : null}
       {estate.owned ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -75,6 +87,18 @@ export function EstateDetailsPage({
   children?: ReactNode;
 }) {
   const estate = useEstate(estateId);
+  const access = useAppAccess();
+  const permission = access.data?.estates?.find(
+    (item) => item.estateId === estateId
+  );
+  const canViewSensors = Boolean(
+    estate.data?.owned ||
+      (permission?.canViewManagement &&
+        (permission.role === "COUNCIL" ||
+          permission.role === "OWNER" ||
+          (permission.role === "MEMBER" &&
+            access.data?.canAccessPlatformAdmin)))
+  );
   const { userId } = useEstateSession();
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
@@ -125,6 +149,7 @@ export function EstateDetailsPage({
           <PageHeader
             actions={
               <EstateActions
+                canViewSensors={canViewSensors}
                 estate={estate.data}
                 onDeactivate={openConfirmation}
               />

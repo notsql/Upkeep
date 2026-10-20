@@ -82,4 +82,46 @@ describe("estate details page", () => {
     renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
     await screen.findByRole("link", { name: "Council members" });
   });
+
+  it.each([
+    ["COUNCIL", false, true],
+    ["MEMBER", true, true],
+    ["MEMBER", false, false],
+    ["RESIDENT", true, false],
+  ])(
+    "shows Sensors for an estate role %s with admin=%s when permitted",
+    async (role, admin, permitted) => {
+      vi.mocked(api.GET).mockImplementation(((path: string) =>
+        Promise.resolve({
+          data:
+            path === "/access/context"
+              ? {
+                  canAccessPlatformAdmin: admin,
+                  estates: [
+                    {
+                      estateId: "estate-id",
+                      role,
+                      canViewManagement: role !== "RESIDENT",
+                    },
+                  ],
+                }
+              : {
+                  ...estate,
+                  owned: false,
+                  canInviteMembers: false,
+                  canManageInvitationPermissions: false,
+                },
+          response: new Response(),
+        })) as never);
+      renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
+      await screen.findByRole("heading", { name: "Maple Grove" });
+      if (permitted) {
+        await screen.findByRole("link", { name: "Device monitoring" });
+      } else {
+        expect(
+          screen.queryByRole("link", { name: "Device monitoring" })
+        ).toBeNull();
+      }
+    }
+  );
 });

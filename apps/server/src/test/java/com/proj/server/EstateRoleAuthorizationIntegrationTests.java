@@ -11,7 +11,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import com.proj.server.anomaly.MlClient;
+import com.proj.server.anomaly.AnomalyScorer;
 import com.proj.server.estate.CouncilIdentity;
 import com.proj.server.workos.WorkOSService;
 import java.time.OffsetDateTime;
@@ -58,7 +58,7 @@ class EstateRoleAuthorizationIntegrationTests {
     WorkOSService identity;
 
     @MockitoBean
-    MlClient ml;
+    AnomalyScorer ml;
 
     private MockHttpServletRequestBuilder asUser(MockHttpServletRequestBuilder request, String user, String role) {
         return request.with(jwt().jwt(token -> token.subject(user).claim("role", role))

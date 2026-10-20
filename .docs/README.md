@@ -20,6 +20,7 @@ same change as the code.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
+- [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
 - [Locations](api/locations.md): member-readable active hierarchy, owner-only
   historical reads and changes. Other API features are not yet documented here.
 - [Access projection and admin estate grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
@@ -39,6 +40,7 @@ same change as the code.
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
 | [frontend/devices.md](frontend/devices.md) | Device list on asset details and dedicated device registration page |
+| [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors`: Device monitoring: locations, device metrics, metric policies and maintenance pauses |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate Council invitations, delegated invitation permission, and acceptance |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
