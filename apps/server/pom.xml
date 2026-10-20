@@ -162,6 +162,27 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<!--
+					Applies to `spring-boot:run` (pnpm dev:server) and `spring-boot:start`
+					(the openapi export) only, never the packaged jar. onnxruntime loads
+					its native library through System::load, which JDK 25 warns about
+					unless native access is granted. Swagger UI is off by default
+					(application.yaml) and switched on here for local runs.
+				-->
+				<configuration>
+					<jvmArguments>--enable-native-access=ALL-UNNAMED</jvmArguments>
+					<arguments>
+						<argument>--springdoc.swagger-ui.enabled=true</argument>
+					</arguments>
+				</configuration>
+			</plugin>
+			<!-- Tests load onnxruntime too; grant native access to keep the JDK quiet. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>--enable-native-access=ALL-UNNAMED</argLine>
+				</configuration>
 			</plugin>
 			<!-- `pnpm check` runs spotless:check; `pnpm fix` runs spotless:apply. -->
 			<plugin>

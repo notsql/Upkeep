@@ -41,6 +41,9 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui
+    # Off in the packaged jar (Cloud Run, docker compose). The Maven
+    # spring-boot:run/start config in pom.xml turns it on for local runs.
+    enabled: false
 
 app:
   cors:

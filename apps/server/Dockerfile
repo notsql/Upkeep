@@ -32,10 +32,13 @@ RUN java -Djarmode=tools -jar /tmp/app.jar extract --destination /app/applicatio
   && rm /tmp/app.jar \
   && SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/training \
      SPRING_DATASOURCE_USERNAME=training SPRING_DATASOURCE_PASSWORD=training \
-     java -XX:AOTCacheOutput=/app/application/app.aot \
+     java --enable-native-access=ALL-UNNAMED -XX:AOTCacheOutput=/app/application/app.aot \
        -Dspring.context.exit=onRefresh -jar /app/application/app.jar \
   && chown -R spring /app
 
+# onnxruntime loads its native library via System::load; grant native access
+# explicitly (training run above too, so the AOT cache matches) instead of
+# letting JDK 25 warn on every start.
 USER spring
 EXPOSE 8080
-ENTRYPOINT ["java", "-XX:AOTCache=/app/application/app.aot", "-jar", "/app/application/app.jar"]
+ENTRYPOINT ["java", "--enable-native-access=ALL-UNNAMED", "-XX:AOTCache=/app/application/app.aot", "-jar", "/app/application/app.jar"]
