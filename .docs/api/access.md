@@ -1,6 +1,6 @@
 # Access projection and admin estate grants
 
-The generated `packages/api/openapi.json` is authoritative. JWTs prove identity; Spring reads current estate memberships on every request. Only WorkOS platform administration uses the admin authority. An unassigned account cannot create estates or submit reports. Its own historical reports remain readable.
+The generated `packages/api/openapi.json` is authoritative. JWTs prove identity; Spring reads current estate memberships on every request. WorkOS platform administration uses the admin authority; sensor management additionally requires that authority plus a same-estate management assignment (owners also qualify). An unassigned account cannot create estates or submit reports. Its own historical reports remain readable.
 
 | Method/path | Request | Response | Status/auth |
 | --- | --- | --- | --- |
@@ -37,3 +37,10 @@ Spring Security explicitly admits the following existing operations for authenti
 | POST | `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` | Estate owner; issue or replace a device key |
 
 Catalogue lookups contain no estate data, so resident and unassigned accounts may read them. Estate operations reject a same-estate resident membership even when ownership conflicts, while residency elsewhere does not block legitimate ownership. MEMBER/COUNCIL membership and platform-admin authority alone do not grant access to these owner-only operations. The matchers are method-specific; unsupported methods and unknown nested actions remain denied by the final `denyAll()` rule. Missing or invalid authentication returns 401 when JWT authentication is configured.
+
+Sensor GET policies/review, PUT metric policy and POST device/metric pause routes
+are explicitly admitted for authenticated requests, then enforce the feature's
+owner/assigned-manager write and Council read permissions. See
+[flatlined-sensors.md](flatlined-sensors.md). The existing POST
+`/estates/{estateId}/locations/{blockId}/floors` is also admitted; its location
+service still enforces ownership.

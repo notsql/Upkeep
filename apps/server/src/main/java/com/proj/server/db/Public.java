@@ -11,10 +11,12 @@ import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
+import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
@@ -78,6 +80,11 @@ public class Public extends SchemaImpl {
     public final Device DEVICE = Device.DEVICE;
 
     /**
+     * The table <code>public.DeviceFlatlinePause</code>.
+     */
+    public final Deviceflatlinepause DEVICEFLATLINEPAUSE = Deviceflatlinepause.DEVICEFLATLINEPAUSE;
+
+    /**
      * The table <code>public.DeviceReading</code>.
      */
     public final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
@@ -96,6 +103,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.EstateUser</code>.
      */
     public final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
+
+    /**
+     * The table <code>public.FlatlinePolicy</code>.
+     */
+    public final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
 
     /**
      * The table <code>public.IssueReport</code>.
@@ -140,10 +152,12 @@ public class Public extends SchemaImpl {
             Assetlifecycleevent.ASSETLIFECYCLEEVENT,
             Assetmodel.ASSETMODEL,
             Device.DEVICE,
+            Deviceflatlinepause.DEVICEFLATLINEPAUSE,
             Devicereading.DEVICEREADING,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
             Estateuser.ESTATEUSER,
+            Flatlinepolicy.FLATLINEPOLICY,
             Issuereport.ISSUEREPORT,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,

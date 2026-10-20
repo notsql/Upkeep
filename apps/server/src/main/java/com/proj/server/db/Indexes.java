@@ -10,6 +10,7 @@ import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
+import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;

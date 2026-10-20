@@ -61,6 +61,23 @@ public class OpenApiConfig {
                                                 new Schema<>().$ref("#/components/schemas/EstateLabel"),
                                                 new Schema<>().types(Set.of("null")))));
             }
+            var sensor = openApi.getComponents().getSchemas().get("SensorMonitoringResponse");
+            if (sensor != null) {
+                sensor.getProperties()
+                        .put(
+                                "flatline",
+                                new Schema<>()
+                                        .oneOf(List.of(
+                                                new Schema<>().$ref("#/components/schemas/FlatlineEvidenceResponse"),
+                                                new Schema<>().types(Set.of("null")))));
+                sensor.getProperties()
+                        .put(
+                                "pause",
+                                new Schema<>()
+                                        .oneOf(List.of(
+                                                new Schema<>().$ref("#/components/schemas/FlatlinePauseResponse"),
+                                                new Schema<>().types(Set.of("null")))));
+            }
         };
     }
 }

@@ -11,10 +11,12 @@ import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
+import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
@@ -63,6 +65,11 @@ public class Tables {
     public static final Device DEVICE = Device.DEVICE;
 
     /**
+     * The table <code>public.DeviceFlatlinePause</code>.
+     */
+    public static final Deviceflatlinepause DEVICEFLATLINEPAUSE = Deviceflatlinepause.DEVICEFLATLINEPAUSE;
+
+    /**
      * The table <code>public.DeviceReading</code>.
      */
     public static final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
@@ -81,6 +88,11 @@ public class Tables {
      * The table <code>public.EstateUser</code>.
      */
     public static final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
+
+    /**
+     * The table <code>public.FlatlinePolicy</code>.
+     */
+    public static final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
 
     /**
      * The table <code>public.IssueReport</code>.

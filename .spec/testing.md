@@ -56,6 +56,20 @@ run `MAVEN_ARGS=-o pnpm test --skip-nx-cache`.
 These commands affect generated artifacts and task metadata, not database data,
 Git changes or dependencies. Docker must still be available for Java tests.
 
+On 2026-10-20 the same recovery fixed a combined test run whose compiled
+`SensorMonitoringResponse` lacked the two location-path fields already present in
+source. That run also had a disposable-database connection refusal in the resident
+report suite. After cleaning and resetting, the real Nx combined command passed
+583 Java tests and 330 web tests with exit code 0 in about 1 minute 49 seconds:
+
+```bash
+MAVEN_ARGS=-o pnpm test --skip-nx-cache --output-style=static
+```
+
+`--output-style=static` exposes Maven and Vitest progress instead of leaving only
+the `@nx/maven:maven` group visible. A long-lived group is not by itself proof of
+a hang: check for an active test JVM and freshly written Surefire reports first.
+
 ## Test-driven development
 
 The point of TDD here is not ceremony. It is that **a test written first

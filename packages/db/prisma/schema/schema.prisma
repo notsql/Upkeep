@@ -27,6 +27,7 @@ model Estate {
   invitations   EstateInvitation[]
   issueReports  IssueReport[]
   events        AssetEvent[]
+  flatlinePolicies FlatlinePolicy[]
 
   @@index([ownerUserId])
 }
@@ -141,6 +142,7 @@ model Asset {
   model         AssetModel?       @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
   devices       Device[]
   readings      DeviceReading[]
+  flatlinePauses DeviceFlatlinePause[]
   assessments   AssetAssessment[]
   events        AssetEvent[]
 
@@ -241,6 +243,7 @@ model Device {
   asset    Asset           @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   location Location        @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   readings DeviceReading[]
+  flatlinePauses DeviceFlatlinePause[]
 
   @@unique([id, estateId])
   @@index([estateId])
@@ -269,6 +272,38 @@ model DeviceReading {
 
   @@unique([deviceId, metric, measuredAt])
   @@index([assetId, metric, measuredAt])
+}
+
+// Shared detection settings for a metric within one estate (ID-68).
+// No row means not configured; duration bounds and decimal validation live in the API.
+model FlatlinePolicy {
+  estateId        String   @db.Uuid
+  metric          String   @db.VarChar(30)
+  durationMinutes Int
+  tolerance       Decimal  @default(0) @db.Decimal(18, 6)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([estateId, metric])
+}
+
+// Retain the latest pause after expiry: resumesAt remains the fresh-start cutoff.
+model DeviceFlatlinePause {
+  deviceId       String   @db.Uuid
+  metric         String   @db.VarChar(30)
+  estateId       String   @db.Uuid
+  assetId        String   @db.Uuid
+  pausedAt       DateTime @db.Timestamptz(6)
+  resumesAt      DateTime @db.Timestamptz(6)
+  pausedByUserId String   @db.VarChar(255)
+
+  device Device @relation(fields: [deviceId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  asset  Asset  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([deviceId, metric])
+  @@index([estateId])
 }
 
 // One condition assessment of an asset (decision 0017). Append-only: rows are

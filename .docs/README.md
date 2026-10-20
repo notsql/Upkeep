@@ -21,6 +21,7 @@ same change as the code.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
 - [Asset readings](api/readings.md): an owner's paginated, filterable list of an asset's readings with GAP, DUPLICATE_TIMESTAMP and OUT_OF_RANGE flags.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
+- [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
 - [Locations](api/locations.md): member-readable active hierarchy, owner-only
   historical reads and changes. Other API features are not yet documented here.
 - [Access projection and admin estate grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.

@@ -46,6 +46,11 @@ errors via `estateError`.
 
 ## Council invitations
 
+Estate details also offers **Device monitoring** to owners, Council and assigned MEMBER
+managers with platform-admin authority, using GET /access/context. The target is
+`/estates/$estateId/sensors`; sensor-specific authorization is enforced by the API.
+See [flatlined-sensors.md](flatlined-sensors.md) for screen components and data hooks.
+
 Estate details offers **Council members** when `EstateResponse.canInviteMembers`
 or `canManageInvitationPermissions` is true. The route is
 `estates/$estateId/council/index.tsx`. Estates mounts `InvitationAcceptance`
