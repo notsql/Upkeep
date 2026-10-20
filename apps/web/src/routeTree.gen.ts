@@ -32,6 +32,7 @@ import { Route as AuthEstatesEstateIdFailureRiskIndexRouteImport } from './route
 import { Route as AuthEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/index'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/readings/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/new/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -157,6 +158,12 @@ const AuthEstatesEstateIdAssetsAssetIdEditIndexRoute =
     path: '/estates/$estateId/assets/$assetId/edit/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport.update({
+    id: '/estates/$estateId/assets/$assetId/readings/',
+    path: '/estates/$estateId/assets/$assetId/readings/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport.update({
     id: '/estates/$estateId/assets/$assetId/devices/new/',
@@ -187,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  '/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 export interface FileRoutesByTo {
@@ -212,6 +220,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  '/estates/$estateId/assets/$assetId/readings': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 export interface FileRoutesById {
@@ -239,6 +248,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 export interface FileRouteTypes {
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/new/'
     | '/estates/$estateId/assets/$assetId/edit/'
+    | '/estates/$estateId/assets/$assetId/readings/'
     | '/estates/$estateId/assets/$assetId/devices/new/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -291,6 +302,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/assets/new'
     | '/estates/$estateId/assets/$assetId/edit'
+    | '/estates/$estateId/assets/$assetId/readings'
     | '/estates/$estateId/assets/$assetId/devices/new'
   id:
     | '__root__'
@@ -317,6 +329,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/$assetId/'
     | '/_auth/estates/$estateId/assets/new/'
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
+    | '/_auth/estates/$estateId/assets/$assetId/readings/'
     | '/_auth/estates/$estateId/assets/$assetId/devices/new/'
   fileRoutesById: FileRoutesById
 }
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/assets/$assetId/readings/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/readings/'
+      path: '/estates/$estateId/assets/$assetId/readings'
+      fullPath: '/estates/$estateId/assets/$assetId/readings/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/assets/$assetId/devices/new/': {
       id: '/_auth/estates/$estateId/assets/$assetId/devices/new/'
       path: '/estates/$estateId/assets/$assetId/devices/new'
@@ -520,6 +540,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
 }
 
@@ -543,6 +564,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdAssetsNewIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdEditIndexRoute,
+  AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute:
+    AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute,
 }

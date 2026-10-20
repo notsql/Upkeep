@@ -44,15 +44,24 @@ export function AssetDevicesSection({
         <h2 className="font-semibold text-xl" id="devices-heading">
           Devices
         </h2>
-        {canRegister ? (
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             className={buttonVariants({ variant: "outline" })}
             params={{ estateId, assetId }}
-            to="/estates/$estateId/assets/$assetId/devices/new"
+            to="/estates/$estateId/assets/$assetId/readings"
           >
-            Register device
+            Readings
           </Link>
-        ) : null}
+          {canRegister ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ estateId, assetId }}
+              to="/estates/$estateId/assets/$assetId/devices/new"
+            >
+              Register device
+            </Link>
+          ) : null}
+        </div>
       </div>
       {devices.isPending ? (
         <p aria-live="polite" className="mt-4">
