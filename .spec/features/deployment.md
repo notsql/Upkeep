@@ -19,7 +19,7 @@ Free default addresses only; no custom domain.
 | --- | --- | --- | --- |
 | `apps/web` (TanStack Start SSR) | Nitro `node-server` | **Cloudflare Worker** `web`, built by `@cloudflare/vite-plugin` (already in the working tree) | `https://web.<account>.workers.dev` |
 | `apps/server` (Spring Boot, Java 25, ONNX in-process) | `apps/server/Dockerfile` | **Cloud Run service** `api`, image from that Dockerfile | `https://api-<hash>.asia-southeast1.run.app` |
-| Images | none | Artifact Registry Docker repo `proj`, `asia-southeast1` | - |
+| Images | none | Artifact Registry Docker repo `upkeep-ar-prd`, `asia-southeast1` | - |
 | Postgres | Neon `dev` branch | **Neon `prd` branch** (Spring connects over JDBC) | - |
 | Build and deploy | none | `web`: Workers Builds. `api`: GitHub Actions `deploy.yml`, keyless via Workload Identity Federation | - |
 | Runtime secrets | Infisical `dev` | Infisical `prd`: `/apps/web` -> Infisical Cloudflare Workers sync; `/apps/server` -> Infisical GCP Secret Manager sync | - |
@@ -153,7 +153,7 @@ concurrency:
 
 env:
   REGION: asia-southeast1
-  IMAGE: asia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/proj/api:${{ github.sha }}
+  IMAGE: asia-southeast1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/upkeep-ar-prd/api:${{ github.sha }}
 
 jobs:
   deploy:
@@ -263,7 +263,7 @@ account has `roles/secretmanager.secretAccessor` on these secrets only.
 2. Neon: create `prd` from `dev` (region `aws-ap-southeast-1`).
 3. GCP: project linked to the billing account (required even within the
    free tier); enable Cloud Run, Artifact Registry, Secret Manager, IAM
-   Credentials APIs; Artifact Registry repo `proj` in `asia-southeast1` with a
+   Credentials APIs; Artifact Registry repo `upkeep-ar-prd` in `asia-southeast1` with a
    cleanup policy keeping the 3 newest images; a budget alert (e.g. USD 5).
 4. GCP IAM: Workload Identity pool + GitHub OIDC provider with attribute
    condition `assertion.repository == 'notsql/CS203' && assertion.ref ==
