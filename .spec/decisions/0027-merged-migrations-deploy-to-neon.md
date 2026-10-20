@@ -1,7 +1,8 @@
 # 0027 - Merged migrations are applied to Neon automatically
 
 **Status:** accepted, amended by 0029 (pushes to `dev` migrate Neon `dev`;
-pushes to `main` migrate Neon `prd`)
+pushes to `main` migrate Neon `prd`) and by 0031 (`DATABASE_URL` comes from
+GitHub environments synced from Infisical, not an OIDC machine identity)
 
 ## Context
 
