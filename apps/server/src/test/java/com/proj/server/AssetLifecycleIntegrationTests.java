@@ -154,6 +154,22 @@ class AssetLifecycleIntegrationTests {
     }
 
     @Test
+    void registerSearchTreatsWildcardsAsLiteralCharacters() throws Exception {
+        for (String query : new String[] {"%", "_"}) {
+            mvc.perform(get(base).param("q", query).with(jwt().jwt(j -> j.subject("owner"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$").isEmpty());
+        }
+        db.execute("update \"Asset\" set name='Water_Pump 50%' where id=?", assetId);
+        for (String query : new String[] {"%", "_", "wAtEr_pUmP"}) {
+            mvc.perform(get(base).param("q", query).with(jwt().jwt(j -> j.subject("owner"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].id").value(assetId.toString()));
+        }
+    }
+
+    @Test
     void retiredAssetsAreHiddenByDefaultButStillReadable() throws Exception {
         db.execute("update \"Asset\" set \"deactivatedAt\" = now() where id = ?", assetId);
         mvc.perform(get(base).with(jwt().jwt(j -> j.subject("owner"))))

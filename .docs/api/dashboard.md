@@ -53,7 +53,8 @@ Each asset contributes once, using the assessment with greatest `assessedOn`,
 then greatest `createdAt`, then smallest assessment UUID (the register's rule).
 `DashboardRepository` builds its CTE, access filters, lateral latest-assessment
 join and aggregates with generated jOOQ tables and typed fields. Result mapping
-uses those fields directly, and aggregate counts use SQL `BIGINT` for Java `long`.
+uses those fields directly. `countLarge` and `countLargeDistinct` keep aggregate
+counts typed as Java `long` with SQL `BIGINT` results.
 All totals use one SQL statement and one Postgres snapshot. Estates rank by
 combined attention count descending, then faulty count descending, then estate
 code and UUID ascending. Limiting rows to five does not limit overall counts.

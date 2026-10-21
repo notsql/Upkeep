@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [typed-jooq-repositories.md](features/typed-jooq-repositories.md) | - | built; typed asset, dashboard and estate-report queries; 821 server and 461 web tests passed |
 | [management-endpoint-security-regression.md](features/management-endpoint-security-regression.md) | - | built; explicit endpoint authorization and regression tests verified |
 | [resident-fault-reporting.md](features/resident-fault-reporting.md) | - | locally verified implementation; multi-estate residents and staff location-only editing follow-up planned |
 | [resident-estate-user-authorization.md](features/resident-estate-user-authorization.md) | - | implemented baseline; planned role revision replaces single-estate limit and manual-only provisioning |

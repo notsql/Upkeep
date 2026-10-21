@@ -73,6 +73,12 @@ does not change. Otherwise only `locationId` and `updatedAt` change: title,
 description, status, submitter, creation time and all image metadata/bytes remain.
 There is no correction reason, audit timeline, transfer or other report editing.
 
+`EstateReportRepository` uses generated jOOQ tables for estate/membership lookups,
+estate-scoped hierarchy joins and relocation updates. Optional `FOR UPDATE` locks
+retain the estate-before-membership order. The update uses a typed jOOQ function
+call to Postgres `clock_timestamp()` so `updatedAt` reflects the database wall
+clock, including when a transaction has waited for a lock.
+
 Example correction:
 
 ```text
