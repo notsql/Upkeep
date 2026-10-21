@@ -97,7 +97,7 @@ Query key: `assessmentsQueryKey(userId, estateId, assetId)` =
 | Hook | Endpoint | On success |
 | --- | --- | --- |
 | `useAssessments(estateId, assetId)` | `GET /estates/{estateId}/assets/{assetId}/assessments` (current first: by assessed date, then recorded time) | query |
-| `useRecordAssessment(estateId, assetId)` | `POST /estates/{estateId}/assets/{assetId}/assessments` | invalidate `assessmentsQueryKey(...)` and estate asset queries (latest condition) |
+| `useRecordAssessment(estateId, assetId)` | `POST /estates/{estateId}/assets/{assetId}/assessments` | invalidate `assessmentsQueryKey(...)`, estate asset queries (latest condition), the dashboard, and `estateFailureRiskQueryKey(userId, estateId)` (estate and per-asset forecast condition flags) |
 
 All queries: `enabled: ready`, `retry: false`, errors via `estateError`.
 

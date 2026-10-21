@@ -78,6 +78,31 @@ class DashboardIntegrationTests {
     }
 
     @Test
+    void countsAssignedManagerEstatesWithoutIncludingTheirAssets() throws Exception {
+        String manager = "manager-" + UUID.randomUUID();
+        var managed = estate("other", "MANAGED-" + UUID.randomUUID(), false);
+        var inactive = estate("other", "INACTIVE-" + UUID.randomUUID(), true);
+        for (var id : new UUID[] {managed, inactive}) {
+            db.execute(
+                    "insert into \"EstateUser\" (\"estateId\", \"userId\", role) values (?, ?, 'MANAGER')",
+                    id,
+                    manager);
+        }
+        assess(managed, asset(managed, false), "FAULTY");
+        mvc.perform(get("/estates").with(jwt().jwt(token -> token.subject(manager))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+        mvc.perform(get("/dashboard/summary").with(jwt().jwt(token -> token.subject(manager))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessibleEstateCount").value(2))
+                .andExpect(jsonPath("$.activeEstateCount").value(1))
+                .andExpect(jsonPath("$.inactiveEstateCount").value(1))
+                .andExpect(jsonPath("$.activeOwnedEstateCount").value(0))
+                .andExpect(jsonPath("$.totalActiveAssets").value(0))
+                .andExpect(jsonPath("$.estatesNeedingAttention.length()").value(0));
+    }
+
+    @Test
     void countsAccessibleEstatesButOnlyActiveOwnedAssets() throws Exception {
         var owned = estate("owner", "OWN", false);
         var inactive = estate("owner", "OLD", true);

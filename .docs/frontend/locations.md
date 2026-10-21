@@ -46,6 +46,11 @@ block down).
 | `nextLevelPosition(list, blockId)` | Highest level `sortOrder` in the block + 1, else 1 | - |
 | `parseFloor(text)` / `floorName(floor)` / `floorRange(lowest, highest)` / `MAX_FLOORS` | Floor text ("B2", "L25", "25") to a number and back (`L<n>` / `B<n>`), every floor highest first without 0, and the 50-floor limit | - |
 
+`parseFloor` rejects numbers outside JavaScript's safe integer range, including
+values that overflow to infinity. `floorRange` checks the floor count before
+building the preview, excluding floor 0, and returns `undefined` for ranges over
+50. The form shows its existing limit message without expanding a large range.
+
 Creation uses `useCreateLocation` from `lib/locations.ts`. Edit/deactivate remain
 inline `api` calls in `LocationsSection`:
 

@@ -5,9 +5,13 @@ Route: `apps/web/src/routes/_auth/estates/$estateId/sensors/index.tsx`, URL
 All API types come from the generated `@proj/api/schema` contract.
 See [API behaviour](../api/flatlined-sensors.md) and decision 0030.
 
-Estate details offers Device monitoring for owners, Council, and MEMBER assignments with
-platform-admin authority, using the existing access projection. Sensor checks do
-not use asset permissions. Backend checks remain authoritative on every request.
+Estate details offers Device monitoring for owners and same-estate MANAGER or
+COUNCIL assignments using the existing access projection. A non-owner Manager
+does not need `canAccessPlatformAdmin` or asset visibility. The legacy MEMBER
+link condition still requires the platform-admin capability, which the current
+access projection retires. Sensor checks do not use asset permissions. Backend
+checks remain authoritative on every request, and policy/review `canManage`
+responses determine whether edit and pause controls appear.
 
 ## Route-local components (`sensors/-components/`)
 

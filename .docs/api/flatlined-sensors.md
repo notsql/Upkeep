@@ -13,8 +13,10 @@ the feature specification and decision 0030.
 
 All four endpoints require a JWT subject and return `Cache-Control: private,
 no-store`. The server checks current membership for the target estate on every
-request. Owners read/write unless a conflicting same-estate RESIDENT row exists.
-JWT ROLE_admin plus a same-estate MEMBER or COUNCIL assignment permits writes;
+request. Owners and current same-estate MANAGER members read/write without a
+WorkOS admin claim, unless a conflicting same-estate RESIDENT row exists.
+Manager demotion/removal changes permission on the next request with the same
+token. Existing compatibility rules remain: JWT ROLE_admin plus a same-estate MEMBER or COUNCIL assignment permits writes;
 COUNCIL without admin authority reads only. MEMBER without admin and other known
 unauthorized roles receive 403. No assignment/foreign estate returns 404, even
 for platform admins. Residency elsewhere does not remove legitimate access.
