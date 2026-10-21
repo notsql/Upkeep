@@ -27,9 +27,15 @@ public class EstateService {
     }
 
     @Transactional
-    public EstateResponse update(UUID id, String owner, EstateRequest request) {
-        owned(id, owner);
-        return repository.update(id, owner, request);
+    public EstateResponse update(UUID id, String user, EstateRequest request) {
+        repository.lock(id);
+        if (!repository.isManager(id, user)) {
+            throw repository.findAccessible(id, user).isPresent()
+                    ? new EstateException(
+                            HttpStatus.FORBIDDEN, "Only the owner or an assigned Manager can edit estate details.")
+                    : notFound();
+        }
+        return repository.update(id, user, request);
     }
 
     @Transactional
@@ -44,7 +50,7 @@ public class EstateService {
         return repository.deactivate(id, owner);
     }
 
-    // Granted users can see an estate but not change it; hiding it would protect nothing.
+    // Deactivation requires current ownership even when a Manager can edit details.
     private EstateResponse owned(UUID id, String user) {
         return repository
                 .findOwned(id, user, true)

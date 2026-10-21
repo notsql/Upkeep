@@ -29,7 +29,8 @@ class ResidentReportServiceTests {
     void rejectsAFiftyOneCharacterTitleBeforeLookingUpTheEstate() {
         var error = assertThrows(
                 ResidentReportException.class,
-                () -> service.create("resident-a", "x".repeat(51), "Description", UUID.randomUUID(), List.of()));
+                () -> service.create(
+                        "resident-a", UUID.randomUUID(), "x".repeat(51), "Description", UUID.randomUUID(), List.of()));
         assertEquals(HttpStatus.BAD_REQUEST, error.status());
         verifyNoInteractions(reports, validator, images, transactions);
     }
@@ -40,7 +41,7 @@ class ResidentReportServiceTests {
         for (var title : new String[] {null, "", "   ", "x".repeat(51), "  " + "x".repeat(51) + "  "}) {
             var error = assertThrows(
                     ResidentReportException.class,
-                    () -> service.create("resident-a", title, "Description", locationId, List.of()));
+                    () -> service.create("resident-a", UUID.randomUUID(), title, "Description", locationId, List.of()));
             assertEquals(HttpStatus.BAD_REQUEST, error.status());
             assertEquals("Enter a title in 1 to 50 characters.", error.getMessage());
         }
@@ -56,8 +57,8 @@ class ResidentReportServiceTests {
         var now = OffsetDateTime.now();
         var detail = new IssueReportDetailResponse(
                 UUID.randomUUID(), title, "Description", "Maple Estate", null, "SUBMITTED", now, now, List.of());
-        when(reports.activeAssignment("resident-a", false)).thenReturn(Optional.of(estate));
-        when(reports.activeAssignment("resident-a", true)).thenReturn(Optional.of(estate));
+        when(reports.activeAssignment("resident-a", estateId, false)).thenReturn(Optional.of(estate));
+        when(reports.activeAssignment("resident-a", estateId, true)).thenReturn(Optional.of(estate));
         when(reports.activeReportLocation(estateId, locationId)).thenReturn(true);
         when(reports.detail(eq("resident-a"), any())).thenReturn(Optional.of(detail));
         when(transactions.execute(any())).thenAnswer(call -> {
@@ -65,7 +66,9 @@ class ResidentReportServiceTests {
             return callback.doInTransaction(null);
         });
 
-        assertEquals(detail, service.create("resident-a", "  " + title + "  ", "Description", locationId, List.of()));
+        assertEquals(
+                detail,
+                service.create("resident-a", estateId, "  " + title + "  ", "Description", locationId, List.of()));
         verify(reports).create(any(), eq("resident-a"), eq(estateId), eq(locationId), eq(title), eq("Description"));
         verifyNoInteractions(validator, images);
     }

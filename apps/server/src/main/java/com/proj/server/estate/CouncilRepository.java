@@ -30,37 +30,36 @@ public class CouncilRepository {
     }
 
     public boolean canInvite(UUID estateId, String userId) {
-        return db.fetchExists(
-                ESTATEUSER,
-                ESTATEUSER
-                        .ESTATEID
-                        .eq(estateId)
-                        .and(ESTATEUSER.USERID.eq(userId))
-                        .and(AccessService.managementMembership())
-                        .and(ESTATEUSER.CANINVITEMEMBERS.isTrue()));
+        return db.fetchExists(ESTATE, ESTATE.ID.eq(estateId).and(AccessService.managerEstates(userId)));
+    }
+
+    public boolean hasMembership(UUID estateId, String user) {
+        return db.fetchExists(ESTATEUSER, ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(user)));
     }
 
     public boolean setPermission(UUID estateId, String userId, boolean allowed) {
-        return db.update(ESTATEUSER)
-                        .set(ESTATEUSER.CANINVITEMEMBERS, allowed)
-                        .where(ESTATEUSER
-                                .ESTATEID
-                                .eq(estateId)
-                                .and(ESTATEUSER.USERID.eq(userId))
-                                .and(AccessService.managementMembership()))
-                        .execute()
-                == 1;
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Invitation delegation has been retired. Only Managers can invite.");
     }
 
     public List<Member> members(UUID estateId) {
-        return db.select(ESTATEUSER.USERID, ESTATEUSER.CANINVITEMEMBERS)
+        var members = db.select(ESTATEUSER.USERID, ESTATEUSER.ROLE)
                 .from(ESTATEUSER)
-                .where(ESTATEUSER.ESTATEID.eq(estateId).and(AccessService.managementMembership()))
+                .where(ESTATEUSER.ESTATEID.eq(estateId))
                 .orderBy(ESTATEUSER.CREATEDAT, ESTATEUSER.USERID)
-                .fetch(row -> new Member(row.value1(), row.value2()));
+                .fetch(row -> new Member(row.value1(), "MANAGER".equals(row.value2()), row.value2()));
+        String owner = ownerUserId(estateId);
+        if (members.stream().noneMatch(member -> member.userId().equals(owner))) {
+            members.addFirst(new Member(owner, true, "MANAGER"));
+        }
+        return members;
     }
 
-    public record Member(String userId, boolean canInviteMembers) {}
+    public record Member(String userId, boolean canInviteMembers, String role) {
+        public Member(String userId, boolean canInviteMembers) {
+            this(userId, canInviteMembers, "COUNCIL");
+        }
+    }
 
     public String ownerUserId(UUID estateId) {
         return db.select(ESTATE.OWNERUSERID)
@@ -78,6 +77,7 @@ public class CouncilRepository {
                 .set(ESTATEINVITATION.ESTATEID, estateId)
                 .set(ESTATEINVITATION.NAME, "")
                 .set(ESTATEINVITATION.EMAIL, request.email())
+                .set(ESTATEINVITATION.ROLE, request.role().name())
                 .set(ESTATEINVITATION.INVITERUSERID, inviter)
                 .set(ESTATEINVITATION.STATUS, SENDING.name())
                 .set(ESTATEINVITATION.CREATEDAT, OffsetDateTime.now())
@@ -88,16 +88,26 @@ public class CouncilRepository {
                 .where(ESTATEINVITATION.ESTATEID.eq(estateId).and(ESTATEINVITATION.EMAIL.eq(request.email())))
                 .forUpdate()
                 .fetchSingle();
+        var estate = requireManager(estateId, inviter);
+        if (estate.getDeactivatedat() != null)
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This estate is inactive.");
         boolean removedRecipient = ACCEPTED.matches(row.getStatus())
                 && !db.fetchExists(
                         ESTATEUSER,
                         ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(row.getAccepteduserid())));
-        if (!CANCELLED.matches(row.getStatus()) && !removedRecipient) return row;
+        if (!CANCELLED.matches(row.getStatus()) && !removedRecipient) {
+            if (!request.role().name().equals(row.getRole()) || !inviter.equals(row.getInviteruserid())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT, "Cancel the outstanding invitation before changing its role or sender.");
+            }
+            return row;
+        }
         // A new attempt gets a new identity; late callbacks for the old ID cannot
         // finalize or activate this replacement. The unique estate/email slot stays.
         return db.update(ESTATEINVITATION)
                 .set(ESTATEINVITATION.ID, UUID.randomUUID())
                 .set(ESTATEINVITATION.NAME, "")
+                .set(ESTATEINVITATION.ROLE, request.role().name())
                 .set(ESTATEINVITATION.INVITERUSERID, inviter)
                 .set(ESTATEINVITATION.STATUS, SENDING.name())
                 .set(ESTATEINVITATION.CREATEDAT, OffsetDateTime.now())
@@ -130,16 +140,22 @@ public class CouncilRepository {
                         .and(ESTATEINVITATION.STATUS.in(SENDING.name(), PENDING.name(), IN_APP.name())))
                 .orderBy(ESTATEINVITATION.CREATEDAT)
                 .fetch(row -> new CouncilInvitationResponse(
-                        row.getId(), row.getEstateid(), row.getEmail(), row.getStatus(), row.getExpiresat()));
+                        row.getId(),
+                        row.getEstateid(),
+                        row.getEmail(),
+                        row.getStatus(),
+                        row.getExpiresat(),
+                        EstateRole.valueOf(row.getRole())));
     }
 
     @Transactional
-    public void cancel(UUID estateId, UUID id) {
+    public void cancel(UUID estateId, UUID id, String actor) {
         var invitation = db.selectFrom(ESTATEINVITATION)
                 .where(ESTATEINVITATION.ID.eq(id).and(ESTATEINVITATION.ESTATEID.eq(estateId)))
                 .forUpdate()
                 .fetchOptional()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Invitation not found."));
+        requireManager(estateId, actor);
         if (CANCELLED.matches(invitation.getStatus())) return;
         if (!CouncilInvitationStatus.isOutstanding(invitation.getStatus()))
             throw new ResponseStatusException(
@@ -152,7 +168,7 @@ public class CouncilRepository {
     }
 
     @Transactional
-    public boolean removeMember(UUID estateId, String userId, String email) {
+    public boolean removeMember(UUID estateId, String userId, String email, String actor) {
         // Activation locks an invitation before its estate. Use the same order
         // so an already-pending acceptance cannot restore a deleted grant.
         db.selectFrom(ESTATEINVITATION)
@@ -160,13 +176,10 @@ public class CouncilRepository {
                 .orderBy(ESTATEINVITATION.ID)
                 .forUpdate()
                 .fetch();
-        db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId)).forUpdate().fetchSingle();
+        var estate = requireManager(estateId, actor);
+        protectMember(estate.getOwneruserid(), actor, userId);
         int removed = db.deleteFrom(ESTATEUSER)
-                .where(ESTATEUSER
-                        .ESTATEID
-                        .eq(estateId)
-                        .and(ESTATEUSER.USERID.eq(userId))
-                        .and(AccessService.managementMembership()))
+                .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(userId)))
                 .execute();
         if (removed == 0) return false;
         db.update(ESTATEINVITATION)
@@ -188,7 +201,12 @@ public class CouncilRepository {
     }
 
     public List<PendingCouncilInvitationResponse> inApp(String email) {
-        return db.select(ESTATEINVITATION.ID, ESTATEINVITATION.ESTATEID, ESTATE.NAME, ESTATEINVITATION.EXPIRESAT)
+        return db.select(
+                        ESTATEINVITATION.ID,
+                        ESTATEINVITATION.ESTATEID,
+                        ESTATE.NAME,
+                        ESTATEINVITATION.EXPIRESAT,
+                        ESTATEINVITATION.ROLE)
                 .from(ESTATEINVITATION)
                 .join(ESTATE)
                 .on(ESTATE.ID.eq(ESTATEINVITATION.ESTATEID))
@@ -199,8 +217,8 @@ public class CouncilRepository {
                         .and(ESTATEINVITATION.EXPIRESAT.gt(OffsetDateTime.now()))
                         .and(ESTATE.DEACTIVATEDAT.isNull()))
                 .orderBy(ESTATEINVITATION.CREATEDAT)
-                .fetch(row ->
-                        new PendingCouncilInvitationResponse(row.value1(), row.value2(), row.value3(), row.value4()));
+                .fetch(row -> new PendingCouncilInvitationResponse(
+                        row.value1(), row.value2(), row.value3(), row.value4(), EstateRole.valueOf(row.value5())));
     }
 
     public Optional<EstateinvitationRecord> forRecipient(UUID id, String email) {
@@ -236,30 +254,21 @@ public class CouncilRepository {
                 .forUpdate()
                 .fetchSingle();
         if (estate.getDeactivatedat() != null) return false;
-        if (!estate.getOwneruserid().equals(invitation.getInviteruserid())
-                && !db.fetchExists(
-                        ESTATEUSER,
-                        ESTATEUSER
-                                .ESTATEID
-                                .eq(estate.getId())
-                                .and(ESTATEUSER.USERID.eq(invitation.getInviteruserid()))
-                                .and(AccessService.managementMembership()))) return false;
-        if (db.fetchExists(
-                ESTATEUSER,
-                ESTATEUSER
-                        .ESTATEID
-                        .eq(estate.getId())
-                        .and(ESTATEUSER.USERID.eq(userId))
-                        .and(ESTATEUSER.ROLE.eq("RESIDENT")))) {
+        if (!canInvite(estate.getId(), invitation.getInviteruserid())) return false;
+        // Invitations never overwrite or resurrect an existing membership,
+        // including a matching role created by a separate explicit assignment.
+        if (estate.getOwneruserid().equals(userId)
+                || db.fetchExists(
+                        ESTATEUSER, ESTATEUSER.ESTATEID.eq(estate.getId()).and(ESTATEUSER.USERID.eq(userId)))) {
             if (explicit)
                 throw new ResponseStatusException(
-                        HttpStatus.CONFLICT, "A resident assignment cannot be converted by an invitation.");
+                        HttpStatus.CONFLICT, "An existing estate membership cannot be converted by an invitation.");
             return false;
         }
         db.insertInto(ESTATEUSER)
                 .set(ESTATEUSER.ESTATEID, estate.getId())
                 .set(ESTATEUSER.USERID, userId)
-                .set(ESTATEUSER.ROLE, "COUNCIL")
+                .set(ESTATEUSER.ROLE, invitation.getRole())
                 .set(ESTATEUSER.CANINVITEMEMBERS, false)
                 .set(ESTATEUSER.CREATEDAT, OffsetDateTime.now())
                 .onConflictDoNothing()
@@ -271,5 +280,98 @@ public class CouncilRepository {
                 .where(ESTATEINVITATION.ID.eq(invitationId))
                 .execute();
         return true;
+    }
+
+    private com.proj.server.db.tables.records.EstateRecord requireManager(UUID id, String actor) {
+        var estate = db.selectFrom(ESTATE)
+                .where(ESTATE.ID.eq(id))
+                .forUpdate()
+                .fetchOptional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estate not found."));
+        if (!canInvite(id, actor))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Manager access to this estate is required.");
+        return estate;
+    }
+
+    private void lockInvitations(UUID estateId) {
+        db.selectFrom(ESTATEINVITATION)
+                .where(ESTATEINVITATION.ESTATEID.eq(estateId))
+                .orderBy(ESTATEINVITATION.ID)
+                .forUpdate()
+                .fetch();
+    }
+
+    private static void protectMember(String owner, String actor, String target) {
+        if (owner.equals(target))
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "Transfer ownership before removing or demoting the owner.");
+        if (actor.equals(target))
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "A Manager cannot remove or demote themselves. Ask another Manager.");
+    }
+
+    @Transactional
+    public void updateRole(UUID estateId, String actor, String target, EstateRole role) {
+        lockInvitations(estateId);
+        var estate = requireManager(estateId, actor);
+        var member = db.selectFrom(ESTATEUSER)
+                .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(target)))
+                .forUpdate()
+                .fetchOptional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Estate member not found."));
+        if (!role.name().equals(member.getRole())) {
+            protectMember(estate.getOwneruserid(), actor, target);
+            db.update(ESTATEUSER)
+                    .set(ESTATEUSER.ROLE, role.name())
+                    .set(ESTATEUSER.CANINVITEMEMBERS, false)
+                    .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(target)))
+                    .execute();
+            if ("MANAGER".equals(member.getRole())) {
+                db.update(ESTATEINVITATION)
+                        .set(ESTATEINVITATION.STATUS, CANCELLED.name())
+                        .where(ESTATEINVITATION
+                                .ESTATEID
+                                .eq(estateId)
+                                .and(ESTATEINVITATION.INVITERUSERID.eq(target))
+                                .and(ESTATEINVITATION.STATUS.in(SENDING.name(), PENDING.name(), IN_APP.name())))
+                        .execute();
+            }
+        }
+    }
+
+    @Transactional
+    public void transferOwnership(UUID estateId, String actor, String target) {
+        var estate = requireManager(estateId, actor);
+        if (!estate.getOwneruserid().equals(actor))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the current owner can transfer ownership.");
+        if (actor.equals(target)
+                || !db.fetchExists(
+                        ESTATEUSER,
+                        ESTATEUSER
+                                .ESTATEID
+                                .eq(estateId)
+                                .and(ESTATEUSER.USERID.eq(target))
+                                .and(ESTATEUSER.ROLE.eq("MANAGER")))) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "The recipient must already be another Manager in this estate.");
+        }
+        // Ownership already grants Manager authority. Persist it for a legacy
+        // owner without a membership so transfer does not remove their access.
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, estateId)
+                .set(ESTATEUSER.USERID, actor)
+                .set(ESTATEUSER.ROLE, "MANAGER")
+                .set(ESTATEUSER.CANINVITEMEMBERS, false)
+                .set(ESTATEUSER.CREATEDAT, OffsetDateTime.now())
+                .onConflict(ESTATEUSER.ESTATEID, ESTATEUSER.USERID)
+                .doUpdate()
+                .set(ESTATEUSER.ROLE, "MANAGER")
+                .set(ESTATEUSER.CANINVITEMEMBERS, false)
+                .execute();
+        db.update(ESTATE)
+                .set(ESTATE.OWNERUSERID, target)
+                .set(ESTATE.UPDATEDAT, OffsetDateTime.now())
+                .where(ESTATE.ID.eq(estateId))
+                .execute();
     }
 }

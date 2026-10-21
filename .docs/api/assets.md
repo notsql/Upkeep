@@ -16,6 +16,11 @@ Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT an
 - 409: Inactive estate, asset or location, or a conflicting change — EstateError
 - 200: Asset register — AssetResponse[]
 
+The register query uses generated jOOQ tables and typed fields, including recursive
+CTEs for full location paths and descendant filtering and a lateral join for the
+latest assessment. Search uses literal case-insensitive substring matching, so
+`%` and `_` do not act as wildcards. Filters and ordering execute in the database.
+
 ## POST `/estates/{estateId}/assets`
 
 - path `estateId`: uuid (required)

@@ -14,17 +14,14 @@ public class EstateUserService {
     }
 
     public List<EstateUserResponse> list(String userId) {
-        return repository.listForUser(userId);
+        throw new EstateException(HttpStatus.FORBIDDEN, "Use estate-scoped member management.");
     }
 
     public void add(String userId, UUID estateId) {
-        if (!repository.estateExists(estateId)) {
-            throw new EstateException(HttpStatus.NOT_FOUND, "Estate not found.");
-        }
-        repository.add(estateId, userId);
+        throw new EstateException(HttpStatus.FORBIDDEN, "Join an estate through an invitation.");
     }
 
     public void remove(String userId, UUID estateId) {
-        repository.remove(estateId, userId);
+        throw new EstateException(HttpStatus.FORBIDDEN, "Use estate-scoped member management.");
     }
 }

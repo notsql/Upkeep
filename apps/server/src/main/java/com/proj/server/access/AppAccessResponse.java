@@ -12,7 +12,7 @@ import java.util.UUID;
             "canAccessPlatformAdmin",
             "hasResidentMembership",
             "canSubmitReport",
-            "residentEstate",
+            "residentEstates",
             "estates"
         })
 public record AppAccessResponse(
@@ -21,27 +21,33 @@ public record AppAccessResponse(
         boolean canAccessPlatformAdmin,
         boolean hasResidentMembership,
         boolean canSubmitReport,
-        @Schema(nullable = true) ResidentContextResponse.EstateLabel residentEstate,
+        List<ResidentContextResponse.EstateLabel> residentEstates,
         List<EstateAccessResponse> estates) {
     @Schema(
             requiredProperties = {
                 "estateId",
+                "estateName",
                 "role",
                 "canViewManagement",
                 "canManageEstate",
                 "canViewAssets",
                 "canInviteMembers",
-                "canManageInvitationPermissions"
+                "canManageInvitationPermissions",
+                "canViewFaultReports",
+                "canRelocateFaultReports"
             })
     public record EstateAccessResponse(
             UUID estateId,
+            String estateName,
 
-            @Schema(allowableValues = {"OWNER", "MEMBER", "COUNCIL", "RESIDENT"})
+            @Schema(allowableValues = {"MANAGER", "MEMBER", "COUNCIL", "RESIDENT", "CREW"})
             String role,
 
             boolean canViewManagement,
             boolean canManageEstate,
             boolean canViewAssets,
             boolean canInviteMembers,
-            boolean canManageInvitationPermissions) {}
+            boolean canManageInvitationPermissions,
+            boolean canViewFaultReports,
+            boolean canRelocateFaultReports) {}
 }

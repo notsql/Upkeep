@@ -90,6 +90,27 @@ public class CouncilController {
         return service.members(estateId, user(jwt));
     }
 
+    @PutMapping("/estates/{estateId}/members/{userId}/role")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Estate role updated; Manager self-demotion and owner demotion are protected")
+    public EstateMemberResponse updateRole(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable String userId,
+            @Valid @RequestBody UpdateEstateRoleRequest request) {
+        return service.updateRole(estateId, user(jwt), userId, request.role());
+    }
+
+    @PostMapping("/estates/{estateId}/ownership-transfer")
+    @ApiResponse(responseCode = "200", description = "Ownership transferred to an existing Manager in this estate")
+    public EstateResponse transferOwnership(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @Valid @RequestBody TransferOwnershipRequest request) {
+        return service.transferOwnership(estateId, user(jwt), request.newOwnerUserId());
+    }
+
     @PutMapping("/estates/{estateId}/members/{userId}/invitation-permission")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiResponse(responseCode = "204", description = "Invitation permission saved", content = @Content)

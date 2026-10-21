@@ -1,5 +1,10 @@
 import { fireEvent, within } from "@testing-library/react";
-import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+} from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
@@ -45,6 +50,8 @@ beforeEach(() => {
               name: "Alice",
               email: "alice@example.com",
               canInviteMembers: allowed,
+              role: allowed ? "MANAGER" : "COUNCIL",
+              owner: false,
             },
           ];
     }
@@ -66,7 +73,7 @@ beforeEach(() => {
   });
 });
 
-it("lets the owner invite a council member and grant invitation permission", async () => {
+it("lets a Manager invite a council member and promote another member", async () => {
   vi.mocked(api.POST).mockResolvedValue({
     data: { email: "council@example.com", status: "PENDING" },
     response: new Response(null, { status: 201 }),
@@ -74,10 +81,17 @@ it("lets the owner invite a council member and grant invitation permission", asy
   vi.mocked(api.PUT).mockImplementation(() => {
     allowed = true;
     return Promise.resolve({
-      data: undefined,
+      data: {
+        userId: "member",
+        role: "MANAGER" as const,
+        name: "Alice",
+        email: "alice@example.com",
+        canInviteMembers: true,
+        owner: false,
+      },
       error: undefined,
-      response: new Response(null, { status: 204 }),
-    });
+      response: new Response(null, { status: 200 }),
+    } as never);
   });
   const { queryClient } = renderWithProviders(
     <CouncilPage estateId="estate-id" />
@@ -94,26 +108,23 @@ it("lets the owner invite a council member and grant invitation permission", asy
     "/estates/{estateId}/council-invitations",
     {
       params: { path: { estateId: "estate-id" } },
-      body: { email: "council@example.com" },
+      body: { email: "council@example.com", role: "COUNCIL" },
     }
   );
-  fireEvent.click(
-    await screen.findByRole("checkbox", {
-      name: "Can invite members for Alice",
-    })
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Role for Alice" }),
+    "Manager (Admin)"
   );
   await waitFor(() =>
     expect(
-      screen
-        .getByRole("checkbox", { name: "Can invite members for Alice" })
-        .getAttribute("aria-checked")
-    ).toBe("true")
+      screen.getByRole("combobox", { name: "Role for Alice" }).textContent
+    ).toContain("Manager (Admin)")
   );
   expect(api.PUT).toHaveBeenCalledWith(
-    "/estates/{estateId}/members/{userId}/invitation-permission",
+    "/estates/{estateId}/members/{userId}/role",
     {
       params: { path: { estateId: "estate-id", userId: "member" } },
-      body: { canInviteMembers: true },
+      body: { role: "MANAGER" },
     }
   );
   expect(
@@ -173,25 +184,22 @@ it("retains input and reports a failed invitation", async () => {
   ).toBe("council@example.com");
 });
 
-it("keeps saved permission unchanged when the update fails", async () => {
+it("keeps the saved role unchanged when a role update fails", async () => {
   vi.mocked(api.PUT).mockResolvedValue({
     error: { message: "Unable to save permission." },
     response: new Response(null, { status: 502 }),
   });
   renderWithProviders(<CouncilPage estateId="estate-id" />);
-  fireEvent.click(
-    await screen.findByRole("checkbox", {
-      name: "Can invite members for Alice",
-    })
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Role for Alice" }),
+    "Crew"
   );
   expect((await screen.findByRole("alert")).textContent).toContain(
     "Unable to save permission."
   );
   expect(
-    screen
-      .getByRole("checkbox", { name: "Can invite members for Alice" })
-      .getAttribute("aria-checked")
-  ).toBe("false");
+    screen.getByRole("combobox", { name: "Role for Alice" }).textContent
+  ).toContain("Council member");
 });
 
 it("blocks repeated submissions while sending", async () => {
@@ -221,7 +229,7 @@ it("blocks repeated submissions while sending", async () => {
   await screen.findByRole("button", { name: "Send invitation" });
 });
 
-it("tells the inviter that an existing account accepts in Estates", async () => {
+it("tells the inviter that an existing account accepts on Invitations", async () => {
   vi.mocked(api.POST).mockResolvedValue({
     data: { email: "existing@example.com", status: "IN_APP" },
     response: new Response(null, { status: 201 }),
@@ -233,7 +241,7 @@ it("tells the inviter that an existing account accepts in Estates", async () => 
   expect(screen.queryByRole("textbox", { name: "Name" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
   const message = await screen.findByRole("status");
-  expect(message.textContent).toContain("Estates");
+  expect(message.textContent).toContain("Invitations");
   expect(message.textContent).toContain("No email was sent");
 });
 
@@ -357,12 +365,12 @@ it("does not expose owner removal controls to delegates", async () => {
   ).toBeNull();
 });
 
-const ESTATES_GUIDANCE = /Existing users accept on Estates\./;
-it("uses Estates consistently in invitation guidance", async () => {
+const ESTATES_GUIDANCE = /Existing users accept on Invitations\./;
+it("uses Invitations consistently in invitation guidance", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   await screen.findByText(ESTATES_GUIDANCE);
 });
-it("announces when invitation permission is saving", async () => {
+it("announces when a member role is saving", async () => {
   let complete: ((value: unknown) => void) | undefined;
   vi.mocked(api.PUT).mockImplementation(
     () =>
@@ -371,12 +379,14 @@ it("announces when invitation permission is saving", async () => {
       }) as never
   );
   renderWithProviders(<CouncilPage estateId="estate-id" />);
-  fireEvent.click(
-    await screen.findByRole("checkbox", {
-      name: "Can invite members for Alice",
-    })
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Role for Alice" }),
+    "Crew"
   );
-  await screen.findByText("Saving invitation permission…");
-  complete?.({ response: new Response(null, { status: 204 }) });
-  await screen.findByText("Permission saved.");
+  await screen.findByText("Saving role…");
+  complete?.({
+    data: { userId: "member", role: "CREW" },
+    response: new Response(null, { status: 200 }),
+  });
+  await screen.findByText("Role saved.");
 });

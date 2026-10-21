@@ -1,5 +1,12 @@
+import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@proj/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import {
   type ChangeEvent,
@@ -9,24 +16,30 @@ import {
   useRef,
   useState,
 } from "react";
-import { type ResidentLocation, useCreateReport } from "@/lib/reports";
+import { useCreateReport, useResidentLocations } from "@/lib/reports";
 import { ReportDetailsFields } from "@/routes/_auth/reports/new/-components/report-details-fields";
 import {
   ReportImagesField,
   type SelectedReportImage,
 } from "@/routes/_auth/reports/new/-components/report-images-field";
 import { ReportLocationFields } from "@/routes/_auth/reports/new/-components/report-location-fields";
+import { ResidentEstateSelector } from "@/routes/_auth/reports/new/-components/resident-estate-selector";
 
 export function NewReportForm({
-  locations,
-  disabled,
+  estates,
 }: {
-  locations: ResidentLocation[];
-  disabled: boolean;
+  estates: components["schemas"]["ResidentContextResponse"]["estates"];
 }) {
   const id = useId();
   const navigate = useNavigate();
   const create = useCreateReport();
+  const [selectedEstateId, setSelectedEstateId] = useState<string | null>(null);
+  const estateId =
+    selectedEstateId ?? (estates.length === 1 ? estates[0]?.id : undefined);
+  const estateName =
+    estates.find((estate) => estate.id === estateId)?.name ??
+    "Choose an estate";
+  const locations = useResidentLocations(estateId);
   const [blockId, setBlockId] = useState<string | null>(null);
   const [levelId, setLevelId] = useState<string | null>(null);
   const [commonId, setCommonId] = useState<string | null>(null);
@@ -47,7 +60,7 @@ export function NewReportForm({
         return;
       }
       const locationId = commonId ?? levelId;
-      if (!(description.trim() && blockId && locationId)) {
+      if (!(estateId && description.trim() && blockId && locationId)) {
         setError(
           "Enter a description and choose a block plus a level or common area."
         );
@@ -56,6 +69,7 @@ export function NewReportForm({
       setError(undefined);
       try {
         const report = await create.mutateAsync({
+          estateId,
           title: reportTitle,
           description: description.trim(),
           locationId,
@@ -81,6 +95,7 @@ export function NewReportForm({
       create.isPending,
       create.mutateAsync,
       description,
+      estateId,
       images,
       levelId,
       navigate,
@@ -88,6 +103,12 @@ export function NewReportForm({
     ]
   );
 
+  const changeEstate = useCallback((value: string | null) => {
+    setSelectedEstateId(value);
+    setBlockId(null);
+    setLevelId(null);
+    setCommonId(null);
+  }, []);
   const changeBlock = useCallback((value: string | null) => {
     setBlockId(value);
     setLevelId(null);
@@ -136,38 +157,67 @@ export function NewReportForm({
   );
 
   return (
-    <form className="grid gap-4" onSubmit={submit}>
-      <ReportLocationFields
-        blockId={blockId}
-        commonId={commonId}
-        id={id}
-        levelId={levelId}
-        locations={locations}
-        onBlockChange={changeBlock}
-        onCommonChange={setCommonId}
-        onLevelChange={changeLevel}
-      />
-      <ReportDetailsFields
-        description={description}
-        id={id}
-        onDescriptionChange={changeDescription}
-        onTitleChange={changeTitle}
-        title={title}
-      />
-      <ReportImagesField
-        id={id}
-        images={images}
-        onChange={changeImages}
-        onRemove={removeImage}
-      />
-      {error ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-      <Button disabled={create.isPending || disabled} type="submit">
-        {create.isPending ? "Submitting…" : "Submit report"}
-      </Button>
-    </form>
+    <Card className="max-w-2xl">
+      <CardHeader>
+        <CardTitle>{estateName}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {locations.isLoading ? <p role="status">Loading locations…</p> : null}
+        {locations.isError ? (
+          <Alert role="alert" variant="destructive">
+            <AlertDescription>
+              Unable to load locations. Please try again.
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        <form className="grid gap-4" onSubmit={submit}>
+          <ResidentEstateSelector
+            estateId={estateId}
+            estates={estates}
+            id={id}
+            onChange={changeEstate}
+          />
+          <ReportLocationFields
+            blockId={blockId}
+            commonId={commonId}
+            id={id}
+            levelId={levelId}
+            locations={locations.data ?? []}
+            onBlockChange={changeBlock}
+            onCommonChange={setCommonId}
+            onLevelChange={changeLevel}
+          />
+          <ReportDetailsFields
+            description={description}
+            id={id}
+            onDescriptionChange={changeDescription}
+            onTitleChange={changeTitle}
+            title={title}
+          />
+          <ReportImagesField
+            id={id}
+            images={images}
+            onChange={changeImages}
+            onRemove={removeImage}
+          />
+          {error ? (
+            <Alert role="alert" variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <Button
+            disabled={
+              create.isPending ||
+              !estateId ||
+              locations.isPending ||
+              locations.isError
+            }
+            type="submit"
+          >
+            {create.isPending ? "Submitting…" : "Submit report"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

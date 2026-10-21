@@ -4,6 +4,15 @@
 **Owner:** unassigned
 **Related feature:** [Resident fault reporting](resident-fault-reporting.md)
 
+**Planned policy revision (2026-10-18):** the
+[estate roles and invitations draft](estate-role-invitations.md) supersedes this
+implementation's one-resident-estate limit, manual-only provisioning and earlier
+role/delegation boundaries. Residents may be assigned to multiple estates;
+Managers/Admins invite and manage estate members, Council manages assets, and
+Managers/Crew manage estate-wide reports. Those changes are not built yet. The
+sections below retain the 2026-10-13 implementation baseline; own-history reads,
+estate-local authorization and identity-based report ownership still apply.
+
 ## Problem
 
 The resident implementation currently uses the WorkOS `resident` JWT claim to
@@ -154,8 +163,10 @@ Proposed `AppAccessResponse` uses independent capabilities:
 - `canEnterWorkspace: boolean`: at least one estate management grant/ownership,
   or existing platform-admin access. This controls navigation and account-level
   management pages; it never authorizes a particular estate.
-- `canCreateEstate: boolean`: requires existing management/ownership or platform
-  admin authorization; false for an unassigned or resident-only account.
+- `canCreateEstate: boolean`: true for every authenticated subject under
+  [self-service creation](self-service-estate-creation.md) (2026-10-20), including
+  unassigned and Resident-only accounts. Creation establishes authority only in
+  the new estate.
 - `canAccessPlatformAdmin: boolean`: existing platform-admin authorization.
 - `hasResidentMembership: boolean`: an existing RESIDENT row, including one in
   an inactive estate. False after that row is deleted.
@@ -182,9 +193,9 @@ Same-estate ownership/RESIDENT conflicts are reported as
 An account with no memberships, ownership or platform-admin access receives
 false estate-management and report-submission capabilities. Its projection has
 `estates = []`, `residentEstate = null`, `canSubmitReport = false`,
-`canEnterWorkspace = false` and `canCreateEstate = false`. It can authenticate,
-sign out and read reports it previously submitted, but receives no estate data
-while awaiting trusted provisioning. A new unassigned resident has no previous
+`canEnterWorkspace = false` and `canCreateEstate = true`. It can authenticate,
+create its first estate, sign out and read reports it previously submitted, but
+receives no existing-estate data without an assignment. A new unassigned resident has no previous
 reports. Existing accounts with an authorized management role in another estate
 continue to use that estate's permissions.
 

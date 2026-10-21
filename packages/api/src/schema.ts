@@ -28,7 +28,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    put: operations["updateRole"];
+    put: operations["updateRole_1"];
     post?: never;
     delete?: never;
     options?: never;
@@ -226,6 +226,7 @@ export interface paths {
     /** List your estates */
     get: operations["list"];
     put?: never;
+    /** Create an estate as any signed-in user; become its owner and Manager */
     post: operations["create"];
     delete?: never;
     options?: never;
@@ -563,6 +564,7 @@ export interface paths {
     /** List an estate's active locations */
     get: operations["listLocations"];
     put?: never;
+    /** Create a location as the estate owner or an assigned Manager */
     post: operations["createLocation"];
     delete?: never;
     options?: never;
@@ -667,6 +669,103 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/members/{userId}/role": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["updateRole"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/ownership-transfer": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["transferOwnership"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/reports": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List fault reports by location subtree, block and inclusive level-position range */
+    get: operations["listEstateReports"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/reports/{reportId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEstateReport"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/reports/{reportId}/images/{imageId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getEstateReportImage"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/reports/{reportId}/location": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations["relocateEstateReport"];
+    trace?: never;
+  };
   "/estates/{id}": {
     parameters: {
       query?: never;
@@ -680,6 +779,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
+    /** Update estate details as the current owner or an assigned Manager */
     patch: operations["update"];
     trace?: never;
   };
@@ -692,6 +792,7 @@ export interface paths {
     };
     get?: never;
     put?: never;
+    /** Deactivate an estate as its current owner */
     post: operations["deactivate"];
     delete?: never;
     options?: never;
@@ -836,11 +937,24 @@ export interface components {
   requestBodies: never;
   responses: never;
   schemas: {
-    InvitationPermissionRequest: {
-      canInviteMembers: boolean;
+    UpdateEstateRoleRequest: {
+      /** @enum {string} */
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
     };
     EstateError: {
       message: string;
+    };
+    EstateMemberResponse: {
+      userId: string;
+      name: string;
+      email: string;
+      canInviteMembers: boolean;
+      /** @enum {string} */
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "MEMBER";
+      owner: boolean;
+    };
+    InvitationPermissionRequest: {
+      canInviteMembers: boolean;
     };
     SetFlatlinePolicyRequest: {
       /** Format: int32 */
@@ -870,6 +984,8 @@ export interface components {
       message: string;
     };
     CreateIssueReportRequest: {
+      /** Format: uuid */
+      estateId: string;
       title: string;
       description: string;
       /** Format: uuid */
@@ -927,6 +1043,9 @@ export interface components {
     };
     DeactivateEstateRequest: {
       code: string;
+    };
+    TransferOwnershipRequest: {
+      newOwnerUserId: string;
     };
     CreateLocationRequest: {
       /** @enum {string} */
@@ -1001,6 +1120,11 @@ export interface components {
     CouncilInvitationRequest: {
       /** Format: email */
       email: string;
+      /**
+       * @default COUNCIL
+       * @enum {string}
+       */
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
     };
     CouncilInvitationResponse: {
       /** Format: uuid */
@@ -1011,6 +1135,8 @@ export interface components {
       status: string;
       /** Format: date-time */
       expiresAt: string | null;
+      /** @enum {string} */
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
     };
     CreateAssetRequest: {
       name: string;
@@ -1298,6 +1424,12 @@ export interface components {
     AcceptedInvitationsResponse: {
       estateIds: string[];
     };
+    RelocateReportRequest: {
+      /** Format: uuid */
+      locationId: string;
+      /** Format: uuid */
+      expectedLocationId: string;
+    };
     UpdateLocationRequest: {
       /** Format: uuid */
       parentId?: string;
@@ -1356,7 +1488,7 @@ export interface components {
       name: string;
     };
     ResidentContextResponse: {
-      estate: components["schemas"]["EstateLabel"] | null;
+      estates: components["schemas"]["EstateLabel"][];
       canSubmit: boolean;
     };
     ManufacturerResponse: {
@@ -1377,12 +1509,6 @@ export interface components {
       database: boolean;
       /** Format: date-time */
       timestamp: string;
-    };
-    EstateMemberResponse: {
-      userId: string;
-      name: string;
-      email: string;
-      canInviteMembers: boolean;
     };
     FlatlineEvidenceResponse: {
       /** Format: date-time */
@@ -1612,6 +1738,8 @@ export interface components {
       estateName: string;
       /** Format: date-time */
       expiresAt: string;
+      /** @enum {string} */
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
     };
     AssetCategoryResponse: {
       code: string;
@@ -1654,19 +1782,22 @@ export interface components {
       canAccessPlatformAdmin: boolean;
       hasResidentMembership: boolean;
       canSubmitReport: boolean;
-      residentEstate: components["schemas"]["EstateLabel"] | null;
+      residentEstates: components["schemas"]["EstateLabel"][];
       estates: components["schemas"]["EstateAccessResponse"][];
     };
     EstateAccessResponse: {
       /** Format: uuid */
       estateId: string;
+      estateName: string;
       /** @enum {string} */
-      role: "OWNER" | "MEMBER" | "COUNCIL" | "RESIDENT";
+      role: "MANAGER" | "MEMBER" | "COUNCIL" | "RESIDENT" | "CREW";
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
       canInviteMembers: boolean;
       canManageInvitationPermissions: boolean;
+      canViewFaultReports: boolean;
+      canRelocateFaultReports: boolean;
     };
   };
 }
@@ -2916,6 +3047,140 @@ export interface operations {
       };
     };
   };
+  getEstateReport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Report with current location path and private image metadata */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["IssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getEstateReportImage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+        imageId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Private image bytes */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": string;
+          "image/png": string;
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["EstateError"];
+          "image/png": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["EstateError"];
+          "image/png": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["EstateError"];
+          "image/png": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["EstateError"];
+          "image/png": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Private image storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "image/jpeg": components["schemas"]["EstateError"];
+          "image/png": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getMembers: {
     parameters: {
       query?: never;
@@ -3855,6 +4120,74 @@ export interface operations {
       };
     };
   };
+  listEstateReports: {
+    parameters: {
+      query?: {
+        locationId?: string;
+        /** @description Block ID in this estate; includes historical locations */
+        blockId?: string;
+        /** @description Inclusive minimum LEVEL.sortOrder, including negative positions */
+        minLevelPosition?: number;
+        /** @description Inclusive maximum LEVEL.sortOrder, including negative positions */
+        maxLevelPosition?: number;
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Reports ordered by creation time and ID, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["IssueReportPageResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listLocations: {
     parameters: {
       query?: {
@@ -4764,6 +5097,78 @@ export interface operations {
       };
     };
   };
+  relocateEstateReport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RelocateReportRequest"];
+      };
+    };
+    responses: {
+      /** @description Corrected report, or unchanged report for a no-op */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["IssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Stale placement, inactive estate or inactive destination/ancestor */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   removeEstateUser: {
     parameters: {
       query?: never;
@@ -4941,7 +5346,9 @@ export interface operations {
   };
   residentLocations: {
     parameters: {
-      query?: never;
+      query: {
+        estateId: string;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -5316,6 +5723,95 @@ export interface operations {
       };
     };
   };
+  transferOwnership: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TransferOwnershipRequest"];
+      };
+    };
+    responses: {
+      /** @description Ownership transferred to an existing Manager in this estate */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Insufficient estate permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or member not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate invitation or inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Identity provider failed */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Identity provider not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   update: {
     parameters: {
       query?: never;
@@ -5532,6 +6028,96 @@ export interface operations {
     };
   };
   updateRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        userId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateEstateRoleRequest"];
+      };
+    };
+    responses: {
+      /** @description Estate role updated; Manager self-demotion and owner demotion are protected */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateMemberResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Insufficient estate permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or member not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate invitation or inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Identity provider failed */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Identity provider not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  updateRole_1: {
     parameters: {
       query?: never;
       header?: never;

@@ -30,21 +30,27 @@ public class ResidentReportService {
     }
 
     public ResidentContextResponse context(String userId) {
-        var estate = reports.activeAssignment(userId, false).orElse(null);
-        return new ResidentContextResponse(estate, estate != null);
+        var estates = reports.activeAssignments(userId);
+        return new ResidentContextResponse(estates, !estates.isEmpty());
     }
 
-    public List<ResidentLocationResponse> locations(String userId) {
+    public List<ResidentLocationResponse> locations(String userId, UUID estateId) {
         if (!reports.hasResidentMembership(userId)) {
             throw new ResidentReportException(HttpStatus.FORBIDDEN, "No resident estate assignment.");
         }
-        return reports.activeAssignment(userId, false)
+        return reports.activeAssignment(userId, estateId, false)
                 .map(estate -> reports.activeLocations(estate.id()))
-                .orElseGet(List::of);
+                .orElseThrow(() -> new ResidentReportException(
+                        HttpStatus.FORBIDDEN, "No active resident assignment in the selected estate."));
     }
 
     public IssueReportDetailResponse create(
-            String userId, String title, String description, UUID locationId, List<MultipartFile> selectedImages) {
+            String userId,
+            UUID estateId,
+            String title,
+            String description,
+            UUID locationId,
+            List<MultipartFile> selectedImages) {
         String reportTitle = title == null ? "" : title.trim();
         if (reportTitle.isBlank() || reportTitle.length() > 50) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Enter a title in 1 to 50 characters.");
@@ -55,7 +61,7 @@ public class ResidentReportService {
         if (locationId == null) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Choose a level or common area.");
         }
-        var estate = reports.activeAssignment(userId, false)
+        var estate = reports.activeAssignment(userId, estateId, false)
                 .orElseThrow(() -> new ResidentReportException(HttpStatus.FORBIDDEN, "No active estate assignment."));
         if (!reports.activeReportLocation(estate.id(), locationId)) {
             throw new ResidentReportException(
@@ -75,7 +81,7 @@ public class ResidentReportService {
                 uploaded.add(new UploadedImage(imageId, key, image.contentType(), image.bytes().length));
             }
             var created = transactions.execute(ignored -> {
-                var current = reports.activeAssignment(userId, true)
+                var current = reports.activeAssignment(userId, estateId, true)
                         .orElseThrow(() ->
                                 new ResidentReportException(HttpStatus.FORBIDDEN, "No active estate assignment."));
                 if (!current.id().equals(estate.id()) || !reports.activeReportLocation(current.id(), locationId)) {

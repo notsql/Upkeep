@@ -1,6 +1,18 @@
 package com.proj.server.asset;
 
 import static com.proj.server.db.tables.Asset.ASSET;
+import static com.proj.server.db.tables.Assetassessment.ASSETASSESSMENT;
+import static com.proj.server.db.tables.Assetmodel.ASSETMODEL;
+import static com.proj.server.db.tables.Location.LOCATION;
+import static com.proj.server.db.tables.Manufacturer.MANUFACTURER;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.lateral;
+import static org.jooq.impl.DSL.lower;
+import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.noCondition;
+import static org.jooq.impl.DSL.position;
+import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.trueCondition;
 
 import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.db.tables.records.AssetRecord;
@@ -9,6 +21,7 @@ import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.jooq.impl.SQLDataType;
 import org.springframework.stereotype.Repository;
 
 /** Persists asset lifecycle state and projects the register in one bulk query. */
@@ -89,60 +102,85 @@ public class AssetRepository {
             UUID locationId,
             AssetConditionFilter condition,
             AssetStatus status) {
-        String conditionName = condition == null ? null : condition.name();
-        return db.resultQuery(
-                        """
-            with recursive paths as (
-                select id, "parentId", name::text path from "Location" where "estateId"=? and "parentId" is null
-                union all
-                select l.id, l."parentId", p.path || ' › ' || l.name from "Location" l join paths p on p.id=l."parentId" where l."estateId"=?
-            ), descendants as (
-                select id from "Location" where "estateId"=? and id=?
-                union all
-                select l.id from "Location" l join descendants d on l."parentId"=d.id where l."estateId"=?
-            )
-            select a.*, p.path, c.condition current_condition, mf.name manufacturer_name, am.name model_name
-            from "Asset" a join paths p on p.id=a."locationId"
-            left join "Manufacturer" mf on mf.id=a."manufacturerId"
-            left join "AssetModel" am on am.id=a."modelId"
-            left join lateral (
-                select condition from "AssetAssessment" where "assetId"=a.id
-                order by "assessedOn" desc, "createdAt" desc, id limit 1
-            ) c on true
-            where a."estateId"=?
-            and (?::text is null or strpos(lower(a.name), lower(?))>0 or strpos(lower(a.reference), lower(?))>0)
-            and (?::text is null or a.category=?)
-            and (?::uuid is null or a."locationId" in (select id from descendants))
-            and (?::text is null or c.condition=? or (?='UNASSESSED' and c.condition is null))
-            and (?='ALL' or (?='ACTIVE' and a."deactivatedAt" is null) or (?='INACTIVE' and a."deactivatedAt" is not null))
-            order by a.reference, a.id
-            """,
-                        estateId,
-                        estateId,
-                        estateId,
-                        locationId,
-                        estateId,
-                        estateId,
-                        q,
-                        q,
-                        q,
-                        category,
-                        category,
-                        locationId,
-                        conditionName,
-                        conditionName,
-                        conditionName,
-                        status.name(),
-                        status.name(),
-                        status.name())
+        var child = LOCATION.as("child");
+        var pathId = field(name("paths", "id"), LOCATION.ID.getDataType());
+        var path = field(name("paths", "path"), SQLDataType.CLOB);
+        var paths = name("paths")
+                .fields("id", "parentId", "path")
+                .as(db.select(LOCATION.ID, LOCATION.PARENTID, LOCATION.NAME.cast(SQLDataType.CLOB))
+                        .from(LOCATION)
+                        .where(LOCATION.ESTATEID.eq(estateId).and(LOCATION.PARENTID.isNull()))
+                        .unionAll(db.select(
+                                        child.ID,
+                                        child.PARENTID,
+                                        path.concat(" › ").concat(child.NAME))
+                                .from(child)
+                                .join(table(name("paths")))
+                                .on(pathId.eq(child.PARENTID))
+                                .where(child.ESTATEID.eq(estateId))));
+        var descendantId = field(name("descendants", "id"), LOCATION.ID.getDataType());
+        var descendants = name("descendants")
+                .fields("id")
+                .as(db.select(LOCATION.ID)
+                        .from(LOCATION)
+                        .where(LOCATION.ESTATEID.eq(estateId).and(LOCATION.ID.eq(locationId)))
+                        .unionAll(db.select(child.ID)
+                                .from(child)
+                                .join(table(name("descendants")))
+                                .on(child.PARENTID.eq(descendantId))
+                                .where(child.ESTATEID.eq(estateId))));
+        var latestAssessment = lateral(db.select(ASSETASSESSMENT.CONDITION)
+                        .from(ASSETASSESSMENT)
+                        .where(ASSETASSESSMENT.ASSETID.eq(ASSET.ID))
+                        .orderBy(
+                                ASSETASSESSMENT.ASSESSEDON.desc(), ASSETASSESSMENT.CREATEDAT.desc(), ASSETASSESSMENT.ID)
+                        .limit(1))
+                .as("latest_assessment");
+        var currentCondition = latestAssessment.field(ASSETASSESSMENT.CONDITION);
+        var filters = ASSET.ESTATEID.eq(estateId);
+        if (q != null) {
+            filters = filters.and(position(lower(ASSET.NAME), lower(q))
+                    .gt(0)
+                    .or(position(lower(ASSET.REFERENCE), lower(q)).gt(0)));
+        }
+        if (category != null) filters = filters.and(ASSET.CATEGORY.eq(category));
+        if (locationId != null) {
+            filters = filters.and(ASSET.LOCATIONID.in(db.select(descendantId).from(descendants)));
+        }
+        if (condition != null) {
+            filters = filters.and(
+                    condition == AssetConditionFilter.UNASSESSED
+                            ? currentCondition.isNull()
+                            : currentCondition.eq(condition.name()));
+        }
+        filters = filters.and(
+                switch (status) {
+                    case ACTIVE -> ASSET.DEACTIVATEDAT.isNull();
+                    case INACTIVE -> ASSET.DEACTIVATEDAT.isNotNull();
+                    case ALL -> noCondition();
+                });
+        return db.withRecursive(paths, descendants)
+                .select(ASSET.fields())
+                .select(path, currentCondition, MANUFACTURER.NAME, ASSETMODEL.NAME)
+                .from(ASSET)
+                .join(paths)
+                .on(pathId.eq(ASSET.LOCATIONID))
+                .leftJoin(MANUFACTURER)
+                .on(MANUFACTURER.ID.eq(ASSET.MANUFACTURERID))
+                .leftJoin(ASSETMODEL)
+                .on(ASSETMODEL.ID.eq(ASSET.MODELID))
+                .leftJoin(latestAssessment)
+                .on(trueCondition())
+                .where(filters)
+                .orderBy(ASSET.REFERENCE, ASSET.ID)
                 .fetch()
                 .map(row -> {
-                    String value = row.get("current_condition", String.class);
+                    String value = row.get(currentCondition);
                     return response(
                             row.into(ASSET),
-                            row.get("path", String.class),
-                            row.get("manufacturer_name", String.class),
-                            row.get("model_name", String.class),
+                            row.get(path),
+                            row.get(MANUFACTURER.NAME),
+                            row.get(ASSETMODEL.NAME),
                             value == null ? null : AssetCondition.valueOf(value));
                 });
     }

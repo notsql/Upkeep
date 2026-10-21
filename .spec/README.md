@@ -31,11 +31,17 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [typed-jooq-repositories.md](features/typed-jooq-repositories.md) | - | built; typed asset, dashboard and estate-report queries; 821 server and 461 web tests passed |
 | [management-endpoint-security-regression.md](features/management-endpoint-security-regression.md) | - | built; explicit endpoint authorization and regression tests verified |
-| [resident-fault-reporting.md](features/resident-fault-reporting.md) | - | draft; awaiting agreement |
-| [resident-estate-user-authorization.md](features/resident-estate-user-authorization.md) | - | draft pivot plan; policy decisions resolved, implementation pending |
+| [resident-fault-reporting.md](features/resident-fault-reporting.md) | - | locally verified implementation; multi-estate residents and staff location-only editing follow-up planned |
+| [resident-estate-user-authorization.md](features/resident-estate-user-authorization.md) | - | implemented baseline; planned role revision replaces single-estate limit and manual-only provisioning |
 | [manager-account-authorization.md](features/manager-account-authorization.md) | ID-21 | invitations verified; broader estate roles are follow-up |
+| [estate-role-invitations.md](features/estate-role-invitations.md) | - | implemented and verified; role invitations, owner preservation, no Manager self-removal/demotion and multi-estate residents; account migration and asset editing excluded; staff editing limited to location under fault-report-locations |
+| [fault-report-locations.md](features/fault-report-locations.md) | - | draft; location display, hierarchy filters and location-only editing for Manager/Admin and Crew; other report information/images retained |
+| [fault-report-block-level-filters.md](features/fault-report-block-level-filters.md) | - | built and verified; searchable block and numeric level-position range |
+| [neon-role-management.md](features/neon-role-management.md) | - | invitation/member Neon authority implemented and verified; unified Manager/Admin; existing-account migration deferred |
 | `estate-management.md` | - | built |
+| [self-service-estate-creation.md](features/self-service-estate-creation.md) | - | built; feature tests/type checks pass; full server suite retains 13 pre-existing bulk-floor failures |
 | `location-hierarchy.md` | - | built |
 | `building-assets.md` | ID-46 | draft |
 | `asset-location-picker.md` | ID-54 | draft |

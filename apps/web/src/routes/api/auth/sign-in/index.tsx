@@ -10,7 +10,7 @@ export const Route = createFileRoute("/api/auth/sign-in/")({
         const search = new URL(request.url).searchParams;
         const invitationToken = search.get("invitation_token");
         const returnPathname = invitationToken
-          ? "/estates"
+          ? "/invitations"
           : sanitizeReturnTo(search.get("returnPathname"));
 
         try {

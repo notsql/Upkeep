@@ -6,6 +6,104 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/estates/{estateId}/members/{userId}/role": {
+      "put": {
+        "tags": ["council-controller"],
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEstateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Estate role updated; Manager self-demotion and owner demotion are protected",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateMemberResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}/invitation-permission": {
       "put": {
         "tags": ["council-controller"],
@@ -298,7 +396,7 @@
     "/api/admin/users/{membershipId}/role": {
       "put": {
         "tags": ["admin-controller"],
-        "operationId": "updateRole",
+        "operationId": "updateRole_1",
         "parameters": [
           {
             "name": "membershipId",
@@ -545,6 +643,7 @@
       },
       "post": {
         "tags": ["estate-controller"],
+        "summary": "Create an estate as any signed-in user; become its owner and Manager",
         "operationId": "create",
         "requestBody": {
           "content": {
@@ -609,6 +708,7 @@
     "/estates/{id}/deactivate": {
       "post": {
         "tags": ["estate-controller"],
+        "summary": "Deactivate an estate as its current owner",
         "operationId": "deactivate",
         "parameters": [
           {
@@ -671,6 +771,96 @@
           },
           "200": {
             "description": "Estate deactivated",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/ownership-transfer": {
+      "post": {
+        "tags": ["council-controller"],
+        "operationId": "transferOwnership",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferOwnershipRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Ownership transferred to an existing Manager in this estate",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateResponse" }
@@ -755,6 +945,7 @@
       },
       "post": {
         "tags": ["location-controller"],
+        "summary": "Create a location as the estate owner or an assigned Manager",
         "operationId": "createLocation",
         "parameters": [
           {
@@ -2462,6 +2653,7 @@
       },
       "patch": {
         "tags": ["estate-controller"],
+        "summary": "Update estate details as the current owner or an assigned Manager",
         "operationId": "update",
         "parameters": [
           {
@@ -2525,6 +2717,86 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/reports/{reportId}/location": {
+      "patch": {
+        "tags": ["estate-report-controller"],
+        "operationId": "relocateEstateReport",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RelocateReportRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Corrected report, or unchanged report for a no-op",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueReportDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale placement, inactive estate or inactive destination/ancestor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid UUID, request or pagination",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Responder membership required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report, location or image",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           }
@@ -2947,6 +3219,14 @@
       "get": {
         "tags": ["resident-report-controller"],
         "operationId": "residentLocations",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Active locations in the assigned estate",
@@ -3116,6 +3396,262 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/reports": {
+      "get": {
+        "tags": ["estate-report-controller"],
+        "summary": "List fault reports by location subtree, block and inclusive level-position range",
+        "operationId": "listEstateReports",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "locationId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "blockId",
+            "in": "query",
+            "description": "Block ID in this estate; includes historical locations",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "minLevelPosition",
+            "in": "query",
+            "description": "Inclusive minimum LEVEL.sortOrder, including negative positions",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "maxLevelPosition",
+            "in": "query",
+            "description": "Inclusive maximum LEVEL.sortOrder, including negative positions",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, request or pagination",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Responder membership required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report, location or image",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Reports ordered by creation time and ID, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueReportPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/reports/{reportId}": {
+      "get": {
+        "tags": ["estate-report-controller"],
+        "operationId": "getEstateReport",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, request or pagination",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Responder membership required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report, location or image",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Report with current location path and private image metadata",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueReportDetailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/reports/{reportId}/images/{imageId}": {
+      "get": {
+        "tags": ["estate-report-controller"],
+        "operationId": "getEstateReportImage",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "imageId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Private image bytes",
+            "content": {
+              "image/jpeg": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/png": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "503": {
+            "description": "Private image storage unavailable",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid UUID, request or pagination",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Responder membership required",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report, location or image",
+            "content": {
+              "image/jpeg": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              },
+              "image/png": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           }
@@ -4117,15 +4653,47 @@
   },
   "components": {
     "schemas": {
-      "InvitationPermissionRequest": {
+      "UpdateEstateRoleRequest": {
         "type": "object",
-        "properties": { "canInviteMembers": { "type": "boolean" } },
-        "required": ["canInviteMembers"]
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+          }
+        },
+        "required": ["role"]
       },
       "EstateError": {
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"]
+      },
+      "EstateMemberResponse": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "canInviteMembers": { "type": "boolean" },
+          "role": {
+            "type": "string",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "MEMBER"]
+          },
+          "owner": { "type": "boolean" }
+        },
+        "required": [
+          "canInviteMembers",
+          "email",
+          "name",
+          "owner",
+          "role",
+          "userId"
+        ]
+      },
+      "InvitationPermissionRequest": {
+        "type": "object",
+        "properties": { "canInviteMembers": { "type": "boolean" } },
+        "required": ["canInviteMembers"]
       },
       "SetFlatlinePolicyRequest": {
         "type": "object",
@@ -4180,6 +4748,7 @@
       "CreateIssueReportRequest": {
         "type": "object",
         "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
           "title": { "type": "string", "maxLength": 50, "minLength": 1 },
           "description": { "type": "string", "minLength": 1 },
           "locationId": { "type": "string", "format": "uuid" },
@@ -4188,7 +4757,7 @@
             "items": { "type": "string", "format": "binary" }
           }
         },
-        "required": ["description", "locationId", "title"]
+        "required": ["description", "estateId", "locationId", "title"]
       },
       "IssueReportDetailResponse": {
         "type": "object",
@@ -4281,6 +4850,17 @@
           "code": { "type": "string", "maxLength": 50, "minLength": 0 }
         },
         "required": ["code"]
+      },
+      "TransferOwnershipRequest": {
+        "type": "object",
+        "properties": {
+          "newOwnerUserId": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 0
+          }
+        },
+        "required": ["newOwnerUserId"]
       },
       "CreateLocationRequest": {
         "type": "object",
@@ -4397,6 +4977,11 @@
             "format": "email",
             "maxLength": 254,
             "minLength": 0
+          },
+          "role": {
+            "type": "string",
+            "default": "COUNCIL",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
           }
         },
         "required": ["email"]
@@ -4408,9 +4993,13 @@
           "estateId": { "type": "string", "format": "uuid" },
           "email": { "type": "string" },
           "status": { "type": "string" },
-          "expiresAt": { "type": ["string", "null"], "format": "date-time" }
+          "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+          "role": {
+            "type": "string",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+          }
         },
-        "required": ["email", "estateId", "expiresAt", "id", "status"]
+        "required": ["email", "estateId", "expiresAt", "id", "role", "status"]
       },
       "CreateAssetRequest": {
         "type": "object",
@@ -4863,6 +5452,14 @@
         },
         "required": ["estateIds"]
       },
+      "RelocateReportRequest": {
+        "type": "object",
+        "properties": {
+          "locationId": { "type": "string", "format": "uuid" },
+          "expectedLocationId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["expectedLocationId", "locationId"]
+      },
       "UpdateLocationRequest": {
         "type": "object",
         "properties": {
@@ -4964,15 +5561,13 @@
       "ResidentContextResponse": {
         "type": "object",
         "properties": {
-          "estate": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/EstateLabel" },
-              { "type": "null" }
-            ]
+          "estates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EstateLabel" }
           },
           "canSubmit": { "type": "boolean" }
         },
-        "required": ["canSubmit", "estate"]
+        "required": ["canSubmit", "estates"]
       },
       "ManufacturerResponse": {
         "type": "object",
@@ -5000,16 +5595,6 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
-      },
-      "EstateMemberResponse": {
-        "type": "object",
-        "properties": {
-          "userId": { "type": "string" },
-          "name": { "type": "string" },
-          "email": { "type": "string" },
-          "canInviteMembers": { "type": "boolean" }
-        },
-        "required": ["canInviteMembers", "email", "name", "userId"]
       },
       "FlatlineEvidenceResponse": {
         "type": "object",
@@ -5390,9 +5975,13 @@
           "id": { "type": "string", "format": "uuid" },
           "estateId": { "type": "string", "format": "uuid" },
           "estateName": { "type": "string" },
-          "expiresAt": { "type": "string", "format": "date-time" }
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "role": {
+            "type": "string",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+          }
         },
-        "required": ["estateId", "estateName", "expiresAt", "id"]
+        "required": ["estateId", "estateName", "expiresAt", "id", "role"]
       },
       "AssetCategoryResponse": {
         "type": "object",
@@ -5463,11 +6052,9 @@
           "canAccessPlatformAdmin": { "type": "boolean" },
           "hasResidentMembership": { "type": "boolean" },
           "canSubmitReport": { "type": "boolean" },
-          "residentEstate": {
-            "oneOf": [
-              { "$ref": "#/components/schemas/EstateLabel" },
-              { "type": "null" }
-            ]
+          "residentEstates": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/EstateLabel" }
           },
           "estates": {
             "type": "array",
@@ -5481,30 +6068,36 @@
           "canSubmitReport",
           "estates",
           "hasResidentMembership",
-          "residentEstate"
+          "residentEstates"
         ]
       },
       "EstateAccessResponse": {
         "type": "object",
         "properties": {
           "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
           "role": {
             "type": "string",
-            "enum": ["OWNER", "MEMBER", "COUNCIL", "RESIDENT"]
+            "enum": ["MANAGER", "MEMBER", "COUNCIL", "RESIDENT", "CREW"]
           },
           "canViewManagement": { "type": "boolean" },
           "canManageEstate": { "type": "boolean" },
           "canViewAssets": { "type": "boolean" },
           "canInviteMembers": { "type": "boolean" },
-          "canManageInvitationPermissions": { "type": "boolean" }
+          "canManageInvitationPermissions": { "type": "boolean" },
+          "canViewFaultReports": { "type": "boolean" },
+          "canRelocateFaultReports": { "type": "boolean" }
         },
         "required": [
           "canInviteMembers",
           "canManageEstate",
           "canManageInvitationPermissions",
+          "canRelocateFaultReports",
           "canViewAssets",
+          "canViewFaultReports",
           "canViewManagement",
           "estateId",
+          "estateName",
           "role"
         ]
       }

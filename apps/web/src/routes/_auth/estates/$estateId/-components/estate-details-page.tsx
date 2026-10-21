@@ -16,16 +16,18 @@ import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-compon
 
 function EstateActions({
   estate,
+  canEditDetails,
   onDeactivate,
   canViewSensors,
 }: {
   estate: components["schemas"]["EstateResponse"];
+  canEditDetails: boolean;
   onDeactivate: () => void;
   canViewSensors: boolean;
 }) {
   const canManageCouncil =
     estate.canInviteMembers || estate.canManageInvitationPermissions;
-  if (!(estate.owned || canManageCouncil || canViewSensors)) {
+  if (!(estate.owned || canEditDetails || canManageCouncil || canViewSensors)) {
     return null;
   }
   return (
@@ -42,7 +44,7 @@ function EstateActions({
           Device monitoring
         </Link>
       ) : null}
-      {estate.owned ? (
+      {canEditDetails ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
           params={{ estateId: estate.id }}
@@ -66,7 +68,7 @@ function EstateActions({
           params={{ estateId: estate.id }}
           to="/estates/$estateId/council"
         >
-          Council members
+          Estate members
         </Link>
       ) : null}
       {estate.owned && !estate.deactivatedAt ? (
@@ -95,9 +97,15 @@ export function EstateDetailsPage({
     estate.data?.owned ||
       (permission?.canViewManagement &&
         (permission.role === "COUNCIL" ||
-          permission.role === "OWNER" ||
           (permission.role === "MEMBER" &&
             access.data?.canAccessPlatformAdmin)))
+  );
+  const canEditDetails = Boolean(
+    estate.data?.owned ||
+      access.data?.estates.some(
+        (assignment) =>
+          assignment.estateId === estateId && assignment.canManageEstate
+      )
   );
   const { userId } = useEstateSession();
   const queryClient = useQueryClient();
@@ -149,6 +157,7 @@ export function EstateDetailsPage({
           <PageHeader
             actions={
               <EstateActions
+                canEditDetails={canEditDetails}
                 canViewSensors={canViewSensors}
                 estate={estate.data}
                 onDeactivate={openConfirmation}
@@ -195,9 +204,10 @@ export function EstateDetailsPage({
               </dd>
             </div>
           </dl>
-          {estate.data.owned ? null : (
+          {canEditDetails ? null : (
             <p className="mb-3 text-muted-foreground text-sm">
-              Shared with you. Only the owner can change this estate.
+              Shared with you. Only the owner or an assigned Manager can edit
+              estate details.
             </p>
           )}
           {confirming ? (

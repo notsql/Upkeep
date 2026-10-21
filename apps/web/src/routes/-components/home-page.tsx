@@ -66,13 +66,23 @@ export function HomePage() {
           description={
             access.data.canSubmitReport
               ? "Report an issue in your assigned estate."
-              : "You have no estate assigned. Awaiting assignment by your estate manager."
+              : "Create your first estate or accept an invitation to join one."
           }
           title="Report a fault"
         />
-        <Link className={buttonVariants()} to="/reports/new">
-          Report a fault
-        </Link>
+        <div className="page-actions">
+          <Link className={buttonVariants()} to="/reports/new">
+            Report a fault
+          </Link>
+          {access.data.canCreateEstate ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              to="/estates/new"
+            >
+              Create estate
+            </Link>
+          ) : null}
+        </div>
       </main>
     );
   }

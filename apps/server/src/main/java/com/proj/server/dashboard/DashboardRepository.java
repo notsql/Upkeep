@@ -1,8 +1,22 @@
 package com.proj.server.dashboard;
 
+import static com.proj.server.db.tables.Asset.ASSET;
+import static com.proj.server.db.tables.Assetassessment.ASSETASSESSMENT;
+import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
+import static org.jooq.impl.DSL.countLarge;
+import static org.jooq.impl.DSL.countLargeDistinct;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.lateral;
+import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.selectOne;
+import static org.jooq.impl.DSL.trueCondition;
+
 import java.util.List;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.jooq.Field;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -15,45 +29,92 @@ public class DashboardRepository {
 
     /** One statement gives counts from a single Postgres snapshot, including empty estates. */
     public SummaryCounts summary(String user) {
-        var rows = db.resultQuery("""
-                with accessible as (
-                    select e.*, e."ownerUserId"=? owned
-                    from "Estate" e
-                    where not exists (select 1 from "EstateUser" r where r."estateId"=e.id and r."userId"=? and r.role='RESIDENT')
-                      and (e."ownerUserId"=? or exists (
-                        select 1 from "EstateUser" u where u."estateId"=e.id and u."userId"=? and u.role in ('MEMBER', 'COUNCIL')
-                    ))
-                )
-                select e.id, e.name, e.code, e.owned, e."deactivatedAt" is null active,
-                    (select count(distinct m."userId") from "EstateUser" m
-                        join accessible o on o.id=m."estateId"
-                        where o.owned and o."deactivatedAt" is null and m."userId"<>? and m.role in ('MEMBER', 'COUNCIL')) members,
-                    count(a.id) total,
-                    count(a.id) filter (where c.condition='GOOD') good,
-                    count(a.id) filter (where c.condition='NEEDS_ATTENTION') attention,
-                    count(a.id) filter (where c.condition='FAULTY') faulty,
-                    count(a.id) filter (where c.condition is null) unassessed
-                from accessible e
-                left join "Asset" a on a."estateId"=e.id and e.owned
-                    and e."deactivatedAt" is null and a."deactivatedAt" is null
-                left join lateral (
-                    select condition from "AssetAssessment" where "assetId"=a.id
-                    order by "assessedOn" desc, "createdAt" desc, id limit 1
-                ) c on true
-                group by e.id, e.name, e.code, e.owned, e."deactivatedAt"
-                """, user, user, user, user, user).fetch();
+        var ownership = field(ESTATE.OWNERUSERID.eq(user)).as("owned");
+        var membership = selectOne()
+                .from(ESTATEUSER)
+                .where(ESTATEUSER.ESTATEID.eq(ESTATE.ID).and(ESTATEUSER.USERID.eq(user)));
+        var accessible = name("accessible")
+                .as(db.select(ESTATE.ID, ESTATE.NAME, ESTATE.CODE, ESTATE.DEACTIVATEDAT, ownership)
+                        .from(ESTATE)
+                        .whereNotExists(selectOne()
+                                .from(ESTATEUSER)
+                                .where(ESTATEUSER
+                                        .ESTATEID
+                                        .eq(ESTATE.ID)
+                                        .and(ESTATEUSER.USERID.eq(user))
+                                        .and(ESTATEUSER.ROLE.eq("RESIDENT"))))
+                        .and(ESTATE.OWNERUSERID
+                                .eq(user)
+                                .orExists(membership.and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL")))));
+        var estateId = accessible.field(ESTATE.ID);
+        var estateName = accessible.field(ESTATE.NAME);
+        var estateCode = accessible.field(ESTATE.CODE);
+        var deactivatedAt = accessible.field(ESTATE.DEACTIVATEDAT);
+        var owned = accessible.field(ownership);
+        var active = field(deactivatedAt.isNull()).as("active");
+        var ownedEstate = accessible.as("owned_estate");
+        Field<Long> members = select(countLargeDistinct(ESTATEUSER.USERID))
+                .from(ESTATEUSER)
+                .join(ownedEstate)
+                .on(ownedEstate.field(ESTATE.ID).eq(ESTATEUSER.ESTATEID))
+                .where(ownedEstate
+                        .field(ownership)
+                        .eq(true)
+                        .and(ownedEstate.field(ESTATE.DEACTIVATEDAT).isNull())
+                        .and(ESTATEUSER.USERID.ne(user))
+                        .and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL")))
+                .asField("members");
+        var latestAssessment = lateral(select(ASSETASSESSMENT.CONDITION)
+                        .from(ASSETASSESSMENT)
+                        .where(ASSETASSESSMENT.ASSETID.eq(ASSET.ID))
+                        .orderBy(
+                                ASSETASSESSMENT.ASSESSEDON.desc(), ASSETASSESSMENT.CREATEDAT.desc(), ASSETASSESSMENT.ID)
+                        .limit(1))
+                .as("latest_assessment");
+        var condition = latestAssessment.field(ASSETASSESSMENT.CONDITION);
+        var total = countLarge(ASSET.ID).as("total");
+        var good = countLarge(ASSET.ID).filterWhere(condition.eq("GOOD")).as("good");
+        var attention = countLarge(ASSET.ID)
+                .filterWhere(condition.eq("NEEDS_ATTENTION"))
+                .as("attention");
+        var faulty = countLarge(ASSET.ID).filterWhere(condition.eq("FAULTY")).as("faulty");
+        var unassessed = countLarge(ASSET.ID).filterWhere(condition.isNull()).as("unassessed");
+        var rows = db.with(accessible)
+                .select(
+                        estateId,
+                        estateName,
+                        estateCode,
+                        owned,
+                        active,
+                        members,
+                        total,
+                        good,
+                        attention,
+                        faulty,
+                        unassessed)
+                .from(accessible)
+                .leftJoin(ASSET)
+                .on(ASSET.ESTATEID
+                        .eq(estateId)
+                        .and(owned.eq(true))
+                        .and(deactivatedAt.isNull())
+                        .and(ASSET.DEACTIVATEDAT.isNull()))
+                .leftJoin(latestAssessment)
+                .on(trueCondition())
+                .groupBy(estateId, estateName, estateCode, owned, deactivatedAt)
+                .fetch();
         var estates = rows.map(row -> new EstateCounts(
-                row.get("id", UUID.class),
-                row.get("name", String.class),
-                row.get("code", String.class),
-                row.get("owned", Boolean.class),
-                row.get("active", Boolean.class),
-                row.get("total", Long.class),
-                row.get("good", Long.class),
-                row.get("attention", Long.class),
-                row.get("faulty", Long.class),
-                row.get("unassessed", Long.class)));
-        return new SummaryCounts(estates, rows.isEmpty() ? 0 : rows.getFirst().get("members", Long.class));
+                row.get(estateId),
+                row.get(estateName),
+                row.get(estateCode),
+                row.get(owned),
+                row.get(active),
+                row.get(total),
+                row.get(good),
+                row.get(attention),
+                row.get(faulty),
+                row.get(unassessed)));
+        return new SummaryCounts(estates, rows.isEmpty() ? 0 : rows.getFirst().get(members));
     }
 
     public record SummaryCounts(List<EstateCounts> estates, long councilMemberCount) {}

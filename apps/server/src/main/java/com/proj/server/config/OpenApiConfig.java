@@ -37,30 +37,8 @@ public class OpenApiConfig {
     }
 
     @Bean
-    OpenApiCustomizer nullableResidentEstate() {
+    OpenApiCustomizer nullableSensorEvidence() {
         return openApi -> {
-            var context = openApi.getComponents().getSchemas().get("ResidentContextResponse");
-            if (context != null) {
-                // Swagger's nullable annotation places `type: null` beside a
-                // $ref in OpenAPI 3.1, which generators read as a plain ref.
-                context.getProperties()
-                        .put(
-                                "estate",
-                                new Schema<>()
-                                        .oneOf(List.of(
-                                                new Schema<>().$ref("#/components/schemas/EstateLabel"),
-                                                new Schema<>().types(Set.of("null")))));
-            }
-            var access = openApi.getComponents().getSchemas().get("AppAccessResponse");
-            if (access != null) {
-                access.getProperties()
-                        .put(
-                                "residentEstate",
-                                new Schema<>()
-                                        .oneOf(List.of(
-                                                new Schema<>().$ref("#/components/schemas/EstateLabel"),
-                                                new Schema<>().types(Set.of("null")))));
-            }
             var sensor = openApi.getComponents().getSchemas().get("SensorMonitoringResponse");
             if (sensor != null) {
                 sensor.getProperties()

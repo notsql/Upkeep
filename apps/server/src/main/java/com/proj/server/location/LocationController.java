@@ -59,7 +59,7 @@ public class LocationController {
 
     @PostMapping
     @ApiResponse(responseCode = "201", description = "Location created")
-    @Operation(operationId = "createLocation")
+    @Operation(operationId = "createLocation", summary = "Create a location as the estate owner or an assigned Manager")
     public ResponseEntity<LocationResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID estateId,

@@ -46,7 +46,14 @@ the API client, never by hand.
 
 ## Roles
 
-Spring's `GET /access/context` drives navigation, Home and protected estate routes. WorkOS remains the authority for platform admin access; estate permissions come from current `EstateUser` rows and estate ownership. A JWT resident claim neither grants reporting access nor removes management access in another estate. The My reports navigation destination requires a current Resident membership; direct access to owned historical reports remains available after membership deletion. See [resident-reports.md](resident-reports.md) and [API access](../api/access.md).
+Spring's `GET /access/context` drives navigation, Home and protected estate routes. WorkOS supplies identity; estate permissions come from current `EstateUser` rows and estate ownership. Provider admin claims grant no platform access. A JWT resident claim neither grants reporting access nor removes management access in another estate. The My reports navigation destination requires a current Resident membership; direct access to owned historical reports remains available after membership deletion. See [resident-reports.md](resident-reports.md) and [API access](../api/access.md).
+
+Every authenticated account has `canCreateEstate=true`. The `_auth` guard permits
+`/estates`, `/estates/`, `/estates/new` and `/estates/new/` before the workspace
+gate, after authentication and access resolution. Creation checks that capability
+for both slash variants. Specific estate routes retain their own capability checks.
+Creation refreshes client access before navigating; the destination guard resolves
+current server access, so a first-time creator can enter their new estate immediately.
 
 ## Council invitation sign-in
 
@@ -63,3 +70,18 @@ See [design-system.md](design-system.md).
 Public home has one Create account action in its content; the header no longer
 repeats it as Register. Header and home both use Sign in for authentication.
 The existing signup/sign-in endpoints and redirects remain unchanged.
+
+
+Invitation recipients return to /invitations with AuthKit PKCE/state preserved.
+The _auth guard requires identity for that page without workspace capability,
+so unassigned, Resident-only and Crew-only accounts can accept offers.
+
+
+## Fault report responder entry
+
+`/estates/$estateId/reports` and its detail route require the target estate's
+`canViewFaultReports` before child loading. This allows Crew without general
+management access and denies Council/provider-role bypass. Home redirects an
+account with report access but no management estate into its first assigned
+report estate. `canRelocateFaultReports` controls correction availability; the
+server independently rechecks membership/activity. See [estate-reports.md](estate-reports.md).

@@ -78,10 +78,33 @@ class LocationControllerTests {
     void setup() {
         when(estates.findAccessible(estateId, "owner")).thenReturn(Optional.of(estate(null)));
         when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
+        when(estates.isManager(estateId, "owner")).thenReturn(true);
+        when(estates.findAccessibleForUpdate(estateId, "owner")).thenReturn(Optional.of(estate(null)));
         when(repository.find(blockId, estateId)).thenReturn(Optional.of(block));
         when(repository.find(otherBlockId, estateId)).thenReturn(Optional.of(otherBlock));
         when(repository.find(levelId, estateId)).thenReturn(Optional.of(level));
         when(repository.find(areaId, estateId)).thenReturn(Optional.of(area));
+    }
+
+    @Test
+    void assignedManagerCreatesALocationWithoutOwnerModificationRights() throws Exception {
+        when(estates.isManager(estateId, "manager")).thenReturn(true);
+        when(estates.findAccessible(estateId, "manager")).thenReturn(Optional.of(estate(null)));
+        when(estates.findAccessibleForUpdate(estateId, "manager")).thenReturn(Optional.of(estate(null)));
+        when(repository.create(eq(estateId), any(), isNull())).thenReturn(block);
+        mvc.perform(post(base)
+                        .with(jwt().jwt(t -> t.subject("manager")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(create("BLOCK", null, "New block", null)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.type").value("BLOCK"));
+        mvc.perform(patch(base + "/" + blockId)
+                        .with(jwt().jwt(t -> t.subject("manager")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(update(null, "Renamed", null)))
+                .andExpect(status().isNotFound());
+        mvc.perform(post(base + "/" + blockId + "/deactivate").with(jwt().jwt(t -> t.subject("manager"))))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -254,6 +277,8 @@ class LocationControllerTests {
     @Test
     void rejectsChangesToAnInactiveEstate() throws Exception {
         when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(now)));
+        when(estates.findAccessible(estateId, "owner")).thenReturn(Optional.of(estate(now)));
+        when(estates.findAccessibleForUpdate(estateId, "owner")).thenReturn(Optional.of(estate(now)));
         mvc.perform(asOwner(post(base), create("BLOCK", null, "Blk 1", null))).andExpect(status().isConflict());
         mvc.perform(asOwner(patch(base + "/" + blockId), update(null, "Blk 1", null)))
                 .andExpect(status().isConflict());

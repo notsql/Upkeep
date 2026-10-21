@@ -1,3 +1,4 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import {
   Dialog,
@@ -10,6 +11,7 @@ import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useCallback, useId, useMemo, useState } from "react";
+import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 import {
@@ -19,6 +21,7 @@ import {
   type LocationNode,
   type LocationType,
   locationsQueryKey,
+  useCreateLocation,
   useLocations,
 } from "@/lib/locations";
 import type { AddFloorsResult } from "@/routes/_auth/estates/$estateId/-components/add-floors-form";
@@ -39,6 +42,7 @@ const EMPTY_EXPANSION: string[] = [];
 
 export function LocationsSection({ estateId }: { estateId: string }) {
   const estate = useEstate(estateId);
+  const access = useAppAccess();
   const locations = useLocations(estateId);
   const { userId } = useEstateSession();
   const queryClient = useQueryClient();
@@ -47,8 +51,14 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   const [panel, setPanel] = useState<Panel>();
   const id = useId();
 
-  // Members can browse, but only the owner can change active locations.
-  const canEdit = Boolean(estate.data?.owned) && !estate.data?.deactivatedAt;
+  const active = Boolean(estate.data) && !estate.data?.deactivatedAt;
+  const manager = access.data?.estates.some(
+    (assignment) =>
+      assignment.estateId === estateId && assignment.canManageEstate
+  );
+  const canCreate = active && Boolean(estate.data?.owned || manager);
+  const canEdit = active && Boolean(estate.data?.owned);
+  const canOpenPanel = panel?.kind === "create" ? canCreate : canEdit;
   const items = locations.data ?? EMPTY;
   const tree = useMemo(() => buildLocationTree(items), [items]);
   const searching = query.trim() !== "";
@@ -99,26 +109,18 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     });
   }, [queryClient, userId, estateId]);
 
+  const { mutateAsync: createLocation } = useCreateLocation(estateId, saved);
+
   const create = useCallback(
     async (type: LocationType, values: LocationFormValues) => {
-      const { error, response } = await api.POST(
-        "/estates/{estateId}/locations",
-        {
-          params: { path: { estateId } },
-          body: {
-            type,
-            name: values.name,
-            ...(values.parentId ? { parentId: values.parentId } : {}),
-            ...(type === "LEVEL" ? { sortOrder: values.sortOrder } : {}),
-          },
-        }
-      );
-      if (error) {
-        throw estateError(error, response.status);
-      }
-      await saved();
+      await createLocation({
+        type,
+        name: values.name,
+        ...(values.parentId ? { parentId: values.parentId } : {}),
+        ...(type === "LEVEL" ? { sortOrder: values.sortOrder } : {}),
+      });
     },
-    [estateId, saved]
+    [createLocation]
   );
 
   const update = useCallback(
@@ -185,7 +187,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   );
 
   const panelView =
-    panel && canEdit ? (
+    panel && canOpenPanel ? (
       <PanelView
         items={items}
         onAddFloors={addFloors}
@@ -216,7 +218,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   }, [panel, id]);
 
   return (
-    <Dialog onOpenChange={changeOpen} open={Boolean(panel && canEdit)}>
+    <Dialog onOpenChange={changeOpen} open={Boolean(panel && canOpenPanel)}>
       <section
         aria-labelledby={`${id}-heading`}
         className="section-surface mt-8 scroll-mt-24"
@@ -226,7 +228,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
           <h2 className="font-semibold text-xl" id={`${id}-heading`}>
             Locations
           </h2>
-          {canEdit ? (
+          {canCreate ? (
             <Button id={`${id}-add`} onClick={addBlock} variant="outline">
               Add block
             </Button>
@@ -248,12 +250,13 @@ export function LocationsSection({ estateId }: { estateId: string }) {
           </p>
         ) : null}
         {locations.error ? (
-          <p className="mt-4 text-destructive" role="alert">
-            {locations.error.message}
-          </p>
+          <Alert className="mt-4" variant="destructive">
+            <AlertDescription>{locations.error.message}</AlertDescription>
+          </Alert>
         ) : null}
         {locations.data ? (
           <LocationTree
+            canCreate={canCreate}
             canEdit={canEdit}
             expandedIds={expandedIds ?? EMPTY_EXPANSION}
             onPanel={setPanel}

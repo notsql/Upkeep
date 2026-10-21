@@ -24,7 +24,7 @@ and uses the same Sign in wording as the home action.
 Public Home uses `useHealth()` from `lib/health.ts`: key `["health"]`,
 `GET /health`, real `ok`/`database` availability with loading/error feedback.
 Signed-in Home mounts the portfolio dashboard described in [dashboard.md](dashboard.md).
-Home awaits Spring access in `beforeLoad`. Resident-only accounts redirect to `/reports/new`; unassigned accounts see an awaiting-assignment explanation. Mixed accounts retain their management dashboard. Direct `HomePage` rendering waits for access before mounting management queries. Navigation uses target-estate capabilities and shows My reports only with a current Resident membership.
+Home awaits Spring access in `beforeLoad`. Resident-only accounts redirect to `/reports/new`; unassigned accounts can create their first estate or accept an invitation. Their Home state offers Create estate and Report a fault without mounting dashboard queries. Mixed accounts retain their management dashboard. Direct `HomePage` rendering waits for access before mounting management queries. Navigation uses target-estate capabilities and shows My reports only with a current Resident membership.
 It uses the authenticated summary endpoint and a separate compact invitation
 query. Estate browsing, creation and invitation acceptance remain on Estates.
 Public auth remains Sign in/Create account.
@@ -39,11 +39,11 @@ existing auth controls. Authenticated workspace navigation lives in AppNavigatio
 
 `components/app-navigation.tsx` subscribes to the router pathname rather than
 the whole location and uses the session-gated, cached `useEstate(estateId)` query.
-The access projection enables Home and Estates for management-capable accounts and Admin users for platform admins. Resident-only accounts see Report a fault, My reports and Sign out; unassigned accounts see Report a fault and Sign out. Mixed accounts see reporting and management links together. My reports is hidden without a current Resident membership, including in mobile More; existing owned history remains readable by direct URL after membership deletion. Account is reached through Settings in the profile menu.
+Estates is available to every authenticated account, including Residents, Crew and unassigned users, so all can reach Create estate. `canEnterWorkspace` still controls the workspace Home. Resident-only accounts also see Report a fault, My reports, Invitations and Sign out; unassigned accounts see those links except My reports. Mixed accounts see reporting and management links together. My reports is hidden without a current Resident membership, including in mobile More; existing owned history remains readable by direct URL after membership deletion. Platform admin capability remains false. Account is reached through Settings in the profile menu.
 
 Target-estate capabilities control Overview, Assets and Council. The estate detail query and switcher mount only after the projection grants management access to that estate. Assets requires `canViewAssets`; Council requires `canInviteMembers || canManageInvitationPermissions`. `/estates/new` has no estate context.
 
-Desktop navigation is a 240px sidebar at widths >=768px. Management-capable accounts get mobile Home / Estates / More, with reporting links in More; resident-only/unassigned accounts get the reporting links directly. EstateNavigation shows the authorized estate switcher and local destinations. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
+Desktop navigation is a 240px sidebar at widths >=768px. Management-capable accounts get mobile Home / Estates / More, with reporting links in More; resident-only/unassigned accounts get Estates and reporting/invitation/sign-out links directly. EstateNavigation shows the authorized estate switcher and local destinations. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
 has no estate selector. Context comes from the route, named breadcrumbs, headings
 and desktop sidebar. The obsolete header `EstateSwitcher` and its remembered-estate
 storage logic remain removed. Navigation links use exact router matching
@@ -84,6 +84,15 @@ See [design-system.md](design-system.md) for exact tokens, layouts, shared heade
 and form patterns, mobile safe-area spacing and manual verification checklist.
 
 ## Conventions used by every feature
+
+Manager/Crew report navigation is documented in [estate-reports.md](estate-reports.md).
+Estate report routes use `canViewFaultReports` independently of management
+capabilities. Crew-only accounts land on assigned reports and switch report
+estates by name through access context; management estate queries are not mounted
+for their report navigation. Report pages offer the report estate selector to
+Managers as well; other management pages retain the existing management switcher.
+Respond to faults links mixed-role accounts into assigned report estates from
+outside a report-capable estate.
 
 - **API client:** `lib/api.ts` exports `api` (`createApiClient` from
   `@proj/api`, base URL `VITE_API_URL`). The bearer token is resolved per

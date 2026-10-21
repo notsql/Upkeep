@@ -1,3 +1,8 @@
+> The legacy WorkOS/global-grant screen is no longer reachable through current
+> access capabilities. Managers use the Estate members page for their selected
+> estate. Its backing global APIs are denied; see [council-invitations.md](council-invitations.md).
+> The source described below remains for compatibility.
+
 # Admin: user roles and estate access (frontend)
 
 Paths are relative to `apps/web/src/`.
