@@ -45,7 +45,7 @@ public class DashboardRepository {
                                         .and(ESTATEUSER.ROLE.eq("RESIDENT"))))
                         .and(ESTATE.OWNERUSERID
                                 .eq(user)
-                                .orExists(membership.and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL")))));
+                                .orExists(membership.and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "MANAGER")))));
         var estateId = accessible.field(ESTATE.ID);
         var estateName = accessible.field(ESTATE.NAME);
         var estateCode = accessible.field(ESTATE.CODE);

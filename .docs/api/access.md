@@ -2,8 +2,10 @@
 
 Source of truth: packages/api/openapi.json. JWTs supply identity; current Neon
 membership/ownership supplies authority. WorkOS admin claims grant no application
-platform or general estate powers. Sensor management retains its feature-specific
-admin-plus-membership checks; see [flatlined-sensors.md](flatlined-sensors.md).
+platform or general estate powers. Sensor management permits owners and current
+same-estate MANAGER members without a provider-admin claim, while retaining its
+legacy admin-plus-MEMBER/COUNCIL compatibility checks; see
+[flatlined-sensors.md](flatlined-sensors.md).
 
 GET `/access/context` takes no body and returns 200 AppAccessResponse for an
 authenticated subject. Missing identity returns 401; database failure returns 503

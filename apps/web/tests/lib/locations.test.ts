@@ -119,6 +119,21 @@ describe("floors", () => {
     }
   });
 
+  it.each(["L999999999999999999", "B999999999999999999", "9".repeat(400)])(
+    "rejects floor numbers that cannot be represented accurately: %s",
+    (text) => {
+      expect(parseFloor(text)).toBeUndefined();
+    }
+  );
+
+  it.each([
+    [1, 51],
+    [-26, 25],
+    [-51, -1],
+  ])("rejects oversized floor ranges %i to %i", (lowest, highest) => {
+    expect(floorRange(lowest, highest)).toBeUndefined();
+  });
+
   it("names floors L1, L2 above ground and B1, B2 below", () => {
     expect(floorName(1)).toBe("L1");
     expect(floorName(25)).toBe("L25");

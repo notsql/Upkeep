@@ -152,6 +152,7 @@ scoped sensor checks; do not broaden existing asset permissions or redesign role
 | Current evidence | Read sensors/settings | Edit policy/create pause |
 | --- | --- | --- |
 | Estate owner, without conflicting same-estate RESIDENT membership | Yes | Yes |
+| Same-estate MANAGER membership, independently of JWT admin authority | Yes | Yes |
 | JWT admin authority plus same-estate MEMBER or COUNCIL management assignment | Yes | Yes |
 | Same-estate COUNCIL without admin authority | Yes | No |
 | MEMBER without admin authority | No | No |
@@ -163,7 +164,7 @@ estate. Residency elsewhere does not remove legitimate access here. Verify
 current database membership on every request, rather than trusting cached UI
 capabilities or a user-provided estate/device ID.
 
-The merged AccessService treats MEMBER/COUNCIL as management readers but
+The merged AccessService treats MANAGER/MEMBER/COUNCIL as management readers but
 keeps asset mutations owner-only. Its canManageEstate/canViewAssets fields
 therefore cannot stand in for the sensor-specific mapping. Existing platform
 admin status alone does not authorize an estate. Derive sensor canManage on

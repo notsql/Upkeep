@@ -53,7 +53,7 @@ function checkRange(
     };
   }
   const floors = floorRange(lowest, highest);
-  if (floors.length > MAX_FLOORS) {
+  if (!floors) {
     return {
       ok: false,
       message: `Add at most ${MAX_FLOORS} floors at a time.`,

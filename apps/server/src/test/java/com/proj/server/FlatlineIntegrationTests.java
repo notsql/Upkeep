@@ -263,6 +263,45 @@ class FlatlineIntegrationTests {
                 .andExpect(status().is(write ? 201 : 403));
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void assignedManagersReadAndManageSensorsRegardlessOfProviderAdminClaim(boolean admin) throws Exception {
+        member("assigned-manager", "MANAGER");
+        mvc.perform(as(get(base + "/flatline-policies"), "assigned-manager", admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canManage").value(true));
+        mvc.perform(as(policyBody("{\"durationMinutes\":2,\"tolerance\":0}"), "assigned-manager", admin))
+                .andExpect(status().isOk());
+        mvc.perform(as(get(base + "/flatlined-sensors?view=ALL"), "assigned-manager", admin))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canManage").value(true));
+        mvc.perform(as(
+                        post(base + "/devices/" + deviceId + "/flatline-pauses/TEMPERATURE")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"durationMinutes\":1}"),
+                        "assigned-manager",
+                        admin))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void managerDemotionAndRemovalImmediatelyRevokeSensorWrites() throws Exception {
+        member("assigned-manager", "MANAGER");
+        mvc.perform(as(policyBody("{\"durationMinutes\":2,\"tolerance\":0}"), "assigned-manager", false))
+                .andExpect(status().isOk());
+        db.execute(
+                "update \"EstateUser\" set role='COUNCIL' where \"estateId\"=? and \"userId\"='assigned-manager'",
+                estateId);
+        mvc.perform(as(get(base + "/flatline-policies"), "assigned-manager", false))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.canManage").value(false));
+        mvc.perform(as(policyBody("{\"durationMinutes\":3,\"tolerance\":0}"), "assigned-manager", false))
+                .andExpect(status().isForbidden());
+        db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='assigned-manager'", estateId);
+        mvc.perform(as(get(base + "/flatline-policies"), "assigned-manager", false))
+                .andExpect(status().isNotFound());
+    }
+
     @Test
     void residentMembershipOverridesConflictingOwnershipAndAdminAuthority() throws Exception {
         member("owner", "RESIDENT");

@@ -133,6 +133,7 @@ describe("estate details page", () => {
   });
 
   it.each([
+    ["MANAGER", false, true],
     ["COUNCIL", false, true],
     ["MEMBER", true, true],
     ["MEMBER", false, false],

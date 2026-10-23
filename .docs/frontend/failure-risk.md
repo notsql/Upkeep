@@ -42,8 +42,10 @@ Query keys: `estateFailureRiskQueryKey(userId, estateId)` =
 | `useEstateFailureRisk(estateId)` | `GET /estates/{estateId}/failure-risk` | query |
 | `useAssetFailureRisk(estateId, assetId, enabled = true)` | `GET /estates/{estateId}/assets/{assetId}/failure-risk` | query (used by `AssetForecastCard`) |
 
-Invalidated by `useRecordAssetEvent` (`lib/asset-events.ts`, see
-[assets.md](assets.md)). The page also reads `useEstate(estateId)` (key
+Invalidated by `useRecordAssetEvent` (`lib/asset-events.ts`) and
+`useRecordAssessment` (`lib/assessments.ts`, see [assets.md](assets.md)). Recording
+an assessment refreshes both the asset card and estate list so their Condition
+flags reflect the latest assessment without a page reload. The page also reads `useEstate(estateId)` (key
 `["estates", userId, "details", estateId]`) for the breadcrumb. All queries:
 `enabled: ready`, `retry: false`, errors via `estateError`.
 

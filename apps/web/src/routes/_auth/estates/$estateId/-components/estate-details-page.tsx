@@ -96,7 +96,8 @@ export function EstateDetailsPage({
   const canViewSensors = Boolean(
     estate.data?.owned ||
       (permission?.canViewManagement &&
-        (permission.role === "COUNCIL" ||
+        (permission.role === "MANAGER" ||
+          permission.role === "COUNCIL" ||
           (permission.role === "MEMBER" &&
             access.data?.canAccessPlatformAdmin)))
   );

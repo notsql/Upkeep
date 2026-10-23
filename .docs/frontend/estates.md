@@ -67,8 +67,9 @@ authority on save, including after membership removal/demotion.
 
 ## Council invitations
 
-Estate details also offers **Device monitoring** to owners, Council and assigned MEMBER
-managers with platform-admin authority, using GET /access/context. The target is
+Estate details also offers **Device monitoring** to owners and current MANAGER or
+COUNCIL assignments, using GET /access/context. A non-owner Manager needs neither
+platform-admin authority nor asset visibility. The target is
 `/estates/$estateId/sensors`; sensor-specific authorization is enforced by the API.
 See [flatlined-sensors.md](flatlined-sensors.md) for screen components and data hooks.
 

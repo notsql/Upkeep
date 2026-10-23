@@ -24,6 +24,10 @@ Asset summaries explicitly cover active estates the user owns. When
 `activeOwnedEstateCount` is zero, asset and member cards display an em dash with a scope
 explanation and the condition/attention sections are omitted.
 
+Assigned MANAGER memberships contribute to Accessible estates even without
+ownership, matching the estate directory. They do not add another owner's assets
+to the condition, attention or asset-count cards.
+
 `routes/-components/asset-condition-distribution.tsx` draws a proportional CSS
 figure inside the shadcn surface. Its green/amber/red/neutral segments represent
 Good / Needs attention / Faulty / Not assessed. A visible legend and accessible

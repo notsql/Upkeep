@@ -214,7 +214,9 @@ public class FlatlineService {
     }
 
     private static boolean canManage(FlatlineRepository.EstateScope scope, boolean admin) {
-        return scope.owner() || (admin && ("MEMBER".equals(scope.role()) || "COUNCIL".equals(scope.role())));
+        return scope.owner()
+                || "MANAGER".equals(scope.role())
+                || (admin && ("MEMBER".equals(scope.role()) || "COUNCIL".equals(scope.role())));
     }
 
     private static FlatlinePolicyResponse unconfigured(DeviceMetric metric) {
