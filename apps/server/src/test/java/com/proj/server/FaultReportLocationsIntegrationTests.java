@@ -21,6 +21,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.jayway.jsonpath.JsonPath;
 import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.resident.ResidentReportException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
@@ -232,6 +234,109 @@ class FaultReportLocationsIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates[0].canViewFaultReports").value(false))
                 .andExpect(jsonPath("$.estates[0].canRelocateFaultReports").value(false));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"NONE", "MEMBER", "COUNCIL", "CREW", "MANAGER"})
+    void migrationRestoresExistingOwnersManagerMembershipAndReportAccess(String previousRole) throws Exception {
+        var estate = estate();
+        db.execute("update \"Estate\" set \"ownerUserId\"='staff' where id=?", estate);
+        if (!previousRole.equals("NONE")) member(estate, "staff", previousRole);
+        var previousMembership = db.fetchOne(
+                "select \"createdAt\", \"canInviteMembers\" from \"EstateUser\" where \"estateId\"=? and \"userId\"='staff'",
+                estate);
+        var other = estate();
+        member(other, "staff", "COUNCIL");
+        var otherMembers = db.fetch("select * from \"EstateUser\" where \"estateId\"=? order by \"userId\"", other)
+                .intoMaps();
+        var block = location(estate, "BLOCK", null, "Block A");
+        var level = location(estate, "LEVEL", block, "Level 1");
+        var report = report(estate, level, "resident");
+        var image = image(report);
+        var originalReport = reportRow(report);
+        var originalImages = imageRows(report);
+
+        applyOwnerMembershipMigrations();
+
+        assertEquals(
+                "MANAGER",
+                db.fetchValue("select role from \"EstateUser\" where \"estateId\"=? and \"userId\"='staff'", estate));
+        if (previousMembership != null) {
+            assertEquals(
+                    previousMembership,
+                    db.fetchOne(
+                            "select \"createdAt\", \"canInviteMembers\" from \"EstateUser\" where \"estateId\"=? and \"userId\"='staff'",
+                            estate));
+        }
+        assertEquals(
+                otherMembers,
+                db.fetch("select * from \"EstateUser\" where \"estateId\"=? order by \"userId\"", other)
+                        .intoMaps());
+        assertEquals(originalReport, reportRow(report));
+        assertEquals(originalImages, imageRows(report));
+        mvc.perform(asStaff(get("/access/context")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estates[?(@.estateId == '" + estate + "')].canViewFaultReports", hasItem(true)))
+                .andExpect(jsonPath(
+                        "$.estates[?(@.estateId == '" + estate + "')].canRelocateFaultReports", hasItem(true)));
+        mvc.perform(asStaff(get(reports(estate))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(report.toString()));
+        mvc.perform(asStaff(get(detail(estate, report)))).andExpect(status().isOk());
+        when(imageStore.read("private/" + image)).thenReturn(new byte[] {1, 2, 3});
+        mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image))).andExpect(status().isOk());
+        mvc.perform(relocate(estate, report, level, level)).andExpect(status().isOk());
+        db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
+        mvc.perform(asStaff(get(reports(estate)))).andExpect(status().isOk());
+        mvc.perform(asStaff(get("/access/context")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estates[?(@.estateId == '" + estate + "')].canViewFaultReports", hasItem(true)))
+                .andExpect(jsonPath(
+                        "$.estates[?(@.estateId == '" + estate + "')].canRelocateFaultReports", hasItem(false)));
+        mvc.perform(relocate(estate, report, level, level)).andExpect(status().isConflict());
+
+        var repaired = db.fetch("select * from \"EstateUser\" order by \"estateId\", \"userId\"")
+                .intoMaps();
+        applyOwnerMembershipMigrations();
+        assertEquals(
+                repaired,
+                db.fetch("select * from \"EstateUser\" order by \"estateId\", \"userId\"")
+                        .intoMaps());
+    }
+
+    @Test
+    void ownerMembershipMigrationPreservesConflictingResidentMembershipAndItsDenial() throws Exception {
+        var estate = estate();
+        db.execute("update \"Estate\" set \"ownerUserId\"='staff' where id=?", estate);
+        member(estate, "staff", "RESIDENT");
+
+        applyOwnerMembershipMigrations();
+
+        assertEquals(
+                "RESIDENT",
+                db.fetchValue("select role from \"EstateUser\" where \"estateId\"=? and \"userId\"='staff'", estate));
+        mvc.perform(asStaff(get(reports(estate)))).andExpect(status().isForbidden());
+        mvc.perform(asStaff(get("/access/context")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estates[0].canViewFaultReports").value(false));
+    }
+
+    private void applyOwnerMembershipMigrations() throws Exception {
+        for (var directory = Path.of("").toAbsolutePath(); directory != null; directory = directory.getParent()) {
+            var migrations = directory.resolve("packages/db/prisma/migrations");
+            if (!Files.isDirectory(migrations)) continue;
+            try (var folders = Files.list(migrations)) {
+                for (var folder : folders.filter(Files::isDirectory)
+                        .filter(path ->
+                                path.getFileName().toString().compareTo("20261022054000_create_work_orders") > 0)
+                        .sorted()
+                        .toList()) {
+                    db.execute(Files.readString(folder.resolve("migration.sql")));
+                }
+            }
+            return;
+        }
+        throw new IllegalStateException("Could not find Prisma migrations");
     }
 
     @Test

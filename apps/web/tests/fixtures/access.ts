@@ -21,6 +21,8 @@ export const residentEstateAccess = {
   canManageInvitationPermissions: false,
   canViewFaultReports: false,
   canRelocateFaultReports: false,
+  canViewWorkOrders: false,
+  canCreateWorkOrders: false,
 };
 
 export const councilEstateAccess = {
@@ -43,6 +45,8 @@ export const ownerEstateAccess = {
   canManageInvitationPermissions: true,
   canViewFaultReports: true,
   canRelocateFaultReports: true,
+  canViewWorkOrders: true,
+  canCreateWorkOrders: true,
 };
 
 export const crewEstateAccess = {
@@ -50,6 +54,7 @@ export const crewEstateAccess = {
   estateId: "oak",
   estateName: "Oak Park",
   role: "CREW",
+  canViewWorkOrders: true,
   canViewFaultReports: true,
   canRelocateFaultReports: true,
 };

@@ -1,6 +1,13 @@
 # Estate roles, invitations and ownership
 
 **Status:** invitation/member/ownership implementation verified on 2026-10-18.
+
+2026-10-22 owner compatibility fix: apply migration
+`20261022135000_backfill_estate_owner_memberships` to align existing owners with
+new-estate MANAGER membership. Missing owner memberships are added and legacy
+nonresident owner roles are normalized; Resident conflicts and unrelated
+memberships remain unchanged. Report permissions continue to use current
+MANAGER/CREW membership.
 Account migration is deferred; staff report-location editing and broader
 asset/report operations are separate features.
 **Owner:** unassigned

@@ -85,7 +85,9 @@ public class AccessService {
                     active && manager,
                     manager,
                     responder,
-                    responder && active);
+                    responder && active,
+                    !resident && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
+                    manager && active);
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)

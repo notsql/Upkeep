@@ -89,6 +89,9 @@ public class SecurityConfig {
                                 "/estates/{estateId}",
                                 "/estates/{estateId}/locations",
                                 "/estates/{estateId}/reports",
+                                "/estates/{estateId}/work-orders",
+                                "/estates/{estateId}/work-orders/{workOrderId}",
+                                "/estates/{estateId}/work-order-assets",
                                 "/estates/{estateId}/reports/{reportId}",
                                 "/estates/{estateId}/reports/{reportId}/images/{imageId}",
                                 "/estates/{estateId}/assets",
@@ -110,6 +113,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
+                                "/estates/{estateId}/work-orders",
                                 "/council-invitations/{invitationId}/accept",
                                 "/estates/{estateId}/ownership-transfer",
                                 "/estates/{estateId}/deactivate",

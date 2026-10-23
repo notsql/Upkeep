@@ -18,7 +18,6 @@ import {
   workspaceAccess,
 } from "@tests/fixtures/access";
 import {
-  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -114,6 +113,7 @@ async function setup(
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
+    "/estates/$estateId/work-orders",
     "/reports/new",
     "/reports",
   ].map((path) =>
@@ -161,6 +161,95 @@ beforeEach(() => {
   auth.role = "user";
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   vi.mocked(api.GET).mockImplementation(getEstates);
+});
+
+it("lets Crew switch work-order estates without management or owner-only requests", async () => {
+  accessOverride = {
+    ...unassignedAccess,
+    canEnterWorkspace: true,
+    estates: [
+      crewEstateAccess,
+      { ...crewEstateAccess, estateId: "pine", estateName: "Pine Estate" },
+    ],
+  };
+  const { router } = await setup("/estates/oak/work-orders");
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  await desktop.findByRole("link", { name: "Work orders" });
+  fireEvent.click(
+    await desktop.findByRole("button", { name: "Switch estate: Oak Park" })
+  );
+  expect(screen.queryByText("Work-order estate")).toBeNull();
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Pine Estate" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/estates/pine/work-orders")
+  );
+  expect(
+    vi.mocked(api.GET).mock.calls.every((call) => call[0] === "/access/context")
+  ).toBe(true);
+});
+
+it.each(["/", "/estates"])(
+  "asks which work-order estate to open from %s",
+  async (path) => {
+    accessOverride = {
+      ...workspaceAccess,
+      estates: [
+        { ...ownerEstateAccess, estateId: "maple", estateName: "Maple Estate" },
+        { ...ownerEstateAccess, estateId: "pine", estateName: "Pine Estate" },
+      ],
+    };
+    const { router } = await setup(path);
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    fireEvent.click(
+      await desktop.findByRole("button", { name: "Work orders" })
+    );
+    const chooser = within(
+      await screen.findByRole("dialog", {
+        name: "Choose an estate for work orders",
+      })
+    );
+    expect(router.state.location.pathname).toBe(path);
+    fireEvent.click(chooser.getByRole("link", { name: "Pine Estate" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/estates/pine/work-orders")
+    );
+  }
+);
+
+it("lets Crew choose a work-order estate from mobile navigation", async () => {
+  accessOverride = {
+    ...unassignedAccess,
+    canEnterWorkspace: true,
+    estates: [
+      crewEstateAccess,
+      { ...crewEstateAccess, estateId: "pine", estateName: "Pine Estate" },
+      councilEstateAccess,
+    ],
+  };
+  const { router } = await setup("/");
+  const mobile = within(
+    screen.getByRole("navigation", { name: "Mobile navigation" })
+  );
+  fireEvent.click(
+    await mobile.findByRole("button", { name: "More navigation" })
+  );
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Work orders" }));
+  const chooser = within(
+    await screen.findByRole("dialog", {
+      name: "Choose an estate for work orders",
+    })
+  );
+  fireEvent.click(chooser.getByRole("link", { name: "Pine Estate" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/estates/pine/work-orders")
+  );
+  expect(
+    vi.mocked(api.GET).mock.calls.every((call) => call[0] === "/access/context")
+  ).toBe(true);
 });
 
 it("shows resident navigation from database access while WorkOS has an ordinary user role", async () => {
@@ -257,9 +346,11 @@ it("lets Crew switch between assigned report estates without requesting manageme
   const local = within(
     await screen.findByRole("navigation", { name: "Estate navigation" })
   );
-  await chooseOption(
-    local.getByRole("combobox", { name: "Report estate" }),
-    "Maple Estate"
+  fireEvent.click(
+    await local.findByRole("button", { name: "Switch estate: Oak Park" })
+  );
+  fireEvent.click(
+    await screen.findByRole("menuitem", { name: "Maple Estate" })
   );
   await waitFor(() =>
     expect(router.state.location.pathname).toBe("/estates/maple/reports")
@@ -282,8 +373,18 @@ it("offers mixed Council/Crew accounts an entry to their responder estate from a
   const desktop = within(
     screen.getByRole("navigation", { name: "Desktop navigation" })
   );
-  const link = await desktop.findByRole("link", { name: "Respond to faults" });
-  expect(link.getAttribute("href")).toBe("/estates/maple/reports");
+  fireEvent.click(
+    await desktop.findByRole("button", { name: "Respond to faults" })
+  );
+  const chooser = within(
+    await screen.findByRole("dialog", {
+      name: "Choose an estate for fault reports",
+    })
+  );
+  expect(chooser.getAllByRole("link")).toHaveLength(1);
+  expect(
+    chooser.getByRole("link", { name: "Oak Park" }).getAttribute("href")
+  ).toBe("/estates/maple/reports");
 });
 
 it("lets a manager switch from their report estate to another assigned Crew report estate", async () => {
@@ -298,10 +399,10 @@ it("lets a manager switch from their report estate to another assigned Crew repo
   const local = within(
     await screen.findByRole("navigation", { name: "Estate navigation" })
   );
-  await chooseOption(
-    local.getByRole("combobox", { name: "Report estate" }),
-    "Oak Park"
+  fireEvent.click(
+    await local.findByRole("button", { name: "Switch estate: Maple Estate" })
   );
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Oak Park" }));
   await waitFor(() =>
     expect(router.state.location.pathname).toBe("/estates/oak/reports")
   );
@@ -640,3 +741,74 @@ it.each(["/", "/estates", "/estates/new"])(
     expect(screen.queryByRole("button", { name: SWITCH_ESTATE })).toBeNull();
   }
 );
+
+it.each(["/", "/estates"])(
+  "asks which fault-report estate to open from %s",
+  async (path) => {
+    accessOverride = {
+      ...workspaceAccess,
+      estates: [
+        { ...crewEstateAccess, estateId: "oak", estateName: "Oak Park" },
+        { ...crewEstateAccess, estateId: "maple", estateName: "Maple Estate" },
+        {
+          ...ownerEstateAccess,
+          estateId: "private",
+          estateName: "Owner only",
+          canViewFaultReports: false,
+        },
+      ],
+    };
+    const { router } = await setup(path);
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    fireEvent.click(
+      await desktop.findByRole("button", { name: "Respond to faults" })
+    );
+    const chooser = within(
+      await screen.findByRole("dialog", {
+        name: "Choose an estate for fault reports",
+      })
+    );
+    expect(router.state.location.pathname).toBe(path);
+    expect(chooser.queryByRole("link", { name: "Owner only" })).toBeNull();
+    fireEvent.click(chooser.getByRole("link", { name: "Maple Estate" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/estates/maple/reports")
+    );
+    expect(
+      vi
+        .mocked(api.GET)
+        .mock.calls.every((call) => call[0] === "/access/context")
+    ).toBe(true);
+  }
+);
+it("lets Crew choose a fault-report estate from mobile navigation", async () => {
+  accessOverride = {
+    ...unassignedAccess,
+    canEnterWorkspace: true,
+    estates: [
+      crewEstateAccess,
+      { ...crewEstateAccess, estateId: "pine", estateName: "Pine Estate" },
+    ],
+  };
+  const { router } = await setup("/");
+  const mobile = within(
+    screen.getByRole("navigation", { name: "Mobile navigation" })
+  );
+  fireEvent.click(
+    await mobile.findByRole("button", { name: "More navigation" })
+  );
+  fireEvent.click(
+    await screen.findByRole("menuitem", { name: "Respond to faults" })
+  );
+  const chooser = within(
+    await screen.findByRole("dialog", {
+      name: "Choose an estate for fault reports",
+    })
+  );
+  fireEvent.click(chooser.getByRole("link", { name: "Pine Estate" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/estates/pine/reports")
+  );
+});

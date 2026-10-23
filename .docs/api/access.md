@@ -17,7 +17,8 @@ name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is fal
 
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
 CREW; canViewManagement/canManageEstate/canViewAssets/canInviteMembers/
-canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports: boolean. Owners project as MANAGER; ownership is
+canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
+canViewWorkOrders/canCreateWorkOrders: boolean. Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot
 receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
 no management access. Asset visibility and other management mutations retain
@@ -29,6 +30,13 @@ ownership and MANAGER membership atomically in the new estate. Other assignments
 are preserved. `canEnterWorkspace` still requires an existing management or
 report-responder capability. An unassigned response has `canCreateEstate=true`,
 all other booleans false and both collections empty. Account migration remains deferred.
+Migration `20261022135000_backfill_estate_owner_memberships` specifically repairs
+existing estate owners: insert a missing MANAGER membership or normalize an
+owner's MEMBER/COUNCIL/CREW row to MANAGER. Existing MANAGER rows, membership
+timestamps/delegation flags, other users and other-estate assignments are preserved.
+Owner/RESIDENT conflicts remain RESIDENT and fail closed. This makes existing
+owners' report capabilities match newly created estates without changing the
+membership-based report authorization rule.
 
 Legacy `/api/admin/users/**` and `/users/**` routes are denied by SecurityConfig,
 including provider admins and local development. Legacy contracts remain in
@@ -74,3 +82,10 @@ owner/assigned-manager write and Council read permissions. See
 [flatlined-sensors.md](flatlined-sensors.md). The existing POST
 `/estates/{estateId}/locations/{blockId}/floors` is also admitted; its location
 service still enforces ownership.
+
+Work-order history uses canViewWorkOrders for current owners/Managers/Crew,
+including inactive estates. canCreateWorkOrders additionally requires an active
+estate and owner/Manager authority. Same-estate Resident conflicts deny both.
+Crew reads every estate work order without assignment filtering. The limited
+asset picker uses creation authority and does not change canViewAssets.
+See [work-orders.md](work-orders.md).

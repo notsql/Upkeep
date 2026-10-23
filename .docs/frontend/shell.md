@@ -91,8 +91,8 @@ capabilities. Crew-only accounts land on assigned reports and switch report
 estates by name through access context; management estate queries are not mounted
 for their report navigation. Report pages offer the report estate selector to
 Managers as well; other management pages retain the existing management switcher.
-Respond to faults links mixed-role accounts into assigned report estates from
-outside a report-capable estate.
+Respond to faults opens the shared authorized-estate chooser from outside a
+report-capable estate; choosing an entry opens that estate's report list.
 
 - **API client:** `lib/api.ts` exports `api` (`createApiClient` from
   `@proj/api`, base URL `VITE_API_URL`). The bearer token is resolved per
@@ -126,3 +126,10 @@ outside a report-capable estate.
 The web tsconfig maps `@/*` to `src/*` and `@tests/*` to `tests/*`. Vite and
 Vitest use the same native tsconfig path resolution. Tests import application
 code through `@/` and can import shared helpers through `@tests/test-utils`.
+
+Work orders and Respond to faults are left-aligned sidebar buttons when an estate
+choice is needed, matching adjacent navigation link spacing and dimensions.
+Work orders uses Wrench; fault reports uses ClipboardList. Both open the shared
+EstateFeatureChooser instead of choosing the first eligible estate. Their estate
+switchers share EstateFeatureSwitcher, retaining each feature's capability filter
+without management-only requests for Crew.

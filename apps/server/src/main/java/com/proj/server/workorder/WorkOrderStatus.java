@@ -1,0 +1,5 @@
+package com.proj.server.workorder;
+
+public enum WorkOrderStatus {
+    OPEN
+}

@@ -76,6 +76,11 @@ function guardEstatePath(
       }
       return;
     }
+    if (feature === "work-orders") {
+      guardWorkOrders(path, estate);
+      return;
+    }
+
     if (!estate?.canViewManagement) {
       throw notFound();
     }
@@ -88,5 +93,17 @@ function guardEstatePath(
     ) {
       throw notFound();
     }
+  }
+}
+
+function guardWorkOrders(
+  path: string,
+  estate: components["schemas"]["EstateAccessResponse"] | undefined
+) {
+  if (!estate?.canViewWorkOrders) {
+    throw notFound();
+  }
+  if (path.split("/")[4] === "new" && !estate.canCreateWorkOrders) {
+    throw notFound();
   }
 }

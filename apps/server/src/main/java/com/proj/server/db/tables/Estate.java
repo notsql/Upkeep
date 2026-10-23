@@ -16,6 +16,7 @@ import com.proj.server.db.tables.Estateuser.EstateuserPath;
 import com.proj.server.db.tables.Flatlinepolicy.FlatlinepolicyPath;
 import com.proj.server.db.tables.Issuereport.IssuereportPath;
 import com.proj.server.db.tables.Location.LocationPath;
+import com.proj.server.db.tables.Workorder.WorkorderPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
 import java.time.OffsetDateTime;
@@ -310,6 +311,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _location = new LocationPath(this, null, Keys.LOCATION__LOCATION_ESTATEID_FKEY.getInverseKey());
 
         return _location;
+    }
+
+    private transient WorkorderPath _workorder;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.WorkOrder</code>
+     * table
+     */
+    public WorkorderPath workorder() {
+        if (_workorder == null)
+            _workorder = new WorkorderPath(this, null, Keys.WORKORDER__WORKORDER_ESTATEID_FKEY.getInverseKey());
+
+        return _workorder;
     }
 
     @Override

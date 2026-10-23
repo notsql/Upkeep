@@ -6,6 +6,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@proj/ui/components/empty";
 import { useCallback } from "react";
 import {
   useAcceptInAppInvitation,
@@ -46,7 +52,11 @@ function PendingInvitation({
   );
 }
 
-export function PendingInvitations() {
+export function PendingInvitations({
+  showEmpty = false,
+}: {
+  showEmpty?: boolean;
+}) {
   const invitations = usePendingCouncilInvitations();
   const retry = useCallback(() => {
     invitations.refetch();
@@ -66,6 +76,20 @@ export function PendingInvitations() {
     );
   }
   if (!invitations.data?.length) {
+    if (showEmpty && invitations.isSuccess) {
+      return (
+        <Empty className="my-4 rounded-xl border bg-card">
+          <EmptyHeader>
+            <EmptyTitle>
+              <h2>No pending invitations</h2>
+            </EmptyTitle>
+            <EmptyDescription>
+              You have no estate invitations to review right now.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      );
+    }
     return null;
   }
   return (

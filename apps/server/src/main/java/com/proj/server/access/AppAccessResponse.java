@@ -34,7 +34,9 @@ public record AppAccessResponse(
                 "canInviteMembers",
                 "canManageInvitationPermissions",
                 "canViewFaultReports",
-                "canRelocateFaultReports"
+                "canRelocateFaultReports",
+                "canViewWorkOrders",
+                "canCreateWorkOrders"
             })
     public record EstateAccessResponse(
             UUID estateId,
@@ -49,5 +51,7 @@ public record AppAccessResponse(
             boolean canInviteMembers,
             boolean canManageInvitationPermissions,
             boolean canViewFaultReports,
-            boolean canRelocateFaultReports) {}
+            boolean canRelocateFaultReports,
+            boolean canViewWorkOrders,
+            boolean canCreateWorkOrders) {}
 }

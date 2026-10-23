@@ -21,6 +21,7 @@ import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Workorder;
 
 
 /**
@@ -113,4 +114,9 @@ public class Tables {
      * The table <code>public.Manufacturer</code>.
      */
     public static final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
+
+    /**
+     * The table <code>public.WorkOrder</code>.
+     */
+    public static final Workorder WORKORDER = Workorder.WORKORDER;
 }

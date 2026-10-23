@@ -17,6 +17,10 @@ Routes are folder-based under `apps/web/src/routes/_auth/estates/$estateId/repor
 before any child query can mount. Crew can enter report routes without general
 management rights. Council/Resident membership and provider-admin claims cannot
 bypass this capability. Personal `/reports` history remains separate.
+Existing owners receive the same report navigation and screens as new owners
+after the owner-membership backfill migration is applied and access context is
+refetched. No frontend ownership bypass is used; the repaired MANAGER membership
+supplies the existing report capabilities.
 
 | Route folder | Screen and components | API calls |
 | --- | --- | --- |
@@ -84,8 +88,22 @@ data, identity or component lifetime changes; image requests use responder URLs.
 
 Fault reports appears in desktop/contextual estate navigation for Manager/Crew,
 including inactive-estate reads. Crew-only accounts land on assigned reports.
-The Report estate Select uses names/capabilities from access context to switch
+The estate dropdown uses names/capabilities from access context to switch
 assigned report estates, including mixed Manager/Crew memberships. It appears
 on report pages and on Crew estate navigation, without management estate queries
 for Crew or overview access. Outside a report-capable estate, Respond to faults
 provides an entry to an assigned report estate on desktop and mobile overflow.
+
+The detail screen offers Create work order only with both report-read and
+work-order creation capabilities. It links to the creation route with a validated
+sourceReportId. Reports remain selectable after conversion; creating work does
+not alter or invalidate report data. See [work-orders.md](work-orders.md).
+
+ReportEstateSwitcher uses the shared EstateFeatureSwitcher: building icon,
+estate name, chevrons and an accessible Switch estate button, matching work-order
+and management estate navigation without a separate field title. Report choices
+remain limited to canViewFaultReports, and inactive labels are retained.
+Respond to faults opens the same EstateFeatureChooser Dialog used by Work orders,
+on desktop and mobile, then routes to the chosen estate report list. It does not
+automatically choose the first estate. Report access still requires the existing
+Manager/Crew membership; ownership does not grant additional report authority.

@@ -21,6 +21,10 @@ identity can enter, including unassigned, Resident-only and Crew-only accounts.
 The auth guard checks identity without requiring workspace access. Desktop/mobile
 navigation includes Invitations. WorkOS invitation sign-in returns here with
 PKCE/state preserved. Existing estate/home invitation summaries remain.
+After the pending-invitations query succeeds with an empty list, this page shows
+a shadcn Empty panel headed "No pending invitations" with explanatory text.
+It stays hidden during loading or errors; failures keep the retry action instead.
+The shared summary on the Estates page still hides an empty list.
 
 Shared pending/acceptance components remain in estates/-components. Pending cards
 show estate, offered role and expiry; Accept is explicit. Loading never explicitly

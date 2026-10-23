@@ -49,5 +49,14 @@ remain in the generated contract but their endpoints cannot grant authority.
 Existing owners without member rows retain ownership-derived Manager authority;
 explicit transfer must retain that access as a Manager membership.
 
+2026-10-22 compatibility repair agreed by the user: existing estates must give
+their owners the same operational report access as newly created estates.
+Migration `20261022135000_backfill_estate_owner_memberships` inserts missing
+owner MANAGER memberships and normalizes owners' legacy MEMBER/COUNCIL/CREW rows.
+It leaves explicit RESIDENT conflicts, existing MANAGER rows, delegation flags,
+membership timestamps and non-owner assignments untouched. This narrowly repairs
+the owner-membership invariant; broad account migration remains deferred and
+ADR 0029's membership-based report authorization remains in force.
+
 No new email provider, credential, dependency, platform-admin role or ownership
 role is introduced. Initial account provisioning remains deferred with migration.

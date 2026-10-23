@@ -1,12 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { type AssetSort, assetSortOptions } from "@/lib/asset-sorting";
 import type { AssetFilters } from "@/lib/assets";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-function validateSearch(search: Record<string, unknown>): AssetFilters {
+function validateSearch(
+  search: Record<string, unknown>
+): AssetFilters & AssetSort {
+  if (
+    search.sortBy !== undefined &&
+    !assetSortOptions.some((option) => option.value === search.sortBy)
+  ) {
+    throw new Error("Choose a valid asset sort column.");
+  }
+  if (
+    search.direction !== undefined &&
+    search.direction !== "ASC" &&
+    search.direction !== "DESC"
+  ) {
+    throw new Error("Choose a valid sort direction.");
+  }
   return {
+    ...(search.sortBy ? { sortBy: search.sortBy as AssetSort["sortBy"] } : {}),
+    ...(search.direction
+      ? { direction: search.direction as AssetSort["direction"] }
+      : {}),
     q: typeof search.q === "string" ? search.q.trim() || undefined : undefined,
     // The server rejects an unknown category, so any code passes through here.
     category:
@@ -39,19 +59,43 @@ export const Route = createFileRoute("/_auth/estates/$estateId/assets/")({
 });
 function AssetRegisterRoute() {
   const { estateId } = Route.useParams();
-  const filters = Route.useSearch();
+  const search = Route.useSearch();
+  const { sortBy, direction } = search;
+  const filters = useMemo(
+    () => ({
+      q: search.q,
+      category: search.category,
+      locationId: search.locationId,
+      condition: search.condition,
+      status: search.status,
+    }),
+    [search]
+  );
   const navigate = Route.useNavigate();
   const change = useCallback(
-    (search: AssetFilters) => {
-      navigate({ search });
+    (values: AssetFilters) => {
+      navigate({
+        search: {
+          ...values,
+          ...(sortBy ? { sortBy } : {}),
+          ...(direction ? { direction } : {}),
+        },
+      });
     },
-    [navigate]
+    [navigate, sortBy, direction]
+  );
+  const changeSort = useCallback(
+    (sort: AssetSort) =>
+      navigate({ search: { ...filters, ...sort }, resetScroll: false }),
+    [filters, navigate]
   );
   return (
     <AssetRegisterPage
       estateId={estateId}
       filters={filters}
       onFiltersChange={change}
+      onSortChange={changeSort}
+      sort={{ sortBy, direction }}
     />
   );
 }

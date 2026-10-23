@@ -5,6 +5,7 @@ import { useCallback } from "react";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
+import { useWorkOrderAccess } from "@/lib/work-orders";
 import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
 
@@ -18,6 +19,7 @@ export const Route = createFileRoute(
 function EstateReportDetailPage() {
   const { estateId, reportId } = Route.useParams();
   const access = useEstateReportAccess(estateId);
+  const workOrders = useWorkOrderAccess(estateId);
   const report = useEstateReport(estateId, reportId);
   const reload = useCallback(async () => {
     const result = await report.refetch();
@@ -40,6 +42,19 @@ function EstateReportDetailPage() {
         Return to fault reports
       </Link>
       <h1 className="font-semibold text-2xl">Fault report details</h1>
+      {workOrders.canCreate &&
+      access.canView &&
+      report.data &&
+      !report.isError ? (
+        <Link
+          className={buttonVariants()}
+          params={{ estateId }}
+          search={{ sourceReportId: reportId }}
+          to="/estates/$estateId/work-orders/new"
+        >
+          Create work order
+        </Link>
+      ) : null}
       {report.isPending ? <p role="status">Loading report…</p> : null}
       {report.isError ? (
         <Alert role="alert" variant="destructive">
