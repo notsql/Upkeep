@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { PageHeader } from "@/components/page-header";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
@@ -33,28 +34,35 @@ function EstateReportDetailPage() {
   }
   return (
     <main className="page-layout space-y-4">
-      <Link
-        className={buttonVariants()}
-        params={{ estateId }}
-        search={{}}
-        to="/estates/$estateId/reports"
-      >
-        Return to fault reports
-      </Link>
-      <h1 className="font-semibold text-2xl">Fault report details</h1>
-      {workOrders.canCreate &&
-      access.canView &&
-      report.data &&
-      !report.isError ? (
-        <Link
-          className={buttonVariants()}
-          params={{ estateId }}
-          search={{ sourceReportId: reportId }}
-          to="/estates/$estateId/work-orders/new"
-        >
-          Create work order
-        </Link>
-      ) : null}
+      <PageHeader
+        actions={
+          workOrders.canCreate && report.data && !report.isError ? (
+            <Link
+              className={buttonVariants()}
+              params={{ estateId }}
+              search={{ sourceReportId: reportId }}
+              to="/estates/$estateId/work-orders/new"
+            >
+              Create work order
+            </Link>
+          ) : null
+        }
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          {
+            label: access.estateName ?? "Estate",
+            to: access.canViewManagement ? "/estates/$estateId" : undefined,
+            params: { estateId },
+          },
+          {
+            label: "Fault reports",
+            to: "/estates/$estateId/reports",
+            params: { estateId },
+          },
+          { label: "Details" },
+        ]}
+        title="Fault report details"
+      />
       {report.isPending ? <p role="status">Loading report…</p> : null}
       {report.isError ? (
         <Alert role="alert" variant="destructive">

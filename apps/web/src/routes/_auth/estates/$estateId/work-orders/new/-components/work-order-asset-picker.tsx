@@ -15,18 +15,24 @@ import {
   useCallback,
   useState,
 } from "react";
-import { useWorkOrderAssets } from "@/lib/work-orders";
+import {
+  useWorkOrderAssets,
+  type WorkOrderAssetOption,
+} from "@/lib/work-orders";
 
 export function WorkOrderAssetPicker({
   estateId,
   onChange,
+  locationId,
 }: {
   estateId: string;
-  onChange: (id: string | undefined) => void;
+  onChange: (asset: WorkOrderAssetOption | undefined) => void;
+  locationId?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState<string>();
+  const [candidate, setCandidate] = useState<WorkOrderAssetOption>();
   const [selected, setSelected] = useState<
     { id: string; label: string } | undefined
   >(undefined);
@@ -40,6 +46,20 @@ export function WorkOrderAssetPicker({
     () => setCursor(assets.data?.nextCursor ?? undefined),
     [assets.data?.nextCursor]
   );
+  const accept = useCallback(
+    (asset: WorkOrderAssetOption) => {
+      setSelected({
+        id: asset.id,
+        label: `${asset.reference} — ${asset.name}`,
+      });
+      onChange(asset);
+      setCandidate(undefined);
+      setOpen(false);
+      setQuery("");
+      setCursor(undefined);
+    },
+    [onChange]
+  );
   const choose = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       const asset = assets.data?.items.find(
@@ -48,17 +68,26 @@ export function WorkOrderAssetPicker({
       if (!asset) {
         return;
       }
-      setSelected({
-        id: asset.id,
-        label: `${asset.reference} — ${asset.name}`,
-      });
-      onChange(asset.id);
-      setOpen(false);
-      setQuery("");
-      setCursor(undefined);
+      if (locationId && locationId !== asset.locationId) {
+        setCandidate(asset);
+        return;
+      }
+      accept(asset);
     },
-    [assets.data?.items, onChange]
+    [assets.data?.items, accept, locationId]
   );
+  const confirm = useCallback(() => {
+    if (candidate) {
+      accept(candidate);
+    }
+  }, [candidate, accept]);
+  const cancel = useCallback(() => setCandidate(undefined), []);
+  const changeOpen = useCallback((isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setCandidate(undefined);
+    }
+  }, []);
   const remove = useCallback(() => {
     setSelected(undefined);
     onChange(undefined);
@@ -69,7 +98,7 @@ export function WorkOrderAssetPicker({
         Linked asset (optional)
       </FieldLabel>
       <div className="flex flex-wrap gap-2">
-        <Dialog onOpenChange={setOpen} open={open}>
+        <Dialog onOpenChange={changeOpen} open={open}>
           <DialogTrigger
             render={
               <Button
@@ -90,6 +119,23 @@ export function WorkOrderAssetPicker({
                 an asset is optional.
               </DialogDescription>
             </DialogHeader>
+            {candidate ? (
+              <div className="grid gap-3" role="status">
+                <p>
+                  Linking {candidate.reference} changes the work location to{" "}
+                  {candidate.locationPath}. The location stays fixed while this
+                  asset is linked.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={confirm} type="button">
+                    Use asset location
+                  </Button>
+                  <Button onClick={cancel} type="button" variant="outline">
+                    Cancel location change
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             <Field>
               <FieldLabel htmlFor="work-asset-search">Search assets</FieldLabel>
               <Input
@@ -159,8 +205,9 @@ export function WorkOrderAssetPicker({
         ) : null}
       </div>
       <p className="text-muted-foreground text-sm">
-        Choose an existing asset, or leave it unlinked if the equipment is not
-        registered.
+        {selected
+          ? "Work location follows the linked asset. Remove the asset to choose another location."
+          : "Choose an existing asset, or leave it unlinked if the equipment is not registered."}
       </p>
     </Field>
   );

@@ -16,7 +16,8 @@ existing filters independently narrow them. No status workflow or schema changes
   Default remains Created descending. Description and the OPEN-only status are
   static headers; additional status handling remains ID-38.
 - Apply ordering on the server after estate authorization/filtering and before
-  keyset pagination. Equal keys use UUID in the selected direction. Cursors bind
+  keyset pagination. Priority ties use creation time descending then UUID descending in either
+  direction, as agreed in manual review. Other equal keys use UUID in the selected direction. Cursors bind
   to sort/direction and remain estate-scoped; invalid or mismatched cursors return
   400. Accept the existing timestamp/UUID cursor for default Created descending.
 - Add optional typed `sortBy: CREATED_AT | REFERENCE | CATEGORY | PRIORITY` and

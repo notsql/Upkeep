@@ -45,6 +45,74 @@ class WorkOrdersIntegrationTests {
 
     private final String owner = "work-order-owner-" + UUID.randomUUID();
 
+    @ParameterizedTest
+    @CsvSource({"ASC,false", "DESC,false", "ASC,true", "DESC,true"})
+    void priorityTiesUseNewestFirstAcrossPagesInEitherDirection(String direction, boolean filtered) throws Exception {
+        var data = new DeviceTestData(db).estateWithAsset(owner);
+        var ids = new java.util.ArrayList<String>();
+        for (int i = 1; i <= 5; i++) {
+            var body = create(data, owner, "CLEANLINESS", i == 4 ? "LOW" : i == 5 ? "URGENT" : "HIGH", "")
+                    .andExpect(status().isCreated())
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            String original = JsonPath.read(body, "$.id");
+            String id = "10000000-0000-0000-0000-00000000000" + i;
+            ids.add(id);
+            db.execute(
+                    "update \"WorkOrder\" set id=?::uuid, \"createdAt\"=?::timestamptz where id=?::uuid",
+                    id,
+                    i == 2 ? "2026-10-01T00:00:00Z" : "2026-10-02T00:00:00Z",
+                    original);
+        }
+        var expected = filtered
+                ? new int[] {3, 1, 2}
+                : direction.equals("ASC") ? new int[] {4, 3, 1, 2, 5} : new int[] {5, 3, 1, 2, 4};
+        String cursor = null;
+        for (int position : expected) {
+            var request = get(path(data[0]))
+                    .param("sortBy", "PRIORITY")
+                    .param("direction", direction)
+                    .param("q", "w000")
+                    .param("limit", "1")
+                    .with(jwt().jwt(t -> t.subject(owner)));
+            if (filtered) request.param("priority", "HIGH");
+            if (cursor != null) request.param("cursor", cursor);
+            var body = mvc.perform(request)
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items.length()").value(1))
+                    .andExpect(jsonPath("$.items[0].id").value(ids.get(position - 1)))
+                    .andReturn()
+                    .getResponse()
+                    .getContentAsString();
+            cursor = JsonPath.read(body, "$.nextCursor");
+        }
+        assertEquals(null, cursor);
+    }
+
+    @Test
+    void linkedAssetsMustMatchTheWorkLocationWithoutChangingExistingHistory() throws Exception {
+        var data = new DeviceTestData(db).estateWithAsset(owner);
+        String linked = ",\"assetId\":\"" + data[2] + "\"";
+        var saved = create(data, owner, "EQUIPMENT_FAULT", "LOW", linked)
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        var alternative = UUID.randomUUID();
+        db.execute(
+                "insert into \"Location\" (id,\"estateId\",type,name,\"updatedAt\") values (?,?,'BLOCK','Block B',now())",
+                alternative,
+                data[0]);
+        db.execute("update \"Asset\" set \"locationId\"=? where id=?", alternative, data[2]);
+        create(data, owner, "EQUIPMENT_FAULT", "LOW", linked).andExpect(status().isBadRequest());
+        assertEquals(1, db.fetchCount(org.jooq.impl.DSL.table("\"WorkOrder\"")));
+        String id = JsonPath.read(saved, "$.id");
+        mvc.perform(get(path(data[0]) + "/" + id).with(jwt().jwt(t -> t.subject(owner))))
+                .andExpect(status().isOk());
+        create(data, owner, "EQUIPMENT_FAULT", "LOW", "").andExpect(status().isCreated());
+    }
+
     @Test
     void acceptsLegacyTimestampCursorForDefaultOrdering() throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
@@ -133,6 +201,8 @@ class WorkOrdersIntegrationTests {
                             .getContentAsString(),
                     "$.id"));
         create(data, owner, "CLEANLINESS", "LOW", "").andExpect(status().isCreated());
+        // True timestamp ties exercise the final UUID fallback under the agreed newest-first rule.
+        db.execute("update \"WorkOrder\" set \"createdAt\"='2026-10-01T00:00:00Z' where \"estateId\"=?", data[0]);
         ids.sort(java.util.Comparator.reverseOrder());
         var body = mvc.perform(get(path(data[0]))
                         .param("priority", "HIGH")
@@ -547,7 +617,7 @@ class WorkOrdersIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"estate", "location", "asset", "membership", "demotion", "report"})
+    @ValueSource(strings = {"estate", "location", "asset", "asset-location", "membership", "demotion", "report"})
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
     void queuedCreationRechecksStateAfterTheEstateLockWait(String change) throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
@@ -577,7 +647,7 @@ class WorkOrdersIntegrationTests {
                                         "queued-manager",
                                         "CLEANLINESS",
                                         "LOW",
-                                        change.equals("asset") ? ",\"assetId\":\"" + data[2] + "\"" : "");
+                                        change.startsWith("asset") ? ",\"assetId\":\"" + data[2] + "\"" : "");
                         return result.andReturn().getResponse().getStatus();
                     });
                     boolean blocked = false;
@@ -597,6 +667,8 @@ class WorkOrdersIntegrationTests {
                             locked.execute("update \"Location\" set \"deactivatedAt\"=now() where id=?", data[1]);
                         case "asset" ->
                             locked.execute("update \"Asset\" set \"deactivatedAt\"=now() where id=?", data[2]);
+                        case "asset-location" ->
+                            locked.execute("update \"Asset\" set \"locationId\"=? where id=?", alternative, data[2]);
                         case "membership" ->
                             locked.execute(
                                     "delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='queued-manager'",
@@ -612,7 +684,9 @@ class WorkOrdersIntegrationTests {
                     }
                     return request;
                 });
-                int expected = change.equals("membership") ? 404 : change.equals("demotion") ? 403 : 409;
+                int expected = change.equals("membership")
+                        ? 404
+                        : change.equals("demotion") ? 403 : change.equals("asset-location") ? 400 : 409;
                 assertEquals(expected, pending.get(10, java.util.concurrent.TimeUnit.SECONDS));
                 assertEquals(0, db.fetchCount(org.jooq.impl.DSL.table("\"WorkOrder\"")));
             }

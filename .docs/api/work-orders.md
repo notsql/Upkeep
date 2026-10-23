@@ -18,7 +18,9 @@ asset lifecycle writes use the same estate-first serialization. References use
 past four digits. Code changes never renumber saved orders. There is no delete,
 edit, assignment or status transition endpoint. Initial status is OPEN.
 
-Assets are optional for every category. Linked assets and their location
+Assets are optional for every category. A newly linked asset must have exactly the
+same location ID as the work order; mismatches return 400 without saving. Existing
+orders remain readable even if their asset subsequently moves. Linked assets and their location
 ancestors must be active; retired assets cannot be linked. All related records
 have composite estate foreign keys. Multiple orders may reference one report.
 Report conversion does not mutate report fields, status, images or timestamps.
@@ -77,7 +79,8 @@ contract's optional field representation.
 WorkOrderPageResponse: items: WorkOrderResponse[]; nextCursor: string or null.
 Default ordering is createdAt then ID, both descending. Optional ordering uses
 the numeric W reference sequence, category, priority rank (Low < Medium < High <
-Urgent), or creation timestamp. Equal keys use ID in the selected direction.
+Urgent), or creation timestamp. Priority ties use creation time descending, then
+ID descending in both priority directions. Other equal sort keys use ID in the selected direction.
 Reference sorting remains numeric beyond W9999 and across estate-code changes.
 Ordering applies to all filtered estate records before pagination.
 Opaque v2 cursors encode sort/direction and the last record ID; the repository

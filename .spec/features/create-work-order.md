@@ -170,8 +170,10 @@ numbered rule must be covered by an observable test.
    selects it automatically; the server rejects a lower value.
 4. Agreed: `assetId` is optional for every category, including equipment faults.
    A supplied asset must be active and
-   belong to the same estate. Default its location into the form, but allow an
-   explicitly chosen work location elsewhere within that estate. A dedicated
+   belong to the same estate. Use its registered location for the work order and lock the location while
+   linked, confirming before replacing a chosen location. The 2026-10-23 manual
+   review supersedes the earlier allowance for a different linked-asset location;
+   the API now requires exact location equality for new orders. A dedicated
    read returns only active asset identifiers, references, names and locations
    to authorized work-order creators, including non-owner Managers. It grants no
    asset-detail, history, cost, sensor or asset-write access.
@@ -383,7 +385,9 @@ job from the same source. No report-list filter or contract extension is needed.
 Reuse shared report components if showing a source preview. This work neither
 adds a new report list/detail screen nor changes Crew report access. Prefill once;
 background refetches must not overwrite edits. A source-placement conflict needs
-an explicit Reload source action while retaining edited text and work location.
+an explicit Reload source action while retaining edited text. The agreed manual
+review additionally requires choosing Use updated report location or Keep work
+location after reload before submission.
 
 Add `apps/web/src/lib/work-orders.ts` hooks around the generated client. New
 private keys begin with the user ID: `[userId, "work-orders", estateId, ...]`
@@ -587,3 +591,8 @@ The user subsequently approved sortable existing columns in work orders and the
 asset register. See [table-column-sorting.md](table-column-sorting.md): priority,
 reference, category and creation sorting preserve filters and pagination; status
 sorting remains deferred until additional work-order statuses exist.
+
+Approved manual-review refinements are specified in
+[work-order-manual-review.md](work-order-manual-review.md), including strict
+linked-asset location matching, explicit post-conflict location choice,
+newest-first priority ties and role-aware estate context switching.

@@ -16,6 +16,7 @@ vi.mock("@/lib/work-orders", () => ({
               id: "pump",
               reference: "MP-A0001",
               name: "Booster pump",
+              locationId: "level",
               locationPath: "Block A / L1",
             },
           ]
@@ -52,7 +53,10 @@ it("keeps search inside the asset popup and shows the chosen asset in the closed
   expect(screen.queryByRole("textbox", { name: "Search assets" })).toBeNull();
   fireEvent.change(await openPicker(), { target: { value: "pump" } });
   await choosePump();
-  expect(change).toHaveBeenLastCalledWith("pump");
+  // Selection now carries registered placement so the parent can lock work location.
+  expect(change).toHaveBeenLastCalledWith(
+    expect.objectContaining({ id: "pump", locationId: "level" })
+  );
   expect(
     screen.getByRole("button", { name: "Linked asset (optional)" }).textContent
   ).toContain("Booster pump");

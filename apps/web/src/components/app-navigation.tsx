@@ -26,6 +26,7 @@ import { useCallback, useState } from "react";
 import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
 import { EstateFeatureChooser } from "@/components/estates/estate-feature-chooser";
 import type { EstateFeature } from "@/components/estates/estate-feature-switcher";
+import { EstateFeatureSwitcher } from "@/components/estates/estate-feature-switcher";
 import { WorkOrderEstateSwitcher } from "@/components/estates/work-order-estate-switcher";
 import { ReportEstateSwitcher } from "@/components/reports/report-estate-switcher";
 import { useAppAccess } from "@/lib/access";
@@ -56,26 +57,50 @@ interface NavigationItem {
   to: Destination;
 }
 
-function useNavigation() {
-  const access = useAppAccess();
+function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
-  const candidate = pathname.match(ESTATE_PATH)?.[1];
+  const searchEstate = useRouterState({
+    select: (state) =>
+      (state.location.search as { estateId?: string }).estateId,
+  });
+  const residentPage =
+    pathname === "/reports" || pathname.startsWith("/reports/");
+  let candidate = pathname.match(ESTATE_PATH)?.[1];
+  if (!candidate && residentPage) {
+    candidate = searchEstate;
+    if (!candidate && access.data?.residentEstates.length === 1) {
+      candidate = access.data.residentEstates[0]?.id;
+    }
+  }
   const permission = access.data?.estates.find(
     (item) => item.estateId === candidate
   );
-  const estateId =
-    candidate &&
-    candidate !== "new" &&
-    (permission?.canViewManagement ||
-      permission?.canViewFaultReports ||
-      permission?.canViewWorkOrders)
-      ? candidate
-      : undefined;
+  const allowed =
+    permission?.canViewManagement ||
+    permission?.canViewFaultReports ||
+    permission?.canViewWorkOrders ||
+    permission?.role === "RESIDENT";
+  let estateId =
+    candidate && candidate !== "new" && allowed ? candidate : undefined;
   const estate = useEstate(
     permission?.canViewManagement ? estateId : undefined
   );
+  if (residentPage && access.data?.estates.length && !estateId) {
+    estateId = "";
+  }
+  return {
+    pathname,
+    estateId,
+    permission,
+    estateName: estate.data?.name ?? permission?.estateName,
+  };
+}
+function useNavigation() {
+  const access = useAppAccess();
+  const { pathname, estateId, permission, estateName } =
+    useNavigationEstate(access);
   const reporting: NavigationItem = {
     label: "Report a fault",
     to: "/reports/new",
@@ -132,8 +157,8 @@ function useNavigation() {
       local: [],
       primary: destinations,
       overflow: [],
-      estateId: undefined,
-      estateName: undefined,
+      estateId,
+      estateName,
     };
   }
   const home: NavigationItem = {
@@ -196,7 +221,7 @@ function useNavigation() {
     primary,
     overflow,
     estateId,
-    estateName: estate.data?.name ?? permission?.estateName,
+    estateName,
   };
 }
 function reportDestination(
@@ -418,6 +443,15 @@ function NavigationEstateSwitcher({
   const permission = access.data?.estates.find(
     (estate) => estate.estateId === estateId
   );
+  if (permission?.role === "RESIDENT" || !estateId) {
+    return (
+      <EstateFeatureSwitcher
+        estateId={estateId}
+        estates={access.data?.estates ?? []}
+        feature="resident"
+      />
+    );
+  }
   if (workOrders) {
     return (
       <WorkOrderEstateSwitcher
@@ -469,7 +503,7 @@ export function AppNavigation() {
               onChooseEstate={chooseEstate}
             />
           ))}
-          {estateId ? (
+          {estateId === undefined ? null : (
             <>
               <div className="mt-6 mb-2">
                 <NavigationEstateSwitcher
@@ -481,7 +515,7 @@ export function AppNavigation() {
                 <DestinationLink item={item} key={item.label} />
               ))}
             </>
-          ) : null}
+          )}
         </nav>
         <p className="mt-auto px-3 pt-8 text-muted-foreground text-xs">
           Your estates, organised.
@@ -506,7 +540,7 @@ export function AppNavigation() {
 
 export function EstateNavigation() {
   const { local, estateId, estateName } = useNavigation();
-  if (!estateId) {
+  if (estateId === undefined) {
     return null;
   }
   return (

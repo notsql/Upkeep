@@ -81,6 +81,7 @@ export function WorkOrderDetailPage({
               <dd>
                 {data.assetId && access.canViewAssets ? (
                   <Link
+                    className="text-primary underline underline-offset-4 focus-visible:rounded-sm"
                     params={{ estateId, assetId: data.assetId }}
                     to="/estates/$estateId/assets/$assetId"
                   >
@@ -97,6 +98,7 @@ export function WorkOrderDetailPage({
                 <dd>
                   {access.canReadReports ? (
                     <Link
+                      className="text-primary underline underline-offset-4 focus-visible:rounded-sm"
                       params={{ estateId, reportId: data.sourceReportId }}
                       to="/estates/$estateId/reports/$reportId"
                     >

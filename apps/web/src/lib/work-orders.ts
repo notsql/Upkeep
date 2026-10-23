@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 
 export type WorkOrder = components["schemas"]["WorkOrderResponse"];
 export type WorkOrderInput = components["schemas"]["CreateWorkOrderRequest"];
+export type WorkOrderAssetOption =
+  components["schemas"]["WorkOrderAssetOptionResponse"];
 type WorkOrderListQuery = NonNullable<
   paths["/estates/{estateId}/work-orders"]["get"]["parameters"]["query"]
 >;
@@ -16,6 +18,13 @@ export class WorkOrderRequestError extends Error {
     super(message);
     this.status = status;
   }
+}
+export function isSourcePlacementConflict(error: unknown): boolean {
+  return (
+    error instanceof WorkOrderRequestError &&
+    error.status === 409 &&
+    error.message.startsWith("The report location changed")
+  );
 }
 export function useWorkOrderAccess(estateId: string) {
   const session = useAuthenticatedSession();

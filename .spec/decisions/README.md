@@ -13,3 +13,4 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0030 - Authenticated accounts create estates](0030-authenticated-accounts-create-estates.md)
 
 - [0032 - Work-order creation and source links](0032-work-order-creation-and-source-links.md)
+- [0033 - Work-order location consistency and estate context](0033-work-order-location-consistency-and-estate-context.md)

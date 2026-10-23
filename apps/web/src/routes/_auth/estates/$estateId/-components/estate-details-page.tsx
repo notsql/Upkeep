@@ -19,15 +19,25 @@ function EstateActions({
   canEditDetails,
   onDeactivate,
   canViewSensors,
+  canViewWorkOrders,
 }: {
   estate: components["schemas"]["EstateResponse"];
   canEditDetails: boolean;
   onDeactivate: () => void;
   canViewSensors: boolean;
+  canViewWorkOrders: boolean;
 }) {
   const canManageCouncil =
     estate.canInviteMembers || estate.canManageInvitationPermissions;
-  if (!(estate.owned || canEditDetails || canManageCouncil || canViewSensors)) {
+  if (
+    !(
+      estate.owned ||
+      canEditDetails ||
+      canManageCouncil ||
+      canViewSensors ||
+      canViewWorkOrders
+    )
+  ) {
     return null;
   }
   return (
@@ -35,6 +45,15 @@ function EstateActions({
       aria-label="Estate actions"
       className="page-actions min-w-0 flex-row gap-3"
     >
+      {canViewWorkOrders ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/work-orders"
+        >
+          View work orders
+        </Link>
+      ) : null}
       {canViewSensors ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -102,11 +121,7 @@ export function EstateDetailsPage({
             access.data?.canAccessPlatformAdmin)))
   );
   const canEditDetails = Boolean(
-    estate.data?.owned ||
-      access.data?.estates.some(
-        (assignment) =>
-          assignment.estateId === estateId && assignment.canManageEstate
-      )
+    estate.data?.owned || permission?.canManageEstate
   );
   const { userId } = useEstateSession();
   const queryClient = useQueryClient();
@@ -160,6 +175,9 @@ export function EstateDetailsPage({
               <EstateActions
                 canEditDetails={canEditDetails}
                 canViewSensors={canViewSensors}
+                canViewWorkOrders={
+                  !access.isError && !!permission?.canViewWorkOrders
+                }
                 estate={estate.data}
                 onDeactivate={openConfirmation}
               />
@@ -220,34 +238,45 @@ export function EstateDetailsPage({
             />
           ) : null}
           {children}
-          {estate.data.owned ? (
-            <section
-              aria-label="Estate assets"
-              className="section-surface mt-6 space-y-3"
-            >
-              <h2 className="font-semibold text-xl">Assets</h2>
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  params={{ estateId }}
-                  to="/estates/$estateId/assets"
-                >
-                  View assets
-                </Link>
-                {estate.data.deactivatedAt ? null : (
-                  <Link
-                    className={buttonVariants({ variant: "outline" })}
-                    params={{ estateId }}
-                    to="/estates/$estateId/assets/new"
-                  >
-                    Register asset
-                  </Link>
-                )}
-              </div>
-            </section>
-          ) : null}
+          <EstateAssetsSection estate={estate.data} />
         </>
       ) : null}
     </main>
+  );
+}
+
+function EstateAssetsSection({
+  estate,
+}: {
+  estate: components["schemas"]["EstateResponse"];
+}) {
+  if (!estate.owned) {
+    return null;
+  }
+  return (
+    <section
+      aria-label="Estate assets"
+      className="section-surface mt-6 space-y-3"
+    >
+      <h2 className="font-semibold text-xl">Assets</h2>
+      <div className="flex flex-wrap gap-4">
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/assets"
+        >
+          View assets
+        </Link>
+        {estate.deactivatedAt ? null : (
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            params={{ estateId: estate.id }}
+            to="/estates/$estateId/assets/new"
+          >
+            Register asset
+          </Link>
+        )}
+      </div>
+    </section>
   );
 }

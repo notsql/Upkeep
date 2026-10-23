@@ -15,16 +15,18 @@ import { PageHeader } from "@/components/page-header";
 import { useEstateReport } from "@/lib/estate-reports";
 import { flattenLocations, useLocations } from "@/lib/locations";
 import {
+  isSourcePlacementConflict,
   useCreateWorkOrder,
   useWorkOrderAccess,
+  type WorkOrderAssetOption,
   type WorkOrderInput,
-  WorkOrderRequestError,
 } from "@/lib/work-orders";
 import { ReportSourcePicker } from "./report-source-picker";
 import { WorkOrderAssetPicker } from "./work-order-asset-picker";
 import { WorkOrderLocationFeedback } from "./work-order-location-feedback";
 import { WorkOrderSaveError } from "./work-order-save-error";
 import { WorkOrderSelect } from "./work-order-select";
+import { WorkOrderSourceLocationChoice } from "./work-order-source-location-choice";
 
 const categories: { value: WorkOrderInput["category"]; label: string }[] = [
   { value: "EQUIPMENT_FAULT", label: "Equipment fault" },
@@ -71,7 +73,17 @@ export function WorkOrderForm({
     source === "RESIDENT_REPORT" ? reportId : ""
   );
   const initialized = useRef<string | undefined>(undefined);
-  const [assetId, setAssetId] = useState<string | undefined>(undefined);
+  const [asset, setAsset] = useState<WorkOrderAssetOption | undefined>(
+    undefined
+  );
+  const [sourceChoice, setSourceChoice] = useState<
+    | {
+        id: string;
+        label: string;
+      }
+    | undefined
+  >(undefined);
+  const [reloading, setReloading] = useState(false);
   const [error, setError] = useState<Error>();
   const saving = useRef<boolean>(false);
   useEffect(() => {
@@ -83,10 +95,10 @@ export function WorkOrderForm({
     ) {
       initialized.current = reportId;
       setDescription(report.data.description);
-      setLocation(report.data.location.id);
+      setLocation(asset?.locationId ?? report.data.location.id);
       setExpectedLocation(report.data.location.id);
     }
-  }, [report.data, report.isError, reportId]);
+  }, [report.data, report.isError, reportId, asset]);
   const categoryChanged = useCallback((next: WorkOrderInput["category"]) => {
     setCategory(next);
     if (next === "SAFETY") {
@@ -97,22 +109,54 @@ export function WorkOrderForm({
     setSource(next);
     setExpectedLocation(undefined);
     setError(undefined);
+    setSourceChoice(undefined);
     if (next !== "RESIDENT_REPORT") {
       setReportId("");
       initialized.current = undefined;
     }
   }, []);
   const reloadSource = useCallback(async () => {
-    const result = await report.refetch();
-    if (result.data && !result.isError) {
-      setExpectedLocation(result.data.location.id);
-      setError(undefined);
+    setReloading(true);
+    try {
+      const result = await report.refetch();
+      if (result.data && !result.isError) {
+        if (isSourcePlacementConflict(error)) {
+          setSourceChoice(result.data.location);
+        } else {
+          setExpectedLocation(result.data.location.id);
+        }
+        setError(undefined);
+      }
+    } finally {
+      setReloading(false);
     }
-  }, [report.refetch]);
+  }, [report.refetch, error]);
+  const changeAsset = useCallback((next: WorkOrderAssetOption | undefined) => {
+    setAsset(next);
+    if (next) {
+      setLocation(next.locationId);
+    }
+  }, []);
+  const canUseSource = !asset || asset.locationId === sourceChoice?.id;
+  const useSourceLocation = useCallback(() => {
+    if (!(sourceChoice && canUseSource)) {
+      return;
+    }
+    setLocation(sourceChoice.id);
+    setExpectedLocation(sourceChoice.id);
+    setSourceChoice(undefined);
+  }, [sourceChoice, canUseSource]);
+  const keepWorkLocation = useCallback(() => {
+    if (!sourceChoice) {
+      return;
+    }
+    setExpectedLocation(sourceChoice.id);
+    setSourceChoice(undefined);
+  }, [sourceChoice]);
   const submit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (saving.current || save.isPending) {
+      if (saving.current || save.isPending || sourceChoice || reloading) {
         return;
       }
       saving.current = true;
@@ -125,7 +169,7 @@ export function WorkOrderForm({
             category,
             priority,
             source,
-            assetId,
+            assetId: asset?.id,
             sourceReportId: reportId,
             expectedSourceLocationId: expectedLocation,
             sourceReference,
@@ -136,17 +180,15 @@ export function WorkOrderForm({
           params: { estateId, workOrderId: order.id },
         });
       } catch (failure) {
-        setError(
-          failure instanceof Error
-            ? failure
-            : new Error("Unable to save the work order.")
-        );
+        setError(workOrderFailure(failure));
       } finally {
         saving.current = false;
       }
     },
     [
-      assetId,
+      asset,
+      sourceChoice,
+      reloading,
       category,
       description,
       estateId,
@@ -187,6 +229,8 @@ export function WorkOrderForm({
   const reportSource = source === "RESIDENT_REPORT";
   const blocked =
     save.isPending ||
+    reloading ||
+    !!sourceChoice ||
     locations.isPending ||
     locations.isError ||
     !options.some((item) => item.id === locationId) ||
@@ -231,6 +275,7 @@ export function WorkOrderForm({
           <ReportSourcePicker
             estateId={estateId}
             onChange={setReportId}
+            selectedTitle={report.data?.title}
             value={reportId}
           />
         ) : null}
@@ -247,20 +292,11 @@ export function WorkOrderForm({
             </Button>
           </p>
         ) : null}
-        {source === "INSPECTION" || source === "MAINTENANCE_RECOMMENDATION" ? (
-          <Field>
-            <FieldLabel htmlFor="work-source-reference">
-              Source reference or explanation
-            </FieldLabel>
-            <Textarea
-              id="work-source-reference"
-              maxLength={500}
-              onChange={changeReference}
-              required
-              value={sourceReference}
-            />
-          </Field>
-        ) : null}
+        <SourceReferenceField
+          onChange={changeReference}
+          source={source}
+          value={sourceReference}
+        />
         <Field>
           <FieldLabel htmlFor="work-description">Description</FieldLabel>
           <Textarea
@@ -272,6 +308,7 @@ export function WorkOrderForm({
           />
         </Field>
         <WorkOrderSelect
+          disabled={!!asset}
           label="Location"
           onChange={setLocation}
           options={options.map((item) => ({
@@ -301,7 +338,21 @@ export function WorkOrderForm({
           options={priorities}
           value={priority}
         />
-        <WorkOrderAssetPicker estateId={estateId} onChange={setAssetId} />
+        <WorkOrderAssetPicker
+          estateId={estateId}
+          locationId={locationId}
+          onChange={changeAsset}
+        />
+        <WorkOrderSourceLocationChoice
+          incompatibleAsset={!canUseSource}
+          onKeepWork={keepWorkLocation}
+          onUseSource={useSourceLocation}
+          sourceLocation={sourceChoice?.label}
+          workLocation={
+            options.find((item) => item.id === locationId)?.path.join(" / ") ??
+            locationId
+          }
+        />
         <WorkOrderSaveError
           error={error}
           estateId={estateId}
@@ -312,6 +363,12 @@ export function WorkOrderForm({
       </form>
     </main>
   );
+}
+
+function workOrderFailure(failure: unknown): Error {
+  return failure instanceof Error
+    ? failure
+    : new Error("Unable to save the work order.");
 }
 
 function creationBody(input: WorkOrderInput): WorkOrderInput {
@@ -348,5 +405,33 @@ function sourceBlocked(
   if (!(canReadReports && expectedLocation) || pending || failed) {
     return true;
   }
-  return error instanceof WorkOrderRequestError && error.status === 409;
+  return isSourcePlacementConflict(error);
+}
+
+function SourceReferenceField({
+  source,
+  value,
+  onChange,
+}: {
+  source: WorkOrderInput["source"];
+  value: string;
+  onChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+}) {
+  if (source !== "INSPECTION" && source !== "MAINTENANCE_RECOMMENDATION") {
+    return null;
+  }
+  return (
+    <Field>
+      <FieldLabel htmlFor="work-source-reference">
+        Source reference or explanation
+      </FieldLabel>
+      <Textarea
+        id="work-source-reference"
+        maxLength={500}
+        onChange={onChange}
+        required
+        value={value}
+      />
+    </Field>
+  );
 }

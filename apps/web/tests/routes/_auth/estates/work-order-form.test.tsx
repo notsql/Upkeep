@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { fireEvent } from "@testing-library/react";
 import {
   chooseOption,
@@ -8,6 +9,8 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { WorkOrderRequestError } from "@/lib/work-orders";
 import { WorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form";
+
+const PUMP = /OAK-A0001.*Pump/;
 
 const mocks = vi.hoisted(() => ({
   save: vi.fn(),
@@ -23,6 +26,7 @@ const mocks = vi.hoisted(() => ({
     estateName: "Oak",
   },
   pending: false,
+  assets: [] as components["schemas"]["WorkOrderAssetOptionResponse"][],
 }));
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mocks.navigate,
@@ -30,7 +34,8 @@ vi.mock("@tanstack/react-router", () => ({
     <span>{children}</span>
   ),
 }));
-vi.mock("@/lib/work-orders", () => ({
+vi.mock("@/lib/work-orders", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/work-orders")>()),
   useWorkOrderAccess: () => mocks.access,
   useCreateWorkOrder: () => ({
     mutateAsync: mocks.save,
@@ -38,21 +43,24 @@ vi.mock("@/lib/work-orders", () => ({
     error: null,
   }),
   useWorkOrderAssets: () => ({
-    data: { items: [], nextCursor: null },
+    data: { items: mocks.assets, nextCursor: null },
     isError: false,
     isPending: false,
   }),
-  WorkOrderRequestError: class extends Error {
-    status = 409;
-  },
 }));
 vi.mock("@/lib/locations", () => ({
   useLocations: () => ({
-    data: [{ id: "level", name: "Level 1", type: "LEVEL" }],
+    data: [
+      { id: "level", name: "Level 1", type: "LEVEL" },
+      { id: "level-2", name: "Level 2", type: "LEVEL" },
+    ],
     isError: false,
     isPending: false,
   }),
-  flattenLocations: () => [{ id: "level", path: ["Block A", "Level 1"] }],
+  flattenLocations: () => [
+    { id: "level", path: ["Block A", "Level 1"] },
+    { id: "level-2", path: ["Block A", "Level 2"] },
+  ],
 }));
 vi.mock("@/lib/estate-reports", () => ({
   useEstateReport: () => mocks.report(),
@@ -72,6 +80,7 @@ beforeEach(() => {
     refetch: mocks.reload,
   });
   mocks.pending = false;
+  mocks.assets = [];
   mocks.access.canCreate = true;
 });
 
@@ -234,60 +243,118 @@ it("disables save while the request is pending", () => {
   ).toBe(true);
 });
 
-it("reloads a stale source placement while keeping edited description and work location", async () => {
-  const report = {
-    id: "report",
-    description: "Source description",
-    location: { id: "level", label: "Level 1" },
-  };
-  mocks.report.mockReturnValue({
-    data: report,
-    isPending: false,
-    isError: false,
-    refetch: mocks.reload,
-  });
-  mocks.save.mockRejectedValueOnce(
-    new WorkOrderRequestError("The report location changed.", 409)
-  );
-  mocks.reload.mockResolvedValue({
-    data: { ...report, location: { id: "moved-source", label: "Block B" } },
-    isError: false,
-  });
-  renderWithProviders(<WorkOrderForm estateId="oak" sourceReportId="report" />);
-  await waitFor(() =>
+it.each(["Keep work location", "Use updated report location"])(
+  "requires an explicit location choice after reloading: %s",
+  async (choice) => {
+    const report = {
+      id: "report",
+      description: "Source description",
+      location: { id: "level", label: "Level 1" },
+    };
+    mocks.report.mockReturnValue({
+      data: report,
+      isPending: false,
+      isError: false,
+      refetch: mocks.reload,
+    });
+    mocks.save.mockRejectedValueOnce(
+      new WorkOrderRequestError("The report location changed.", 409)
+    );
+    mocks.reload.mockResolvedValue({
+      data: {
+        ...report,
+        location: { id: "level-2", label: "Block A / Level 2" },
+      },
+      isError: false,
+    });
+    renderWithProviders(
+      <WorkOrderForm estateId="oak" sourceReportId="report" />
+    );
+    await waitFor(() =>
+      expect(
+        (
+          screen.getByRole("textbox", {
+            name: "Description",
+          }) as HTMLTextAreaElement
+        ).value
+      ).toBe("Source description")
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Description" }), {
+      target: { value: "Edited description" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Create work order" }));
+    await screen.findByText("The report location changed.");
+    fireEvent.click(screen.getByRole("button", { name: "Reload source" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Reload source" })).toBeNull()
+    );
+    expect(
+      screen
+        .getByRole("button", { name: "Create work order" })
+        .hasAttribute("disabled")
+    ).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: choice }));
     expect(
       (
         screen.getByRole("textbox", {
           name: "Description",
         }) as HTMLTextAreaElement
       ).value
-    ).toBe("Source description")
-  );
+    ).toBe("Edited description");
+    fireEvent.click(screen.getByRole("button", { name: "Create work order" }));
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          description: "Edited description",
+          locationId: choice === "Keep work location" ? "level" : "level-2",
+          sourceReportId: "report",
+          expectedSourceLocationId: "level-2",
+        })
+      )
+    );
+  }
+);
+
+it("confirms an asset location change and locks the work location until unlinking", async () => {
+  mocks.assets = [
+    {
+      id: "pump",
+      reference: "OAK-A0001",
+      name: "Pump",
+      locationId: "level",
+      locationPath: "Block A / Level 1",
+    },
+  ];
+  renderWithProviders(<WorkOrderForm estateId="oak" />);
   fireEvent.change(screen.getByRole("textbox", { name: "Description" }), {
-    target: { value: "Edited description" },
+    target: { value: "Repair pump" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Create work order" }));
-  await screen.findByText("The report location changed.");
-  fireEvent.click(screen.getByRole("button", { name: "Reload source" }));
-  await waitFor(() =>
-    expect(screen.queryByRole("button", { name: "Reload source" })).toBeNull()
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Location" }),
+    "Block A / Level 2"
   );
-  expect(
-    (
-      screen.getByRole("textbox", {
-        name: "Description",
-      }) as HTMLTextAreaElement
-    ).value
-  ).toBe("Edited description");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Linked asset (optional)" })
+  );
+  const pump = await screen.findByRole("button", { name: PUMP });
+  await waitFor(() => {
+    fireEvent.click(pump);
+    screen.getByRole("button", { name: "Use asset location" });
+  });
+  expect(mocks.save).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Use asset location" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  const location = screen.getByRole("combobox", { name: "Location" });
+  expect(location.textContent).toContain("Block A / Level 1");
+  expect(location.hasAttribute("disabled")).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Create work order" }));
   await waitFor(() =>
-    expect(mocks.save).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        description: "Edited description",
-        locationId: "level",
-        sourceReportId: "report",
-        expectedSourceLocationId: "moved-source",
-      })
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({ assetId: "pump", locationId: "level" })
     )
   );
+  fireEvent.click(screen.getByRole("button", { name: "Remove linked asset" }));
+  expect(
+    screen.getByRole("combobox", { name: "Location" }).hasAttribute("disabled")
+  ).toBe(false);
 });

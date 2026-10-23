@@ -51,6 +51,14 @@ export const Route = createFileRoute("/_auth")({
       }
       return { user };
     }
+    if (path.startsWith("/estates/") && path.split("/")[3] === "work-orders") {
+      const [, , estateId] = path.split("/");
+      guardWorkOrders(
+        path,
+        access.estates.find((estate) => estate.estateId === estateId)
+      );
+      return { user };
+    }
     if (!access.canEnterWorkspace) {
       throw redirect({ href: "/reports/new" });
     }
@@ -76,11 +84,6 @@ function guardEstatePath(
       }
       return;
     }
-    if (feature === "work-orders") {
-      guardWorkOrders(path, estate);
-      return;
-    }
-
     if (!estate?.canViewManagement) {
       throw notFound();
     }

@@ -122,6 +122,25 @@ beforeEach(() => {
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
 });
 
+it.each(
+  [residentAccess, mixedAccess, unassignedAccess].flatMap((access) =>
+    ["", "/new", "/saved"].map((suffix) => ({ access, suffix }))
+  )
+)(
+  "hides unauthorized work-order deep links rather than redirecting to reporting: %j",
+  async ({ access, suffix }) => {
+    get.mockResolvedValue({ data: access, response: new Response() });
+    const path = `/estates/maple/work-orders${suffix}`;
+    const router = routerFor(path);
+    await router.load();
+    expect(router.state.location.pathname).toBe(path);
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
 it.each(["/estates/oak/work-orders", "/estates/oak/work-orders/saved"])(
   "lets Crew read %s before the management guard",
   async (path) => {

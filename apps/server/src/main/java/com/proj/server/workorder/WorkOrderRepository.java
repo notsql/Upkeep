@@ -92,8 +92,8 @@ public class WorkOrderRepository {
         if (priority != null) condition = condition.and(WORKORDER.PRIORITY.eq(priority.name()));
         if (query != null && !query.isBlank()) condition = condition.and(WORKORDER.REFERENCE.containsIgnoreCase(query));
         return switch (sort) {
-            case CREATED_AT -> sortedList(estateId, condition, WORKORDER.CREATEDAT, direction, id, limit);
-            case CATEGORY -> sortedList(estateId, condition, WORKORDER.CATEGORY, direction, id, limit);
+            case CREATED_AT -> sortedList(estateId, condition, WORKORDER.CREATEDAT, direction, id, limit, false);
+            case CATEGORY -> sortedList(estateId, condition, WORKORDER.CATEGORY, direction, id, limit, false);
             case PRIORITY ->
                 sortedList(
                         estateId,
@@ -105,7 +105,8 @@ public class WorkOrderRepository {
                                 .otherwise(3),
                         direction,
                         id,
-                        limit);
+                        limit,
+                        true);
             case REFERENCE ->
                 sortedList(
                         estateId,
@@ -115,7 +116,8 @@ public class WorkOrderRepository {
                                 java.math.BigDecimal.class, WORKORDER.REFERENCE),
                         direction,
                         id,
-                        limit);
+                        limit,
+                        false);
         };
     }
 
@@ -125,23 +127,34 @@ public class WorkOrderRepository {
             Field<T> key,
             WorkOrderSortDirection direction,
             UUID cursor,
-            int limit) {
+            int limit,
+            boolean newestTies) {
         boolean ascending = direction == WorkOrderSortDirection.ASC;
         if (cursor != null) {
-            var value = db.select(key)
+            var row = db.select(key, WORKORDER.CREATEDAT)
                     .from(WORKORDER)
                     .where(WORKORDER.ESTATEID.eq(estateId).and(WORKORDER.ID.eq(cursor)))
-                    .fetchOne(key);
-            if (value == null)
+                    .fetchOne();
+            if (row == null)
                 throw new WorkOrderException(
                         org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid work-order cursor.");
-            condition = condition.and((ascending ? key.gt(value) : key.lt(value))
-                    .or(key.eq(value).and(ascending ? WORKORDER.ID.gt(cursor) : WORKORDER.ID.lt(cursor))));
+            var value = row.get(key);
+            Condition tie = ascending ? WORKORDER.ID.gt(cursor) : WORKORDER.ID.lt(cursor);
+            if (newestTies) {
+                var time = row.get(WORKORDER.CREATEDAT);
+                tie = WORKORDER
+                        .CREATEDAT
+                        .lt(time)
+                        .or(WORKORDER.CREATEDAT.eq(time).and(WORKORDER.ID.lt(cursor)));
+            }
+            condition = condition.and(
+                    (ascending ? key.gt(value) : key.lt(value)).or(key.eq(value).and(tie)));
         }
-        return orders(condition)
-                .orderBy(ascending ? key.asc() : key.desc(), ascending ? WORKORDER.ID.asc() : WORKORDER.ID.desc())
-                .limit(limit)
-                .fetch(this::response);
+        var ordering = new java.util.ArrayList<org.jooq.SortField<?>>();
+        ordering.add(ascending ? key.asc() : key.desc());
+        if (newestTies) ordering.add(WORKORDER.CREATEDAT.desc());
+        ordering.add(ascending && !newestTies ? WORKORDER.ID.asc() : WORKORDER.ID.desc());
+        return orders(condition).orderBy(ordering).limit(limit).fetch(this::response);
     }
 
     private SelectJoinStep<org.jooq.Record> orderJoins() {

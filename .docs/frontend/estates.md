@@ -124,3 +124,10 @@ reduced-motion preferences. Badges distinguish Owner from Shared with you,
 without implying a council role from general estate access. Clear filters resets
 search/access/status to their defaults. No estates and no search/access matches
 have separate guidance. Home portfolio analytics are documented in [dashboard.md](dashboard.md).
+
+## Work-order overview entry
+
+EstateDetailsPage includes View work orders in the shadcn Estate actions group
+when GET /access/context grants canViewWorkOrders for that estate. It routes to
+/estates/$estateId/work-orders and remains visible for inactive history. Access
+errors hide the action. Existing overview permissions are unchanged.

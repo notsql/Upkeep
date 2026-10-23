@@ -74,6 +74,9 @@ public class WorkOrderService {
             if (asset.getDeactivatedat() != null || asset.getRetiredon() != null)
                 throw error(HttpStatus.CONFLICT, "This asset is inactive or retired.");
             requireActiveLocation(estateId, asset.getLocationid());
+            if (!request.locationId().equals(asset.getLocationid()))
+                throw error(
+                        HttpStatus.BAD_REQUEST, "The work location must match the linked asset's registered location.");
         }
         var id = repository.create(estateId, estate.getCode(), user, request);
         return repository.detail(estateId, id);

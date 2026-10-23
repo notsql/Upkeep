@@ -43,8 +43,10 @@ creation form, so its filter form is never nested inside another form.
 The auth route checks work-order capabilities before the generic management
 guard. Crew can enter list/detail, and cannot enter new. AppNavigation exposes
 Work orders locally or as an entry to an authorized estate. WorkOrderEstateSwitcher
-uses labels and canViewWorkOrders from access context; switches open the estate's
-work-order list and do not request management estate lists for Crew. The trigger
+uses labels, estate-local roles and capabilities from access context. It includes
+all membership estates and retains the work-order list when permitted in the
+chosen estate; otherwise it opens that estate's allowed management, Crew or
+resident destination. Crew do not request management estate lists. The trigger
 uses the normal building icon, estate name and chevrons, without an additional
 Work-order estate label. Outside an authorized estate, the global Work orders
 button opens the shared EstateFeatureChooser, a shadcn Dialog that asks the user to choose
@@ -56,14 +58,24 @@ canViewAssets and source reports only with canViewFaultReports.
 The existing estate-report detail screen adds Create work order only when both
 creation and report-read capabilities are present. It passes sourceReportId to
 the new route. The form reuses useEstateReport/useEstateReportList and active
-location reads; report selection retains existing filters and pagination.
+location reads. The Resident report selector opens ReportSourcePicker's shadcn
+Dialog with existing block/range filters, report buttons and cursor pagination.
+Only the selected title stays on the main form; searching/paging does not discard
+selection. Report-detail conversion resolves the preselected title.
+Its shared report filter comboboxes use the same rounded 44px controls as the
+estate report list; see [estate-reports.md](estate-reports.md).
 Previously converted reports remain selectable. Description and location prefill
 once per selected report; background refresh does not overwrite edits.
-A placement conflict offers Reload source, updates the observed placement and
-preserves edited description/work location.
+A placement conflict offers Reload source, then displays the updated source and
+current work locations. Save stays disabled until Use updated report location or
+Keep work location is chosen. Edited descriptions remain intact. A linked asset
+at a different location must be removed before using the updated report location.
 
 Equipment links are optional for all categories. Asset search uses only the
-limited work-order asset endpoint, including for non-owner Managers. Empty
+limited work-order asset endpoint, including for non-owner Managers. Selection
+uses the asset's registered location and requires Use asset location confirmation
+if changing an existing work location. Location is disabled while linked and
+unlocked by Remove linked asset. The API enforces exact location equality. Empty
 registers permit creation. Category SAFETY selects and locks URGENT priority.
 Inspection/recommendation sources collect a required manual reference/explanation.
 An empty active location list blocks saving and links to location management.
@@ -149,7 +161,8 @@ Default is Created descending. Description and OPEN-only Status stay static.
 
 The route validates URL `sortBy`/`direction`, derived from the generated API query
 types. Sorting clears only `cursor`, keeps filters, and queries the complete
-sorted result through the API. Next/First page preserve ordering. Applying or
+sorted result through the API. Priority ties use newest creation first, then ID descending, regardless of the
+priority direction. Next/First page preserve ordering. Applying or
 clearing filters preserves ordering; refresh/back restore it. An explicit
 priority filter still narrows rows; sorting alone never removes a priority.
 Sort navigation preserves the current scroll position. During a sort-only
@@ -158,3 +171,21 @@ collapse; pagination is disabled until the new results arrive. Placeholder rows
 are limited to the same authorized user/estate and unchanged filters. They are
 not carried across identity/estate changes, failures or revoked access. Filter
 and pagination navigation retain normal scroll-reset behavior.
+
+Linked asset and View source report links use persistent underlines, theme colours
+and visible keyboard focus when their independent read capabilities permit links.
+Signed-in unauthorized work-order URLs show Page not found before any generic
+workspace/resident redirect; signed-out requests still go to sign-in.
+
+The estate switcher includes all membership estates with estate-local roles,
+even with one choice. Work-order/report context is retained where permitted;
+otherwise selection opens management overview, Crew work orders or resident
+reporting with estateId preselected. See [shell.md](shell.md). Conflict errors use
+structured rounded shadcn Alerts; network advice is reserved for ambiguous errors.
+
+Current manual-review verification: 555 web tests and 877 backend tests pass,
+workspace type checks and the production web build pass, and web formatting/lint
+passes. Java Spotless initially lacked dependencies in this PC's offline Maven
+cache; an offline server:lint recheck on 2026-10-24 passed for 255 Java files.
+Java formatting is verified. No dependency installation or database migration
+was performed by the agent for these refinements.
