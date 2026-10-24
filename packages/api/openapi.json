@@ -6,6 +6,174 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/estates/{estateId}/work-orders/{workOrderId}/completion": {
+      "put": {
+        "tags": ["work-order-controller"],
+        "summary": "Close work with a recorded outcome; identical retries are idempotent",
+        "operationId": "saveWorkOrderCompletion",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveWorkOrderCompletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Completion created",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
+              }
+            }
+          },
+          "200": {
+            "description": "Identical completion replay",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["work-order-controller"],
+        "summary": "Correct a closed outcome with a reason and before/after audit",
+        "operationId": "correctWorkOrderCompletion",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorrectWorkOrderCompletionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Corrected work order, unchanged outcome or identical latest correction replay",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}/role": {
       "put": {
         "tags": ["council-controller"],
@@ -799,6 +967,24 @@
             "schema": {
               "type": "string",
               "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["OPEN", "ASSIGNED", "IN_PROGRESS", "CLOSED"]
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["EQUIPMENT_FAULT", "CLEANLINESS", "SAFETY"]
             }
           },
           {
@@ -2911,6 +3097,87 @@
         }
       }
     },
+    "/estates/{estateId}/work-orders/{workOrderId}/status": {
+      "patch": {
+        "tags": ["work-order-controller"],
+        "summary": "Start work as an active owner or Manager",
+        "operationId": "changeWorkOrderStatus",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeWorkOrderStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Updated work order; current-version no-op returns unchanged order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/reports/{reportId}/location": {
       "patch": {
         "tags": ["estate-report-controller"],
@@ -3660,6 +3927,157 @@
         }
       }
     },
+    "/estates/{estateId}/work-orders/{workOrderId}/status-history": {
+      "get": {
+        "tags": ["work-order-controller"],
+        "operationId": "getWorkOrderStatusHistory",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Chronological status history",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkOrderStatusEventResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/work-orders/{workOrderId}/completion-revisions": {
+      "get": {
+        "tags": ["work-order-controller"],
+        "summary": "Read the chronological outcome correction audit",
+        "operationId": "getWorkOrderCompletionRevisions",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Completion revisions, oldest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkOrderCompletionRevisionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/work-order-assets": {
       "get": {
         "tags": ["work-order-controller"],
@@ -4376,6 +4794,82 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/work-order-completions": {
+      "get": {
+        "tags": ["work-order-controller"],
+        "summary": "Canonical work-order outcomes for existing asset-history readers",
+        "operationId": "listAssetWorkOrderCompletions",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Asset work completions, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetWorkOrderCompletionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/readings": {
       "get": {
         "tags": ["asset-reading-controller"],
@@ -4996,6 +5490,133 @@
   },
   "components": {
     "schemas": {
+      "SaveWorkOrderCompletionRequest": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "findings": { "type": "string", "maxLength": 2500, "minLength": 0 },
+          "workPerformed": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "partsUsed": { "type": "string", "maxLength": 2500, "minLength": 0 },
+          "labourCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "partsCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "downtimeMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "findings", "workPerformed"]
+      },
+      "WorkOrderCompletionResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "findings": { "type": "string" },
+          "workPerformed": { "type": "string" },
+          "partsUsed": { "type": "string" },
+          "labourCost": { "type": "string" },
+          "partsCost": { "type": "string" },
+          "totalCost": { "type": "string" },
+          "currency": { "type": "string" },
+          "downtimeMinutes": { "type": "integer", "format": "int32" },
+          "completedByUserId": { "type": "string" },
+          "completedByName": { "type": "string" },
+          "completedAt": { "type": "string", "format": "date-time" },
+          "editedByUserId": { "type": "string" },
+          "editedByName": { "type": "string" },
+          "editedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "completedAt",
+          "completedByUserId",
+          "currency",
+          "findings",
+          "id",
+          "workPerformed"
+        ]
+      },
+      "WorkOrderResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "description": { "type": "string" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "locationPath": { "type": "string" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["EQUIPMENT_FAULT", "CLEANLINESS", "SAFETY"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "MANUAL",
+              "RESIDENT_REPORT",
+              "INSPECTION",
+              "MAINTENANCE_RECOMMENDATION"
+            ]
+          },
+          "sourceReportId": { "type": "string", "format": "uuid" },
+          "sourceReference": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["OPEN", "ASSIGNED", "IN_PROGRESS", "CLOSED"]
+          },
+          "version": { "type": "integer", "format": "int32" },
+          "completion": {
+            "$ref": "#/components/schemas/WorkOrderCompletionResponse"
+          },
+          "createdByUserId": { "type": "string" },
+          "createdByName": {
+            "type": "string",
+            "description": "Current creator display name on creation/detail responses; null when unavailable."
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "category",
+          "createdAt",
+          "createdByUserId",
+          "description",
+          "estateId",
+          "id",
+          "locationId",
+          "locationPath",
+          "priority",
+          "reference",
+          "source",
+          "status",
+          "updatedAt",
+          "version"
+        ]
+      },
+      "EstateError": {
+        "type": "object",
+        "properties": { "message": { "type": "string" } },
+        "required": ["message"]
+      },
       "UpdateEstateRoleRequest": {
         "type": "object",
         "properties": {
@@ -5005,11 +5626,6 @@
           }
         },
         "required": ["role"]
-      },
-      "EstateError": {
-        "type": "object",
-        "properties": { "message": { "type": "string" } },
-        "required": ["message"]
       },
       "EstateMemberResponse": {
         "type": "object",
@@ -5235,61 +5851,6 @@
           "locationId",
           "priority",
           "source"
-        ]
-      },
-      "WorkOrderResponse": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "estateId": { "type": "string", "format": "uuid" },
-          "reference": { "type": "string" },
-          "description": { "type": "string" },
-          "locationId": { "type": "string", "format": "uuid" },
-          "locationPath": { "type": "string" },
-          "assetId": { "type": "string", "format": "uuid" },
-          "assetReference": { "type": "string" },
-          "category": {
-            "type": "string",
-            "enum": ["EQUIPMENT_FAULT", "CLEANLINESS", "SAFETY"]
-          },
-          "priority": {
-            "type": "string",
-            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
-          },
-          "source": {
-            "type": "string",
-            "enum": [
-              "MANUAL",
-              "RESIDENT_REPORT",
-              "INSPECTION",
-              "MAINTENANCE_RECOMMENDATION"
-            ]
-          },
-          "sourceReportId": { "type": "string", "format": "uuid" },
-          "sourceReference": { "type": "string" },
-          "status": { "type": "string", "enum": ["OPEN"] },
-          "createdByUserId": { "type": "string" },
-          "createdByName": {
-            "type": "string",
-            "description": "Current creator display name on creation/detail responses; null when unavailable."
-          },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
-        },
-        "required": [
-          "category",
-          "createdAt",
-          "createdByUserId",
-          "description",
-          "estateId",
-          "id",
-          "locationId",
-          "locationPath",
-          "priority",
-          "reference",
-          "source",
-          "status",
-          "updatedAt"
         ]
       },
       "TransferOwnershipRequest": {
@@ -5893,6 +6454,70 @@
         },
         "required": ["estateIds"]
       },
+      "ChangeWorkOrderStatusRequest": {
+        "type": "object",
+        "properties": {
+          "targetStatus": {
+            "type": "string",
+            "enum": ["OPEN", "ASSIGNED", "IN_PROGRESS", "CLOSED"]
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "targetStatus"]
+      },
+      "CorrectWorkOrderCompletionRequest": {
+        "type": "object",
+        "properties": {
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "correctionReason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "findings": { "type": "string", "maxLength": 2500, "minLength": 0 },
+          "workPerformed": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "partsUsed": {
+            "type": ["string", "null"],
+            "description": "Omit or send null to clear",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "labourCost": {
+            "type": ["string", "null"],
+            "description": "Omit or send null to mark unknown",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "partsCost": {
+            "type": ["string", "null"],
+            "description": "Omit or send null to mark unknown",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "downtimeMinutes": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "Omit or send null to mark unknown",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "correctionReason",
+          "expectedVersion",
+          "findings",
+          "workPerformed"
+        ]
+      },
       "RelocateReportRequest": {
         "type": "object",
         "properties": {
@@ -6047,6 +6672,59 @@
           "nextCursor": { "type": "string" }
         },
         "required": ["items"]
+      },
+      "WorkOrderStatusEventResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "fromStatus": {
+            "type": "string",
+            "enum": ["OPEN", "ASSIGNED", "IN_PROGRESS", "CLOSED"]
+          },
+          "toStatus": {
+            "type": "string",
+            "enum": ["OPEN", "ASSIGNED", "IN_PROGRESS", "CLOSED"]
+          },
+          "changedByUserId": { "type": "string" },
+          "changedByName": { "type": "string" },
+          "changedAt": { "type": "string", "format": "date-time" },
+          "version": { "type": "integer", "format": "int32" }
+        },
+        "required": [
+          "changedAt",
+          "changedByUserId",
+          "id",
+          "toStatus",
+          "version"
+        ]
+      },
+      "WorkOrderCompletionRevisionResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "fromVersion": { "type": "integer", "format": "int32" },
+          "version": { "type": "integer", "format": "int32" },
+          "correctionReason": { "type": "string" },
+          "changedByUserId": { "type": "string" },
+          "changedByName": { "type": "string" },
+          "changedAt": { "type": "string", "format": "date-time" },
+          "before": {
+            "$ref": "#/components/schemas/WorkOrderCompletionResponse"
+          },
+          "after": {
+            "$ref": "#/components/schemas/WorkOrderCompletionResponse"
+          }
+        },
+        "required": [
+          "after",
+          "before",
+          "changedAt",
+          "changedByUserId",
+          "correctionReason",
+          "fromVersion",
+          "id",
+          "version"
+        ]
       },
       "WorkOrderAssetOptionResponse": {
         "type": "object",
@@ -6297,6 +6975,18 @@
           "lifecycleVersion",
           "occurredAt"
         ]
+      },
+      "AssetWorkOrderCompletionResponse": {
+        "type": "object",
+        "properties": {
+          "workOrderId": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "locationPath": { "type": "string" },
+          "completion": {
+            "$ref": "#/components/schemas/WorkOrderCompletionResponse"
+          }
+        },
+        "required": ["completion", "locationPath", "reference", "workOrderId"]
       },
       "AssetReadingPage": {
         "type": "object",
@@ -6564,7 +7254,8 @@
           "canViewFaultReports": { "type": "boolean" },
           "canRelocateFaultReports": { "type": "boolean" },
           "canViewWorkOrders": { "type": "boolean" },
-          "canCreateWorkOrders": { "type": "boolean" }
+          "canCreateWorkOrders": { "type": "boolean" },
+          "canUpdateWorkOrders": { "type": "boolean" }
         },
         "required": [
           "canCreateWorkOrders",
@@ -6572,6 +7263,7 @@
           "canManageEstate",
           "canManageInvitationPermissions",
           "canRelocateFaultReports",
+          "canUpdateWorkOrders",
           "canViewAssets",
           "canViewFaultReports",
           "canViewManagement",

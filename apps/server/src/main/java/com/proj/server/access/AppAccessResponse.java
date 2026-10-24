@@ -36,7 +36,8 @@ public record AppAccessResponse(
                 "canViewFaultReports",
                 "canRelocateFaultReports",
                 "canViewWorkOrders",
-                "canCreateWorkOrders"
+                "canCreateWorkOrders",
+                "canUpdateWorkOrders"
             })
     public record EstateAccessResponse(
             UUID estateId,
@@ -53,5 +54,6 @@ public record AppAccessResponse(
             boolean canViewFaultReports,
             boolean canRelocateFaultReports,
             boolean canViewWorkOrders,
-            boolean canCreateWorkOrders) {}
+            boolean canCreateWorkOrders,
+            boolean canUpdateWorkOrders) {}
 }

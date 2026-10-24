@@ -22,6 +22,9 @@ import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Workorder;
+import com.proj.server.db.tables.Workordercompletion;
+import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderstatusevent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -136,6 +139,21 @@ public class Public extends SchemaImpl {
     public final Workorder WORKORDER = Workorder.WORKORDER;
 
     /**
+     * The table <code>public.WorkOrderCompletion</code>.
+     */
+    public final Workordercompletion WORKORDERCOMPLETION = Workordercompletion.WORKORDERCOMPLETION;
+
+    /**
+     * The table <code>public.WorkOrderCompletionRevision</code>.
+     */
+    public final Workordercompletionrevision WORKORDERCOMPLETIONREVISION = Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+
+    /**
+     * The table <code>public.WorkOrderStatusEvent</code>.
+     */
+    public final Workorderstatusevent WORKORDERSTATUSEVENT = Workorderstatusevent.WORKORDERSTATUSEVENT;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -168,7 +186,10 @@ public class Public extends SchemaImpl {
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
             Manufacturer.MANUFACTURER,
-            Workorder.WORKORDER
+            Workorder.WORKORDER,
+            Workordercompletion.WORKORDERCOMPLETION,
+            Workordercompletionrevision.WORKORDERCOMPLETIONREVISION,
+            Workorderstatusevent.WORKORDERSTATUSEVENT
         );
     }
 }

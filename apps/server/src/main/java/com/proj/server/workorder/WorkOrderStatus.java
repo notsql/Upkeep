@@ -1,5 +1,8 @@
 package com.proj.server.workorder;
 
 public enum WorkOrderStatus {
-    OPEN
+    OPEN,
+    ASSIGNED,
+    IN_PROGRESS,
+    CLOSED
 }

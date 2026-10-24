@@ -6,7 +6,7 @@ import {
   EmptyTitle,
 } from "@proj/ui/components/empty";
 import { Link } from "@tanstack/react-router";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import {
   type WorkOrderFilters as Filters,
@@ -26,27 +26,44 @@ export function WorkOrderListPage({
   onChange: (search: WorkOrderListSearch) => void;
 }) {
   const access = useWorkOrderAccess(estateId);
-  const { priority, q, cursor, sortBy, direction } = search;
+  const { priority, q, status, category, cursor, sortBy, direction } = search;
   const descending = (direction ?? "DESC") === "DESC";
-  const filters = { priority, q };
+  const filters = { priority, q, status, category };
   const options = useMemo(
     () => ({
       priority,
       q,
+      status,
+      category,
       ...(sortBy ? { sortBy } : {}),
       ...(direction ? { direction } : {}),
     }),
-    [priority, q, sortBy, direction]
+    [priority, q, status, category, sortBy, direction]
   );
-  const filtered = !!priority || !!q;
+  const scope = JSON.stringify([access.userId, estateId, options]);
+  const [trail, setTrail] = useState<{
+    scope: string;
+    cursors: (string | undefined)[];
+  }>({ scope, cursors: [] });
+  const cursors = trail.scope === scope ? trail.cursors : [];
+  const currentIndex = cursors.indexOf(cursor);
+  const canPrevious = currentIndex > 0;
+  const previous = useCallback(() => {
+    if (currentIndex > 0) {
+      onChange({ ...options, cursor: cursors[currentIndex - 1] });
+    }
+  }, [onChange, options, cursors, currentIndex]);
+  const filtered = !!priority || !!q || !!status || !!category;
   const orders = useWorkOrderList(estateId, options, cursor);
   const changeFilters = useCallback(
-    (values: Filters) =>
+    (values: Filters) => {
+      setTrail({ scope: "", cursors: [] });
       onChange({
         ...values,
         ...(sortBy ? { sortBy } : {}),
         ...(direction ? { direction } : {}),
-      }),
+      });
+    },
     [onChange, sortBy, direction]
   );
   const changeSort = useCallback(
@@ -56,17 +73,35 @@ export function WorkOrderListPage({
       if ((sortBy ?? "CREATED_AT") === column) {
         nextDirection = descending ? "ASC" : "DESC";
       }
+      setTrail({ scope: "", cursors: [] });
       onChange({ ...options, sortBy: column, direction: nextDirection });
     },
     [options, onChange, sortBy, descending]
   );
   const retry = useCallback(() => orders.refetch(), [orders.refetch]);
   const first = useCallback(() => onChange(options), [onChange, options]);
-  const next = useCallback(
-    () =>
-      onChange({ ...options, cursor: orders.data?.nextCursor ?? undefined }),
-    [onChange, options, orders.data?.nextCursor]
-  );
+  const next = useCallback(() => {
+    const nextCursor = orders.data?.nextCursor;
+    if (!nextCursor) {
+      return;
+    }
+    setTrail({
+      scope,
+      cursors: [
+        ...(currentIndex >= 0 ? cursors.slice(0, currentIndex + 1) : [cursor]),
+        nextCursor,
+      ],
+    });
+    onChange({ ...options, cursor: nextCursor });
+  }, [
+    onChange,
+    options,
+    orders.data?.nextCursor,
+    scope,
+    currentIndex,
+    cursors,
+    cursor,
+  ]);
   if (access.pending) {
     return <p role="status">Loading access…</p>;
   }
@@ -101,7 +136,7 @@ export function WorkOrderListPage({
       />
       <WorkOrderFilters
         filters={filters}
-        key={`${priority ?? "ALL"}:${q ?? ""}`}
+        key={JSON.stringify(filters)}
         onChange={changeFilters}
       />
       {orders.isPending ? <p role="status">Loading work orders…</p> : null}
@@ -127,26 +162,16 @@ export function WorkOrderListPage({
               sortBy={sortBy ?? "CREATED_AT"}
             />
           )}
-          <div className="flex gap-2">
-            {cursor ? (
-              <Button
-                disabled={orders.isPlaceholderData}
-                onClick={first}
-                variant="outline"
-              >
-                First page
-              </Button>
-            ) : null}
-            {orders.data.nextCursor ? (
-              <Button
-                disabled={orders.isPlaceholderData}
-                onClick={next}
-                variant="outline"
-              >
-                Next
-              </Button>
-            ) : null}
-          </div>
+          <WorkOrderPages
+            canPrevious={canPrevious}
+            count={orders.data.items.length}
+            cursor={cursor}
+            hasNext={!!orders.data.nextCursor}
+            onFirst={first}
+            onNext={next}
+            onPrevious={previous}
+            pending={orders.isPlaceholderData}
+          />
         </>
       ) : null}
     </main>
@@ -162,10 +187,58 @@ function WorkOrderEmptyState({ filtered }: { filtered: boolean }) {
         </EmptyTitle>
         <EmptyDescription>
           {filtered
-            ? "Try a different priority or reference, or clear the filters."
+            ? "Try different filters, or clear them."
             : "Saved work orders will appear here."}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
+  );
+}
+
+function WorkOrderPages({
+  count,
+  cursor,
+  canPrevious,
+  hasNext,
+  pending,
+  onFirst,
+  onPrevious,
+  onNext,
+}: {
+  count: number;
+  cursor?: string;
+  canPrevious: boolean;
+  hasNext: boolean;
+  pending: boolean;
+  onFirst: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  return (
+    <nav
+      aria-label="Work-order pages"
+      className="flex flex-wrap items-center justify-between gap-3"
+    >
+      <p className="text-muted-foreground text-sm">
+        {count} {count === 1 ? "work order" : "work orders"} on this page
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {cursor ? (
+          <Button disabled={pending} onClick={onFirst} variant="outline">
+            First page
+          </Button>
+        ) : null}
+        {canPrevious ? (
+          <Button disabled={pending} onClick={onPrevious} variant="outline">
+            Previous
+          </Button>
+        ) : null}
+        {hasNext ? (
+          <Button disabled={pending} onClick={onNext} variant="outline">
+            Next
+          </Button>
+        ) : null}
+      </div>
+    </nav>
   );
 }

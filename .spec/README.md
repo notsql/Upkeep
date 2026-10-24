@@ -31,6 +31,8 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [work-order-review-follow-ups.md](features/work-order-review-follow-ups.md) | ID-38 / ID-40 manual review | implemented and verified 2026-10-24; conflict recovery, audited corrections, oldest priority ties, member table/pagination |
+| [work-order-progress-and-completion.md](features/work-order-progress-and-completion.md) | ID-38 / ID-40 | independent scope implemented 2026-10-24; live QA follow-ups verified; provider integration pending |
 | [table-column-sorting.md](features/table-column-sorting.md) | ID-36 / asset register review | built and verified 2026-10-23; sortable existing columns, filters retained |
 | [create-work-order.md](features/create-work-order.md) | ID-36 | implemented 2026-10-22; ready for manual review; saved inspection links deferred until inspection feature is ready |
 | [typed-jooq-repositories.md](features/typed-jooq-repositories.md) | - | built; typed asset, dashboard and estate-report queries; 821 server and 461 web tests passed |

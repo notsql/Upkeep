@@ -327,8 +327,9 @@ class FaultReportLocationsIntegrationTests {
             if (!Files.isDirectory(migrations)) continue;
             try (var folders = Files.list(migrations)) {
                 for (var folder : folders.filter(Files::isDirectory)
-                        .filter(path ->
-                                path.getFileName().toString().compareTo("20261022054000_create_work_orders") > 0)
+                        .filter(path -> path.getFileName()
+                                .toString()
+                                .equals("20261022135000_backfill_estate_owner_memberships"))
                         .sorted()
                         .toList()) {
                     db.execute(Files.readString(folder.resolve("migration.sql")));

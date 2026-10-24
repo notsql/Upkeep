@@ -1,4 +1,4 @@
-# Work orders (ID-36)
+# Work orders (ID-36, independent ID-38 and ID-40)
 
 API: [work-orders.md](../api/work-orders.md). Generated request/response types
 come from `@proj/api/schema`; feature hooks live in `src/lib/work-orders.ts`.
@@ -9,9 +9,9 @@ All route paths are beneath `src/routes/_auth/estates/$estateId/work-orders/`:
 
 | Folder | URL | Screen |
 | --- | --- | --- |
-| index.tsx; -components/work-order-list-page.tsx; -components/work-order-filters.tsx | /estates/$estateId/work-orders | Priority/reference filters, paginated list and conditional Create |
+| index.tsx; -components/work-order-list-page.tsx; -components/work-order-filters.tsx | /estates/$estateId/work-orders | Status/category/priority/reference filters, paginated list and conditional Create |
 | new/index.tsx; new/-components/ | /estates/$estateId/work-orders/new | Creation form; optional validated sourceReportId UUID search |
-| $workOrderId/index.tsx; $workOrderId/-components/ | /estates/$estateId/work-orders/$workOrderId | Saved read-only detail |
+| $workOrderId/index.tsx; $workOrderId/-components/ | /estates/$estateId/work-orders/$workOrderId | Saved detail, progress, audit and completion |
 
 Screens use PageHeader and named breadcrumbs, FormActions, shadcn Field,
 Textarea, Input, Select, Button, Table, Badge, Card, Dialog, Alert and Empty.
@@ -29,12 +29,12 @@ Crew retain an unlinked label because the overview requires management access.
 The list's shadcn Select offers All priorities, Low, Medium, High and Urgent.
 Search reference accepts a partial visible reference, such as MG-W0001 (max 200
 characters). Apply filters trims the search and updates URL `priority`/`q`,
-resetting `cursor`; Clear filters resets all three and the controls. Pagination
+resetting `cursor`; Clear filters resets all criteria/cursor and the controls. Pagination
 preserves criteria. Refresh and browser history restore the applied values.
 The route rejects invalid priorities and overlong/non-string searches before
 mounting list queries. Filters combine on the server before pagination. Empty
 filtered results say No matching work orders; an empty unfiltered estate says
-No work orders yet. All current orders are OPEN; status filtering awaits ID-38.
+No work orders yet. Status/category filters share the same URL/pagination rules.
 
 Route-local components split source selection, optional asset search, location
 feedback and save errors. The existing ReportFilters is reused outside the
@@ -87,7 +87,7 @@ so users can check after an ambiguous network response.
 
 All private work-order keys start with the current user ID:
 
-- [userId, "work-orders", estateId, "list", { priority, q, sortBy?, direction? }, cursor]
+- [userId, "work-orders", estateId, "list", { priority, q, status, category, sortBy?, direction? }, cursor]
 - [userId, "work-orders", estateId, "detail", workOrderId]
 - [userId, "work-order-assets", estateId, q, cursor]
 
@@ -107,8 +107,8 @@ Source selection keeps existing [userId, "estate-reports", estateId, ...] keys.
 Location reads reuse existing location keys. No owner-only asset list/detail
 queries are needed to create or read an order as a Manager/Crew member.
 
-Assignment/routing, status transitions, advanced filters, costs, attachments and
-saved inspection integration belong to follow-up stories.
+Assignment/routing/provider filtering, attachments and saved inspection integration
+belong to follow-up stories.
 
 
 ## Manual review
@@ -157,7 +157,7 @@ Category, Priority and Created headers using shared
 `components/sortable-table-head.tsx` (shadcn Button/TableHead with direction
 icons, keyboard interaction and aria-sort). First selecting Priority/Created
 uses descending order; Reference/Category use ascending. Clicking again reverses.
-Default is Created descending. Description and OPEN-only Status stay static.
+Default is Created descending. Description and Status stay static.
 
 The route validates URL `sortBy`/`direction`, derived from the generated API query
 types. Sorting clears only `cursor`, keeps filters, and queries the complete
@@ -183,9 +183,165 @@ otherwise selection opens management overview, Crew work orders or resident
 reporting with estateId preselected. See [shell.md](shell.md). Conflict errors use
 structured rounded shadcn Alerts; network advice is reserved for ambiguous errors.
 
-Current manual-review verification: 555 web tests and 877 backend tests pass,
+ID-36 baseline manual-review verification: 555 web tests and 877 backend tests pass,
 workspace type checks and the production web build pass, and web formatting/lint
 passes. Java Spotless initially lacked dependencies in this PC's offline Maven
 cache; an offline server:lint recheck on 2026-10-24 passed for 255 Java files.
 Java formatting is verified. No dependency installation or database migration
 was performed by the agent for these refinements.
+
+## Progress and completion
+
+Access context supplies canUpdateWorkOrders separately from creation/asset
+capabilities. Detail adds route-local `work-order-progress.tsx`: active owners/
+Managers see Start work on Open/Assigned and Complete work order on In Progress.
+Crew see history/outcomes without mutation actions. Active owners/Managers see
+Edit outcome on Closed work.
+
+The completion shadcn Dialog scrolls within the viewport, uses labelled
+Textarea/Input fields, explains SGD/whole minutes and unknown versus explicit 0,
+and explains that closure retains Closed status while authorized users can correct
+the recorded outcome. Findings/work performed are required.
+Failed saves retain entered values. The version the user reviewed is retained;
+background refetch cannot silently authorize a new version. Conflicts offer
+Refresh work order and explicit review before retrying. Refresh after an ambiguous
+response lets the user check whether the first request saved. No mutation retries
+automatically. `components/work-order-completion.tsx` renders read-only outcomes
+on both work-order detail and asset maintenance; unknown values stay Unknown.
+
+Status history shows chronological transitions, actor display name (or Name
+unavailable) and server date/time; raw account IDs are not display labels. Legacy
+creation is derived by the API. Failed history loads offer Retry history.
+
+New hooks in `lib/work-orders.ts` use generated types and endpoints:
+
+- useWorkOrderStatusHistory: GET status-history;
+  [userId, "work-orders", estateId, "history", workOrderId].
+- useChangeWorkOrderStatus: PATCH status; useSaveWorkOrderCompletion: PUT completion.
+  Both seed detail and invalidate that user's estate lists and order history.
+- useAssetWorkOrderCompletions: GET asset work-order-completions;
+  [userId, "asset-work-order-completions", estateId, assetId], gated by canViewAssets.
+  Closure invalidates this key for a linked asset. Forecast/condition/manual-event
+  queries are not invalidated because closure does not alter those records.
+
+List query keys now include status/category with the existing criteria. Apply/
+clear reset the cursor while preserving sort; the route validates the new enums.
+Sort placeholder rows require unchanged status/category as well as priority/q.
+Provider selection remains deferred until real ID-37 data is available; ID-38's
+full acceptance is still pending that integration.
+
+Manual review for the new progress/completion scope, after backend generation
+and automated verification finish:
+
+1. As an active owner/Manager, open an Open order and choose Start work. Confirm
+   In Progress, a changed version and one actor/time history entry. Refresh and
+   confirm the state persists. An older tab's start request should conflict and
+   offer Refresh rather than overwrite.
+2. Choose Complete work order. Leave findings/work performed blank and verify
+   submission is blocked. Enter both; leave labour unknown, enter parts cost 0
+   and downtime 0. Save once. Confirm Closed, unknown labour/total, zero parts/
+   downtime and recorded closer/time after refresh. Edit outcome should prefill the
+   saved values, require a correction reason and preserve Closed/original closure.
+   Check the before/after audit and that asset Maintenance still has one entry.
+3. Complete an asset-linked job. As its owner, open Maintenance: the reference,
+   saved work location and outcome should appear once beside manual events.
+   Move/retire an asset after starting another job; completing existing work
+   should retain its original work location and asset link.
+4. Use a non-owner Manager: start/close succeeds through work orders, while
+   opening owner-only asset details/history remains denied. As Crew, read the
+   outcome/audit without Start/Complete controls. Inactive estates stay read-only.
+5. Combine status, category, priority and partial reference filters. Apply/clear
+   should reset pagination and retain sorting; refresh/back restore criteria.
+   Closed orders remain visible when status is omitted.
+6. With a source-report job, compare the report and asset condition before/after
+   closure. Their values and manual maintenance/forecast inputs should remain
+   unchanged. In browser device emulation, check dialog scrolling, keyboard
+   focus, narrow portrait/landscape and light/dark themes.
+
+Verification on 2026-10-24 for progress/completion: 564 web tests and 913 backend
+tests pass; workspace types, formatting/lint and the production web build pass.
+The actual detail/filter/dialog components were clicked through in isolated
+Chrome with fixture hooks at 320×740, dark 390×844 and landscape 844×390. Dialog
+bounds, landscape footer scrolling, required fields, keyboard tab order and
+zero/unknown outcome display passed without horizontal overflow. These checks
+do not replace live authenticated manual QA or physical-device testing. All
+fixture/browser driver files and screenshots are outside the repository.
+
+Live authenticated review on 2026-10-24 also exercised Manager creation/start/
+closure, stale-tab conflict detection, retained input after failed saves, and an
+identical retry after a deliberately lost successful completion response. The
+retry returned the existing completion without duplicate audit or maintenance
+entries. Owner asset history showed the saved work location and 17.00 SGD total
+after its linked QA asset was moved and retired. Crew remained read-only and
+non-owner Managers could close work without owner-only asset access. Resident
+estate work-order list/create URLs showed Page not found. Combined filters,
+refresh/back and live narrow portrait/dark layouts passed. The live 844×390
+completion dialog fit within the viewport and scrolled to Cancel/Complete.
+
+The earlier review found a recovery defect: Refresh work order refreshes detail/status/actions
+but leaves status history stale, and the resolved conflict warning remains.
+New Created events could also display Name unavailable despite an available
+creator name. Both are addressed by the agreed
+[follow-up implementation](../../.spec/features/work-order-review-follow-ups.md),
+along with oldest-first priority ties and audited outcome corrections.
+
+QA records left in shared development: TS-003-W0003 and TS-003-W0004 (Closed),
+BRO-123-W0001 (Closed), and retired asset BRO-123-A0001 under QA Progress Block / QA Service
+Area. They were created for live persistence/lifecycle checks. Follow-up QA
+corrected the two earlier QA outcomes and created/closed TS-003-W0004 to verify
+refreshed history and lost-response recovery. No existing non-QA work or estate
+member permissions were changed. Physical-phone testing, a live page containing
+more than 20 matching orders, and live inactive-estate coverage remain unverified;
+pagination and inactive-estate rules have automated coverage.
+
+
+## Review follow-ups: recovery, corrections and pagination
+
+Refresh work order reloads the detail and status history together, and correction
+history for a completed order. Its shadcn Alert has a title, separated/wrapping
+actions and a pending button. A resolved warning clears only after reads succeed.
+Transient network/5xx refresh failures retain the last loaded detail and dialog
+draft with feedback; denied/unavailable records and revoked access hide content.
+Failed saves retain all entered values. Refresh never silently adopts a new
+expectedVersion: the user explicitly reviews the current outcome before retrying.
+
+Edit outcome reuses the labelled completion fields, prefilled from the outcome
+captured when the dialog opens. Blank optional values send explicit null, costs
+remain decimal strings, and downtime 0 remains zero. Correction reason is required
+(max 500); mutations use the generated CorrectWorkOrderCompletionRequest. A save
+keeps the job Closed and preserves its original closer/time. CompletionOutcome
+shows Edited author/time in both detail and Maintenance. The Outcome corrections
+card loads revisions with reason/actor/time and a keyboard-accessible View before
+and after button exposing both saved snapshots. Crew can read this audit.
+
+Hooks in `lib/work-orders.ts`:
+
+- useWorkOrderCompletionRevisions: GET completion-revisions; key
+  [userId, "work-orders", estateId, "revisions", workOrderId], enabled for an
+  accessible completed order; retries are explicit.
+- useCorrectWorkOrderCompletion: PATCH completion; requires canUpdateWorkOrders,
+  has no automatic retries, seeds detail and invalidates the list, status/revision
+  history and linked owner's asset-work-order-completions cache. It does not
+  invalidate or write forecast/manual-event data.
+
+The work-order footer displays the current page's row count and Next/First page.
+Previous returns to cursors visited in the current list session. That cursor
+trail is scoped to user, estate and criteria; applying/clearing filters or sorting
+resets it. A directly opened later cursor has First page without an invented
+previous cursor, total or page number. Requests stay server-paginated at 20 rows;
+buttons disable while sort placeholder rows are visible. Priority ties are now
+oldest first in both priority directions, then stable descending IDs. Created
+sorting still defaults newest first.
+
+
+Follow-up verification on 2026-10-24: 936 backend tests and 575 web tests pass,
+with workspace types, pnpm fix/check and the production web build. Live owner/
+Manager correction, stale-tab review, updated before/after audit and Crew read-only
+screens passed. Refresh cleared the stale start warning and fetched its missing
+history entry. A lost successful completion response followed by Refresh showed
+Closed without switching the dialog into editing mode. Priority sorting placed
+older equal-priority jobs first. Existing QA asset Maintenance still displayed
+one entry after correction. Dark 320px portrait and light 844×390 landscape edit
+dialogs fit and scroll to their action buttons; Tab advances Findings → Work
+performed. The member table stays within the page at 320px with its own horizontal
+scroll. Physical-phone and large live datasets remain the limits noted above.

@@ -22,6 +22,9 @@ import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Workorder;
+import com.proj.server.db.tables.Workordercompletion;
+import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderstatusevent;
 
 
 /**
@@ -119,4 +122,19 @@ public class Tables {
      * The table <code>public.WorkOrder</code>.
      */
     public static final Workorder WORKORDER = Workorder.WORKORDER;
+
+    /**
+     * The table <code>public.WorkOrderCompletion</code>.
+     */
+    public static final Workordercompletion WORKORDERCOMPLETION = Workordercompletion.WORKORDERCOMPLETION;
+
+    /**
+     * The table <code>public.WorkOrderCompletionRevision</code>.
+     */
+    public static final Workordercompletionrevision WORKORDERCOMPLETIONREVISION = Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+
+    /**
+     * The table <code>public.WorkOrderStatusEvent</code>.
+     */
+    public static final Workorderstatusevent WORKORDERSTATUSEVENT = Workorderstatusevent.WORKORDERSTATUSEVENT;
 }

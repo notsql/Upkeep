@@ -231,6 +231,20 @@ public class WorkorderRecord extends UpdatableRecordImpl<WorkorderRecord> {
         return (OffsetDateTime) get(14);
     }
 
+    /**
+     * Setter for <code>public.WorkOrder.version</code>.
+     */
+    public void setVersion(Integer value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrder.version</code>.
+     */
+    public Integer getVersion() {
+        return (Integer) get(15);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -254,7 +268,7 @@ public class WorkorderRecord extends UpdatableRecordImpl<WorkorderRecord> {
     /**
      * Create a detached, initialised WorkorderRecord
      */
-    public WorkorderRecord(UUID id, UUID estateid, String reference, String description, UUID locationid, UUID assetid, String category, String priority, String source, UUID sourcereportid, String sourcereference, String status, String createdbyuserid, OffsetDateTime createdat, OffsetDateTime updatedat) {
+    public WorkorderRecord(UUID id, UUID estateid, String reference, String description, UUID locationid, UUID assetid, String category, String priority, String source, UUID sourcereportid, String sourcereference, String status, String createdbyuserid, OffsetDateTime createdat, OffsetDateTime updatedat, Integer version) {
         super(Workorder.WORKORDER);
 
         setId(id);
@@ -272,6 +286,7 @@ public class WorkorderRecord extends UpdatableRecordImpl<WorkorderRecord> {
         setCreatedbyuserid(createdbyuserid);
         setCreatedat(createdat);
         setUpdatedat(updatedat);
+        setVersion(version);
         resetTouchedOnNotNull();
     }
 }

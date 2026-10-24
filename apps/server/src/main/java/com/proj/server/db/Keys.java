@@ -22,6 +22,9 @@ import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Workorder;
+import com.proj.server.db.tables.Workordercompletion;
+import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderstatusevent;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
@@ -40,6 +43,9 @@ import com.proj.server.db.tables.records.IssuereportimageRecord;
 import com.proj.server.db.tables.records.LocationRecord;
 import com.proj.server.db.tables.records.ManufacturerRecord;
 import com.proj.server.db.tables.records.WorkorderRecord;
+import com.proj.server.db.tables.records.WorkordercompletionRecord;
+import com.proj.server.db.tables.records.WorkordercompletionrevisionRecord;
+import com.proj.server.db.tables.records.WorkorderstatuseventRecord;
 
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
@@ -78,6 +84,9 @@ public class Keys {
     public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
     public static final UniqueKey<ManufacturerRecord> MANUFACTURER_PKEY = Internal.createUniqueKey(Manufacturer.MANUFACTURER, DSL.name("Manufacturer_pkey"), new TableField[] { Manufacturer.MANUFACTURER.ID }, true);
     public static final UniqueKey<WorkorderRecord> WORKORDER_PKEY = Internal.createUniqueKey(Workorder.WORKORDER, DSL.name("WorkOrder_pkey"), new TableField[] { Workorder.WORKORDER.ID }, true);
+    public static final UniqueKey<WorkordercompletionRecord> WORKORDERCOMPLETION_PKEY = Internal.createUniqueKey(Workordercompletion.WORKORDERCOMPLETION, DSL.name("WorkOrderCompletion_pkey"), new TableField[] { Workordercompletion.WORKORDERCOMPLETION.ID }, true);
+    public static final UniqueKey<WorkordercompletionrevisionRecord> WORKORDERCOMPLETIONREVISION_PKEY = Internal.createUniqueKey(Workordercompletionrevision.WORKORDERCOMPLETIONREVISION, DSL.name("WorkOrderCompletionRevision_pkey"), new TableField[] { Workordercompletionrevision.WORKORDERCOMPLETIONREVISION.ID }, true);
+    public static final UniqueKey<WorkorderstatuseventRecord> WORKORDERSTATUSEVENT_PKEY = Internal.createUniqueKey(Workorderstatusevent.WORKORDERSTATUSEVENT, DSL.name("WorkOrderStatusEvent_pkey"), new TableField[] { Workorderstatusevent.WORKORDERSTATUSEVENT.ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions

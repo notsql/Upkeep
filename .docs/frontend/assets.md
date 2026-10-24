@@ -206,3 +206,24 @@ query key and endpoints remain unchanged. Sorting preserves filters, clearing
 filters preserves sorting, and refresh/browser back restore both.
 Sorting uses `resetScroll: false`, keeping the current page position as rows or
 cards reorder. Other asset navigation retains its existing scroll behavior.
+
+## Completed work orders in maintenance
+
+`$assetId/-components/asset-maintenance-section.tsx` combines manual AssetEvent
+entries with canonical completed work from useAssetWorkOrderCompletions, ordered
+newest first with stable ID ties. Each completion appears once, labelled Work
+order with reference, saved work location, findings/work performed, parts notes,
+SGD costs, minutes, closer and server time. Reference links require independent
+canViewWorkOrders. Unknown costs/downtime are displayed distinctly from zero.
+The shared CompletionOutcome component also serves work-order detail. Existing
+Record repair and forecast/manual-event APIs retain their behavior. Completion
+reads retain owner-only asset permission, including moved/retired asset history;
+non-owner Managers use work-order outcomes instead. See [work-orders.md](work-orders.md).
+
+
+Authorized corrections retain the same canonical completion entry in Maintenance.
+The displayed outcome/costs are current, with Edited author/time when corrected;
+original completion time still determines the entry's place in history. Revision
+snapshots and correction reasons are available from the work-order detail, subject
+to independent work-order access. Correction never creates an AssetEvent or
+changes condition/forecast inputs.

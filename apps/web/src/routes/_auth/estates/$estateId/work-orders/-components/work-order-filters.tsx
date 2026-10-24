@@ -28,6 +28,25 @@ const options: {
   { value: "URGENT", label: "Urgent" },
 ];
 
+const statusOptions: {
+  value: NonNullable<Filters["status"]> | "ALL";
+  label: string;
+}[] = [
+  { value: "ALL", label: "All statuses" },
+  { value: "OPEN", label: "Open" },
+  { value: "ASSIGNED", label: "Assigned" },
+  { value: "IN_PROGRESS", label: "In progress" },
+  { value: "CLOSED", label: "Closed" },
+];
+const categoryOptions: {
+  value: NonNullable<Filters["category"]> | "ALL";
+  label: string;
+}[] = [
+  { value: "ALL", label: "All categories" },
+  { value: "EQUIPMENT_FAULT", label: "Equipment fault" },
+  { value: "CLEANLINESS", label: "Cleanliness" },
+  { value: "SAFETY", label: "Safety" },
+];
 export function WorkOrderFilters({
   filters,
   onChange,
@@ -39,7 +58,29 @@ export function WorkOrderFilters({
   const [priority, setPriority] = useState<
     NonNullable<Filters["priority"]> | "ALL"
   >(filters.priority ?? "ALL");
+  const [status, setStatus] = useState<NonNullable<Filters["status"]> | "ALL">(
+    filters.status ?? "ALL"
+  );
+  const [category, setCategory] = useState<
+    NonNullable<Filters["category"]> | "ALL"
+  >(filters.category ?? "ALL");
   const [q, setQuery] = useState(filters.q ?? "");
+  const changeStatus = useCallback(
+    (value: NonNullable<Filters["status"]> | "ALL" | null) => {
+      if (value) {
+        setStatus(value);
+      }
+    },
+    []
+  );
+  const changeCategory = useCallback(
+    (value: NonNullable<Filters["category"]> | "ALL" | null) => {
+      if (value) {
+        setCategory(value);
+      }
+    },
+    []
+  );
   const changePriority = useCallback(
     (value: NonNullable<Filters["priority"]> | "ALL" | null) => {
       if (value) {
@@ -57,13 +98,17 @@ export function WorkOrderFilters({
       event.preventDefault();
       onChange({
         ...(priority === "ALL" ? {} : { priority }),
+        ...(status === "ALL" ? {} : { status }),
+        ...(category === "ALL" ? {} : { category }),
         ...(q.trim() ? { q: q.trim() } : {}),
       });
     },
-    [onChange, priority, q]
+    [onChange, priority, q, status, category]
   );
   const clear = useCallback(() => {
     setPriority("ALL");
+    setStatus("ALL");
+    setCategory("ALL");
     setQuery("");
     onChange({});
   }, [onChange]);
@@ -73,6 +118,44 @@ export function WorkOrderFilters({
       className="flex flex-wrap items-end gap-4"
       onSubmit={apply}
     >
+      <Field className="w-full sm:w-48">
+        <FieldLabel htmlFor={`${id}-status`}>Status</FieldLabel>
+        <Select
+          items={statusOptions}
+          onValueChange={changeStatus}
+          value={status}
+        >
+          <SelectTrigger className="w-full" id={`${id}-status`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {statusOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Field className="w-full sm:w-48">
+        <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
+        <Select
+          items={categoryOptions}
+          onValueChange={changeCategory}
+          value={category}
+        >
+          <SelectTrigger className="w-full" id={`${id}-category`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {categoryOptions.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
       <Field className="w-full sm:w-48">
         <FieldLabel htmlFor={`${id}-priority`}>Priority</FieldLabel>
         <Select items={options} onValueChange={changePriority} value={priority}>

@@ -16,8 +16,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { type FormEvent, useCallback, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import {
   useCouncilInvitation,
@@ -108,54 +117,149 @@ function MemberPermission({
   );
   const self = userId === member.userId;
   return (
-    <li className="grid gap-3 rounded-lg border p-3">
-      <p className="break-words font-medium">{member.name}</p>
-      <p className="break-all text-muted-foreground text-sm">{member.email}</p>
-      {member.owner ? <Badge>Owner</Badge> : null}
-      <p>
-        {roles.find((role) => role.value === member.role)?.label ?? member.role}
-      </p>
-      {self || member.owner ? (
+    <TableRow>
+      <TableCell className="min-w-32 whitespace-normal break-words font-medium">
+        {member.name}
+      </TableCell>
+      <TableCell className="min-w-44 max-w-64 whitespace-normal break-all">
+        {member.email}
+      </TableCell>
+      <TableCell className="whitespace-normal">
+        <div className="space-y-2">
+          {member.owner ? <Badge>Owner</Badge> : null}
+          <p>
+            {roles.find((role) => role.value === member.role)?.label ??
+              member.role}
+          </p>
+        </div>
+      </TableCell>
+      <TableCell className="min-w-60 whitespace-normal">
+        <div className="grid gap-3">
+          {self || member.owner ? (
+            <p className="text-muted-foreground text-sm">
+              {member.owner
+                ? "Transfer ownership before changing this member’s access."
+                : "Another Manager must change or remove your access."}
+            </p>
+          ) : (
+            <>
+              <RolePicker
+                disabled={update.isPending}
+                label={`Role for ${member.name}`}
+                onChange={change}
+                value={member.role}
+              />
+              <RemoveMemberButton
+                email={member.email}
+                estateId={estateId}
+                memberId={member.userId}
+              />
+            </>
+          )}
+          {update.isPending ? <p role="status">Saving role…</p> : null}
+          {update.isSuccess ? <p role="status">Role saved.</p> : null}
+          {update.error ? <p role="alert">{update.error.message}</p> : null}
+          {canTransfer &&
+          !self &&
+          !member.owner &&
+          member.role === "MANAGER" ? (
+            <Button onClick={showTransfer} variant="outline">
+              Transfer ownership to {member.name}
+            </Button>
+          ) : null}
+          {confirmTransfer ? (
+            <AccessConfirmation
+              confirmLabel="Transfer ownership"
+              description="They will become the estate owner. You will remain a Manager, and ownership powers will pass to them."
+              email={member.email}
+              keepLabel="Keep ownership"
+              onClose={closeTransfer}
+              onConfirm={confirm}
+              title="Transfer estate ownership?"
+            />
+          ) : null}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function EstateMembersTable({
+  estateId,
+  members,
+  canTransfer,
+}: {
+  estateId: string;
+  members: components["schemas"]["EstateMemberResponse"][];
+  canTransfer: boolean;
+}) {
+  const [selectedPage, setSelectedPage] = useState(0);
+  const lastPage = Math.max(0, Math.ceil(members.length / 20) - 1);
+  const page = Math.min(selectedPage, lastPage);
+  useEffect(
+    () => setSelectedPage((current) => Math.min(current, lastPage)),
+    [lastPage]
+  );
+  const previous = useCallback(
+    () => setSelectedPage((current) => Math.max(0, current - 1)),
+    []
+  );
+  const next = useCallback(
+    () => setSelectedPage((current) => Math.min(lastPage, current + 1)),
+    [lastPage]
+  );
+  const start = page * 20;
+  return (
+    <div className="mt-4 min-w-0 space-y-4">
+      <Table>
+        <TableCaption className="sr-only">Estate members</TableCaption>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {members.slice(start, start + 20).map((member) => (
+            <MemberPermission
+              canTransfer={canTransfer}
+              estateId={estateId}
+              key={member.userId}
+              member={member}
+            />
+          ))}
+        </TableBody>
+      </Table>
+      <nav
+        aria-label="Member pages"
+        className="flex flex-wrap items-center justify-between gap-3"
+      >
         <p className="text-muted-foreground text-sm">
-          {member.owner
-            ? "Transfer ownership before changing this member’s access."
-            : "Another Manager must change or remove your access."}
+          {members.length ? start + 1 : 0}–
+          {Math.min(start + 20, members.length)} of {members.length} members
         </p>
-      ) : (
-        <>
-          <RolePicker
-            disabled={update.isPending}
-            label={`Role for ${member.name}`}
-            onChange={change}
-            value={member.role}
-          />
-          <RemoveMemberButton
-            email={member.email}
-            estateId={estateId}
-            memberId={member.userId}
-          />
-        </>
-      )}
-      {update.isPending ? <p role="status">Saving role…</p> : null}
-      {update.isSuccess ? <p role="status">Role saved.</p> : null}
-      {update.error ? <p role="alert">{update.error.message}</p> : null}
-      {canTransfer && !self && !member.owner && member.role === "MANAGER" ? (
-        <Button onClick={showTransfer} variant="outline">
-          Transfer ownership to {member.name}
-        </Button>
-      ) : null}
-      {confirmTransfer ? (
-        <AccessConfirmation
-          confirmLabel="Transfer ownership"
-          description="They will become the estate owner. You will remain a Manager, and ownership powers will pass to them."
-          email={member.email}
-          keepLabel="Keep ownership"
-          onClose={closeTransfer}
-          onConfirm={confirm}
-          title="Transfer estate ownership?"
-        />
-      ) : null}
-    </li>
+        <div className="flex gap-2">
+          <Button
+            aria-label="Previous members"
+            disabled={page === 0}
+            onClick={previous}
+            variant="outline"
+          >
+            Previous
+          </Button>
+          <Button
+            aria-label="Next members"
+            disabled={page === lastPage}
+            onClick={next}
+            variant="outline"
+          >
+            Next
+          </Button>
+        </div>
+      </nav>
+    </div>
   );
 }
 
@@ -244,6 +348,7 @@ function CouncilInvitationForm({ estateId }: { estateId: string }) {
 }
 
 export function CouncilPage({ estateId }: { estateId: string }) {
+  const { userId } = useEstateSession();
   const estate = useEstate(estateId);
   const canManage = estate.data?.canManageInvitationPermissions === true;
   const members = useEstateMembers(estateId, canManage);
@@ -313,16 +418,14 @@ export function CouncilPage({ estateId }: { estateId: string }) {
                 No members yet. Invite someone to get started.
               </p>
             ) : null}
-            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-              {members.data?.map((member) => (
-                <MemberPermission
-                  canTransfer={estate.data.owned}
-                  estateId={estateId}
-                  key={member.userId}
-                  member={member}
-                />
-              ))}
-            </ul>
+            {members.data && !members.error ? (
+              <EstateMembersTable
+                canTransfer={estate.data.owned}
+                estateId={estateId}
+                key={`${estateId}:${userId}`}
+                members={members.data}
+              />
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

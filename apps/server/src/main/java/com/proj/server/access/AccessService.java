@@ -87,6 +87,7 @@ public class AccessService {
                     responder,
                     responder && active,
                     !resident && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
+                    manager && active,
                     manager && active);
         });
         var assigned = rows.stream()
