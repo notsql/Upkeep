@@ -111,6 +111,7 @@ async function setup(
     "/estates/$estateId",
     "/estates/$estateId/assets",
     "/estates/$estateId/council",
+    "/estates/$estateId/roles",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
     "/estates/$estateId/work-orders",
@@ -170,6 +171,93 @@ beforeEach(() => {
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   vi.mocked(api.GET).mockImplementation(getEstates);
 });
+
+it("shows the assigned custom role name in the estate dropdown", async () => {
+  accessOverride = {
+    ...workspaceAccess,
+    estates: [
+      {
+        ...ownerEstateAccess,
+        estateId: "oak",
+        estateName: "Oak Park",
+        role: "CUSTOM",
+        customRoleName: "Auditor",
+      },
+    ],
+  };
+  await setup("/estates/oak");
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  const trigger = await desktop.findByRole("button", {
+    name: "Switch estate: Oak Park",
+  });
+  expect(trigger.textContent).toContain("Auditor");
+  expect(trigger.getAttribute("aria-description")).toBe("Auditor");
+  fireEvent.click(trigger);
+  within(await screen.findByRole("menuitem", { name: "Oak Park" })).getByText(
+    "Auditor"
+  );
+});
+
+it.each(["roles", "council"])(
+  "switches to a custom estate's permitted %s screen without report or overview access",
+  async (feature) => {
+    accessOverride = {
+      ...workspaceAccess,
+      estates: [
+        { ...ownerEstateAccess, estateId: "maple", estateName: "Maple Estate" },
+        {
+          ...ownerEstateAccess,
+          estateId: "oak",
+          estateName: "Oak Park",
+          role: "CUSTOM",
+          customRoleName: "Delegated staff",
+          canViewManagement: false,
+          canManageEstate: false,
+          canViewAssets: false,
+          canInviteMembers: feature === "council",
+          canManageInvitationPermissions: false,
+          canViewFaultReports: false,
+          canRelocateFaultReports: false,
+          canViewWorkOrders: false,
+          canCreateWorkOrders: false,
+          canViewEstateRoles: feature === "roles",
+          canViewEstateInvitations: feature === "council",
+        },
+      ],
+    };
+    const { router } = await setup("/estates/maple/assets");
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    fireEvent.click(
+      await desktop.findByRole("button", {
+        name: "Switch estate: Maple Estate",
+      })
+    );
+    const target = await screen.findByRole("menuitem", { name: "Oak Park" });
+    expect(target.getAttribute("href")).toBe(`/estates/oak/${feature}`);
+    fireEvent.click(target);
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe(`/estates/oak/${feature}`)
+    );
+    const current = await desktop.findByRole("button", {
+      name: "Switch estate: Oak Park",
+    });
+    expect(current.textContent).toContain("Delegated staff");
+    expect(
+      vi
+        .mocked(api.GET)
+        .mock.calls.some(
+          (call) =>
+            call[0] === "/estates/{id}" &&
+            (call[1] as { params?: { path?: { id?: string } } }).params?.path
+              ?.id === "oak"
+        )
+    ).toBe(false);
+  }
+);
 
 it.each([
   "/estates/pine/work-orders",

@@ -1,5 +1,6 @@
 package com.proj.server.location;
 
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -50,7 +51,7 @@ public class LocationService {
 
     @Transactional
     public LocationResponse update(UUID estateId, UUID id, String owner, UpdateLocationRequest request) {
-        lockActiveEstate(estateId, owner);
+        lockActiveEstateForPermission(estateId, owner, EstatePermissionCode.EDIT_LOCATIONS);
         var location = activeLocation(estateId, id);
         var parentType = checkPlacement(estateId, location.type(), request.parentId(), request.sortOrder());
         checkUnique(estateId, location.type(), request.parentId(), request.name(), request.sortOrder(), id);
@@ -67,7 +68,7 @@ public class LocationService {
     @Transactional
     public AddFloorsResponse addFloors(UUID estateId, UUID blockId, String owner, AddFloorsRequest request) {
         var floors = floorRange(request.lowestFloor(), request.highestFloor());
-        lockActiveEstate(estateId, owner);
+        lockActiveEstateForPermission(estateId, owner, EstatePermissionCode.CREATE_LOCATIONS);
         var block = repository.find(blockId, estateId).orElseThrow(LocationService::locationNotFound);
         if (block.type() != LocationType.BLOCK) {
             throw badRequest("Floors can only be added to a block.");
@@ -139,13 +140,31 @@ public class LocationService {
 
     private void lockActiveEstateForCreation(UUID estateId, String user) {
         var estate = estates.findAccessibleForUpdate(estateId, user).orElseThrow(LocationService::estateNotFound);
-        if (!estates.isManager(estateId, user)) {
+        if (!estates.isManager(estateId, user)
+                && !estates.hasPermission(estateId, user, EstatePermissionCode.CREATE_LOCATIONS)) {
+            if (estates.isCustom(estateId, user))
+                throw new LocationException(HttpStatus.FORBIDDEN, "Creating locations requires CREATE_LOCATIONS.");
             throw estateNotFound();
         }
         if (estate.deactivatedAt() != null) {
             throw new LocationException(
                     HttpStatus.CONFLICT, "This estate is inactive. Its locations cannot be changed.");
         }
+    }
+
+    private void lockActiveEstateForPermission(UUID estateId, String user, EstatePermissionCode permission) {
+        estates.lock(estateId);
+        if (estates.hasPermission(estateId, user, permission)) {
+            var estate = estates.findAccessibleForUpdate(estateId, user).orElseThrow(LocationService::estateNotFound);
+            if (estate.deactivatedAt() != null)
+                throw new LocationException(
+                        HttpStatus.CONFLICT, "This estate is inactive. Its locations cannot be changed.");
+            return;
+        }
+        if (estates.isCustom(estateId, user))
+            throw new LocationException(
+                    HttpStatus.FORBIDDEN, "This location permission is required: " + permission.name());
+        lockActiveEstate(estateId, user);
     }
 
     private void lockActiveEstate(UUID estateId, String owner) {
@@ -187,6 +206,11 @@ public class LocationService {
                 .orElseThrow(() -> new LocationException(HttpStatus.NOT_FOUND, "Parent location not found."));
         if (!allowed.contains(parent.type())) {
             throw badRequest(describe(type) + " must sit inside " + describe(allowed) + ".");
+        }
+        if (parent.parentId() != null) {
+            var ancestor = repository.find(parent.parentId(), estateId).orElseThrow(LocationService::locationNotFound);
+            if (ancestor.deactivatedAt() != null)
+                throw new LocationException(HttpStatus.CONFLICT, "An ancestor of the chosen location is deactivated.");
         }
         if (parent.deactivatedAt() != null) {
             throw new LocationException(HttpStatus.CONFLICT, "The chosen parent location is deactivated.");

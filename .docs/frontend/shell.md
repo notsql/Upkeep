@@ -57,7 +57,9 @@ EstateContextSwitcher, WorkOrderEstateSwitcher and ReportEstateSwitcher share
 EstateFeatureSwitcher (shadcn Button/DropdownMenu). Choices come from
 GET /access/context, key [userId, "app-access"], with no management estate-list
 request. The trigger and choices show estate name plus estate-local Manager,
-Crew, Council, Member or Resident role. Even a single estate retains the dropdown.
+Crew, Council, Member or Resident role, or the assigned custom-role name.
+Even a single estate retains the dropdown, including role-only and
+invitation-only custom contexts.
 Resident-facing navigation also has context, using URL estateId or the sole
 active assignment; multiple unselected assignments show Choose estate.
 The estate menu caps height at the smaller of 20rem and the positioning
@@ -65,8 +67,10 @@ primitive's available height. Internal scrolling keeps every choice reachable
 when the sidebar switcher is near an edge in a short landscape viewport.
 
 All accessible membership estates appear. Selecting one preserves report/work-order
-context when allowed, otherwise opens management overview, Crew work orders or
-/reports/new?estateId=<id>. Other destinations clear search/hash. Inactive Resident
+context when allowed, otherwise opens an authorized overview, work-order, fault-report,
+role or invitation screen; Residents open /reports/new?estateId=<id>.
+An estate with no feature capability returns to Estates.
+Other destinations clear search/hash. Inactive Resident
 choices are disabled with Reporting unavailable, using residentEstates from access
 context to determine active reporting assignments. Each selected item has a check;
 account changes and access failures hide previous choices. Feature links remain
@@ -141,3 +145,17 @@ Work-order capability guards run before general resident/workspace redirects.
 Signed-in unauthorized list/detail/create deep links show Page not found without
 mounting protected child queries. Normal resident entry and signed-out sign-in
 behaviour remain intact.
+
+## Custom estate permissions
+
+Estate-scoped navigation and `_auth` guard check Roles and council capabilities
+before requiring management access. Roles requires canViewEstateRoles; council
+requires canViewEstateInvitations/canInviteMembers/member-admin authority. Access
+lookup failures mount no controls. Role-only and invitation-only users therefore
+need no VIEW_ESTATE. AppNavigation avoids useEstate for these contexts, labels
+them from access estateName, and exposes Roles/Invitations as local destinations.
+Outside that estate, named global entries provide a route into scoped-only
+estates. Report contexts retain their report switcher; management contexts retain
+the management estate switcher. Home sends a scoped-only user to Roles or estate
+invitations after checking management/report entry. Access/cache remains per user.
+See [estate-roles.md](estate-roles.md) and [council-invitations.md](council-invitations.md).

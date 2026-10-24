@@ -86,7 +86,7 @@ function OutstandingInvitation({
     <li className="grid gap-2 rounded-lg border p-3">
       <p className="break-all font-medium">{invitation.email}</p>
       <p className="text-muted-foreground text-sm">
-        {invitation.role} · {delivery}
+        {invitation.customRoleName ?? invitation.role} · {delivery}
         {invitation.expiresAt
           ? ` · Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`
           : ""}

@@ -6,10 +6,10 @@ JWT subject. Estate and location IDs are UUIDs.
 | Method | Path | Request | Success | Access |
 | --- | --- | --- | --- | --- |
 | GET | `/estates/{estateId}/locations` | Optional query `includeInactive: boolean`, default false | 200 `LocationResponse[]` | Owner or current management member/responder for active rows; owner or MANAGER/CREW responder with `includeInactive=true` |
-| POST | `/estates/{estateId}/locations` | `CreateLocationRequest` | 201 `LocationResponse`, Location header | Owner or assigned MANAGER, active estate |
-| PATCH | `/estates/{estateId}/locations/{id}` | `UpdateLocationRequest` | 200 `LocationResponse` | Owner, active estate/location |
+| POST | `/estates/{estateId}/locations` | `CreateLocationRequest` | 201 `LocationResponse`, Location header | Owner, assigned MANAGER or custom CREATE_LOCATIONS, active estate |
+| PATCH | `/estates/{estateId}/locations/{id}` | `UpdateLocationRequest` | 200 `LocationResponse` | Owner or custom EDIT_LOCATIONS, active estate/location |
 | POST | `/estates/{estateId}/locations/{id}/deactivate` | none | 200 `LocationResponse` | Owner, active estate |
-| POST | `/estates/{estateId}/locations/{blockId}/floors` | `AddFloorsRequest` | 200 `AddFloorsResponse` | Owner, active estate and block |
+| POST | `/estates/{estateId}/locations/{blockId}/floors` | `AddFloorsRequest` | 200 `AddFloorsResponse` | Owner or custom CREATE_LOCATIONS, active estate and block |
 
 Invited members must accept before reading. Removing membership immediately
 denies subsequent reads. Invitation delegation does not confer location-write
@@ -17,8 +17,7 @@ permission. Reads list active locations, including on an inactive estate.
 Owners and current Managers assigned to the target estate can create blocks,
 levels and common areas. Council/legacy MEMBER/Crew/Resident/unassigned users
 cannot create; being a Manager in another estate grants no creation authority.
-Location editing/deactivation remain owner-only. The UI uses that estate's
-`canManageEstate` capability for creation, independently of ownership controls.
+Location editing also permits custom EDIT_LOCATIONS; deactivation remains owner-only. The UI uses separate canCreateLocations/canCreateFloors/canEditLocations flags.
 
 Creation locks the estate before checking current ownership/Manager membership
 and active status, serializing against member removal/demotion, ownership
@@ -77,8 +76,16 @@ Example: an authenticated owner or assigned Manager sends POST `/estates/{estate
 `{"type":"BLOCK","name":"Block A"}`. The 201 response contains the new
 `LocationResponse`. POST `/estates/{estateId}/locations/{blockId}/floors` with
 `{"lowestFloor":-2,"highestFloor":3}` creates L3, L2, L1, B1 and B2. After accepting an invitation, a member can GET the same
-collection and see Block A. Only an accepted MANAGER membership additionally
-permits creation; other membership roles cannot create. Editing/deactivation
-still require ownership.
+collection and see Block A. Accepted MANAGER or custom CREATE_LOCATIONS additionally permits creation; custom EDIT_LOCATIONS additionally permits editing. Deactivation still requires ownership.
 
 A resident membership in the target estate returns 403 on management requests, including a conflicting owner/RESIDENT row. Management access in another estate does not change this restriction. Unrelated estates retain 404.
+
+Custom VIEW_ESTATE permits active hierarchy reads; custom VIEW_FAULT_REPORTS
+also permits historical `includeInactive=true` supporting report reads. Custom
+CREATE_LOCATIONS (with prerequisite VIEW_ESTATE) permits individual creation and
+bulk floors. EDIT_LOCATIONS permits rename/reorder/reparent only, with the same
+prerequisite. Missing custom write permission returns403 in a known estate; a
+foreign estate remains404. All writes require activity and recheck current grants
+after estate locking. READ/EDIT_ESTATE alone never imply creation/editing and no
+custom grant permits deactivation. Parents and ancestors must be active for
+placement. See [estate-roles.md](estate-roles.md).

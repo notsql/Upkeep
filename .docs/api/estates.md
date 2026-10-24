@@ -7,10 +7,10 @@ specific estate, never provider claims or membership in another estate.
 
 | Method | Path | Request | Success | Authority |
 | --- | --- | --- | --- | --- |
-| GET | `/estates` | Optional `status: ACTIVE \| INACTIVE \| ALL`, default ACTIVE | 200 EstateResponse[] | Lists estates owned or assigned as MANAGER/COUNCIL/legacy MEMBER; excludes RESIDENT/CREW |
-| GET | `/estates/{id}` | `id: UUID` | 200 EstateResponse | Owner or assigned MANAGER/COUNCIL/legacy MEMBER |
+| GET | `/estates` | Optional `status: ACTIVE \| INACTIVE \| ALL`, default ACTIVE | 200 EstateResponse[] | Lists estates owned or assigned as MANAGER/COUNCIL/legacy MEMBER or CUSTOM with VIEW_ESTATE; excludes RESIDENT/CREW |
+| GET | `/estates/{id}` | `id: UUID` | 200 EstateResponse | Owner or assigned MANAGER/COUNCIL/legacy MEMBER or custom VIEW_ESTATE |
 | POST | `/estates` | EstateRequest | 201 EstateResponse; Location `/estates/{id}` | Any authenticated subject; creation atomically records ownership and MANAGER membership |
-| PATCH | `/estates/{id}` | EstateRequest | 200 EstateResponse | Current owner or assigned MANAGER in this estate |
+| PATCH | `/estates/{id}` | EstateRequest | 200 EstateResponse | Current owner, assigned MANAGER or custom EDIT_ESTATE in this estate |
 | POST | `/estates/{id}/deactivate` | DeactivateEstateRequest | 200 EstateResponse | Current owner only |
 
 ## DTOs
@@ -45,7 +45,7 @@ Council/Member receive 403; inaccessible estates (including Crew-only and
 unassigned callers) return 404. Resident membership explicitly denies management
 access with 403. A Manager assigned only to a different estate receives 404.
 
-Editing locks the estate before checking current Manager/owner authority and
+Editing locks the estate before checking current Manager/owner/custom EDIT_ESTATE authority and
 uses the same permission condition in the update. Member removal/demotion and
 ownership transfer serialize on that estate row. The next edit request reflects
 current membership even with the same token. Active/inactive details are
@@ -74,3 +74,12 @@ Example: an assigned Manager sends `PATCH /estates/{id}` with
 The 200 response contains these details, timestamps and estate ID, with
 `owned:false`. The same Manager's `POST /estates/{id}/deactivate` with
 `{"code":"MG-001"}` returns 403.
+
+Custom roles use current [estate permissions](estate-roles.md). VIEW_ESTATE
+adds estate list/detail visibility and active location context; EDIT_ESTATE permits
+detail editing, including inactive estates. A known custom member without the
+required permission receives403. Neither grant allows location creation/editing,
+member administration, assets, ownership transfer or estate deactivation. Queries
+and writes use the same typed permission predicates; same-token reassignment or
+definition editing affects the next request. Invitation response flags include
+custom INVITE_MEMBERS for sending; legacy member administration remains Manager-only.

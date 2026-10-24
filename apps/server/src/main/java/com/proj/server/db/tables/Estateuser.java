@@ -87,6 +87,11 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
      */
     public final TableField<EstateuserRecord, String> ROLE = createField(DSL.name("role"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'MEMBER'::character varying"), SQLDataType.VARCHAR)), this, "");
 
+    /**
+     * The column <code>public.EstateUser.customRoleId</code>.
+     */
+    public final TableField<EstateuserRecord, UUID> CUSTOMROLEID = createField(DSL.name("customRoleId"), SQLDataType.UUID, this, "");
+
     private Estateuser(Name alias, Table<EstateuserRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -184,8 +189,9 @@ public class Estateuser extends TableImpl<EstateuserRecord> {
     @Override
     public List<Check<EstateuserRecord>> getChecks() {
         return Arrays.asList(
+            Internal.createCheck(this, DSL.name("EstateUser_custom_role_check"), "(((((role)::text = 'CUSTOM'::text) AND (\"customRoleId\" IS NOT NULL)) OR (((role)::text <> 'CUSTOM'::text) AND (\"customRoleId\" IS NULL))))", true),
             Internal.createCheck(this, DSL.name("EstateUser_resident_invitation_check"), "((((role)::text <> 'RESIDENT'::text) OR (NOT \"canInviteMembers\")))", true),
-            Internal.createCheck(this, DSL.name("EstateUser_role_check"), "(((role)::text = ANY ((ARRAY['MEMBER'::character varying, 'COUNCIL'::character varying, 'RESIDENT'::character varying, 'MANAGER'::character varying, 'CREW'::character varying])::text[])))", true)
+            Internal.createCheck(this, DSL.name("EstateUser_role_check"), "(((role)::text = ANY ((ARRAY['MEMBER'::character varying, 'COUNCIL'::character varying, 'RESIDENT'::character varying, 'MANAGER'::character varying, 'CREW'::character varying, 'CUSTOM'::character varying])::text[])))", true)
         );
     }
 

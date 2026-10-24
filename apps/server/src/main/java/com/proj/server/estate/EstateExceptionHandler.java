@@ -9,9 +9,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes = {EstateController.class, EstateUserController.class, CouncilController.class})
+@RestControllerAdvice(
+        assignableTypes = {
+            EstateController.class,
+            EstateUserController.class,
+            CouncilController.class,
+            EstateRoleController.class
+        })
 public class EstateExceptionHandler {
-    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    @ExceptionHandler({org.springframework.dao.DataAccessException.class, org.jooq.exception.DataAccessException.class})
     ResponseEntity<EstateError> unavailable() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(new EstateError("Estate access is temporarily unavailable."));

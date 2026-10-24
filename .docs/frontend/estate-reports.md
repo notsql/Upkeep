@@ -20,7 +20,7 @@ overview only with `canViewManagement`; Crew see plain text and do not fetch
 management estate details. The Fault reports breadcrumb replaces the old return
 button on detail.
 `_auth` authenticates and checks the requested estate's `canViewFaultReports`
-before any child query can mount. Crew can enter report routes without general
+before any child query can mount. Crew and custom report readers can enter report routes without general
 management rights. Council/Resident membership and provider-admin claims cannot
 bypass this capability. Personal `/reports` history remains separate.
 Existing owners receive the same report navigation and screens as new owners
@@ -100,7 +100,7 @@ responder is also the submitter). Other sessions observe corrections on refetch.
 Session changes cancel/remove old-user queries. Blob URLs are revoked when image
 data, identity or component lifetime changes; image requests use responder URLs.
 
-Fault reports appears in desktop/contextual estate navigation for Manager/Crew,
+Fault reports appears in desktop/contextual estate navigation for Manager/Crew/custom report readers,
 including inactive-estate reads. Crew-only accounts land on assigned reports.
 The estate dropdown uses names/capabilities from access context to switch
 assigned report estates, including mixed Manager/Crew memberships. It appears
@@ -121,5 +121,15 @@ keeps the report list; other choices open a permitted management, Crew or reside
 destination. Inactive Resident choices explain reporting unavailability.
 Respond to faults opens the same EstateFeatureChooser Dialog used by Work orders,
 on desktop and mobile, then routes to the chosen estate report list. It does not
-automatically choose the first estate. Report access still requires the existing
-Manager/Crew membership; ownership does not grant additional report authority.
+automatically choose the first estate. Report access requires Manager/Crew membership
+or custom VIEW_FAULT_REPORTS; ownership alone does not grant report authority.
+
+## Custom estate permissions
+
+CUSTOM VIEW_FAULT_REPORTS enters these routes with no management estate query.
+The report estate switcher uses access-context labels, including custom estates.
+Read-only custom responders see list/detail/private images and historical location
+filters; Change location additionally requires canRelocateFaultReports from
+RELOCATE_FAULT_REPORTS and an active estate. The existing query keys, correction
+DTO and invalidations remain. Live definition edits/reassignment update access
+and the API independently rejects stale UI authority with the same token.

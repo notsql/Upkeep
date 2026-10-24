@@ -17,6 +17,8 @@ asset lifecycle writes use the same estate-first serialization. References use
 `<current estate code>-W0001`, counting existing orders under that lock, growing
 past four digits. Code changes never renumber saved orders. There is no delete,
 edit, assignment or status transition endpoint. Initial status is OPEN.
+The status contract is limited to OPEN in ID-36; workflow states/transitions
+belong to ID-38 and closure with an outcome belongs to ID-40.
 
 Assets are optional for every category. A newly linked asset must have exactly the
 same location ID as the work order; mismatches return 400 without saving. Existing

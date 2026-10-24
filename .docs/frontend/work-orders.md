@@ -39,6 +39,11 @@ No work orders yet. All current orders are OPEN; status filtering awaits ID-38.
 Route-local components split source selection, optional asset search, location
 feedback and save errors. The existing ReportFilters is reused outside the
 creation form, so its filter form is never nested inside another form.
+`new/-components/work-order-form.tsx` composes the creation screen;
+`use-work-order-form.ts` owns its state, prefill, source-conflict choices and
+submission guard. `work-order-source-fields.tsx` renders the source selector,
+report picker and manual source reference. These share the existing feature
+hooks and generated request type; the refactor adds no endpoint or query key.
 
 The auth route checks work-order capabilities before the generic management
 guard. Crew can enter list/detail, and cannot enter new. AppNavigation exposes
