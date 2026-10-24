@@ -30,6 +30,8 @@ export function useEstateReportAccess(estateId: string) {
   return {
     userId,
     canView,
+    estateName: permission?.estateName,
+    canViewManagement: canView && !!permission?.canViewManagement,
     canRelocate: canView && !!permission?.canRelocateFaultReports,
     pending: !ready || access.isPending,
   };

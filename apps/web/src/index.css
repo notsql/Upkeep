@@ -84,6 +84,11 @@ h2 {
 [data-slot="tabs-list"] {
   border-radius: 0.625rem;
 }
+.report-filters [data-slot="input-group"] {
+  min-height: 2.75rem;
+  background: var(--card);
+  border-radius: 0.625rem;
+}
 /* The list pads its tabs by 3px, so the active tab's corners nest inside the list's. */
 [data-slot="tabs-trigger"] {
   border-radius: calc(0.625rem - 3px);

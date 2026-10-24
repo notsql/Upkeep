@@ -121,6 +121,8 @@ public class AccessService {
                     canManageInvitationPermissions,
                     canViewFaultReports,
                     canRelocateFaultReports,
+                    !resident && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
+                    manager && active,
                     row.get(ESTATEUSER.CUSTOMROLEID),
                     row.get(ESTATEROLEDEFINITION.NAME),
                     canCreateLocations,
@@ -142,6 +144,7 @@ public class AccessService {
                 || capabilities.stream()
                         .anyMatch(estate -> estate.canViewManagement()
                                 || estate.canViewFaultReports()
+                                || estate.canViewWorkOrders()
                                 || estate.canViewEstateRoles()
                                 || estate.canViewEstateInvitations());
         return new AppAccessResponse(

@@ -12,4 +12,7 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0029 - Fault report responder access](0029-fault-report-responder-access.md)
 - [0030 - Authenticated accounts create estates](0030-authenticated-accounts-create-estates.md)
 
+- [0032 - Work-order creation and source links](0032-work-order-creation-and-source-links.md)
+- [0033 - Work-order location consistency and estate context](0033-work-order-location-consistency-and-estate-context.md)
+
 - [0032 - Custom estate roles and live permissions](0032-custom-estate-role-bindings-and-live-permissions.md)

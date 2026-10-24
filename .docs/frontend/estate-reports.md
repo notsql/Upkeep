@@ -13,10 +13,20 @@ delegates blob presentation and URL cleanup to `ReportImage`, supplying the
 existing "Loading image…" status.
 
 Routes are folder-based under `apps/web/src/routes/_auth/estates/$estateId/reports/`.
+List and detail use the shared PageHeader with Estates / estate name / Fault
+reports breadcrumbs; detail adds Details and places Create work order in the
+header actions. The estate name comes from access context and links to the
+overview only with `canViewManagement`; Crew see plain text and do not fetch
+management estate details. The Fault reports breadcrumb replaces the old return
+button on detail.
 `_auth` authenticates and checks the requested estate's `canViewFaultReports`
 before any child query can mount. Crew and custom report readers can enter report routes without general
 management rights. Council/Resident membership and provider-admin claims cannot
 bypass this capability. Personal `/reports` history remains separate.
+Existing owners receive the same report navigation and screens as new owners
+after the owner-membership backfill migration is applied and access context is
+refetched. No frontend ownership bypass is used; the repaired MANAGER membership
+supplies the existing report capabilities.
 
 | Route folder | Screen and components | API calls |
 | --- | --- | --- |
@@ -39,6 +49,12 @@ Apply filters validates bounds and applies the range with the selected block.
 Reversed/fractional/overflow values show an accessible error without a request.
 Clear filters resets both groups.
 
+These are existing shadcn Combobox controls. Scoped `.report-filters` styling in
+`src/index.css` gives their input-group wrappers a 44px minimum height, rounded
+corners and card background; popups have rounded corners. The shared filter also
+uses this presentation in the work-order resident-report selector. Search,
+typed integer bounds and application behavior remain unchanged.
+
 URL search fields are `blockId`, `minLevelPosition`, `maxLevelPosition`, `cursor`.
 Invalid URL bounds fail route validation before report queries mount. Changing
 or clearing a filter removes the cursor in the same navigation; refresh and back
@@ -55,7 +71,9 @@ Change location appears only with `canRelocateFaultReports` and opens once the
 location choices load. The modal shows current placement and editable Block,
 Level and Common area controls. Parent changes clear dependent selections.
 None means level-only placement; a common area can also sit directly under a
-block. Inactive nodes/ancestors are excluded from destinations. No active choices
+block. Selecting No level requires a block common area: the common-area control
+says Choose a block common area and inline status explains disabled Save when
+nothing is selected. Bare blocks remain invalid. Inactive nodes/ancestors are excluded from destinations. No active choices
 produce an explanation and disabled Save. No reason or other report fields are
 editable. Errors retain the selection; a 409 requires Reload before retrying.
 Reload refreshes the observed location/selection. Pending saves prevent repeats.
@@ -84,11 +102,27 @@ data, identity or component lifetime changes; image requests use responder URLs.
 
 Fault reports appears in desktop/contextual estate navigation for Manager/Crew/custom report readers,
 including inactive-estate reads. Crew-only accounts land on assigned reports.
-The Report estate Select uses names/capabilities from access context to switch
+The estate dropdown uses names/capabilities from access context to switch
 assigned report estates, including mixed Manager/Crew memberships. It appears
 on report pages and on Crew estate navigation, without management estate queries
 for Crew or overview access. Outside a report-capable estate, Respond to faults
 provides an entry to an assigned report estate on desktop and mobile overflow.
+
+The detail screen offers Create work order only with both report-read and
+work-order creation capabilities. It links to the creation route with a validated
+sourceReportId. Reports remain selectable after conversion; creating work does
+not alter or invalidate report data. See [work-orders.md](work-orders.md).
+
+ReportEstateSwitcher uses the shared EstateFeatureSwitcher: building icon,
+estate name, chevrons and an accessible Switch estate button, matching work-order
+and management estate navigation without a separate field title. The context dropdown includes all accessible membership estates and labels their
+estate-local roles; feature access remains capability-gated. An eligible choice
+keeps the report list; other choices open a permitted management, Crew or resident
+destination. Inactive Resident choices explain reporting unavailability.
+Respond to faults opens the same EstateFeatureChooser Dialog used by Work orders,
+on desktop and mobile, then routes to the chosen estate report list. It does not
+automatically choose the first estate. Report access requires Manager/Crew membership
+or custom VIEW_FAULT_REPORTS; ownership alone does not grant report authority.
 
 ## Custom estate permissions
 

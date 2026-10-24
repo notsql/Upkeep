@@ -6,6 +6,11 @@ current `EstateUser` MANAGER/CREW membership or custom VIEW_FAULT_REPORTS in the
 alone, WorkOS claims, Council, Member and Resident roles do not grant responder
 access. Revocation applies to the next request with the same token. Resident
 own-history URLs retain submitter-only authorization.
+Estate creation records owner MANAGER membership. Migration
+`20261022135000_backfill_estate_owner_memberships` repairs that invariant for
+existing owners with missing or legacy nonresident memberships, so their report
+access matches new estates. It preserves owner/RESIDENT conflicts and all
+non-owner assignments; report authorization still checks current membership.
 
 ## DTOs
 

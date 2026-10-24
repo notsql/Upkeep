@@ -17,7 +17,8 @@ name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is fal
 
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
 CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canInviteMembers/
-canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports: boolean. Owners project as MANAGER; ownership is
+canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
+canViewWorkOrders/canCreateWorkOrders: boolean. Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot
 receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
 no management access. Asset visibility and other management mutations retain
@@ -26,8 +27,15 @@ existing individual service guards; broader operations remain separate features.
 Every authenticated subject has `canCreateEstate=true`, regardless of existing
 membership or WorkOS role claims. Creation records the authenticated subject's
 ownership and MANAGER membership atomically in the new estate. Other assignments
-are preserved. `canEnterWorkspace` requires an existing management, report, role-authoring or estate-invitation capability. An unassigned response has `canCreateEstate=true`,
+are preserved. `canEnterWorkspace` requires an existing management, report, work-order, role-authoring or estate-invitation capability. An unassigned response has `canCreateEstate=true`,
 all other booleans false and both collections empty. Account migration remains deferred.
+Migration `20261022135000_backfill_estate_owner_memberships` specifically repairs
+existing estate owners: insert a missing MANAGER membership or normalize an
+owner's MEMBER/COUNCIL/CREW row to MANAGER. Existing MANAGER rows, membership
+timestamps/delegation flags, other users and other-estate assignments are preserved.
+Owner/RESIDENT conflicts remain RESIDENT and fail closed. This makes existing
+owners' report capabilities match newly created estates without changing the
+membership-based report authorization rule.
 
 Legacy `/api/admin/users/**` and `/users/**` routes are denied by SecurityConfig,
 including provider admins and local development. Legacy contracts remain in
@@ -73,6 +81,18 @@ owner/assigned-manager write and Council read permissions. See
 [flatlined-sensors.md](flatlined-sensors.md). The existing POST
 `/estates/{estateId}/locations/{blockId}/floors` is also admitted; its location service enforces ownership or custom CREATE_LOCATIONS.
 
+Work-order history uses canViewWorkOrders for current owners/Managers/Crew,
+including inactive estates. canCreateWorkOrders additionally requires an active
+estate and owner/Manager authority. Same-estate Resident conflicts deny both.
+Crew reads every estate work order without assignment filtering. The limited
+asset picker uses creation authority and does not change canViewAssets.
+See [work-orders.md](work-orders.md).
+
+The custom permission catalogue does not grant work-order access. Custom
+VIEW_ESTATE, EDIT_ESTATE or VIEW_FAULT_REPORTS does not imply
+canViewWorkOrders/canCreateWorkOrders; independent ownership still follows the
+owner policy above.
+
 ## Custom-role capability fields
 
 EstateAccessResponse additionally requires `customRoleId: UUID | null` and
@@ -83,7 +103,7 @@ Presets project null custom metadata. CUSTOM resolves persisted current grants;
 unsupported codes or invalid prerequisite sets grant nothing. No JWT role claim
 or cached definition supplies server authority.
 
-`AccessService.context` computes each estate capability in a named local matching
+`AccessService.context` computes custom-role capabilities in named locals matching
 its response field before constructing EstateAccessResponse.
 
 VIEW_ESTATE grants canViewManagement and membership in estate lists/dashboard

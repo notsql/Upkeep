@@ -27,13 +27,17 @@ import { ResidentEstateSelector } from "@/routes/_auth/reports/new/-components/r
 
 export function NewReportForm({
   estates,
+  initialEstateId,
 }: {
   estates: components["schemas"]["ResidentContextResponse"]["estates"];
+  initialEstateId?: string;
 }) {
   const id = useId();
   const navigate = useNavigate();
   const create = useCreateReport();
-  const [selectedEstateId, setSelectedEstateId] = useState<string | null>(null);
+  const [selectedEstateId, setSelectedEstateId] = useState<string | null>(
+    initialEstateId ?? null
+  );
   const estateId =
     selectedEstateId ?? (estates.length === 1 ? estates[0]?.id : undefined);
   const estateName =
@@ -103,12 +107,19 @@ export function NewReportForm({
     ]
   );
 
-  const changeEstate = useCallback((value: string | null) => {
-    setSelectedEstateId(value);
-    setBlockId(null);
-    setLevelId(null);
-    setCommonId(null);
-  }, []);
+  const changeEstate = useCallback(
+    (value: string | null) => {
+      setSelectedEstateId(value);
+      setBlockId(null);
+      setLevelId(null);
+      setCommonId(null);
+      navigate({
+        to: "/reports/new",
+        search: { estateId: value ?? undefined },
+      });
+    },
+    [navigate]
+  );
   const changeBlock = useCallback((value: string | null) => {
     setBlockId(value);
     setLevelId(null);

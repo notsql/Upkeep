@@ -19,6 +19,7 @@ function EstateActions({
   canEditDetails,
   onDeactivate,
   canViewSensors,
+  canViewWorkOrders,
   canViewRoles,
   canViewInvitations,
 }: {
@@ -26,6 +27,7 @@ function EstateActions({
   canEditDetails: boolean;
   onDeactivate: () => void;
   canViewSensors: boolean;
+  canViewWorkOrders: boolean;
   canViewRoles: boolean;
   canViewInvitations: boolean;
 }) {
@@ -39,7 +41,8 @@ function EstateActions({
       canEditDetails ||
       canManageCouncil ||
       canViewSensors ||
-      canViewRoles
+      canViewRoles ||
+      canViewWorkOrders
     )
   ) {
     return null;
@@ -49,6 +52,15 @@ function EstateActions({
       aria-label="Estate actions"
       className="page-actions min-w-0 flex-row gap-3"
     >
+      {canViewWorkOrders ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/work-orders"
+        >
+          View work orders
+        </Link>
+      ) : null}
       {canViewRoles ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -103,6 +115,20 @@ function EstateActions({
   );
 }
 
+function canViewEstateSensors(
+  owned: boolean | undefined,
+  permission: components["schemas"]["EstateAccessResponse"] | undefined,
+  platformAdmin: boolean | undefined
+): boolean {
+  return Boolean(
+    owned ||
+      (permission?.canViewManagement &&
+        (permission.role === "MANAGER" ||
+          permission.role === "COUNCIL" ||
+          (permission.role === "MEMBER" && platformAdmin)))
+  );
+}
+
 export function EstateDetailsPage({
   estateId,
   children,
@@ -116,13 +142,10 @@ export function EstateDetailsPage({
   const permission = access.data?.estates?.find(
     (item) => item.estateId === estateId
   );
-  const canViewSensors = Boolean(
-    estate.data?.owned ||
-      (permission?.canViewManagement &&
-        (permission.role === "MANAGER" ||
-          permission.role === "COUNCIL" ||
-          (permission.role === "MEMBER" &&
-            access.data?.canAccessPlatformAdmin)))
+  const canViewSensors = canViewEstateSensors(
+    estate.data?.owned,
+    permission,
+    access.data?.canAccessPlatformAdmin
   );
   const canEditDetails = Boolean(
     estate.data?.owned ||
@@ -187,6 +210,9 @@ export function EstateDetailsPage({
                 }
                 canViewRoles={permission?.canViewEstateRoles === true}
                 canViewSensors={canViewSensors}
+                canViewWorkOrders={
+                  !access.isError && !!permission?.canViewWorkOrders
+                }
                 estate={estate.data}
                 onDeactivate={openConfirmation}
               />

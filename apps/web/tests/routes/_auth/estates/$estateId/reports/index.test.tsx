@@ -196,6 +196,23 @@ async function openCorrection() {
   return within(await screen.findByRole("dialog"));
 }
 
+it("explains that no level requires a block common area", async () => {
+  const dialog = await openCorrection();
+  await chooseOption(
+    dialog.getByRole("combobox", { name: "Level" }),
+    "No level (block common area)"
+  );
+  await dialog.findByText(
+    "Choose a common area under this block, or select a level."
+  );
+  expect(
+    dialog.getByRole("combobox", { name: "Common area" }).textContent
+  ).toContain("Choose a block common area");
+  expect(
+    dialog.getByRole("button", { name: SAVE }).hasAttribute("disabled")
+  ).toBe(true);
+});
+
 beforeEach(() => {
   auth.user = { id: "crew-user" };
   get.mockReset().mockImplementation(serve);
@@ -216,6 +233,62 @@ beforeEach(() => {
 });
 
 afterEach(() => vi.unstubAllGlobals());
+
+it.each([false, true])(
+  "provides report detail breadcrumbs with management access %s",
+  async (canViewManagement) => {
+    get.mockImplementation((path: string) => {
+      if (path === "/access/context") {
+        const data = access();
+        data.estates[0].canViewManagement = canViewManagement;
+        return Promise.resolve({ data });
+      }
+      return serve(path);
+    });
+    const { router } = await setup(`${basePath}/${reportId}`);
+    await screen.findByRole("heading", { name: report.title });
+    const breadcrumbs = within(
+      screen.getByRole("navigation", { name: "Breadcrumbs" })
+    );
+    expect(
+      breadcrumbs.getByRole("link", { name: "Estates" }).getAttribute("href")
+    ).toBe("/estates");
+    if (canViewManagement) {
+      expect(
+        breadcrumbs
+          .getByRole("link", { name: crewEstateAccess.estateName })
+          .getAttribute("href")
+      ).toBe(`/estates/${estateId}`);
+    } else {
+      breadcrumbs.getByText(crewEstateAccess.estateName);
+      expect(
+        breadcrumbs.queryByRole("link", { name: crewEstateAccess.estateName })
+      ).toBeNull();
+      expect(get.mock.calls.some(([path]) => path === "/estates/{id}")).toBe(
+        false
+      );
+    }
+    expect(breadcrumbs.getByText("Details").getAttribute("aria-current")).toBe(
+      "page"
+    );
+    fireEvent.click(breadcrumbs.getByRole("link", { name: "Fault reports" }));
+    await waitFor(() => expect(router.state.location.pathname).toBe(basePath));
+    await screen.findByRole("link", { name: report.title });
+  }
+);
+
+it("provides named estate breadcrumbs on the fault report list", async () => {
+  await setup();
+  await screen.findByRole("link", { name: report.title });
+  const breadcrumbs = within(
+    screen.getByRole("navigation", { name: "Breadcrumbs" })
+  );
+  breadcrumbs.getByRole("link", { name: "Estates" });
+  breadcrumbs.getByText(crewEstateAccess.estateName);
+  expect(
+    breadcrumbs.getByText("Fault reports").getAttribute("aria-current")
+  ).toBe("page");
+});
 
 it("labels each estate report's metadata like the resident report cards", async () => {
   await setup();

@@ -24,6 +24,7 @@ import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
@@ -44,6 +45,7 @@ import com.proj.server.db.tables.records.IssuereportimageRecord;
 import com.proj.server.db.tables.records.LocationRecord;
 import com.proj.server.db.tables.records.ManufacturerRecord;
 import com.proj.server.db.tables.records.PermissionRecord;
+import com.proj.server.db.tables.records.WorkorderRecord;
 
 import org.jooq.ForeignKey;
 import org.jooq.TableField;
@@ -84,6 +86,7 @@ public class Keys {
     public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
     public static final UniqueKey<ManufacturerRecord> MANUFACTURER_PKEY = Internal.createUniqueKey(Manufacturer.MANUFACTURER, DSL.name("Manufacturer_pkey"), new TableField[] { Manufacturer.MANUFACTURER.ID }, true);
     public static final UniqueKey<PermissionRecord> PERMISSION_PKEY = Internal.createUniqueKey(Permission.PERMISSION, DSL.name("Permission_pkey"), new TableField[] { Permission.PERMISSION.CODE }, true);
+    public static final UniqueKey<WorkorderRecord> WORKORDER_PKEY = Internal.createUniqueKey(Workorder.WORKORDER, DSL.name("WorkOrder_pkey"), new TableField[] { Workorder.WORKORDER.ID }, true);
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -107,4 +110,5 @@ public class Keys {
     public static final ForeignKey<IssuereportRecord, EstateRecord> ISSUEREPORT__ISSUEREPORT_ESTATEID_FKEY = Internal.createForeignKey(Issuereport.ISSUEREPORT, DSL.name("IssueReport_estateId_fkey"), new TableField[] { Issuereport.ISSUEREPORT.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<IssuereportimageRecord, IssuereportRecord> ISSUEREPORTIMAGE__ISSUEREPORTIMAGE_REPORTID_FKEY = Internal.createForeignKey(Issuereportimage.ISSUEREPORTIMAGE, DSL.name("IssueReportImage_reportId_fkey"), new TableField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, Keys.ISSUEREPORT_PKEY, new TableField[] { Issuereport.ISSUEREPORT.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<LocationRecord, EstateRecord> LOCATION__LOCATION_ESTATEID_FKEY = Internal.createForeignKey(Location.LOCATION, DSL.name("Location_estateId_fkey"), new TableField[] { Location.LOCATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<WorkorderRecord, EstateRecord> WORKORDER__WORKORDER_ESTATEID_FKEY = Internal.createForeignKey(Workorder.WORKORDER, DSL.name("WorkOrder_estateId_fkey"), new TableField[] { Workorder.WORKORDER.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
 }

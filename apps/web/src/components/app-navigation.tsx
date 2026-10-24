@@ -20,8 +20,14 @@ import {
   ShieldCheck,
   UserRound,
   Users,
+  Wrench,
 } from "lucide-react";
+import { useCallback, useState } from "react";
 import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
+import { EstateFeatureChooser } from "@/components/estates/estate-feature-chooser";
+import type { EstateFeature } from "@/components/estates/estate-feature-switcher";
+import { EstateFeatureSwitcher } from "@/components/estates/estate-feature-switcher";
+import { WorkOrderEstateSwitcher } from "@/components/estates/work-order-estate-switcher";
 import { ReportEstateSwitcher } from "@/components/reports/report-estate-switcher";
 import { useAppAccess } from "@/lib/access";
 import { useEstate } from "@/lib/estates";
@@ -40,10 +46,12 @@ type Destination =
   | "/estates/$estateId"
   | "/estates/$estateId/assets"
   | "/estates/$estateId/reports"
+  | "/estates/$estateId/work-orders"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles";
 interface NavigationItem {
   active: boolean;
+  chooseEstate?: EstateFeature;
   estateId?: string;
   icon: LucideIcon;
   label: string;
@@ -86,27 +94,52 @@ function scopedDestinations(
   return entries;
 }
 
-function useNavigation() {
-  const access = useAppAccess();
+function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
-  const candidate = pathname.match(ESTATE_PATH)?.[1];
+  const searchEstate = useRouterState({
+    select: (state) =>
+      (state.location.search as { estateId?: string }).estateId,
+  });
+  const residentPage =
+    pathname === "/reports" || pathname.startsWith("/reports/");
+  let candidate = pathname.match(ESTATE_PATH)?.[1];
+  if (!candidate && residentPage) {
+    candidate = searchEstate;
+    if (!candidate && access.data?.residentEstates.length === 1) {
+      candidate = access.data.residentEstates[0]?.id;
+    }
+  }
   const permission = access.data?.estates.find(
     (item) => item.estateId === candidate
   );
-  const estateId =
-    candidate &&
-    candidate !== "new" &&
-    (permission?.canViewManagement ||
-      permission?.canViewFaultReports ||
-      permission?.canViewEstateRoles ||
-      permission?.canViewEstateInvitations)
-      ? candidate
-      : undefined;
+  const allowed =
+    permission?.canViewManagement ||
+    permission?.canViewFaultReports ||
+    permission?.canViewWorkOrders ||
+    permission?.canViewEstateRoles ||
+    permission?.canViewEstateInvitations ||
+    permission?.role === "RESIDENT";
+  let estateId =
+    candidate && candidate !== "new" && allowed ? candidate : undefined;
   const estate = useEstate(
     permission?.canViewManagement ? estateId : undefined
   );
+  if (residentPage && access.data?.estates.length && !estateId) {
+    estateId = "";
+  }
+  return {
+    pathname,
+    estateId,
+    permission,
+    estateName: estate.data?.name ?? permission?.estateName,
+  };
+}
+function useNavigation() {
+  const access = useAppAccess();
+  const { pathname, estateId, permission, estateName } =
+    useNavigationEstate(access);
   const reporting: NavigationItem = {
     label: "Report a fault",
     to: "/reports/new",
@@ -163,8 +196,8 @@ function useNavigation() {
       local: [],
       primary: destinations,
       overflow: [],
-      estateId: undefined,
-      estateName: undefined,
+      estateId,
+      estateName,
     };
   }
   const home: NavigationItem = {
@@ -201,6 +234,20 @@ function useNavigation() {
   desktop.push(...scoped);
   overflow.push(...scoped);
   const local = estateDestinations(estateId, permission, pathname);
+  if (
+    !permission?.canViewWorkOrders &&
+    access.data.estates.some((item) => item.canViewWorkOrders)
+  ) {
+    const entry: NavigationItem = {
+      label: "Work orders",
+      to: "/estates/$estateId/work-orders",
+      chooseEstate: "work-orders",
+      icon: Wrench,
+      active: false,
+    };
+    desktop.push(entry);
+    overflow.push(entry);
+  }
   const responderEntry = reportDestination(access.data.estates, permission);
   if (responderEntry) {
     desktop.push(responderEntry);
@@ -216,7 +263,7 @@ function useNavigation() {
     primary,
     overflow,
     estateId,
-    estateName: estate.data?.name ?? permission?.estateName,
+    estateName,
   };
 }
 function reportDestination(
@@ -226,14 +273,13 @@ function reportDestination(
   if (permission?.canViewFaultReports) {
     return;
   }
-  const estate = estates.find((item) => item.canViewFaultReports);
-  if (!estate) {
+  if (!estates.some((item) => item.canViewFaultReports)) {
     return;
   }
   return {
     label: "Respond to faults",
     to: "/estates/$estateId/reports",
-    estateId: estate.estateId,
+    chooseEstate: "reports",
     icon: ClipboardList,
     active: false,
   };
@@ -247,6 +293,15 @@ function estateDestinations(
   const local: NavigationItem[] = [];
   if (estateId && permission) {
     const base = `/estates/${estateId}`;
+    if (permission.canViewWorkOrders) {
+      local.push({
+        label: "Work orders",
+        to: "/estates/$estateId/work-orders",
+        estateId,
+        icon: Wrench,
+        active: pathname.startsWith(`${base}/work-orders`),
+      });
+    }
     if (permission?.canViewManagement) {
       local.push({
         label: "Overview",
@@ -303,11 +358,18 @@ function DestinationLink({
   item,
   mobile = false,
   contextual = false,
+  onChooseEstate,
 }: {
   item: NavigationItem;
   mobile?: boolean;
   contextual?: boolean;
+  onChooseEstate?: (feature: EstateFeature) => void;
 }) {
+  const selectEstate = useCallback(() => {
+    if (item.chooseEstate) {
+      onChooseEstate?.(item.chooseEstate);
+    }
+  }, [item.chooseEstate, onChooseEstate]);
   const Icon = item.icon;
   let linkClass = "sidebar-link";
   if (mobile) {
@@ -315,6 +377,20 @@ function DestinationLink({
   }
   if (contextual) {
     linkClass = "estate-nav-link";
+  }
+  if (item.chooseEstate) {
+    return (
+      <Button
+        aria-haspopup="dialog"
+        className={`${linkClass} h-auto w-full justify-start gap-3 rounded-xl border-0 px-3 py-3 text-left`}
+        onClick={selectEstate}
+        type="button"
+        variant="ghost"
+      >
+        <Icon aria-hidden="true" className="size-5 shrink-0" />
+        <span>{item.label}</span>
+      </Button>
+    );
   }
   return (
     <Link
@@ -329,7 +405,13 @@ function DestinationLink({
     </Link>
   );
 }
-function OverflowNavigation({ items }: { items: NavigationItem[] }) {
+function OverflowNavigation({
+  items,
+  onChooseEstate,
+}: {
+  items: NavigationItem[];
+  onChooseEstate: (feature: EstateFeature) => void;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -351,27 +433,51 @@ function OverflowNavigation({ items }: { items: NavigationItem[] }) {
         sideOffset={12}
       >
         {items.map((item) => (
-          <DropdownMenuItem
+          <OverflowDestination
+            item={item}
             key={item.label}
-            render={
-              <Link
-                activeOptions={{
-                  exact: true,
-                  includeSearch: false,
-                }}
-                aria-current={item.active ? "page" : undefined}
-                params={item.estateId ? { estateId: item.estateId } : undefined}
-                to={item.to}
-              />
-            }
-          >
-            {item.label}
-          </DropdownMenuItem>
+            onChooseEstate={onChooseEstate}
+          />
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
+
+function OverflowDestination({
+  item,
+  onChooseEstate,
+}: {
+  item: NavigationItem;
+  onChooseEstate: (feature: EstateFeature) => void;
+}) {
+  const choose = useCallback(() => {
+    if (item.chooseEstate) {
+      onChooseEstate(item.chooseEstate);
+    }
+  }, [item.chooseEstate, onChooseEstate]);
+  if (item.chooseEstate) {
+    return <DropdownMenuItem onClick={choose}>{item.label}</DropdownMenuItem>;
+  }
+  return (
+    <DropdownMenuItem
+      render={
+        <Link
+          activeOptions={{
+            exact: true,
+            includeSearch: false,
+          }}
+          aria-current={item.active ? "page" : undefined}
+          params={item.estateId ? { estateId: item.estateId } : undefined}
+          to={item.to}
+        />
+      }
+    >
+      {item.label}
+    </DropdownMenuItem>
+  );
+}
+
 function NavigationEstateSwitcher({
   estateId,
   estateName,
@@ -383,9 +489,29 @@ function NavigationEstateSwitcher({
   const reporting = useRouterState({
     select: (state) => state.location.pathname.split("/")[3] === "reports",
   });
+  const workOrders = useRouterState({
+    select: (state) => state.location.pathname.split("/")[3] === "work-orders",
+  });
   const permission = access.data?.estates.find(
     (estate) => estate.estateId === estateId
   );
+  if (permission?.role === "RESIDENT" || !estateId) {
+    return (
+      <EstateFeatureSwitcher
+        estateId={estateId}
+        estates={access.data?.estates ?? []}
+        feature="resident"
+      />
+    );
+  }
+  if (workOrders) {
+    return (
+      <WorkOrderEstateSwitcher
+        estateId={estateId}
+        estates={access.data?.estates ?? []}
+      />
+    );
+  }
   if (permission?.canViewManagement && !reporting) {
     return (
       <EstateContextSwitcher estateId={estateId} estateName={estateName} />
@@ -393,7 +519,11 @@ function NavigationEstateSwitcher({
   }
   if (!permission?.canViewFaultReports) {
     return (
-      <p className="px-3 font-medium">{estateName ?? permission?.estateName}</p>
+      <EstateFeatureSwitcher
+        estateId={estateId}
+        estates={access.data?.estates ?? []}
+        feature="management"
+      />
     );
   }
   return (
@@ -404,6 +534,18 @@ function NavigationEstateSwitcher({
   );
 }
 export function AppNavigation() {
+  const [chooserFeature, setChooserFeature] = useState<
+    EstateFeature | undefined
+  >(undefined);
+  const chooseEstate = useCallback(
+    (feature: EstateFeature) => setChooserFeature(feature),
+    []
+  );
+  const changeChooser = useCallback((open: boolean) => {
+    if (!open) {
+      setChooserFeature(undefined);
+    }
+  }, []);
   const { desktop, local, primary, overflow, estateId, estateName } =
     useNavigation();
   return (
@@ -416,9 +558,13 @@ export function AppNavigation() {
         <p className="sidebar-eyebrow">Workspace</p>
         <nav aria-label="Desktop navigation" className="grid gap-1">
           {desktop.map((item) => (
-            <DestinationLink item={item} key={item.label} />
+            <DestinationLink
+              item={item}
+              key={item.label}
+              onChooseEstate={chooseEstate}
+            />
           ))}
-          {estateId ? (
+          {estateId === undefined ? null : (
             <>
               <div className="mt-6 mb-2">
                 <NavigationEstateSwitcher
@@ -430,7 +576,7 @@ export function AppNavigation() {
                 <DestinationLink item={item} key={item.label} />
               ))}
             </>
-          ) : null}
+          )}
         </nav>
         <p className="mt-auto px-3 pt-8 text-muted-foreground text-xs">
           Your estates, organised.
@@ -440,15 +586,22 @@ export function AppNavigation() {
         {primary.map((item) => (
           <DestinationLink item={item} key={item.label} mobile />
         ))}
-        {overflow.length ? <OverflowNavigation items={overflow} /> : null}
+        {overflow.length ? (
+          <OverflowNavigation items={overflow} onChooseEstate={chooseEstate} />
+        ) : null}
       </nav>
+      <EstateFeatureChooser
+        feature={chooserFeature ?? "work-orders"}
+        onOpenChange={changeChooser}
+        open={!!chooserFeature}
+      />
     </>
   );
 }
 
 export function EstateNavigation() {
   const { local, estateId, estateName } = useNavigation();
-  if (!estateId) {
+  if (estateId === undefined) {
     return null;
   }
   return (

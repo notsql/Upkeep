@@ -24,6 +24,7 @@ import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Workorder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -148,6 +149,11 @@ public class Public extends SchemaImpl {
     public final Permission PERMISSION = Permission.PERMISSION;
 
     /**
+     * The table <code>public.WorkOrder</code>.
+     */
+    public final Workorder WORKORDER = Workorder.WORKORDER;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -182,7 +188,8 @@ public class Public extends SchemaImpl {
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
             Manufacturer.MANUFACTURER,
-            Permission.PERMISSION
+            Permission.PERMISSION,
+            Workorder.WORKORDER
         );
     }
 }

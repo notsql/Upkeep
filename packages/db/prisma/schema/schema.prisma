@@ -28,6 +28,8 @@ model Estate {
   issueReports  IssueReport[]
   events        AssetEvent[]
   flatlinePolicies FlatlinePolicy[]
+  workOrders    WorkOrder[]
+
   roleDefinitions EstateRoleDefinition[]
 
   @@index([ownerUserId])
@@ -58,6 +60,7 @@ model Location {
   assets       Asset[]
   devices      Device[]
   issueReports IssueReport[]
+  workOrders   WorkOrder[]
 
   @@unique([id, type, estateId])
   @@unique([id, estateId])
@@ -96,7 +99,9 @@ model IssueReport {
   estate   Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   location Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   images   IssueReportImage[]
+  workOrders WorkOrder[]
 
+  @@unique([id, estateId])
   @@index([submittedByUserId, createdAt, id])
   @@index([estateId])
   @@index([estateId, createdAt, id])
@@ -150,12 +155,41 @@ model Asset {
   flatlinePauses DeviceFlatlinePause[]
   assessments   AssetAssessment[]
   events        AssetEvent[]
+  workOrders    WorkOrder[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId])
   @@index([locationId])
   @@index([modelId])
+}
+
+// An open job in an estate (decision 0032). Equipment links are optional;
+// several jobs may reference one resident report. References never change.
+model WorkOrder {
+  id                    String   @id @default(uuid()) @db.Uuid
+  estateId              String   @db.Uuid
+  reference             String   @db.VarChar(70)
+  description           String   @db.VarChar(2500)
+  locationId            String   @db.Uuid
+  assetId               String?  @db.Uuid
+  category              String   @db.VarChar(30)
+  priority              String   @db.VarChar(30)
+  source                String   @db.VarChar(30)
+  sourceReportId        String?  @db.Uuid
+  sourceReference       String?  @db.VarChar(500)
+  status                String   @default("OPEN") @db.VarChar(20)
+  createdByUserId        String   @db.VarChar(255)
+  createdAt             DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @db.Timestamptz(6)
+
+  estate       Estate      @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location     Location    @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  asset        Asset?      @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  sourceReport IssueReport? @relation(fields: [sourceReportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, reference])
+  @@index([estateId, createdAt, id])
 }
 
 // An asset category (decision 0026). `code` is stable and is what assets and

@@ -7,7 +7,7 @@ import {
   waitFor,
   within,
 } from "@tests/test-utils";
-import { type ReactNode, useState } from "react";
+import { type ComponentProps, type ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { AssetFilters } from "@/lib/assets";
@@ -164,6 +164,145 @@ function MobileRegister() {
     />
   );
 }
+
+function SortedRegister() {
+  const [sort, setSort] = useState<
+    NonNullable<ComponentProps<typeof AssetRegisterPage>["sort"]>
+  >({});
+  return (
+    <AssetRegisterPage
+      estateId="estate"
+      filters={{ status: "ALL" }}
+      onFiltersChange={vi.fn()}
+      onSortChange={setSort}
+      sort={sort}
+    />
+  );
+}
+
+const sortingAssets = Object.freeze([
+  {
+    id: "ten",
+    reference: "E-A0010",
+    name: "Zulu pump",
+    category: "PUMP",
+    locationPath: "Block 10",
+    currentCondition: "GOOD",
+    deactivatedAt: "2026-10-01T00:00:00Z",
+  },
+  {
+    id: "two",
+    reference: "E-A0002",
+    name: "Alpha pump",
+    category: "PUMP",
+    locationPath: "Block 2",
+    currentCondition: "FAULTY",
+  },
+  {
+    id: "three",
+    reference: "E-A0003",
+    name: "Beta pump",
+    category: "PUMP",
+    locationPath: "Block 3",
+    currentCondition: null,
+  },
+]);
+
+it("sorts the complete asset table naturally and by condition/status without losing rows", async () => {
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data: path === "/estates/{estateId}/assets" ? sortingAssets : [],
+        response: new Response(),
+      }) as never
+  );
+  renderWithProviders(<SortedRegister />);
+  const table = within(await screen.findByRole("table", { name: "Assets" }));
+  expect(
+    table
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[0].textContent)
+  ).toEqual(["E-A0002", "E-A0003", "E-A0010"]);
+  fireEvent.click(screen.getByRole("button", { name: "Sort by Name" }));
+  expect(
+    table
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[1].textContent)
+  ).toEqual(["Alpha pump", "Beta pump", "Zulu pump"]);
+  fireEvent.click(screen.getByRole("button", { name: "Sort by Name" }));
+  expect(
+    table
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[1].textContent)
+  ).toEqual(["Zulu pump", "Beta pump", "Alpha pump"]);
+  expect(
+    screen.getByRole("columnheader", { name: "Name" }).getAttribute("aria-sort")
+  ).toBe("descending");
+  fireEvent.click(
+    screen.getByRole("button", { name: "Sort by Current condition" })
+  );
+  expect(
+    table
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[4].textContent)
+  ).toEqual(["Faulty", "Good", "Not assessed yet"]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Sort by Current condition" })
+  );
+  expect(
+    table
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[4].textContent)
+  ).toEqual(["Good", "Faulty", "Not assessed yet"]);
+  fireEvent.click(screen.getByRole("button", { name: "Sort by Status" }));
+  expect(
+    table
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[5].textContent)
+  ).toEqual(["Active", "Active", "Retired"]);
+  expect(sortingAssets.map((asset) => asset.reference)).toEqual([
+    "E-A0010",
+    "E-A0002",
+    "E-A0003",
+  ]);
+});
+
+it("sorts asset cards using the mobile sorting controls", async () => {
+  const resize = mockMobileViewport();
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data: path === "/estates/{estateId}/assets" ? sortingAssets : [],
+        response: new Response(),
+      }) as never
+  );
+  renderWithProviders(<SortedRegister />);
+  const cards = within(await screen.findByRole("list", { name: "Assets" }));
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Sort assets by" }),
+    "Name"
+  );
+  expect(
+    cards.getAllByRole("link").map((link) => link.getAttribute("aria-label"))
+  ).toEqual([
+    "Alpha pump (E-A0002)",
+    "Beta pump (E-A0003)",
+    "Zulu pump (E-A0010)",
+  ]);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Reverse asset sort direction" })
+  );
+  expect(cards.getAllByRole("link")[0].getAttribute("aria-label")).toBe(
+    "Zulu pump (E-A0010)"
+  );
+  resize(false);
+});
 
 it("shows complete mobile cards and switches to a table without refetching", async () => {
   const resize = mockMobileViewport();
