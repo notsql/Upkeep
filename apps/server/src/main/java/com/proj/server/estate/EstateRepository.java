@@ -20,12 +20,13 @@ import org.springframework.web.server.ResponseStatusException;
 public class EstateRepository {
     public boolean isReportResponder(UUID estateId, String user) {
         return db.fetchExists(
-                ESTATEUSER,
-                ESTATEUSER
-                        .ESTATEID
-                        .eq(estateId)
-                        .and(ESTATEUSER.USERID.eq(user))
-                        .and(ESTATEUSER.ROLE.in("MANAGER", "CREW")));
+                        ESTATEUSER,
+                        ESTATEUSER
+                                .ESTATEID
+                                .eq(estateId)
+                                .and(ESTATEUSER.USERID.eq(user))
+                                .and(ESTATEUSER.ROLE.in("MANAGER", "CREW")))
+                || hasPermission(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS);
     }
 
     private final DSLContext db;
@@ -58,6 +59,8 @@ public class EstateRepository {
 
     public Optional<EstateResponse> findOwned(UUID id, String owner, boolean lock) {
         denyResident(id, owner);
+        if (isCustom(id, owner) && !db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner))))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "This operation requires estate ownership.");
         var query = db.selectFrom(ESTATE).where(ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner)));
         return (lock ? query.forUpdate().fetchOptional() : query.fetchOptional()).map(row -> response(row, owner));
     }
@@ -116,7 +119,10 @@ public class EstateRepository {
                         .set(ESTATE.POSTALCODE, request.postalCode())
                         .set(ESTATE.DESCRIPTION, request.description())
                         .set(ESTATE.UPDATEDAT, OffsetDateTime.now(ZoneOffset.UTC))
-                        .where(ESTATE.ID.eq(id).and(AccessService.managerEstates(user)))
+                        .where(ESTATE.ID
+                                .eq(id)
+                                .and(AccessService.managerEstates(user)
+                                        .or(EstatePermissions.customEstates(user, EstatePermissionCode.EDIT_ESTATE))))
                         .returning()
                         .fetchSingle(),
                 user);
@@ -139,7 +145,19 @@ public class EstateRepository {
         return AccessService.managementEstates(user);
     }
 
+    public boolean hasPermission(UUID id, String user, EstatePermissionCode permission) {
+        return EstatePermissions.has(db, id, user, permission);
+    }
+
+    public boolean isCustom(UUID id, String user) {
+        return db.fetchExists(
+                ESTATEUSER,
+                ESTATEUSER.ESTATEID.eq(id).and(ESTATEUSER.USERID.eq(user)).and(ESTATEUSER.ROLE.eq("CUSTOM")));
+    }
+
     private void denyResident(UUID id, String user) {
+        if (isCustom(id, user) && !hasPermission(id, user, EstatePermissionCode.VIEW_ESTATE))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewing estate details requires VIEW_ESTATE.");
         if (db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(AccessService.residentEstate(user)))) {
             throw new ResponseStatusException(
                     HttpStatus.FORBIDDEN, "Resident membership does not grant management access.");
@@ -158,7 +176,9 @@ public class EstateRepository {
                 row.getUpdatedat(),
                 row.getDeactivatedat(),
                 row.getOwneruserid().equals(user),
-                row.getDeactivatedat() == null && isManager(row.getId(), user),
+                row.getDeactivatedat() == null
+                        && (isManager(row.getId(), user)
+                                || hasPermission(row.getId(), user, EstatePermissionCode.INVITE_MEMBERS)),
                 isManager(row.getId(), user));
     }
 

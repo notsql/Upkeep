@@ -6,14 +6,26 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Locale;
+import java.util.UUID;
 import tools.jackson.databind.JsonNode;
 
 public record CouncilInvitationRequest(
         @NotBlank @Email @Size(max = 254) String email,
-        @Schema(defaultValue = "COUNCIL") EstateRole role) {
+        @Schema(defaultValue = "COUNCIL") EstateRole role,
+
+        @io.swagger.v3.oas.annotations.media.Schema(nullable = true)
+        UUID customRoleId,
+
+        @io.swagger.v3.oas.annotations.media.Schema(nullable = true)
+        Integer expectedRoleVersion) {
     public CouncilInvitationRequest {
         email = email == null ? null : email.strip().toLowerCase(Locale.ROOT);
         role = role == null ? EstateRole.COUNCIL : role;
+        EstateRoleSelection.validate(role, customRoleId, expectedRoleVersion);
+    }
+
+    public CouncilInvitationRequest(String email, EstateRole role) {
+        this(email, role, null, null);
     }
 
     public CouncilInvitationRequest(String email) {
@@ -33,6 +45,16 @@ public record CouncilInvitationRequest(
                 throw new IllegalArgumentException("Choose an invitation role.");
             role = EstateRole.valueOf(offered.asText());
         }
-        return new CouncilInvitationRequest(email == null || email.isNull() ? null : email.asText(), role);
+        var custom = body.get("customRoleId");
+        UUID customId = custom == null || custom.isNull() ? null : UUID.fromString(custom.asText());
+        var version = body.get("expectedRoleVersion");
+        Integer expected = null;
+        if (version != null && !version.isNull()) {
+            if (!version.isIntegralNumber() || version.asLong() > Integer.MAX_VALUE || version.asLong() < 1)
+                throw new IllegalArgumentException("Choose a positive role version.");
+            expected = version.asInt();
+        }
+        return new CouncilInvitationRequest(
+                email == null || email.isNull() ? null : email.asText(), role, customId, expected);
     }
 }

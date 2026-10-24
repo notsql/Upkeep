@@ -36,16 +36,7 @@ public class DashboardRepository {
         var accessible = name("accessible")
                 .as(db.select(ESTATE.ID, ESTATE.NAME, ESTATE.CODE, ESTATE.DEACTIVATEDAT, ownership)
                         .from(ESTATE)
-                        .whereNotExists(selectOne()
-                                .from(ESTATEUSER)
-                                .where(ESTATEUSER
-                                        .ESTATEID
-                                        .eq(ESTATE.ID)
-                                        .and(ESTATEUSER.USERID.eq(user))
-                                        .and(ESTATEUSER.ROLE.eq("RESIDENT"))))
-                        .and(ESTATE.OWNERUSERID
-                                .eq(user)
-                                .orExists(membership.and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "MANAGER")))));
+                        .where(com.proj.server.access.AccessService.managementEstates(user)));
         var estateId = accessible.field(ESTATE.ID);
         var estateName = accessible.field(ESTATE.NAME);
         var estateCode = accessible.field(ESTATE.CODE);

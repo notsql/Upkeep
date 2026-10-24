@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [custom-estate-role-creation.md](features/custom-estate-role-creation.md) | - | draft; nine permission codes/prerequisites confirmed; custom roles including Manager-only deletion blocked by assigned members/pending invitations, protected presets, delegated invitations, seeded Permission catalogue and typed jOOQ planned; preset-role target matrix recorded, broader CRUD separate; full design awaiting review |
 | [typed-jooq-repositories.md](features/typed-jooq-repositories.md) | - | built; typed asset, dashboard and estate-report queries; 821 server and 461 web tests passed |
 | [management-endpoint-security-regression.md](features/management-endpoint-security-regression.md) | - | built; explicit endpoint authorization and regression tests verified |
 | [resident-fault-reporting.md](features/resident-fault-reporting.md) | - | locally verified implementation; multi-estate residents and staff location-only editing follow-up planned |

@@ -36,8 +36,12 @@ public class CouncilService {
     }
 
     public CouncilInvitationResponse invite(UUID estateId, String user, CouncilInvitationRequest request) {
-        var estate = access(estateId, user);
-        if (estate.deactivatedAt() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
+        if (council.mayInviteCustom(estateId, user)) {
+            council.authorizeInviter(estateId, user, false).requireActive();
+        } else {
+            var estate = access(estateId, user);
+            if (estate.deactivatedAt() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
+        }
         var owner = identity.user(council.ownerUserId(estateId));
         if (owner.email().equalsIgnoreCase(request.email()))
             throw error(HttpStatus.CONFLICT, "Already a member of this estate.");
@@ -46,7 +50,7 @@ public class CouncilService {
             if (person.email().equalsIgnoreCase(request.email()))
                 throw error(HttpStatus.CONFLICT, "Already a member of this estate.");
         }
-        var row = council.reserve(estateId, user, request);
+        var row = retryInvitationLocks(() -> council.reserve(estateId, user, request));
         if (!SENDING.matches(row.getStatus())) throw error(HttpStatus.CONFLICT, "Already invited or already a member.");
         // A failed dispatch is retried with its original payload and idempotency key.
         var invitation = identity.send(row.getId(), row.getEmail(), row.getInviteruserid());
@@ -54,6 +58,11 @@ public class CouncilService {
             throw error(HttpStatus.BAD_GATEWAY, "The invitation provider returned an invalid invitation.");
         if (!council.sent(row.getId(), invitation))
             throw error(HttpStatus.CONFLICT, "This invitation changed while being sent. Refresh the invitation list.");
+        if ("CUSTOM".equals(row.getRole())) {
+            row.setStatus("existing_account".equals(invitation.state()) ? IN_APP.name() : PENDING.name());
+            row.setExpiresat(invitation.expiresAt());
+            return council.invitationResponse(row);
+        }
         return new CouncilInvitationResponse(
                 row.getId(),
                 estateId,
@@ -64,12 +73,16 @@ public class CouncilService {
     }
 
     public List<CouncilInvitationResponse> outstanding(UUID estateId, String user) {
+        if (council.mayInviteCustom(estateId, user)) {
+            council.authorizeInviter(estateId, user, false);
+            return council.outstanding(estateId, user);
+        }
         access(estateId, user);
         return council.outstanding(estateId);
     }
 
     public void cancel(UUID estateId, String user, UUID invitationId) {
-        access(estateId, user);
+        if (!council.mayInviteCustom(estateId, user)) access(estateId, user);
         council.cancel(estateId, invitationId, user);
     }
 
@@ -83,12 +96,14 @@ public class CouncilService {
                 .noneMatch(existing -> existing.userId().equals(member)))
             throw error(HttpStatus.NOT_FOUND, "Estate member not found.");
         var person = identity.user(member);
-        if (!council.removeMember(estateId, member, person.email().toLowerCase(Locale.ROOT), user))
+        if (!retryInvitationLocks(
+                () -> council.removeMember(estateId, member, person.email().toLowerCase(Locale.ROOT), user)))
             throw error(HttpStatus.NOT_FOUND, "Estate member not found.");
     }
 
     public List<EstateMemberResponse> members(UUID estateId, String user) {
         access(estateId, user);
+        String owner = council.ownerUserId(estateId);
         return council.members(estateId).stream()
                 .map(member -> {
                     var person = identity.user(member.userId());
@@ -98,7 +113,9 @@ public class CouncilService {
                             person.email(),
                             member.canInviteMembers(),
                             member.role(),
-                            council.ownerUserId(estateId).equals(member.userId()));
+                            owner.equals(member.userId()),
+                            member.customRoleId(),
+                            member.customRoleName());
                 })
                 .toList();
     }
@@ -107,18 +124,30 @@ public class CouncilService {
         throw error(HttpStatus.FORBIDDEN, "Invitation delegation has been retired. Only Managers can invite.");
     }
 
-    @org.springframework.transaction.annotation.Transactional
     public EstateMemberResponse updateRole(UUID estateId, String actor, String target, EstateRole role) {
+        return updateRole(estateId, actor, target, new UpdateEstateRoleRequest(role));
+    }
+
+    public EstateMemberResponse updateRole(
+            UUID estateId, String actor, String target, UpdateEstateRoleRequest request) {
         access(estateId, actor);
+        if (!council.hasMembership(estateId, target)) throw error(HttpStatus.NOT_FOUND, "Estate member not found.");
         var person = identity.user(target);
-        council.updateRole(estateId, actor, target, role);
+        var ownerId = council.ownerUserId(estateId);
+        var member = retryInvitationLocks(() -> council.updateRole(estateId, actor, target, request));
         return new EstateMemberResponse(
-                target,
+                member.userId(),
                 person.name(),
                 person.email(),
-                role == EstateRole.MANAGER,
-                role.name(),
-                council.ownerUserId(estateId).equals(target));
+                member.canInviteMembers(),
+                member.role(),
+                ownerId.equals(member.userId()),
+                member.customRoleId(),
+                member.customRoleName());
+    }
+
+    public List<EstateInvitationRoleOptionResponse> invitationRoles(UUID estateId, String user) {
+        return council.invitationRoles(estateId, user);
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -141,11 +170,21 @@ public class CouncilService {
     }
 
     public AcceptedInvitationsResponse acceptInApp(UUID id, String user) {
+        return acceptInApp(id, user, null);
+    }
+
+    public AcceptedInvitationsResponse acceptInApp(UUID id, String user, AcceptEstateInvitationRequest request) {
         var person = verifiedPerson(user);
         var row = council.forRecipient(id, person.email().toLowerCase(Locale.ROOT))
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Invitation not found for this account."));
+        boolean custom = "CUSTOM".equals(row.getRole());
+        if (custom && request == null)
+            throw error(HttpStatus.BAD_REQUEST, "Review the custom role and include its current version.");
         if (!CouncilInvitationStatus.canAccept(row.getStatus())
-                || !council.activateExplicit(id, user, java.time.OffsetDateTime.now()))
+                || !(custom
+                        ? council.activateExplicit(
+                                id, user, java.time.OffsetDateTime.now(), request.expectedRoleVersion())
+                        : council.activateExplicit(id, user, java.time.OffsetDateTime.now())))
             throw error(HttpStatus.CONFLICT, "This invitation is no longer available. Ask the estate owner for help.");
         return new AcceptedInvitationsResponse(List.of(row.getEstateid()));
     }
@@ -167,6 +206,17 @@ public class CouncilService {
             if (council.activate(row.getId(), user, invitation.acceptedAt())) activated.add(row.getEstateid());
         }
         return new AcceptedInvitationsResponse(activated);
+    }
+
+    private static <T> T retryInvitationLocks(java.util.function.Supplier<T> operation) {
+        for (int attempt = 0; attempt < 8; attempt++) {
+            try {
+                return operation.get();
+            } catch (CouncilRepository.InvitationLocksChanged changed) {
+                /* Retry after the repository transaction rolled back. */
+            }
+        }
+        throw error(HttpStatus.CONFLICT, "Invitations changed. Refresh and retry this operation.");
     }
 
     private static ResponseStatusException error(HttpStatus status, String message) {

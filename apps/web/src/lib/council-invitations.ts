@@ -1,5 +1,6 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { estateError, useEstateSession } from "@/lib/estates";
 
@@ -42,6 +43,10 @@ export function useCouncilInvitation(estateId: string) {
       client.invalidateQueries({
         queryKey: [userId, "estate-invitations", estateId],
       }),
+    onError: () =>
+      client.invalidateQueries({
+        queryKey: [userId, "estate-invitation-roles", estateId],
+      }),
   });
 }
 
@@ -69,6 +74,10 @@ export function useUpdateEstateRole(estateId: string) {
       return data;
     },
     onSuccess: () =>
+      client.invalidateQueries({
+        predicate: (query) => query.queryKey.includes(userId),
+      }),
+    onError: () =>
       client.invalidateQueries({
         predicate: (query) => query.queryKey.includes(userId),
       }),
@@ -147,14 +156,29 @@ export function useAcceptInAppInvitation() {
   const { userId } = useEstateSession();
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async (invitationId: string) => {
+    mutationFn: async (
+      selection:
+        | string
+        | {
+            invitationId: string;
+            body: components["schemas"]["AcceptEstateInvitationRequest"];
+          }
+    ) => {
+      const invitationId =
+        typeof selection === "string" ? selection : selection.invitationId;
       const { data, error, response } = await api.POST(
         "/council-invitations/{invitationId}/accept",
         {
           params: { path: { invitationId } },
+          ...(typeof selection === "string" ? {} : { body: selection.body }),
         }
       );
       if (error || !data) {
+        if (response.status === 409 || response.status === 404) {
+          await client.invalidateQueries({
+            queryKey: [userId, "council-invitations"],
+          });
+        }
         throw estateError(error, response.status);
       }
       return data;
@@ -234,6 +258,36 @@ export function useRemoveEstateMember(estateId: string) {
         client.invalidateQueries({ queryKey: [userId, "app-access"] }),
         client.invalidateQueries({ queryKey: [userId, "resident-context"] }),
       ]);
+    },
+  });
+}
+
+export function useEstateInvitationRoles(estateId: string) {
+  const { userId, ready } = useAuthenticatedSession();
+  const access = useAppAccess();
+  const permission = access.data?.estates?.find(
+    (estate) => estate.estateId === estateId
+  );
+  return useQuery({
+    queryKey: [userId, "estate-invitation-roles", estateId],
+    enabled:
+      ready &&
+      !access.isError &&
+      !!(
+        permission?.canInviteMembers ||
+        permission?.canViewEstateInvitations ||
+        permission?.canManageInvitationPermissions
+      ),
+    retry: false,
+    queryFn: async ({ signal }) => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/invitation-roles",
+        { params: { path: { estateId } }, signal }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
     },
   });
 }

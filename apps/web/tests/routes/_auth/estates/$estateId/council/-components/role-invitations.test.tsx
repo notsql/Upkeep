@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { ownerEstateAccess, unassignedAccess } from "@tests/fixtures/access";
 import {
   chooseOption,
   renderWithProviders,
@@ -52,8 +53,63 @@ beforeEach(() => {
     if (path === "/estates/{estateId}/council-invitations") {
       data = [];
     }
+    if (path === "/access/context") {
+      data = {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [
+          {
+            ...ownerEstateAccess,
+            estateId: "estate",
+            estateName: "Maple",
+            canViewEstateInvitations: true,
+            canViewEstateRoles: true,
+            canReassignRoles: true,
+          },
+        ],
+      };
+    }
+    if (
+      path === "/estates/{estateId}/roles" ||
+      path === "/estates/{estateId}/role-permissions"
+    ) {
+      data = [];
+    }
+    if (path === "/estates/{estateId}/invitation-roles") {
+      data = [
+        { role: "MANAGER", label: "Manager (Admin)" },
+        { role: "COUNCIL", label: "Council member" },
+        { role: "RESIDENT", label: "Resident" },
+        { role: "CREW", label: "Crew" },
+      ];
+    }
     return Promise.resolve({ data, response: new Response() }) as never;
   });
+});
+
+it("defaults to Council even when another eligible role is listed first", async () => {
+  vi.mocked(api.POST).mockResolvedValue({
+    data: { email: "council@example.com", role: "COUNCIL", status: "IN_APP" },
+    response: new Response(null, { status: 201 }),
+  } as never);
+  renderWithProviders(<CouncilPage estateId="estate" />);
+  expect(
+    (await screen.findByRole("combobox", { name: "Invitation role" }))
+      .textContent
+  ).toContain("Council member");
+  fireEvent.change(screen.getByRole("textbox", { name: "Email" }), {
+    target: { value: "council@example.com" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith(
+      "/estates/{estateId}/council-invitations",
+      {
+        params: { path: { estateId: "estate" } },
+        body: { email: "council@example.com", role: "COUNCIL" },
+      }
+    )
+  );
 });
 
 it("lets a non-owner Manager invite Crew with the selected stored role", async () => {

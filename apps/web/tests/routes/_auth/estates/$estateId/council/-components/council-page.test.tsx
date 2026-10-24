@@ -1,4 +1,5 @@
 import { fireEvent, within } from "@testing-library/react";
+import { ownerEstateAccess, unassignedAccess } from "@tests/fixtures/access";
 import {
   chooseOption,
   renderWithProviders,
@@ -41,6 +42,41 @@ beforeEach(() => {
   cancelled = false;
   vi.mocked(api.GET).mockImplementation((path) => {
     let data: unknown = currentEstate;
+    if (path === "/access/context") {
+      data = {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [
+          {
+            ...ownerEstateAccess,
+            estateId: "estate-id",
+            estateName: currentEstate.name,
+            canInviteMembers: currentEstate.canInviteMembers,
+            canManageInvitationPermissions:
+              currentEstate.canManageInvitationPermissions,
+            canViewEstateInvitations:
+              currentEstate.canInviteMembers ||
+              currentEstate.canManageInvitationPermissions,
+            canViewEstateRoles: currentEstate.canManageInvitationPermissions,
+            canReassignRoles: currentEstate.canManageInvitationPermissions,
+          },
+        ],
+      };
+    }
+    if (path === "/estates/{estateId}/invitation-roles") {
+      data = [
+        { role: "COUNCIL", label: "Council member" },
+        { role: "RESIDENT", label: "Resident" },
+        { role: "MANAGER", label: "Manager (Admin)" },
+        { role: "CREW", label: "Crew" },
+      ];
+    }
+    if (
+      path === "/estates/{estateId}/roles" ||
+      path === "/estates/{estateId}/role-permissions"
+    ) {
+      data = [];
+    }
     if (path === "/estates/{estateId}/members") {
       data = removed
         ? []
@@ -360,9 +396,7 @@ it("does not expose owner removal controls to delegates", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   await screen.findByRole("button", { name: "Send invitation" });
   expect(screen.queryByRole("button", { name: removalLabel })).toBeNull();
-  expect(
-    screen.queryByRole("heading", { name: "Pending invitations" })
-  ).toBeNull();
+  screen.getByRole("heading", { name: "Pending invitations" });
 });
 
 const ESTATES_GUIDANCE = /Existing users accept on Invitations\./;

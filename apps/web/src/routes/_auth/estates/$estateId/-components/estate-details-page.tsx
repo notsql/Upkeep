@@ -19,15 +19,29 @@ function EstateActions({
   canEditDetails,
   onDeactivate,
   canViewSensors,
+  canViewRoles,
+  canViewInvitations,
 }: {
   estate: components["schemas"]["EstateResponse"];
   canEditDetails: boolean;
   onDeactivate: () => void;
   canViewSensors: boolean;
+  canViewRoles: boolean;
+  canViewInvitations: boolean;
 }) {
   const canManageCouncil =
-    estate.canInviteMembers || estate.canManageInvitationPermissions;
-  if (!(estate.owned || canEditDetails || canManageCouncil || canViewSensors)) {
+    canViewInvitations ||
+    estate.canInviteMembers ||
+    estate.canManageInvitationPermissions;
+  if (
+    !(
+      estate.owned ||
+      canEditDetails ||
+      canManageCouncil ||
+      canViewSensors ||
+      canViewRoles
+    )
+  ) {
     return null;
   }
   return (
@@ -35,6 +49,15 @@ function EstateActions({
       aria-label="Estate actions"
       className="page-actions min-w-0 flex-row gap-3"
     >
+      {canViewRoles ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/roles"
+        >
+          Roles
+        </Link>
+      ) : null}
       {canViewSensors ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -159,6 +182,10 @@ export function EstateDetailsPage({
             actions={
               <EstateActions
                 canEditDetails={canEditDetails}
+                canViewInvitations={
+                  permission?.canViewEstateInvitations === true
+                }
+                canViewRoles={permission?.canViewEstateRoles === true}
                 canViewSensors={canViewSensors}
                 estate={estate.data}
                 onDeactivate={openConfirmation}

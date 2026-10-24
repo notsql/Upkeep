@@ -34,13 +34,24 @@ public record AppAccessResponse(
                 "canInviteMembers",
                 "canManageInvitationPermissions",
                 "canViewFaultReports",
-                "canRelocateFaultReports"
+                "canRelocateFaultReports",
+                "customRoleId",
+                "customRoleName",
+                "canCreateLocations",
+                "canCreateFloors",
+                "canEditLocations",
+                "canViewEstateRoles",
+                "canCreateRoles",
+                "canEditRoles",
+                "canDeleteRoles",
+                "canReassignRoles",
+                "canViewEstateInvitations"
             })
     public record EstateAccessResponse(
             UUID estateId,
             String estateName,
 
-            @Schema(allowableValues = {"MANAGER", "MEMBER", "COUNCIL", "RESIDENT", "CREW"})
+            @Schema(allowableValues = {"MANAGER", "MEMBER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"})
             String role,
 
             boolean canViewManagement,
@@ -49,5 +60,16 @@ public record AppAccessResponse(
             boolean canInviteMembers,
             boolean canManageInvitationPermissions,
             boolean canViewFaultReports,
-            boolean canRelocateFaultReports) {}
+            boolean canRelocateFaultReports,
+            @Schema(nullable = true) UUID customRoleId,
+            @Schema(nullable = true) String customRoleName,
+            boolean canCreateLocations,
+            boolean canCreateFloors,
+            boolean canEditLocations,
+            boolean canViewEstateRoles,
+            boolean canCreateRoles,
+            boolean canEditRoles,
+            boolean canDeleteRoles,
+            boolean canReassignRoles,
+            boolean canViewEstateInvitations) {}
 }

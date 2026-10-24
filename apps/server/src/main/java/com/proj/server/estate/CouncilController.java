@@ -99,7 +99,7 @@ public class CouncilController {
             @PathVariable UUID estateId,
             @PathVariable String userId,
             @Valid @RequestBody UpdateEstateRoleRequest request) {
-        return service.updateRole(estateId, user(jwt), userId, request.role());
+        return service.updateRole(estateId, user(jwt), userId, request);
     }
 
     @PostMapping("/estates/{estateId}/ownership-transfer")
@@ -136,8 +136,20 @@ public class CouncilController {
 
     @PostMapping("/council-invitations/{invitationId}/accept")
     @ApiResponse(responseCode = "200", description = "Explicitly accept one in-app estate invitation")
-    public AcceptedInvitationsResponse acceptInApp(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID invitationId) {
-        return service.acceptInApp(invitationId, user(jwt));
+    public AcceptedInvitationsResponse acceptInApp(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID invitationId,
+            @Valid @RequestBody(required = false) AcceptEstateInvitationRequest request) {
+        return service.acceptInApp(invitationId, user(jwt), request);
+    }
+
+    @GetMapping("/estates/{estateId}/invitation-roles")
+    @ApiResponse(responseCode = "200", description = "Eligible preset and custom invitation roles")
+    public org.springframework.http.ResponseEntity<List<EstateInvitationRoleOptionResponse>> invitationRoles(
+            @AuthenticationPrincipal Jwt jwt, @PathVariable UUID estateId) {
+        return org.springframework.http.ResponseEntity.ok()
+                .header("Cache-Control", "private, no-store")
+                .body(service.invitationRoles(estateId, user(jwt)));
     }
 
     private static String user(Jwt jwt) {

@@ -40,13 +40,50 @@ type Destination =
   | "/estates/$estateId"
   | "/estates/$estateId/assets"
   | "/estates/$estateId/reports"
-  | "/estates/$estateId/council";
+  | "/estates/$estateId/council"
+  | "/estates/$estateId/roles";
 interface NavigationItem {
   active: boolean;
   estateId?: string;
   icon: LucideIcon;
   label: string;
   to: Destination;
+}
+
+function scopedDestinations(
+  estates: components["schemas"]["EstateAccessResponse"][],
+  estateId: string | undefined
+): NavigationItem[] {
+  const entries: NavigationItem[] = [];
+  for (const assignment of estates) {
+    if (
+      assignment.canViewManagement ||
+      assignment.canViewFaultReports ||
+      assignment.estateId === estateId
+    ) {
+      continue;
+    }
+    if (assignment.canViewEstateRoles) {
+      const entry: NavigationItem = {
+        label: `${assignment.estateName} roles`,
+        to: "/estates/$estateId/roles",
+        estateId: assignment.estateId,
+        icon: ShieldCheck,
+        active: false,
+      };
+      entries.push(entry);
+    } else if (assignment.canViewEstateInvitations) {
+      const entry: NavigationItem = {
+        label: `${assignment.estateName} invitations`,
+        to: "/estates/$estateId/council",
+        estateId: assignment.estateId,
+        icon: Users,
+        active: false,
+      };
+      entries.push(entry);
+    }
+  }
+  return entries;
 }
 
 function useNavigation() {
@@ -61,7 +98,10 @@ function useNavigation() {
   const estateId =
     candidate &&
     candidate !== "new" &&
-    (permission?.canViewManagement || permission?.canViewFaultReports)
+    (permission?.canViewManagement ||
+      permission?.canViewFaultReports ||
+      permission?.canViewEstateRoles ||
+      permission?.canViewEstateInvitations)
       ? candidate
       : undefined;
   const estate = useEstate(
@@ -157,6 +197,9 @@ function useNavigation() {
     desktop.push(admin);
     overflow.push(admin);
   }
+  const scoped = scopedDestinations(access.data.estates, estateId);
+  desktop.push(...scoped);
+  overflow.push(...scoped);
   const local = estateDestinations(estateId, permission, pathname);
   const responderEntry = reportDestination(access.data.estates, permission);
   if (responderEntry) {
@@ -213,6 +256,15 @@ function estateDestinations(
         active: pathname === base || pathname === `${base}/`,
       });
     }
+    if (permission.canViewEstateRoles) {
+      local.push({
+        label: "Roles",
+        to: "/estates/$estateId/roles",
+        estateId,
+        icon: ShieldCheck,
+        active: pathname.startsWith(`${base}/roles`),
+      });
+    }
     if (permission?.canViewFaultReports) {
       local.push({
         label: "Fault reports",
@@ -232,6 +284,7 @@ function estateDestinations(
       });
     }
     if (
+      permission?.canViewEstateInvitations ||
       permission?.canInviteMembers ||
       permission?.canManageInvitationPermissions
     ) {
@@ -336,6 +389,11 @@ function NavigationEstateSwitcher({
   if (permission?.canViewManagement && !reporting) {
     return (
       <EstateContextSwitcher estateId={estateId} estateName={estateName} />
+    );
+  }
+  if (!permission?.canViewFaultReports) {
+    return (
+      <p className="px-3 font-medium">{estateName ?? permission?.estateName}</p>
     );
   }
   return (
