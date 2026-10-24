@@ -15,6 +15,7 @@ import java.util.UUID;
             "model",
             "metrics",
             "reportingIntervalSeconds",
+            "status",
             "createdAt",
             "updatedAt"
         })
@@ -30,6 +31,9 @@ public record DeviceResponse(
 
         @Schema(nullable = true, description = "When the device last sent a valid reading. Null until its first.")
         OffsetDateTime lastSeenAt,
+
+        @Schema(description = "Derived from last-seen on every read (decision 0027)")
+        DeviceStatus status,
 
         @Schema(nullable = true, description = "When the device's current API key was issued. Null if it has none.")
         OffsetDateTime credentialIssuedAt,

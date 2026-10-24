@@ -99,6 +99,7 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
+                                "/estates/{estateId}/devices",
                                 "/estates/{estateId}/failure-risk",
                                 "/estates/{estateId}/flatline-policies",
                                 "/estates/{estateId}/flatlined-sensors",

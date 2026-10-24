@@ -25,7 +25,7 @@ malformed submissions turned away with a reason the device can log.
   8. `unit` is not exactly the catalogue unit for the metric - 400, stating the expected unit, for example `unit for TEMPERATURE must be °C; got C.`
   9. `measuredAt` is not an ISO-8601 timestamp with a UTC offset - 400.
   10. `measuredAt` is more than 5 minutes after the server's receipt time - 400.
-  11. The device's asset is retired, or its estate is inactive - 409. A deactivated location alone does not block readings: deactivating a location leaves its assets in service.
+  11. The device's estate is inactive - 409. A deactivated location alone does not block readings: deactivating a location leaves its assets in service. (Amended by ID-44, `device-status.md`: a retired asset's readings are now accepted, so a device left switched on can be found.)
 - Duplicates, conflicts and out-of-order readings (decision 0028):
   - A reading whose device, metric and `measuredAt` match nothing stored is saved - 201.
   - An identical retry, with the same device, metric, `measuredAt` and value, saves nothing and returns the stored reading - 200.
@@ -61,7 +61,7 @@ original `receivedAt`. Errors use the existing `{ "message": ... }` body.
 - A value with more than 6 decimal places is rounded half-up to 6 before it is stored or compared, never rejected (decision 0028). `0.30000000000000004` is stored as `0.300000`.
 - Values are compared numerically after that rounding, so `21.5` and `21.50` are identical.
 - Two identical submissions arriving at the same moment: the unique index lets one insert, and the other becomes the 200 path.
-- A reading that arrives while its asset is being retired may be accepted if it is read before the retirement commits. No row lock is taken, so readings do not queue behind each other.
+- No row lock is taken, so readings do not queue behind each other. (Retirement no longer blocks readings; see rule 11.)
 - Units are compared exactly. `°C` must be sent as UTF-8, and `C` or `degC` is rejected.
 
 ## Simulated pump

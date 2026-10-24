@@ -2422,7 +2422,7 @@
             }
           },
           "409": {
-            "description": "A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive",
+            "description": "A different value is already stored for this metric and time, or the estate is inactive",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -3958,6 +3958,59 @@
         }
       }
     },
+    "/estates/{estateId}/devices": {
+      "get": {
+        "tags": ["estate-device-controller"],
+        "operationId": "listEstateDevices",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found, or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The estate's devices: Offline, then Awaiting first reading, then Online, the longest silent first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateDeviceResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -5283,6 +5336,11 @@
             "format": "date-time",
             "description": "When the device last sent a valid reading. Null until its first."
           },
+          "status": {
+            "type": "string",
+            "description": "Derived from last-seen on every read (decision 0027)",
+            "enum": ["AWAITING_FIRST_READING", "ONLINE", "OFFLINE"]
+          },
           "credentialIssuedAt": {
             "type": ["string", "null"],
             "format": "date-time",
@@ -5301,6 +5359,7 @@
           "metrics",
           "model",
           "reportingIntervalSeconds",
+          "status",
           "updatedAt"
         ]
       },
@@ -5791,6 +5850,58 @@
           "failuresObserved",
           "flagReasons",
           "flagged"
+        ]
+      },
+      "EstateDeviceResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "assetRetired": { "type": "boolean" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string" },
+          "model": { "type": "string" },
+          "metrics": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DeviceMetricResponse" }
+          },
+          "reportingIntervalSeconds": { "type": "integer", "format": "int32" },
+          "lastSeenAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device last sent a valid reading. Null until its first."
+          },
+          "status": {
+            "type": "string",
+            "description": "Derived from last-seen on every read (decision 0027)",
+            "enum": ["AWAITING_FIRST_READING", "ONLINE", "OFFLINE"]
+          },
+          "credentialIssuedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device's current API key was issued. Null if it has none."
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "assetRetired",
+          "createdAt",
+          "estateId",
+          "id",
+          "identifier",
+          "locationId",
+          "metrics",
+          "model",
+          "reportingIntervalSeconds",
+          "status",
+          "updatedAt"
         ]
       },
       "AssetLifecycleEventResponse": {
