@@ -1,6 +1,59 @@
 # Work-order manual review refinements
 
-**Status:** implemented; landscape estate-menu fix verified 2026-10-24; formatting passes; ready for human commit/PR review
+## PR #33 review and main integration — 2026-10-24
+
+The user requested fixes for the creation-form file split and the question about
+the single work-order status, then explicitly requested resolution of conflicts
+with main's custom-estate-role implementation.
+
+- Keep ID-36's initial OPEN status contract. Document the story boundary beside
+  the enum: ID-38 supplies the remaining workflow states and transitions and
+  ID-40 supplies completion. Those behaviours already exist on the separate
+  progress/completion branch and are not part of this creation PR.
+- Separate the creation screen, state/submission hook and source-specific fields.
+  Preserve existing observable behaviour and run unchanged tests before and after
+  the refactor, as required by the refactoring step in `.spec/testing.md`.
+- Integrate main without creating a commit. Preserve custom roles and their
+  existing permission catalogue together with explicit work-order capabilities.
+  Do not infer work-order authority from unrelated custom permissions or grant
+  access to the owner-only asset register.
+- Retain both sets of additive Prisma migrations and regenerate their combined
+  jOOQ output and API contract through the existing generators. Do not edit
+  generated classes or generated API types manually, reset data, or rewrite an
+  applied migration.
+- Reconcile capability-based navigation and route guards, keeping unauthorized
+  work-order URLs as 404s. Add and observe failing regression tests before any
+  newly required integration behaviour, then run the combined checks and update
+  the matching documentation. Leave the result uncommitted for human review.
+
+Integration review found that the shared estate dropdown did not recognize custom
+role names and sent role-only/invitation-only estates to unauthorized fault-report
+screens. Three regressions were observed failing before implementation: the
+displayed role was "Role unavailable", and both destinations were `/reports`.
+The dropdown now displays the custom-role name and uses permitted role/invitation
+routes, retaining its switcher after navigation without requesting an unauthorized
+estate overview. Older access fixtures include the combined capability fields.
+
+Both sets of migrations replay successfully on a disposable local Postgres.
+jOOQ was regenerated against that database, and the combined OpenAPI contract
+and TypeScript types were exported from the actual Spring application. Existing
+migrations and the shared Neon database were not changed. The form's existing
+tests passed before and after its behaviour-preserving split.
+
+The first combined run also exposed two outdated test helpers: the owner-backfill
+helper replayed every later migration, and location fixtures copied Owner
+capabilities into other roles. The helper now targets its specific backfill SQL,
+and fixtures mirror the API capability projection. Existing assertions and
+production migration contents are unchanged. The affected 67 backend and 35
+location UI tests pass.
+
+Final combined verification: 1,052 backend tests and 590 web tests pass, along
+with workspace type checks, full formatting/lint and the production web build.
+All 61 existing main API paths are preserved alongside the work-order paths.
+No unresolved merge entries or conflict markers remain. A human must commit
+and push the local merge/review changes before GitHub can verify the updated PR.
+
+**Status:** review edits and merge conflicts resolved and verified locally; no commit or push made.
 
 ## Problem
 

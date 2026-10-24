@@ -571,6 +571,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/invitation-roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["invitationRoles"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/locations": {
     parameters: {
       query?: never;
@@ -783,6 +799,54 @@ export interface paths {
     patch: operations["relocateEstateReport"];
     trace?: never;
   };
+  "/estates/{estateId}/role-permissions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["catalogue"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["list_1"];
+    put?: never;
+    post: operations["create_1"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/roles/{roleId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["update"];
+    post?: never;
+    delete: operations["delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/work-order-assets": {
     parameters: {
       query?: never;
@@ -916,7 +980,7 @@ export interface paths {
     options?: never;
     head?: never;
     /** Update estate details as the current owner or an assigned Manager */
-    patch: operations["update"];
+    patch: operations["update_1"];
     trace?: never;
   };
   "/estates/{id}/deactivate": {
@@ -1147,9 +1211,57 @@ export interface components {
     EstateError: {
       message: string;
     };
+    UpdateEstateRoleDefinitionRequest: {
+      name: string;
+      description?: string | null;
+      permissions: (
+        | "VIEW_ESTATE"
+        | "EDIT_ESTATE"
+        | "VIEW_FAULT_REPORTS"
+        | "RELOCATE_FAULT_REPORTS"
+        | "INVITE_MEMBERS"
+        | "CREATE_LOCATIONS"
+        | "EDIT_LOCATIONS"
+        | "CREATE_ROLES"
+        | "EDIT_ROLES"
+      )[];
+      /** Format: int32 */
+      expectedVersion: number;
+    };
+    EstateRoleDefinitionResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      name: string;
+      description: string | null;
+      permissions: (
+        | "VIEW_ESTATE"
+        | "EDIT_ESTATE"
+        | "VIEW_FAULT_REPORTS"
+        | "RELOCATE_FAULT_REPORTS"
+        | "INVITE_MEMBERS"
+        | "CREATE_LOCATIONS"
+        | "EDIT_LOCATIONS"
+        | "CREATE_ROLES"
+        | "EDIT_ROLES"
+      )[];
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: int32 */
+      version: number;
+      canEdit: boolean;
+      canDelete: boolean;
+    };
     UpdateEstateRoleRequest: {
       /** @enum {string} */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      /** Format: uuid */
+      customRoleId?: string | null;
+      /** Format: int32 */
+      expectedRoleVersion?: number | null;
     };
     EstateMemberResponse: {
       userId: string;
@@ -1157,8 +1269,11 @@ export interface components {
       email: string;
       canInviteMembers: boolean;
       /** @enum {string} */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "MEMBER";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "MEMBER" | "CUSTOM";
       owner: boolean;
+      /** Format: uuid */
+      customRoleId: string | null;
+      customRoleName: string | null;
     };
     InvitationPermissionRequest: {
       canInviteMembers: boolean;
@@ -1273,6 +1388,21 @@ export interface components {
       /** Format: uuid */
       expectedSourceLocationId?: string;
     };
+    CreateEstateRoleRequest: {
+      name: string;
+      description?: string | null;
+      permissions: (
+        | "VIEW_ESTATE"
+        | "EDIT_ESTATE"
+        | "VIEW_FAULT_REPORTS"
+        | "RELOCATE_FAULT_REPORTS"
+        | "INVITE_MEMBERS"
+        | "CREATE_LOCATIONS"
+        | "EDIT_LOCATIONS"
+        | "CREATE_ROLES"
+        | "EDIT_ROLES"
+      )[];
+    };
     TransferOwnershipRequest: {
       newOwnerUserId: string;
     };
@@ -1353,7 +1483,11 @@ export interface components {
        * @default COUNCIL
        * @enum {string}
        */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      /** Format: uuid */
+      customRoleId?: string | null;
+      /** Format: int32 */
+      expectedRoleVersion?: number | null;
     };
     CouncilInvitationResponse: {
       /** Format: uuid */
@@ -1365,7 +1499,41 @@ export interface components {
       /** Format: date-time */
       expiresAt: string | null;
       /** @enum {string} */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      /** Format: uuid */
+      customRoleId: string | null;
+      /** Format: int32 */
+      customRoleVersion: number | null;
+      customRoleName: string | null;
+      customPermissions:
+        | components["schemas"]["EstatePermissionResponse"][]
+        | null;
+    };
+    EstatePermissionResponse: {
+      /** @enum {string} */
+      code:
+        | "VIEW_ESTATE"
+        | "EDIT_ESTATE"
+        | "VIEW_FAULT_REPORTS"
+        | "RELOCATE_FAULT_REPORTS"
+        | "INVITE_MEMBERS"
+        | "CREATE_LOCATIONS"
+        | "EDIT_LOCATIONS"
+        | "CREATE_ROLES"
+        | "EDIT_ROLES";
+      label: string;
+      description: string;
+      requires: (
+        | "VIEW_ESTATE"
+        | "EDIT_ESTATE"
+        | "VIEW_FAULT_REPORTS"
+        | "RELOCATE_FAULT_REPORTS"
+        | "INVITE_MEMBERS"
+        | "CREATE_LOCATIONS"
+        | "EDIT_LOCATIONS"
+        | "CREATE_ROLES"
+        | "EDIT_ROLES"
+      )[];
     };
     CreateAssetRequest: {
       name: string;
@@ -1650,6 +1818,10 @@ export interface components {
        */
       receivedAt: string;
     };
+    AcceptEstateInvitationRequest: {
+      /** Format: int32 */
+      expectedRoleVersion: number;
+    };
     AcceptedInvitationsResponse: {
       estateIds: string[];
     };
@@ -1808,6 +1980,16 @@ export interface components {
     WorkOrderAssetPageResponse: {
       items: components["schemas"]["WorkOrderAssetOptionResponse"][];
       nextCursor?: string;
+    };
+    EstateInvitationRoleOptionResponse: {
+      /** @enum {string} */
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      label: string;
+      /** Format: uuid */
+      customRoleId: string | null;
+      /** Format: int32 */
+      customRoleVersion: number | null;
+      permissions: components["schemas"]["EstatePermissionResponse"][] | null;
     };
     FlatlineEvidenceResponse: {
       /** Format: date-time */
@@ -2045,7 +2227,15 @@ export interface components {
       /** Format: date-time */
       expiresAt: string;
       /** @enum {string} */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      /** Format: uuid */
+      customRoleId: string | null;
+      /** Format: int32 */
+      customRoleVersion: number | null;
+      customRoleName: string | null;
+      customPermissions:
+        | components["schemas"]["EstatePermissionResponse"][]
+        | null;
     };
     AssetCategoryResponse: {
       code: string;
@@ -2096,7 +2286,7 @@ export interface components {
       estateId: string;
       estateName: string;
       /** @enum {string} */
-      role: "MANAGER" | "MEMBER" | "COUNCIL" | "RESIDENT" | "CREW";
+      role: "MANAGER" | "MEMBER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
@@ -2107,6 +2297,18 @@ export interface components {
       canViewWorkOrders: boolean;
       canCreateWorkOrders: boolean;
       canUpdateWorkOrders: boolean;
+      /** Format: uuid */
+      customRoleId: string | null;
+      customRoleName: string | null;
+      canCreateLocations: boolean;
+      canCreateFloors: boolean;
+      canEditLocations: boolean;
+      canViewEstateRoles: boolean;
+      canCreateRoles: boolean;
+      canEditRoles: boolean;
+      canDeleteRoles: boolean;
+      canReassignRoles: boolean;
+      canViewEstateInvitations: boolean;
     };
   };
 }
@@ -2204,7 +2406,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["AcceptEstateInvitationRequest"];
+      };
+    };
     responses: {
       /** @description Explicitly accept one in-app estate invitation */
       200: {
@@ -2488,6 +2694,80 @@ export interface operations {
         };
       };
       /** @description Identity provider not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  catalogue: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Grantable permission catalogue */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstatePermissionResponse"][];
+        };
+      };
+      /** @description Invalid definition or identifier */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or role not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate, stale version, inactive estate or assigned members */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage unavailable */
       503: {
         headers: {
           [name: string]: unknown;
@@ -2846,6 +3126,84 @@ export interface operations {
       };
       /** @description Duplicate estate code */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  create_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateEstateRoleRequest"];
+      };
+    };
+    responses: {
+      /** @description Custom role created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateRoleDefinitionResponse"];
+        };
+      };
+      /** @description Invalid definition or identifier */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or role not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate, stale version, inactive estate or assigned members */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -3348,6 +3706,79 @@ export interface operations {
       };
       /** @description Duplicate name or level position, inactive estate or location, or active children */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        roleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Role and associated invitation history permanently deleted */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid definition or identifier */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or role not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate, stale version, inactive estate or assigned members */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -4087,6 +4518,91 @@ export interface operations {
       };
     };
   };
+  invitationRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Eligible preset and custom invitation roles */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateInvitationRoleOptionResponse"][];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Insufficient estate permissions */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or member not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate invitation or inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Identity provider failed */
+      502: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Identity provider not configured */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   invite: {
     parameters: {
       query?: never;
@@ -4303,6 +4819,80 @@ export interface operations {
       };
       /** @description Duplicate estate code */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  list_1: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Estate-scoped custom definitions */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateRoleDefinitionResponse"][];
+        };
+      };
+      /** @description Invalid definition or identifier */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or role not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate, stale version, inactive estate or assigned members */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -6838,6 +7428,85 @@ export interface operations {
     };
   };
   update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        roleId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UpdateEstateRoleDefinitionRequest"];
+      };
+    };
+    responses: {
+      /** @description Custom role updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateRoleDefinitionResponse"];
+        };
+      };
+      /** @description Invalid definition or identifier */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Estate permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or role not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Duplicate, stale version, inactive estate or assigned members */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  update_1: {
     parameters: {
       query?: never;
       header?: never;

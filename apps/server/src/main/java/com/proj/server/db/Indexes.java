@@ -14,6 +14,7 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
@@ -68,6 +69,8 @@ public class Indexes {
     public static final Index ESTATEINVITATION_EMAIL_STATUS_IDX = Internal.createIndex(DSL.name("EstateInvitation_email_status_idx"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.EMAIL, Estateinvitation.ESTATEINVITATION.STATUS }, false);
     public static final Index ESTATEINVITATION_ESTATEID_EMAIL_KEY = Internal.createIndex(DSL.name("EstateInvitation_estateId_email_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.ESTATEID, Estateinvitation.ESTATEINVITATION.EMAIL }, true);
     public static final Index ESTATEINVITATION_PROVIDERINVITATIONID_KEY = Internal.createIndex(DSL.name("EstateInvitation_providerInvitationId_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.PROVIDERINVITATIONID }, true);
+    public static final Index ESTATEROLEDEFINITION_ESTATEID_NORMALIZEDNAME_KEY = Internal.createIndex(DSL.name("EstateRoleDefinition_estateId_normalizedName_key"), Estateroledefinition.ESTATEROLEDEFINITION, new OrderField[] { Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID, Estateroledefinition.ESTATEROLEDEFINITION.NORMALIZEDNAME }, true);
+    public static final Index ESTATEROLEDEFINITION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("EstateRoleDefinition_id_estateId_key"), Estateroledefinition.ESTATEROLEDEFINITION, new OrderField[] { Estateroledefinition.ESTATEROLEDEFINITION.ID, Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID }, true);
     public static final Index ESTATEUSER_USERID_IDX = Internal.createIndex(DSL.name("EstateUser_userId_idx"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, false);
     public static final Index ISSUEREPORT_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
     public static final Index ISSUEREPORT_ESTATEID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID }, false);

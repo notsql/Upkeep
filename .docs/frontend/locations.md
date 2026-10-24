@@ -22,9 +22,9 @@ device forms (see [assets.md](assets.md), [devices.md](devices.md)).
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `LocationsSection` (`estates/$estateId/-components/locations-section.tsx`) | "Locations" section. Search box (filters by name and reveals a matching hierarchy with parent context). Otherwise a nested tree (`ul aria-label="Location hierarchy"`). Owners and shared members can browse/search. Creation controls require a loaded active estate and ownership or target-estate `canManageEstate`; edit/deactivate require ownership. Owners get "Add levels" (blocks: opens `AddLevelsTabs`); assigned Managers get "Add level" (blocks: opens `LocationForm`). Both get "Add common area" (blocks and levels) and a top "Add block" button. Only owners get "Edit" and "Deactivate". One Dialog at a time for create/edit/deactivate; pending submissions prevent dismissal. Blocks are distinct surfaces; branches start collapsed and whole name/count buttons expand/collapse children. Each node has an Actions DropdownMenu; search results reveal parents and retain allowed actions. State, queries and writes only; the pieces below live beside it in the same `-components/` folder. | `Alert`, `Button`, `Input`, `Label`, `DropdownMenu`, `Dialog` |
+| `LocationsSection` (`estates/$estateId/-components/locations-section.tsx`) | "Locations" section. Search box (filters by name and reveals a matching hierarchy with parent context). Otherwise a nested tree (`ul aria-label="Location hierarchy"`). Owners and shared members can browse/search. Creation controls require a loaded active estate and canCreateLocations; bulk levels use canCreateFloors; editing uses canEditLocations; deactivation requires ownership. Owners get "Add levels" (blocks: opens `AddLevelsTabs`); assigned Managers get "Add level" (blocks: opens `LocationForm`). Both get "Add common area" (blocks and levels) and a top "Add block" button. Owners and custom EDIT_LOCATIONS get "Edit"; only owners get "Deactivate". One Dialog at a time for create/edit/deactivate; pending submissions prevent dismissal. Blocks are distinct surfaces; branches start collapsed and whole name/count buttons expand/collapse children. Each node has an Actions DropdownMenu; search results reveal parents and retain allowed actions. State, queries and writes only; the pieces below live beside it in the same `-components/` folder. | `Alert`, `Button`, `Input`, `Label`, `DropdownMenu`, `Dialog` |
 | `LocationTree`, `LocationItem`, `LocationActions`, `locationSummaries` (`estates/$estateId/-components/location-tree.tsx`) | The nested tree or search results, each node's disclosure button and count summary ("2 levels · 3 common areas"), and its Actions DropdownMenu, which opens a dialog by passing a `Panel`. | `Button`, `DropdownMenu` |
-| `Panel`, `panelTitle`, `dialogDescription` (`estates/$estateId/-components/location-panel.ts`) | Which dialog is open (`create` block/level/common area, `edit`, owner-only `levels`, `deactivate`) and its title and description. | - |
+| `Panel`, `panelTitle`, `dialogDescription` (`estates/$estateId/-components/location-panel.ts`) | Which dialog is open (`create` block/level/common area, `edit`, `levels` gated by canCreateFloors, `deactivate`) and its title and description. | - |
 | `PanelView` (`estates/$estateId/-components/location-panel-view.tsx`) | Picks the dialog body for the open `Panel`: `LocationForm`, `AddLevelsTabs` or `DeactivateLocation`; `parentOptions` lists where an edited location may move. | - |
 | `DeactivateLocation` (`estates/$estateId/-components/deactivate-location.tsx`) | Deactivation confirmation: "It stays on record... cannot be changed or reactivated". | `Button` |
 | `AddLevelsTabs` (`estates/$estateId/-components/add-levels-tabs.tsx`) | Body of the "Add levels to {block}" dialog. shadcn `Tabs`, default tab "Range of floors" (`AddFloorsForm`), alternative tab "One custom level" (`LocationForm` titled "Add level to {block}", position defaulting to `nextLevelPosition`). Hidden tab content is unmounted. | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` |
@@ -119,3 +119,16 @@ component and its obsolete flat-search helper were removed. `filterLocationTree`
 filters the already-built tree directly, without rebuilding/flattening it or
 constructing a set of matching IDs. Summaries use the unfiltered tree. The dialog
 header and form accessible name share the same `panelTitle` helper.
+
+## Custom estate permissions
+
+LocationsSection resolves the exact estate's canCreateLocations, canCreateFloors
+and canEditLocations independently from canManageEstate. CREATE_LOCATIONS
+shows Add block/common area and Add levels (including bulk floors).
+EDIT_LOCATIONS shows rename/move controls without creation. EDIT_ESTATE alone
+shows neither. Deactivation remains current-owner-only. All mutation controls
+require a loaded active estate; an open panel disappears when its capability is
+revoked. LocationTree receives the separate capabilities recursively. Existing
+preset Manager creation and owner-only bulk/edit/deactivation behavior is
+preserved. Query keys and invalidations are unchanged. Custom report readers
+also use historical locations for filters/correction without gaining writes.

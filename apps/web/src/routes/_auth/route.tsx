@@ -73,7 +73,10 @@ function guardEstatePath(
   access: components["schemas"]["AppAccessResponse"]
 ) {
   const [, , estateId, feature] = path.split("/");
-  if (path.startsWith("/estates/") && estateId && estateId !== "new") {
+  if (!(path.startsWith("/estates/") && estateId) || estateId === "new") {
+    return;
+  }
+  {
     const estate = access.estates.find((item) => item.estateId === estateId);
     if (estate?.role === "RESIDENT") {
       throw redirect({ href: "/reports/new" });
@@ -84,16 +87,28 @@ function guardEstatePath(
       }
       return;
     }
+    if (feature === "roles") {
+      if (!estate?.canViewEstateRoles) {
+        throw notFound();
+      }
+      return;
+    }
+    if (feature === "council") {
+      if (
+        !(
+          estate?.canViewEstateInvitations ||
+          estate?.canInviteMembers ||
+          estate?.canManageInvitationPermissions
+        )
+      ) {
+        throw notFound();
+      }
+      return;
+    }
     if (!estate?.canViewManagement) {
       throw notFound();
     }
     if (feature === "assets" && !estate.canViewAssets) {
-      throw notFound();
-    }
-    if (
-      feature === "council" &&
-      !(estate.canInviteMembers || estate.canManageInvitationPermissions)
-    ) {
       throw notFound();
     }
   }

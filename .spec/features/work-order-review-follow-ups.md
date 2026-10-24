@@ -1,5 +1,39 @@
 # Work-order manual review and estate member tables
 
+## PR #36 integration review — 2026-10-24
+
+The user requested resolving conflicts with main after ID-36 merged in PR #33.
+Reuse main's creation-form split, which addresses the same reviewer comment on
+this PR. Preserve progress/completion, correction audit, pagination and oldest-first
+priority ties. Combine main's custom-role permissions and member-role confirmation
+with this branch's paginated member table; use its extracted invitation form and
+member role controls instead of restoring the old preset-only copies.
+
+Retain both sets of additive migrations without editing their contents. Regenerate
+the combined Prisma/jOOQ and OpenAPI types against a disposable local database;
+do not change the user's Neon database. Preserve capability-based access guards
+and the known Owner/Manager versus Crew/Resident boundaries. Run existing and
+integration regression tests, type checks, formatting and the production build.
+The known invitation-test fixture failure is outside this review's scope. Leave
+the result uncommitted for the human to review and push.
+
+Integration implemented against main `78cabbe`. All 11 conflicted paths are
+resolved. The creation-form folder is identical to main, retaining its split
+screen/hook/source-field implementation. Member pagination now lives in
+`estate-members-table.tsx`; main's custom-role-aware MemberPermission renders
+its rows with the existing confirmation flow. Three table integration failures
+were observed before implementation. The focused member/creation set then passed
+37 tests, including a custom-role change on page two. The estate-switch test's
+access fixture was corrected to grant both estates; its assertions are unchanged.
+
+The combined schema replays on disposable Postgres, and Prisma/jOOQ and the
+actual Spring OpenAPI/TypeScript contract were regenerated. Existing migration
+contents and Neon data are unchanged. Final verification passes: 611 web tests,
+1,111 backend tests, workspace types, full lint/formatting and the production
+web build. The known invitation-test failure did not recur locally. No new live
+browser pass was performed for this merge. Changes are uncommitted for human
+review; the updated PR must be pushed before GitHub can verify the resolutions.
+
 **Status:** implemented and verified 2026-10-24; uncommitted for human review
 **Owner:** Chan Ding Jie
 **Baseline:** `feat/work-order-progress-and-completion` at `18f3b3e`, with the

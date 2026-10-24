@@ -323,18 +323,10 @@ class FaultReportLocationsIntegrationTests {
 
     private void applyOwnerMembershipMigrations() throws Exception {
         for (var directory = Path.of("").toAbsolutePath(); directory != null; directory = directory.getParent()) {
-            var migrations = directory.resolve("packages/db/prisma/migrations");
-            if (!Files.isDirectory(migrations)) continue;
-            try (var folders = Files.list(migrations)) {
-                for (var folder : folders.filter(Files::isDirectory)
-                        .filter(path -> path.getFileName()
-                                .toString()
-                                .equals("20261022135000_backfill_estate_owner_memberships"))
-                        .sorted()
-                        .toList()) {
-                    db.execute(Files.readString(folder.resolve("migration.sql")));
-                }
-            }
+            var migration = directory.resolve(
+                    "packages/db/prisma/migrations/20261022135000_backfill_estate_owner_memberships/migration.sql");
+            if (!Files.isRegularFile(migration)) continue;
+            db.execute(Files.readString(migration));
             return;
         }
         throw new IllegalStateException("Could not find Prisma migrations");

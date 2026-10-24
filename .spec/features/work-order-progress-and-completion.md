@@ -2,7 +2,10 @@
 
 **Status:** independent scope implemented and verified 2026-10-24; live QA follow-ups implemented and verified; shared integrations pending
 **Owner:** Chan Ding Jie
-**Baseline:** ID-36 at `18f3b3e`; PR #33 is still under review.
+**Baseline:** originally ID-36 at `18f3b3e`; PR #33 has since merged.
+PR #36's integration review brings in main at `78cabbe`, retaining its creation
+form split and custom roles alongside progress/completion. See the review
+follow-up plan for integration verification.
 
 Sources: [ID-38](https://notjira.atlassian.net/browse/ID-38),
 [ID-40](https://notjira.atlassian.net/browse/ID-40),
