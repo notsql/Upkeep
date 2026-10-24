@@ -21,6 +21,21 @@ export const Route = createFileRoute("/")({
     ) {
       throw redirect({ href: `/estates/${reportEstate.estateId}/reports` });
     }
+    if (
+      user &&
+      access &&
+      !reportEstate &&
+      !access.estates.some((estate) => estate.canViewManagement)
+    ) {
+      const scoped = access.estates.find(
+        (estate) => estate.canViewEstateRoles || estate.canViewEstateInvitations
+      );
+      if (scoped) {
+        throw redirect({
+          href: `/estates/${scoped.estateId}/${scoped.canViewEstateRoles ? "roles" : "council"}`,
+        });
+      }
+    }
   },
   head: () => ({ meta: [{ title: "UpKeep — Estate workspace" }] }),
 });

@@ -13,7 +13,7 @@ it("activates accepted invitations and refreshes the estate list", async () => {
   vi.mocked(api.POST).mockResolvedValue({
     data: { estateIds: ["estate"] },
     response: new Response(),
-  });
+  } as never);
   const { queryClient } = renderWithProviders(<InvitationAcceptance />);
   queryClient.setQueryData(["estates", "recipient", "list", "ACTIVE"], []);
   queryClient.setQueryData(["recipient", "council-invitations"], []);
@@ -46,7 +46,7 @@ it("offers a retry when invitation verification fails", async () => {
   vi.mocked(api.POST).mockResolvedValue({
     data: { estateIds: [] },
     response: new Response(),
-  });
+  } as never);
   fireEvent.click(screen.getByRole("button", { name: "Retry invitations" }));
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
 });

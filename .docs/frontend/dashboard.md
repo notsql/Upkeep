@@ -83,3 +83,11 @@ Query staleness/focus refresh; no polling or real-time subscription was added.
 
 See [the API contract](../api/dashboard.md) for scope, ranking and count rules,
 and [the shared design guide](design-system.md) for themes and navigation.
+
+## Custom estate permissions
+
+Custom VIEW_ESTATE contributes estate counts and enables overview/Home. It
+never widens owner-scoped asset/condition totals. Home's route loader sends a
+role/invitation-only user without management/report access to the first eligible
+Roles or council route; report-capable users retain report entry. The dashboard
+is not mounted for these redirected scoped-only accounts.

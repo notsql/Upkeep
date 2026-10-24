@@ -41,6 +41,8 @@ export function locationSummaries(tree: LocationNode[]): Map<string, string> {
 export function LocationTree({
   tree,
   canCreate,
+  canCreateFloors,
+  canDeactivate,
   canEdit,
   onPanel,
   summaries,
@@ -51,6 +53,8 @@ export function LocationTree({
 }: {
   tree: LocationNode[];
   canCreate: boolean;
+  canCreateFloors: boolean;
+  canDeactivate: boolean;
   canEdit: boolean;
   onPanel: (panel: Panel) => void;
   summaries: Map<string, string>;
@@ -77,6 +81,8 @@ export function LocationTree({
       {tree.map((node) => (
         <LocationItem
           canCreate={canCreate}
+          canCreateFloors={canCreateFloors}
+          canDeactivate={canDeactivate}
           canEdit={canEdit}
           expandedIds={expandedIds}
           key={node.id}
@@ -94,6 +100,8 @@ export function LocationTree({
 function LocationItem({
   node,
   canCreate,
+  canCreateFloors,
+  canDeactivate,
   canEdit,
   onPanel,
   summaries,
@@ -103,6 +111,8 @@ function LocationItem({
 }: {
   node: LocationNode;
   canCreate: boolean;
+  canCreateFloors: boolean;
+  canDeactivate: boolean;
   canEdit: boolean;
   onPanel: (panel: Panel) => void;
   summaries: Map<string, string>;
@@ -161,6 +171,8 @@ function LocationItem({
         {canEdit || (canCreate && node.type !== "COMMON_AREA") ? (
           <LocationActions
             canCreate={canCreate}
+            canCreateFloors={canCreateFloors}
+            canDeactivate={canDeactivate}
             canEdit={canEdit}
             node={node}
             onPanel={onPanel}
@@ -173,6 +185,8 @@ function LocationItem({
             ? node.children.map((child) => (
                 <LocationItem
                   canCreate={canCreate}
+                  canCreateFloors={canCreateFloors}
+                  canDeactivate={canDeactivate}
                   canEdit={canEdit}
                   expandedIds={expandedIds}
                   key={child.id}
@@ -193,11 +207,15 @@ function LocationItem({
 function LocationActions({
   node,
   canCreate,
+  canCreateFloors,
+  canDeactivate,
   canEdit,
   onPanel,
 }: {
   node: LocationNode;
   canCreate: boolean;
+  canCreateFloors: boolean;
+  canDeactivate: boolean;
   canEdit: boolean;
   onPanel: (panel: Panel) => void;
 }) {
@@ -239,10 +257,10 @@ function LocationActions({
       <DropdownMenuContent align="end">
         {node.type === "BLOCK" && canCreate ? (
           <DropdownMenuItem
-            aria-label={`Add ${canEdit ? "levels" : "level"} to ${node.name}`}
-            onClick={canEdit ? addLevels : addLevel}
+            aria-label={`Add ${canCreateFloors ? "levels" : "level"} to ${node.name}`}
+            onClick={canCreateFloors ? addLevels : addLevel}
           >
-            {canEdit ? "Add levels" : "Add level"}
+            {canCreateFloors ? "Add levels" : "Add level"}
           </DropdownMenuItem>
         ) : null}
         {canCreate && node.type !== "COMMON_AREA" ? (
@@ -254,18 +272,18 @@ function LocationActions({
           </DropdownMenuItem>
         ) : null}
         {canEdit ? (
-          <>
-            <DropdownMenuItem aria-label={`Edit ${node.name}`} onClick={edit}>
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              aria-label={`Deactivate ${node.name}`}
-              className="text-destructive"
-              onClick={deactivate}
-            >
-              Deactivate
-            </DropdownMenuItem>
-          </>
+          <DropdownMenuItem aria-label={`Edit ${node.name}`} onClick={edit}>
+            Edit
+          </DropdownMenuItem>
+        ) : null}
+        {canDeactivate ? (
+          <DropdownMenuItem
+            aria-label={`Deactivate ${node.name}`}
+            className="text-destructive"
+            onClick={deactivate}
+          >
+            Deactivate
+          </DropdownMenuItem>
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>

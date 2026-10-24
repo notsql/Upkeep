@@ -29,7 +29,7 @@ public class EstateService {
     @Transactional
     public EstateResponse update(UUID id, String user, EstateRequest request) {
         repository.lock(id);
-        if (!repository.isManager(id, user)) {
+        if (!repository.isManager(id, user) && !repository.hasPermission(id, user, EstatePermissionCode.EDIT_ESTATE)) {
             throw repository.findAccessible(id, user).isPresent()
                     ? new EstateException(
                             HttpStatus.FORBIDDEN, "Only the owner or an assigned Manager can edit estate details.")

@@ -18,25 +18,45 @@ function PendingInvitation({
   invitation: components["schemas"]["PendingCouncilInvitationResponse"];
 }) {
   const acceptance = useAcceptInAppInvitation();
-  const accept = useCallback(
-    () => acceptance.mutate(invitation.id),
-    [acceptance, invitation.id]
-  );
+  const accept = useCallback(() => {
+    if (invitation.role === "CUSTOM") {
+      if (!invitation.customRoleVersion) {
+        return;
+      }
+      acceptance.mutate({
+        invitationId: invitation.id,
+        body: { expectedRoleVersion: invitation.customRoleVersion },
+      });
+    } else {
+      acceptance.mutate(invitation.id);
+    }
+  }, [
+    acceptance,
+    invitation.id,
+    invitation.role,
+    invitation.customRoleVersion,
+  ]);
+  let roleName = invitation.role?.toLowerCase();
+  if (invitation.role === "MANAGER") {
+    roleName = "Manager (Admin)";
+  }
+  if (invitation.role === "CUSTOM") {
+    roleName = invitation.customRoleName ?? "Unavailable custom role";
+  }
   return (
     <li className="space-y-2 border-b py-4 last:border-b-0">
       <p className="font-medium">{invitation.estateName}</p>
-      <p>
-        Offered role:{" "}
-        {invitation.role === "MANAGER"
-          ? "Manager (Admin)"
-          : invitation.role?.toLowerCase()}
-      </p>
+      <p>Offered role: {roleName}</p>
       <p className="text-muted-foreground text-sm">
         Expires {new Date(invitation.expiresAt).toLocaleDateString()}
       </p>
       <Button
         aria-label={`Accept invitation to ${invitation.estateName}`}
-        disabled={acceptance.isPending || acceptance.isSuccess}
+        disabled={
+          acceptance.isPending ||
+          acceptance.isSuccess ||
+          (invitation.role === "CUSTOM" && !invitation.customRoleVersion)
+        }
         onClick={accept}
       >
         {acceptance.isPending ? "Accepting…" : "Accept invitation"}

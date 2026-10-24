@@ -126,3 +126,17 @@ outside a report-capable estate.
 The web tsconfig maps `@/*` to `src/*` and `@tests/*` to `tests/*`. Vite and
 Vitest use the same native tsconfig path resolution. Tests import application
 code through `@/` and can import shared helpers through `@tests/test-utils`.
+
+## Custom estate permissions
+
+Estate-scoped navigation and `_auth` guard check Roles and council capabilities
+before requiring management access. Roles requires canViewEstateRoles; council
+requires canViewEstateInvitations/canInviteMembers/member-admin authority. Access
+lookup failures mount no controls. Role-only and invitation-only users therefore
+need no VIEW_ESTATE. AppNavigation avoids useEstate for these contexts, labels
+them from access estateName, and exposes Roles/Invitations as local destinations.
+Outside that estate, named global entries provide a route into scoped-only
+estates. Report contexts retain their report switcher; management contexts retain
+the management estate switcher. Home sends a scoped-only user to Roles or estate
+invitations after checking management/report entry. Access/cache remains per user.
+See [estate-roles.md](estate-roles.md) and [council-invitations.md](council-invitations.md).

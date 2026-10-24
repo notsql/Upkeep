@@ -25,7 +25,7 @@ with Create estate. Back, breadcrumb and Cancel on creation all lead to this dir
 | `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/code/address, Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you), Create estate and a grid of whole-card details links with name, code, address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty`, `Button`, `Input`, `Label`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
 | `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create or edit. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an alert and Retry access. | `Alert`, `AlertDescription`, `Button` |
 | `EstateForm` (`estates/-components/estate-form.tsx`) | Fields: `name` (req, max 200), `code` (req, max 50, "Saved in uppercase"), `address` (req, max 500), `postalCode` (req, max 20), `description` (optional, max 2000). Submit "Create estate" / "Save changes". | `Button`, `Input`, `Label`, `Textarea` |
-| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, code, address, postal code, description. Owners and target-estate Managers get "Edit estate", including inactive estates. Only the current owner gets "Deactivate estate" while active. Other roles see "Shared with you. Only the owner or an assigned Manager can edit estate details." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
+| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, code, address, postal code, description. Owners, target-estate Managers and custom EDIT_ESTATE get "Edit estate", including inactive estates. Only the current owner gets "Deactivate estate" while active. Other roles see "Shared with you. You do not have permission to edit estate details." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
 | `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the estate `code` exactly to enable "Deactivate estate". Closing is blocked while pending. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label` |
 
 ## Data (`lib/estates.ts`)
@@ -124,3 +124,12 @@ reduced-motion preferences. Badges distinguish Owner from Shared with you,
 without implying a council role from general estate access. Clear filters resets
 search/access/status to their defaults. No estates and no search/access matches
 have separate guidance. Home portfolio analytics are documented in [dashboard.md](dashboard.md).
+
+## Custom estate permissions
+
+Custom VIEW_ESTATE adds estate list/detail visibility. The exact estate's
+canManageEstate (custom EDIT_ESTATE) controls detail editing, including inactive
+estates; it never grants ownership. EstateActions exposes Roles when
+canViewEstateRoles, and Estate members/invitations when canViewEstateInvitations
+or existing invite/admin flags permit. No VIEW_ESTATE means no overview query;
+role/invite/report-only users use their own scoped routes. See [estate-roles.md](estate-roles.md).

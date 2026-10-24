@@ -28,6 +28,7 @@ model Estate {
   issueReports  IssueReport[]
   events        AssetEvent[]
   flatlinePolicies FlatlinePolicy[]
+  roleDefinitions EstateRoleDefinition[]
 
   @@index([ownerUserId])
 }
@@ -67,6 +68,8 @@ model Location {
 // A WorkOS user an admin has assigned to an estate, giving them view access.
 // Ownership stays on Estate.ownerUserId; see decision 0012.
 model EstateUser {
+  customRoleId     String? @db.Uuid
+  customRole EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   role             String   @default("MEMBER") @db.VarChar(20)
   canInviteMembers Boolean  @default(false)
   estateId         String   @db.Uuid
@@ -353,6 +356,8 @@ model AssetLifecycleEvent {
 
 // Estate-local Council invitations; WorkOS owns identity and email delivery.
 model EstateInvitation {
+  customRoleId String? @db.Uuid
+  customRole EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   id                   String    @id @default(uuid()) @db.Uuid
   role                 String    @default("COUNCIL") @db.VarChar(20)
   estateId             String    @db.Uuid
@@ -369,4 +374,40 @@ model EstateInvitation {
 
   @@unique([estateId, email])
   @@index([email, status])
+}
+
+// Application-defined catalogue. Codes and enforcement change together through migrations.
+model Permission {
+  code String @id @db.VarChar(64)
+  label String @db.VarChar(120)
+  description String @db.VarChar(500)
+  roles EstateRolePermission[]
+}
+
+model EstateRoleDefinition {
+  id String @id @default(uuid()) @db.Uuid
+  estateId String @db.Uuid
+  name String @db.VarChar(40)
+  normalizedName String @db.VarChar(40)
+  description String? @db.VarChar(500)
+  createdByUserId String @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+  version Int @default(1)
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  permissions EstateRolePermission[]
+  members EstateUser[]
+  invitations EstateInvitation[]
+
+  @@unique([id, estateId])
+  @@unique([estateId, normalizedName])
+}
+
+model EstateRolePermission {
+  roleId String @db.Uuid
+  permission String @db.VarChar(64)
+  role EstateRoleDefinition @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  catalogue Permission @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([roleId, permission])
 }

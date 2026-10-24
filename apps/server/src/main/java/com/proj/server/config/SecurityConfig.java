@@ -103,6 +103,9 @@ public class SecurityConfig {
                                 "/estates/{estateId}/flatline-policies",
                                 "/estates/{estateId}/flatlined-sensors",
                                 "/estates/{estateId}/members",
+                                "/estates/{estateId}/roles",
+                                "/estates/{estateId}/role-permissions",
+                                "/estates/{estateId}/invitation-roles",
                                 "/estates/{estateId}/council-invitations")
                         .authenticated()
                         .requestMatchers(HttpMethod.POST, "/estates")
@@ -111,6 +114,7 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
                                 "/council-invitations/{invitationId}/accept",
+                                "/estates/{estateId}/roles",
                                 "/estates/{estateId}/ownership-transfer",
                                 "/estates/{estateId}/deactivate",
                                 "/estates/{estateId}/locations",
@@ -139,11 +143,13 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
+                                "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}/role",
                                 "/estates/{estateId}/flatline-policies/{metric}")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,
+                                "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}",
                                 "/estates/{estateId}/council-invitations/{invitationId}")
                         .authenticated()

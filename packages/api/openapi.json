@@ -6,6 +6,153 @@
   ],
   "security": [{ "bearerAuth": [] }],
   "paths": {
+    "/estates/{estateId}/roles/{roleId}": {
+      "put": {
+        "tags": ["estate-role-controller"],
+        "operationId": "update",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEstateRoleDefinitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid definition or identifier",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Custom role updated",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["estate-role-controller"],
+        "operationId": "delete",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "roleId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid definition or identifier",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": {
+            "description": "Role and associated invitation history permanently deleted"
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}/role": {
       "put": {
         "tags": ["council-controller"],
@@ -774,6 +921,151 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/roles": {
+      "get": {
+        "tags": ["estate-role-controller"],
+        "operationId": "list_1",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid definition or identifier",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Estate-scoped custom definitions",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["estate-role-controller"],
+        "operationId": "create_1",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEstateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid definition or identifier",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Custom role created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
+                }
               }
             }
           }
@@ -2444,6 +2736,15 @@
             "schema": { "type": "string", "format": "uuid" }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptEstateInvitationRequest"
+              }
+            }
+          }
+        },
         "responses": {
           "400": {
             "description": "Invalid request",
@@ -2654,7 +2955,7 @@
       "patch": {
         "tags": ["estate-controller"],
         "summary": "Update estate details as the current owner or an assigned Manager",
-        "operationId": "update",
+        "operationId": "update_1",
         "parameters": [
           {
             "name": "id",
@@ -3402,6 +3703,76 @@
         }
       }
     },
+    "/estates/{estateId}/role-permissions": {
+      "get": {
+        "tags": ["estate-role-controller"],
+        "operationId": "catalogue",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid definition or identifier",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Grantable permission catalogue",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstatePermissionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/reports": {
       "get": {
         "tags": ["estate-report-controller"],
@@ -3735,6 +4106,91 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/EstateMemberResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/invitation-roles": {
+      "get": {
+        "tags": ["council-controller"],
+        "operationId": "invitationRoles",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient estate permissions",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or member not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate invitation or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "502": {
+            "description": "Identity provider failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Identity provider not configured",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Eligible preset and custom invitation roles",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateInvitationRoleOptionResponse"
                   }
                 }
               }
@@ -4653,20 +5109,103 @@
   },
   "components": {
     "schemas": {
-      "UpdateEstateRoleRequest": {
+      "UpdateEstateRoleDefinitionRequest": {
         "type": "object",
         "properties": {
-          "role": {
-            "type": "string",
-            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+          "name": { "type": "string", "maxLength": 40, "minLength": 0 },
+          "description": {
+            "type": ["string", "null"],
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "VIEW_ESTATE",
+                "EDIT_ESTATE",
+                "VIEW_FAULT_REPORTS",
+                "RELOCATE_FAULT_REPORTS",
+                "INVITE_MEMBERS",
+                "CREATE_LOCATIONS",
+                "EDIT_LOCATIONS",
+                "CREATE_ROLES",
+                "EDIT_ROLES"
+              ]
+            },
+            "minItems": 1
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMinimum": 0
           }
         },
-        "required": ["role"]
+        "required": ["expectedVersion", "name", "permissions"]
       },
       "EstateError": {
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"]
+      },
+      "EstateRoleDefinitionResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "description": { "type": ["string", "null"] },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "VIEW_ESTATE",
+                "EDIT_ESTATE",
+                "VIEW_FAULT_REPORTS",
+                "RELOCATE_FAULT_REPORTS",
+                "INVITE_MEMBERS",
+                "CREATE_LOCATIONS",
+                "EDIT_LOCATIONS",
+                "CREATE_ROLES",
+                "EDIT_ROLES"
+              ]
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "version": { "type": "integer", "format": "int32" },
+          "canEdit": { "type": "boolean" },
+          "canDelete": { "type": "boolean" }
+        },
+        "required": [
+          "canDelete",
+          "canEdit",
+          "createdAt",
+          "description",
+          "estateId",
+          "id",
+          "name",
+          "permissions",
+          "updatedAt",
+          "version"
+        ]
+      },
+      "UpdateEstateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
+          },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "expectedRoleVersion": {
+            "type": ["integer", "null"],
+            "format": "int32"
+          }
+        },
+        "required": ["role"]
       },
       "EstateMemberResponse": {
         "type": "object",
@@ -4677,12 +5216,23 @@
           "canInviteMembers": { "type": "boolean" },
           "role": {
             "type": "string",
-            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "MEMBER"]
+            "enum": [
+              "MANAGER",
+              "COUNCIL",
+              "RESIDENT",
+              "CREW",
+              "MEMBER",
+              "CUSTOM"
+            ]
           },
-          "owner": { "type": "boolean" }
+          "owner": { "type": "boolean" },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "customRoleName": { "type": ["string", "null"] }
         },
         "required": [
           "canInviteMembers",
+          "customRoleId",
+          "customRoleName",
           "email",
           "name",
           "owner",
@@ -4851,6 +5401,36 @@
         },
         "required": ["code"]
       },
+      "CreateEstateRoleRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 40, "minLength": 0 },
+          "description": {
+            "type": ["string", "null"],
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "VIEW_ESTATE",
+                "EDIT_ESTATE",
+                "VIEW_FAULT_REPORTS",
+                "RELOCATE_FAULT_REPORTS",
+                "INVITE_MEMBERS",
+                "CREATE_LOCATIONS",
+                "EDIT_LOCATIONS",
+                "CREATE_ROLES",
+                "EDIT_ROLES"
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "required": ["name", "permissions"]
+      },
       "TransferOwnershipRequest": {
         "type": "object",
         "properties": {
@@ -4981,7 +5561,12 @@
           "role": {
             "type": "string",
             "default": "COUNCIL",
-            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
+          },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "expectedRoleVersion": {
+            "type": ["integer", "null"],
+            "format": "int32"
           }
         },
         "required": ["email"]
@@ -4996,10 +5581,70 @@
           "expiresAt": { "type": ["string", "null"], "format": "date-time" },
           "role": {
             "type": "string",
-            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
+          },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "customRoleVersion": {
+            "type": ["integer", "null"],
+            "format": "int32"
+          },
+          "customRoleName": { "type": ["string", "null"] },
+          "customPermissions": {
+            "type": ["array", "null"],
+            "items": { "$ref": "#/components/schemas/EstatePermissionResponse" }
           }
         },
-        "required": ["email", "estateId", "expiresAt", "id", "role", "status"]
+        "required": [
+          "customPermissions",
+          "customRoleId",
+          "customRoleName",
+          "customRoleVersion",
+          "email",
+          "estateId",
+          "expiresAt",
+          "id",
+          "role",
+          "status"
+        ]
+      },
+      "EstatePermissionResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "VIEW_ESTATE",
+              "EDIT_ESTATE",
+              "VIEW_FAULT_REPORTS",
+              "RELOCATE_FAULT_REPORTS",
+              "INVITE_MEMBERS",
+              "CREATE_LOCATIONS",
+              "EDIT_LOCATIONS",
+              "CREATE_ROLES",
+              "EDIT_ROLES"
+            ]
+          },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "requires": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "VIEW_ESTATE",
+                "EDIT_ESTATE",
+                "VIEW_FAULT_REPORTS",
+                "RELOCATE_FAULT_REPORTS",
+                "INVITE_MEMBERS",
+                "CREATE_LOCATIONS",
+                "EDIT_LOCATIONS",
+                "CREATE_ROLES",
+                "EDIT_ROLES"
+              ]
+            }
+          }
+        },
+        "required": ["code", "description", "label", "requires"]
       },
       "CreateAssetRequest": {
         "type": "object",
@@ -5442,6 +6087,17 @@
           "value"
         ]
       },
+      "AcceptEstateInvitationRequest": {
+        "type": "object",
+        "properties": {
+          "expectedRoleVersion": {
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": ["expectedRoleVersion"]
+      },
       "AcceptedInvitationsResponse": {
         "type": "object",
         "properties": {
@@ -5595,6 +6251,32 @@
           "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["database", "ok", "timestamp"]
+      },
+      "EstateInvitationRoleOptionResponse": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
+          },
+          "label": { "type": "string" },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "customRoleVersion": {
+            "type": ["integer", "null"],
+            "format": "int32"
+          },
+          "permissions": {
+            "type": ["array", "null"],
+            "items": { "$ref": "#/components/schemas/EstatePermissionResponse" }
+          }
+        },
+        "required": [
+          "customRoleId",
+          "customRoleVersion",
+          "label",
+          "permissions",
+          "role"
+        ]
       },
       "FlatlineEvidenceResponse": {
         "type": "object",
@@ -5978,10 +6660,30 @@
           "expiresAt": { "type": "string", "format": "date-time" },
           "role": {
             "type": "string",
-            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW"]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
+          },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "customRoleVersion": {
+            "type": ["integer", "null"],
+            "format": "int32"
+          },
+          "customRoleName": { "type": ["string", "null"] },
+          "customPermissions": {
+            "type": ["array", "null"],
+            "items": { "$ref": "#/components/schemas/EstatePermissionResponse" }
           }
         },
-        "required": ["estateId", "estateName", "expiresAt", "id", "role"]
+        "required": [
+          "customPermissions",
+          "customRoleId",
+          "customRoleName",
+          "customRoleVersion",
+          "estateId",
+          "estateName",
+          "expiresAt",
+          "id",
+          "role"
+        ]
       },
       "AssetCategoryResponse": {
         "type": "object",
@@ -6078,7 +6780,14 @@
           "estateName": { "type": "string" },
           "role": {
             "type": "string",
-            "enum": ["MANAGER", "MEMBER", "COUNCIL", "RESIDENT", "CREW"]
+            "enum": [
+              "MANAGER",
+              "MEMBER",
+              "COUNCIL",
+              "RESIDENT",
+              "CREW",
+              "CUSTOM"
+            ]
           },
           "canViewManagement": { "type": "boolean" },
           "canManageEstate": { "type": "boolean" },
@@ -6086,16 +6795,38 @@
           "canInviteMembers": { "type": "boolean" },
           "canManageInvitationPermissions": { "type": "boolean" },
           "canViewFaultReports": { "type": "boolean" },
-          "canRelocateFaultReports": { "type": "boolean" }
+          "canRelocateFaultReports": { "type": "boolean" },
+          "customRoleId": { "type": ["string", "null"], "format": "uuid" },
+          "customRoleName": { "type": ["string", "null"] },
+          "canCreateLocations": { "type": "boolean" },
+          "canCreateFloors": { "type": "boolean" },
+          "canEditLocations": { "type": "boolean" },
+          "canViewEstateRoles": { "type": "boolean" },
+          "canCreateRoles": { "type": "boolean" },
+          "canEditRoles": { "type": "boolean" },
+          "canDeleteRoles": { "type": "boolean" },
+          "canReassignRoles": { "type": "boolean" },
+          "canViewEstateInvitations": { "type": "boolean" }
         },
         "required": [
+          "canCreateFloors",
+          "canCreateLocations",
+          "canCreateRoles",
+          "canDeleteRoles",
+          "canEditLocations",
+          "canEditRoles",
           "canInviteMembers",
           "canManageEstate",
           "canManageInvitationPermissions",
+          "canReassignRoles",
           "canRelocateFaultReports",
           "canViewAssets",
+          "canViewEstateInvitations",
+          "canViewEstateRoles",
           "canViewFaultReports",
           "canViewManagement",
+          "customRoleId",
+          "customRoleName",
           "estateId",
           "estateName",
           "role"

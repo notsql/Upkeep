@@ -15,12 +15,15 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estateroledefinition;
+import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Permission;
 
 import java.util.Arrays;
 import java.util.List;
@@ -100,6 +103,16 @@ public class Public extends SchemaImpl {
     public final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
 
     /**
+     * The table <code>public.EstateRoleDefinition</code>.
+     */
+    public final Estateroledefinition ESTATEROLEDEFINITION = Estateroledefinition.ESTATEROLEDEFINITION;
+
+    /**
+     * The table <code>public.EstateRolePermission</code>.
+     */
+    public final Estaterolepermission ESTATEROLEPERMISSION = Estaterolepermission.ESTATEROLEPERMISSION;
+
+    /**
      * The table <code>public.EstateUser</code>.
      */
     public final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
@@ -130,6 +143,11 @@ public class Public extends SchemaImpl {
     public final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
 
     /**
+     * The table <code>public.Permission</code>.
+     */
+    public final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -156,12 +174,15 @@ public class Public extends SchemaImpl {
             Devicereading.DEVICEREADING,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
+            Estateroledefinition.ESTATEROLEDEFINITION,
+            Estaterolepermission.ESTATEROLEPERMISSION,
             Estateuser.ESTATEUSER,
             Flatlinepolicy.FLATLINEPOLICY,
             Issuereport.ISSUEREPORT,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
-            Manufacturer.MANUFACTURER
+            Manufacturer.MANUFACTURER,
+            Permission.PERMISSION
         );
     }
 }

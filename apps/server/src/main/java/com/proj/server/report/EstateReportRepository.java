@@ -34,6 +34,10 @@ public class EstateReportRepository {
         return lock ? query.forUpdate().fetchOne(ESTATEUSER.ROLE) : query.fetchOne(ESTATEUSER.ROLE);
     }
 
+    public boolean hasPermission(UUID estateId, String user, com.proj.server.estate.EstatePermissionCode permission) {
+        return com.proj.server.estate.EstatePermissions.has(db, estateId, user, permission);
+    }
+
     public Record location(UUID estateId, UUID locationId) {
         var parent = LOCATION.as("parent");
         var grandparent = LOCATION.as("grandparent");

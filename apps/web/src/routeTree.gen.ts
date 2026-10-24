@@ -31,6 +31,7 @@ import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_a
 import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/edit/index'
 import { Route as AuthEstatesEstateIdFailureRiskIndexRouteImport } from './routes/_auth/estates/$estateId/failure-risk/index'
 import { Route as AuthEstatesEstateIdReportsIndexRouteImport } from './routes/_auth/estates/$estateId/reports/index'
+import { Route as AuthEstatesEstateIdRolesIndexRouteImport } from './routes/_auth/estates/$estateId/roles/index'
 import { Route as AuthEstatesEstateIdSensorsIndexRouteImport } from './routes/_auth/estates/$estateId/sensors/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/index'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
@@ -155,6 +156,12 @@ const AuthEstatesEstateIdReportsIndexRoute =
     path: '/estates/$estateId/reports/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdRolesIndexRoute =
+  AuthEstatesEstateIdRolesIndexRouteImport.update({
+    id: '/estates/$estateId/roles/',
+    path: '/estates/$estateId/roles/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdSensorsIndexRoute =
   AuthEstatesEstateIdSensorsIndexRouteImport.update({
     id: '/estates/$estateId/sensors/',
@@ -220,6 +227,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
+  '/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
   '/estates/$estateId/sensors/': typeof AuthEstatesEstateIdSensorsIndexRoute
   '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -250,6 +258,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/edit': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/failure-risk': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/reports': typeof AuthEstatesEstateIdReportsIndexRoute
+  '/estates/$estateId/roles': typeof AuthEstatesEstateIdRolesIndexRoute
   '/estates/$estateId/sensors': typeof AuthEstatesEstateIdSensorsIndexRoute
   '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -282,6 +291,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/_auth/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/_auth/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
+  '/_auth/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
   '/_auth/estates/$estateId/sensors/': typeof AuthEstatesEstateIdSensorsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/edit/'
     | '/estates/$estateId/failure-risk/'
     | '/estates/$estateId/reports/'
+    | '/estates/$estateId/roles/'
     | '/estates/$estateId/sensors/'
     | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/new/'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/edit'
     | '/estates/$estateId/failure-risk'
     | '/estates/$estateId/reports'
+    | '/estates/$estateId/roles'
     | '/estates/$estateId/sensors'
     | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/assets/new'
@@ -375,6 +387,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/edit/'
     | '/_auth/estates/$estateId/failure-risk/'
     | '/_auth/estates/$estateId/reports/'
+    | '/_auth/estates/$estateId/roles/'
     | '/_auth/estates/$estateId/sensors/'
     | '/_auth/estates/$estateId/assets/$assetId/'
     | '/_auth/estates/$estateId/assets/new/'
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdReportsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/roles/': {
+      id: '/_auth/estates/$estateId/roles/'
+      path: '/estates/$estateId/roles'
+      fullPath: '/estates/$estateId/roles/'
+      preLoaderRoute: typeof AuthEstatesEstateIdRolesIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/sensors/': {
       id: '/_auth/estates/$estateId/sensors/'
       path: '/estates/$estateId/sensors'
@@ -618,6 +638,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdEditIndexRoute: typeof AuthEstatesEstateIdEditIndexRoute
   AuthEstatesEstateIdFailureRiskIndexRoute: typeof AuthEstatesEstateIdFailureRiskIndexRoute
   AuthEstatesEstateIdReportsIndexRoute: typeof AuthEstatesEstateIdReportsIndexRoute
+  AuthEstatesEstateIdRolesIndexRoute: typeof AuthEstatesEstateIdRolesIndexRoute
   AuthEstatesEstateIdSensorsIndexRoute: typeof AuthEstatesEstateIdSensorsIndexRoute
   AuthEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
@@ -643,6 +664,7 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthEstatesEstateIdFailureRiskIndexRoute:
     AuthEstatesEstateIdFailureRiskIndexRoute,
   AuthEstatesEstateIdReportsIndexRoute: AuthEstatesEstateIdReportsIndexRoute,
+  AuthEstatesEstateIdRolesIndexRoute: AuthEstatesEstateIdRolesIndexRoute,
   AuthEstatesEstateIdSensorsIndexRoute: AuthEstatesEstateIdSensorsIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdIndexRoute,
@@ -675,3 +697,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
