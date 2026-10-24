@@ -136,6 +136,11 @@ public class Workorder extends TableImpl<WorkorderRecord> {
      */
     public final TableField<WorkorderRecord, OffsetDateTime> UPDATEDAT = createField(DSL.name("updatedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false), this, "");
 
+    /**
+     * The column <code>public.WorkOrder.version</code>.
+     */
+    public final TableField<WorkorderRecord, Integer> VERSION = createField(DSL.name("version"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
     private Workorder(Name alias, Table<WorkorderRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -205,7 +210,7 @@ public class Workorder extends TableImpl<WorkorderRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.WORKORDER_ESTATEID_CREATEDAT_ID_IDX, Indexes.WORKORDER_ESTATEID_REFERENCE_KEY);
+        return Arrays.asList(Indexes.WORKORDER_ESTATEID_CREATEDAT_ID_IDX, Indexes.WORKORDER_ESTATEID_REFERENCE_KEY, Indexes.WORKORDER_ID_ESTATEID_KEY);
     }
 
     @Override

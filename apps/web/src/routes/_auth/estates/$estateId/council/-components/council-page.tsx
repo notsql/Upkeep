@@ -18,11 +18,11 @@ import {
 import { useEstate } from "@/lib/estates";
 import { OwnerInvitations } from "@/routes/_auth/estates/$estateId/council/-components/access-controls";
 import { CouncilInvitationForm } from "@/routes/_auth/estates/$estateId/council/-components/invitation-form";
-import { MemberPermission } from "@/routes/_auth/estates/$estateId/council/-components/member-permission";
 import {
   presetOptions,
   type RoleOption,
 } from "@/routes/_auth/estates/$estateId/council/-components/role-picker";
+import { EstateMembersTable } from "./estate-members-table";
 
 function EstateMembers({
   estateId,
@@ -31,6 +31,7 @@ function EstateMembers({
   estateId: string;
   permission: components["schemas"]["EstateAccessResponse"];
 }) {
+  const { userId } = useAuthenticatedSession();
   const estate = useEstate(estateId);
   const members = useEstateMembers(estateId, true);
   const roles = useEstateRoleDefinitions(estateId);
@@ -76,18 +77,16 @@ function EstateMembers({
         {members.data?.length === 0 ? (
           <p className="mt-4">No members yet. Invite someone to get started.</p>
         ) : null}
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-          {members.data?.map((member) => (
-            <MemberPermission
-              canReassign={canReassign}
-              canTransfer={estate.data?.owned === true}
-              estateId={estateId}
-              key={member.userId}
-              member={member}
-              options={options}
-            />
-          ))}
-        </ul>
+        {!members.isError && members.data ? (
+          <EstateMembersTable
+            canReassign={canReassign}
+            canTransfer={estate.data?.owned === true}
+            estateId={estateId}
+            key={`${estateId}:${userId}`}
+            members={members.data}
+            options={options}
+          />
+        ) : null}
       </CardContent>
     </Card>
   );

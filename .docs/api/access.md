@@ -18,7 +18,7 @@ name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is fal
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
 CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canInviteMembers/
 canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
-canViewWorkOrders/canCreateWorkOrders: boolean. Owners project as MANAGER; ownership is
+canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders: boolean. Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot
 receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
 no management access. Asset visibility and other management mutations retain
@@ -87,6 +87,10 @@ estate and owner/Manager authority. Same-estate Resident conflicts deny both.
 Crew reads every estate work order without assignment filtering. The limited
 asset picker uses creation authority and does not change canViewAssets.
 See [work-orders.md](work-orders.md).
+
+canUpdateWorkOrders requires current owner/Manager authority and an active estate,
+with the same Resident override as creation. Crew stay read-only. This capability
+does not grant owner-only asset-register access.
 
 The custom permission catalogue does not grant work-order access. Custom
 VIEW_ESTATE, EDIT_ESTATE or VIEW_FAULT_REPORTS does not imply

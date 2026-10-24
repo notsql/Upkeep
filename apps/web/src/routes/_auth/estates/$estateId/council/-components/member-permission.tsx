@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { TableCell, TableRow } from "@proj/ui/components/table";
 import { useCallback, useState } from "react";
 import {
   useTransferOwnership,
@@ -84,65 +85,80 @@ export function MemberPermission({
     presetOptions.find((option) => option.role === member.role)?.label ??
     member.role;
   return (
-    <li className="grid gap-3 rounded-lg border p-3">
-      <p className="break-words font-medium">{member.name}</p>
-      <p className="break-all text-muted-foreground text-sm">{member.email}</p>
-      {member.owner ? <Badge>Owner</Badge> : null}
-      <p>{roleName}</p>
-      {self || member.owner ? (
-        <p className="text-muted-foreground text-sm">
-          {member.owner
-            ? "Transfer ownership before changing this member’s access."
-            : "Another Manager must change or remove your access."}
-        </p>
-      ) : (
-        <>
-          <RolePicker
-            disabled={update.isPending || !canReassign}
-            label={`Role for ${member.name}`}
-            onChange={change}
-            options={options}
-            value={currentValue}
-          />
-          <RemoveMemberButton
-            email={member.email}
-            estateId={estateId}
-            memberId={member.userId}
-          />
-        </>
-      )}
-      {update.isPending ? <p role="status">Saving role…</p> : null}
-      {update.isSuccess ? <p role="status">Role saved.</p> : null}
-      {update.error && !pendingRole ? (
-        <p role="alert">{update.error.message}</p>
-      ) : null}
-      {canTransfer && !self && !member.owner && member.role === "MANAGER" ? (
-        <Button onClick={showTransfer} variant="outline">
-          Transfer ownership to {member.name}
-        </Button>
-      ) : null}
-      {confirmTransfer ? (
-        <AccessConfirmation
-          confirmLabel="Transfer ownership"
-          description="They will become the estate owner. You will remain a Manager, and ownership powers will pass to them."
-          email={member.email}
-          keepLabel="Keep ownership"
-          onClose={closeTransfer}
-          onConfirm={confirm}
-          title="Transfer estate ownership?"
-        />
-      ) : null}
-      {pendingRole ? (
-        <AccessConfirmation
-          confirmLabel="Change role"
-          description={`Assign ${pendingRole.label}. ${member.role === "RESIDENT" && pendingRole.role !== "CUSTOM" ? "New resident submissions in this estate will stop. Their own past reports remain readable." : "The new role replaces the previous role and its permissions."}`}
-          email={member.email}
-          keepLabel="Keep role"
-          onClose={closeRole}
-          onConfirm={confirmRole}
-          title="Change estate role?"
-        />
-      ) : null}
-    </li>
+    <TableRow>
+      <TableCell className="min-w-32 whitespace-normal break-words font-medium">
+        {member.name}
+      </TableCell>
+      <TableCell className="min-w-44 max-w-64 whitespace-normal break-all">
+        {member.email}
+      </TableCell>
+      <TableCell className="whitespace-normal">
+        <div className="space-y-2">
+          {member.owner ? <Badge>Owner</Badge> : null}
+          <p>{roleName}</p>
+        </div>
+      </TableCell>
+      <TableCell className="min-w-60 whitespace-normal">
+        <div className="grid gap-3">
+          {self || member.owner ? (
+            <p className="text-muted-foreground text-sm">
+              {member.owner
+                ? "Transfer ownership before changing this member’s access."
+                : "Another Manager must change or remove your access."}
+            </p>
+          ) : (
+            <>
+              <RolePicker
+                disabled={update.isPending || !canReassign}
+                label={`Role for ${member.name}`}
+                onChange={change}
+                options={options}
+                value={currentValue}
+              />
+              <RemoveMemberButton
+                email={member.email}
+                estateId={estateId}
+                memberId={member.userId}
+              />
+            </>
+          )}
+          {update.isPending ? <p role="status">Saving role…</p> : null}
+          {update.isSuccess ? <p role="status">Role saved.</p> : null}
+          {update.error && !pendingRole ? (
+            <p role="alert">{update.error.message}</p>
+          ) : null}
+          {canTransfer &&
+          !self &&
+          !member.owner &&
+          member.role === "MANAGER" ? (
+            <Button onClick={showTransfer} variant="outline">
+              Transfer ownership to {member.name}
+            </Button>
+          ) : null}
+          {confirmTransfer ? (
+            <AccessConfirmation
+              confirmLabel="Transfer ownership"
+              description="They will become the estate owner. You will remain a Manager, and ownership powers will pass to them."
+              email={member.email}
+              keepLabel="Keep ownership"
+              onClose={closeTransfer}
+              onConfirm={confirm}
+              title="Transfer estate ownership?"
+            />
+          ) : null}
+          {pendingRole ? (
+            <AccessConfirmation
+              confirmLabel="Change role"
+              description={`Assign ${pendingRole.label}. ${member.role === "RESIDENT" && pendingRole.role !== "CUSTOM" ? "New resident submissions in this estate will stop. Their own past reports remain readable." : "The new role replaces the previous role and its permissions."}`}
+              email={member.email}
+              keepLabel="Keep role"
+              onClose={closeRole}
+              onConfirm={confirmRole}
+              title="Change estate role?"
+            />
+          ) : null}
+        </div>
+      </TableCell>
+    </TableRow>
   );
 }

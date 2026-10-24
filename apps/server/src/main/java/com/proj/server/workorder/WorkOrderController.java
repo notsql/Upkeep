@@ -41,8 +41,10 @@ import org.springframework.web.bind.annotation.*;
 })
 public class WorkOrderController {
     private final WorkOrderService orders;
+    private final WorkOrderProgressService progress;
 
-    public WorkOrderController(WorkOrderService orders) {
+    public WorkOrderController(WorkOrderService orders, WorkOrderProgressService progress) {
+        this.progress = progress;
         this.orders = orders;
     }
 
@@ -68,6 +70,8 @@ public class WorkOrderController {
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @RequestParam(required = false) WorkOrderPriority priority,
+            @RequestParam(required = false) WorkOrderStatus status,
+            @RequestParam(required = false) WorkOrderCategory category,
             @io.swagger.v3.oas.annotations.Parameter(
                             description =
                                     "Case-insensitive literal partial work-order reference; surrounding whitespace is ignored",
@@ -78,8 +82,8 @@ public class WorkOrderController {
             @RequestParam(defaultValue = "DESC") WorkOrderSortDirection direction,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer limit) {
-        return privateResponse(
-                orders.list(estateId, subject(principal), priority, q, sortBy, direction, cursor, limit));
+        return privateResponse(orders.list(
+                estateId, subject(principal), priority, status, category, q, sortBy, direction, cursor, limit));
     }
 
     @GetMapping("/work-orders/{workOrderId}")
@@ -100,6 +104,90 @@ public class WorkOrderController {
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer limit) {
         return privateResponse(orders.assets(estateId, subject(principal), q, cursor, limit));
+    }
+
+    @PatchMapping("/work-orders/{workOrderId}/status")
+    @Operation(operationId = "changeWorkOrderStatus", summary = "Start work as an active owner or Manager")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Updated work order; current-version no-op returns unchanged order")
+    public ResponseEntity<WorkOrderResponse> changeStatus(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID workOrderId,
+            @Valid @RequestBody ChangeWorkOrderStatusRequest request) {
+        var user = subject(principal);
+        return privateResponse(orders.resolveCreatorName(
+                progress.change(estateId, workOrderId, user, progress.actorName(user), request)));
+    }
+
+    @PutMapping("/work-orders/{workOrderId}/completion")
+    @Operation(
+            operationId = "saveWorkOrderCompletion",
+            summary = "Close work with a recorded outcome; identical retries are idempotent")
+    @ApiResponse(
+            responseCode = "201",
+            description = "Completion created",
+            content = @Content(schema = @Schema(implementation = WorkOrderResponse.class)))
+    @ApiResponse(
+            responseCode = "200",
+            description = "Identical completion replay",
+            content = @Content(schema = @Schema(implementation = WorkOrderResponse.class)))
+    public ResponseEntity<WorkOrderResponse> complete(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID workOrderId,
+            @Valid @RequestBody SaveWorkOrderCompletionRequest request) {
+        var user = subject(principal);
+        var result = progress.complete(estateId, workOrderId, user, progress.actorName(user), request);
+        return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
+                .header("Cache-Control", "private, no-store")
+                .body(orders.resolveCreatorName(result.order()));
+    }
+
+    @PatchMapping("/work-orders/{workOrderId}/completion")
+    @Operation(
+            operationId = "correctWorkOrderCompletion",
+            summary = "Correct a closed outcome with a reason and before/after audit")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Corrected work order, unchanged outcome or identical latest correction replay")
+    public ResponseEntity<WorkOrderResponse> correctCompletion(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID workOrderId,
+            @Valid @RequestBody CorrectWorkOrderCompletionRequest request) {
+        var user = subject(principal);
+        return privateResponse(orders.resolveCreatorName(
+                progress.correct(estateId, workOrderId, user, progress.actorName(user), request)));
+    }
+
+    @GetMapping("/work-orders/{workOrderId}/completion-revisions")
+    @Operation(
+            operationId = "getWorkOrderCompletionRevisions",
+            summary = "Read the chronological outcome correction audit")
+    @ApiResponse(responseCode = "200", description = "Completion revisions, oldest first")
+    public ResponseEntity<java.util.List<WorkOrderCompletionRevisionResponse>> revisions(
+            @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID workOrderId) {
+        return privateResponse(progress.revisions(estateId, workOrderId, subject(principal)));
+    }
+
+    @GetMapping("/work-orders/{workOrderId}/status-history")
+    @Operation(operationId = "getWorkOrderStatusHistory")
+    @ApiResponse(responseCode = "200", description = "Chronological status history")
+    public ResponseEntity<java.util.List<WorkOrderStatusEventResponse>> history(
+            @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID workOrderId) {
+        return privateResponse(progress.history(estateId, workOrderId, subject(principal)));
+    }
+
+    @GetMapping("/assets/{assetId}/work-order-completions")
+    @Operation(
+            operationId = "listAssetWorkOrderCompletions",
+            summary = "Canonical work-order outcomes for existing asset-history readers")
+    @ApiResponse(responseCode = "200", description = "Asset work completions, newest first")
+    public ResponseEntity<java.util.List<AssetWorkOrderCompletionResponse>> completions(
+            @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID assetId) {
+        return privateResponse(progress.completions(estateId, assetId, subject(principal)));
     }
 
     private static <T> ResponseEntity<T> privateResponse(T body) {

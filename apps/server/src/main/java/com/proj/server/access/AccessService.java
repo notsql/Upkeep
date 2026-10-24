@@ -123,6 +123,7 @@ public class AccessService {
                     canRelocateFaultReports,
                     !resident && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
                     manager && active,
+                    manager && active,
                     row.get(ESTATEUSER.CUSTOMROLEID),
                     row.get(ESTATEROLEDEFINITION.NAME),
                     canCreateLocations,

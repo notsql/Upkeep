@@ -91,6 +91,9 @@ public class SecurityConfig {
                                 "/estates/{estateId}/reports",
                                 "/estates/{estateId}/work-orders",
                                 "/estates/{estateId}/work-orders/{workOrderId}",
+                                "/estates/{estateId}/work-orders/{workOrderId}/status-history",
+                                "/estates/{estateId}/work-orders/{workOrderId}/completion-revisions",
+                                "/estates/{estateId}/assets/{assetId}/work-order-completions",
                                 "/estates/{estateId}/work-order-assets",
                                 "/estates/{estateId}/reports/{reportId}",
                                 "/estates/{estateId}/reports/{reportId}/images/{imageId}",
@@ -137,6 +140,8 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PATCH,
+                                "/estates/{estateId}/work-orders/{workOrderId}/status",
+                                "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}",
                                 "/estates/{estateId}/locations/{id}",
                                 "/estates/{estateId}/assets/{id}",
@@ -146,6 +151,7 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
+                                "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
                                 "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}/role",

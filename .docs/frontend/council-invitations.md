@@ -6,7 +6,7 @@
 Its index.tsx and route-local -components folder contain CouncilPage,
 access-controls and access-confirmation. Managers see the four preset invitation roles and eligible custom roles,
 member roles, cancellation and removal. Shadcn Button, Card, Label, Input, Select,
-Badge and Dialog supply the controls. Delegation checkboxes are removed.
+Badge, Table and Dialog supply the controls. Delegation checkboxes are removed.
 
 The email/role form disables duplicate submissions and retains input/role on
 failure. IN_APP confirmation says no email was sent and directs recipients to
@@ -52,6 +52,27 @@ All requests use generated DTOs/client in apps/web/src/lib/council-invitations.t
 
 The legacy useInvitationPermission hook is removed. Identity changes clear the
 previous user's cache. Spring rechecks authority independently of stale UI.
+
+
+## Member table and pagination
+
+CouncilPage renders members in a shadcn Table captioned Estate members with
+Name, Email, Role/Owner and Actions columns. Existing invitation forms, role
+editing, removal/ownership confirmations, per-row pending/errors and self/owner
+protections remain. Long text wraps; horizontal scrolling is confined to the
+member table on small screens. No API or permission change accompanies this UI.
+
+`estate-members-table.tsx` paginates the existing user-scoped member array at 20 rows,
+with Previous/Next and an exact visible range/total. A shorter refreshed roster
+clamps the current page. The table is keyed by estate and session user so
+context changes reset pagination. Failed roster reads hide stale member rows.
+The existing useEstateMembers endpoint/query key and mutation invalidations
+remain as documented above.
+`member-permission.tsx` renders each table row using the shared RolePicker,
+including custom-role names/options and confirmation before custom/resident
+conversions. Role selection retains definition IDs/versions. Reassignment is
+disabled when the access projection or estate activity disallows it; existing
+ownership/removal protections and confirmation dialogs remain in the Actions cell.
 
 ## Custom roles and access resolution
 

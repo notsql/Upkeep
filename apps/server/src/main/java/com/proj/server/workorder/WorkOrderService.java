@@ -24,8 +24,7 @@ public class WorkOrderService {
         this.workOS = workOS;
     }
 
-    private com.proj.server.db.tables.records.EstateRecord authorize(
-            UUID estateId, String user, boolean create, boolean lock) {
+    com.proj.server.db.tables.records.EstateRecord authorize(UUID estateId, String user, boolean create, boolean lock) {
         var estate = repository.estate(estateId, lock);
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user);
@@ -106,6 +105,8 @@ public class WorkOrderService {
             UUID estateId,
             String user,
             WorkOrderPriority priority,
+            WorkOrderStatus status,
+            WorkOrderCategory category,
             String query,
             WorkOrderSort sortBy,
             WorkOrderSortDirection direction,
@@ -117,11 +118,24 @@ public class WorkOrderService {
         int limit = limit(requestedLimit);
         var id = orderCursor(cursor, sortBy, direction);
         var found = repository.list(
-                estateId, priority, query == null ? null : query.trim(), sortBy, direction, id, limit + 1);
+                estateId,
+                priority,
+                status,
+                category,
+                query == null ? null : query.trim(),
+                sortBy,
+                direction,
+                id,
+                limit + 1);
         var page = found.size() > limit ? found.subList(0, limit) : found;
         var last = page.isEmpty() ? null : page.getLast();
         return new WorkOrderPageResponse(
-                page, found.size() > limit ? encode("v2|" + sortBy + "|" + direction, last.id()) : null);
+                page,
+                found.size() > limit
+                        ? encode(
+                                (sortBy == WorkOrderSort.PRIORITY ? "v3|" : "v2|") + sortBy + "|" + direction,
+                                last.id())
+                        : null);
     }
 
     private static UUID orderCursor(String cursor, WorkOrderSort sort, WorkOrderSortDirection direction) {
@@ -130,7 +144,7 @@ public class WorkOrderService {
             if (cursor.length() > 2048) throw new IllegalArgumentException();
             var parts = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8).split("\\|", -1);
             if (parts.length == 4
-                    && parts[0].equals("v2")
+                    && parts[0].equals(sort == WorkOrderSort.PRIORITY ? "v3" : "v2")
                     && parts[1].equals(sort.name())
                     && parts[2].equals(direction.name())) return UUID.fromString(parts[3]);
             if (parts.length == 2 && sort == WorkOrderSort.CREATED_AT && direction == WorkOrderSortDirection.DESC) {

@@ -3,14 +3,20 @@ import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Empty } from "@proj/ui/components/empty";
+import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { CompletionOutcome } from "@/components/work-order-completion";
 import {
   type AssetEventInput,
   assetEventTypeLabel,
   useAssetEvents,
   useRecordAssetEvent,
 } from "@/lib/asset-events";
+import {
+  useAssetWorkOrderCompletions,
+  useWorkOrderAccess,
+} from "@/lib/work-orders";
 import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/record-event-dialog";
 
 export function AssetMaintenanceSection({
@@ -23,8 +29,28 @@ export function AssetMaintenanceSection({
   estateId: string;
 }) {
   const events = useAssetEvents(estateId, assetId);
+  const completions = useAssetWorkOrderCompletions(estateId, assetId);
+  const access = useWorkOrderAccess(estateId);
+  const entries = [
+    ...(events.data ?? []).map((event) => ({
+      kind: "manual" as const,
+      id: event.id,
+      at: event.occurredOn,
+      event,
+    })),
+    ...(completions.data ?? []).map((work) => ({
+      kind: "work" as const,
+      id: work.completion.id,
+      at: work.completion.completedAt,
+      work,
+    })),
+  ].sort((a, b) => b.at.localeCompare(a.at) || b.id.localeCompare(a.id));
   const recordEvent = useRecordAssetEvent(estateId, assetId);
   const [recording, setRecording] = useState(false);
+  const retryCompletions = useCallback(
+    () => completions.refetch(),
+    [completions.refetch]
+  );
   const open = useCallback(() => setRecording(true), []);
   const cancel = useCallback(() => setRecording(false), []);
   const save = useCallback(
@@ -51,7 +77,7 @@ export function AssetMaintenanceSection({
           </Button>
         ) : null}
       </div>
-      {events.isPending ? (
+      {events.isPending || completions.isPending ? (
         <p aria-live="polite" className="mt-4">
           Loading maintenance…
         </p>
@@ -61,31 +87,72 @@ export function AssetMaintenanceSection({
           <AlertDescription>{events.error.message}</AlertDescription>
         </Alert>
       ) : null}
-      {events.data && events.data.length === 0 ? (
+      {completions.error ? (
+        <Alert className="mt-4" variant="destructive">
+          <AlertDescription>
+            {completions.error.message}
+            <Button onClick={retryCompletions} variant="outline">
+              Retry completed work
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {events.data && completions.data && entries.length === 0 ? (
         <Empty className="mt-4 border border-dashed" role="status">
           No maintenance recorded yet.
         </Empty>
       ) : null}
-      {events.data?.length ? (
+      {entries.length ? (
         <ul className="mt-4 grid gap-3">
-          {events.data.map((event) => (
-            <li key={event.id}>
+          {entries.map((entry) => (
+            <li key={`${entry.kind}-${entry.id}`}>
               <Card size="sm">
                 <CardContent>
-                  <p className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">
-                      {assetEventTypeLabel[event.type]}
-                    </span>
-                    <span>· {event.occurredOn}</span>
-                    {event.countsTowardForecast ? null : (
-                      <Badge variant="secondary">Previous unit</Badge>
-                    )}
-                  </p>
-                  <p className="mt-2 whitespace-pre-wrap">{event.notes}</p>
-                  <p className="mt-2 text-muted-foreground">
-                    Recorded by {event.recordedByName ?? "Unknown user"} on{" "}
-                    {new Date(event.createdAt).toLocaleString()}
-                  </p>
+                  {entry.kind === "manual" ? (
+                    <>
+                      <p className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">
+                          {assetEventTypeLabel[entry.event.type]}
+                        </span>
+                        <span>· {entry.event.occurredOn}</span>
+                        {entry.event.countsTowardForecast ? null : (
+                          <Badge variant="secondary">Previous unit</Badge>
+                        )}
+                      </p>
+                      <p className="mt-2 whitespace-pre-wrap">
+                        {entry.event.notes}
+                      </p>
+                      <p className="mt-2 text-muted-foreground">
+                        Recorded by{" "}
+                        {entry.event.recordedByName ?? "Unknown user"} on{" "}
+                        {new Date(entry.event.createdAt).toLocaleString()}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="mb-2 flex flex-wrap items-center gap-2">
+                        <Badge variant="outline">Work order</Badge>
+                        {access.canView ? (
+                          <Link
+                            className="text-primary underline underline-offset-4"
+                            params={{
+                              estateId,
+                              workOrderId: entry.work.workOrderId,
+                            }}
+                            to="/estates/$estateId/work-orders/$workOrderId"
+                          >
+                            {entry.work.reference}
+                          </Link>
+                        ) : (
+                          entry.work.reference
+                        )}
+                      </p>
+                      <p className="mb-4">
+                        Work location: {entry.work.locationPath}
+                      </p>
+                      <CompletionOutcome completion={entry.work.completion} />
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </li>

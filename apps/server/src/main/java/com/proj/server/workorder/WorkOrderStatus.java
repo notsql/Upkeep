@@ -5,5 +5,8 @@ package com.proj.server.workorder;
  * closure with a completion outcome.
  */
 public enum WorkOrderStatus {
-    OPEN
+    OPEN,
+    ASSIGNED,
+    IN_PROGRESS,
+    CLOSED
 }

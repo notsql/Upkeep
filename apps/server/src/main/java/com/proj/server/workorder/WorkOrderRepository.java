@@ -6,6 +6,7 @@ import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Issuereport.ISSUEREPORT;
 import static com.proj.server.db.tables.Location.LOCATION;
 import static com.proj.server.db.tables.Workorder.WORKORDER;
+import static com.proj.server.db.tables.Workordercompletion.WORKORDERCOMPLETION;
 
 import com.proj.server.db.tables.records.EstateRecord;
 import java.time.OffsetDateTime;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class WorkOrderRepository {
+    private static final tools.jackson.databind.json.JsonMapper JSON =
+            tools.jackson.databind.json.JsonMapper.builder().build();
     private final DSLContext db;
 
     public WorkOrderRepository(DSLContext db) {
@@ -73,6 +76,7 @@ public class WorkOrderRepository {
                 .set(WORKORDER.CREATEDAT, now)
                 .set(WORKORDER.UPDATEDAT, now)
                 .execute();
+        appendStatus(id, estateId, null, WorkOrderStatus.OPEN, user, null, now, 0);
         return id;
     }
 
@@ -83,12 +87,16 @@ public class WorkOrderRepository {
     public List<WorkOrderResponse> list(
             UUID estateId,
             WorkOrderPriority priority,
+            WorkOrderStatus status,
+            WorkOrderCategory category,
             String query,
             WorkOrderSort sort,
             WorkOrderSortDirection direction,
             UUID id,
             int limit) {
         Condition condition = WORKORDER.ESTATEID.eq(estateId);
+        if (status != null) condition = condition.and(WORKORDER.STATUS.eq(status.name()));
+        if (category != null) condition = condition.and(WORKORDER.CATEGORY.eq(category.name()));
         if (priority != null) condition = condition.and(WORKORDER.PRIORITY.eq(priority.name()));
         if (query != null && !query.isBlank()) condition = condition.and(WORKORDER.REFERENCE.containsIgnoreCase(query));
         return switch (sort) {
@@ -128,7 +136,7 @@ public class WorkOrderRepository {
             WorkOrderSortDirection direction,
             UUID cursor,
             int limit,
-            boolean newestTies) {
+            boolean oldestTies) {
         boolean ascending = direction == WorkOrderSortDirection.ASC;
         if (cursor != null) {
             var row = db.select(key, WORKORDER.CREATEDAT)
@@ -140,11 +148,11 @@ public class WorkOrderRepository {
                         org.springframework.http.HttpStatus.BAD_REQUEST, "Invalid work-order cursor.");
             var value = row.get(key);
             Condition tie = ascending ? WORKORDER.ID.gt(cursor) : WORKORDER.ID.lt(cursor);
-            if (newestTies) {
+            if (oldestTies) {
                 var time = row.get(WORKORDER.CREATEDAT);
                 tie = WORKORDER
                         .CREATEDAT
-                        .lt(time)
+                        .gt(time)
                         .or(WORKORDER.CREATEDAT.eq(time).and(WORKORDER.ID.lt(cursor)));
             }
             condition = condition.and(
@@ -152,8 +160,8 @@ public class WorkOrderRepository {
         }
         var ordering = new java.util.ArrayList<org.jooq.SortField<?>>();
         ordering.add(ascending ? key.asc() : key.desc());
-        if (newestTies) ordering.add(WORKORDER.CREATEDAT.desc());
-        ordering.add(ascending && !newestTies ? WORKORDER.ID.asc() : WORKORDER.ID.desc());
+        if (oldestTies) ordering.add(WORKORDER.CREATEDAT.asc());
+        ordering.add(ascending && !oldestTies ? WORKORDER.ID.asc() : WORKORDER.ID.desc());
         return orders(condition).orderBy(ordering).limit(limit).fetch(this::response);
     }
 
@@ -161,6 +169,7 @@ public class WorkOrderRepository {
         var parent = LOCATION.as("parent");
         var grandparent = LOCATION.as("grandparent");
         return db.select(WORKORDER.fields())
+                .select(WORKORDERCOMPLETION.fields())
                 .select(ASSET.REFERENCE.as("assetReference"))
                 .select(DSL.concatWs(" / ", grandparent.NAME, parent.NAME, LOCATION.NAME)
                         .as("locationPath"))
@@ -172,7 +181,12 @@ public class WorkOrderRepository {
                 .leftJoin(grandparent)
                 .on(grandparent.ID.eq(parent.PARENTID).and(grandparent.ESTATEID.eq(LOCATION.ESTATEID)))
                 .leftJoin(ASSET)
-                .on(ASSET.ID.eq(WORKORDER.ASSETID).and(ASSET.ESTATEID.eq(WORKORDER.ESTATEID)));
+                .on(ASSET.ID.eq(WORKORDER.ASSETID).and(ASSET.ESTATEID.eq(WORKORDER.ESTATEID)))
+                .leftJoin(WORKORDERCOMPLETION)
+                .on(WORKORDERCOMPLETION
+                        .WORKORDERID
+                        .eq(WORKORDER.ID)
+                        .and(WORKORDERCOMPLETION.ESTATEID.eq(WORKORDER.ESTATEID)));
     }
 
     private SelectConditionStep<org.jooq.Record> orders(Condition condition) {
@@ -195,10 +209,176 @@ public class WorkOrderRepository {
                 row.get(WORKORDER.SOURCEREPORTID),
                 row.get(WORKORDER.SOURCEREFERENCE),
                 WorkOrderStatus.valueOf(row.get(WORKORDER.STATUS)),
+                row.get(WORKORDER.VERSION),
+                WorkOrderCompletionResponse.from(row.into(WORKORDERCOMPLETION)),
                 row.get(WORKORDER.CREATEDBYUSERID),
                 null,
                 row.get(WORKORDER.CREATEDAT),
                 row.get(WORKORDER.UPDATEDAT));
+    }
+
+    public com.proj.server.db.tables.records.WorkorderRecord lockOrder(UUID estateId, UUID id) {
+        return db.selectFrom(WORKORDER)
+                .where(WORKORDER.ESTATEID.eq(estateId).and(WORKORDER.ID.eq(id)))
+                .forUpdate()
+                .fetchOne();
+    }
+
+    public void appendStatus(
+            UUID id,
+            UUID estate,
+            WorkOrderStatus from,
+            WorkOrderStatus to,
+            String user,
+            String name,
+            OffsetDateTime now,
+            int version) {
+        var event = com.proj.server.db.tables.Workorderstatusevent.WORKORDERSTATUSEVENT;
+        db.insertInto(event)
+                .set(event.ID, UUID.randomUUID())
+                .set(event.ESTATEID, estate)
+                .set(event.WORKORDERID, id)
+                .set(event.FROMSTATUS, from == null ? null : from.name())
+                .set(event.TOSTATUS, to.name())
+                .set(event.CHANGEDBYUSERID, user)
+                .set(event.CHANGEDBYNAME, name)
+                .set(event.CHANGEDAT, now)
+                .set(event.VERSION, version)
+                .execute();
+    }
+
+    public void updateStatus(UUID id, WorkOrderStatus status, OffsetDateTime now, int version) {
+        db.update(WORKORDER)
+                .set(WORKORDER.STATUS, status.name())
+                .set(WORKORDER.VERSION, version)
+                .set(WORKORDER.UPDATEDAT, now)
+                .where(WORKORDER.ID.eq(id))
+                .execute();
+    }
+
+    public void complete(
+            UUID estate,
+            UUID id,
+            String user,
+            String name,
+            SaveWorkOrderCompletionRequest request,
+            OffsetDateTime now) {
+        db.insertInto(WORKORDERCOMPLETION)
+                .set(WORKORDERCOMPLETION.ID, UUID.randomUUID())
+                .set(WORKORDERCOMPLETION.ESTATEID, estate)
+                .set(WORKORDERCOMPLETION.WORKORDERID, id)
+                .set(WORKORDERCOMPLETION.FINDINGS, request.findings())
+                .set(WORKORDERCOMPLETION.WORKPERFORMED, request.workPerformed())
+                .set(WORKORDERCOMPLETION.PARTSUSED, request.partsUsed())
+                .set(WORKORDERCOMPLETION.LABOURCOST, money(request.labourCost()))
+                .set(WORKORDERCOMPLETION.PARTSCOST, money(request.partsCost()))
+                .set(WORKORDERCOMPLETION.DOWNTIMEMINUTES, request.downtimeMinutes())
+                .set(WORKORDERCOMPLETION.COMPLETEDBYUSERID, user)
+                .set(WORKORDERCOMPLETION.COMPLETEDBYNAME, name)
+                .set(WORKORDERCOMPLETION.COMPLETEDAT, now)
+                .execute();
+    }
+
+    public void correctCompletion(
+            UUID estate,
+            UUID id,
+            String user,
+            String name,
+            SaveWorkOrderCompletionRequest request,
+            OffsetDateTime now) {
+        db.update(WORKORDERCOMPLETION)
+                .set(WORKORDERCOMPLETION.FINDINGS, request.findings())
+                .set(WORKORDERCOMPLETION.WORKPERFORMED, request.workPerformed())
+                .set(WORKORDERCOMPLETION.PARTSUSED, request.partsUsed())
+                .set(WORKORDERCOMPLETION.LABOURCOST, money(request.labourCost()))
+                .set(WORKORDERCOMPLETION.PARTSCOST, money(request.partsCost()))
+                .set(WORKORDERCOMPLETION.DOWNTIMEMINUTES, request.downtimeMinutes())
+                .set(WORKORDERCOMPLETION.EDITEDBYUSERID, user)
+                .set(WORKORDERCOMPLETION.EDITEDBYNAME, name)
+                .set(WORKORDERCOMPLETION.EDITEDAT, now)
+                .where(WORKORDERCOMPLETION.WORKORDERID.eq(id).and(WORKORDERCOMPLETION.ESTATEID.eq(estate)))
+                .execute();
+    }
+
+    public void appendRevision(UUID estate, UUID id, WorkOrderCompletionRevisionResponse revision) {
+        var table = com.proj.server.db.tables.Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+        db.insertInto(table)
+                .set(table.ID, revision.id())
+                .set(table.ESTATEID, estate)
+                .set(table.WORKORDERID, id)
+                .set(table.FROMVERSION, revision.fromVersion())
+                .set(table.VERSION, revision.version())
+                .set(table.CORRECTIONREASON, revision.correctionReason())
+                .set(table.CHANGEDBYUSERID, revision.changedByUserId())
+                .set(table.CHANGEDBYNAME, revision.changedByName())
+                .set(table.CHANGEDAT, revision.changedAt())
+                .set(table.BEFOREOUTCOME, org.jooq.JSONB.valueOf(JSON.writeValueAsString(revision.before())))
+                .set(table.AFTEROUTCOME, org.jooq.JSONB.valueOf(JSON.writeValueAsString(revision.after())))
+                .execute();
+    }
+
+    public List<WorkOrderCompletionRevisionResponse> revisions(UUID estate, UUID id) {
+        var table = com.proj.server.db.tables.Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+        return db.selectFrom(table)
+                .where(table.ESTATEID.eq(estate).and(table.WORKORDERID.eq(id)))
+                .orderBy(table.VERSION.asc())
+                .fetch(this::revision);
+    }
+
+    public WorkOrderCompletionRevisionResponse latestRevision(UUID estate, UUID id) {
+        var table = com.proj.server.db.tables.Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+        return db.selectFrom(table)
+                .where(table.ESTATEID.eq(estate).and(table.WORKORDERID.eq(id)))
+                .orderBy(table.VERSION.desc())
+                .limit(1)
+                .fetchOne(this::revision);
+    }
+
+    private WorkOrderCompletionRevisionResponse revision(
+            com.proj.server.db.tables.records.WorkordercompletionrevisionRecord row) {
+        return new WorkOrderCompletionRevisionResponse(
+                row.getId(),
+                row.getFromversion(),
+                row.getVersion(),
+                row.getCorrectionreason(),
+                row.getChangedbyuserid(),
+                row.getChangedbyname(),
+                row.getChangedat(),
+                JSON.readValue(row.getBeforeoutcome().data(), WorkOrderCompletionResponse.class),
+                JSON.readValue(row.getAfteroutcome().data(), WorkOrderCompletionResponse.class));
+    }
+
+    static java.math.BigDecimal money(String value) {
+        return value == null ? null : new java.math.BigDecimal(value).setScale(2);
+    }
+
+    public List<WorkOrderStatusEventResponse> history(UUID estate, UUID id) {
+        var event = com.proj.server.db.tables.Workorderstatusevent.WORKORDERSTATUSEVENT;
+        return db.selectFrom(event)
+                .where(event.ESTATEID.eq(estate).and(event.WORKORDERID.eq(id)))
+                .orderBy(event.VERSION, event.ID)
+                .fetch(row -> new WorkOrderStatusEventResponse(
+                        row.getId(),
+                        row.getFromstatus() == null ? null : WorkOrderStatus.valueOf(row.getFromstatus()),
+                        WorkOrderStatus.valueOf(row.getTostatus()),
+                        row.getChangedbyuserid(),
+                        row.getChangedbyname(),
+                        row.getChangedat(),
+                        row.getVersion()));
+    }
+
+    public List<AssetWorkOrderCompletionResponse> completions(UUID estate, UUID asset) {
+        return orders(WORKORDER
+                        .ESTATEID
+                        .eq(estate)
+                        .and(WORKORDER.ASSETID.eq(asset))
+                        .and(WORKORDERCOMPLETION.ID.isNotNull()))
+                .orderBy(WORKORDERCOMPLETION.COMPLETEDAT.desc(), WORKORDERCOMPLETION.ID.desc())
+                .fetch(row -> new AssetWorkOrderCompletionResponse(
+                        row.get(WORKORDER.ID),
+                        row.get(WORKORDER.REFERENCE),
+                        row.get("locationPath", String.class),
+                        WorkOrderCompletionResponse.from(row.into(WORKORDERCOMPLETION))));
     }
 
     public List<WorkOrderAssetOptionResponse> assets(

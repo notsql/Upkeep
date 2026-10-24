@@ -5,6 +5,7 @@ import {
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -80,6 +81,7 @@ function serve({
   accessError = false,
   loadingAccess = false,
   memberRole = "RESIDENT",
+  memberCount = 1,
   invitationRoles = [option],
 } = {}) {
   vi.mocked(api.GET).mockImplementation((path) => {
@@ -144,15 +146,18 @@ function serve({
       data = [definition];
     }
     if (route.endsWith("/members")) {
-      data = [
-        {
-          userId: "other",
-          name: "Other",
-          email: "other@example.com",
-          role: memberRole,
-          owner: false,
-        },
-      ];
+      data = Array.from({ length: memberCount }, (_, index) => ({
+        userId: memberCount === 1 ? "other" : `other-${index + 1}`,
+        name: memberCount === 1 ? "Other" : `Other ${index + 1}`,
+        email:
+          memberCount === 1
+            ? "other@example.com"
+            : `other-${index + 1}@example.com`,
+        role: memberRole,
+        customRoleId: memberRole === "CUSTOM" ? definition.id : null,
+        customRoleName: memberRole === "CUSTOM" ? definition.name : null,
+        owner: false,
+      }));
     }
     return Promise.resolve({ data, response: new Response() }) as never;
   });
@@ -179,6 +184,37 @@ beforeEach(() => {
     },
     response: new Response(),
   } as never);
+});
+
+it("keeps custom-role changes and confirmation available on later member-table pages", async () => {
+  serve({ memberRole: "CUSTOM", memberCount: 21 });
+  renderWithProviders(<CouncilPage estateId="estate" />);
+  const table = within(
+    await screen.findByRole("table", { name: "Estate members" })
+  );
+  expect(table.getAllByRole("row")).toHaveLength(21);
+  expect(table.queryByText("Other 21")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  await table.findByText("Other 21");
+  table.getByRole("cell", { name: definition.name });
+  await chooseOption(
+    table.getByRole("combobox", { name: "Role for Other 21" }),
+    "Council member"
+  );
+  const dialog = await screen.findByRole("dialog", {
+    name: "Change estate role?",
+  });
+  expect(api.PUT).not.toHaveBeenCalled();
+  fireEvent.click(within(dialog).getByRole("button", { name: "Change role" }));
+  await waitFor(() =>
+    expect(api.PUT).toHaveBeenCalledWith(
+      "/estates/{estateId}/members/{userId}/role",
+      {
+        params: { path: { estateId: "estate", userId: "other-21" } },
+        body: { role: "COUNCIL" },
+      }
+    )
+  );
 });
 
 it("shows an outstanding invitation's custom role without permission details", async () => {

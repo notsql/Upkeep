@@ -16,6 +16,7 @@ import java.util.UUID;
             "priority",
             "source",
             "status",
+            "version",
             "createdByUserId",
             "createdAt",
             "updatedAt"
@@ -35,6 +36,8 @@ public record WorkOrderResponse(
         UUID sourceReportId,
         String sourceReference,
         WorkOrderStatus status,
+        int version,
+        WorkOrderCompletionResponse completion,
         String createdByUserId,
 
         @Schema(description = "Current creator display name on creation/detail responses; null when unavailable.")
@@ -58,6 +61,8 @@ public record WorkOrderResponse(
                 sourceReportId,
                 sourceReference,
                 status,
+                version,
+                completion,
                 createdByUserId,
                 name,
                 createdAt,

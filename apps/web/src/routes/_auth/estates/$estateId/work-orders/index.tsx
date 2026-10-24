@@ -5,6 +5,8 @@ import { WorkOrderListPage } from "./-components/work-order-list-page";
 export const Route = createFileRoute("/_auth/estates/$estateId/work-orders/")({
   validateSearch: (search: Record<string, unknown>): WorkOrderListSearch => {
     const { priority, q, cursor, sortBy, direction } = search;
+    const status = parseStatus(search.status);
+    const category = parseCategory(search.category);
     if (
       sortBy !== undefined &&
       sortBy !== "CREATED_AT" &&
@@ -38,6 +40,8 @@ export const Route = createFileRoute("/_auth/estates/$estateId/work-orders/")({
       ...(sortBy ? { sortBy } : {}),
       ...(direction ? { direction } : {}),
       ...(priority ? { priority } : {}),
+      ...(status ? { status } : {}),
+      ...(category ? { category } : {}),
       ...(typeof q === "string" && q.trim() ? { q: q.trim() } : {}),
       ...(typeof cursor === "string" && cursor ? { cursor } : {}),
     };
@@ -66,4 +70,32 @@ function WorkOrderListRoute() {
       search={search}
     />
   );
+}
+
+function parseStatus(value: unknown): WorkOrderListSearch["status"] {
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+  if (
+    value === "OPEN" ||
+    value === "ASSIGNED" ||
+    value === "IN_PROGRESS" ||
+    value === "CLOSED"
+  ) {
+    return value;
+  }
+  throw new Error("Choose a valid work-order status.");
+}
+function parseCategory(value: unknown): WorkOrderListSearch["category"] {
+  if (value === undefined || value === "") {
+    return undefined;
+  }
+  if (
+    value === "EQUIPMENT_FAULT" ||
+    value === "CLEANLINESS" ||
+    value === "SAFETY"
+  ) {
+    return value;
+  }
+  throw new Error("Choose a valid work-order category.");
 }

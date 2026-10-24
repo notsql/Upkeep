@@ -164,7 +164,7 @@ model Asset {
   @@index([modelId])
 }
 
-// An open job in an estate (decision 0032). Equipment links are optional;
+// A job in an estate (decisions 0032 and 0034). Equipment links are optional;
 // several jobs may reference one resident report. References never change.
 model WorkOrder {
   id                    String   @id @default(uuid()) @db.Uuid
@@ -179,6 +179,7 @@ model WorkOrder {
   sourceReportId        String?  @db.Uuid
   sourceReference       String?  @db.VarChar(500)
   status                String   @default("OPEN") @db.VarChar(20)
+  version               Int      @default(0)
   createdByUserId        String   @db.VarChar(255)
   createdAt             DateTime @default(now()) @db.Timestamptz(6)
   updatedAt             DateTime @updatedAt @db.Timestamptz(6)
@@ -188,8 +189,73 @@ model WorkOrder {
   asset        Asset?      @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   sourceReport IssueReport? @relation(fields: [sourceReportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
+  statusEvents WorkOrderStatusEvent[]
+  completion   WorkOrderCompletion?
+
+  @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId, createdAt, id])
+}
+
+// Append-only status audit. Version zero is the initial Open event for new orders.
+model WorkOrderStatusEvent {
+  id                  String   @id @default(uuid()) @db.Uuid
+  estateId            String   @db.Uuid
+  workOrderId         String   @db.Uuid
+  fromStatus          String?  @db.VarChar(20)
+  toStatus            String   @db.VarChar(20)
+  changedByUserId     String   @db.VarChar(255)
+  changedByName       String?  @db.VarChar(255)
+  changedAt           DateTime @default(now()) @db.Timestamptz(6)
+  version             Int
+  workOrder           WorkOrder @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([workOrderId, version])
+  @@index([estateId, workOrderId])
+}
+
+// Canonical outcome and costs; corrections retain identity and append revisions (decision 0035).
+model WorkOrderCompletion {
+  id                  String   @id @default(uuid()) @db.Uuid
+  estateId            String   @db.Uuid
+  workOrderId         String   @unique @db.Uuid
+  findings            String   @db.VarChar(2500)
+  workPerformed       String   @db.VarChar(2500)
+  partsUsed           String?  @db.VarChar(2500)
+  labourCost          Decimal? @db.Decimal(14, 2)
+  partsCost           Decimal? @db.Decimal(14, 2)
+  currency            String   @default("SGD") @db.VarChar(3)
+  downtimeMinutes     Int?
+  completedByUserId   String   @db.VarChar(255)
+  completedByName     String?  @db.VarChar(255)
+  completedAt         DateTime @default(now()) @db.Timestamptz(6)
+  editedByUserId      String?  @db.VarChar(255)
+  editedByName        String?  @db.VarChar(255)
+  editedAt            DateTime? @db.Timestamptz(6)
+  revisions           WorkOrderCompletionRevision[]
+  workOrder           WorkOrder @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([workOrderId, estateId])
+  @@index([estateId, completedAt, id])
+}
+
+// Append-only before/after audit for corrections to one canonical completion.
+model WorkOrderCompletionRevision {
+  id                  String   @id @default(uuid()) @db.Uuid
+  estateId            String   @db.Uuid
+  workOrderId         String   @db.Uuid
+  fromVersion         Int
+  version             Int
+  correctionReason    String   @db.VarChar(500)
+  changedByUserId     String   @db.VarChar(255)
+  changedByName       String?  @db.VarChar(255)
+  changedAt           DateTime @default(now()) @db.Timestamptz(6)
+  beforeOutcome       Json
+  afterOutcome        Json
+  completion          WorkOrderCompletion @relation(fields: [workOrderId, estateId], references: [workOrderId, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([workOrderId, version])
+  @@index([estateId, workOrderId])
 }
 
 // An asset category (decision 0026). `code` is stable and is what assets and

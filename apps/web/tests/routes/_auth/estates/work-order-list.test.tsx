@@ -481,3 +481,34 @@ it.each(["sortBy=PRIORITY", "direction=SIDEWAYS"])(
     ).toBe(false);
   }
 );
+
+it("returns to visited cursor pages without losing filters and resets the trail after a filter change", async () => {
+  const { router } = await setup(`${basePath}?priority=HIGH&q=TEST`);
+  await screen.findByRole("link", { name: "TEST-W0001" });
+  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  await waitFor(() =>
+    expect(router.state.location.search.cursor).toBe("page-two")
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Previous" }));
+  await waitFor(() =>
+    expect(router.state.location.search).toEqual({
+      priority: "HIGH",
+      q: "TEST",
+    })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  await waitFor(() =>
+    expect(router.state.location.search.cursor).toBe("page-two")
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await waitFor(() => expect(router.state.location.search).toEqual({}));
+  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
+  screen.getByText("1 work order on this page");
+});
+
+it("offers First page for a directly opened cursor without inventing a previous page", async () => {
+  await setup(`${basePath}?cursor=direct-link`);
+  await screen.findByRole("button", { name: "First page" });
+  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
+  screen.getByText("1 work order on this page");
+});

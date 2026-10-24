@@ -47,7 +47,7 @@ class WorkOrdersIntegrationTests {
 
     @ParameterizedTest
     @CsvSource({"ASC,false", "DESC,false", "ASC,true", "DESC,true"})
-    void priorityTiesUseNewestFirstAcrossPagesInEitherDirection(String direction, boolean filtered) throws Exception {
+    void priorityTiesUseOldestFirstAcrossPagesInEitherDirection(String direction, boolean filtered) throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
         var ids = new java.util.ArrayList<String>();
         for (int i = 1; i <= 5; i++) {
@@ -56,18 +56,21 @@ class WorkOrdersIntegrationTests {
                     .andReturn()
                     .getResponse()
                     .getContentAsString();
-            String original = JsonPath.read(body, "$.id");
-            String id = "10000000-0000-0000-0000-00000000000" + i;
-            ids.add(id);
+            ids.add(JsonPath.read(body, "$.id"));
+        }
+        // Keep persisted identities/audit relations intact. Assign priorities and dates
+        // against sorted UUIDs so equal-priority ordering must use time before ID.
+        ids.sort(java.util.Comparator.naturalOrder());
+        for (int i = 1; i <= ids.size(); i++) {
             db.execute(
-                    "update \"WorkOrder\" set id=?::uuid, \"createdAt\"=?::timestamptz where id=?::uuid",
-                    id,
+                    "update \"WorkOrder\" set priority=?, \"createdAt\"=?::timestamptz where id=?::uuid",
+                    i == 4 ? "LOW" : i == 5 ? "URGENT" : "HIGH",
                     i == 2 ? "2026-10-01T00:00:00Z" : "2026-10-02T00:00:00Z",
-                    original);
+                    ids.get(i - 1));
         }
         var expected = filtered
-                ? new int[] {3, 1, 2}
-                : direction.equals("ASC") ? new int[] {4, 3, 1, 2, 5} : new int[] {5, 3, 1, 2, 4};
+                ? new int[] {2, 3, 1}
+                : direction.equals("ASC") ? new int[] {4, 2, 3, 1, 5} : new int[] {5, 2, 3, 1, 4};
         String cursor = null;
         for (int position : expected) {
             var request = get(path(data[0]))
@@ -201,7 +204,8 @@ class WorkOrdersIntegrationTests {
                             .getContentAsString(),
                     "$.id"));
         create(data, owner, "CLEANLINESS", "LOW", "").andExpect(status().isCreated());
-        // True timestamp ties exercise the final UUID fallback under the agreed newest-first rule.
+        // True timestamp ties exercise the final UUID fallback under the oldest-first rule (with the existing
+        // descending UUID fallback).
         db.execute("update \"WorkOrder\" set \"createdAt\"='2026-10-01T00:00:00Z' where \"estateId\"=?", data[0]);
         ids.sort(java.util.Comparator.reverseOrder());
         var body = mvc.perform(get(path(data[0]))
@@ -740,6 +744,8 @@ class WorkOrdersIntegrationTests {
     }
 
     private void cleanup(UUID estate) {
+        db.execute("delete from \"WorkOrderCompletion\" where \"estateId\"=?", estate);
+        db.execute("delete from \"WorkOrderStatusEvent\" where \"estateId\"=?", estate);
         db.execute("delete from \"WorkOrder\" where \"estateId\"=?", estate);
         db.execute("delete from \"IssueReport\" where \"estateId\"=?", estate);
         db.execute("delete from \"Asset\" where \"estateId\"=?", estate);

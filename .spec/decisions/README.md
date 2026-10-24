@@ -15,4 +15,7 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0032 - Work-order creation and source links](0032-work-order-creation-and-source-links.md)
 - [0033 - Work-order location consistency and estate context](0033-work-order-location-consistency-and-estate-context.md)
 
+- [0034 - Work-order progress and canonical completion](0034-work-order-progress-and-canonical-completion.md)
+- [0035 - Audited completion corrections (supersedes 0034 outcome immutability)](0035-audited-completion-corrections.md)
+
 - [0032 - Custom estate roles and live permissions](0032-custom-estate-role-bindings-and-live-permissions.md)

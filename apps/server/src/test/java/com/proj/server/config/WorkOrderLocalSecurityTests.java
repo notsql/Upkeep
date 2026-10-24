@@ -32,6 +32,9 @@ class WorkOrderLocalSecurityTests {
     @MockitoBean
     WorkOrderService orders;
 
+    @MockitoBean
+    com.proj.server.workorder.WorkOrderProgressService progress;
+
     @Test
     void missingIdentityIsRejectedEvenWithoutConfiguredJwt() throws Exception {
         String base = "/estates/" + UUID.randomUUID();
@@ -46,6 +49,21 @@ class WorkOrderLocalSecurityTests {
             {"description":"Leak","locationId":"%s","category":"CLEANLINESS","priority":"LOW","source":"MANUAL"}
             """.formatted(UUID.randomUUID())))
                 .andExpect(status().isUnauthorized());
-        verifyNoInteractions(orders);
+        var id = UUID.randomUUID();
+        for (String path :
+                new String[] {"/work-orders/" + id + "/status-history", "/assets/" + id + "/work-order-completions"}) {
+            mvc.perform(get(base + path)).andExpect(status().isUnauthorized());
+        }
+        mvc.perform(patch(base + "/work-orders/" + id + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"targetStatus\":\"IN_PROGRESS\",\"expectedVersion\":0}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(
+                        put(base + "/work-orders/" + id + "/completion")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"expectedVersion\":1,\"findings\":\"Worn seal\",\"workPerformed\":\"Replaced seal\"}"))
+                .andExpect(status().isUnauthorized());
+        verifyNoInteractions(orders, progress);
     }
 }
