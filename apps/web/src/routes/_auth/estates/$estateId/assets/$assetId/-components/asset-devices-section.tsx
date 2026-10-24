@@ -2,6 +2,7 @@ import { Badge } from "@proj/ui/components/badge";
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
+import { DeviceStatusBadge } from "@/components/device-status-badge";
 import {
   type Device,
   deviceMetrics,
@@ -83,11 +84,14 @@ export function AssetDevicesSection({
           <li className="rounded-lg border p-4" key={device.id}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <h3 className="break-all font-medium">{device.identifier}</h3>
-              <Badge className="whitespace-normal" variant="outline">
-                {device.lastSeenAt
-                  ? `Last seen ${new Date(device.lastSeenAt).toLocaleString()}`
-                  : "Awaiting first reading"}
-              </Badge>
+              <div className="flex flex-wrap items-center gap-2">
+                {device.lastSeenAt ? (
+                  <Badge className="whitespace-normal" variant="outline">
+                    {`Last seen ${new Date(device.lastSeenAt).toLocaleString()}`}
+                  </Badge>
+                ) : null}
+                <DeviceStatusBadge status={device.status} />
+              </div>
             </div>
             <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
               <div>

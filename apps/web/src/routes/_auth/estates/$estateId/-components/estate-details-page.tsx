@@ -27,6 +27,8 @@ function EstateActions({
 }) {
   const canManageCouncil =
     estate.canInviteMembers || estate.canManageInvitationPermissions;
+  // canManageInvitationPermissions is the server's Manager check, active or not.
+  const canViewDevices = estate.owned || estate.canManageInvitationPermissions;
   if (!(estate.owned || canEditDetails || canManageCouncil || canViewSensors)) {
     return null;
   }
@@ -35,6 +37,15 @@ function EstateActions({
       aria-label="Estate actions"
       className="page-actions min-w-0 flex-row gap-3"
     >
+      {canViewDevices ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/devices"
+        >
+          Devices
+        </Link>
+      ) : null}
       {canViewSensors ? (
         <Link
           className={buttonVariants({ variant: "outline" })}

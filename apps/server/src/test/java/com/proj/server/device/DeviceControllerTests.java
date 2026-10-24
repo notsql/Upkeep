@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.proj.server.asset.AssetRepository;
+import com.proj.server.config.ClockConfig;
 import com.proj.server.config.SecurityConfig;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.DeviceRecord;
@@ -47,7 +48,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
             "app.cors.allowed-origins=http://localhost:3001",
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app"
         })
-@Import({SecurityConfig.class, DeviceService.class, DeviceExceptionHandler.class})
+@Import({SecurityConfig.class, ClockConfig.class, DeviceService.class, DeviceExceptionHandler.class})
 class DeviceControllerTests {
     @Autowired
     MockMvc mvc;
@@ -113,7 +114,7 @@ class DeviceControllerTests {
 
     @BeforeEach
     void setup() {
-        when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(null)));
+        when(estates.findManaged(estateId, "owner")).thenReturn(Optional.of(estate(null)));
         when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
         when(assets.find(assetId, estateId, false)).thenReturn(Optional.of(asset(null)));
         when(assets.find(assetId, estateId, true)).thenReturn(Optional.of(asset(null)));

@@ -35,9 +35,7 @@ public class ReadingService {
                 .findDevice(deviceId)
                 .orElseThrow(() -> new ReadingException(HttpStatus.UNAUTHORIZED, "A valid device key is required."));
         var reading = ReadingValidator.parse(body, device.metrics(), receivedAt);
-        if (device.assetRetired()) {
-            throw new ReadingException(HttpStatus.CONFLICT, "This asset is retired. Readings are not accepted.");
-        }
+        // A retired asset's devices still report, so one left switched on can be found (ID-44).
         if (device.estateInactive()) {
             throw new ReadingException(HttpStatus.CONFLICT, "This estate is inactive. Readings are not accepted.");
         }

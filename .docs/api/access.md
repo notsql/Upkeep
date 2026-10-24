@@ -65,6 +65,8 @@ Spring Security explicitly admits the following existing operations for authenti
 | GET | `/estates/{estateId}/failure-risk` | Estate owner |
 | POST | `/estates/{estateId}/assets/{assetId}/readings/anomaly-check` | Estate owner |
 | POST | `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` | Estate owner; issue or replace a device key |
+| GET | `/estates/{estateId}/devices` | Estate Manager (owner or `MANAGER` member) via `findManaged`; see [device-status.md](device-status.md) |
+| GET | `/estates/{estateId}/assets/{assetId}/devices` | Estate Manager (owner or `MANAGER` member) via `findManaged` |
 
 Catalogue lookups contain no estate data, so resident and unassigned accounts may read them. Estate operations reject a same-estate resident membership even when ownership conflicts, while residency elsewhere does not block legitimate ownership. MEMBER/COUNCIL membership and platform-admin authority alone do not grant access to these owner-only operations. The matchers are method-specific; unsupported methods and unknown nested actions remain denied by the final `denyAll()` rule. Missing or invalid authentication returns 401 when JWT authentication is configured.
 

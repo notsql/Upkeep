@@ -19,6 +19,7 @@ same change as the code.
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
+- [Device status](api/device-status.md): derived Online/Offline/Awaiting first reading status and the Manager's estate-wide device list.
 - [Asset readings](api/readings.md): an owner's paginated, filterable list of an asset's readings with GAP, DUPLICATE_TIMESTAMP and OUT_OF_RANGE flags.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
@@ -41,7 +42,7 @@ same change as the code.
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
-| [frontend/devices.md](frontend/devices.md) | Device list on asset details and dedicated device registration page |
+| [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details and dedicated device registration page |
 | [frontend/readings.md](frontend/readings.md) | `/estates/$estateId/assets/$assetId/readings`: reading list, metric/time/suspect filters, flag badges, pagination |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer and /invitations |

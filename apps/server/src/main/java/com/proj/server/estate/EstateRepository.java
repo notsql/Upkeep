@@ -56,6 +56,15 @@ public class EstateRepository {
                 .map(row -> response(row, user));
     }
 
+    /** The owner or a MANAGER member; residents are refused, everyone else finds nothing. */
+    public Optional<EstateResponse> findManaged(UUID id, String user) {
+        denyResident(id, user);
+        return db.selectFrom(ESTATE)
+                .where(ESTATE.ID.eq(id).and(AccessService.managerEstates(user)))
+                .fetchOptional()
+                .map(row -> response(row, user));
+    }
+
     public Optional<EstateResponse> findOwned(UUID id, String owner, boolean lock) {
         denyResident(id, owner);
         var query = db.selectFrom(ESTATE).where(ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner)));
