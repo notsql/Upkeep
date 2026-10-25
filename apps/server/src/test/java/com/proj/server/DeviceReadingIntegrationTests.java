@@ -194,14 +194,30 @@ class DeviceReadingIntegrationTests {
     }
 
     @Test
-    void rejectsReadingsForARetiredAsset() throws Exception {
+    void acceptsReadingsForARetiredAssetSoAPhantomDeviceShowsOnline() throws Exception {
         db.execute(
                 "update \"Asset\" set \"deactivatedAt\" = now(), \"retiredOn\" = current_date where id = ?", assetId);
-        send(temperature("21.5", minutesAgo(1)))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("This asset is retired. Readings are not accepted."));
-        assertThat(storedReadings()).isZero();
-        assertThat(lastSeen()).isNull();
+        send(temperature("21.5", minutesAgo(1))).andExpect(status().isCreated());
+        assertThat(storedReadings()).isOne();
+        assertThat(lastSeen()).isNotNull();
+
+        mvc.perform(get("/estates/" + estateId + "/devices").with(jwt().jwt(j -> j.subject("owner"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].assetRetired").value(true))
+                .andExpect(jsonPath("$[0].status").value("ONLINE"));
+    }
+
+    @Test
+    void anOfflineDeviceReturnsOnlineWhenAValidReadingArrives() throws Exception {
+        db.execute("update \"Device\" set \"lastSeenAt\" = now() - interval '1 hour' where id = ?", deviceId);
+        var devices = "/estates/" + estateId + "/assets/" + assetId + "/devices";
+        mvc.perform(get(devices).with(jwt().jwt(j -> j.subject("owner"))))
+                .andExpect(jsonPath("$[0].status").value("OFFLINE"));
+
+        send(temperature("21.5", minutesAgo(1))).andExpect(status().isCreated());
+
+        mvc.perform(get(devices).with(jwt().jwt(j -> j.subject("owner"))))
+                .andExpect(jsonPath("$[0].status").value("ONLINE"));
     }
 
     @Test

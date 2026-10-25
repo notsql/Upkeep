@@ -33,8 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "409",
-            description = "A different value is already stored for this metric and time, or the asset is retired,"
-                    + " or the estate is inactive",
+            description = "A different value is already stored for this metric and time, or the estate is inactive",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
 })
 public class DeviceReadingController {

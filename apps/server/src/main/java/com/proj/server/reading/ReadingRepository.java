@@ -1,6 +1,5 @@
 package com.proj.server.reading;
 
-import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Device.DEVICE;
 import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
 import static com.proj.server.db.tables.Estate.ESTATE;
@@ -27,26 +26,12 @@ public class ReadingRepository {
     }
 
     /** What a submission needs to know about the device sending it. */
-    record SubmittingDevice(
-            UUID id,
-            UUID estateId,
-            UUID assetId,
-            Set<DeviceMetric> metrics,
-            boolean assetRetired,
-            boolean estateInactive) {}
+    record SubmittingDevice(UUID id, UUID estateId, UUID assetId, Set<DeviceMetric> metrics, boolean estateInactive) {}
 
-    /** No row lock: readings do not queue behind each other or behind a retirement. */
+    /** No row lock: readings do not queue behind each other or behind a deactivation. */
     public Optional<SubmittingDevice> findDevice(UUID deviceId) {
-        return db.select(
-                        DEVICE.ID,
-                        DEVICE.ESTATEID,
-                        DEVICE.ASSETID,
-                        DEVICE.METRICS,
-                        ASSET.DEACTIVATEDAT,
-                        ESTATE.DEACTIVATEDAT)
+        return db.select(DEVICE.ID, DEVICE.ESTATEID, DEVICE.ASSETID, DEVICE.METRICS, ESTATE.DEACTIVATEDAT)
                 .from(DEVICE)
-                .join(ASSET)
-                .on(ASSET.ID.eq(DEVICE.ASSETID))
                 .join(ESTATE)
                 .on(ESTATE.ID.eq(DEVICE.ESTATEID))
                 .where(DEVICE.ID.eq(deviceId))
@@ -57,7 +42,6 @@ public class ReadingRepository {
                         Arrays.stream(row.get(DEVICE.METRICS))
                                 .map(DeviceMetric::valueOf)
                                 .collect(Collectors.toCollection(() -> EnumSet.noneOf(DeviceMetric.class))),
-                        row.get(ASSET.DEACTIVATEDAT) != null,
                         row.get(ESTATE.DEACTIVATEDAT) != null));
     }
 

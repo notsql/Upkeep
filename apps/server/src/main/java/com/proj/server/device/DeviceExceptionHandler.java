@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-@RestControllerAdvice(assignableTypes = DeviceController.class)
+@RestControllerAdvice(assignableTypes = {DeviceController.class, EstateDeviceController.class})
 public class DeviceExceptionHandler {
     @ExceptionHandler(DeviceException.class)
     ResponseEntity<EstateError> device(DeviceException error) {

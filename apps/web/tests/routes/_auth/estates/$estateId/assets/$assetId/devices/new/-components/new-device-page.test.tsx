@@ -49,6 +49,7 @@ const device: Device = {
     { metric: "PRESSURE", unit: "bar" },
   ],
   reportingIntervalSeconds: 60,
+  status: "AWAITING_FIRST_READING",
   createdAt: at,
   updatedAt: at,
 };

@@ -4,6 +4,8 @@ import { api } from "@/lib/api";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Device = components["schemas"]["DeviceResponse"];
+export type EstateDevice = components["schemas"]["EstateDeviceResponse"];
+export type DeviceStatus = Device["status"];
 export type DeviceInput = components["schemas"]["CreateDeviceRequest"];
 export type DeviceMetric = DeviceInput["metrics"][number];
 export type DeviceCredential =
@@ -51,6 +53,35 @@ export function useDevices(estateId: string, assetId: string) {
       const { data, error, response } = await api.GET(
         "/estates/{estateId}/assets/{assetId}/devices",
         { params: { path: { estateId, assetId } } }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+  });
+}
+
+export function estateDevicesQueryKey(
+  userId: string | undefined,
+  estateId: string
+) {
+  return ["estates", userId, "estate-devices", estateId] as const;
+}
+
+/** Status is derived on read (decision 0027), so the list polls while open. */
+export function useEstateDevices(estateId: string) {
+  const { userId, ready } = useEstateSession();
+  return useQuery({
+    queryKey: estateDevicesQueryKey(userId, estateId),
+    enabled: ready,
+    retry: false,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
+    queryFn: async () => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/devices",
+        { params: { path: { estateId } } }
       );
       if (error || !data) {
         throw estateError(error, response.status);

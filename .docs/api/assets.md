@@ -55,6 +55,7 @@ latest assessment. Search uses literal case-insensitive substring matching, so
 
 ## GET `/estates/{estateId}/assets/{assetId}/devices`
 
+- Auth: estate Manager - the owner or a `MANAGER` member; residents get 403. Registration and credentials stay owner-only.
 - path `estateId`: uuid (required)
 - path `assetId`: uuid (required)
 - 400: Missing or invalid details, or an unsupported metric — EstateError
@@ -254,6 +255,7 @@ Owner only. No body. See "Device credentials" below.
 | metrics | DeviceMetricResponse[] | yes |  |
 | reportingIntervalSeconds | int32 | yes |  |
 | lastSeenAt | date-time | no |  |
+| status | AWAITING_FIRST_READING / ONLINE / OFFLINE | yes | Derived on read; see [device-status.md](device-status.md) |
 | credentialIssuedAt | date-time | no | null until a key is issued |
 | createdAt | date-time | yes |  |
 | updatedAt | date-time | yes |  |
