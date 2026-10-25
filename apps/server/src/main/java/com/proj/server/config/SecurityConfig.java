@@ -89,6 +89,12 @@ public class SecurityConfig {
                                 "/estates/{estateId}",
                                 "/estates/{estateId}/locations",
                                 "/estates/{estateId}/reports",
+                                "/estates/{estateId}/work-orders",
+                                "/estates/{estateId}/work-orders/{workOrderId}",
+                                "/estates/{estateId}/work-orders/{workOrderId}/status-history",
+                                "/estates/{estateId}/work-orders/{workOrderId}/completion-revisions",
+                                "/estates/{estateId}/assets/{assetId}/work-order-completions",
+                                "/estates/{estateId}/work-order-assets",
                                 "/estates/{estateId}/reports/{reportId}",
                                 "/estates/{estateId}/reports/{reportId}/images/{imageId}",
                                 "/estates/{estateId}/assets",
@@ -104,6 +110,9 @@ public class SecurityConfig {
                                 "/estates/{estateId}/flatline-policies",
                                 "/estates/{estateId}/flatlined-sensors",
                                 "/estates/{estateId}/members",
+                                "/estates/{estateId}/roles",
+                                "/estates/{estateId}/role-permissions",
+                                "/estates/{estateId}/invitation-roles",
                                 "/estates/{estateId}/council-invitations")
                         .authenticated()
                         .requestMatchers(HttpMethod.POST, "/estates")
@@ -111,7 +120,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
+                                "/estates/{estateId}/work-orders",
                                 "/council-invitations/{invitationId}/accept",
+                                "/estates/{estateId}/roles",
                                 "/estates/{estateId}/ownership-transfer",
                                 "/estates/{estateId}/deactivate",
                                 "/estates/{estateId}/locations",
@@ -130,6 +141,8 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PATCH,
+                                "/estates/{estateId}/work-orders/{workOrderId}/status",
+                                "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}",
                                 "/estates/{estateId}/locations/{id}",
                                 "/estates/{estateId}/assets/{id}",
@@ -139,12 +152,15 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
+                                "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
+                                "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}/role",
                                 "/estates/{estateId}/flatline-policies/{metric}")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,
+                                "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}",
                                 "/estates/{estateId}/council-invitations/{invitationId}")
                         .authenticated()

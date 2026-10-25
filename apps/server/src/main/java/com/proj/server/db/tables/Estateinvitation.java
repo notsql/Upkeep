@@ -122,6 +122,11 @@ public class Estateinvitation extends TableImpl<EstateinvitationRecord> {
      */
     public final TableField<EstateinvitationRecord, String> ROLE = createField(DSL.name("role"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'COUNCIL'::character varying"), SQLDataType.VARCHAR)), this, "");
 
+    /**
+     * The column <code>public.EstateInvitation.customRoleId</code>.
+     */
+    public final TableField<EstateinvitationRecord, UUID> CUSTOMROLEID = createField(DSL.name("customRoleId"), SQLDataType.UUID, this, "");
+
     private Estateinvitation(Name alias, Table<EstateinvitationRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -219,7 +224,8 @@ public class Estateinvitation extends TableImpl<EstateinvitationRecord> {
     @Override
     public List<Check<EstateinvitationRecord>> getChecks() {
         return Arrays.asList(
-            Internal.createCheck(this, DSL.name("EstateInvitation_role_check"), "(((role)::text = ANY ((ARRAY['COUNCIL'::character varying, 'RESIDENT'::character varying, 'MANAGER'::character varying, 'CREW'::character varying])::text[])))", true)
+            Internal.createCheck(this, DSL.name("EstateInvitation_custom_role_check"), "(((((role)::text = 'CUSTOM'::text) AND (\"customRoleId\" IS NOT NULL)) OR (((role)::text <> 'CUSTOM'::text) AND (\"customRoleId\" IS NULL))))", true),
+            Internal.createCheck(this, DSL.name("EstateInvitation_role_check"), "(((role)::text = ANY ((ARRAY['COUNCIL'::character varying, 'RESIDENT'::character varying, 'MANAGER'::character varying, 'CREW'::character varying, 'CUSTOM'::character varying])::text[])))", true)
         );
     }
 

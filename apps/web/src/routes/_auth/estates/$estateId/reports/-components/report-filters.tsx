@@ -121,7 +121,7 @@ export function ReportFilters({
   );
 
   return (
-    <form className="space-y-3" noValidate onSubmit={apply}>
+    <form className="report-filters space-y-3" noValidate onSubmit={apply}>
       <div className="grid items-end gap-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor={`${id}-block`}>Block</Label>
@@ -131,7 +131,7 @@ export function ReportFilters({
             value={selected}
           >
             <ComboboxInput className="w-full" id={`${id}-block`} />
-            <ComboboxContent>
+            <ComboboxContent className="rounded-xl">
               <ComboboxEmpty>No blocks found.</ComboboxEmpty>
               <ComboboxList>
                 {(choice: BlockChoice) => (
@@ -232,7 +232,7 @@ function LevelPositionFilter({
           id={id}
           placeholder={placeholder}
         />
-        <ComboboxContent>
+        <ComboboxContent className="rounded-xl">
           <ComboboxEmpty>
             No positions found. Type a whole number.
           </ComboboxEmpty>

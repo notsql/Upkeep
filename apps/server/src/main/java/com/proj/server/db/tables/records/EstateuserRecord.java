@@ -91,6 +91,20 @@ public class EstateuserRecord extends UpdatableRecordImpl<EstateuserRecord> {
         return (String) get(4);
     }
 
+    /**
+     * Setter for <code>public.EstateUser.customRoleId</code>.
+     */
+    public void setCustomroleid(UUID value) {
+        set(5, value);
+    }
+
+    /**
+     * Getter for <code>public.EstateUser.customRoleId</code>.
+     */
+    public UUID getCustomroleid() {
+        return (UUID) get(5);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -114,7 +128,7 @@ public class EstateuserRecord extends UpdatableRecordImpl<EstateuserRecord> {
     /**
      * Create a detached, initialised EstateuserRecord
      */
-    public EstateuserRecord(UUID estateid, String userid, OffsetDateTime createdat, Boolean caninvitemembers, String role) {
+    public EstateuserRecord(UUID estateid, String userid, OffsetDateTime createdat, Boolean caninvitemembers, String role, UUID customroleid) {
         super(Estateuser.ESTATEUSER);
 
         setEstateid(estateid);
@@ -122,6 +136,7 @@ public class EstateuserRecord extends UpdatableRecordImpl<EstateuserRecord> {
         setCreatedat(createdat);
         setCaninvitemembers(caninvitemembers);
         setRole(role);
+        setCustomroleid(customroleid);
         resetTouchedOnNotNull();
     }
 }

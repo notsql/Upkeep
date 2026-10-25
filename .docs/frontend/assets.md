@@ -157,7 +157,7 @@ highlight the card; motion-reduced preferences disable its transition. Desktop
 table names/references remain links. Search stays visible; Filters opens an
 Apply/Clear secondary filters/Cancel dialog. Draft changes do not query until
 Apply; cancellation discards them. The count excludes search/default Active.
-Page Clear resets everything; dialog Clear retains search. Condition uses shared
+Page Clear resets filters while preserving sorting; dialog Clear retains search. Condition uses shared
 ConditionBadge with green/amber/red/neutral labels. LifecycleStatusBadge uses green Active
 and red Retired labels, shared with estate status styling. Table order, linked
 references/names, URL filters and back navigation retain their existing behavior.
@@ -182,3 +182,48 @@ that existing assets remain available. Backend write restrictions are unchanged.
 Creating, retiring or restoring an asset and recording a condition assessment also
 invalidate `["estates", userId, "dashboard"]` so Home reflects operational changes.
 See [dashboard.md](dashboard.md).
+
+## Register sorting
+
+All six desktop headers use `components/sortable-table-head.tsx`: Reference,
+Name, Category, Location, Current condition and Status. The shadcn header Button
+shows ascending/descending icons and TableHead exposes aria-sort. Default is
+Reference ascending. Selecting another text/status column starts ascending;
+Current condition starts descending (worst first). Repeat selection reverses.
+
+`lib/asset-sorting.ts` sorts a copy of the entire filtered API array. Text uses
+natural English comparison, case-insensitively; categories use displayed labels
+and locations use full displayed paths. Condition orders Good, Needs attention,
+Faulty with unassessed last in either direction; Status orders Active, Retired.
+Reference and ID break ties. All matching records remain present.
+
+`assets/-components/asset-sort-controls.tsx` provides the same choices for mobile
+cards through shadcn Select (Sort assets by) and a Reverse asset sort direction
+Button. Cards and the desktop table use the same ordered array. The route
+validates and persists `sortBy`/`direction` in URL search. These are presentation
+state and are stripped before calling `useAssets`; its generated API filters,
+query key and endpoints remain unchanged. Sorting preserves filters, clearing
+filters preserves sorting, and refresh/browser back restore both.
+Sorting uses `resetScroll: false`, keeping the current page position as rows or
+cards reorder. Other asset navigation retains its existing scroll behavior.
+
+## Completed work orders in maintenance
+
+`$assetId/-components/asset-maintenance-section.tsx` combines manual AssetEvent
+entries with canonical completed work from useAssetWorkOrderCompletions, ordered
+newest first with stable ID ties. Each completion appears once, labelled Work
+order with reference, saved work location, findings/work performed, parts notes,
+SGD costs, minutes, closer and server time. Reference links require independent
+canViewWorkOrders. Unknown costs/downtime are displayed distinctly from zero.
+The shared CompletionOutcome component also serves work-order detail. Existing
+Record repair and forecast/manual-event APIs retain their behavior. Completion
+reads retain owner-only asset permission, including moved/retired asset history;
+non-owner Managers use work-order outcomes instead. See [work-orders.md](work-orders.md).
+
+
+Authorized corrections retain the same canonical completion entry in Maintenance.
+The displayed outcome/costs are current, with Edited author/time when corrected;
+original completion time still determines the entry's place in history. Revision
+snapshots and correction reasons are available from the work-order detail, subject
+to independent work-order access. Correction never creates an AssetEvent or
+changes condition/forecast inputs.

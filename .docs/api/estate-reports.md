@@ -2,10 +2,15 @@
 
 Source of truth: `packages/api/openapi.json`. Every operation requires a JWT
 subject, including local development without a configured issuer. Authority is
-current `EstateUser` MANAGER or CREW membership in the requested estate. Ownership
+current `EstateUser` MANAGER/CREW membership or custom VIEW_FAULT_REPORTS in the requested estate. Ownership
 alone, WorkOS claims, Council, Member and Resident roles do not grant responder
 access. Revocation applies to the next request with the same token. Resident
 own-history URLs retain submitter-only authorization.
+Estate creation records owner MANAGER membership. Migration
+`20261022135000_backfill_estate_owner_memberships` repairs that invariant for
+existing owners with missing or legacy nonresident memberships, so their report
+access matches new estates. It preserves owner/RESIDENT conflicts and all
+non-owner assignments; report authorization still checks current membership.
 
 ## DTOs
 
@@ -62,7 +67,7 @@ or new index is required.
 Example: `GET /estates/<estate-uuid>/reports?blockId=<block-uuid>&minLevelPosition=-1&maxLevelPosition=4`
 returns basement through position 4 within that block, regardless of level names.
 
-Relocation stays in the original estate. Staff may change block, level and
+Custom relocation additionally requires RELOCATE_FAULT_REPORTS; VIEW_FAULT_REPORTS alone is read-only. Relocation stays in the original estate. Staff may change block, level and
 common-area selections; the saved node is an active LEVEL or COMMON_AREA whose
 ancestors are active. An inactive current placement can be corrected. The estate
 is locked before membership and placement checks, serializing hierarchy edits,
@@ -78,6 +83,11 @@ estate-scoped hierarchy joins and relocation updates. Optional `FOR UPDATE` lock
 retain the estate-before-membership order. The update uses a typed jOOQ function
 call to Postgres `clock_timestamp()` so `updatedAt` reflects the database wall
 clock, including when a transaction has waited for a lock.
+
+Service authorization takes the required permission separately from the locking
+flag. Lists, details and images explicitly require VIEW_FAULT_REPORTS; relocation
+explicitly requires RELOCATE_FAULT_REPORTS. Acquiring a lock does not change the
+permission being checked.
 
 Example correction:
 
@@ -97,3 +107,9 @@ estate labels; [locations.md](locations.md) permits responders to read inactive
 hierarchy nodes without granting location writes. Migration
 `20261018150454_fault_report_locations` adds the estate pagination and
 estate/location pagination indexes; Prisma and jOOQ are regenerated together.
+
+Custom report-only accounts may read reports/images and supporting historical
+locations without VIEW_ESTATE or management detail/asset access. Read and
+relocation permissions are independently projected by access context and checked
+on each request; editing a definition or reassigning a member takes effect with
+the same token. No custom grant expands other report CRUD or Resident submissions.

@@ -227,9 +227,22 @@ function LocationEditor({
         disabled={pending || !chosen.block}
         label="Common area"
         onChange={changeCommon}
-        options={[{ id: "none", name: "None (level only)" }, ...common]}
+        options={[
+          {
+            id: "none",
+            name: chosen.level
+              ? "None (level only)"
+              : "Choose a block common area",
+          },
+          ...common,
+        ]}
         value={chosen.common ?? "none"}
       />
+      {chosen.block && !chosen.level && !chosen.common ? (
+        <p className="text-muted-foreground text-sm" role="status">
+          Choose a common area under this block, or select a level.
+        </p>
+      ) : null}
       {noDestinations ? (
         <p>No active locations are available for correction.</p>
       ) : null}

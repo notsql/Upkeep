@@ -14,11 +14,16 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Workorder;
+import com.proj.server.db.tables.Workordercompletion;
+import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderstatusevent;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -64,10 +69,13 @@ public class Indexes {
     public static final Index ESTATEINVITATION_EMAIL_STATUS_IDX = Internal.createIndex(DSL.name("EstateInvitation_email_status_idx"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.EMAIL, Estateinvitation.ESTATEINVITATION.STATUS }, false);
     public static final Index ESTATEINVITATION_ESTATEID_EMAIL_KEY = Internal.createIndex(DSL.name("EstateInvitation_estateId_email_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.ESTATEID, Estateinvitation.ESTATEINVITATION.EMAIL }, true);
     public static final Index ESTATEINVITATION_PROVIDERINVITATIONID_KEY = Internal.createIndex(DSL.name("EstateInvitation_providerInvitationId_key"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.PROVIDERINVITATIONID }, true);
+    public static final Index ESTATEROLEDEFINITION_ESTATEID_NORMALIZEDNAME_KEY = Internal.createIndex(DSL.name("EstateRoleDefinition_estateId_normalizedName_key"), Estateroledefinition.ESTATEROLEDEFINITION, new OrderField[] { Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID, Estateroledefinition.ESTATEROLEDEFINITION.NORMALIZEDNAME }, true);
+    public static final Index ESTATEROLEDEFINITION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("EstateRoleDefinition_id_estateId_key"), Estateroledefinition.ESTATEROLEDEFINITION, new OrderField[] { Estateroledefinition.ESTATEROLEDEFINITION.ID, Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID }, true);
     public static final Index ESTATEUSER_USERID_IDX = Internal.createIndex(DSL.name("EstateUser_userId_idx"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, false);
     public static final Index ISSUEREPORT_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
     public static final Index ISSUEREPORT_ESTATEID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID }, false);
     public static final Index ISSUEREPORT_ESTATEID_LOCATIONID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_locationId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID, Issuereport.ISSUEREPORT.LOCATIONID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
+    public static final Index ISSUEREPORT_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("IssueReport_id_estateId_key"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ID, Issuereport.ISSUEREPORT.ESTATEID }, true);
     public static final Index ISSUEREPORT_SUBMITTEDBYUSERID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_submittedByUserId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.SUBMITTEDBYUSERID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
     public static final Index ISSUEREPORTIMAGE_REPORTID_IDX = Internal.createIndex(DSL.name("IssueReportImage_reportId_idx"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, false);
     public static final Index ISSUEREPORTIMAGE_STORAGEKEY_KEY = Internal.createIndex(DSL.name("IssueReportImage_storageKey_key"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.STORAGEKEY }, true);
@@ -76,4 +84,14 @@ public class Indexes {
     public static final Index LOCATION_ID_TYPE_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_type_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.TYPE, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_PARENTID_IDX = Internal.createIndex(DSL.name("Location_parentId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.PARENTID }, false);
     public static final Index MANUFACTURER_NAME_KEY = Internal.createIndex(DSL.name("Manufacturer_name_key"), Manufacturer.MANUFACTURER, new OrderField[] { Manufacturer.MANUFACTURER.NAME }, true);
+    public static final Index WORKORDER_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrder_estateId_createdAt_id_idx"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.CREATEDAT, Workorder.WORKORDER.ID }, false);
+    public static final Index WORKORDER_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("WorkOrder_estateId_reference_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.REFERENCE }, true);
+    public static final Index WORKORDER_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("WorkOrder_id_estateId_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ID, Workorder.WORKORDER.ESTATEID }, true);
+    public static final Index WORKORDERCOMPLETION_ESTATEID_COMPLETEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrderCompletion_estateId_completedAt_id_idx"), Workordercompletion.WORKORDERCOMPLETION, new OrderField[] { Workordercompletion.WORKORDERCOMPLETION.ESTATEID, Workordercompletion.WORKORDERCOMPLETION.COMPLETEDAT, Workordercompletion.WORKORDERCOMPLETION.ID }, false);
+    public static final Index WORKORDERCOMPLETION_WORKORDERID_ESTATEID_KEY = Internal.createIndex(DSL.name("WorkOrderCompletion_workOrderId_estateId_key"), Workordercompletion.WORKORDERCOMPLETION, new OrderField[] { Workordercompletion.WORKORDERCOMPLETION.WORKORDERID, Workordercompletion.WORKORDERCOMPLETION.ESTATEID }, true);
+    public static final Index WORKORDERCOMPLETION_WORKORDERID_KEY = Internal.createIndex(DSL.name("WorkOrderCompletion_workOrderId_key"), Workordercompletion.WORKORDERCOMPLETION, new OrderField[] { Workordercompletion.WORKORDERCOMPLETION.WORKORDERID }, true);
+    public static final Index WORKORDERCOMPLETIONREVISION_ESTATEID_WORKORDERID_IDX = Internal.createIndex(DSL.name("WorkOrderCompletionRevision_estateId_workOrderId_idx"), Workordercompletionrevision.WORKORDERCOMPLETIONREVISION, new OrderField[] { Workordercompletionrevision.WORKORDERCOMPLETIONREVISION.ESTATEID, Workordercompletionrevision.WORKORDERCOMPLETIONREVISION.WORKORDERID }, false);
+    public static final Index WORKORDERCOMPLETIONREVISION_WORKORDERID_VERSION_KEY = Internal.createIndex(DSL.name("WorkOrderCompletionRevision_workOrderId_version_key"), Workordercompletionrevision.WORKORDERCOMPLETIONREVISION, new OrderField[] { Workordercompletionrevision.WORKORDERCOMPLETIONREVISION.WORKORDERID, Workordercompletionrevision.WORKORDERCOMPLETIONREVISION.VERSION }, true);
+    public static final Index WORKORDERSTATUSEVENT_ESTATEID_WORKORDERID_IDX = Internal.createIndex(DSL.name("WorkOrderStatusEvent_estateId_workOrderId_idx"), Workorderstatusevent.WORKORDERSTATUSEVENT, new OrderField[] { Workorderstatusevent.WORKORDERSTATUSEVENT.ESTATEID, Workorderstatusevent.WORKORDERSTATUSEVENT.WORKORDERID }, false);
+    public static final Index WORKORDERSTATUSEVENT_WORKORDERID_VERSION_KEY = Internal.createIndex(DSL.name("WorkOrderStatusEvent_workOrderId_version_key"), Workorderstatusevent.WORKORDERSTATUSEVENT, new OrderField[] { Workorderstatusevent.WORKORDERSTATUSEVENT.WORKORDERID, Workorderstatusevent.WORKORDERSTATUSEVENT.VERSION }, true);
 }

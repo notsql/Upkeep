@@ -15,12 +15,19 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estateroledefinition;
+import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Workorder;
+import com.proj.server.db.tables.Workordercompletion;
+import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderstatusevent;
 
 
 /**
@@ -85,6 +92,16 @@ public class Tables {
     public static final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
 
     /**
+     * The table <code>public.EstateRoleDefinition</code>.
+     */
+    public static final Estateroledefinition ESTATEROLEDEFINITION = Estateroledefinition.ESTATEROLEDEFINITION;
+
+    /**
+     * The table <code>public.EstateRolePermission</code>.
+     */
+    public static final Estaterolepermission ESTATEROLEPERMISSION = Estaterolepermission.ESTATEROLEPERMISSION;
+
+    /**
      * The table <code>public.EstateUser</code>.
      */
     public static final Estateuser ESTATEUSER = Estateuser.ESTATEUSER;
@@ -113,4 +130,29 @@ public class Tables {
      * The table <code>public.Manufacturer</code>.
      */
     public static final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
+
+    /**
+     * The table <code>public.Permission</code>.
+     */
+    public static final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
+     * The table <code>public.WorkOrder</code>.
+     */
+    public static final Workorder WORKORDER = Workorder.WORKORDER;
+
+    /**
+     * The table <code>public.WorkOrderCompletion</code>.
+     */
+    public static final Workordercompletion WORKORDERCOMPLETION = Workordercompletion.WORKORDERCOMPLETION;
+
+    /**
+     * The table <code>public.WorkOrderCompletionRevision</code>.
+     */
+    public static final Workordercompletionrevision WORKORDERCOMPLETIONREVISION = Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+
+    /**
+     * The table <code>public.WorkOrderStatusEvent</code>.
+     */
+    public static final Workorderstatusevent WORKORDERSTATUSEVENT = Workorderstatusevent.WORKORDERSTATUSEVENT;
 }

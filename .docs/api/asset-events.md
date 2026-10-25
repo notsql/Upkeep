@@ -70,3 +70,9 @@ Example: `POST /estates/{estateId}/assets/{assetId}/events`
 ```json
 {"type":"BREAKDOWN_REPAIR","occurredOn":"2026-10-02","notes":"Replaced mechanical seal"}
 ```
+
+Completed work-order outcomes are read separately through
+[work-order-completions](work-orders.md#progress-closure-and-asset-outcomes).
+They are canonical WorkOrderCompletion records, not AssetEvent rows. The
+Maintenance screen combines both read sources; closure alone does not change
+forecast inputs or duplicate costs into manual maintenance history.

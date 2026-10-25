@@ -1,4 +1,5 @@
 import { fireEvent, within } from "@testing-library/react";
+import { ownerEstateAccess, unassignedAccess } from "@tests/fixtures/access";
 import {
   chooseOption,
   renderWithProviders,
@@ -41,6 +42,41 @@ beforeEach(() => {
   cancelled = false;
   vi.mocked(api.GET).mockImplementation((path) => {
     let data: unknown = currentEstate;
+    if (path === "/access/context") {
+      data = {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [
+          {
+            ...ownerEstateAccess,
+            estateId: "estate-id",
+            estateName: currentEstate.name,
+            canInviteMembers: currentEstate.canInviteMembers,
+            canManageInvitationPermissions:
+              currentEstate.canManageInvitationPermissions,
+            canViewEstateInvitations:
+              currentEstate.canInviteMembers ||
+              currentEstate.canManageInvitationPermissions,
+            canViewEstateRoles: currentEstate.canManageInvitationPermissions,
+            canReassignRoles: currentEstate.canManageInvitationPermissions,
+          },
+        ],
+      };
+    }
+    if (path === "/estates/{estateId}/invitation-roles") {
+      data = [
+        { role: "COUNCIL", label: "Council member" },
+        { role: "RESIDENT", label: "Resident" },
+        { role: "MANAGER", label: "Manager (Admin)" },
+        { role: "CREW", label: "Crew" },
+      ];
+    }
+    if (
+      path === "/estates/{estateId}/roles" ||
+      path === "/estates/{estateId}/role-permissions"
+    ) {
+      data = [];
+    }
     if (path === "/estates/{estateId}/members") {
       data = removed
         ? []
@@ -360,9 +396,7 @@ it("does not expose owner removal controls to delegates", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   await screen.findByRole("button", { name: "Send invitation" });
   expect(screen.queryByRole("button", { name: removalLabel })).toBeNull();
-  expect(
-    screen.queryByRole("heading", { name: "Pending invitations" })
-  ).toBeNull();
+  screen.getByRole("heading", { name: "Pending invitations" });
 });
 
 const ESTATES_GUIDANCE = /Existing users accept on Invitations\./;
@@ -389,4 +423,81 @@ it("announces when a member role is saving", async () => {
     response: new Response(null, { status: 200 }),
   });
   await screen.findByText("Role saved.");
+});
+
+it("shows members in a table with bounded pages and clamps after the roster shrinks", async () => {
+  let roster = Array.from({ length: 21 }, (_, index) => ({
+    userId: `member-${index + 1}`,
+    name: `Member ${index + 1}`,
+    email: `member${index + 1}@example.com`,
+    role: "CREW",
+    owner: false,
+  }));
+  const serve = vi.mocked(api.GET).getMockImplementation() as
+    | ((path: string) => unknown)
+    | undefined;
+  vi.mocked(api.GET).mockImplementation((path) =>
+    path === "/estates/{estateId}/members"
+      ? (Promise.resolve({ data: roster, response: new Response() }) as never)
+      : (serve?.(path) as never)
+  );
+  const view = renderWithProviders(<CouncilPage estateId="estate-id" />);
+  const table = within(
+    await screen.findByRole("table", { name: "Estate members" })
+  );
+  expect(table.getAllByRole("row")).toHaveLength(21);
+  expect(table.queryByText("Member 21")).toBeNull();
+  screen.getByText("1–20 of 21 members");
+  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  await table.findByText("Member 21");
+  expect(table.queryByText("Member 1")).toBeNull();
+  screen.getByText("21–21 of 21 members");
+  fireEvent.click(screen.getByRole("button", { name: "Previous members" }));
+  await table.findByText("Member 1");
+  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  roster = roster.slice(0, 20);
+  await view.queryClient.invalidateQueries({
+    queryKey: ["owner", "estate-members", "estate-id"],
+  });
+  await table.findByText("Member 1");
+  screen.getByText("1–20 of 20 members");
+});
+
+it("resets the member page when switching estates", async () => {
+  const serve = vi.mocked(api.GET).getMockImplementation() as
+    | ((path: string) => unknown)
+    | undefined;
+  vi.mocked(api.GET).mockImplementation((path) => {
+    if (path === "/access/context") {
+      return Promise.resolve({
+        data: {
+          ...unassignedAccess,
+          canEnterWorkspace: true,
+          estates: ["estate-id", "other-estate"].map((estateId) => ({
+            ...ownerEstateAccess,
+            estateId,
+          })),
+        },
+        response: new Response(),
+      }) as never;
+    }
+    return path === "/estates/{estateId}/members"
+      ? (Promise.resolve({
+          data: Array.from({ length: 21 }, (_, index) => ({
+            userId: `member-${index + 1}`,
+            name: `Member ${index + 1}`,
+            email: `member${index + 1}@example.com`,
+            role: "CREW",
+            owner: false,
+          })),
+          response: new Response(),
+        }) as never)
+      : (serve?.(path) as never);
+  });
+  const view = renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await screen.findByRole("table", { name: "Estate members" });
+  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  await screen.findByText("21–21 of 21 members");
+  view.rerender(<CouncilPage estateId="other-estate" />);
+  await screen.findByText("1–20 of 21 members");
 });

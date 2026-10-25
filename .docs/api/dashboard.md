@@ -7,7 +7,7 @@ Source of truth: `packages/api/openapi.json`. No database migration is required.
 `GET /dashboard/summary` takes no path/query parameters or request body.
 It requires a signed-in JWT with a nonblank subject and returns 200
 `DashboardSummaryResponse`. Accessible estates are owned estates or estates
-with a current `EstateUser` membership. Ownership plus membership does not
+with current MANAGER/COUNCIL/MEMBER membership or custom VIEW_ESTATE. Ownership plus membership does not
 count an estate twice. Invitations alone do not grant access.
 
 Estate totals include active and inactive accessible estates. Asset and
@@ -92,4 +92,9 @@ active assets (one Good, one Faulty, one without assessments):
 }
 ```
 
-Estate access excludes RESIDENT memberships and same-estate resident/owner conflicts. Ownership or current MANAGER/MEMBER/COUNCIL memberships contribute estate counts, including non-owner Managers and former owners who retain Manager membership after transfer. Asset and condition summaries remain limited to active estates the caller owns. Council-member counts omit resident rows. A mixed account sees only the estates where it holds management access.
+Estate access excludes RESIDENT memberships and same-estate resident/owner conflicts. Ownership, current MANAGER/MEMBER/COUNCIL memberships or custom VIEW_ESTATE contribute estate counts, including non-owner Managers and former owners who retain Manager membership after transfer. Asset and condition summaries remain limited to active estates the caller owns. Council-member counts omit resident rows. A mixed account sees only the estates where it holds management access.
+
+Role-only, invitation-only and report-only CUSTOM memberships do not enter estate
+counts. The shared typed VIEW_ESTATE predicate keeps dashboard and directory
+scope aligned after edits/reassignment. Custom permissions do not widen owner-only
+asset/condition/member summary scope. See [estate-roles.md](estate-roles.md).

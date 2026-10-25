@@ -76,6 +76,9 @@ function routerFor(path: string) {
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
+    "/estates/$estateId/work-orders",
+    "/estates/$estateId/work-orders/new",
+    "/estates/$estateId/work-orders/$workOrderId",
     "/admin/users",
   ].map((destination) =>
     createRoute({
@@ -117,6 +120,56 @@ beforeEach(() => {
     accessToken: "ordinary-user-token",
   });
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
+});
+
+it.each(
+  [residentAccess, mixedAccess, unassignedAccess].flatMap((access) =>
+    ["", "/new", "/saved"].map((suffix) => ({ access, suffix }))
+  )
+)(
+  "hides unauthorized work-order deep links rather than redirecting to reporting: %j",
+  async ({ access, suffix }) => {
+    get.mockResolvedValue({ data: access, response: new Response() });
+    const path = `/estates/maple/work-orders${suffix}`;
+    const router = routerFor(path);
+    await router.load();
+    expect(router.state.location.pathname).toBe(path);
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it.each(["/estates/oak/work-orders", "/estates/oak/work-orders/saved"])(
+  "lets Crew read %s before the management guard",
+  async (path) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [crewEstateAccess],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(path);
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+  }
+);
+it("rejects Crew at a direct creation URL", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...unassignedAccess,
+      canEnterWorkspace: true,
+      estates: [crewEstateAccess],
+    },
+    response: new Response(),
+  });
+  const router = routerFor("/estates/oak/work-orders/new");
+  renderWithProviders(<RouterProvider router={router} />);
+  await waitFor(() => expect(router.state.status).toBe("idle"));
+  expect(managementLoader).not.toHaveBeenCalled();
 });
 
 it.each(["/estates/maple", "/estates/maple/assets", "/estates/maple/council"])(

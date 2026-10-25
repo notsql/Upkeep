@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { PageHeader } from "@/components/page-header";
 import { ReportCard } from "@/components/reports/report-card";
 import {
   type EstateReportFilters,
@@ -91,7 +92,18 @@ function EstateReportsPage() {
   }
   return (
     <main className="page-layout space-y-4">
-      <h1 className="font-semibold text-2xl">Fault reports</h1>
+      <PageHeader
+        breadcrumbs={[
+          { label: "Estates", to: "/estates" },
+          {
+            label: access.estateName ?? "Estate",
+            to: access.canViewManagement ? "/estates/$estateId" : undefined,
+            params: { estateId },
+          },
+          { label: "Fault reports" },
+        ]}
+        title="Fault reports"
+      />
       {locations.data ? (
         <ReportFilters
           filters={filters}

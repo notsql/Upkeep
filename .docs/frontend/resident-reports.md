@@ -51,3 +51,17 @@ refresh access and resident contexts. [Staff location correction](estate-reports
 uses estate-scoped report routes; personal history retains ownership checks.
 Corrected placement appears on subsequent reads/focus refresh; a successful
 correction in the same browser also invalidates current-user personal reports.
+
+## Estate context preselection
+
+reports/new/index.tsx validates optional URL estateId (nonempty string).
+NewReportRoute passes it to NewReportPage and keys the page by the selection,
+resetting form state on a context switch. NewReportPage verifies the ID against
+GET /resident/context's active assignments before mounting NewReportForm; an
+unavailable/foreign selection explains that reporting is unavailable and never
+silently chooses another estate. The form initializes that authorized estate,
+then uses the existing per-estate location query. Changing the form's Estate
+Select also updates URL estateId so the shell context stays synchronized. No API
+or mutation changes.
+The shell estate dropdown includes all membership roles, even a sole Resident
+estate; inactive resident choices explain Reporting unavailable and are disabled.

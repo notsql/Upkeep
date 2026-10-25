@@ -12,7 +12,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
@@ -21,6 +20,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConditionBadge } from "@/components/condition-badge";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
+import {
+  type AssetSort,
+  type AssetSortColumn,
+  assetSortOptions,
+  sortAssets,
+} from "@/lib/asset-sorting";
 import { type AssetFilters, useAssets } from "@/lib/assets";
 import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
@@ -30,19 +36,41 @@ import {
   AssetFilterControls,
   MobileAssetFilters,
 } from "@/routes/_auth/estates/$estateId/assets/-components/asset-filters";
+import { AssetSortControls } from "./asset-sort-controls";
 
 export function AssetRegisterPage({
   estateId,
   filters,
   onFiltersChange,
+  sort = {},
+  onSortChange,
 }: {
   estateId: string;
   filters: AssetFilters;
   onFiltersChange: (filters: AssetFilters) => void;
+  sort?: AssetSort;
+  onSortChange?: (sort: AssetSort) => void;
 }) {
   const mobile = useMobile();
   const assets = useAssets(estateId, filters);
   const categories = useAssetCategories();
+  const sortedAssets = useMemo(
+    () => sortAssets(assets.data ?? [], sort, categories.data),
+    [assets.data, sort, categories.data]
+  );
+  const sortColumn = sort.sortBy ?? "REFERENCE";
+  const descending = sort.direction === "DESC";
+  const changeSort = useCallback(
+    (column: AssetSortColumn) => {
+      let direction: NonNullable<AssetSort["direction"]> =
+        column === "CONDITION" ? "DESC" : "ASC";
+      if (column === sortColumn) {
+        direction = descending ? "ASC" : "DESC";
+      }
+      onSortChange?.({ sortBy: column, direction });
+    },
+    [onSortChange, sortColumn, descending]
+  );
   const estate = useEstate(estateId);
   const locations = useLocations(estateId, true);
   const [search, setSearch] = useState(filters.q ?? "");
@@ -148,6 +176,9 @@ export function AssetRegisterPage({
           />
         )}
       </div>
+      {mobile ? (
+        <AssetSortControls onChange={onSortChange} sort={sort} />
+      ) : null}
       {filtered ? (
         <Button onClick={clearFilters} variant="outline">
           Clear filters
@@ -183,7 +214,7 @@ export function AssetRegisterPage({
       ) : null}
       {assets.data && assets.data.length > 0 && mobile ? (
         <ul aria-label="Assets" className="grid gap-3">
-          {assets.data.map((asset) => (
+          {sortedAssets.map((asset) => (
             <li key={asset.id}>
               <Link
                 aria-label={`${asset.name} (${asset.reference})`}
@@ -238,20 +269,20 @@ export function AssetRegisterPage({
         <Table aria-label="Assets">
           <TableHeader>
             <TableRow>
-              {[
-                "Reference",
-                "Name",
-                "Category",
-                "Location",
-                "Current condition",
-                "Status",
-              ].map((label) => (
-                <TableHead key={label}>{label}</TableHead>
+              {assetSortOptions.map((option) => (
+                <SortableTableHead
+                  active={sortColumn === option.value}
+                  column={option.value}
+                  descending={descending}
+                  key={option.value}
+                  label={option.label}
+                  onSort={changeSort}
+                />
               ))}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {assets.data.map((asset) => (
+            {sortedAssets.map((asset) => (
               <TableRow key={asset.id}>
                 <TableCell>
                   <Link
