@@ -320,7 +320,7 @@ class CustomEstateRoleInvitationsIntegrationTests extends CustomEstateRoleTestSu
         send("manager", post(path() + "/council-invitations"), offer(role, "new@example.com"))
                 .andExpect(status().isNotFound());
         mvc.perform(as("owner", get(path() + "/role-permissions")))
-                .andExpect(jsonPath("$.length()").value(9));
+                .andExpect(jsonPath("$.length()").value(11));
         assertFalse(hasRecipient());
     }
 

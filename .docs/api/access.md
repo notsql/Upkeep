@@ -18,7 +18,7 @@ name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is fal
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
 CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canInviteMembers/
 canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
-canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders: boolean. Owners project as MANAGER; ownership is
+canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments: boolean. Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot
 receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
 no management access. Asset visibility and other management mutations retain
@@ -27,7 +27,7 @@ existing individual service guards; broader operations remain separate features.
 Every authenticated subject has `canCreateEstate=true`, regardless of existing
 membership or WorkOS role claims. Creation records the authenticated subject's
 ownership and MANAGER membership atomically in the new estate. Other assignments
-are preserved. `canEnterWorkspace` requires an existing management, report, work-order, role-authoring or estate-invitation capability. An unassigned response has `canCreateEstate=true`,
+are preserved. `canEnterWorkspace` requires an existing management, report, work-order, document, role-authoring or estate-invitation capability. An unassigned response has `canCreateEstate=true`,
 all other booleans false and both collections empty. Account migration remains deferred.
 Migration `20261022135000_backfill_estate_owner_memberships` specifically repairs
 existing estate owners: insert a missing MANAGER membership or normalize an
@@ -124,3 +124,11 @@ canManageInvitationPermissions remains Manager-only member administration.
 No custom permission grants canViewAssets or owner powers. Role-only and
 invitation-only accounts canEnterWorkspace without general management access.
 See [estate-roles.md](estate-roles.md) for the complete permission catalogue.
+
+`canViewDocuments` grants workspace entry and document list/search/download for
+current owners/Managers, Council, Crew or custom VIEW_DOCUMENTS. Inactive history
+is retained. `canUploadDocuments` additionally requires an active estate and
+preset document write access or custom EDIT_DOCUMENTS with VIEW_DOCUMENTS.
+MEMBER/RESIDENT alone grant neither; owner/Resident conflicts deny both.
+Deletion is projected per document, since only an uploader with current edit
+permission or an estate Manager can delete it. See [documents.md](documents.md).

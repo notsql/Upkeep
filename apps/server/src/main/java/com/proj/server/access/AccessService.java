@@ -110,6 +110,11 @@ public class AccessService {
             boolean canDeleteRoles = active && manager;
             boolean canReassignRoles = active && manager;
             boolean canViewEstateInvitations = manager || permissions.contains(EstatePermissionCode.INVITE_MEMBERS);
+            boolean presetDocuments =
+                    manager || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)) || "CREW".equals(row.get(ESTATEUSER.ROLE));
+            boolean canViewDocuments = presetDocuments || permissions.contains(EstatePermissionCode.VIEW_DOCUMENTS);
+            boolean canUploadDocuments =
+                    active && (presetDocuments || permissions.contains(EstatePermissionCode.EDIT_DOCUMENTS));
             return new AppAccessResponse.EstateAccessResponse(
                     row.get(ESTATE.ID),
                     row.get(ESTATE.NAME),
@@ -134,7 +139,9 @@ public class AccessService {
                     canEditRoles,
                     canDeleteRoles,
                     canReassignRoles,
-                    canViewEstateInvitations);
+                    canViewEstateInvitations,
+                    canViewDocuments,
+                    canUploadDocuments);
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)
@@ -147,7 +154,8 @@ public class AccessService {
                                 || estate.canViewFaultReports()
                                 || estate.canViewWorkOrders()
                                 || estate.canViewEstateRoles()
-                                || estate.canViewEstateInvitations());
+                                || estate.canViewEstateInvitations()
+                                || estate.canViewDocuments());
         return new AppAccessResponse(
                 workspace,
                 true,

@@ -28,6 +28,7 @@ import { Route as ApiAuthSignInIndexRouteImport } from './routes/api/auth/sign-i
 import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-up/index'
 import { Route as AuthEstatesEstateIdAssetsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/index'
 import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_auth/estates/$estateId/council/index'
+import { Route as AuthEstatesEstateIdDocumentsIndexRouteImport } from './routes/_auth/estates/$estateId/documents/index'
 import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/edit/index'
 import { Route as AuthEstatesEstateIdFailureRiskIndexRouteImport } from './routes/_auth/estates/$estateId/failure-risk/index'
 import { Route as AuthEstatesEstateIdReportsIndexRouteImport } from './routes/_auth/estates/$estateId/reports/index'
@@ -141,6 +142,12 @@ const AuthEstatesEstateIdCouncilIndexRoute =
     path: '/estates/$estateId/council/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdDocumentsIndexRoute =
+  AuthEstatesEstateIdDocumentsIndexRouteImport.update({
+    id: '/estates/$estateId/documents/',
+    path: '/estates/$estateId/documents/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdEditIndexRoute =
   AuthEstatesEstateIdEditIndexRouteImport.update({
     id: '/estates/$estateId/edit/',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
   '/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
+  '/estates/$estateId/documents/': typeof AuthEstatesEstateIdDocumentsIndexRoute
   '/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
@@ -279,6 +287,7 @@ export interface FileRoutesByTo {
   '/api/auth/sign-up': typeof ApiAuthSignUpIndexRoute
   '/estates/$estateId/assets': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council': typeof AuthEstatesEstateIdCouncilIndexRoute
+  '/estates/$estateId/documents': typeof AuthEstatesEstateIdDocumentsIndexRoute
   '/estates/$estateId/edit': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/failure-risk': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/reports': typeof AuthEstatesEstateIdReportsIndexRoute
@@ -315,6 +324,7 @@ export interface FileRoutesById {
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
   '/_auth/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/_auth/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
+  '/_auth/estates/$estateId/documents/': typeof AuthEstatesEstateIdDocumentsIndexRoute
   '/_auth/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/_auth/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/_auth/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
@@ -351,6 +361,7 @@ export interface FileRouteTypes {
     | '/api/auth/sign-up/'
     | '/estates/$estateId/assets/'
     | '/estates/$estateId/council/'
+    | '/estates/$estateId/documents/'
     | '/estates/$estateId/edit/'
     | '/estates/$estateId/failure-risk/'
     | '/estates/$estateId/reports/'
@@ -385,6 +396,7 @@ export interface FileRouteTypes {
     | '/api/auth/sign-up'
     | '/estates/$estateId/assets'
     | '/estates/$estateId/council'
+    | '/estates/$estateId/documents'
     | '/estates/$estateId/edit'
     | '/estates/$estateId/failure-risk'
     | '/estates/$estateId/reports'
@@ -420,6 +432,7 @@ export interface FileRouteTypes {
     | '/api/auth/sign-up/'
     | '/_auth/estates/$estateId/assets/'
     | '/_auth/estates/$estateId/council/'
+    | '/_auth/estates/$estateId/documents/'
     | '/_auth/estates/$estateId/edit/'
     | '/_auth/estates/$estateId/failure-risk/'
     | '/_auth/estates/$estateId/reports/'
@@ -582,6 +595,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdCouncilIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/documents/': {
+      id: '/_auth/estates/$estateId/documents/'
+      path: '/estates/$estateId/documents'
+      fullPath: '/estates/$estateId/documents/'
+      preLoaderRoute: typeof AuthEstatesEstateIdDocumentsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/edit/': {
       id: '/_auth/estates/$estateId/edit/'
       path: '/estates/$estateId/edit'
@@ -695,6 +715,7 @@ interface AuthRouteRouteChildren {
   AuthReportsNewIndexRoute: typeof AuthReportsNewIndexRoute
   AuthEstatesEstateIdAssetsIndexRoute: typeof AuthEstatesEstateIdAssetsIndexRoute
   AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
+  AuthEstatesEstateIdDocumentsIndexRoute: typeof AuthEstatesEstateIdDocumentsIndexRoute
   AuthEstatesEstateIdEditIndexRoute: typeof AuthEstatesEstateIdEditIndexRoute
   AuthEstatesEstateIdFailureRiskIndexRoute: typeof AuthEstatesEstateIdFailureRiskIndexRoute
   AuthEstatesEstateIdReportsIndexRoute: typeof AuthEstatesEstateIdReportsIndexRoute
@@ -723,6 +744,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthReportsNewIndexRoute: AuthReportsNewIndexRoute,
   AuthEstatesEstateIdAssetsIndexRoute: AuthEstatesEstateIdAssetsIndexRoute,
   AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
+  AuthEstatesEstateIdDocumentsIndexRoute:
+    AuthEstatesEstateIdDocumentsIndexRoute,
   AuthEstatesEstateIdEditIndexRoute: AuthEstatesEstateIdEditIndexRoute,
   AuthEstatesEstateIdFailureRiskIndexRoute:
     AuthEstatesEstateIdFailureRiskIndexRoute,

@@ -80,6 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/access/context",
+                                "/estates/{estateId}/documents",
+                                "/estates/{estateId}/documents/{documentId}/content",
                                 "/asset-categories",
                                 "/manufacturers",
                                 "/manufacturers/{manufacturerId}/models",
@@ -119,6 +121,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
+                                "/estates/{estateId}/documents",
                                 "/estates/{estateId}/work-orders",
                                 "/council-invitations/{invitationId}/accept",
                                 "/estates/{estateId}/roles",
@@ -159,6 +162,7 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,
+                                "/estates/{estateId}/documents/{documentId}",
                                 "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}",
                                 "/estates/{estateId}/council-invitations/{invitationId}")

@@ -11,6 +11,7 @@ import {
   Building2,
   ClipboardList,
   ClipboardPenLine,
+  Files,
   Home,
   Layers,
   LayoutDashboard,
@@ -48,7 +49,8 @@ type Destination =
   | "/estates/$estateId/reports"
   | "/estates/$estateId/work-orders"
   | "/estates/$estateId/council"
-  | "/estates/$estateId/roles";
+  | "/estates/$estateId/roles"
+  | "/estates/$estateId/documents";
 interface NavigationItem {
   active: boolean;
   chooseEstate?: EstateFeature;
@@ -115,6 +117,7 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
     (item) => item.estateId === candidate
   );
   const allowed =
+    permission?.canViewDocuments ||
     permission?.canViewManagement ||
     permission?.canViewFaultReports ||
     permission?.canViewWorkOrders ||
@@ -248,6 +251,20 @@ function useNavigation() {
     desktop.push(entry);
     overflow.push(entry);
   }
+  if (
+    !permission?.canViewDocuments &&
+    access.data.estates.some((item) => item.canViewDocuments)
+  ) {
+    const entry: NavigationItem = {
+      label: "Documents",
+      to: "/estates/$estateId/documents",
+      chooseEstate: "documents",
+      icon: Files,
+      active: false,
+    };
+    desktop.push(entry);
+    overflow.push(entry);
+  }
   const responderEntry = reportDestination(access.data.estates, permission);
   if (responderEntry) {
     desktop.push(responderEntry);
@@ -293,6 +310,15 @@ function estateDestinations(
   const local: NavigationItem[] = [];
   if (estateId && permission) {
     const base = `/estates/${estateId}`;
+    if (permission.canViewDocuments) {
+      local.push({
+        label: "Documents",
+        to: "/estates/$estateId/documents",
+        estateId,
+        icon: Files,
+        active: pathname.startsWith(`${base}/documents`),
+      });
+    }
     if (permission.canViewWorkOrders) {
       local.push({
         label: "Work orders",
@@ -495,6 +521,18 @@ function NavigationEstateSwitcher({
   const permission = access.data?.estates.find(
     (estate) => estate.estateId === estateId
   );
+  const documents = useRouterState({
+    select: (state) => state.location.pathname.split("/")[3] === "documents",
+  });
+  if (documents) {
+    return (
+      <EstateFeatureSwitcher
+        estateId={estateId}
+        estates={access.data?.estates ?? []}
+        feature="documents"
+      />
+    );
+  }
   if (permission?.role === "RESIDENT" || !estateId) {
     return (
       <EstateFeatureSwitcher

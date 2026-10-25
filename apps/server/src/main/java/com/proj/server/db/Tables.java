@@ -13,6 +13,7 @@ import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
+import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateroledefinition;
@@ -80,6 +81,11 @@ public class Tables {
      * The table <code>public.DeviceReading</code>.
      */
     public static final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
+
+    /**
+     * The table <code>public.Document</code>.
+     */
+    public static final Document DOCUMENT = Document.DOCUMENT;
 
     /**
      * The table <code>public.Estate</code>.

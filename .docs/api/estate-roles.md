@@ -52,6 +52,8 @@ or required permission catalogue unavailable. JSON errors are EstateError
 | EDIT_LOCATIONS | VIEW_ESTATE | Rename/reorder/move active locations in an active estate |
 | CREATE_ROLES | None | Bounded custom-role creation |
 | EDIT_ROLES | None | Bounded custom-role editing, excluding own assigned role |
+| VIEW_DOCUMENTS | None | List, search and download invoices and service reports, including inactive history |
+| EDIT_DOCUMENTS | VIEW_DOCUMENTS | Upload in active estates; delete own files; Managers retain deletion of any estate document |
 
 Prerequisites are explicit: the server rejects a missing prerequisite and never
 adds one silently. Unknown codes or inconsistent stored sets fail closed. Reserved

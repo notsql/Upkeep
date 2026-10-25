@@ -1830,6 +1830,205 @@
         }
       }
     },
+    "/estates/{estateId}/documents": {
+      "get": {
+        "tags": ["document-controller"],
+        "operationId": "listDocuments",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "filename",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "maxLength": 255 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Committed documents, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPageResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["document-controller"],
+        "operationId": "uploadDocument",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/UploadDocumentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Document stored and indexed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/DocumentResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Estate inactive",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "413": {
+            "description": "File exceeds 5,000,000 bytes or multipart request exceeds servlet limits",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "415": {
+            "description": "Use matching PDF, JPEG or PNG extension, media type and signature",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}": {
       "post": {
         "tags": ["flatline-controller"],
@@ -5175,6 +5374,90 @@
         }
       }
     },
+    "/estates/{estateId}/documents/{documentId}/content": {
+      "get": {
+        "tags": ["document-controller"],
+        "operationId": "downloadDocument",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Private attachment",
+            "content": {
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/jpeg": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/png": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -5864,6 +6147,79 @@
         }
       }
     },
+    "/estates/{estateId}/documents/{documentId}": {
+      "delete": {
+        "tags": ["document-controller"],
+        "operationId": "deleteDocument",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": {
+            "description": "Platform removal committed; storage cleanup may be retried"
+          }
+        }
+      }
+    },
     "/estates/{estateId}/council-invitations/{invitationId}": {
       "delete": {
         "tags": ["council-controller"],
@@ -6095,7 +6451,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             },
             "minItems": 1
@@ -6128,7 +6486,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             }
           },
@@ -6425,7 +6785,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             },
             "minItems": 1
@@ -6509,6 +6871,43 @@
           }
         },
         "required": ["created", "skipped"]
+      },
+      "UploadDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "enum": ["INVOICE", "SERVICE_REPORT"]
+          },
+          "file": { "type": "string", "format": "binary" }
+        },
+        "required": ["documentType", "file"]
+      },
+      "DocumentResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "documentType": {
+            "type": "string",
+            "enum": ["INVOICE", "SERVICE_REPORT"]
+          },
+          "originalFilename": { "type": "string" },
+          "contentType": { "type": "string" },
+          "sizeBytes": { "type": "integer", "format": "int32" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "canDelete": { "type": "boolean" }
+        },
+        "required": [
+          "canDelete",
+          "contentType",
+          "createdAt",
+          "documentType",
+          "estateId",
+          "id",
+          "originalFilename",
+          "sizeBytes"
+        ]
       },
       "CreateFlatlinePauseRequest": {
         "type": "object",
@@ -6623,7 +7022,9 @@
               "CREATE_LOCATIONS",
               "EDIT_LOCATIONS",
               "CREATE_ROLES",
-              "EDIT_ROLES"
+              "EDIT_ROLES",
+              "VIEW_DOCUMENTS",
+              "EDIT_DOCUMENTS"
             ]
           },
           "label": { "type": "string" },
@@ -6641,7 +7042,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             }
           }
@@ -7629,6 +8032,17 @@
           "flagged"
         ]
       },
+      "DocumentPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentResponse" }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
+      },
       "AssetLifecycleEventResponse": {
         "type": "object",
         "properties": {
@@ -7975,7 +8389,9 @@
           "canEditRoles": { "type": "boolean" },
           "canDeleteRoles": { "type": "boolean" },
           "canReassignRoles": { "type": "boolean" },
-          "canViewEstateInvitations": { "type": "boolean" }
+          "canViewEstateInvitations": { "type": "boolean" },
+          "canViewDocuments": { "type": "boolean" },
+          "canUploadDocuments": { "type": "boolean" }
         },
         "required": [
           "canCreateFloors",
@@ -7991,7 +8407,9 @@
           "canReassignRoles",
           "canRelocateFaultReports",
           "canUpdateWorkOrders",
+          "canUploadDocuments",
           "canViewAssets",
+          "canViewDocuments",
           "canViewEstateInvitations",
           "canViewEstateRoles",
           "canViewFaultReports",

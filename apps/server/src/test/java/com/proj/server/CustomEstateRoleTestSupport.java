@@ -55,7 +55,9 @@ abstract class CustomEstateRoleTestSupport {
             "CREATE_LOCATIONS",
             "EDIT_LOCATIONS",
             "CREATE_ROLES",
-            "EDIT_ROLES");
+            "EDIT_ROLES",
+            "VIEW_DOCUMENTS",
+            "EDIT_DOCUMENTS");
 
     @Autowired
     MockMvc mvc;

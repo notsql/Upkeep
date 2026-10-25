@@ -102,7 +102,7 @@ class CustomEstateRoleMigrationTests {
     }
 
     @Test
-    void seedsExactlyTheNineSupportedPermissionsAndLeavesCustomDefinitionsEmpty() throws Exception {
+    void seedsExactlyTheElevenSupportedPermissionsAndLeavesCustomDefinitionsEmpty() throws Exception {
         var actual = new ArrayList<String>();
         try (var statement = connection.createStatement();
                 var rows = statement.executeQuery("select code, label, description from \"Permission\"")) {
@@ -113,7 +113,7 @@ class CustomEstateRoleMigrationTests {
             }
         }
         assertEquals(new java.util.HashSet<>(CustomEstateRoleTestSupport.CODES), new java.util.HashSet<>(actual));
-        assertEquals(9, actual.size());
+        assertEquals(11, actual.size());
         assertEquals(0, count("select count(*) from \"EstateRoleDefinition\""));
         assertEquals(0, count("select count(*) from \"EstateRolePermission\""));
     }

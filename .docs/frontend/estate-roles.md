@@ -61,3 +61,10 @@ Invitation/member pickers, confirmation wording and version-aware acceptance are
 in [council-invitations.md](council-invitations.md). Independent location controls
 are in [locations.md](locations.md). The API's permission/deletion/rollout rules
 are in [../api/estate-roles.md](../api/estate-roles.md).
+
+The permission catalogue also offers View invoices and service reports
+(`VIEW_DOCUMENTS`) and Edit invoices and service reports (`EDIT_DOCUMENTS`).
+Edit requires explicitly selecting View. These permissions cover both document
+types independently of general management or fault-report access. Existing
+bounded delegation and explicit prerequisite validation apply. See
+[documents.md](documents.md) for the document screen and deletion authority.

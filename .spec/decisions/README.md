@@ -8,6 +8,8 @@ without knowing what it cost.
 
 Decisions are append-only. To reverse one, add a new record that supersedes it.
 
+- [0036 - Private estate documents and durable deletion](0036-private-estate-documents-and-durable-deletion.md)
+
 - [0028 - Estate role invitations and ownership](0028-estate-role-invitations.md)
 - [0029 - Fault report responder access](0029-fault-report-responder-access.md)
 - [0030 - Authenticated accounts create estates](0030-authenticated-accounts-create-estates.md)
