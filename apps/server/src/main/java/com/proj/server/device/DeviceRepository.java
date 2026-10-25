@@ -1,5 +1,6 @@
 package com.proj.server.device;
 
+import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Device.DEVICE;
 
 import com.proj.server.db.tables.records.DeviceRecord;
@@ -24,6 +25,24 @@ public class DeviceRepository {
                 .where(DEVICE.ASSETID.eq(assetId))
                 .orderBy(DEVICE.CREATEDAT.desc(), DEVICE.ID)
                 .fetch();
+    }
+
+    /** A device with the asset it reports for. */
+    public record WithAsset(DeviceRecord device, String assetReference, String assetName, boolean assetRetired) {}
+
+    /** Every device in the estate, retired assets included. Unordered: the caller sorts by status. */
+    public List<WithAsset> listForEstate(UUID estateId) {
+        return db.select(DEVICE.fields())
+                .select(ASSET.REFERENCE, ASSET.NAME, ASSET.DEACTIVATEDAT)
+                .from(DEVICE)
+                .join(ASSET)
+                .on(ASSET.ID.eq(DEVICE.ASSETID))
+                .where(DEVICE.ESTATEID.eq(estateId))
+                .fetch(row -> new WithAsset(
+                        row.into(DEVICE),
+                        row.get(ASSET.REFERENCE),
+                        row.get(ASSET.NAME),
+                        row.get(ASSET.DEACTIVATEDAT) != null));
     }
 
     /** Across every estate: identifiers are globally unique (decision 0016). */

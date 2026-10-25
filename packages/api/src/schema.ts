@@ -491,6 +491,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/devices": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateDevices"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}": {
     parameters: {
       query?: never;
@@ -1795,6 +1811,11 @@ export interface components {
        */
       lastSeenAt?: string | null;
       /**
+       * @description Derived from last-seen on every read (decision 0027)
+       * @enum {string}
+       */
+      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE";
+      /**
        * Format: date-time
        * @description When the device's current API key was issued. Null if it has none.
        */
@@ -2394,6 +2415,43 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
+    };
+    EstateDeviceResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      assetRetired: boolean;
+      /** Format: uuid */
+      locationId: string;
+      identifier: string;
+      model: string;
+      metrics: components["schemas"]["DeviceMetricResponse"][];
+      /** Format: int32 */
+      reportingIntervalSeconds: number;
+      /**
+       * Format: date-time
+       * @description When the device last sent a valid reading. Null until its first.
+       */
+      lastSeenAt?: string | null;
+      /**
+       * @description Derived from last-seen on every read (decision 0027)
+       * @enum {string}
+       */
+      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE";
+      /**
+       * Format: date-time
+       * @description When the device's current API key was issued. Null if it has none.
+       */
+      credentialIssuedAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
     };
   };
 }
@@ -5785,6 +5843,55 @@ export interface operations {
       };
     };
   };
+  listEstateDevices: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The estate's devices: Offline, then Awaiting first reading, then Online, the longest silent first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateDeviceResponse"][];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found, or not managed by the caller */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listEstateFailureRisk: {
     parameters: {
       query?: never;
@@ -7608,7 +7715,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive */
+      /** @description A different value is already stored for this metric and time, or the estate is inactive */
       409: {
         headers: {
           [name: string]: unknown;

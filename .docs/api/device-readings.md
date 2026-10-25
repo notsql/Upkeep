@@ -13,7 +13,7 @@ Decisions: 0016 (metric catalogue), 0025 (device keys), 0028 (duplicates and rou
 - 200: An identical reading was already stored; nothing changed, and the stored reading is returned - ReadingResponse
 - 400: Malformed reading; `message` names the field and the problem - EstateError
 - 401: Missing, malformed, unknown or replaced device key - EstateError (`A valid device key is required.`)
-- 409: A different value is already stored for this metric and time, or the asset is retired, or the estate is inactive - EstateError
+- 409: A different value is already stored for this metric and time, or the estate is inactive - EstateError
 
 ## CreateReadingRequest
 
@@ -57,7 +57,7 @@ No other fields are accepted.
 8. Unit mismatch, compared exactly - 400 `unit for TEMPERATURE must be °C; got C.`
 9. Unparseable timestamp or no offset - 400 `measuredAt must be an ISO-8601 timestamp with a UTC offset, such as 2026-10-17T14:30:00+08:00.`
 10. More than 5 minutes ahead - 400 `measuredAt is more than 5 minutes after the server's time. Check the device's clock.`
-11. Retired asset - 409 `This asset is retired. Readings are not accepted.`; inactive estate - 409 `This estate is inactive. Readings are not accepted.` A deactivated location does not block readings.
+11. Inactive estate - 409 `This estate is inactive. Readings are not accepted.` A retired asset does not block readings (ID-44: a device left switched on stays visible as Online), and neither does a deactivated location. Flatline review, failure risk and the dashboard already exclude retired assets.
 
 Values are never judged for plausibility: 150 °C on a pump is stored.
 
@@ -72,7 +72,7 @@ Values are never judged for plausibility: 150 °C on a pump is stored.
 
 ## Last seen
 
-A 201 or 200 sets `Device.lastSeenAt` to the server's receipt time (never `measuredAt`), and never moves it backwards. 400, 401 and 409 leave it unchanged. It is shown as `lastSeenAt` on `DeviceResponse`. `Device.updatedAt` is not touched.
+A 201 or 200 sets `Device.lastSeenAt` to the server's receipt time (never `measuredAt`), and never moves it backwards. 400, 401 and 409 leave it unchanged. It is shown as `lastSeenAt` on `DeviceResponse`, which derives `status` from it ([device-status.md](device-status.md)). `Device.updatedAt` is not touched.
 
 ## Storage
 
