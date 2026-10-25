@@ -11,6 +11,7 @@ import com.proj.server.db.tables.Asset.AssetPath;
 import com.proj.server.db.tables.Assetassessment.AssetassessmentPath;
 import com.proj.server.db.tables.Assetevent.AsseteventPath;
 import com.proj.server.db.tables.Device.DevicePath;
+import com.proj.server.db.tables.Document.DocumentPath;
 import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
 import com.proj.server.db.tables.Estateroledefinition.EstateroledefinitionPath;
 import com.proj.server.db.tables.Estateuser.EstateuserPath;
@@ -247,6 +248,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _device = new DevicePath(this, null, Keys.DEVICE__DEVICE_ESTATEID_FKEY.getInverseKey());
 
         return _device;
+    }
+
+    private transient DocumentPath _document;
+
+    /**
+     * Get the implicit to-many join path to the <code>public.Document</code>
+     * table
+     */
+    public DocumentPath document() {
+        if (_document == null)
+            _document = new DocumentPath(this, null, Keys.DOCUMENT__DOCUMENT_ESTATEID_FKEY.getInverseKey());
+
+        return _document;
     }
 
     private transient EstateinvitationPath _estateinvitation;

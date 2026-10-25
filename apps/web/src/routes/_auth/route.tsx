@@ -59,6 +59,10 @@ export const Route = createFileRoute("/_auth")({
       );
       return { user };
     }
+    if (path.startsWith("/estates/") && path.split("/")[3] === "documents") {
+      guardDocuments(path, access);
+      return { user };
+    }
     if (!access.canEnterWorkspace) {
       throw redirect({ href: "/reports/new" });
     }
@@ -122,6 +126,18 @@ function guardWorkOrders(
     throw notFound();
   }
   if (path.split("/")[4] === "new" && !estate.canCreateWorkOrders) {
+    throw notFound();
+  }
+}
+
+function guardDocuments(
+  path: string,
+  access: components["schemas"]["AppAccessResponse"]
+) {
+  const estate = access.estates.find(
+    (item) => item.estateId === path.split("/")[2]
+  );
+  if (!estate?.canViewDocuments) {
     throw notFound();
   }
 }

@@ -13,6 +13,7 @@ import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
+import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateroledefinition;
@@ -95,6 +96,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.DeviceReading</code>.
      */
     public final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
+
+    /**
+     * The table <code>public.Document</code>.
+     */
+    public final Document DOCUMENT = Document.DOCUMENT;
 
     /**
      * The table <code>public.Estate</code>.
@@ -196,6 +202,7 @@ public class Public extends SchemaImpl {
             Device.DEVICE,
             Deviceflatlinepause.DEVICEFLATLINEPAUSE,
             Devicereading.DEVICEREADING,
+            Document.DOCUMENT,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
             Estateroledefinition.ESTATEROLEDEFINITION,

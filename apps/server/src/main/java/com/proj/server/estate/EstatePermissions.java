@@ -118,7 +118,10 @@ public final class EstatePermissions {
             boolean manager,
             Set<EstatePermissionCode> permissions) {
         public boolean has(EstatePermissionCode permission) {
-            return manager || permissions.contains(permission);
+            boolean presetDocuments = (permission == EstatePermissionCode.VIEW_DOCUMENTS
+                            || permission == EstatePermissionCode.EDIT_DOCUMENTS)
+                    && ("COUNCIL".equals(role) || "CREW".equals(role));
+            return manager || presetDocuments || permissions.contains(permission);
         }
 
         public boolean active() {

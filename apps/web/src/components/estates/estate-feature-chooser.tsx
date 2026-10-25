@@ -22,12 +22,24 @@ export function EstateFeatureChooser({
   onOpenChange: (open: boolean) => void;
 }) {
   const access = useAppAccess();
-  const report = feature === "reports";
-  const label = report ? "fault reports" : "work orders";
-  const destination = report
-    ? "/estates/$estateId/reports"
-    : "/estates/$estateId/work-orders";
-  const capability = report ? "canViewFaultReports" : "canViewWorkOrders";
+  const destinations = {
+    reports: {
+      label: "fault reports",
+      path: "/estates/$estateId/reports",
+      capability: "canViewFaultReports",
+    },
+    documents: {
+      label: "documents",
+      path: "/estates/$estateId/documents",
+      capability: "canViewDocuments",
+    },
+    "work-orders": {
+      label: "work orders",
+      path: "/estates/$estateId/work-orders",
+      capability: "canViewWorkOrders",
+    },
+  } as const;
+  const { label, path: destination, capability } = destinations[feature];
   const choices = access.isError
     ? []
     : (access.data?.estates.filter((estate) => estate[capability]) ?? []);

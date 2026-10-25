@@ -1830,6 +1830,205 @@
         }
       }
     },
+    "/estates/{estateId}/documents": {
+      "get": {
+        "tags": ["document-controller"],
+        "operationId": "listDocuments",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "filename",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "maxLength": 255 }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Committed documents, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPageResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["document-controller"],
+        "operationId": "uploadDocument",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": { "$ref": "#/components/schemas/UploadDocumentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Document stored and indexed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/DocumentResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Estate inactive",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "413": {
+            "description": "File exceeds 5,000,000 bytes or multipart request exceeds servlet limits",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "415": {
+            "description": "Use matching PDF, JPEG or PNG extension, media type and signature",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}": {
       "post": {
         "tags": ["flatline-controller"],
@@ -5175,19 +5374,33 @@
         }
       }
     },
-    "/estates/{estateId}/devices": {
+    "/estates/{estateId}/documents/{documentId}/content": {
       "get": {
-        "tags": ["estate-device-controller"],
-        "operationId": "listEstateDevices",
+        "tags": ["document-controller"],
+        "operationId": "downloadDocument",
         "parameters": [
           {
             "name": "estateId",
             "in": "path",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
         "responses": {
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "401": {
             "description": "Sign in required",
             "content": {
@@ -5197,7 +5410,7 @@
             }
           },
           "403": {
-            "description": "Resident membership does not grant management access",
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -5205,7 +5418,23 @@
             }
           },
           "404": {
-            "description": "Estate not found, or not managed by the caller",
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -5213,15 +5442,16 @@
             }
           },
           "200": {
-            "description": "The estate's devices: Offline, then Awaiting first reading, then Online, the longest silent first",
+            "description": "Private attachment",
             "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateDeviceResponse"
-                  }
-                }
+              "application/pdf": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/jpeg": {
+                "schema": { "type": "string", "format": "binary" }
+              },
+              "image/png": {
+                "schema": { "type": "string", "format": "binary" }
               }
             }
           }
@@ -5917,6 +6147,79 @@
         }
       }
     },
+    "/estates/{estateId}/documents/{documentId}": {
+      "delete": {
+        "tags": ["document-controller"],
+        "operationId": "deleteDocument",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document request, file, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": {
+            "description": "Platform removal committed; storage cleanup may be retried"
+          }
+        }
+      }
+    },
     "/estates/{estateId}/council-invitations/{invitationId}": {
       "delete": {
         "tags": ["council-controller"],
@@ -5993,6 +6296,59 @@
             }
           },
           "204": { "description": "Invitation cancelled for this estate" }
+        }
+      }
+    },
+    "/estates/{estateId}/devices": {
+      "get": {
+        "tags": ["estate-device-controller"],
+        "operationId": "listEstateDevices",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found, or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The estate's devices: Offline, then Awaiting first reading, then Online, the longest silent first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateDeviceResponse"
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
@@ -6148,7 +6504,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             },
             "minItems": 1
@@ -6181,7 +6539,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             }
           },
@@ -6478,7 +6838,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             },
             "minItems": 1
@@ -6562,6 +6924,43 @@
           }
         },
         "required": ["created", "skipped"]
+      },
+      "UploadDocumentRequest": {
+        "type": "object",
+        "properties": {
+          "documentType": {
+            "type": "string",
+            "enum": ["INVOICE", "SERVICE_REPORT"]
+          },
+          "file": { "type": "string", "format": "binary" }
+        },
+        "required": ["documentType", "file"]
+      },
+      "DocumentResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "documentType": {
+            "type": "string",
+            "enum": ["INVOICE", "SERVICE_REPORT"]
+          },
+          "originalFilename": { "type": "string" },
+          "contentType": { "type": "string" },
+          "sizeBytes": { "type": "integer", "format": "int32" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "canDelete": { "type": "boolean" }
+        },
+        "required": [
+          "canDelete",
+          "contentType",
+          "createdAt",
+          "documentType",
+          "estateId",
+          "id",
+          "originalFilename",
+          "sizeBytes"
+        ]
       },
       "CreateFlatlinePauseRequest": {
         "type": "object",
@@ -6676,7 +7075,9 @@
               "CREATE_LOCATIONS",
               "EDIT_LOCATIONS",
               "CREATE_ROLES",
-              "EDIT_ROLES"
+              "EDIT_ROLES",
+              "VIEW_DOCUMENTS",
+              "EDIT_DOCUMENTS"
             ]
           },
           "label": { "type": "string" },
@@ -6694,7 +7095,9 @@
                 "CREATE_LOCATIONS",
                 "EDIT_LOCATIONS",
                 "CREATE_ROLES",
-                "EDIT_ROLES"
+                "EDIT_ROLES",
+                "VIEW_DOCUMENTS",
+                "EDIT_DOCUMENTS"
               ]
             }
           }
@@ -7688,57 +8091,16 @@
           "flagged"
         ]
       },
-      "EstateDeviceResponse": {
+      "DocumentPageResponse": {
         "type": "object",
         "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "estateId": { "type": "string", "format": "uuid" },
-          "assetId": { "type": "string", "format": "uuid" },
-          "assetReference": { "type": "string" },
-          "assetName": { "type": "string" },
-          "assetRetired": { "type": "boolean" },
-          "locationId": { "type": "string", "format": "uuid" },
-          "identifier": { "type": "string" },
-          "model": { "type": "string" },
-          "metrics": {
+          "items": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/DeviceMetricResponse" }
+            "items": { "$ref": "#/components/schemas/DocumentResponse" }
           },
-          "reportingIntervalSeconds": { "type": "integer", "format": "int32" },
-          "lastSeenAt": {
-            "type": ["string", "null"],
-            "format": "date-time",
-            "description": "When the device last sent a valid reading. Null until its first."
-          },
-          "status": {
-            "type": "string",
-            "description": "Derived from last-seen on every read (decision 0027)",
-            "enum": ["AWAITING_FIRST_READING", "ONLINE", "OFFLINE"]
-          },
-          "credentialIssuedAt": {
-            "type": ["string", "null"],
-            "format": "date-time",
-            "description": "When the device's current API key was issued. Null if it has none."
-          },
-          "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "nextCursor": { "type": ["string", "null"] }
         },
-        "required": [
-          "assetId",
-          "assetName",
-          "assetReference",
-          "assetRetired",
-          "createdAt",
-          "estateId",
-          "id",
-          "identifier",
-          "locationId",
-          "metrics",
-          "model",
-          "reportingIntervalSeconds",
-          "status",
-          "updatedAt"
-        ]
+        "required": ["items", "nextCursor"]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",
@@ -8086,7 +8448,9 @@
           "canEditRoles": { "type": "boolean" },
           "canDeleteRoles": { "type": "boolean" },
           "canReassignRoles": { "type": "boolean" },
-          "canViewEstateInvitations": { "type": "boolean" }
+          "canViewEstateInvitations": { "type": "boolean" },
+          "canViewDocuments": { "type": "boolean" },
+          "canUploadDocuments": { "type": "boolean" }
         },
         "required": [
           "canCreateFloors",
@@ -8102,7 +8466,9 @@
           "canReassignRoles",
           "canRelocateFaultReports",
           "canUpdateWorkOrders",
+          "canUploadDocuments",
           "canViewAssets",
+          "canViewDocuments",
           "canViewEstateInvitations",
           "canViewEstateRoles",
           "canViewFaultReports",
@@ -8113,6 +8479,58 @@
           "estateId",
           "estateName",
           "role"
+        ]
+      },
+      "EstateDeviceResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "estateId": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "assetRetired": { "type": "boolean" },
+          "locationId": { "type": "string", "format": "uuid" },
+          "identifier": { "type": "string" },
+          "model": { "type": "string" },
+          "metrics": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DeviceMetricResponse" }
+          },
+          "reportingIntervalSeconds": { "type": "integer", "format": "int32" },
+          "lastSeenAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device last sent a valid reading. Null until its first."
+          },
+          "status": {
+            "type": "string",
+            "description": "Derived from last-seen on every read (decision 0027)",
+            "enum": ["AWAITING_FIRST_READING", "ONLINE", "OFFLINE"]
+          },
+          "credentialIssuedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device's current API key was issued. Null if it has none."
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "assetRetired",
+          "createdAt",
+          "estateId",
+          "id",
+          "identifier",
+          "locationId",
+          "metrics",
+          "model",
+          "reportingIntervalSeconds",
+          "status",
+          "updatedAt"
         ]
       }
     },

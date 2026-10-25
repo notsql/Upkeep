@@ -523,6 +523,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listDocuments"];
+    put?: never;
+    post: operations["uploadDocument"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/documents/{documentId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations["deleteDocument"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/documents/{documentId}/content": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadDocument"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/failure-risk": {
     parameters: {
       query?: never;
@@ -1240,6 +1288,8 @@ export interface components {
         | "EDIT_LOCATIONS"
         | "CREATE_ROLES"
         | "EDIT_ROLES"
+        | "VIEW_DOCUMENTS"
+        | "EDIT_DOCUMENTS"
       )[];
       /** Format: int32 */
       expectedVersion: number;
@@ -1261,6 +1311,8 @@ export interface components {
         | "EDIT_LOCATIONS"
         | "CREATE_ROLES"
         | "EDIT_ROLES"
+        | "VIEW_DOCUMENTS"
+        | "EDIT_DOCUMENTS"
       )[];
       /** Format: date-time */
       createdAt: string;
@@ -1417,6 +1469,8 @@ export interface components {
         | "EDIT_LOCATIONS"
         | "CREATE_ROLES"
         | "EDIT_ROLES"
+        | "VIEW_DOCUMENTS"
+        | "EDIT_DOCUMENTS"
       )[];
     };
     TransferOwnershipRequest: {
@@ -1468,6 +1522,27 @@ export interface components {
       created: components["schemas"]["LocationResponse"][];
       /** @description Names of floors the block already had, highest first */
       skipped: string[];
+    };
+    UploadDocumentRequest: {
+      /** @enum {string} */
+      documentType: "INVOICE" | "SERVICE_REPORT";
+      /** Format: binary */
+      file: string;
+    };
+    DocumentResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** @enum {string} */
+      documentType: "INVOICE" | "SERVICE_REPORT";
+      originalFilename: string;
+      contentType: string;
+      /** Format: int32 */
+      sizeBytes: number;
+      /** Format: date-time */
+      createdAt: string;
+      canDelete: boolean;
     };
     CreateFlatlinePauseRequest: {
       /** Format: int32 */
@@ -1536,7 +1611,9 @@ export interface components {
         | "CREATE_LOCATIONS"
         | "EDIT_LOCATIONS"
         | "CREATE_ROLES"
-        | "EDIT_ROLES";
+        | "EDIT_ROLES"
+        | "VIEW_DOCUMENTS"
+        | "EDIT_DOCUMENTS";
       label: string;
       description: string;
       requires: (
@@ -1549,6 +1626,8 @@ export interface components {
         | "EDIT_LOCATIONS"
         | "CREATE_ROLES"
         | "EDIT_ROLES"
+        | "VIEW_DOCUMENTS"
+        | "EDIT_DOCUMENTS"
       )[];
     };
     CreateAssetRequest: {
@@ -2114,42 +2193,9 @@ export interface components {
       flagged: boolean;
       flagReasons: ("CONDITION" | "FAILURE_RISK" | "END_OF_LIFE")[];
     };
-    EstateDeviceResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      /** Format: uuid */
-      assetId: string;
-      assetReference: string;
-      assetName: string;
-      assetRetired: boolean;
-      /** Format: uuid */
-      locationId: string;
-      identifier: string;
-      model: string;
-      metrics: components["schemas"]["DeviceMetricResponse"][];
-      /** Format: int32 */
-      reportingIntervalSeconds: number;
-      /**
-       * Format: date-time
-       * @description When the device last sent a valid reading. Null until its first.
-       */
-      lastSeenAt?: string | null;
-      /**
-       * @description Derived from last-seen on every read (decision 0027)
-       * @enum {string}
-       */
-      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE";
-      /**
-       * Format: date-time
-       * @description When the device's current API key was issued. Null if it has none.
-       */
-      credentialIssuedAt?: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
+    DocumentPageResponse: {
+      items: components["schemas"]["DocumentResponse"][];
+      nextCursor: string | null;
     };
     AssetLifecycleEventResponse: {
       /** Format: uuid */
@@ -2367,6 +2413,45 @@ export interface components {
       canDeleteRoles: boolean;
       canReassignRoles: boolean;
       canViewEstateInvitations: boolean;
+      canViewDocuments: boolean;
+      canUploadDocuments: boolean;
+    };
+    EstateDeviceResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      assetRetired: boolean;
+      /** Format: uuid */
+      locationId: string;
+      identifier: string;
+      model: string;
+      metrics: components["schemas"]["DeviceMetricResponse"][];
+      /** Format: int32 */
+      reportingIntervalSeconds: number;
+      /**
+       * Format: date-time
+       * @description When the device last sent a valid reading. Null until its first.
+       */
+      lastSeenAt?: string | null;
+      /**
+       * @description Derived from last-seen on every read (decision 0027)
+       * @enum {string}
+       */
+      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE";
+      /**
+       * Format: date-time
+       * @description When the device's current API key was issued. Null if it has none.
+       */
+      credentialIssuedAt?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
     };
   };
 }
@@ -3836,6 +3921,160 @@ export interface operations {
         };
       };
       /** @description Storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  deleteDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Platform removal committed; storage cleanup may be retried */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid document request, file, search, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate document permission required; deletion also requires uploader or Manager */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or document unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document metadata operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  downloadDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Private attachment */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/pdf": string;
+          "image/jpeg": string;
+          "image/png": string;
+        };
+      };
+      /** @description Invalid document request, file, search, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate document permission required; deletion also requires uploader or Manager */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or document unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document metadata operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document storage unavailable */
       503: {
         headers: {
           [name: string]: unknown;
@@ -5515,6 +5754,86 @@ export interface operations {
       };
       /** @description Duplicate identifier, or an inactive estate, asset or location */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listDocuments: {
+    parameters: {
+      query?: {
+        filename?: string;
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Committed documents, newest first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentPageResponse"];
+        };
+      };
+      /** @description Invalid document request, file, search, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate document permission required; deletion also requires uploader or Manager */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or document unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document metadata operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document storage unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -7990,6 +8309,113 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["AdminError"];
+        };
+      };
+    };
+  };
+  uploadDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "multipart/form-data": components["schemas"]["UploadDocumentRequest"];
+      };
+    };
+    responses: {
+      /** @description Document stored and indexed */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentResponse"];
+        };
+      };
+      /** @description Invalid document request, file, search, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate document permission required; deletion also requires uploader or Manager */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or document unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate inactive */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File exceeds 5,000,000 bytes or multipart request exceeds servlet limits */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Use matching PDF, JPEG or PNG extension, media type and signature */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document metadata operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
         };
       };
     };

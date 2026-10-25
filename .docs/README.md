@@ -7,6 +7,8 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
+- [Invoices and service reports](api/documents.md): private document upload, search, download, deletion and cleanup.
+
 - [Admin role updates](api/admin-roles.md): retired global WorkOS organization-role contracts; use estate-local roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
 - [Estates](api/estates.md): creation by any authenticated account, estate details, owner/assigned-Manager/custom-permission editing and owner-only deactivation.
@@ -36,6 +38,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 
 | File | Covers |
 | --- | --- |
+| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, file validation, upload/download/deletion, filename search and capability-based navigation |
 | [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
 | [frontend/shell.md](frontend/shell.md) | Root layout, providers, header nav, home page (`/`), and conventions shared by every feature (API client, session gate, query-key prefix, errors) |
 | [frontend/dashboard.md](frontend/dashboard.md) | Signed-in Home portfolio totals, condition breakdown, attention links and compact invitations |

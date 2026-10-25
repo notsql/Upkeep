@@ -26,6 +26,7 @@ model Estate {
   assessments   AssetAssessment[]
   invitations   EstateInvitation[]
   issueReports  IssueReport[]
+  documents     Document[]
   events        AssetEvent[]
   flatlinePolicies FlatlinePolicy[]
   workOrders    WorkOrder[]
@@ -33,6 +34,26 @@ model Estate {
   roleDefinitions EstateRoleDefinition[]
 
   @@index([ownerUserId])
+}
+
+model Document {
+  id               String    @id @default(uuid()) @db.Uuid
+  estateId         String    @db.Uuid
+  documentType     String    @db.VarChar(20)
+  originalFilename String    @db.VarChar(255)
+  contentType      String    @db.VarChar(50)
+  sizeBytes        Int
+  storageKey       String    @unique @db.VarChar(500)
+  uploadedByUserId String    @db.VarChar(255)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt        DateTime? @db.Timestamptz(6)
+  deletedByUserId  String?   @db.VarChar(255)
+  storageDeletedAt DateTime? @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, createdAt, id])
+  @@index([deletedAt, storageDeletedAt])
 }
 
 // A block, level or common area inside an estate. Levels sit under blocks;

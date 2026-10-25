@@ -10,7 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { Building2, Check, ChevronsUpDown } from "lucide-react";
 import { useAppAccess } from "@/lib/access";
 
-export type EstateFeature = "work-orders" | "reports";
+export type EstateFeature = "work-orders" | "reports" | "documents";
 type EstateContextFeature = EstateFeature | "management" | "resident";
 const roleLabels: Record<string, string> = {
   MANAGER: "Manager",
@@ -36,6 +36,9 @@ function estateDestination(
   if (estate.role === "RESIDENT") {
     return "/reports/new";
   }
+  if (feature === "documents" && estate.canViewDocuments) {
+    return "/estates/$estateId/documents";
+  }
   if (feature === "reports" && estate.canViewFaultReports) {
     return "/estates/$estateId/reports";
   }
@@ -50,6 +53,9 @@ function estateDestination(
   }
   if (estate.canViewFaultReports) {
     return "/estates/$estateId/reports";
+  }
+  if (estate.canViewDocuments) {
+    return "/estates/$estateId/documents";
   }
   if (estate.canViewEstateRoles) {
     return "/estates/$estateId/roles";

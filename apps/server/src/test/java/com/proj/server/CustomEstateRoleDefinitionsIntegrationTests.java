@@ -59,7 +59,7 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
     }
 
     @Test
-    void catalogueContainsTheNineSupportedCodesWithExplicitPrerequisites() throws Exception {
+    void catalogueContainsTheElevenSupportedCodesWithExplicitPrerequisites() throws Exception {
         mvc.perform(as("owner", get(path() + "/role-permissions")))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
@@ -69,6 +69,7 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
                 .andExpect(jsonPath("$[?(@.code == 'EDIT_ESTATE')].requires[0]", contains("VIEW_ESTATE")))
                 .andExpect(jsonPath("$[?(@.code == 'CREATE_LOCATIONS')].requires[0]", contains("VIEW_ESTATE")))
                 .andExpect(jsonPath("$[?(@.code == 'EDIT_LOCATIONS')].requires[0]", contains("VIEW_ESTATE")))
+                .andExpect(jsonPath("$[?(@.code == 'EDIT_DOCUMENTS')].requires[0]", contains("VIEW_DOCUMENTS")))
                 .andExpect(jsonPath(
                         "$[?(@.code == 'RELOCATE_FAULT_REPORTS')].requires[0]", contains("VIEW_FAULT_REPORTS")));
     }

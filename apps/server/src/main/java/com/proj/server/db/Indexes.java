@@ -12,6 +12,7 @@ import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
+import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateroledefinition;
@@ -64,6 +65,9 @@ public class Indexes {
     public static final Index DEVICEFLATLINEPAUSE_ESTATEID_IDX = Internal.createIndex(DSL.name("DeviceFlatlinePause_estateId_idx"), Deviceflatlinepause.DEVICEFLATLINEPAUSE, new OrderField[] { Deviceflatlinepause.DEVICEFLATLINEPAUSE.ESTATEID }, false);
     public static final Index DEVICEREADING_ASSETID_METRIC_MEASUREDAT_IDX = Internal.createIndex(DSL.name("DeviceReading_assetId_metric_measuredAt_idx"), Devicereading.DEVICEREADING, new OrderField[] { Devicereading.DEVICEREADING.ASSETID, Devicereading.DEVICEREADING.METRIC, Devicereading.DEVICEREADING.MEASUREDAT }, false);
     public static final Index DEVICEREADING_DEVICEID_METRIC_MEASUREDAT_KEY = Internal.createIndex(DSL.name("DeviceReading_deviceId_metric_measuredAt_key"), Devicereading.DEVICEREADING, new OrderField[] { Devicereading.DEVICEREADING.DEVICEID, Devicereading.DEVICEREADING.METRIC, Devicereading.DEVICEREADING.MEASUREDAT }, true);
+    public static final Index DOCUMENT_DELETEDAT_STORAGEDELETEDAT_IDX = Internal.createIndex(DSL.name("Document_deletedAt_storageDeletedAt_idx"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.DELETEDAT, Document.DOCUMENT.STORAGEDELETEDAT }, false);
+    public static final Index DOCUMENT_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("Document_estateId_createdAt_id_idx"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.ESTATEID, Document.DOCUMENT.CREATEDAT, Document.DOCUMENT.ID }, false);
+    public static final Index DOCUMENT_STORAGEKEY_KEY = Internal.createIndex(DSL.name("Document_storageKey_key"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.STORAGEKEY }, true);
     public static final Index ESTATE_CODE_KEY = Internal.createIndex(DSL.name("Estate_code_key"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.CODE }, true);
     public static final Index ESTATE_OWNERUSERID_IDX = Internal.createIndex(DSL.name("Estate_ownerUserId_idx"), Estate.ESTATE, new OrderField[] { Estate.ESTATE.OWNERUSERID }, false);
     public static final Index ESTATEINVITATION_EMAIL_STATUS_IDX = Internal.createIndex(DSL.name("EstateInvitation_email_status_idx"), Estateinvitation.ESTATEINVITATION, new OrderField[] { Estateinvitation.ESTATEINVITATION.EMAIL, Estateinvitation.ESTATEINVITATION.STATUS }, false);
