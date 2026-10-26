@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { type AssetSort, assetSortOptions } from "@/lib/asset-sorting";
 import type { AssetFilters } from "@/lib/assets";
+import { useInspectionAccess } from "@/lib/inspections";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
+import { InspectionAssetList } from "./-components/inspection-asset-list";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -89,6 +91,13 @@ function AssetRegisterRoute() {
       navigate({ search: { ...filters, ...sort }, resetScroll: false }),
     [filters, navigate]
   );
+  const access = useInspectionAccess(estateId);
+  if (access.pending) {
+    return <p role="status">Loading access…</p>;
+  }
+  if (!access.canViewAssets) {
+    return <InspectionAssetList estateId={estateId} />;
+  }
   return (
     <AssetRegisterPage
       estateId={estateId}

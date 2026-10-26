@@ -126,7 +126,7 @@ export function WorkOrderListPage({
           { label: "Estates", to: "/estates" },
           {
             label: access.estateName ?? "Estate",
-            to: access.canViewManagement ? "/estates/$estateId" : undefined,
+            to: access.canViewEstateDetails ? "/estates/$estateId" : undefined,
             params: { estateId },
           },
           { label: "Work orders" },

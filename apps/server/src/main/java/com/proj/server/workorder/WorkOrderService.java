@@ -47,11 +47,14 @@ public class WorkOrderService {
         if (request.category() == WorkOrderCategory.SAFETY && request.priority() != WorkOrderPriority.URGENT)
             throw error(HttpStatus.BAD_REQUEST, "Safety work orders must be urgent.");
         boolean report = request.source() == WorkOrderSource.RESIDENT_REPORT;
-        if (report != (request.sourceReportId() != null) || report != (request.expectedSourceLocationId() != null))
+        boolean inspection = request.sourceInspectionId() != null;
+        if ((inspection && request.source() != WorkOrderSource.INSPECTION)
+                || report != (request.sourceReportId() != null)
+                || (report || inspection) != (request.expectedSourceLocationId() != null))
             throw error(
                     HttpStatus.BAD_REQUEST,
                     "Report sources require a report and its observed location; other sources cannot include them.");
-        boolean referenceRequired = request.source() == WorkOrderSource.INSPECTION
+        boolean referenceRequired = (request.source() == WorkOrderSource.INSPECTION && !inspection)
                 || request.source() == WorkOrderSource.MAINTENANCE_RECOMMENDATION;
         if (referenceRequired
                 && (request.sourceReference() == null
@@ -67,17 +70,35 @@ public class WorkOrderService {
                 throw error(HttpStatus.CONFLICT, "The report location changed. Reload the source before saving.");
         }
         requireActiveLocation(estateId, request.locationId());
+        if (inspection && request.assetId() == null)
+            throw error(HttpStatus.BAD_REQUEST, "A linked inspection requires its asset.");
         if (request.assetId() != null) {
             var asset = repository.asset(estateId, request.assetId());
             if (asset == null) throw error(HttpStatus.NOT_FOUND, "Asset not found.");
             if (asset.getDeactivatedat() != null || asset.getRetiredon() != null)
                 throw error(HttpStatus.CONFLICT, "This asset is inactive or retired.");
             requireActiveLocation(estateId, asset.getLocationid());
+            if (inspection && !asset.getLocationid().equals(request.expectedSourceLocationId()))
+                throw error(
+                        HttpStatus.CONFLICT,
+                        "The asset location changed. Reload the inspection source and review its current location.");
             if (!request.locationId().equals(asset.getLocationid()))
                 throw error(
-                        HttpStatus.BAD_REQUEST, "The work location must match the linked asset's registered location.");
+                        inspection ? HttpStatus.CONFLICT : HttpStatus.BAD_REQUEST,
+                        "The work location must match the linked asset's registered location.");
         }
-        var id = repository.create(estateId, estate.getCode(), user, request);
+        String reference = request.sourceReference();
+        if (inspection) {
+            var source = repository.inspection(estateId, request.sourceInspectionId());
+            if (source == null) throw error(HttpStatus.NOT_FOUND, "Inspection not found.");
+            if (!"FAIL".equals(source.getOutcome()) || !source.getAssetid().equals(request.assetId()))
+                throw error(HttpStatus.BAD_REQUEST, "Choose a failed inspection for the linked asset.");
+            String existing = repository.inspectionOrder(estateId, source.getId());
+            if (existing != null)
+                throw error(HttpStatus.CONFLICT, "Work order " + existing + " already exists for this inspection.");
+            reference = "Inspection " + source.getInspectedon() + " (" + source.getId() + ")";
+        }
+        var id = repository.create(estateId, estate.getCode(), user, request, reference);
         return repository.detail(estateId, id);
     }
 

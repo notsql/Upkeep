@@ -1,4 +1,8 @@
-import { ownerEstateAccess, unassignedAccess } from "@tests/fixtures/access";
+import {
+  crewEstateAccess,
+  ownerEstateAccess,
+  unassignedAccess,
+} from "@tests/fixtures/access";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,6 +39,43 @@ describe("estate details page", () => {
     vi.mocked(useAppAccess).mockReturnValue({
       data: unassignedAccess,
     } as unknown as ReturnType<typeof useAppAccess>);
+  });
+
+  it("shows Crew an Assets entry point without estate editing or administrative queries", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: {
+        ...estate,
+        owned: false,
+        canInviteMembers: false,
+        canManageInvitationPermissions: false,
+      },
+      response: new Response(),
+    });
+    vi.mocked(useAppAccess).mockReturnValue({
+      data: {
+        ...unassignedAccess,
+        estates: [{ ...crewEstateAccess, estateId: estate.id }],
+      },
+    } as unknown as ReturnType<typeof useAppAccess>);
+    renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
+    await screen.findByRole("heading", { name: estate.name });
+    screen.getByRole("link", { name: "View assets" });
+    expect(screen.queryByRole("link", { name: "Edit estate" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Estate members" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Deactivate estate" })
+    ).toBeNull();
+    expect(
+      vi
+        .mocked(api.GET)
+        .mock.calls.some((call) =>
+          [
+            "/dashboard/summary",
+            "/estates/{estateId}/members",
+            "/estates/{estateId}/roles",
+          ].includes(call[0])
+        )
+    ).toBe(false);
   });
 
   it.each([undefined, "2026-10-01T00:00:00Z"])(

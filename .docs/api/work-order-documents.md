@@ -15,6 +15,10 @@ edit/uploader/delete rights alone grant no association-write authority. Resident
 override and live estate membership rules apply. Asset-register access is not
 required. Reads remain available in inactive estates.
 
+Association writes enforce Owner/Manager authority separately from work-order
+creation access. Crew can read work orders and permitted attachments,
+but linking, changing or removing a document association returns 403.
+
 Responses use `Cache-Control: private, no-store`. Errors use
 `EstateError { message: string }`: 400 invalid target/version/reason/cursor/limit;
 401 missing identity; 403 missing document or work-order authority; 404 inaccessible

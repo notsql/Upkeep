@@ -7,8 +7,8 @@ specific estate, never provider claims or membership in another estate.
 
 | Method | Path | Request | Success | Authority |
 | --- | --- | --- | --- | --- |
-| GET | `/estates` | Optional `status: ACTIVE \| INACTIVE \| ALL`, default ACTIVE | 200 EstateResponse[] | Lists estates owned or assigned as MANAGER/COUNCIL/legacy MEMBER or CUSTOM with VIEW_ESTATE; excludes RESIDENT/CREW |
-| GET | `/estates/{id}` | `id: UUID` | 200 EstateResponse | Owner or assigned MANAGER/COUNCIL/legacy MEMBER or custom VIEW_ESTATE |
+| GET | `/estates` | Optional `status: ACTIVE \| INACTIVE \| ALL`, default ACTIVE | 200 EstateResponse[] | Lists estates owned or assigned as MANAGER/COUNCIL/CREW/legacy MEMBER or CUSTOM with VIEW_ESTATE; excludes RESIDENT |
+| GET | `/estates/{id}` | `id: UUID` | 200 EstateResponse | Owner or assigned MANAGER/COUNCIL/CREW/legacy MEMBER or custom VIEW_ESTATE |
 | POST | `/estates` | EstateRequest | 201 EstateResponse; Location `/estates/{id}` | Any authenticated subject; creation atomically records ownership and MANAGER membership |
 | PATCH | `/estates/{id}` | EstateRequest | 200 EstateResponse | Current owner, assigned MANAGER or custom EDIT_ESTATE in this estate |
 | POST | `/estates/{id}/deactivate` | DeactivateEstateRequest | 200 EstateResponse | Current owner only |
@@ -37,11 +37,11 @@ Any signed-in account can create an estate, including unassigned, Resident, Crew
 Council and legacy Member accounts. The JWT subject becomes owner and MANAGER in
 that new estate. The request cannot choose another owner or role. This grants no
 authority over existing estates and preserves other memberships and invitations.
-`GET /estates` can return an empty list to Resident/Crew/unassigned accounts.
+`GET /estates` can return an empty list to Resident/unassigned accounts; Crew see their assigned estates.
 No database migration or global Manager grant is involved.
 
 Council, legacy MEMBER, Crew, Resident and unassigned users cannot edit details.
-Council/Member receive 403; inaccessible estates (including Crew-only and
+Council/Member receive 403; Crew receive 403 on estate mutation; inaccessible estates (including
 unassigned callers) return 404. Resident membership explicitly denies management
 access with 403. A Manager assigned only to a different estate receives 404.
 
@@ -83,3 +83,11 @@ member administration, assets, ownership transfer or estate deactivation. Querie
 and writes use the same typed permission predicates; same-token reassignment or
 definition editing affects the next request. Invitation response flags include
 custom INVITE_MEMBERS for sending; legacy member administration remains Manager-only.
+
+## Inspection readers
+
+Current Crew can list/read assigned estates through `canViewEstateDetails`,
+without edit/deactivate/ownership/member administration authority. Inactive
+estates remain readable. Their limited asset inspection context and independent
+recording/work-order creation capabilities are described in
+[inspections](inspections.md).

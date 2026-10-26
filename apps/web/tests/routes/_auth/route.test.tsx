@@ -73,6 +73,13 @@ function routerFor(path: string) {
     "/estates/new",
     "/estates/$estateId",
     "/estates/$estateId/assets",
+    "/estates/$estateId/assets/new",
+    "/estates/$estateId/assets/$assetId",
+    "/estates/$estateId/assets/$assetId/edit",
+    "/estates/$estateId/assets/$assetId/readings",
+    "/estates/$estateId/assets/$assetId/inspections/new",
+    "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
+    "/estates/$estateId/edit",
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
@@ -157,7 +164,7 @@ it.each(["/estates/oak/work-orders", "/estates/oak/work-orders/saved"])(
     await screen.findByRole("heading", { name: "Management page" });
   }
 );
-it("rejects Crew at a direct creation URL", async () => {
+it("blocks Crew direct work-order creation before the child loader starts", async () => {
   get.mockResolvedValue({
     data: {
       ...unassignedAccess,
@@ -167,9 +174,99 @@ it("rejects Crew at a direct creation URL", async () => {
     response: new Response(),
   });
   const router = routerFor("/estates/oak/work-orders/new");
-  renderWithProviders(<RouterProvider router={router} />);
-  await waitFor(() => expect(router.state.status).toBe("idle"));
+  await router.load();
+  expect(
+    router.state.matches.some((match) => match.status === "notFound")
+  ).toBe(true);
   expect(managementLoader).not.toHaveBeenCalled();
+});
+
+it.each([
+  "/estates/oak",
+  "/estates/oak/assets",
+  "/estates/oak/assets/pump",
+  "/estates/oak/assets/pump/inspections/new",
+  "/estates/oak/assets/pump/inspections/saved",
+])(
+  "admits Crew inspection and estate read route %s without management access",
+  async (path) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [crewEstateAccess],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(path);
+    await router.load();
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+    expect(router.state.location.pathname).toBe(path);
+  }
+);
+
+it.each([
+  "/estates/oak/edit",
+  "/estates/oak/council",
+  "/estates/oak/assets/new",
+  "/estates/oak/assets/pump/edit",
+  "/estates/oak/assets/pump/readings",
+])(
+  "keeps Crew out of administrative route %s before its loader starts",
+  async (path) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [crewEstateAccess],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(path);
+    await router.load();
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it.each(["oak", "foreign"])(
+  "requires inspection creation capability in the requested estate %s",
+  async (estateId) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [{ ...crewEstateAccess, canCreateInspectionResults: false }],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(
+      `/estates/${estateId}/assets/pump/inspections/new`
+    );
+    await router.load();
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it("allows inactive-estate inspection history while denying result creation", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...unassignedAccess,
+      canEnterWorkspace: true,
+      estates: [
+        {
+          ...crewEstateAccess,
+          canCreateInspectionResults: false,
+          canCreateWorkOrders: false,
+        },
+      ],
+    },
+    response: new Response(),
+  });
+  const router = routerFor("/estates/oak/assets/pump/inspections/saved");
+  await router.load();
+  renderWithProviders(<RouterProvider router={router} />);
+  await screen.findByRole("heading", { name: "Management page" });
 });
 
 it.each(["/estates/maple", "/estates/maple/assets", "/estates/maple/council"])(

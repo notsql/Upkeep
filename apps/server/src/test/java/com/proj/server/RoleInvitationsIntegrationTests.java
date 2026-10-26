@@ -161,7 +161,7 @@ class RoleInvitationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"COUNCIL,403", "MEMBER,403", "RESIDENT,403", "CREW,404", "UNASSIGNED,404", "OTHER_MANAGER,404"})
+    @CsvSource({"COUNCIL,403", "MEMBER,403", "RESIDENT,403", "CREW,403", "UNASSIGNED,404", "OTHER_MANAGER,404"})
     void otherRolesAndManagersOfOtherEstatesCannotEditDetails(String role, int expected) throws Exception {
         if ("OTHER_MANAGER".equals(role)) {
             estates.create(

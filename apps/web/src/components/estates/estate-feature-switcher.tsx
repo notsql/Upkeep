@@ -49,7 +49,7 @@ function estateDestination(
   if (feature === "work-orders" && estate.canViewWorkOrders) {
     return "/estates/$estateId/work-orders";
   }
-  if (estate.canViewManagement) {
+  if (estate.canViewEstateDetails ?? estate.canViewManagement) {
     return "/estates/$estateId";
   }
   if (estate.canViewWorkOrders) {
