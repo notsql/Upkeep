@@ -72,6 +72,8 @@ vi.mock("@/lib/api", () => ({
             role: state.estate.owned ? "OWNER" : "COUNCIL",
             canManageEstate: state.estate.owned,
             canViewAssets: state.estate.owned,
+            canViewInspectionResults: state.estate.owned,
+            canCreateInspectionResults: state.estate.owned,
             canInviteMembers: state.estate.canInviteMembers,
             canManageInvitationPermissions:
               state.estate.canManageInvitationPermissions,

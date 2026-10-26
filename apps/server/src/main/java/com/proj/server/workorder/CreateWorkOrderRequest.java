@@ -11,6 +11,7 @@ public record CreateWorkOrderRequest(
         @NotNull WorkOrderPriority priority,
         @NotNull WorkOrderSource source,
         UUID sourceReportId,
+        UUID sourceInspectionId,
         @Size(max = 500) String sourceReference,
         UUID expectedSourceLocationId) {
     public CreateWorkOrderRequest {

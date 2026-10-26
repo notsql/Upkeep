@@ -29,6 +29,12 @@ public class WorkOrderProgressService {
         this.workOS = workOS;
     }
 
+    private void authorizeUpdate(UUID estate, String user) {
+        orders.authorize(estate, user, true, true);
+        if (!estates.isManager(estate, user))
+            throw error(HttpStatus.FORBIDDEN, "Only the owner or an assigned Manager can update work-order progress.");
+    }
+
     // Controllers resolve optional names before entering write transactions.
     public String actorName(String user) {
         return workOS.findDisplayName(user).orElse(null);
@@ -37,7 +43,7 @@ public class WorkOrderProgressService {
     @Transactional
     public WorkOrderResponse change(
             UUID estate, UUID id, String user, String name, ChangeWorkOrderStatusRequest request) {
-        orders.authorize(estate, user, true, true);
+        authorizeUpdate(estate, user);
         var row = repository.lockOrder(estate, id);
         if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
         if (request.targetStatus() != WorkOrderStatus.IN_PROGRESS)
@@ -59,7 +65,7 @@ public class WorkOrderProgressService {
     @Transactional
     public CompletionResult complete(
             UUID estate, UUID id, String user, String name, SaveWorkOrderCompletionRequest request) {
-        orders.authorize(estate, user, true, true);
+        authorizeUpdate(estate, user);
         var row = repository.lockOrder(estate, id);
         if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
         var saved = repository.detail(estate, id);
@@ -81,7 +87,7 @@ public class WorkOrderProgressService {
     @Transactional
     public WorkOrderResponse correct(
             UUID estate, UUID id, String user, String name, CorrectWorkOrderCompletionRequest request) {
-        orders.authorize(estate, user, true, true);
+        authorizeUpdate(estate, user);
         var row = repository.lockOrder(estate, id);
         if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
         var saved = repository.detail(estate, id);

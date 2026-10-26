@@ -9,11 +9,13 @@ export function WorkOrderSaveError({
   error,
   estateId,
   reportSource,
+  inspectionSource = false,
   reloadSource,
 }: {
   error: Error | undefined;
   estateId: string;
   reportSource: boolean;
+  inspectionSource?: boolean;
   reloadSource: () => Promise<void>;
 }) {
   if (!error) {
@@ -28,7 +30,8 @@ export function WorkOrderSaveError({
       </AlertTitle>
       <AlertDescription className="space-y-3 text-sm">
         <p>{error.message}</p>
-        {conflict ? (
+        {inspectionSource ? <p>The inspection remains saved.</p> : null}
+        {conflict || inspectionSource ? (
           <Button onClick={reloadSource} type="button" variant="outline">
             Reload source
           </Button>

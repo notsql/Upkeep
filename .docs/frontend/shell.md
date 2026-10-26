@@ -159,3 +159,13 @@ estates. Report contexts retain their report switcher; management contexts retai
 the management estate switcher. Home sends a scoped-only user to Roles or estate
 invitations after checking management/report entry. Access/cache remains per user.
 See [estate-roles.md](estate-roles.md) and [council-invitations.md](council-invitations.md).
+
+## Inspection capability routing
+
+The protected guard admits only the estate's exact inspection asset list/detail,
+result creation and result detail paths with their inspection capabilities.
+Crew estate overview reads use canViewEstateDetails, independent of management
+or asset-admin grants. Sidebar Assets includes authorised inspection readers;
+work-order creation uses its separate capability, now also available to Crew.
+Restricted views never mount owner-only asset hooks. See
+[inspections](inspections.md) for generated-client requests and cache handling.

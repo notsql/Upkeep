@@ -394,3 +394,10 @@ Example: `POST …/devices/{deviceId}/replace` with `{"identifier":"PUMP-02","mo
 `GET /estates/{estateId}/locations?includeInactive=true` returns all owner-visible locations (200 LocationResponse[]); omission/false retains active-only behavior. 401 unsigned, 404 foreign/missing estate. The UI computes hierarchical paths from parentId. LocationResponse contains required id/estateId (UUID), type (BLOCK/LEVEL/COMMON_AREA), name (string), createdAt/updatedAt (date-time), and nullable parentId (UUID), sortOrder (integer), deactivatedAt (date-time).
 
 A resident membership in the target estate returns 403 on management requests, including a conflicting owner/RESIDENT row. Management access in another estate does not change this restriction. Unrelated estates retain 404.
+
+## Inspection asset context
+
+Owner-only asset register/detail/history APIs retain their existing authority.
+Managers/Crew use the separate limited inspection-assets endpoints and immutable
+inspection collection/detail/photo APIs; see [inspections](inspections.md).
+Recording does not update condition, maintenance costs, lifecycle or forecasts.

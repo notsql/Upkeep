@@ -22,3 +22,8 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0035 - Audited completion corrections (supersedes 0034 outcome immutability)](0035-audited-completion-corrections.md)
 
 - [0032 - Custom estate roles and live permissions](0032-custom-estate-role-bindings-and-live-permissions.md)
+
+- [0037 — Standalone inspection evidence and Crew creation](0037-standalone-inspections-and-crew-creation.md)
+- [0038 — Inspection form component boundaries](0038-inspection-form-component-boundaries.md)
+- [0039 — One work-order form for inspection follow-up](0039-unified-work-order-creation.md)
+- [0040 — Crew have read-only work-order access](0040-crew-read-only-work-orders.md)

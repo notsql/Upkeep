@@ -362,6 +362,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/inspections": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listInspectionResults"];
+    put?: never;
+    post: operations["createInspectionResult"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInspectionResult"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInspectionPhoto"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/readings": {
     parameters: {
       query?: never;
@@ -691,6 +739,54 @@ export interface paths {
       cookie?: never;
     };
     get: operations["review"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listInspectionAssets"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-assets/{assetId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInspectionAsset"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-results/{inspectionId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInspectionSource"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1338,6 +1434,8 @@ export interface components {
         | "MAINTENANCE_RECOMMENDATION";
       /** Format: uuid */
       sourceReportId?: string;
+      /** Format: uuid */
+      sourceInspectionId?: string | null;
       sourceReference?: string;
       /** @enum {string} */
       status: "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "CLOSED";
@@ -1554,6 +1652,8 @@ export interface components {
         | "MAINTENANCE_RECOMMENDATION";
       /** Format: uuid */
       sourceReportId?: string;
+      /** Format: uuid */
+      sourceInspectionId?: string;
       sourceReference?: string;
       /** Format: uuid */
       expectedSourceLocationId?: string;
@@ -2571,6 +2671,9 @@ export interface components {
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
+      canViewEstateDetails: boolean;
+      canViewInspectionResults: boolean;
+      canCreateInspectionResults: boolean;
       canInviteMembers: boolean;
       canManageInvitationPermissions: boolean;
       canViewFaultReports: boolean;
@@ -2592,6 +2695,73 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
+    };
+    CreateInspectionRequest: {
+      /** @enum {string} */
+      outcome: "PASS" | "FAIL";
+      /** Format: date */
+      inspectedOn: string;
+      notes?: string;
+      /** Format: uuid */
+      expectedLocationId: string;
+      photos?: string[];
+    };
+    InspectionPhotoResponse: {
+      /** Format: uuid */
+      id: string;
+      contentType: string;
+    };
+    InspectionResultResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      assetId: string;
+      /** Format: uuid */
+      locationId: string;
+      locationPath: string;
+      /** @enum {string} */
+      outcome: "PASS" | "FAIL";
+      /** Format: date */
+      inspectedOn: string;
+      notes: string | null;
+      recordedByUserId: string;
+      recordedByName: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      photos: components["schemas"]["InspectionPhotoResponse"][];
+      workOrder: components["schemas"]["InspectionWorkOrderResponse"] | null;
+    };
+    InspectionWorkOrderResponse: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+    };
+    InspectionAssetPageResponse: {
+      items: components["schemas"]["InspectionAssetResponse"][];
+      nextCursor: string | null;
+    };
+    InspectionAssetResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      locationId: string;
+      reference: string;
+      name: string;
+      category: string;
+      locationPath: string;
+      /** Format: date */
+      installedOn: string | null;
+      estateActive: boolean;
+      assetActive: boolean;
+      locationActive: boolean;
+    };
+    InspectionResultPageResponse: {
+      items: components["schemas"]["InspectionResultResponse"][];
+      nextCursor: string | null;
     };
   };
 }
@@ -3639,6 +3809,105 @@ export interface operations {
       };
       /** @description Inactive estate, asset or location, or a conflicting change */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  createInspectionResult: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "multipart/form-data": components["schemas"]["CreateInspectionRequest"];
+      };
+    };
+    responses: {
+      /** @description Inspection recorded; no work order is created automatically */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionResultResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };
@@ -4880,6 +5149,389 @@ export interface operations {
         content: {
           "image/jpeg": components["schemas"]["EstateError"];
           "image/png": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getInspectionAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorised private inspection data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionAssetResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getInspectionPhoto: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+        inspectionId: string;
+        photoId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorised private inspection data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": string;
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getInspectionResult: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+        inspectionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorised private inspection data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionResultResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getInspectionSource: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        inspectionId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorised private inspection data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionResultResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
         };
       };
     };
@@ -6522,6 +7174,202 @@ export interface operations {
       };
       /** @description Inaccessible estate, report, location or image */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listInspectionAssets: {
+    parameters: {
+      query?: {
+        q?: string;
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorised private inspection data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionAssetPageResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listInspectionResults: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authorised private inspection data */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionResultPageResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };

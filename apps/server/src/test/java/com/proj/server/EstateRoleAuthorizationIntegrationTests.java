@@ -296,7 +296,7 @@ class EstateRoleAuthorizationIntegrationTests {
                                     .contentType(MediaType.APPLICATION_JSON)
                                     .content(
                                             "{\"name\":\"Changed\",\"code\":\"CHANGED\",\"address\":\"Road\",\"postalCode\":\"123456\"}"))
-                    .andExpect(status().is(role.equals("CREW") ? 404 : 403));
+                    .andExpect(status().isForbidden());
             mvc.perform(asUser(post("/estates/" + previous + "/council-invitations"), "creator", claim)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"email\":\"new@example.com\",\"role\":\"MANAGER\"}"))
@@ -326,14 +326,19 @@ class EstateRoleAuthorizationIntegrationTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"UNASSIGNED", "RESIDENT", "CREW"})
-    void directoryDoesNotExposeNonManagementAssignments(String role) throws Exception {
+    void directoryIncludesAssignedCrewButHidesUnassignedAndResidentEstates(String role) throws Exception {
         var assigned = estate("Assigned estate", "other-owner");
         if (!role.equals("UNASSIGNED")) {
             membership("creator", assigned, role);
         }
         mvc.perform(asUser(get("/estates"), "creator", "user"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.length()").value(role.equals("CREW") ? 1 : 0));
+        if (role.equals("CREW")) {
+            mvc.perform(asUser(get("/estates/" + assigned), "creator", "user"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(assigned.toString()));
+        }
     }
 
     @Test

@@ -43,13 +43,17 @@ export function locationsQueryKey(
   return ["estates", userId, "locations", estateId] as const;
 }
 
-export function useLocations(estateId: string, includeInactive = false) {
+export function useLocations(
+  estateId: string,
+  includeInactive = false,
+  enabled = true
+) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: includeInactive
       ? [...locationsQueryKey(userId, estateId), "all"]
       : locationsQueryKey(userId, estateId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(

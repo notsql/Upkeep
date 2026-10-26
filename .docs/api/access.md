@@ -91,7 +91,7 @@ asset picker uses creation authority and does not change canViewAssets.
 See [work-orders.md](work-orders.md).
 
 canUpdateWorkOrders requires current owner/Manager authority and an active estate,
-with the same Resident override as creation. Crew stay read-only. This capability
+with the same Resident override as creation. Crew remain readers of progress/completion. This capability
 does not grant owner-only asset-register access.
 
 The custom permission catalogue does not grant work-order access. Custom
@@ -134,3 +134,16 @@ preset document write access or custom EDIT_DOCUMENTS with VIEW_DOCUMENTS.
 MEMBER/RESIDENT alone grant neither; owner/Resident conflicts deny both.
 Deletion is projected per document, since only an uploader with current edit
 permission or an estate Manager can delete it. See [documents.md](documents.md).
+
+## Inspection and estate read capabilities
+
+`EstateAccessResponse` also requires `canViewEstateDetails`,
+`canViewInspectionResults`, `canCreateInspectionResults: boolean`. Estate detail
+reads include current Crew, independent of management/dashboard grants.
+Inspection reads require Owner/Manager/Crew; recording additionally requires an
+active estate, with asset/location activity checked by the write endpoint.
+Residents override ownership; independent ownership survives other memberships.
+`canCreateWorkOrders` and `canUpdateWorkOrders` require active-estate
+Owner/Manager authority. Crew have `canViewWorkOrders: true` and both write
+capabilities false. `canViewAssets` stays owner-only. See
+[inspections](inspections.md) for limited asset APIs, evidence and source lookup.

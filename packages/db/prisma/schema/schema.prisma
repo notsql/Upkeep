@@ -9,27 +9,28 @@ datasource db {
 }
 
 model Estate {
-  id               String             @id @default(uuid()) @db.Uuid
-  ownerUserId      String             @db.VarChar(255)
-  name             String             @db.VarChar(200)
-  code             String             @unique @db.VarChar(50)
-  address          String             @db.VarChar(500)
-  postalCode       String             @db.VarChar(20)
-  description      String?            @db.VarChar(2000)
-  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime           @updatedAt @db.Timestamptz(6)
-  deactivatedAt    DateTime?          @db.Timestamptz(6)
-  locations        Location[]
-  users            EstateUser[]
-  assets           Asset[]
-  devices          Device[]
-  assessments      AssetAssessment[]
-  invitations      EstateInvitation[]
-  issueReports     IssueReport[]
-  documents        Document[]
-  events           AssetEvent[]
-  flatlinePolicies FlatlinePolicy[]
-  workOrders       WorkOrder[]
+  id                String                  @id @default(uuid()) @db.Uuid
+  ownerUserId       String                  @db.VarChar(255)
+  name              String                  @db.VarChar(200)
+  code              String                  @unique @db.VarChar(50)
+  address           String                  @db.VarChar(500)
+  postalCode        String                  @db.VarChar(20)
+  description       String?                 @db.VarChar(2000)
+  createdAt         DateTime                @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime                @updatedAt @db.Timestamptz(6)
+  deactivatedAt     DateTime?               @db.Timestamptz(6)
+  locations         Location[]
+  users             EstateUser[]
+  assets            Asset[]
+  devices           Device[]
+  assessments       AssetAssessment[]
+  invitations       EstateInvitation[]
+  issueReports      IssueReport[]
+  documents         Document[]
+  events            AssetEvent[]
+  flatlinePolicies  FlatlinePolicy[]
+  workOrders        WorkOrder[]
+  inspectionResults AssetInspectionResult[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -102,13 +103,14 @@ model Location {
   updatedAt     DateTime  @updatedAt @db.Timestamptz(6)
   deactivatedAt DateTime? @db.Timestamptz(6)
 
-  estate       Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  parent       Location?     @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
-  children     Location[]    @relation("LocationTree")
-  assets       Asset[]
-  devices      Device[]
-  issueReports IssueReport[]
-  workOrders   WorkOrder[]
+  estate            Estate                  @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  parent            Location?               @relation("LocationTree", fields: [parentId, parentType, estateId], references: [id, type, estateId], onDelete: Restrict, onUpdate: Restrict)
+  children          Location[]              @relation("LocationTree")
+  assets            Asset[]
+  devices           Device[]
+  issueReports      IssueReport[]
+  workOrders        WorkOrder[]
+  inspectionResults AssetInspectionResult[]
 
   @@unique([id, type, estateId])
   @@unique([id, estateId])
@@ -193,17 +195,18 @@ model Asset {
   lifecycleVersion Int                   @default(0)
   lifecycleEvents  AssetLifecycleEvent[]
 
-  estate         Estate                @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location       Location              @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  assetCategory  AssetCategory         @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
-  manufacturer   Manufacturer?         @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  model          AssetModel?           @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
-  devices        Device[]
-  readings       DeviceReading[]
-  flatlinePauses DeviceFlatlinePause[]
-  assessments    AssetAssessment[]
-  events         AssetEvent[]
-  workOrders     WorkOrder[]
+  estate            Estate                  @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location          Location                @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory     AssetCategory           @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  manufacturer      Manufacturer?           @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  model             AssetModel?             @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
+  devices           Device[]
+  readings          DeviceReading[]
+  flatlinePauses    DeviceFlatlinePause[]
+  assessments       AssetAssessment[]
+  events            AssetEvent[]
+  workOrders        WorkOrder[]
+  inspectionResults AssetInspectionResult[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -215,27 +218,30 @@ model Asset {
 // A job in an estate (decisions 0032 and 0034). Equipment links are optional;
 // several jobs may reference one resident report. References never change.
 model WorkOrder {
-  id              String   @id @default(uuid()) @db.Uuid
-  estateId        String   @db.Uuid
-  reference       String   @db.VarChar(70)
-  description     String   @db.VarChar(2500)
-  locationId      String   @db.Uuid
-  assetId         String?  @db.Uuid
-  category        String   @db.VarChar(30)
-  priority        String   @db.VarChar(30)
-  source          String   @db.VarChar(30)
-  sourceReportId  String?  @db.Uuid
-  sourceReference String?  @db.VarChar(500)
-  status          String   @default("OPEN") @db.VarChar(20)
-  version         Int      @default(0)
-  createdByUserId String   @db.VarChar(255)
-  createdAt       DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+  id                 String   @id @default(uuid()) @db.Uuid
+  estateId           String   @db.Uuid
+  reference          String   @db.VarChar(70)
+  description        String   @db.VarChar(2500)
+  locationId         String   @db.Uuid
+  assetId            String?  @db.Uuid
+  category           String   @db.VarChar(30)
+  priority           String   @db.VarChar(30)
+  source             String   @db.VarChar(30)
+  sourceReportId     String?  @db.Uuid
+  sourceInspectionId String?  @unique @db.Uuid
+  sourceReference    String?  @db.VarChar(500)
+  status             String   @default("OPEN") @db.VarChar(20)
+  version            Int      @default(0)
+  createdByUserId    String   @db.VarChar(255)
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @db.Timestamptz(6)
 
   estate       Estate       @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   location     Location     @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   asset        Asset?       @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   sourceReport IssueReport? @relation(fields: [sourceReportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  sourceInspection AssetInspectionResult? @relation(fields: [sourceInspectionId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   statusEvents      WorkOrderStatusEvent[]
   completion        WorkOrderCompletion?
@@ -246,6 +252,42 @@ model WorkOrder {
   @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId, createdAt, id])
+}
+
+// Standalone, append-only asset inspection evidence. Follow-up is derived from the work-order link.
+model AssetInspectionResult {
+  id               String                 @id @default(uuid()) @db.Uuid
+  estateId         String                 @db.Uuid
+  assetId          String                 @db.Uuid
+  locationId       String                 @db.Uuid
+  locationPath     String                 @db.VarChar(650)
+  outcome          String                 @db.VarChar(4)
+  inspectedOn      DateTime               @db.Date
+  notes            String?                @db.VarChar(2000)
+  recordedByUserId String                 @db.VarChar(255)
+  recordedByName   String?                @db.VarChar(255)
+  createdAt        DateTime               @default(now()) @db.Timestamptz(6)
+  estate           Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset            Asset                  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  location         Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  photos           AssetInspectionPhoto[]
+  workOrders       WorkOrder[]
+
+  @@unique([id, estateId])
+  @@index([estateId, assetId, inspectedOn, createdAt, id])
+}
+
+model AssetInspectionPhoto {
+  id                 String                @id @default(uuid()) @db.Uuid
+  estateId           String                @db.Uuid
+  inspectionResultId String                @db.Uuid
+  storageKey         String                @unique @db.VarChar(500)
+  contentType        String                @db.VarChar(50)
+  sizeBytes          Int
+  createdAt          DateTime              @default(now()) @db.Timestamptz(6)
+  inspectionResult   AssetInspectionResult @relation(fields: [inspectionResultId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, inspectionResultId])
 }
 
 // Append-only status audit. Version zero is the initial Open event for new orders.

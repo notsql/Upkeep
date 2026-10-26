@@ -51,7 +51,22 @@ public class WorkOrderRepository {
                 .fetchOne();
     }
 
-    public UUID create(UUID estateId, String code, String user, CreateWorkOrderRequest request) {
+    public com.proj.server.db.tables.records.AssetinspectionresultRecord inspection(UUID estate, UUID id) {
+        var table = com.proj.server.db.tables.Assetinspectionresult.ASSETINSPECTIONRESULT;
+        return db.selectFrom(table)
+                .where(table.ESTATEID.eq(estate).and(table.ID.eq(id)))
+                .fetchOne();
+    }
+
+    public String inspectionOrder(UUID estate, UUID inspection) {
+        return db.select(WORKORDER.REFERENCE)
+                .from(WORKORDER)
+                .where(WORKORDER.ESTATEID.eq(estate).and(WORKORDER.SOURCEINSPECTIONID.eq(inspection)))
+                .fetchOne(WORKORDER.REFERENCE);
+    }
+
+    public UUID create(
+            UUID estateId, String code, String user, CreateWorkOrderRequest request, String sourceReference) {
         long sequence = db.selectCount()
                         .from(WORKORDER)
                         .where(WORKORDER.ESTATEID.eq(estateId))
@@ -70,7 +85,8 @@ public class WorkOrderRepository {
                 .set(WORKORDER.PRIORITY, request.priority().name())
                 .set(WORKORDER.SOURCE, request.source().name())
                 .set(WORKORDER.SOURCEREPORTID, request.sourceReportId())
-                .set(WORKORDER.SOURCEREFERENCE, request.sourceReference())
+                .set(WORKORDER.SOURCEINSPECTIONID, request.sourceInspectionId())
+                .set(WORKORDER.SOURCEREFERENCE, sourceReference)
                 .set(WORKORDER.STATUS, "OPEN")
                 .set(WORKORDER.CREATEDBYUSERID, user)
                 .set(WORKORDER.CREATEDAT, now)
@@ -207,6 +223,7 @@ public class WorkOrderRepository {
                 WorkOrderPriority.valueOf(row.get(WORKORDER.PRIORITY)),
                 WorkOrderSource.valueOf(row.get(WORKORDER.SOURCE)),
                 row.get(WORKORDER.SOURCEREPORTID),
+                row.get(WORKORDER.SOURCEINSPECTIONID),
                 row.get(WORKORDER.SOURCEREFERENCE),
                 WorkOrderStatus.valueOf(row.get(WORKORDER.STATUS)),
                 row.get(WORKORDER.VERSION),
