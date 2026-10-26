@@ -24,6 +24,10 @@ Asset summaries explicitly cover active estates the user owns. When
 `activeOwnedEstateCount` is zero, asset and member cards display an em dash with a scope
 explanation and the condition/attention sections are omitted.
 
+Assigned MANAGER memberships contribute to Accessible estates even without
+ownership, matching the estate directory. They do not add another owner's assets
+to the condition, attention or asset-count cards.
+
 `routes/-components/asset-condition-distribution.tsx` draws a proportional CSS
 figure inside the shadcn surface. Its green/amber/red/neutral segments represent
 Good / Needs attention / Faulty / Not assessed. A visible legend and accessible
@@ -79,3 +83,11 @@ Query staleness/focus refresh; no polling or real-time subscription was added.
 
 See [the API contract](../api/dashboard.md) for scope, ranking and count rules,
 and [the shared design guide](design-system.md) for themes and navigation.
+
+## Custom estate permissions
+
+Custom VIEW_ESTATE contributes estate counts and enables overview/Home. It
+never widens owner-scoped asset/condition totals. Home's route loader sends a
+role/invitation-only user without management/report access to the first eligible
+Roles or council route; report-capable users retain report entry. The dashboard
+is not mounted for these redirected scoped-only accounts.

@@ -13,14 +13,23 @@ import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
+import com.proj.server.db.tables.Document;
+import com.proj.server.db.tables.Documentworkorderevent;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estateroledefinition;
+import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Workorder;
+import com.proj.server.db.tables.Workordercompletion;
+import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderstatusevent;
 
 import java.util.Arrays;
 import java.util.List;
@@ -90,6 +99,16 @@ public class Public extends SchemaImpl {
     public final Devicereading DEVICEREADING = Devicereading.DEVICEREADING;
 
     /**
+     * The table <code>public.Document</code>.
+     */
+    public final Document DOCUMENT = Document.DOCUMENT;
+
+    /**
+     * The table <code>public.DocumentWorkOrderEvent</code>.
+     */
+    public final Documentworkorderevent DOCUMENTWORKORDEREVENT = Documentworkorderevent.DOCUMENTWORKORDEREVENT;
+
+    /**
      * The table <code>public.Estate</code>.
      */
     public final Estate ESTATE = Estate.ESTATE;
@@ -98,6 +117,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.EstateInvitation</code>.
      */
     public final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
+
+    /**
+     * The table <code>public.EstateRoleDefinition</code>.
+     */
+    public final Estateroledefinition ESTATEROLEDEFINITION = Estateroledefinition.ESTATEROLEDEFINITION;
+
+    /**
+     * The table <code>public.EstateRolePermission</code>.
+     */
+    public final Estaterolepermission ESTATEROLEPERMISSION = Estaterolepermission.ESTATEROLEPERMISSION;
 
     /**
      * The table <code>public.EstateUser</code>.
@@ -130,6 +159,31 @@ public class Public extends SchemaImpl {
     public final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
 
     /**
+     * The table <code>public.Permission</code>.
+     */
+    public final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
+     * The table <code>public.WorkOrder</code>.
+     */
+    public final Workorder WORKORDER = Workorder.WORKORDER;
+
+    /**
+     * The table <code>public.WorkOrderCompletion</code>.
+     */
+    public final Workordercompletion WORKORDERCOMPLETION = Workordercompletion.WORKORDERCOMPLETION;
+
+    /**
+     * The table <code>public.WorkOrderCompletionRevision</code>.
+     */
+    public final Workordercompletionrevision WORKORDERCOMPLETIONREVISION = Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+
+    /**
+     * The table <code>public.WorkOrderStatusEvent</code>.
+     */
+    public final Workorderstatusevent WORKORDERSTATUSEVENT = Workorderstatusevent.WORKORDERSTATUSEVENT;
+
+    /**
      * No further instances allowed
      */
     private Public() {
@@ -154,14 +208,23 @@ public class Public extends SchemaImpl {
             Device.DEVICE,
             Deviceflatlinepause.DEVICEFLATLINEPAUSE,
             Devicereading.DEVICEREADING,
+            Document.DOCUMENT,
+            Documentworkorderevent.DOCUMENTWORKORDEREVENT,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
+            Estateroledefinition.ESTATEROLEDEFINITION,
+            Estaterolepermission.ESTATEROLEPERMISSION,
             Estateuser.ESTATEUSER,
             Flatlinepolicy.FLATLINEPOLICY,
             Issuereport.ISSUEREPORT,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
-            Manufacturer.MANUFACTURER
+            Manufacturer.MANUFACTURER,
+            Permission.PERMISSION,
+            Workorder.WORKORDER,
+            Workordercompletion.WORKORDERCOMPLETION,
+            Workordercompletionrevision.WORKORDERCOMPLETIONREVISION,
+            Workorderstatusevent.WORKORDERSTATUSEVENT
         );
     }
 }

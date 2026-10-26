@@ -4,7 +4,11 @@ import com.proj.server.asset.AssetRepository;
 import com.proj.server.db.tables.records.DeviceRecord;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.location.LocationRepository;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -22,31 +26,57 @@ public class DeviceService {
     private final AssetRepository assets;
     private final LocationRepository locations;
     private final EstateRepository estates;
+    private final Clock clock;
+
+    /** Offline first, then Awaiting first reading, then Online. */
+    private static final List<DeviceStatus> STATUS_ORDER =
+            List.of(DeviceStatus.OFFLINE, DeviceStatus.AWAITING_FIRST_READING, DeviceStatus.ONLINE);
+
+    private static final Comparator<EstateDeviceResponse> ESTATE_ORDER = Comparator.comparingInt(
+                    (EstateDeviceResponse device) -> STATUS_ORDER.indexOf(device.status()))
+            .thenComparing(
+                    EstateDeviceResponse::lastSeenAt, Comparator.nullsLast(Comparator.<OffsetDateTime>naturalOrder()))
+            .thenComparing(EstateDeviceResponse::identifier);
 
     public DeviceService(
             DeviceRepository repository,
             AssetRepository assets,
             LocationRepository locations,
-            EstateRepository estates) {
+            EstateRepository estates,
+            Clock clock) {
         this.repository = repository;
         this.assets = assets;
         this.locations = locations;
         this.estates = estates;
+        this.clock = clock;
     }
 
-    public List<DeviceResponse> list(UUID estateId, UUID assetId, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(DeviceService::estateNotFound);
+    public List<DeviceResponse> list(UUID estateId, UUID assetId, String user) {
+        estates.findManaged(estateId, user).orElseThrow(DeviceService::estateNotFound);
         assets.find(assetId, estateId, false).orElseThrow(DeviceService::assetNotFound);
         var devices = repository.listForAsset(assetId);
         // Replacements are on the same asset, so the list holds both ends of every link.
-        var replacedBy = new HashMap<UUID, UUID>();
-        for (var device : devices) {
-            if (device.getReplacesdeviceid() != null) {
-                replacedBy.put(device.getReplacesdeviceid(), device.getId());
-            }
-        }
+        var replacedBy = replacedBy(devices);
+        var now = clock.instant();
         return devices.stream()
-                .map(device -> response(device, replacedBy.get(device.getId())))
+                .map(device -> response(device, replacedBy.get(device.getId()), now))
+                .toList();
+    }
+
+    /** Every device in the estate, the ones needing attention first (ID-44). */
+    public List<EstateDeviceResponse> listForEstate(UUID estateId, String user) {
+        estates.findManaged(estateId, user).orElseThrow(DeviceService::estateNotFound);
+        var rows = repository.listForEstate(estateId);
+        var replacedBy =
+                replacedBy(rows.stream().map(DeviceRepository.WithAsset::device).toList());
+        var now = clock.instant();
+        return rows.stream()
+                .map(row -> EstateDeviceResponse.of(
+                        response(row.device(), replacedBy.get(row.device().getId()), now),
+                        row.assetReference(),
+                        row.assetName(),
+                        row.assetRetired()))
+                .sorted(ESTATE_ORDER)
                 .toList();
     }
 
@@ -62,7 +92,7 @@ public class DeviceService {
                     HttpStatus.CONFLICT, "This asset is deactivated. Devices cannot be registered to it.");
         }
         checkNewDevice(estateId, request);
-        return response(repository.create(estateId, assetId, request), null);
+        return response(repository.create(estateId, assetId, request), null, clock.instant());
     }
 
     /**
@@ -78,9 +108,9 @@ public class DeviceService {
                     HttpStatus.BAD_REQUEST, "Enter the device's identifier exactly to confirm deactivation.");
         }
         if (device.getDeactivatedat() != null) {
-            return response(device, repository.replacementOf(deviceId).orElse(null));
+            return response(device, repository.replacementOf(deviceId).orElse(null), clock.instant());
         }
-        return response(repository.deactivate(deviceId), null);
+        return response(repository.deactivate(deviceId), null, clock.instant());
     }
 
     /**
@@ -99,7 +129,7 @@ public class DeviceService {
         }
         checkNewDevice(estateId, request);
         repository.deactivate(deviceId);
-        return response(repository.createReplacing(estateId, assetId, request, deviceId), null);
+        return response(repository.createReplacing(estateId, assetId, request, deviceId), null, clock.instant());
     }
 
     /**
@@ -158,7 +188,18 @@ public class DeviceService {
                 .formatted(identifier);
     }
 
-    private static DeviceResponse response(DeviceRecord row, UUID replacedByDeviceId) {
+    /** Replacement → replaced links within one list: replaced device ID to its replacement's ID. */
+    private static HashMap<UUID, UUID> replacedBy(List<DeviceRecord> devices) {
+        var links = new HashMap<UUID, UUID>();
+        for (var device : devices) {
+            if (device.getReplacesdeviceid() != null) {
+                links.put(device.getReplacesdeviceid(), device.getId());
+            }
+        }
+        return links;
+    }
+
+    private static DeviceResponse response(DeviceRecord row, UUID replacedByDeviceId, Instant now) {
         var metrics = Arrays.stream(row.getMetrics())
                 .map(DeviceMetric::valueOf)
                 .map(metric -> new DeviceMetricResponse(metric, metric.unit()))
@@ -173,6 +214,7 @@ public class DeviceService {
                 metrics,
                 row.getReportingintervalseconds(),
                 row.getLastseenat(),
+                DeviceStatus.of(row.getLastseenat(), row.getReportingintervalseconds(), now),
                 row.getCredentialissuedat(),
                 row.getDeactivatedat(),
                 row.getReplacesdeviceid(),

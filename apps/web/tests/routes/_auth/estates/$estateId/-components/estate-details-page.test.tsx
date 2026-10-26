@@ -37,6 +37,34 @@ describe("estate details page", () => {
     } as unknown as ReturnType<typeof useAppAccess>);
   });
 
+  it.each([undefined, "2026-10-01T00:00:00Z"])(
+    "offers work-order history from the overview (inactive: %s)",
+    async (deactivatedAt) => {
+      vi.mocked(api.GET).mockResolvedValue({
+        data: { ...estate, deactivatedAt },
+        response: new Response(),
+      });
+      vi.mocked(useAppAccess).mockReturnValue({
+        data: {
+          ...unassignedAccess,
+          estates: [{ ...ownerEstateAccess, estateId: estate.id }],
+        },
+      } as unknown as ReturnType<typeof useAppAccess>);
+      renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
+      await screen.findByRole("link", { name: "View work orders" });
+    }
+  );
+
+  it("hides the work-order overview action without its capability", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: estate,
+      response: new Response(),
+    });
+    renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
+    await screen.findByRole("heading", { name: estate.name });
+    expect(screen.queryByRole("link", { name: "View work orders" })).toBeNull();
+  });
+
   it.each([undefined, "2026-09-25T00:00:00Z"])(
     "lets an assigned Manager edit without owner-only actions (inactive: %s)",
     async (deactivatedAt) => {
@@ -133,6 +161,7 @@ describe("estate details page", () => {
   });
 
   it.each([
+    ["MANAGER", false, true],
     ["COUNCIL", false, true],
     ["MEMBER", true, true],
     ["MEMBER", false, false],
@@ -173,6 +202,26 @@ describe("estate details page", () => {
           screen.queryByRole("link", { name: "Device monitoring" })
         ).toBeNull();
       }
+    }
+  );
+
+  it.each([
+    [true, true, true],
+    [false, true, true],
+    [false, false, false],
+  ])(
+    "links to Devices for Managers only (owned: %s, manager: %s)",
+    async (owned, manager, shown) => {
+      vi.mocked(api.GET).mockResolvedValue({
+        data: { ...estate, owned, canManageInvitationPermissions: manager },
+        response: new Response(),
+      });
+      renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
+      await screen.findByRole("heading", { name: "Maple Grove" });
+      const link = screen.queryByRole("link", { name: "Devices" });
+      expect(link?.getAttribute("href") ?? null).toBe(
+        shown ? "/estates/$estateId/devices" : null
+      );
     }
   );
 });

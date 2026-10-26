@@ -48,7 +48,9 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
   useRouterState: ({ select }: { select: (value: unknown) => unknown }) =>
-    select({ location: { pathname: state.pathname, hash: state.hash } }),
+    select({
+      location: { pathname: state.pathname, hash: state.hash, search: {} },
+    }),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: state.user, role: state.role, loading: false }),

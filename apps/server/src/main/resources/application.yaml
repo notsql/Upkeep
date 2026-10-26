@@ -35,6 +35,10 @@ spring:
 
 server:
   port: ${SERVER_PORT:8080}
+  tomcat:
+    # Drain rejected multipart requests so callers receive the JSON 413 response
+    # instead of a connection reset while their request body is still arriving.
+    max-swallow-size: 20MB
 
 springdoc:
   api-docs:

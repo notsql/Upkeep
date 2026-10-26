@@ -12,6 +12,7 @@ import {
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/reports/new";
+import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page";
 
 const { get, post, navigate, auth } = vi.hoisted(() => ({
   get: vi.fn(),
@@ -45,6 +46,7 @@ const blockId = "00000000-0000-0000-0000-000000000002";
 const levelId = "00000000-0000-0000-0000-000000000003";
 
 beforeEach(() => {
+  vi.spyOn(Route, "useSearch").mockReturnValue({});
   auth.role = "user";
   get.mockReset();
   post.mockReset();
@@ -92,6 +94,42 @@ beforeEach(() => {
     }
     return Promise.resolve({ error: { message: "Unexpected request" } });
   });
+});
+
+it("uses the estate selected through context navigation instead of silently choosing another", async () => {
+  const original = get.getMockImplementation();
+  get.mockImplementation((path: string, ...args: unknown[]) =>
+    path === "/resident/context"
+      ? Promise.resolve({
+          data: {
+            estates: [
+              { id: estateId, name: "Maple Estate" },
+              { id: "other", name: "Other estate" },
+            ],
+            canSubmit: true,
+          },
+        })
+      : original?.(path, ...args)
+  );
+  renderWithProviders(<NewReportPage requestedEstateId="other" />);
+  await screen.findByRole("heading", { name: REPORT_A_FAULT });
+  await waitFor(() =>
+    expect(
+      screen.getByRole("combobox", { name: "Estate" }).textContent
+    ).toContain("Other estate")
+  );
+  expect(get).toHaveBeenCalledWith(
+    "/resident/locations",
+    expect.objectContaining({ params: { query: { estateId: "other" } } })
+  );
+});
+
+it("explains an unavailable selected estate without falling back to another assignment", async () => {
+  renderWithProviders(<NewReportPage requestedEstateId="inactive" />);
+  await screen.findByText(
+    "Reporting is unavailable for the selected estate. Choose an active Resident estate from the estate menu."
+  );
+  expect(screen.queryByRole("button", { name: SUBMIT_REPORT })).toBeNull();
 });
 
 it("shows only the assigned estate and requires description and a level or common area", async () => {
@@ -315,5 +353,9 @@ it("lets a multi-estate resident choose an estate and clears the old location se
   expect(
     screen.getByRole("combobox", { name: LEVEL }).textContent
   ).not.toContain("Level 2");
+  expect(navigate).toHaveBeenLastCalledWith({
+    to: "/reports/new",
+    search: { estateId: "other" },
+  });
   expect(post).not.toHaveBeenCalled();
 });

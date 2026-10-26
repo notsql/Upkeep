@@ -14,6 +14,8 @@ export const residentEstateAccess = {
   estateId: "maple",
   estateName: "Maple Estate",
   role: "RESIDENT",
+  customRoleId: null as string | null,
+  customRoleName: null as string | null,
   canViewManagement: false,
   canManageEstate: false,
   canViewAssets: false,
@@ -21,6 +23,18 @@ export const residentEstateAccess = {
   canManageInvitationPermissions: false,
   canViewFaultReports: false,
   canRelocateFaultReports: false,
+  canViewWorkOrders: false,
+  canCreateWorkOrders: false,
+  canUpdateWorkOrders: false,
+  canCreateLocations: false,
+  canCreateFloors: false,
+  canEditLocations: false,
+  canViewEstateRoles: false,
+  canCreateRoles: false,
+  canEditRoles: false,
+  canDeleteRoles: false,
+  canReassignRoles: false,
+  canViewEstateInvitations: false,
 };
 
 export const councilEstateAccess = {
@@ -36,6 +50,8 @@ export const ownerEstateAccess = {
   estateId: "pine",
   estateName: "Pine Estate",
   role: "MANAGER",
+  customRoleId: null as string | null,
+  customRoleName: null as string | null,
   canViewManagement: true,
   canManageEstate: true,
   canViewAssets: true,
@@ -43,6 +59,18 @@ export const ownerEstateAccess = {
   canManageInvitationPermissions: true,
   canViewFaultReports: true,
   canRelocateFaultReports: true,
+  canViewWorkOrders: true,
+  canCreateWorkOrders: true,
+  canUpdateWorkOrders: true,
+  canCreateLocations: true,
+  canCreateFloors: true,
+  canEditLocations: true,
+  canViewEstateRoles: true,
+  canCreateRoles: true,
+  canEditRoles: true,
+  canDeleteRoles: true,
+  canReassignRoles: true,
+  canViewEstateInvitations: true,
 };
 
 export const crewEstateAccess = {
@@ -50,6 +78,7 @@ export const crewEstateAccess = {
   estateId: "oak",
   estateName: "Oak Park",
   role: "CREW",
+  canViewWorkOrders: true,
   canViewFaultReports: true,
   canRelocateFaultReports: true,
 };

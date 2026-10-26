@@ -8,8 +8,9 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/reports/$reportId";
 
-const { get, auth, listeners } = vi.hoisted(() => ({
+const { get, auth, listeners, search } = vi.hoisted(() => ({
   get: vi.fn(),
+  search: { estateId: undefined as string | undefined },
   auth: { user: { id: "resident-a" }, role: "user", loading: false },
   listeners: new Set<() => void>(),
 }));
@@ -18,6 +19,7 @@ const REPORT_NOT_FOUND = /report.*not found|report.*unavailable/i;
 vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  useSearch: () => search,
   useParams: () => ({ reportId: "00000000-0000-0000-0000-000000000010" }),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", async () => {
@@ -58,6 +60,7 @@ const detail = {
 
 beforeEach(() => {
   auth.user = { id: "resident-a" };
+  search.estateId = undefined;
   get.mockReset();
   get.mockImplementation((path: string) => {
     if (path.endsWith("/images/{imageId}")) {
@@ -217,4 +220,13 @@ it("removes the previous user's image and revokes its blob URL on an account cha
   expect(screen.queryByRole("img")).toBeNull();
   expect(screen.queryByText(detail.description)).toBeNull();
   expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:resident-image");
+});
+
+it("returns to the selected estate's report history", async () => {
+  search.estateId = "maple";
+  renderWithProviders(<Page />);
+  const back = await screen.findByRole("link", {
+    name: "Return to My Reports",
+  });
+  expect(back.getAttribute("href")).toBe("/reports?estateId=maple");
 });

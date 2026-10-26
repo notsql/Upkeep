@@ -2,8 +2,16 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { useResidentContext } from "@/lib/reports";
 import { NewReportForm } from "@/routes/_auth/reports/new/-components/new-report-form";
 
-export function NewReportPage() {
+export function NewReportPage({
+  requestedEstateId,
+}: {
+  requestedEstateId?: string;
+} = {}) {
   const context = useResidentContext();
+  const unavailable =
+    !!context.data &&
+    !!requestedEstateId &&
+    !context.data.estates.some((estate) => estate.id === requestedEstateId);
 
   return (
     <main className="page-layout">
@@ -18,7 +26,15 @@ export function NewReportPage() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {context.data && !context.data.canSubmit ? (
+      {unavailable ? (
+        <Alert role="alert">
+          <AlertDescription>
+            Reporting is unavailable for the selected estate. Choose an active
+            Resident estate from the estate menu.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {context.data && !context.data.canSubmit && !unavailable ? (
         <Alert role="alert">
           <AlertDescription>
             You have no estate assigned. Contact your estate manager before
@@ -26,8 +42,11 @@ export function NewReportPage() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {context.data?.canSubmit ? (
-        <NewReportForm estates={context.data.estates} />
+      {context.data?.canSubmit && !unavailable ? (
+        <NewReportForm
+          estates={context.data.estates}
+          initialEstateId={requestedEstateId}
+        />
       ) : null}
     </main>
   );

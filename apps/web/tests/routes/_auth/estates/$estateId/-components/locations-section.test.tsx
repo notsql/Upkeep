@@ -82,6 +82,13 @@ function serve(
                   role: options.role,
                   estateId: options.assignmentId ?? estate.id,
                   canManageEstate: options.role === "MANAGER",
+                  canCreateLocations:
+                    !options.deactivatedAt &&
+                    ((options.owned ?? true) || options.role === "MANAGER"),
+                  canCreateFloors:
+                    !options.deactivatedAt && (options.owned ?? true),
+                  canEditLocations:
+                    !options.deactivatedAt && (options.owned ?? true),
                 },
               ]
             : [],

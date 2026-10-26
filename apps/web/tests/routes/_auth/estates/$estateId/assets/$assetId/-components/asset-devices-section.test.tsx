@@ -69,6 +69,7 @@ const device: Device = {
     { metric: "PRESSURE", unit: "bar" },
   ],
   reportingIntervalSeconds: 60,
+  status: "AWAITING_FIRST_READING",
   createdAt: at,
   updatedAt: at,
 };
@@ -115,6 +116,21 @@ describe("AssetDevicesSection", () => {
       params: { path: { estateId: "estate-id", assetId: "asset-id" } },
     });
   });
+
+  it.each([
+    ["ONLINE", "Online"],
+    ["OFFLINE", "Offline"],
+  ] as const)(
+    "shows a %s device's status and when it was last seen",
+    async (status, label) => {
+      const lastSeenAt = "2026-10-24T08:30:00Z";
+      devices = [{ ...device, lastSeenAt, status }];
+      renderSection();
+      const item = within(await screen.findByRole("listitem"));
+      item.getByText(label);
+      item.getByText(`Last seen ${new Date(lastSeenAt).toLocaleString()}`);
+    }
+  );
 
   it("says when an asset has no devices, and hides registration on a deactivated asset", async () => {
     devices = [];

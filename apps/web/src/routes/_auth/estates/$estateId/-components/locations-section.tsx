@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import {
@@ -40,6 +41,29 @@ import {
 const EMPTY: Location[] = [];
 const EMPTY_EXPANSION: string[] = [];
 
+function locationPermissions(
+  estate: ReturnType<typeof useEstate>["data"],
+  permission: components["schemas"]["EstateAccessResponse"] | undefined
+) {
+  const active = Boolean(estate) && !estate?.deactivatedAt;
+  const presetCreator =
+    permission?.role === "MANAGER" && permission.canManageEstate;
+  const canCreate =
+    active &&
+    Boolean(permission?.canCreateLocations ?? (estate?.owned || presetCreator));
+  const canCreateFloors =
+    active && Boolean(permission?.canCreateFloors ?? estate?.owned);
+  const canEdit =
+    active && Boolean(permission?.canEditLocations ?? estate?.owned);
+  const canDeactivate = active && Boolean(estate?.owned);
+  return {
+    create: canCreate,
+    levels: canCreateFloors,
+    edit: canEdit,
+    deactivate: canDeactivate,
+  };
+}
+
 export function LocationsSection({ estateId }: { estateId: string }) {
   const estate = useEstate(estateId);
   const access = useAppAccess();
@@ -51,14 +75,17 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   const [panel, setPanel] = useState<Panel>();
   const id = useId();
 
-  const active = Boolean(estate.data) && !estate.data?.deactivatedAt;
-  const manager = access.data?.estates.some(
-    (assignment) =>
-      assignment.estateId === estateId && assignment.canManageEstate
+  const permission = access.data?.estates.find(
+    (assignment) => assignment.estateId === estateId
   );
-  const canCreate = active && Boolean(estate.data?.owned || manager);
-  const canEdit = active && Boolean(estate.data?.owned);
-  const canOpenPanel = panel?.kind === "create" ? canCreate : canEdit;
+  const panelPermissions = locationPermissions(estate.data, permission);
+  const {
+    create: canCreate,
+    levels: canCreateFloors,
+    edit: canEdit,
+    deactivate: canDeactivate,
+  } = panelPermissions;
+  const canOpenPanel = panel ? panelPermissions[panel.kind] : false;
   const items = locations.data ?? EMPTY;
   const tree = useMemo(() => buildLocationTree(items), [items]);
   const searching = query.trim() !== "";
@@ -257,6 +284,8 @@ export function LocationsSection({ estateId }: { estateId: string }) {
         {locations.data ? (
           <LocationTree
             canCreate={canCreate}
+            canCreateFloors={canCreateFloors}
+            canDeactivate={canDeactivate}
             canEdit={canEdit}
             expandedIds={expandedIds ?? EMPTY_EXPANSION}
             onPanel={setPanel}

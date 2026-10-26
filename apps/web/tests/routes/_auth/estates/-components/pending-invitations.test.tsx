@@ -32,7 +32,7 @@ it("requires an explicit accept action and refreshes estate access", async () =>
   vi.mocked(api.POST).mockResolvedValue({
     data: { estateIds: ["estate"] },
     response: new Response(),
-  });
+  } as never);
   vi.mocked(api.GET).mockResolvedValue({
     data: [],
     response: new Response(),

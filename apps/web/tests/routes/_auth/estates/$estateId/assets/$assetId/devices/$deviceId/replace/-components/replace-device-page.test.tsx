@@ -47,6 +47,7 @@ const old: Device = {
   model: "PT-100",
   metrics: [{ metric: "PRESSURE", unit: "bar" }],
   reportingIntervalSeconds: 300,
+  status: "AWAITING_FIRST_READING",
   createdAt: at,
   updatedAt: at,
 };

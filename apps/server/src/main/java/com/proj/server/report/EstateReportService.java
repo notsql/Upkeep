@@ -1,5 +1,6 @@
 package com.proj.server.report;
 
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.resident.IssueReportDetailResponse;
 import com.proj.server.resident.IssueReportPageResponse;
 import com.proj.server.resident.ResidentImageStore;
@@ -29,13 +30,15 @@ public class EstateReportService {
         this.images = images;
     }
 
-    public Record authorize(UUID estateId, String user, boolean lock) {
+    public Record authorize(UUID estateId, String user, EstatePermissionCode permission, boolean lock) {
         var estate = repository.estate(estateId, lock);
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user, lock);
-        if (!"MANAGER".equals(role) && !"CREW".equals(role)) {
+        boolean customAllowed = "CUSTOM".equals(role) && repository.hasPermission(estateId, user, permission);
+        if (!"MANAGER".equals(role) && !"CREW".equals(role) && !customAllowed) {
             boolean known = user.equals(estate.get("ownerUserId", String.class))
-                    || (role != null && Set.of("MEMBER", "COUNCIL", "RESIDENT").contains(role));
+                    || (role != null
+                            && Set.of("MEMBER", "COUNCIL", "RESIDENT", "CUSTOM").contains(role));
             throw error(
                     known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
                     known ? "Responder membership required." : "Estate not found.");
@@ -52,7 +55,7 @@ public class EstateReportService {
             Integer maxLevelPosition,
             String cursor,
             Integer requestedLimit) {
-        authorize(estateId, user, false);
+        authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         if (locationId != null && repository.location(estateId, locationId) == null)
             throw error(HttpStatus.NOT_FOUND, "Location not found.");
         if (blockId != null) {
@@ -91,12 +94,12 @@ public class EstateReportService {
     }
 
     public IssueReportDetailResponse detail(UUID estateId, String user, UUID reportId) {
-        authorize(estateId, user, false);
+        authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         return find(estateId, reportId);
     }
 
     public ImageBytes image(UUID estateId, String user, UUID reportId, UUID imageId) {
-        authorize(estateId, user, false);
+        authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         var image = reports.estateImage(estateId, reportId, imageId)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Report image not found."));
         return new ImageBytes(images.read(image.key()), image.contentType());
@@ -105,7 +108,7 @@ public class EstateReportService {
     @Transactional
     public IssueReportDetailResponse relocate(
             UUID estateId, String user, UUID reportId, RelocateReportRequest request) {
-        var estate = authorize(estateId, user, true);
+        var estate = authorize(estateId, user, EstatePermissionCode.RELOCATE_FAULT_REPORTS, true);
         if (estate.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         var report = find(estateId, reportId);
         if (!report.location().id().equals(request.expectedLocationId()))

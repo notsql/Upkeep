@@ -3,6 +3,7 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { DeviceStatusBadge } from "@/components/device-status-badge";
 import {
   type Device,
   deviceMetrics,
@@ -133,12 +134,6 @@ function DeviceItem({
   );
   const active = !device.deactivatedAt;
   const actionable = canManage && active;
-  let status = "Awaiting first reading";
-  if (device.deactivatedAt) {
-    status = `Deactivated ${new Date(device.deactivatedAt).toLocaleString()}`;
-  } else if (device.lastSeenAt) {
-    status = `Last seen ${new Date(device.lastSeenAt).toLocaleString()}`;
-  }
   const replaces = device.replacesDeviceId
     ? identifiers.get(device.replacesDeviceId)
     : undefined;
@@ -149,12 +144,20 @@ function DeviceItem({
     <li className="rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h3 className="break-all font-medium">{device.identifier}</h3>
-        <Badge
-          className="whitespace-normal"
-          variant={active ? "outline" : "secondary"}
-        >
-          {status}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          {device.lastSeenAt ? (
+            <Badge className="whitespace-normal" variant="outline">
+              {`Last seen ${new Date(device.lastSeenAt).toLocaleString()}`}
+            </Badge>
+          ) : null}
+          {device.deactivatedAt ? (
+            <Badge className="whitespace-normal" variant="secondary">
+              {`Deactivated ${new Date(device.deactivatedAt).toLocaleString()}`}
+            </Badge>
+          ) : (
+            <DeviceStatusBadge status={device.status} />
+          )}
+        </div>
       </div>
       {replaces ? (
         <p className="mt-1 text-muted-foreground text-sm">

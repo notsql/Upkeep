@@ -99,15 +99,20 @@ export function useCreateReport() {
   });
 }
 
-export function useReportList(cursor?: string) {
+export function useReportList(cursor?: string, estateId?: string) {
   const userId = useResidentId();
   return useQuery({
-    queryKey: [userId, "reports", "list", cursor],
+    queryKey: [userId, "reports", "list", estateId, cursor],
     enabled: !!userId,
     retry: false,
     queryFn: async () => {
       const { data, error } = await api.GET("/resident/reports", {
-        params: { query: cursor ? { cursor } : {} },
+        params: {
+          query: {
+            ...(cursor ? { cursor } : {}),
+            ...(estateId ? { estateId } : {}),
+          },
+        },
       });
       if (error || !data) {
         throw reportError(error, "Unable to load reports.");

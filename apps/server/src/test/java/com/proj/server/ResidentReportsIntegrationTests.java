@@ -391,6 +391,94 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
+    void filtersOwnHistoryByEstateBeforePaginationAndRetainsFormerResidentHistory() throws Exception {
+        var firstEstate = estate("FILTER-A", false);
+        var secondEstate = estate("FILTER-B", false);
+        assign("resident-a", firstEstate);
+        var firstBlock = location(firstEstate, "BLOCK", null, null, false);
+        var firstLevel = location(firstEstate, "LEVEL", firstBlock, "BLOCK", false);
+        var secondBlock = location(secondEstate, "BLOCK", null, null, false);
+        var secondLevel = location(secondEstate, "LEVEL", secondBlock, "BLOCK", false);
+        var older = report("resident-a", firstEstate, firstLevel, "Older first-estate report");
+        var newer = report("resident-a", firstEstate, firstLevel, "Newer first-estate report");
+        var otherEstate = report("resident-a", secondEstate, secondLevel, "Second-estate report");
+        report("resident-b", firstEstate, firstLevel, "Another resident's private report");
+        db.execute("update \"IssueReport\" set \"createdAt\"=now()-interval '3 days' where id=?", older);
+        db.execute("update \"IssueReport\" set \"createdAt\"=now()-interval '2 days' where id=?", newer);
+        db.execute("update \"IssueReport\" set \"createdAt\"=now()-interval '1 day' where id=?", otherEstate);
+        db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='resident-a'", firstEstate);
+        var first = mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", firstEstate.toString())
+                                .param("limit", "1"),
+                        "resident-a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(newer.toString()))
+                .andReturn();
+        String cursor = com.jayway.jsonpath.JsonPath.read(first.getResponse().getContentAsString(), "$.nextCursor");
+        mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", firstEstate.toString())
+                                .param("limit", "1")
+                                .param("cursor", cursor),
+                        "resident-a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].id").value(older.toString()))
+                .andExpect(jsonPath("$.nextCursor").isEmpty());
+        mvc.perform(asUser(get("/resident/reports"), "resident-a"))
+                .andExpect(jsonPath("$.items.length()").value(3));
+        mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", UUID.randomUUID().toString()),
+                        "resident-a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(0));
+    }
+
+    @Test
+    void reportCursorsCannotBeReusedForAnotherEstateOrTheUnfilteredList() throws Exception {
+        var firstEstate = estate("CURSOR-A", false);
+        var secondEstate = estate("CURSOR-B", false);
+        var block = location(firstEstate, "BLOCK", null, null, false);
+        var level = location(firstEstate, "LEVEL", block, "BLOCK", false);
+        report("resident-a", firstEstate, level, "First report");
+        report("resident-a", firstEstate, level, "Second report");
+        var response = mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", firstEstate.toString())
+                                .param("limit", "1"),
+                        "resident-a"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String cursor = com.jayway.jsonpath.JsonPath.read(response.getResponse().getContentAsString(), "$.nextCursor");
+        mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", secondEstate.toString())
+                                .param("cursor", cursor),
+                        "resident-a"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(asUser(get("/resident/reports").param("cursor", cursor), "resident-a"))
+                .andExpect(status().isBadRequest());
+        var all = mvc.perform(asUser(get("/resident/reports").param("limit", "1"), "resident-a"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String allCursor = com.jayway.jsonpath.JsonPath.read(all.getResponse().getContentAsString(), "$.nextCursor");
+        mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", firstEstate.toString())
+                                .param("cursor", allCursor),
+                        "resident-a"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void rejectsMalformedEstateFiltersWithoutRequiringCurrentMembershipForOwnedHistory() throws Exception {
+        mvc.perform(asUser(get("/resident/reports").param("estateId", "not-a-uuid"), "resident-a"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void rejectsTooManyUnsupportedMalformedAndOversizedImages() throws Exception {
         var e = estate("IMAGES", false);
         assign("resident-a", e);

@@ -85,3 +85,7 @@ management access and denies Council/provider-role bypass. Home redirects an
 account with report access but no management estate into its first assigned
 report estate. `canRelocateFaultReports` controls correction availability; the
 server independently rechecks membership/activity. See [estate-reports.md](estate-reports.md).
+
+Work-order list/detail routes check canViewWorkOrders before the generic
+management guard so Crew can enter. The /new route requires canCreateWorkOrders.
+See [work-orders.md](work-orders.md).

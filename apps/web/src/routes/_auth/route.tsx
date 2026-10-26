@@ -51,6 +51,18 @@ export const Route = createFileRoute("/_auth")({
       }
       return { user };
     }
+    if (path.startsWith("/estates/") && path.split("/")[3] === "work-orders") {
+      const [, , estateId] = path.split("/");
+      guardWorkOrders(
+        path,
+        access.estates.find((estate) => estate.estateId === estateId)
+      );
+      return { user };
+    }
+    if (path.startsWith("/estates/") && path.split("/")[3] === "documents") {
+      guardDocuments(path, access);
+      return { user };
+    }
     if (!access.canEnterWorkspace) {
       throw redirect({ href: "/reports/new" });
     }
@@ -65,7 +77,10 @@ function guardEstatePath(
   access: components["schemas"]["AppAccessResponse"]
 ) {
   const [, , estateId, feature] = path.split("/");
-  if (path.startsWith("/estates/") && estateId && estateId !== "new") {
+  if (!(path.startsWith("/estates/") && estateId) || estateId === "new") {
+    return;
+  }
+  {
     const estate = access.estates.find((item) => item.estateId === estateId);
     if (estate?.role === "RESIDENT") {
       throw redirect({ href: "/reports/new" });
@@ -76,17 +91,53 @@ function guardEstatePath(
       }
       return;
     }
+    if (feature === "roles") {
+      if (!estate?.canViewEstateRoles) {
+        throw notFound();
+      }
+      return;
+    }
+    if (feature === "council") {
+      if (
+        !(
+          estate?.canViewEstateInvitations ||
+          estate?.canInviteMembers ||
+          estate?.canManageInvitationPermissions
+        )
+      ) {
+        throw notFound();
+      }
+      return;
+    }
     if (!estate?.canViewManagement) {
       throw notFound();
     }
     if (feature === "assets" && !estate.canViewAssets) {
       throw notFound();
     }
-    if (
-      feature === "council" &&
-      !(estate.canInviteMembers || estate.canManageInvitationPermissions)
-    ) {
-      throw notFound();
-    }
+  }
+}
+
+function guardWorkOrders(
+  path: string,
+  estate: components["schemas"]["EstateAccessResponse"] | undefined
+) {
+  if (!estate?.canViewWorkOrders) {
+    throw notFound();
+  }
+  if (path.split("/")[4] === "new" && !estate.canCreateWorkOrders) {
+    throw notFound();
+  }
+}
+
+function guardDocuments(
+  path: string,
+  access: components["schemas"]["AppAccessResponse"]
+) {
+  const estate = access.estates.find(
+    (item) => item.estateId === path.split("/")[2]
+  );
+  if (!estate?.canViewDocuments) {
+    throw notFound();
   }
 }

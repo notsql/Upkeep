@@ -123,7 +123,7 @@ export function parseFloor(text: string): number | undefined {
     return;
   }
   const number = Number(value.replace(FLOOR_LETTER, ""));
-  if (number === 0) {
+  if (number === 0 || !Number.isSafeInteger(number)) {
     return;
   }
   return value.startsWith("B") ? -number : number;
@@ -134,8 +134,15 @@ export function floorName(floor: number): string {
   return floor > 0 ? `L${floor}` : `B${-floor}`;
 }
 
-/** Every floor from highest to lowest, with no floor 0. */
-export function floorRange(lowest: number, highest: number): number[] {
+/** Highest to lowest without floor 0; undefined when the range exceeds the limit. */
+export function floorRange(
+  lowest: number,
+  highest: number
+): number[] | undefined {
+  const count = highest - lowest + 1 - (lowest <= 0 && highest >= 0 ? 1 : 0);
+  if (count > MAX_FLOORS) {
+    return;
+  }
   const floors: number[] = [];
   for (let floor = highest; floor >= lowest; floor -= 1) {
     if (floor !== 0) {

@@ -4,5 +4,6 @@ public enum EstateRole {
     MANAGER,
     COUNCIL,
     RESIDENT,
-    CREW
+    CREW,
+    CUSTOM
 }

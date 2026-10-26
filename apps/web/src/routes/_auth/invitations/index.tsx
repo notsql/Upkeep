@@ -16,7 +16,7 @@ function InvitationsPage() {
         title="Estate invitations"
       />
       <InvitationAcceptance />
-      <PendingInvitations />
+      <PendingInvitations showEmpty />
     </main>
   );
 }
