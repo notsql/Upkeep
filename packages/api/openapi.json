@@ -3550,6 +3550,266 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/inspections": {
+      "get": {
+        "tags": ["inspection-controller"],
+        "operationId": "listInspectionResults",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorised private inspection data",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionResultPageResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["inspection-controller"],
+        "operationId": "createInspectionResult",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInspectionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Inspection recorded; no work order is created automatically",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/events": {
       "get": {
         "tags": ["asset-event-controller"],
@@ -6879,6 +7139,376 @@
         }
       }
     },
+    "/estates/{estateId}/inspection-results/{inspectionId}": {
+      "get": {
+        "tags": ["inspection-controller"],
+        "operationId": "getInspectionSource",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorised private inspection data",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/inspection-assets": {
+      "get": {
+        "tags": ["inspection-controller"],
+        "operationId": "listInspectionAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorised private inspection data",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionAssetPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/inspection-assets/{assetId}": {
+      "get": {
+        "tags": ["inspection-controller"],
+        "operationId": "getInspectionAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorised private inspection data",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionAssetResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/flatlined-sensors": {
       "get": {
         "tags": ["flatline-controller"],
@@ -7761,6 +8391,270 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}": {
+      "get": {
+        "tags": ["inspection-controller"],
+        "operationId": "getInspectionResult",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorised private inspection data",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}": {
+      "get": {
+        "tags": ["inspection-controller"],
+        "operationId": "getInspectionPhoto",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "inspectionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "photoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Authorised private inspection data",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/failure-risk": {
       "get": {
         "tags": ["failure-risk-controller"],
@@ -8447,900 +9341,6 @@
           },
           "204": {
             "description": "Invitation cancelled for this estate"
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/assets/{assetId}/inspections": {
-      "get": {
-        "tags": ["inspection-controller"],
-        "operationId": "listInspectionResults",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Authorised private inspection data",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InspectionResultPageResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["inspection-controller"],
-        "operationId": "createInspectionResult",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInspectionRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Inspection recorded; no work order is created automatically",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InspectionResultResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/inspection-results/{inspectionId}": {
-      "get": {
-        "tags": ["inspection-controller"],
-        "operationId": "getInspectionSource",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "inspectionId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Authorised private inspection data",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InspectionResultResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/inspection-assets": {
-      "get": {
-        "tags": ["inspection-controller"],
-        "operationId": "listInspectionAssets",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "cursor",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Authorised private inspection data",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InspectionAssetPageResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/inspection-assets/{assetId}": {
-      "get": {
-        "tags": ["inspection-controller"],
-        "operationId": "getInspectionAsset",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Authorised private inspection data",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InspectionAssetResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}": {
-      "get": {
-        "tags": ["inspection-controller"],
-        "operationId": "getInspectionResult",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "inspectionId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Authorised private inspection data",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InspectionResultResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}": {
-      "get": {
-        "tags": ["inspection-controller"],
-        "operationId": "getInspectionPhoto",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "inspectionId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "photoId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid fields or cursor",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Inspection authority required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Related record unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive resource or changed location",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "413": {
-            "description": "Photo too large",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "415": {
-            "description": "Unsupported photo format",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage or persistence unavailable",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Authorised private inspection data",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string",
-                  "format": "byte"
-                }
-              }
-            }
           }
         }
       }
@@ -10570,7 +10570,7 @@
           },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
           },
           "installedOn": {
             "type": ["string", "null"],
@@ -10705,7 +10705,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "\u00b0C"
+            "description": "°C"
           },
           "flowRate": {
             "type": "number",
@@ -10759,6 +10759,136 @@
           "readingsScored"
         ]
       },
+      "CreateInspectionRequest": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["PASS", "FAIL"]
+          },
+          "inspectedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "expectedLocationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "binary"
+            }
+          }
+        },
+        "required": ["expectedLocationId", "inspectedOn", "outcome"]
+      },
+      "InspectionPhotoResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentType": {
+            "type": "string"
+          }
+        },
+        "required": ["contentType", "id"]
+      },
+      "InspectionResultResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "estateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationPath": {
+            "type": "string"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["PASS", "FAIL"]
+          },
+          "inspectedOn": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": ["string", "null"]
+          },
+          "recordedByUserId": {
+            "type": "string"
+          },
+          "recordedByName": {
+            "type": ["string", "null"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "photos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InspectionPhotoResponse"
+            }
+          },
+          "workOrder": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InspectionWorkOrderResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "assetId",
+          "createdAt",
+          "estateId",
+          "id",
+          "inspectedOn",
+          "locationId",
+          "locationPath",
+          "notes",
+          "outcome",
+          "photos",
+          "recordedByName",
+          "recordedByUserId",
+          "workOrder"
+        ]
+      },
+      "InspectionWorkOrderResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "reference"]
+      },
       "CreateAssetEventRequest": {
         "type": "object",
         "properties": {
@@ -10774,6 +10904,31 @@
             "type": "string",
             "maxLength": 2000,
             "minLength": 0
+          },
+          "findings": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "workPerformed": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "serviceProvider": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "partsReplaced": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "downtimeMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
           }
         },
         "required": ["notes", "occurredOn", "type"]
@@ -10822,6 +10977,22 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "findings": {
+            "type": ["string", "null"]
+          },
+          "workPerformed": {
+            "type": ["string", "null"]
+          },
+          "serviceProvider": {
+            "type": ["string", "null"]
+          },
+          "partsReplaced": {
+            "type": ["string", "null"]
+          },
+          "downtimeMinutes": {
+            "type": ["integer", "null"],
+            "format": "int32"
           }
         },
         "required": [
@@ -11115,7 +11286,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "\u00b0C"
+            "example": "°C"
           },
           "measuredAt": {
             "type": "string",
@@ -11711,6 +11882,76 @@
           "label",
           "permissions",
           "role"
+        ]
+      },
+      "InspectionAssetPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InspectionAssetResponse"
+            }
+          },
+          "nextCursor": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"]
+      },
+      "InspectionAssetResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "estateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "locationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "locationPath": {
+            "type": "string"
+          },
+          "installedOn": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "estateActive": {
+            "type": "boolean"
+          },
+          "assetActive": {
+            "type": "boolean"
+          },
+          "locationActive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assetActive",
+          "category",
+          "estateActive",
+          "estateId",
+          "id",
+          "installedOn",
+          "locationActive",
+          "locationId",
+          "locationPath",
+          "name",
+          "reference"
         ]
       },
       "FlatlineEvidenceResponse": {
@@ -12320,6 +12561,21 @@
         },
         "required": ["type"]
       },
+      "InspectionResultPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InspectionResultResponse"
+            }
+          },
+          "nextCursor": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": ["items", "nextCursor"]
+      },
       "DashboardConditionCounts": {
         "type": "object",
         "properties": {
@@ -12767,221 +13023,6 @@
           "estateName",
           "role"
         ]
-      },
-      "CreateInspectionRequest": {
-        "type": "object",
-        "properties": {
-          "outcome": {
-            "type": "string",
-            "enum": ["PASS", "FAIL"]
-          },
-          "inspectedOn": {
-            "type": "string",
-            "format": "date"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "expectedLocationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "photos": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "binary"
-            }
-          }
-        },
-        "required": ["expectedLocationId", "inspectedOn", "outcome"]
-      },
-      "InspectionPhotoResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "contentType": {
-            "type": "string"
-          }
-        },
-        "required": ["contentType", "id"]
-      },
-      "InspectionResultResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "locationPath": {
-            "type": "string"
-          },
-          "outcome": {
-            "type": "string",
-            "enum": ["PASS", "FAIL"]
-          },
-          "inspectedOn": {
-            "type": "string",
-            "format": "date"
-          },
-          "notes": {
-            "type": ["string", "null"]
-          },
-          "recordedByUserId": {
-            "type": "string"
-          },
-          "recordedByName": {
-            "type": ["string", "null"]
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "photos": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InspectionPhotoResponse"
-            }
-          },
-          "workOrder": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/InspectionWorkOrderResponse"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          }
-        },
-        "required": [
-          "assetId",
-          "createdAt",
-          "estateId",
-          "id",
-          "inspectedOn",
-          "locationId",
-          "locationPath",
-          "notes",
-          "outcome",
-          "photos",
-          "recordedByName",
-          "recordedByUserId",
-          "workOrder"
-        ]
-      },
-      "InspectionWorkOrderResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "reference": {
-            "type": "string"
-          }
-        },
-        "required": ["id", "reference"]
-      },
-      "InspectionAssetPageResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InspectionAssetResponse"
-            }
-          },
-          "nextCursor": {
-            "type": ["string", "null"]
-          }
-        },
-        "required": ["items", "nextCursor"]
-      },
-      "InspectionAssetResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "estateId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "locationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "reference": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "locationPath": {
-            "type": "string"
-          },
-          "installedOn": {
-            "type": ["string", "null"],
-            "format": "date"
-          },
-          "estateActive": {
-            "type": "boolean"
-          },
-          "assetActive": {
-            "type": "boolean"
-          },
-          "locationActive": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "assetActive",
-          "category",
-          "estateActive",
-          "estateId",
-          "id",
-          "installedOn",
-          "locationActive",
-          "locationId",
-          "locationPath",
-          "name",
-          "reference"
-        ]
-      },
-      "InspectionResultPageResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InspectionResultResponse"
-            }
-          },
-          "nextCursor": {
-            "type": ["string", "null"]
-          }
-        },
-        "required": ["items", "nextCursor"]
       }
     },
     "securitySchemes": {

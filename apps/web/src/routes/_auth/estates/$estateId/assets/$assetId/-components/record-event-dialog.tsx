@@ -10,6 +10,7 @@ import {
 } from "@proj/ui/components/dialog";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldLabel,
   FieldLegend,
@@ -40,13 +41,28 @@ import {
 } from "@/lib/asset-events";
 
 interface FormValues {
+  downtimeMinutes: string;
+  findings: string;
   notes: string;
   occurredOn: string;
+  partsReplaced: string;
+  serviceProvider: string;
   type: string;
+  workPerformed: string;
 }
 
 type FieldName = keyof FormValues;
 type FieldErrors = Partial<Record<FieldName, string>>;
+
+// Optional text sent only when filled in; left out, it means "not known".
+const DETAIL_FIELDS = [
+  "findings",
+  "workPerformed",
+  "serviceProvider",
+  "partsReplaced",
+] as const;
+
+const WHOLE_NUMBER = /^\d+$/;
 
 const typeItems = [
   { value: "", label: "Select a type" },
@@ -74,6 +90,9 @@ function validate(values: FormValues, today: string): FieldErrors {
   if (!values.notes.trim()) {
     errors.notes = "Notes are required.";
   }
+  if (values.downtimeMinutes && !WHOLE_NUMBER.test(values.downtimeMinutes)) {
+    errors.downtimeMinutes = "Downtime must be a whole number of minutes.";
+  }
   return errors;
 }
 
@@ -92,6 +111,11 @@ export function RecordEventDialog({
     type: defaultType ?? "",
     occurredOn: today,
     notes: "",
+    findings: "",
+    workPerformed: "",
+    serviceProvider: "",
+    partsReplaced: "",
+    downtimeMinutes: "",
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string>();
@@ -134,12 +158,22 @@ export function RecordEventDialog({
       submitting.current = true;
       setPending(true);
       setError(undefined);
+      const input: AssetEventInput = {
+        type: values.type,
+        occurredOn: values.occurredOn,
+        notes: values.notes.trim(),
+      };
+      for (const field of DETAIL_FIELDS) {
+        const value = values[field].trim();
+        if (value) {
+          input[field] = value;
+        }
+      }
+      if (values.downtimeMinutes) {
+        input.downtimeMinutes = Number(values.downtimeMinutes);
+      }
       try {
-        await onSave({
-          type: values.type,
-          occurredOn: values.occurredOn,
-          notes: values.notes.trim(),
-        });
+        await onSave(input);
       } catch (cause) {
         setError(
           cause instanceof Error
@@ -226,6 +260,75 @@ export function RecordEventDialog({
                 value={values.notes}
               />
               {errorText("notes")}
+            </Field>
+          </FieldSet>
+          <FieldSet disabled={pending}>
+            <FieldLegend>Maintenance details</FieldLegend>
+            <FieldDescription>
+              Optional. Leave blank if not known.
+            </FieldDescription>
+            <Field>
+              <FieldLabel htmlFor={`${id}-findings`}>Findings</FieldLabel>
+              <Textarea
+                id={`${id}-findings`}
+                maxLength={2500}
+                name="findings"
+                onChange={handleChange}
+                value={values.findings}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-work-performed`}>
+                Work performed
+              </FieldLabel>
+              <Textarea
+                id={`${id}-work-performed`}
+                maxLength={2500}
+                name="workPerformed"
+                onChange={handleChange}
+                value={values.workPerformed}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-service-provider`}>
+                Service provider
+              </FieldLabel>
+              <Input
+                id={`${id}-service-provider`}
+                maxLength={200}
+                name="serviceProvider"
+                onChange={handleChange}
+                value={values.serviceProvider}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-parts-replaced`}>
+                Parts replaced
+              </FieldLabel>
+              <Textarea
+                id={`${id}-parts-replaced`}
+                maxLength={2500}
+                name="partsReplaced"
+                onChange={handleChange}
+                value={values.partsReplaced}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-downtime`}>
+                Downtime (minutes)
+              </FieldLabel>
+              <Input
+                {...errorProps("downtimeMinutes")}
+                id={`${id}-downtime`}
+                inputMode="numeric"
+                min={0}
+                name="downtimeMinutes"
+                onChange={handleChange}
+                step={1}
+                type="number"
+                value={values.downtimeMinutes}
+              />
+              {errorText("downtimeMinutes")}
             </Field>
           </FieldSet>
           {error ? (

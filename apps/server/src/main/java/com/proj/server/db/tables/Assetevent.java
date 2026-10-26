@@ -118,6 +118,31 @@ public class Assetevent extends TableImpl<AsseteventRecord> {
      */
     public final TableField<AsseteventRecord, OffsetDateTime> CREATEDAT = createField(DSL.name("createdAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "");
 
+    /**
+     * The column <code>public.AssetEvent.downtimeMinutes</code>.
+     */
+    public final TableField<AsseteventRecord, Integer> DOWNTIMEMINUTES = createField(DSL.name("downtimeMinutes"), SQLDataType.INTEGER, this, "");
+
+    /**
+     * The column <code>public.AssetEvent.findings</code>.
+     */
+    public final TableField<AsseteventRecord, String> FINDINGS = createField(DSL.name("findings"), SQLDataType.VARCHAR(2500), this, "");
+
+    /**
+     * The column <code>public.AssetEvent.partsReplaced</code>.
+     */
+    public final TableField<AsseteventRecord, String> PARTSREPLACED = createField(DSL.name("partsReplaced"), SQLDataType.VARCHAR(2500), this, "");
+
+    /**
+     * The column <code>public.AssetEvent.serviceProvider</code>.
+     */
+    public final TableField<AsseteventRecord, String> SERVICEPROVIDER = createField(DSL.name("serviceProvider"), SQLDataType.VARCHAR(200), this, "");
+
+    /**
+     * The column <code>public.AssetEvent.workPerformed</code>.
+     */
+    public final TableField<AsseteventRecord, String> WORKPERFORMED = createField(DSL.name("workPerformed"), SQLDataType.VARCHAR(2500), this, "");
+
     private Assetevent(Name alias, Table<AsseteventRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

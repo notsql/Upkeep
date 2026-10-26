@@ -55,6 +55,11 @@ public class AssetEventRepository {
                 .set(ASSETEVENT.RECORDEDBYUSERID, recordedByUserId)
                 .set(ASSETEVENT.RECORDEDBYNAME, recordedByName)
                 .set(ASSETEVENT.CREATEDAT, OffsetDateTime.now(ZoneOffset.UTC))
+                .set(ASSETEVENT.FINDINGS, request.findings())
+                .set(ASSETEVENT.WORKPERFORMED, request.workPerformed())
+                .set(ASSETEVENT.SERVICEPROVIDER, request.serviceProvider())
+                .set(ASSETEVENT.PARTSREPLACED, request.partsReplaced())
+                .set(ASSETEVENT.DOWNTIMEMINUTES, request.downtimeMinutes())
                 .returning()
                 .fetchSingle();
     }

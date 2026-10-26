@@ -41,6 +41,11 @@ A same-estate RESIDENT membership takes precedence over conflicting ownership an
 | recordedByUserId | string | yes |  |
 | recordedByName | string / null | no |  |
 | createdAt | date-time | yes |  |
+| findings | string / null | no |  |
+| workPerformed | string / null | no |  |
+| serviceProvider | string / null | no |  |
+| partsReplaced | string / null | no |  |
+| downtimeMinutes | integer / null | no |  |
 
 ## CreateAssetEventRequest
 
@@ -49,6 +54,11 @@ A same-estate RESIDENT membership takes precedence over conflicting ownership an
 | type | BREAKDOWN_REPAIR / PREVENTIVE | yes |  |
 | occurredOn | date | yes |  |
 | notes | string | yes | minLength=0, maxLength=2000 |
+| findings | string | no | maxLength=2500 |
+| workPerformed | string | no | maxLength=2500 |
+| serviceProvider | string | no | maxLength=200 |
+| partsReplaced | string | no | maxLength=2500 |
+| downtimeMinutes | integer | no | minimum=0 |
 
 ## EstateError
 
@@ -63,12 +73,15 @@ A same-estate RESIDENT membership takes precedence over conflicting ownership an
 - Recording requires an active estate and an active asset (409 otherwise); estate then asset rows are locked. Listing works for deactivated assets: their events are kept, only closed to new entries.
 - Each event snapshots the asset's manufacturer and model at the time (`assetManufacturer`, `assetModel`, display names). `countsTowardForecast` is true when the type counts (both current types do), the date is on or after `installedOn`, and the snapshot matches the asset's current manufacturer and model: events from a replaced unit stay in history but stop feeding the forecast.
 - `recordedByName` comes from WorkOS and may be null. A constraint that still fires returns 409.
+- Maintenance details (ID-49) are optional: `findings`, `workPerformed`, `serviceProvider`, `partsReplaced` and `downtimeMinutes`. Text is trimmed; omitted or blank text is stored as null ("not known"). `downtimeMinutes` must be a JSON whole number of 0 or more: `0` means no downtime, null means not known. A negative or fractional number, a string, or text over its limit returns 400. Events recorded before ID-49 return null for all five. The details do not affect `countsTowardForecast` or the forecast.
 - Recording an event changes the derived failure risk (`failure-risk.md`) on the next read.
 
 Example: `POST /estates/{estateId}/assets/{assetId}/events`
 
 ```json
-{"type":"BREAKDOWN_REPAIR","occurredOn":"2026-10-02","notes":"Replaced mechanical seal"}
+{"type":"BREAKDOWN_REPAIR","occurredOn":"2026-10-02","notes":"Pump tripped",
+ "findings":"Mechanical seal worn","workPerformed":"Replaced mechanical seal",
+ "serviceProvider":"Acme Pumps","partsReplaced":"Mechanical seal","downtimeMinutes":90}
 ```
 
 Completed work-order outcomes are read separately through

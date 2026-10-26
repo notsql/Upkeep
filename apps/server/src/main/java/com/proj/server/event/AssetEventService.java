@@ -115,7 +115,12 @@ public class AssetEventService {
                 calculator.counts(riskAsset(asset), riskEvent(event)),
                 event.getRecordedbyuserid(),
                 event.getRecordedbyname(),
-                event.getCreatedat());
+                event.getCreatedat(),
+                event.getFindings(),
+                event.getWorkperformed(),
+                event.getServiceprovider(),
+                event.getPartsreplaced(),
+                event.getDowntimeminutes());
     }
 
     /** Catalogue names, looked up once per ID within one response. */

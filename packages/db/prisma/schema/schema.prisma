@@ -406,6 +406,12 @@ model AssetEvent {
   recordedByUserId String   @db.VarChar(255)
   recordedByName   String?  @db.VarChar(200)
   createdAt        DateTime @default(now()) @db.Timestamptz(6)
+  // Optional maintenance detail (ID-49); null means not known.
+  findings         String?  @db.VarChar(2500)
+  workPerformed    String?  @db.VarChar(2500)
+  serviceProvider  String?  @db.VarChar(200)
+  partsReplaced    String?  @db.VarChar(2500)
+  downtimeMinutes  Int?
 
   estate       Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   asset        Asset         @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)

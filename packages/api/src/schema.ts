@@ -1935,12 +1935,60 @@ export interface components {
        */
       conditionRecorded?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
     };
+    CreateInspectionRequest: {
+      /** @enum {string} */
+      outcome: "PASS" | "FAIL";
+      /** Format: date */
+      inspectedOn: string;
+      notes?: string;
+      /** Format: uuid */
+      expectedLocationId: string;
+      photos?: string[];
+    };
+    InspectionPhotoResponse: {
+      /** Format: uuid */
+      id: string;
+      contentType: string;
+    };
+    InspectionResultResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      assetId: string;
+      /** Format: uuid */
+      locationId: string;
+      locationPath: string;
+      /** @enum {string} */
+      outcome: "PASS" | "FAIL";
+      /** Format: date */
+      inspectedOn: string;
+      notes: string | null;
+      recordedByUserId: string;
+      recordedByName: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      photos: components["schemas"]["InspectionPhotoResponse"][];
+      workOrder: components["schemas"]["InspectionWorkOrderResponse"] | null;
+    };
+    InspectionWorkOrderResponse: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+    };
     CreateAssetEventRequest: {
       /** @enum {string} */
       type: "BREAKDOWN_REPAIR" | "PREVENTIVE";
       /** Format: date */
       occurredOn: string;
       notes: string;
+      findings?: string;
+      workPerformed?: string;
+      serviceProvider?: string;
+      partsReplaced?: string;
+      /** Format: int32 */
+      downtimeMinutes?: number;
     };
     AssetEventResponse: {
       /** Format: uuid */
@@ -1961,6 +2009,12 @@ export interface components {
       recordedByName?: string | null;
       /** Format: date-time */
       createdAt: string;
+      findings?: string | null;
+      workPerformed?: string | null;
+      serviceProvider?: string | null;
+      partsReplaced?: string | null;
+      /** Format: int32 */
+      downtimeMinutes?: number | null;
     };
     CreateDeviceRequest: {
       identifier: string;
@@ -2315,6 +2369,27 @@ export interface components {
       customRoleVersion: number | null;
       permissions: components["schemas"]["EstatePermissionResponse"][] | null;
     };
+    InspectionAssetPageResponse: {
+      items: components["schemas"]["InspectionAssetResponse"][];
+      nextCursor: string | null;
+    };
+    InspectionAssetResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      locationId: string;
+      reference: string;
+      name: string;
+      category: string;
+      locationPath: string;
+      /** Format: date */
+      installedOn: string | null;
+      estateActive: boolean;
+      assetActive: boolean;
+      locationActive: boolean;
+    };
     FlatlineEvidenceResponse: {
       /** Format: date-time */
       unchangedSince: string;
@@ -2559,6 +2634,10 @@ export interface components {
        */
       validMax?: number;
     };
+    InspectionResultPageResponse: {
+      items: components["schemas"]["InspectionResultResponse"][];
+      nextCursor: string | null;
+    };
     DashboardConditionCounts: {
       /** Format: int64 */
       good: number;
@@ -2695,73 +2774,6 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
-    };
-    CreateInspectionRequest: {
-      /** @enum {string} */
-      outcome: "PASS" | "FAIL";
-      /** Format: date */
-      inspectedOn: string;
-      notes?: string;
-      /** Format: uuid */
-      expectedLocationId: string;
-      photos?: string[];
-    };
-    InspectionPhotoResponse: {
-      /** Format: uuid */
-      id: string;
-      contentType: string;
-    };
-    InspectionResultResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      /** Format: uuid */
-      assetId: string;
-      /** Format: uuid */
-      locationId: string;
-      locationPath: string;
-      /** @enum {string} */
-      outcome: "PASS" | "FAIL";
-      /** Format: date */
-      inspectedOn: string;
-      notes: string | null;
-      recordedByUserId: string;
-      recordedByName: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      photos: components["schemas"]["InspectionPhotoResponse"][];
-      workOrder: components["schemas"]["InspectionWorkOrderResponse"] | null;
-    };
-    InspectionWorkOrderResponse: {
-      /** Format: uuid */
-      id: string;
-      reference: string;
-    };
-    InspectionAssetPageResponse: {
-      items: components["schemas"]["InspectionAssetResponse"][];
-      nextCursor: string | null;
-    };
-    InspectionAssetResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      estateId: string;
-      /** Format: uuid */
-      locationId: string;
-      reference: string;
-      name: string;
-      category: string;
-      locationPath: string;
-      /** Format: date */
-      installedOn: string | null;
-      estateActive: boolean;
-      assetActive: boolean;
-      locationActive: boolean;
-    };
-    InspectionResultPageResponse: {
-      items: components["schemas"]["InspectionResultResponse"][];
-      nextCursor: string | null;
     };
   };
 }

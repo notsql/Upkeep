@@ -8,6 +8,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { CompletionOutcome } from "@/components/work-order-completion";
 import {
+  type AssetEvent,
   type AssetEventInput,
   assetEventTypeLabel,
   useAssetEvents,
@@ -18,6 +19,31 @@ import {
   useWorkOrderAccess,
 } from "@/lib/work-orders";
 import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/record-event-dialog";
+
+function ManualDetails({ event }: { event: AssetEvent }) {
+  const details = [
+    ["Findings", event.findings],
+    ["Work performed", event.workPerformed],
+    ["Service provider", event.serviceProvider],
+    ["Parts replaced", event.partsReplaced],
+    ["Downtime (minutes)", event.downtimeMinutes?.toString()],
+  ].filter(
+    (detail): detail is [string, string] => typeof detail[1] === "string"
+  );
+  if (details.length === 0) {
+    return null;
+  }
+  return (
+    <dl className="mt-2 grid gap-2 sm:grid-cols-2">
+      {details.map(([term, value]) => (
+        <div key={term}>
+          <dt className="text-muted-foreground">{term}</dt>
+          <dd className="whitespace-pre-wrap">{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 export function AssetMaintenanceSection({
   assetId,
@@ -111,6 +137,7 @@ export function AssetMaintenanceSection({
                   {entry.kind === "manual" ? (
                     <>
                       <p className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline">Manual entry</Badge>
                         <span className="font-medium">
                           {assetEventTypeLabel[entry.event.type]}
                         </span>
@@ -122,6 +149,7 @@ export function AssetMaintenanceSection({
                       <p className="mt-2 whitespace-pre-wrap">
                         {entry.event.notes}
                       </p>
+                      <ManualDetails event={entry.event} />
                       <p className="mt-2 text-muted-foreground">
                         Recorded by{" "}
                         {entry.event.recordedByName ?? "Unknown user"} on{" "}
