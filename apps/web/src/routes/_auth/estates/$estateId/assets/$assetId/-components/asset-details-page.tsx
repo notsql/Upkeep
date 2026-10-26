@@ -10,6 +10,7 @@ import { useAsset, useDeactivateAsset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
+import { AssetCostsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-forecast-card";
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
@@ -164,6 +165,7 @@ export function AssetDetailsPage({
             canRecord={!asset.data.deactivatedAt}
             estateId={estateId}
           />
+          <AssetCostsSection assetId={assetId} estateId={estateId} />
           <AssetDevicesSection
             assetId={assetId}
             canRegister={!asset.data.deactivatedAt}

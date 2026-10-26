@@ -6,6 +6,7 @@ package com.proj.server.db.tables.records;
 
 import com.proj.server.db.tables.Assetevent;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -246,6 +247,48 @@ public class AsseteventRecord extends UpdatableRecordImpl<AsseteventRecord> {
         return (String) get(15);
     }
 
+    /**
+     * Setter for <code>public.AssetEvent.labourCost</code>.
+     */
+    public void setLabourcost(BigDecimal value) {
+        set(16, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.labourCost</code>.
+     */
+    public BigDecimal getLabourcost() {
+        return (BigDecimal) get(16);
+    }
+
+    /**
+     * Setter for <code>public.AssetEvent.otherCost</code>.
+     */
+    public void setOthercost(BigDecimal value) {
+        set(17, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.otherCost</code>.
+     */
+    public BigDecimal getOthercost() {
+        return (BigDecimal) get(17);
+    }
+
+    /**
+     * Setter for <code>public.AssetEvent.partsCost</code>.
+     */
+    public void setPartscost(BigDecimal value) {
+        set(18, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.partsCost</code>.
+     */
+    public BigDecimal getPartscost() {
+        return (BigDecimal) get(18);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -269,7 +312,7 @@ public class AsseteventRecord extends UpdatableRecordImpl<AsseteventRecord> {
     /**
      * Create a detached, initialised AsseteventRecord
      */
-    public AsseteventRecord(UUID id, UUID estateid, UUID assetid, String type, LocalDate occurredon, String notes, UUID manufacturerid, UUID modelid, String recordedbyuserid, String recordedbyname, OffsetDateTime createdat, Integer downtimeminutes, String findings, String partsreplaced, String serviceprovider, String workperformed) {
+    public AsseteventRecord(UUID id, UUID estateid, UUID assetid, String type, LocalDate occurredon, String notes, UUID manufacturerid, UUID modelid, String recordedbyuserid, String recordedbyname, OffsetDateTime createdat, Integer downtimeminutes, String findings, String partsreplaced, String serviceprovider, String workperformed, BigDecimal labourcost, BigDecimal othercost, BigDecimal partscost) {
         super(Assetevent.ASSETEVENT);
 
         setId(id);
@@ -288,6 +331,9 @@ public class AsseteventRecord extends UpdatableRecordImpl<AsseteventRecord> {
         setPartsreplaced(partsreplaced);
         setServiceprovider(serviceprovider);
         setWorkperformed(workperformed);
+        setLabourcost(labourcost);
+        setOthercost(othercost);
+        setPartscost(partscost);
         resetTouchedOnNotNull();
     }
 }

@@ -9,6 +9,7 @@ import com.proj.server.risk.FailureRiskCalculator;
 import com.proj.server.risk.RiskAsset;
 import com.proj.server.risk.RiskEvent;
 import com.proj.server.workos.WorkOSService;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -120,7 +121,27 @@ public class AssetEventService {
                 event.getWorkperformed(),
                 event.getServiceprovider(),
                 event.getPartsreplaced(),
-                event.getDowntimeminutes());
+                event.getDowntimeminutes(),
+                plain(event.getLabourcost()),
+                plain(event.getPartscost()),
+                plain(event.getOthercost()),
+                total(event.getLabourcost(), event.getPartscost(), event.getOthercost()));
+    }
+
+    private static String plain(BigDecimal cost) {
+        return cost == null ? null : cost.toPlainString();
+    }
+
+    /** Unknown when any cost is unknown, as for work-order completions. */
+    private static String total(BigDecimal... costs) {
+        var sum = BigDecimal.ZERO.setScale(2);
+        for (var cost : costs) {
+            if (cost == null) {
+                return null;
+            }
+            sum = sum.add(cost);
+        }
+        return sum.toPlainString();
     }
 
     /** Catalogue names, looked up once per ID within one response. */

@@ -370,6 +370,10 @@ model AssetEvent {
   serviceProvider  String?  @db.VarChar(200)
   partsReplaced    String?  @db.VarChar(2500)
   downtimeMinutes  Int?
+  // Optional SGD costs (ID-50); null means not known.
+  labourCost       Decimal? @db.Decimal(14, 2)
+  partsCost        Decimal? @db.Decimal(14, 2)
+  otherCost        Decimal? @db.Decimal(14, 2)
 
   estate       Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   asset        Asset         @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)

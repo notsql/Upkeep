@@ -7856,6 +7856,18 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "labourCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "partsCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "otherCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
           }
         },
         "required": ["notes", "occurredOn", "type"]
@@ -7882,7 +7894,23 @@
           "workPerformed": { "type": ["string", "null"] },
           "serviceProvider": { "type": ["string", "null"] },
           "partsReplaced": { "type": ["string", "null"] },
-          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" }
+          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" },
+          "labourCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals"
+          },
+          "partsCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals"
+          },
+          "otherCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals"
+          },
+          "totalCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals; null when any cost is unknown"
+          }
         },
         "required": [
           "assetId",
