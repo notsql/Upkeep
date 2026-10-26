@@ -189,6 +189,34 @@ public class DocumentRecord extends UpdatableRecordImpl<DocumentRecord> {
         return (OffsetDateTime) get(11);
     }
 
+    /**
+     * Setter for <code>public.Document.workOrderAssociationVersion</code>.
+     */
+    public void setWorkorderassociationversion(Integer value) {
+        set(12, value);
+    }
+
+    /**
+     * Getter for <code>public.Document.workOrderAssociationVersion</code>.
+     */
+    public Integer getWorkorderassociationversion() {
+        return (Integer) get(12);
+    }
+
+    /**
+     * Setter for <code>public.Document.workOrderId</code>.
+     */
+    public void setWorkorderid(UUID value) {
+        set(13, value);
+    }
+
+    /**
+     * Getter for <code>public.Document.workOrderId</code>.
+     */
+    public UUID getWorkorderid() {
+        return (UUID) get(13);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -212,7 +240,7 @@ public class DocumentRecord extends UpdatableRecordImpl<DocumentRecord> {
     /**
      * Create a detached, initialised DocumentRecord
      */
-    public DocumentRecord(UUID id, UUID estateid, String documenttype, String originalfilename, String contenttype, Integer sizebytes, String storagekey, String uploadedbyuserid, OffsetDateTime createdat, OffsetDateTime deletedat, String deletedbyuserid, OffsetDateTime storagedeletedat) {
+    public DocumentRecord(UUID id, UUID estateid, String documenttype, String originalfilename, String contenttype, Integer sizebytes, String storagekey, String uploadedbyuserid, OffsetDateTime createdat, OffsetDateTime deletedat, String deletedbyuserid, OffsetDateTime storagedeletedat, Integer workorderassociationversion, UUID workorderid) {
         super(Document.DOCUMENT);
 
         setId(id);
@@ -227,6 +255,8 @@ public class DocumentRecord extends UpdatableRecordImpl<DocumentRecord> {
         setDeletedat(deletedat);
         setDeletedbyuserid(deletedbyuserid);
         setStoragedeletedat(storagedeletedat);
+        setWorkorderassociationversion(workorderassociationversion);
+        setWorkorderid(workorderid);
         resetTouchedOnNotNull();
     }
 }

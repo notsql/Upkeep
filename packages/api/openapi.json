@@ -610,6 +610,174 @@
         }
       }
     },
+    "/estates/{estateId}/documents/{documentId}/work-order": {
+      "get": {
+        "tags": ["work-order-document-controller"],
+        "operationId": "getDocumentWorkOrder",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document association, reason, version or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Document and work-order permissions required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing, deleted or inaccessible document/work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or stale association version",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Current document association, including an unlinked document",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentWorkOrderResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["work-order-document-controller"],
+        "operationId": "changeDocumentWorkOrder",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeDocumentWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid document association, reason, version or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Document and work-order permissions required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing, deleted or inaccessible document/work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or stale association version",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Association saved, or unchanged target with current version",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentWorkOrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/{userId}/estates/{estateId}": {
       "put": {
         "tags": ["estate-user-controller"],
@@ -770,6 +938,12 @@
         "operationId": "listResidentReports",
         "parameters": [
           {
+            "name": "estateId",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -794,7 +968,7 @@
             }
           },
           "400": {
-            "description": "Invalid cursor or limit",
+            "description": "Invalid estate filter, cursor or limit",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -4502,6 +4676,98 @@
         }
       }
     },
+    "/estates/{estateId}/work-orders/{workOrderId}/documents": {
+      "get": {
+        "tags": ["work-order-document-controller"],
+        "operationId": "getWorkOrderDocuments",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document association, reason, version or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Document and work-order permissions required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing, deleted or inaccessible document/work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or stale association version",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Current nondeleted document attachments, newest uploads first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/work-orders/{workOrderId}/completion-revisions": {
       "get": {
         "tags": ["work-order-controller"],
@@ -5367,6 +5633,98 @@
                   "items": {
                     "$ref": "#/components/schemas/FailureRiskResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/documents/{documentId}/work-order/history": {
+      "get": {
+        "tags": ["work-order-document-controller"],
+        "operationId": "getDocumentWorkOrderHistory",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid document association, reason, version or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Document and work-order permissions required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing, deleted or inaccessible document/work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate or stale association version",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Chronological paginated document association audit",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentWorkOrderEventPageResponse"
                 }
               }
             }
@@ -6603,6 +6961,39 @@
         },
         "required": ["durationMinutes", "metric", "tolerance", "unit"]
       },
+      "ChangeDocumentWorkOrderRequest": {
+        "type": "object",
+        "properties": {
+          "workOrderId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Send null explicitly to remove the work-order link"
+          },
+          "expectedAssociationVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "correctionReason": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          }
+        },
+        "required": ["expectedAssociationVersion", "workOrderId"]
+      },
+      "DocumentWorkOrderResponse": {
+        "type": "object",
+        "properties": {
+          "documentId": { "type": "string", "format": "uuid" },
+          "workOrderId": { "type": ["string", "null"], "format": "uuid" },
+          "workOrderReference": { "type": ["string", "null"] },
+          "associationVersion": { "type": "integer", "format": "int32" },
+          "changedByName": { "type": ["string", "null"] },
+          "changedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": ["associationVersion", "documentId"]
+      },
       "UserRoles": {
         "type": "object",
         "properties": {
@@ -7757,6 +8148,17 @@
           "version"
         ]
       },
+      "DocumentPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/DocumentResponse" }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
+      },
       "WorkOrderCompletionRevisionResponse": {
         "type": "object",
         "properties": {
@@ -8032,16 +8434,33 @@
           "flagged"
         ]
       },
-      "DocumentPageResponse": {
+      "DocumentWorkOrderEventPageResponse": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
-            "items": { "$ref": "#/components/schemas/DocumentResponse" }
+            "items": {
+              "$ref": "#/components/schemas/DocumentWorkOrderEventResponse"
+            }
           },
           "nextCursor": { "type": ["string", "null"] }
         },
-        "required": ["items", "nextCursor"]
+        "required": ["items"]
+      },
+      "DocumentWorkOrderEventResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "fromWorkOrderId": { "type": ["string", "null"], "format": "uuid" },
+          "fromWorkOrderReference": { "type": ["string", "null"] },
+          "toWorkOrderId": { "type": ["string", "null"], "format": "uuid" },
+          "toWorkOrderReference": { "type": ["string", "null"] },
+          "associationVersion": { "type": "integer", "format": "int32" },
+          "correctionReason": { "type": ["string", "null"] },
+          "changedByName": { "type": ["string", "null"] },
+          "changedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["associationVersion", "changedAt", "id"]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",

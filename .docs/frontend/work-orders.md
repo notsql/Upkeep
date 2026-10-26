@@ -350,3 +350,7 @@ one entry after correction. Dark 320px portrait and light 844×390 landscape edi
 dialogs fit and scroll to their action buttons; Tab advances Findings → Work
 performed. The member table stays within the page at 320px with its own horizontal
 scroll. Physical-phone and large live datasets remain the limits noted above.
+
+Document attachment section and its independent document permission guard:
+[work-order-documents.md](work-order-documents.md). Authenticated downloads reuse
+ID-22; association changes preserve job status, outcomes and maintenance costs.

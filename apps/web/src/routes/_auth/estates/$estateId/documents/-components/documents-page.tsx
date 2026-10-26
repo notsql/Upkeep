@@ -27,7 +27,9 @@ import {
   useDocuments,
   useDownloadDocument,
 } from "@/lib/documents";
+import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
 import { DocumentRow } from "./document-row";
+import { DocumentWorkOrderDialog } from "./document-work-order-dialog";
 import { UploadDocumentForm } from "./upload-document-form";
 
 function FilenameSearch({
@@ -85,6 +87,9 @@ export function DocumentsPage({
   onSearch: (filters: DocumentFilters) => void;
 }) {
   const access = useDocumentAccess(estateId);
+  const associations = useWorkOrderDocumentAccess(estateId);
+  const [associationDocument, setAssociationDocument] =
+    useState<EstateDocument>();
   const documents = useDocuments(estateId, filters);
   const deletion = useDeleteDocument(estateId);
   const download = useDownloadDocument(estateId);
@@ -112,6 +117,10 @@ export function DocumentsPage({
     [filters, documents.data?.nextCursor, onSearch]
   );
   const close = useCallback(() => setSelected(undefined), []);
+  const closeAssociation = useCallback(
+    () => setAssociationDocument(undefined),
+    []
+  );
   const changeDialog = useCallback(
     (open: boolean) => {
       if (!(open || deletion.isPending)) {
@@ -192,6 +201,9 @@ export function DocumentsPage({
                 document={document}
                 downloading={download.isPending}
                 key={document.id}
+                onAssociation={
+                  associations.canRead ? setAssociationDocument : undefined
+                }
                 onDelete={chooseDeletion}
                 onDownload={downloadDocument}
               />
@@ -211,6 +223,14 @@ export function DocumentsPage({
           </Button>
         ) : null}
       </div>
+      {associationDocument ? (
+        <DocumentWorkOrderDialog
+          document={associationDocument}
+          estateId={estateId}
+          key={`${estateId}:${associationDocument.id}`}
+          onClose={closeAssociation}
+        />
+      ) : null}
       <Dialog onOpenChange={changeDialog} open={!!selected}>
         <DialogContent>
           <DialogHeader>

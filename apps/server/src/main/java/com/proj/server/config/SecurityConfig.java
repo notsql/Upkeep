@@ -82,6 +82,9 @@ public class SecurityConfig {
                                 "/access/context",
                                 "/estates/{estateId}/documents",
                                 "/estates/{estateId}/documents/{documentId}/content",
+                                "/estates/{estateId}/documents/{documentId}/work-order",
+                                "/estates/{estateId}/documents/{documentId}/work-order/history",
+                                "/estates/{estateId}/work-orders/{workOrderId}/documents",
                                 "/asset-categories",
                                 "/manufacturers",
                                 "/manufacturers/{manufacturerId}/models",
@@ -154,6 +157,7 @@ public class SecurityConfig {
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
+                                "/estates/{estateId}/documents/{documentId}/work-order",
                                 "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
                                 "/estates/{estateId}/roles/{roleId}",

@@ -164,8 +164,12 @@ public class ResidentReportRepository {
                 images));
     }
 
-    public List<IssueReportSummaryResponse> list(String userId, OffsetDateTime beforeTime, UUID beforeId, int limit) {
+    public List<IssueReportSummaryResponse> list(
+            String userId, UUID estateId, OffsetDateTime beforeTime, UUID beforeId, int limit) {
         var condition = ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId);
+        if (estateId != null) {
+            condition = condition.and(ISSUEREPORT.ESTATEID.eq(estateId));
+        }
         if (beforeTime != null) {
             condition = condition.and(row(ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID).lt(beforeTime, beforeId));
         }

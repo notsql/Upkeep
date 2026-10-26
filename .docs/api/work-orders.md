@@ -273,3 +273,7 @@ Postgres; jOOQ/Prisma and the live OpenAPI contract were regenerated. Prisma
 deploy applied it to shared development on 2026-10-24, preserving the unrelated
 Device migration. Read-only verification confirmed migration history and that
 the live API matches the generated contract. See decision 0035.
+
+Document associations and attachment endpoints: see
+[work-order-documents.md](work-order-documents.md). Linking preserves work-order
+status/version, completion outcomes and costs.

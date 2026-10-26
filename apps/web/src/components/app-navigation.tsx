@@ -57,6 +57,7 @@ interface NavigationItem {
   estateId?: string;
   icon: LucideIcon;
   label: string;
+  search?: { estateId: string };
   to: Destination;
 }
 
@@ -143,7 +144,10 @@ function useNavigation() {
   const access = useAppAccess();
   const { pathname, estateId, permission, estateName } =
     useNavigationEstate(access);
+  const residentSearch =
+    permission?.role === "RESIDENT" && estateId ? { estateId } : undefined;
   const reporting: NavigationItem = {
+    search: residentSearch,
     label: "Report a fault",
     to: "/reports/new",
     icon: ClipboardPenLine,
@@ -156,6 +160,7 @@ function useNavigation() {
     active: pathname.startsWith("/invitations"),
   };
   const history: NavigationItem = {
+    search: residentSearch,
     label: "My reports",
     to: "/reports",
     icon: ClipboardList,
@@ -424,6 +429,7 @@ function DestinationLink({
       aria-current={item.active ? "page" : undefined}
       className={linkClass}
       params={item.estateId ? { estateId: item.estateId } : undefined}
+      search={item.search}
       to={item.to}
     >
       <Icon aria-hidden="true" className="size-5 shrink-0" />
@@ -495,6 +501,7 @@ function OverflowDestination({
           }}
           aria-current={item.active ? "page" : undefined}
           params={item.estateId ? { estateId: item.estateId } : undefined}
+          search={item.search}
           to={item.to}
         />
       }
@@ -524,6 +531,9 @@ function NavigationEstateSwitcher({
   const documents = useRouterState({
     select: (state) => state.location.pathname.split("/")[3] === "documents",
   });
+  const creatingReport = useRouterState({
+    select: (state) => state.location.pathname.startsWith("/reports/new"),
+  });
   if (documents) {
     return (
       <EstateFeatureSwitcher
@@ -538,7 +548,7 @@ function NavigationEstateSwitcher({
       <EstateFeatureSwitcher
         estateId={estateId}
         estates={access.data?.estates ?? []}
-        feature="resident"
+        feature={creatingReport ? "report-creation" : "resident"}
       />
     );
   }
@@ -594,7 +604,10 @@ export function AppNavigation() {
           <span>UpKeep</span>
         </Link>
         <p className="sidebar-eyebrow">Workspace</p>
-        <nav aria-label="Desktop navigation" className="grid gap-1">
+        <nav
+          aria-label="Desktop navigation"
+          className="grid min-w-0 grid-cols-1 gap-1"
+        >
           {desktop.map((item) => (
             <DestinationLink
               item={item}
@@ -604,7 +617,7 @@ export function AppNavigation() {
           ))}
           {estateId === undefined ? null : (
             <>
-              <div className="mt-6 mb-2">
+              <div className="mt-6 mb-2 min-w-0">
                 <NavigationEstateSwitcher
                   estateId={estateId}
                   estateName={estateName}

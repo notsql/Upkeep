@@ -75,3 +75,19 @@ with existing bounded delegation rules.
 Example: POST multipart `documentType=SERVICE_REPORT` and `file=@lift-report.pdf`
 to `/estates/{estateId}/documents`, then GET the returned `Location` with a fresh
 bearer token. Search with `GET /estates/{estateId}/documents?filename=lift`.
+
+Work-order linking/change/removal and attachment reads are documented in
+[work-order-documents.md](work-order-documents.md). These require independent
+work-order authority; uploader/delete rights do not grant association mutation.
+
+
+## Development database / bucket isolation
+
+The orphan sweep compares the configured bucket's entire `documents/` prefix
+against the connected database's Document records. It does not discover other
+Neon branches or treat branch-local metadata as a complete shared-bucket registry.
+Independent databases sharing that prefix can therefore make each other's valid
+objects appear unreferenced; objects older than 24 hours are eligible for deletion.
+Pair the bucket/prefix with its authoritative database or coordinate storage
+isolation before running this configuration long-term. The ID-26 QA pass recorded
+this setup concern without changing ID-22's cleanup behaviour.

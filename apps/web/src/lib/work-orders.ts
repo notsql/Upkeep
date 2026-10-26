@@ -43,6 +43,7 @@ export function useWorkOrderAccess(estateId: string) {
     canUpdate: valid && !!permission?.canUpdateWorkOrders,
     canReadReports: valid && !!permission?.canViewFaultReports,
     canViewAssets: valid && !!permission?.canViewAssets,
+    canViewDocuments: valid && !!permission?.canViewDocuments,
     canViewManagement: valid && !!permission?.canViewManagement,
     estateName: permission?.estateName,
     pending: !session.ready || access.isPending,

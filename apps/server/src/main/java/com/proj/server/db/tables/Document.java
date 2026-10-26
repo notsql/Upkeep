@@ -122,6 +122,16 @@ public class Document extends TableImpl<DocumentRecord> {
      */
     public final TableField<DocumentRecord, OffsetDateTime> STORAGEDELETEDAT = createField(DSL.name("storageDeletedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
 
+    /**
+     * The column <code>public.Document.workOrderAssociationVersion</code>.
+     */
+    public final TableField<DocumentRecord, Integer> WORKORDERASSOCIATIONVERSION = createField(DSL.name("workOrderAssociationVersion"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
+    /**
+     * The column <code>public.Document.workOrderId</code>.
+     */
+    public final TableField<DocumentRecord, UUID> WORKORDERID = createField(DSL.name("workOrderId"), SQLDataType.UUID, this, "");
+
     private Document(Name alias, Table<DocumentRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -191,7 +201,7 @@ public class Document extends TableImpl<DocumentRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.DOCUMENT_DELETEDAT_STORAGEDELETEDAT_IDX, Indexes.DOCUMENT_ESTATEID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_STORAGEKEY_KEY);
+        return Arrays.asList(Indexes.DOCUMENT_DELETEDAT_STORAGEDELETEDAT_IDX, Indexes.DOCUMENT_ESTATEID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ESTATEID_WORKORDERID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ID_ESTATEID_KEY, Indexes.DOCUMENT_STORAGEKEY_KEY);
     }
 
     @Override
@@ -219,6 +229,7 @@ public class Document extends TableImpl<DocumentRecord> {
     @Override
     public List<Check<DocumentRecord>> getChecks() {
         return Arrays.asList(
+            Internal.createCheck(this, DSL.name("Document_association_version_check"), "((\"workOrderAssociationVersion\" >= 0))", true),
             Internal.createCheck(this, DSL.name("Document_content_type_check"), "(((\"contentType\")::text = ANY ((ARRAY['application/pdf'::character varying, 'image/jpeg'::character varying, 'image/png'::character varying])::text[])))", true),
             Internal.createCheck(this, DSL.name("Document_deletion_check"), "(((\"deletedAt\" IS NULL) = (\"deletedByUserId\" IS NULL)))", true),
             Internal.createCheck(this, DSL.name("Document_filename_check"), "((length(TRIM(BOTH FROM \"originalFilename\")) > 0))", true),

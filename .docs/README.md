@@ -11,6 +11,7 @@ same change as the code.
 
 - [Admin role updates](api/admin-roles.md): retired global WorkOS organization-role contracts; use estate-local roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
+- [Work-order document association](api/work-order-documents.md): same-estate links, audited corrections, permission intersection and deletion integration.
 - [Estates](api/estates.md): creation by any authenticated account, estate details, owner/assigned-Manager/custom-permission editing and owner-only deactivation.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
   retirement, restoration and lifecycle history, plus device registration,
@@ -37,6 +38,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 
 | File | Covers |
 | --- | --- |
+| [frontend/work-order-documents.md](frontend/work-order-documents.md) | Document/work-order association dialog, correction history and work-order attachments |
 | [frontend/documents.md](frontend/documents.md) | Estate Documents screen, file validation, upload/download/deletion, filename search and capability-based navigation |
 | [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
 | [frontend/shell.md](frontend/shell.md) | Root layout, providers, header nav, home page (`/`), and conventions shared by every feature (API client, session gate, query-key prefix, errors) |

@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [work-order-document-association.md](features/work-order-document-association.md) | ID-26 | link/change/remove, audit and attachments implemented on ID-22 PR #37 base; automated, isolated live and real Neon/R2 checks passed; database/bucket cleanup coordination and ID-23/24/25 integration pending |
 | [invoice-service-report-uploads.md](features/invoice-service-report-uploads.md) | - | test-first suites written; Docker restored, 77 integration cases ran (5 passed, 68 failures, 4 missing-field errors); permission/UI failures observed; one file/submission, 5 MB/file, filename search, uploader-or-Manager deletion and VIEW_DOCUMENTS/EDIT_DOCUMENTS planned; implementation not started |
 | [work-order-review-follow-ups.md](features/work-order-review-follow-ups.md) | ID-38 / ID-40 manual review | implemented and verified 2026-10-24; conflict recovery, audited corrections, oldest priority ties, member table/pagination |
 | [work-order-progress-and-completion.md](features/work-order-progress-and-completion.md) | ID-38 / ID-40 | independent scope implemented 2026-10-24; live QA follow-ups verified; provider integration pending |

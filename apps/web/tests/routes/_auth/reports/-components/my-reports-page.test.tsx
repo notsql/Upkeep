@@ -2,7 +2,7 @@ import { act, fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { Route } from "@/routes/_auth/reports";
+import { MyReportsPage as Page } from "@/routes/_auth/reports/-components/my-reports-page";
 
 const { get, auth, listeners } = vi.hoisted(() => ({
   get: vi.fn(),
@@ -39,7 +39,6 @@ vi.mock("@workos/authkit-tanstack-react-start/client", async () => {
   };
 });
 
-const Page = Route.options.component as React.ComponentType;
 const report = {
   id: "00000000-0000-0000-0000-000000000010",
   title: "Leaking pipe",
@@ -187,4 +186,61 @@ it("does not show the previous resident's cached report after an account change"
   });
   await screen.findByText(NO_REPORTS);
   expect(screen.queryByText("Leaking pipe")).toBeNull();
+});
+
+it("loads an estate-scoped history and preselects that estate for a new report", async () => {
+  get.mockResolvedValue({ data: { items: [], nextCursor: null } });
+  renderWithProviders(<Page estateId="maple" estateName="Maple Estate" />);
+  await screen.findByText(NO_REPORTS);
+  screen.getByText("Maple Estate");
+  expect(get).toHaveBeenCalledWith(
+    "/resident/reports",
+    expect.objectContaining({ params: { query: { estateId: "maple" } } })
+  );
+  expect(
+    screen.getByRole("link", { name: REPORT_A_FAULT }).getAttribute("href")
+  ).toBe("/reports/new?estateId=maple");
+});
+
+it("starts from the first page when the selected estate changes", async () => {
+  get.mockImplementation(
+    (
+      _path: string,
+      options: { params: { query: { estateId?: string; cursor?: string } } }
+    ) => {
+      const { estateId, cursor } = options.params.query;
+      const mapleTitle = cursor ? "Older Maple report" : "Maple report";
+      return Promise.resolve({
+        data: {
+          items: [
+            {
+              ...report,
+              title: estateId === "oak" ? "Oak report" : mapleTitle,
+            },
+          ],
+          nextCursor: estateId === "oak" || cursor ? null : "maple-next",
+        },
+      });
+    }
+  );
+  const view = renderWithProviders(<Page estateId="maple" />);
+  await screen.findByRole("link", { name: "Maple report" });
+  fireEvent.click(screen.getByRole("button", { name: NEXT }));
+  await screen.findByRole("link", { name: "Older Maple report" });
+  view.rerender(<Page estateId="oak" />);
+  await screen.findByRole("link", { name: "Oak report" });
+  expect(get).toHaveBeenCalledWith(
+    "/resident/reports",
+    expect.objectContaining({ params: { query: { estateId: "oak" } } })
+  );
+  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
+});
+
+it("preserves the selected estate when opening a report", async () => {
+  get.mockResolvedValue({ data: { items: [report], nextCursor: null } });
+  renderWithProviders(<Page estateId="maple" estateName="Maple Estate" />);
+  const link = await screen.findByRole("link", { name: LEAKING_PIPE });
+  expect(link.getAttribute("href")).toBe(
+    `/reports/${report.id}?estateId=maple`
+  );
 });

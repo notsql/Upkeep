@@ -115,6 +115,7 @@ async function setup(
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
     "/estates/$estateId/work-orders",
+    "/estates/$estateId/documents",
     "/reports/new",
     "/reports",
   ].map((path) =>
@@ -264,7 +265,7 @@ it.each([
   "/estates/pine",
   "/reports/new?estateId=maple",
 ])(
-  "shows all estate roles and switches to resident reporting from %s",
+  "shows estate roles and preserves explicit creation intent when switching from %s",
   async (path) => {
     accessOverride = mixedAccess;
     const { router } = await setup(path);
@@ -288,7 +289,11 @@ it.each([
     );
     fireEvent.click(resident);
     await waitFor(() =>
-      expect(router.state.location.href).toBe("/reports/new?estateId=maple")
+      expect(router.state.location.href).toBe(
+        path.startsWith("/reports/new")
+          ? "/reports/new?estateId=maple"
+          : "/reports?estateId=maple"
+      )
     );
     expect(
       vi.mocked(api.GET).mock.calls.some((call) => call[0] === "/estates")
@@ -410,12 +415,12 @@ it("shows resident navigation from database access while WorkOS has an ordinary 
         (
           await navigation.findByRole("link", { name: "Report a fault" })
         ).getAttribute("href")
-      ).toBe("/reports/new");
+      ).toBe("/reports/new?estateId=maple");
       expect(
         navigation
           .getByRole("link", { name: "My reports" })
           .getAttribute("href")
-      ).toBe("/reports");
+      ).toBe("/reports?estateId=maple");
       expect(navigation.queryByRole("link", { name: "Home" })).toBeNull();
       expect(
         navigation.getByRole("link", { name: "Estates" }).getAttribute("href")
@@ -912,3 +917,67 @@ it("lets Crew choose a fault-report estate from mobile navigation", async () => 
     expect(router.state.location.pathname).toBe("/estates/pine/reports")
   );
 });
+
+it.each(["work-orders", "documents"])(
+  "switches from Crew %s to clearly labelled Resident history",
+  async (feature) => {
+    const crewDocuments = {
+      ...crewEstateAccess,
+      estateId: "pine",
+      estateName: "Pine Estate",
+      canViewDocuments: true,
+    };
+    accessOverride = {
+      ...mixedAccess,
+      estates: [crewDocuments, mixedAccess.estates[0]],
+    };
+    const { router } = await setup(`/estates/pine/${feature}`);
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    fireEvent.click(
+      await desktop.findByRole("button", { name: SWITCH_ESTATE })
+    );
+    const resident = await screen.findByRole("menuitem", {
+      name: "Maple Estate",
+    });
+    within(resident).getByText("My reports");
+    fireEvent.click(resident);
+    await waitFor(() =>
+      expect(router.state.location.href).toBe("/reports?estateId=maple")
+    );
+    fireEvent.click(
+      await desktop.findByRole("link", { name: "Report a fault" })
+    );
+    await waitFor(() =>
+      expect(router.state.location.href).toBe("/reports/new?estateId=maple")
+    );
+  }
+);
+
+it.each([
+  ["/estates/pine/work-orders", false],
+  ["/reports/new?estateId=maple", true],
+] as const)(
+  "only disables unavailable Resident reporting during creation from %s",
+  async (path, disabled) => {
+    accessOverride = { ...mixedAccess, residentEstates: [] };
+    const { router } = await setup(path);
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    fireEvent.click(
+      await desktop.findByRole("button", { name: SWITCH_ESTATE })
+    );
+    const resident = await screen.findByRole("menuitem", {
+      name: "Maple Estate",
+    });
+    expect(resident.getAttribute("aria-disabled") === "true").toBe(disabled);
+    if (!disabled) {
+      fireEvent.click(resident);
+      await waitFor(() =>
+        expect(router.state.location.href).toBe("/reports?estateId=maple")
+      );
+    }
+  }
+);
