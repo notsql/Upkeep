@@ -1841,6 +1841,12 @@ export interface components {
       /** Format: date */
       occurredOn: string;
       notes: string;
+      findings?: string;
+      workPerformed?: string;
+      serviceProvider?: string;
+      partsReplaced?: string;
+      /** Format: int32 */
+      downtimeMinutes?: number;
     };
     AssetEventResponse: {
       /** Format: uuid */
@@ -1861,6 +1867,12 @@ export interface components {
       recordedByName?: string | null;
       /** Format: date-time */
       createdAt: string;
+      findings?: string | null;
+      workPerformed?: string | null;
+      serviceProvider?: string | null;
+      partsReplaced?: string | null;
+      /** Format: int32 */
+      downtimeMinutes?: number | null;
     };
     CreateDeviceRequest: {
       identifier: string;

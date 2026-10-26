@@ -7835,7 +7835,28 @@
             "enum": ["BREAKDOWN_REPAIR", "PREVENTIVE"]
           },
           "occurredOn": { "type": "string", "format": "date" },
-          "notes": { "type": "string", "maxLength": 2000, "minLength": 0 }
+          "notes": { "type": "string", "maxLength": 2000, "minLength": 0 },
+          "findings": { "type": "string", "maxLength": 2500, "minLength": 0 },
+          "workPerformed": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "serviceProvider": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          },
+          "partsReplaced": {
+            "type": "string",
+            "maxLength": 2500,
+            "minLength": 0
+          },
+          "downtimeMinutes": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
         },
         "required": ["notes", "occurredOn", "type"]
       },
@@ -7856,7 +7877,12 @@
           "countsTowardForecast": { "type": "boolean" },
           "recordedByUserId": { "type": "string" },
           "recordedByName": { "type": ["string", "null"] },
-          "createdAt": { "type": "string", "format": "date-time" }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "findings": { "type": ["string", "null"] },
+          "workPerformed": { "type": ["string", "null"] },
+          "serviceProvider": { "type": ["string", "null"] },
+          "partsReplaced": { "type": ["string", "null"] },
+          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" }
         },
         "required": [
           "assetId",

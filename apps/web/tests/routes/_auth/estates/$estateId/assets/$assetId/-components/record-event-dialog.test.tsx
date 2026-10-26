@@ -103,6 +103,80 @@ describe("RecordEventDialog", () => {
     );
   });
 
+  it("labels the optional maintenance details", () => {
+    renderWithProviders(
+      <RecordEventDialog onCancel={vi.fn()} onSave={vi.fn()} />
+    );
+    for (const name of [
+      "Findings",
+      "Work performed",
+      "Service provider",
+      "Parts replaced",
+    ]) {
+      screen.getByRole("textbox", { name });
+    }
+    screen.getByRole("spinbutton", { name: "Downtime (minutes)" });
+  });
+
+  it("posts the maintenance details trimmed, leaving out the blank ones", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(
+      <RecordEventDialog
+        defaultType="BREAKDOWN_REPAIR"
+        onCancel={vi.fn()}
+        onSave={onSave}
+      />
+    );
+    fireEvent.change(dateField(), { target: { value: "2026-09-20" } });
+    fireEvent.change(notesField(), { target: { value: "Pump tripped." } });
+    fireEvent.change(screen.getByRole("textbox", { name: "Findings" }), {
+      target: { value: "  Seal worn.  " },
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Work performed" }), {
+      target: { value: "Replaced the seal." },
+    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Service provider" }),
+      { target: { value: "   " } }
+    );
+    fireEvent.change(
+      screen.getByRole("spinbutton", { name: "Downtime (minutes)" }),
+      { target: { value: "0" } }
+    );
+    fireEvent.click(submitButton());
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toStrictEqual({
+      type: "BREAKDOWN_REPAIR",
+      occurredOn: "2026-09-20",
+      notes: "Pump tripped.",
+      findings: "Seal worn.",
+      workPerformed: "Replaced the seal.",
+      downtimeMinutes: 0,
+    });
+  });
+
+  it("rejects downtime that is not a whole number of minutes", async () => {
+    const onSave = vi.fn();
+    renderWithProviders(
+      <RecordEventDialog
+        defaultType="BREAKDOWN_REPAIR"
+        onCancel={vi.fn()}
+        onSave={onSave}
+      />
+    );
+    fireEvent.change(notesField(), { target: { value: "Fixed." } });
+    const downtime = screen.getByRole("spinbutton", {
+      name: "Downtime (minutes)",
+    });
+    fireEvent.change(downtime, { target: { value: "1.5" } });
+    fireEvent.click(submitButton());
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Downtime must be a whole number of minutes."
+    );
+    expect(downtime.getAttribute("aria-invalid")).toBe("true");
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it("keeps what was entered and explains a server error", async () => {
     const onSave = vi
       .fn()

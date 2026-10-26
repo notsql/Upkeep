@@ -176,6 +176,76 @@ public class AsseteventRecord extends UpdatableRecordImpl<AsseteventRecord> {
         return (OffsetDateTime) get(10);
     }
 
+    /**
+     * Setter for <code>public.AssetEvent.downtimeMinutes</code>.
+     */
+    public void setDowntimeminutes(Integer value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.downtimeMinutes</code>.
+     */
+    public Integer getDowntimeminutes() {
+        return (Integer) get(11);
+    }
+
+    /**
+     * Setter for <code>public.AssetEvent.findings</code>.
+     */
+    public void setFindings(String value) {
+        set(12, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.findings</code>.
+     */
+    public String getFindings() {
+        return (String) get(12);
+    }
+
+    /**
+     * Setter for <code>public.AssetEvent.partsReplaced</code>.
+     */
+    public void setPartsreplaced(String value) {
+        set(13, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.partsReplaced</code>.
+     */
+    public String getPartsreplaced() {
+        return (String) get(13);
+    }
+
+    /**
+     * Setter for <code>public.AssetEvent.serviceProvider</code>.
+     */
+    public void setServiceprovider(String value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.serviceProvider</code>.
+     */
+    public String getServiceprovider() {
+        return (String) get(14);
+    }
+
+    /**
+     * Setter for <code>public.AssetEvent.workPerformed</code>.
+     */
+    public void setWorkperformed(String value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.AssetEvent.workPerformed</code>.
+     */
+    public String getWorkperformed() {
+        return (String) get(15);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -199,7 +269,7 @@ public class AsseteventRecord extends UpdatableRecordImpl<AsseteventRecord> {
     /**
      * Create a detached, initialised AsseteventRecord
      */
-    public AsseteventRecord(UUID id, UUID estateid, UUID assetid, String type, LocalDate occurredon, String notes, UUID manufacturerid, UUID modelid, String recordedbyuserid, String recordedbyname, OffsetDateTime createdat) {
+    public AsseteventRecord(UUID id, UUID estateid, UUID assetid, String type, LocalDate occurredon, String notes, UUID manufacturerid, UUID modelid, String recordedbyuserid, String recordedbyname, OffsetDateTime createdat, Integer downtimeminutes, String findings, String partsreplaced, String serviceprovider, String workperformed) {
         super(Assetevent.ASSETEVENT);
 
         setId(id);
@@ -213,6 +283,11 @@ public class AsseteventRecord extends UpdatableRecordImpl<AsseteventRecord> {
         setRecordedbyuserid(recordedbyuserid);
         setRecordedbyname(recordedbyname);
         setCreatedat(createdat);
+        setDowntimeminutes(downtimeminutes);
+        setFindings(findings);
+        setPartsreplaced(partsreplaced);
+        setServiceprovider(serviceprovider);
+        setWorkperformed(workperformed);
         resetTouchedOnNotNull();
     }
 }

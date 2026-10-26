@@ -16,6 +16,7 @@ import org.jooq.DSLContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -280,6 +281,73 @@ class AssetEventIntegrationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").isNotEmpty());
         assertNoEvents();
+    }
+
+    @Test
+    void recordsAndListsTheMaintenanceDetails() throws Exception {
+        var json = """
+                {"type":"BREAKDOWN_REPAIR","occurredOn":"2026-09-01","notes":"Pump tripped",
+                 "findings":"  Seal worn  ","workPerformed":"Replaced the seal","serviceProvider":"Acme Pumps",
+                 "partsReplaced":"Mechanical seal","downtimeMinutes":90}""";
+        mvc.perform(record(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.notes").value("Pump tripped"))
+                .andExpect(jsonPath("$.findings").value("Seal worn"))
+                .andExpect(jsonPath("$.workPerformed").value("Replaced the seal"))
+                .andExpect(jsonPath("$.serviceProvider").value("Acme Pumps"))
+                .andExpect(jsonPath("$.partsReplaced").value("Mechanical seal"))
+                .andExpect(jsonPath("$.downtimeMinutes").value(90));
+        mvc.perform(as("owner", get(events)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].findings").value("Seal worn"))
+                .andExpect(jsonPath("$[0].workPerformed").value("Replaced the seal"))
+                .andExpect(jsonPath("$[0].serviceProvider").value("Acme Pumps"))
+                .andExpect(jsonPath("$[0].partsReplaced").value("Mechanical seal"))
+                .andExpect(jsonPath("$[0].downtimeMinutes").value(90));
+    }
+
+    @Test
+    void omittedOrBlankDetailsAreUnknownAndZeroDowntimeIsKept() throws Exception {
+        mvc.perform(record(body("PREVENTIVE", "2026-09-01", "Serviced")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.findings").value(nullValue()))
+                .andExpect(jsonPath("$.workPerformed").value(nullValue()))
+                .andExpect(jsonPath("$.serviceProvider").value(nullValue()))
+                .andExpect(jsonPath("$.partsReplaced").value(nullValue()))
+                .andExpect(jsonPath("$.downtimeMinutes").value(nullValue()));
+        var blank = """
+                {"type":"PREVENTIVE","occurredOn":"2026-09-02","notes":"Serviced","findings":"  ",
+                 "workPerformed":"","serviceProvider":" ","partsReplaced":"","downtimeMinutes":0}""";
+        mvc.perform(record(blank))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.findings").value(nullValue()))
+                .andExpect(jsonPath("$.workPerformed").value(nullValue()))
+                .andExpect(jsonPath("$.serviceProvider").value(nullValue()))
+                .andExpect(jsonPath("$.partsReplaced").value(nullValue()))
+                .andExpect(jsonPath("$.downtimeMinutes").value(0));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"-1", "1.5", "\"90\""})
+    void rejectsDowntimeThatIsNotAWholeNumberOfMinutes(String downtime) throws Exception {
+        mvc.perform(record(withDetail("downtimeMinutes", downtime)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+        assertNoEvents();
+    }
+
+    @ParameterizedTest
+    @CsvSource({"serviceProvider,200", "findings,2500", "workPerformed,2500", "partsReplaced,2500"})
+    void rejectsDetailsOverTheirLimit(String field, int limit) throws Exception {
+        mvc.perform(record(withDetail(field, "\"" + "x".repeat(limit) + "\""))).andExpect(status().isCreated());
+        mvc.perform(record(withDetail(field, "\"" + "x".repeat(limit + 1) + "\"")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+    }
+
+    static String withDetail(String field, String json) {
+        return """
+                {"type":"PREVENTIVE","occurredOn":"2026-09-01","notes":"Fine","%s":%s}""".formatted(field, json);
     }
 
     void assertNoEvents() {

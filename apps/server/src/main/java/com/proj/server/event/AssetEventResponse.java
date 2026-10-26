@@ -29,4 +29,9 @@ public record AssetEventResponse(
         boolean countsTowardForecast,
         String recordedByUserId,
         @Schema(nullable = true) String recordedByName,
-        OffsetDateTime createdAt) {}
+        OffsetDateTime createdAt,
+        @Schema(nullable = true) String findings,
+        @Schema(nullable = true) String workPerformed,
+        @Schema(nullable = true) String serviceProvider,
+        @Schema(nullable = true) String partsReplaced,
+        @Schema(nullable = true) Integer downtimeMinutes) {}
