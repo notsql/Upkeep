@@ -24,7 +24,7 @@ unavailable instead of exposing the account ID.
 
 List/create/detail breadcrumbs include Estates → estate name → Work orders.
 The estate name links to `/estates/$estateId` only with `canViewManagement`;
-Crew retain an unlinked label because the overview requires management access.
+Crew also link to their read-only estate overview via canViewEstateDetails.
 
 The list's shadcn Select offers All priorities, Low, Medium, High and Urgent.
 Search reference accepts a partial visible reference, such as MG-W0001 (max 200
@@ -44,9 +44,16 @@ creation form, so its filter form is never nested inside another form.
 submission guard. `work-order-source-fields.tsx` renders the source selector,
 report picker and manual source reference. These share the existing feature
 hooks and generated request type; the refactor adds no endpoint or query key.
+Saved inspection links use this same screen and state/submit hook, with fixed
+prefilled Source, Location and Linked asset controls. Source context and explicit
+move confirmation come from `use-work-order-inspection.ts` and
+`work-order-inspection-context.tsx`; they do not define another form or submit
+handler. The inspection path skips active-location and editable-asset-option
+queries. Its Cancel button returns to the asset history without creating work.
 
 The auth route checks work-order capabilities before the generic management
-guard. Crew can enter list/detail, and cannot enter new. AppNavigation exposes
+guard. Crew can enter list/detail, but `/new` is denied and creation actions are
+hidden because `canCreateWorkOrders` is false. AppNavigation exposes
 Work orders locally or as an entry to an authorized estate. WorkOrderEstateSwitcher
 uses labels, estate-local roles and capabilities from access context. It includes
 all membership estates and retains the work-order list when permitted in the
@@ -110,7 +117,7 @@ report queries, asset history, dashboard totals or costs.
 
 Source selection keeps existing [userId, "estate-reports", estateId, ...] keys.
 Location reads reuse existing location keys. No owner-only asset list/detail
-queries are needed to create or read an order as a Manager/Crew member.
+queries are needed to create an order as a Manager or read one as Crew.
 
 Assignment/routing/provider filtering, attachments and saved inspection integration
 belong to follow-up stories.
@@ -127,10 +134,10 @@ belong to follow-up stories.
    Create another order from that same report; references should differ and the
    report itself should be unchanged.
 4. Use a Crew account to read and switch authorized estate work-order lists.
-   Create should be hidden and direct /new access denied. Non-owner Managers
+   Create actions must be absent and direct /new access must be denied. Non-owner Managers
    can link an active asset without gaining access to the asset register.
 5. As an owner/Manager, use the estate-name breadcrumb from list, create and
-   detail to return to the overview. Crew should see the name without a link.
+   detail to return to the overview. Crew can use the same breadcrumb for their read-only overview.
 6. Apply a priority and partial reference search together. Check Next/First page,
    refresh and browser back retain criteria; Clear filters restores all results.
    A nonexistent reference should say No matching work orders.
@@ -354,3 +361,15 @@ scroll. Physical-phone and large live datasets remain the limits noted above.
 Document attachment section and its independent document permission guard:
 [work-order-documents.md](work-order-documents.md). Authenticated downloads reuse
 ID-22; association changes preserve job status, outcomes and maintenance costs.
+
+## Inspection handoff
+
+The creation route also validates `sourceInspectionId` and rejects mixed source
+IDs before source reads. The existing `WorkOrderForm` fixes source/asset/location,
+prefills notes once and uses the prefilled Location field without a separate
+inspection summary card. Recorded/current locations appear only when explicit
+move review is required. Cancel returns to the asset's inspection history; the
+unlinked failed record retains a Create work order action that reopens this same
+prefilled form. Linked results display their existing work order. Successful conversion invalidates user/estate/asset-scoped
+inspection detail/history and source lookup alongside work-order lists.
+See [inspection screens](inspections.md) for routes, query keys and failure states.

@@ -7,28 +7,39 @@ export const Route = createFileRoute(
 )({
   validateSearch: (
     search: Record<string, unknown>
-  ): { sourceReportId?: string } => {
-    if (search.sourceReportId === undefined) {
-      return {};
+  ): { sourceReportId?: string; sourceInspectionId?: string } => {
+    const { sourceReportId, sourceInspectionId } = search;
+    if (sourceReportId !== undefined && sourceInspectionId !== undefined) {
+      throw new Error("Choose one source only.");
     }
     if (
-      typeof search.sourceReportId !== "string" ||
-      !UUID.test(search.sourceReportId)
+      sourceReportId !== undefined &&
+      (typeof sourceReportId !== "string" || !UUID.test(sourceReportId))
     ) {
       throw new Error("Invalid source report.");
     }
-    return { sourceReportId: search.sourceReportId };
+    if (
+      sourceInspectionId !== undefined &&
+      (typeof sourceInspectionId !== "string" || !UUID.test(sourceInspectionId))
+    ) {
+      throw new Error("Invalid source inspection.");
+    }
+    return {
+      ...(typeof sourceReportId === "string" ? { sourceReportId } : {}),
+      ...(typeof sourceInspectionId === "string" ? { sourceInspectionId } : {}),
+    };
   },
   component: NewWorkOrderRoute,
   head: () => ({ meta: [{ title: "Create work order" }] }),
 });
 function NewWorkOrderRoute() {
   const { estateId } = Route.useParams();
-  const { sourceReportId } = Route.useSearch();
+  const { sourceReportId, sourceInspectionId } = Route.useSearch();
   return (
     <WorkOrderForm
       estateId={estateId}
-      key={`${estateId}:${sourceReportId}`}
+      key={`${estateId}:${sourceReportId}:${sourceInspectionId}`}
+      sourceInspectionId={sourceInspectionId}
       sourceReportId={sourceReportId}
     />
   );

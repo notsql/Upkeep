@@ -6,7 +6,7 @@ Paths are relative to `apps/web/src/`. Every route here sits under
 Every signed-in account can open the directory and creation form, including
 `/estates/` and `/estates/new/`, without `canEnterWorkspace`. Creation still checks
 `canCreateEstate`; all estate-specific routes retain target-estate capability
-guards. Resident-only, Crew-only and unassigned accounts can see an empty directory
+guards. Resident-only and unassigned accounts can see an empty directory; Crew see assigned estates
 with Create estate. Back, breadcrumb and Cancel on creation all lead to this directory.
 
 ## Routes
@@ -15,7 +15,7 @@ with Create estate. Back, breadcrumb and Cancel on creation all lead to this dir
 | --- | --- | --- | --- | --- |
 | `routes/_auth/estates/index.tsx` | `/estates` | - | "Estates" | `EstateListPage` |
 | `routes/_auth/estates/new/index.tsx` | `/estates/new` | - | "Create estate" | `EstateEditorPage` (no `estateId`) |
-| `routes/_auth/estates/$estateId/index.tsx` | `/estates/$estateId` | `estateId` | "Estate details" | `EstateDetailsPage` with `LocationsSection` as children (see [locations.md](locations.md)) |
+| `routes/_auth/estates/$estateId/index.tsx` | `/estates/$estateId` | `estateId` | "Estate details" | `EstateDetailsPage`; management readers also mount `LocationsSection` (see [locations.md](locations.md)); Crew receive the read-only summary |
 | `routes/_auth/estates/$estateId/edit/index.tsx` | `/estates/$estateId/edit` | `estateId` | "Edit estate" | `EstateEditorPage estateId` |
 
 ## Screens and components
@@ -140,3 +140,12 @@ estates; it never grants ownership. EstateActions exposes Roles when
 canViewEstateRoles, and Estate members/invitations when canViewEstateInvitations
 or existing invite/admin flags permit. No VIEW_ESTATE means no overview query;
 role/invite/report-only users use their own scoped routes. See [estate-roles.md](estate-roles.md).
+
+## Crew inspection entry
+
+Assigned Crew may open a read-only estate overview using canViewEstateDetails.
+It exposes Assets/inspection entry and work orders without estate edit, member
+administration or the management locations section. Work-order breadcrumbs and
+context switching retain the current estate/feature. Existing Owners/Managers
+also retain their Devices action on the estate overview.
+See [inspections](inspections.md) for limited asset screens and recording.

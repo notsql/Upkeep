@@ -227,3 +227,15 @@ original completion time still determines the entry's place in history. Revision
 snapshots and correction reasons are available from the work-order detail, subject
 to independent work-order access. Correction never creates an AssetEvent or
 changes condition/forecast inputs.
+
+## Restricted inspection context
+
+The existing asset list/detail route components select owner screens with
+canViewAssets. Otherwise authorised inspection readers mount limited
+inspection-asset-list/inspection-asset-page components and hooks, without owner
+condition, maintenance, readings, device or forecast queries. Active eligible
+assets expose Create inspection record for Owners/Managers/Crew. The result
+form/detail routes and history table are documented in
+[inspections](inspections.md). Both Owner and restricted Manager/Crew asset
+details mount the shared Inspection records table, with paged canonical reads,
+saved-record links and work-order follow-up under independent permissions.

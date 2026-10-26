@@ -44,6 +44,8 @@ import { Route as AuthEstatesEstateIdWorkOrdersNewIndexRouteImport } from './rou
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/readings/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/new/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/inspections/new/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/index'
 
 const IndexRoute = IndexRouteImport.update({
@@ -240,6 +242,20 @@ const AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute =
     path: '/estates/$estateId/assets/$assetId/devices/new/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRouteImport.update(
+    {
+      id: '/estates/$estateId/assets/$assetId/inspections/$inspectionId/',
+      path: '/estates/$estateId/assets/$assetId/inspections/$inspectionId/',
+      getParentRoute: () => AuthRouteRoute,
+    } as any,
+  )
+const AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRouteImport.update({
+    id: '/estates/$estateId/assets/$assetId/inspections/new/',
+    path: '/estates/$estateId/assets/$assetId/inspections/new/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport.update(
     {
@@ -284,6 +300,8 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  '/estates/$estateId/assets/$assetId/inspections/$inspectionId/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
+  '/estates/$estateId/assets/$assetId/inspections/new/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
   '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 export interface FileRoutesByTo {
@@ -321,6 +339,8 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  '/estates/$estateId/assets/$assetId/inspections/$inspectionId': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
+  '/estates/$estateId/assets/$assetId/inspections/new': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
   '/estates/$estateId/assets/$assetId/devices/$deviceId/replace': typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 export interface FileRoutesById {
@@ -360,6 +380,8 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/inspections/new/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 export interface FileRouteTypes {
@@ -399,6 +421,8 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/edit/'
     | '/estates/$estateId/assets/$assetId/readings/'
     | '/estates/$estateId/assets/$assetId/devices/new/'
+    | '/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
+    | '/estates/$estateId/assets/$assetId/inspections/new/'
     | '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -436,6 +460,8 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/edit'
     | '/estates/$estateId/assets/$assetId/readings'
     | '/estates/$estateId/assets/$assetId/devices/new'
+    | '/estates/$estateId/assets/$assetId/inspections/$inspectionId'
+    | '/estates/$estateId/assets/$assetId/inspections/new'
     | '/estates/$estateId/assets/$assetId/devices/$deviceId/replace'
   id:
     | '__root__'
@@ -474,6 +500,8 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
     | '/_auth/estates/$estateId/assets/$assetId/readings/'
     | '/_auth/estates/$estateId/assets/$assetId/devices/new/'
+    | '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
+    | '/_auth/estates/$estateId/assets/$assetId/inspections/new/'
     | '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
   fileRoutesById: FileRoutesById
 }
@@ -735,6 +763,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
+      path: '/estates/$estateId/assets/$assetId/inspections/$inspectionId'
+      fullPath: '/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/inspections/new/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/inspections/new/'
+      path: '/estates/$estateId/assets/$assetId/inspections/new'
+      fullPath: '/estates/$estateId/assets/$assetId/inspections/new/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': {
       id: '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
       path: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace'
@@ -773,6 +815,8 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 
@@ -815,6 +859,10 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute,
+  AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute:
+    AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute,
+  AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute:
+    AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute,
 }
@@ -836,13 +884,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

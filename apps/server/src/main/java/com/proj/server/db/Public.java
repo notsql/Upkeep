@@ -8,6 +8,8 @@ import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
 import com.proj.server.db.tables.Assetevent;
+import com.proj.server.db.tables.Assetinspectionphoto;
+import com.proj.server.db.tables.Assetinspectionresult;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
@@ -72,6 +74,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.AssetEvent</code>.
      */
     public final Assetevent ASSETEVENT = Assetevent.ASSETEVENT;
+
+    /**
+     * The table <code>public.AssetInspectionPhoto</code>.
+     */
+    public final Assetinspectionphoto ASSETINSPECTIONPHOTO = Assetinspectionphoto.ASSETINSPECTIONPHOTO;
+
+    /**
+     * The table <code>public.AssetInspectionResult</code>.
+     */
+    public final Assetinspectionresult ASSETINSPECTIONRESULT = Assetinspectionresult.ASSETINSPECTIONRESULT;
 
     /**
      * The table <code>public.AssetLifecycleEvent</code>.
@@ -203,6 +215,8 @@ public class Public extends SchemaImpl {
             Assetassessment.ASSETASSESSMENT,
             Assetcategory.ASSETCATEGORY,
             Assetevent.ASSETEVENT,
+            Assetinspectionphoto.ASSETINSPECTIONPHOTO,
+            Assetinspectionresult.ASSETINSPECTIONRESULT,
             Assetlifecycleevent.ASSETLIFECYCLEEVENT,
             Assetmodel.ASSETMODEL,
             Device.DEVICE,

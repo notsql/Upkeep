@@ -70,6 +70,15 @@ function EstateActions({
           Roles
         </Link>
       ) : null}
+      {estate.owned || estate.canManageInvitationPermissions ? (
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ estateId: estate.id }}
+          to="/estates/$estateId/devices"
+        >
+          Devices
+        </Link>
+      ) : null}
       {canViewSensors ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
@@ -273,7 +282,7 @@ export function EstateDetailsPage({
             />
           ) : null}
           {children}
-          {estate.data.owned ? (
+          {estate.data.owned || permission?.canViewInspectionResults ? (
             <section
               aria-label="Estate assets"
               className="section-surface mt-6 space-y-3"
@@ -287,7 +296,7 @@ export function EstateDetailsPage({
                 >
                   View assets
                 </Link>
-                {estate.data.deactivatedAt ? null : (
+                {!estate.data.owned || estate.data.deactivatedAt ? null : (
                   <Link
                     className={buttonVariants({ variant: "outline" })}
                     params={{ estateId }}

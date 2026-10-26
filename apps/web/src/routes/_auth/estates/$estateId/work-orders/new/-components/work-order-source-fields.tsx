@@ -22,6 +22,7 @@ export function WorkOrderSourceFields({
   return (
     <section aria-label="Work-order source" className="grid max-w-3xl gap-5">
       <WorkOrderSelect
+        disabled={form.inspectionSource}
         label="Source"
         onChange={form.sourceChanged}
         options={sources.filter(

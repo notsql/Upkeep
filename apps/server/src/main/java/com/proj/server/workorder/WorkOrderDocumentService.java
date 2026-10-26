@@ -44,6 +44,7 @@ public class WorkOrderDocumentService {
 
     private EstatePermissions.Authority authorize(UUID estate, String user, boolean write) {
         var access = documents.authority(estate, user, write ? EDIT_DOCUMENTS : VIEW_DOCUMENTS, write);
+        if (write) access.requireManager();
         orders.authorize(estate, user, write, false);
         return access;
     }

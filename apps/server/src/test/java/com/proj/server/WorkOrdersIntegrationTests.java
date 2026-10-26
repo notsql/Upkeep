@@ -411,7 +411,7 @@ class WorkOrdersIntegrationTests {
     }
 
     @Test
-    void currentManagerCreatesAndCrewReadsEveryOrderButCannotCreateOrPickAssets() throws Exception {
+    void currentManagerCanCreateWhileCrewCanOnlyReadOrders() throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
         member(data[0], "manager", "MANAGER");
         member(data[0], "crew", "CREW");
@@ -432,7 +432,8 @@ class WorkOrdersIntegrationTests {
                 .andExpect(status().isForbidden());
         mvc.perform(get("/access/context").with(jwt().jwt(t -> t.subject("crew"))))
                 .andExpect(jsonPath("$.estates[0].canViewWorkOrders").value(true))
-                .andExpect(jsonPath("$.estates[0].canCreateWorkOrders").value(false));
+                .andExpect(jsonPath("$.estates[0].canCreateWorkOrders").value(false))
+                .andExpect(jsonPath("$.estates[0].canUpdateWorkOrders").value(false));
     }
 
     @ParameterizedTest

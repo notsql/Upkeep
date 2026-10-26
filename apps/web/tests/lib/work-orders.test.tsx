@@ -173,3 +173,40 @@ it("seeds the saved detail and refreshes only work-order lists", async () => {
       ?.isInvalidated
   ).toBe(false);
 });
+
+it("refreshes the linked inspection and its history after conversion without invalidating other scopes", async () => {
+  vi.mocked(api.POST).mockResolvedValue({
+    data: {
+      id: "saved",
+      reference: "OAK-W0001",
+      assetId: "pump",
+      sourceInspectionId: "inspection",
+    },
+    response: new Response(null, { status: 201 }),
+  } as never);
+  const view = renderWithProviders(<Orders />);
+  const detail = [
+    "manager",
+    "inspection-results",
+    "oak",
+    "pump",
+    "detail",
+    "inspection",
+  ];
+  const history = ["manager", "inspection-results", "oak", "pump", "list"];
+  const unrelated = [
+    ["someone-else", "inspection-results", "oak", "pump", "list"],
+    ["manager", "inspection-results", "other-estate", "pump", "list"],
+    ["manager", "inspection-results", "oak", "other-asset", "list"],
+  ];
+  for (const key of [detail, history, ...unrelated]) {
+    view.queryClient.setQueryData(key, { saved: true });
+  }
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Saved");
+  expect(view.queryClient.getQueryState(detail)?.isInvalidated).toBe(true);
+  expect(view.queryClient.getQueryState(history)?.isInvalidated).toBe(true);
+  for (const key of unrelated) {
+    expect(view.queryClient.getQueryState(key)?.isInvalidated).toBe(false);
+  }
+});

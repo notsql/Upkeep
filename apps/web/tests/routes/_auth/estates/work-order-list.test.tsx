@@ -49,6 +49,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 }));
 const estateId = "00000000-0000-0000-0000-000000000001";
 const basePath = `/estates/${estateId}/work-orders`;
+const WORK_ORDER_WRITES = /start work|complete work|correct outcome/i;
 const order = {
   id: "00000000-0000-0000-0000-000000000002",
   estateId,
@@ -114,6 +115,23 @@ beforeEach(() => {
     return Promise.resolve({ data: [], response: new Response() });
   });
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
+});
+
+it("lets Crew view work orders without creation or progress controls", async () => {
+  state.crew = true;
+  const { router } = await setup();
+  const detail = await screen.findByRole("link", { name: "TEST-W0001" });
+  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
+  fireEvent.click(detail);
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe(`${basePath}/${order.id}`)
+  );
+  await screen.findByRole("heading", { name: "TEST-W0001" });
+  expect(
+    screen.queryByRole("button", {
+      name: WORK_ORDER_WRITES,
+    })
+  ).toBeNull();
 });
 
 it.each(["work-orders", "assets"])(
@@ -204,7 +222,7 @@ it.each(["", "/new", `/${order.id}`])(
   }
 );
 
-it("keeps the estate breadcrumb unlinked for Crew who cannot enter the overview", async () => {
+it("links the estate breadcrumb for Crew with read-only estate access", async () => {
   state.crew = true;
   await setup();
   const breadcrumbs = await screen.findByRole("navigation", {
@@ -212,8 +230,10 @@ it("keeps the estate breadcrumb unlinked for Crew who cannot enter the overview"
   });
   within(breadcrumbs).getByText("Testing");
   expect(
-    within(breadcrumbs).queryByRole("link", { name: "Testing" })
-  ).toBeNull();
+    within(breadcrumbs)
+      .getByRole("link", { name: "Testing" })
+      .getAttribute("href")
+  ).toBe(`/estates/${estateId}`);
 });
 
 it("applies priority and reference to the server query and URL and resets pagination", async () => {

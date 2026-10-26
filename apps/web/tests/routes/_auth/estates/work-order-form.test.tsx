@@ -62,6 +62,18 @@ vi.mock("@/lib/locations", () => ({
     { id: "level-2", path: ["Block A", "Level 2"] },
   ],
 }));
+vi.mock("@/lib/inspections", () => ({
+  useInspectionSource: () => ({
+    data: undefined,
+    isPending: false,
+    isError: false,
+  }),
+  useInspectionAsset: () => ({
+    data: undefined,
+    isPending: false,
+    isError: false,
+  }),
+}));
 vi.mock("@/lib/estate-reports", () => ({
   useEstateReport: () => mocks.report(),
   useEstateReportList: () => ({
@@ -188,7 +200,7 @@ it("prefills a report once and preserves edits on background refetch", async () 
   );
 });
 
-it("hides creation from Crew", () => {
+it("hides creation when the estate capability is absent", () => {
   mocks.access.canCreate = false;
   renderWithProviders(<WorkOrderForm estateId="oak" />);
   expect(
