@@ -9,24 +9,24 @@ datasource db {
 }
 
 model Estate {
-  id            String             @id @default(uuid()) @db.Uuid
-  ownerUserId   String             @db.VarChar(255)
-  name          String             @db.VarChar(200)
-  code          String             @unique @db.VarChar(50)
-  address       String             @db.VarChar(500)
-  postalCode    String             @db.VarChar(20)
-  description   String?            @db.VarChar(2000)
-  createdAt     DateTime           @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime           @updatedAt @db.Timestamptz(6)
-  deactivatedAt DateTime?          @db.Timestamptz(6)
-  locations     Location[]
-  users         EstateUser[]
-  assets        Asset[]
-  devices       Device[]
-  assessments   AssetAssessment[]
-  invitations   EstateInvitation[]
-  issueReports  IssueReport[]
-  events        AssetEvent[]
+  id               String             @id @default(uuid()) @db.Uuid
+  ownerUserId      String             @db.VarChar(255)
+  name             String             @db.VarChar(200)
+  code             String             @unique @db.VarChar(50)
+  address          String             @db.VarChar(500)
+  postalCode       String             @db.VarChar(20)
+  description      String?            @db.VarChar(2000)
+  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(6)
+  deactivatedAt    DateTime?          @db.Timestamptz(6)
+  locations        Location[]
+  users            EstateUser[]
+  assets           Asset[]
+  devices          Device[]
+  assessments      AssetAssessment[]
+  invitations      EstateInvitation[]
+  issueReports     IssueReport[]
+  events           AssetEvent[]
   flatlinePolicies FlatlinePolicy[]
 
   @@index([ownerUserId])
@@ -137,16 +137,16 @@ model Asset {
   lifecycleVersion Int                   @default(0)
   lifecycleEvents  AssetLifecycleEvent[]
 
-  estate        Estate            @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location      Location          @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  assetCategory AssetCategory     @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
-  manufacturer  Manufacturer?     @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  model         AssetModel?       @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
-  devices       Device[]
-  readings      DeviceReading[]
+  estate         Estate                @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location       Location              @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory  AssetCategory         @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  manufacturer   Manufacturer?         @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  model          AssetModel?           @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
+  devices        Device[]
+  readings       DeviceReading[]
   flatlinePauses DeviceFlatlinePause[]
-  assessments   AssetAssessment[]
-  events        AssetEvent[]
+  assessments    AssetAssessment[]
+  events         AssetEvent[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -238,16 +238,24 @@ model Device {
   // SHA-256 hex of the device's API key; the key itself is never stored (decision 0025).
   credentialHash           String?   @unique @db.Char(64)
   credentialIssuedAt       DateTime? @db.Timestamptz(6)
+  // Permanent: a deactivated device keeps its readings but has no key (ID-45).
+  deactivatedAt            DateTime? @db.Timestamptz(6)
+  // The deactivated device this one replaced, on the same asset (ID-45).
+  replacesDeviceId         String?   @db.Uuid
   createdAt                DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt                DateTime  @updatedAt @db.Timestamptz(6)
 
-  estate   Estate          @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  asset    Asset           @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  location Location        @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  readings DeviceReading[]
+  estate         Estate                @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset          Asset                 @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  location       Location              @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  readings       DeviceReading[]
   flatlinePauses DeviceFlatlinePause[]
+  replaces       Device?               @relation("DeviceReplacement", fields: [replacesDeviceId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  replacedBy     Device?               @relation("DeviceReplacement")
 
   @@unique([id, estateId])
+  // A device can be replaced only once.
+  @@unique([replacesDeviceId, estateId])
   @@index([estateId])
   @@index([assetId])
   @@index([locationId])

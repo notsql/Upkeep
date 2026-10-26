@@ -203,6 +203,34 @@ public class DeviceRecord extends UpdatableRecordImpl<DeviceRecord> {
         return (OffsetDateTime) get(12);
     }
 
+    /**
+     * Setter for <code>public.Device.deactivatedAt</code>.
+     */
+    public void setDeactivatedat(OffsetDateTime value) {
+        set(13, value);
+    }
+
+    /**
+     * Getter for <code>public.Device.deactivatedAt</code>.
+     */
+    public OffsetDateTime getDeactivatedat() {
+        return (OffsetDateTime) get(13);
+    }
+
+    /**
+     * Setter for <code>public.Device.replacesDeviceId</code>.
+     */
+    public void setReplacesdeviceid(UUID value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.Device.replacesDeviceId</code>.
+     */
+    public UUID getReplacesdeviceid() {
+        return (UUID) get(14);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -226,7 +254,7 @@ public class DeviceRecord extends UpdatableRecordImpl<DeviceRecord> {
     /**
      * Create a detached, initialised DeviceRecord
      */
-    public DeviceRecord(UUID id, UUID estateid, UUID assetid, UUID locationid, String identifier, String model, String[] metrics, Integer reportingintervalseconds, OffsetDateTime lastseenat, OffsetDateTime createdat, OffsetDateTime updatedat, String credentialhash, OffsetDateTime credentialissuedat) {
+    public DeviceRecord(UUID id, UUID estateid, UUID assetid, UUID locationid, String identifier, String model, String[] metrics, Integer reportingintervalseconds, OffsetDateTime lastseenat, OffsetDateTime createdat, OffsetDateTime updatedat, String credentialhash, OffsetDateTime credentialissuedat, OffsetDateTime deactivatedat, UUID replacesdeviceid) {
         super(Device.DEVICE);
 
         setId(id);
@@ -242,6 +270,8 @@ public class DeviceRecord extends UpdatableRecordImpl<DeviceRecord> {
         setUpdatedat(updatedat);
         setCredentialhash(credentialhash);
         setCredentialissuedat(credentialissuedat);
+        setDeactivatedat(deactivatedat);
+        setReplacesdeviceid(replacesdeviceid);
         resetTouchedOnNotNull();
     }
 }

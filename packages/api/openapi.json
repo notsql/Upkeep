@@ -2046,7 +2046,7 @@
             }
           },
           "409": {
-            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "description": "Duplicate identifier, an inactive estate, asset or location, or a deactivated device",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -2125,7 +2125,7 @@
             }
           },
           "409": {
-            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "description": "Duplicate identifier, an inactive estate, asset or location, or a deactivated device",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -2134,6 +2134,176 @@
           },
           "201": {
             "description": "Device registered, awaiting its first reading",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/DeviceResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/replace": {
+      "post": {
+        "tags": ["device-controller"],
+        "operationId": "replaceDevice",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDeviceRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid details, or an unsupported metric",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset, location or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate identifier, an inactive estate, asset or location, or a deactivated device",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "The old device deactivated and the new one registered on the same asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/DeviceResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate": {
+      "post": {
+        "tags": ["device-controller"],
+        "operationId": "deactivateDevice",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "deviceId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing or invalid details, or an unsupported metric",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate, asset, location or device not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate identifier, an inactive estate, asset or location, or a deactivated device",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Device deactivated and its key removed. Permanent; readings are kept.",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/DeviceResponse" }
@@ -2201,7 +2371,7 @@
             }
           },
           "409": {
-            "description": "Duplicate identifier, or an inactive estate, asset or location",
+            "description": "Duplicate identifier, an inactive estate, asset or location, or a deactivated device",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -5288,6 +5458,21 @@
             "format": "date-time",
             "description": "When the device's current API key was issued. Null if it has none."
           },
+          "deactivatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "When the device was deactivated. Permanent; null while active."
+          },
+          "replacesDeviceId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "The deactivated device this one replaced"
+          },
+          "replacedByDeviceId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "The device that replaced this one"
+          },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" }
         },
@@ -5303,6 +5488,11 @@
           "reportingIntervalSeconds",
           "updatedAt"
         ]
+      },
+      "DeactivateDeviceRequest": {
+        "type": "object",
+        "properties": { "identifier": { "type": "string" } },
+        "required": ["identifier"]
       },
       "DeviceCredentialResponse": {
         "type": "object",

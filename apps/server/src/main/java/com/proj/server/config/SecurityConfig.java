@@ -121,6 +121,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{id}/restore",
                                 "/estates/{estateId}/assets/{assetId}/devices",
                                 "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential",
+                                "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate",
+                                "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/replace",
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings/anomaly-check",

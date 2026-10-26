@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.*;
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "409",
-            description = "Duplicate identifier, or an inactive estate, asset or location",
+            description = "Duplicate identifier, an inactive estate, asset or location, or a deactivated device",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
 })
 public class DeviceController {
@@ -77,6 +77,35 @@ public class DeviceController {
             @PathVariable UUID assetId,
             @PathVariable UUID deviceId) {
         return service.issueCredential(estateId, assetId, deviceId, owner(jwt));
+    }
+
+    @PostMapping("/{deviceId}/deactivate")
+    @ApiResponse(
+            responseCode = "200",
+            description = "Device deactivated and its key removed. Permanent; readings are kept.")
+    @Operation(operationId = "deactivateDevice")
+    public DeviceResponse deactivate(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID assetId,
+            @PathVariable UUID deviceId,
+            @Valid @RequestBody DeactivateDeviceRequest request) {
+        return service.deactivate(estateId, assetId, deviceId, owner(jwt), request.identifier());
+    }
+
+    @PostMapping("/{deviceId}/replace")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiResponse(
+            responseCode = "201",
+            description = "The old device deactivated and the new one registered on the same asset")
+    @Operation(operationId = "replaceDevice")
+    public DeviceResponse replace(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID assetId,
+            @PathVariable UUID deviceId,
+            @Valid @RequestBody CreateDeviceRequest request) {
+        return service.replace(estateId, assetId, deviceId, owner(jwt), request);
     }
 
     private static String owner(Jwt jwt) {

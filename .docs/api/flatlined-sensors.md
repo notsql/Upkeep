@@ -61,7 +61,7 @@ order is device identifier, metric catalogue order, then device UUID. Size is 1â
 page is nonnegative and offset must fit int32. hasSensorReadings is independent of
 view/page and covers current active device/asset/registered-metric attribution.
 Inactive estates keep settings readable but return no monitoring rows and reject
-writes; retired assets are excluded. An inactive location alone does not exclude
+writes; retired assets and deactivated devices (ID-45) are excluded. An inactive location alone does not exclude
 a device. Expired pause metadata remains visible as a fresh-start cutoff.
 
 Each entry includes the asset's and device's **current** full location paths,
