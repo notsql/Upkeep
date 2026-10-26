@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header";
 import { useAsset, useDeactivateAsset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
+import { useInspectionAccess } from "@/lib/inspections";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 import { AssetCostsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
@@ -16,8 +17,33 @@ import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$asse
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
+import { InspectionHistoryTable } from "./inspection-history-table";
 
 const NOT_RECORDED = "Not recorded";
+
+function InspectionRecordAction({
+  estateId,
+  assetId,
+  estateActive,
+}: {
+  estateId: string;
+  assetId: string;
+  estateActive: boolean;
+}) {
+  const access = useInspectionAccess(estateId);
+  if (!(access.canCreate && estateActive)) {
+    return null;
+  }
+  return (
+    <Link
+      className={buttonVariants()}
+      params={{ estateId, assetId }}
+      to="/estates/$estateId/assets/$assetId/inspections/new"
+    >
+      Create inspection record
+    </Link>
+  );
+}
 
 export function AssetDetailsPage({
   estateId,
@@ -73,6 +99,11 @@ export function AssetDetailsPage({
             actions={
               asset.data.deactivatedAt ? undefined : (
                 <div className="flex flex-wrap items-center gap-4">
+                  <InspectionRecordAction
+                    assetId={assetId}
+                    estateActive={!estate.data?.deactivatedAt}
+                    estateId={estateId}
+                  />
                   <Link
                     className={buttonVariants({ variant: "outline" })}
                     params={{ estateId, assetId }}
@@ -151,6 +182,7 @@ export function AssetDetailsPage({
               <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
             </div>
           </dl>
+          <InspectionHistoryTable assetId={assetId} estateId={estateId} />
           <AssetRetirementPanel asset={asset.data} />
           <AssetConditionSection
             assetId={assetId}

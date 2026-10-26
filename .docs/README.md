@@ -34,6 +34,8 @@ same change as the code.
 - [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
 - [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, block/level-position and subtree filtering, private images and location correction.
 
+Inspections: [API](api/inspections.md) · [Frontend](frontend/inspections.md).
+
 Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 
 ## Frontend (`apps/web`)

@@ -45,6 +45,9 @@ export function useWorkOrderAccess(estateId: string) {
     canViewAssets: valid && !!permission?.canViewAssets,
     canViewDocuments: valid && !!permission?.canViewDocuments,
     canViewManagement: valid && !!permission?.canViewManagement,
+    canViewEstateDetails:
+      valid &&
+      !!(permission?.canViewEstateDetails ?? permission?.canViewManagement),
     estateName: permission?.estateName,
     pending: !session.ready || access.isPending,
   };
@@ -198,6 +201,21 @@ export function useCreateWorkOrder(estateId: string) {
       await client.invalidateQueries({
         queryKey: [userId, "work-orders", estateId, "list"],
       });
+      if (data.sourceInspectionId && data.assetId) {
+        await Promise.all([
+          client.invalidateQueries({
+            queryKey: [userId, "inspection-results", estateId, data.assetId],
+          }),
+          client.invalidateQueries({
+            queryKey: [
+              userId,
+              "inspection-source",
+              estateId,
+              data.sourceInspectionId,
+            ],
+          }),
+        ]);
+      }
     },
   });
 }

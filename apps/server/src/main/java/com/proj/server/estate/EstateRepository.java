@@ -151,7 +151,15 @@ public class EstateRepository {
 
     // Estates the user owns, or has been granted by an admin (decision 0012).
     private static Condition accessibleTo(String user) {
-        return AccessService.managementEstates(user);
+        return AccessService.managementEstates(user)
+                .or(AccessService.residentEstate(user)
+                        .not()
+                        .and(ESTATE.ID.in(org.jooq
+                                .impl
+                                .DSL
+                                .select(ESTATEUSER.ESTATEID)
+                                .from(ESTATEUSER)
+                                .where(ESTATEUSER.USERID.eq(user).and(ESTATEUSER.ROLE.eq("CREW"))))));
     }
 
     public boolean hasPermission(UUID id, String user, EstatePermissionCode permission) {
@@ -165,7 +173,9 @@ public class EstateRepository {
     }
 
     private void denyResident(UUID id, String user) {
-        if (isCustom(id, user) && !hasPermission(id, user, EstatePermissionCode.VIEW_ESTATE))
+        if (isCustom(id, user)
+                && !db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(user)))
+                && !hasPermission(id, user, EstatePermissionCode.VIEW_ESTATE))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Viewing estate details requires VIEW_ESTATE.");
         if (db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(AccessService.residentEstate(user)))) {
             throw new ResponseStatusException(

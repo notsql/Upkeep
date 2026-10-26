@@ -333,7 +333,7 @@ function estateDestinations(
         active: pathname.startsWith(`${base}/work-orders`),
       });
     }
-    if (permission?.canViewManagement) {
+    if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
       local.push({
         label: "Overview",
         to: "/estates/$estateId",
@@ -360,7 +360,7 @@ function estateDestinations(
         active: pathname.startsWith(`${base}/reports`),
       });
     }
-    if (permission?.canViewAssets) {
+    if (permission?.canViewAssets || permission?.canViewInspectionResults) {
       local.push({
         label: "Assets",
         to: "/estates/$estateId/assets",
@@ -560,7 +560,10 @@ function NavigationEstateSwitcher({
       />
     );
   }
-  if (permission?.canViewManagement && !reporting) {
+  if (
+    (permission?.canViewEstateDetails ?? permission?.canViewManagement) &&
+    !reporting
+  ) {
     return (
       <EstateContextSwitcher estateId={estateId} estateName={estateName} />
     );

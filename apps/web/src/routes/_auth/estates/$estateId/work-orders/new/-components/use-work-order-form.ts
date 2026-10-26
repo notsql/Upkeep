@@ -15,22 +15,33 @@ import {
   useWorkOrderAccess,
   type WorkOrderAssetOption,
   type WorkOrderInput,
+  WorkOrderRequestError,
 } from "@/lib/work-orders";
+import { useWorkOrderInspection } from "./use-work-order-inspection";
 
-export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
+export function useWorkOrderForm(
+  estateId: string,
+  sourceReportId?: string,
+  sourceInspectionId?: string
+) {
   const access = useWorkOrderAccess(estateId);
   const save = useCreateWorkOrder(estateId);
   const navigate = useNavigate();
-  const locations = useLocations(estateId);
+  const inspection = useWorkOrderInspection(estateId, sourceInspectionId);
+  const inspectionSource = !!sourceInspectionId;
+  const locations = useLocations(estateId, false, !inspectionSource);
   const [description, setDescription] = useState("");
-  const [locationId, setLocation] = useState("");
+  const [selectedLocationId, setLocation] = useState("");
   const [category, setCategory] =
     useState<WorkOrderInput["category"]>("EQUIPMENT_FAULT");
   const [priority, setPriority] =
     useState<WorkOrderInput["priority"]>("MEDIUM");
-  const [source, setSource] = useState<WorkOrderInput["source"]>(
-    sourceReportId ? "RESIDENT_REPORT" : "MANUAL"
-  );
+  const [source, setSource] = useState<WorkOrderInput["source"]>(() => {
+    if (sourceInspectionId) {
+      return "INSPECTION";
+    }
+    return sourceReportId ? "RESIDENT_REPORT" : "MANUAL";
+  });
   const [reportId, setReportId] = useState(sourceReportId ?? "");
   const [sourceReference, setReference] = useState("");
   const [expectedLocation, setExpectedLocation] = useState<string>();
@@ -39,9 +50,13 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
     source === "RESIDENT_REPORT" ? reportId : ""
   );
   const initialized = useRef<string | undefined>(undefined);
-  const [asset, setAsset] = useState<WorkOrderAssetOption | undefined>(
+  const [selectedAsset, setAsset] = useState<WorkOrderAssetOption | undefined>(
     undefined
   );
+  const asset = inspectionSource ? inspection.asset : selectedAsset;
+  const locationId = inspectionSource
+    ? (inspection.asset?.locationId ?? "")
+    : selectedLocationId;
   const [sourceChoice, setSourceChoice] = useState<
     | {
         id: string;
@@ -52,6 +67,17 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
   const [reloading, setReloading] = useState(false);
   const [error, setError] = useState<Error>();
   const saving = useRef<boolean>(false);
+  useEffect(() => {
+    if (
+      sourceInspectionId &&
+      inspection.record &&
+      inspection.asset &&
+      initialized.current !== sourceInspectionId
+    ) {
+      initialized.current = sourceInspectionId;
+      setDescription(inspection.record.notes ?? "");
+    }
+  }, [sourceInspectionId, inspection.record, inspection.asset]);
   useEffect(() => {
     if (
       report.data &&
@@ -71,19 +97,31 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
       setPriority("URGENT");
     }
   }, []);
-  const sourceChanged = useCallback((next: WorkOrderInput["source"]) => {
-    setSource(next);
-    setExpectedLocation(undefined);
-    setError(undefined);
-    setSourceChoice(undefined);
-    if (next !== "RESIDENT_REPORT") {
-      setReportId("");
-      initialized.current = undefined;
-    }
-  }, []);
+  const sourceChanged = useCallback(
+    (next: WorkOrderInput["source"]) => {
+      if (inspectionSource) {
+        return;
+      }
+      setSource(next);
+      setExpectedLocation(undefined);
+      setError(undefined);
+      setSourceChoice(undefined);
+      if (next !== "RESIDENT_REPORT") {
+        setReportId("");
+        initialized.current = undefined;
+      }
+    },
+    [inspectionSource]
+  );
   const reloadSource = useCallback(async () => {
     setReloading(true);
     try {
+      if (inspectionSource) {
+        if (await inspection.reload()) {
+          setError(undefined);
+        }
+        return;
+      }
       const result = await report.refetch();
       if (result.data && !result.isError) {
         if (isSourcePlacementConflict(error)) {
@@ -96,7 +134,7 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
     } finally {
       setReloading(false);
     }
-  }, [report.refetch, error]);
+  }, [inspectionSource, inspection.reload, report.refetch, error]);
   const changeAsset = useCallback((next: WorkOrderAssetOption | undefined) => {
     setAsset(next);
     if (next) {
@@ -119,10 +157,41 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
     setExpectedLocation(sourceChoice.id);
     setSourceChoice(undefined);
   }, [sourceChoice]);
+  const options = locations.isError
+    ? []
+    : flattenLocations(locations.data ?? []);
+  const locationOptions =
+    inspectionSource && asset
+      ? [{ value: asset.locationId, label: asset.locationPath }]
+      : options.map((item) => ({
+          value: item.id,
+          label: item.path.join(" / "),
+        }));
+  const inspectionConflict =
+    inspectionSource &&
+    error instanceof WorkOrderRequestError &&
+    error.status === 409;
+  const blocked =
+    save.isPending ||
+    reloading ||
+    !!sourceChoice ||
+    (inspectionSource
+      ? inspection.blocked || inspectionConflict
+      : locations.isPending ||
+        locations.isError ||
+        !options.some((item) => item.id === locationId) ||
+        sourceBlocked(
+          source,
+          access.canReadReports,
+          expectedLocation,
+          report.isPending,
+          report.isError,
+          error
+        ));
   const submit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (saving.current || save.isPending || sourceChoice || reloading) {
+      if (saving.current || blocked) {
         return;
       }
       saving.current = true;
@@ -137,7 +206,10 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
             source,
             assetId: asset?.id,
             sourceReportId: reportId,
-            expectedSourceLocationId: expectedLocation,
+            sourceInspectionId,
+            expectedSourceLocationId: inspectionSource
+              ? locationId
+              : expectedLocation,
             sourceReference,
           })
         );
@@ -153,8 +225,7 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
     },
     [
       asset,
-      sourceChoice,
-      reloading,
+      blocked,
       category,
       description,
       estateId,
@@ -163,9 +234,10 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
       navigate,
       priority,
       reportId,
-      save.isPending,
       save.mutateAsync,
       source,
+      sourceInspectionId,
+      inspectionSource,
       sourceReference,
     ]
   );
@@ -183,25 +255,15 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
     () => locations.refetch(),
     [locations.refetch]
   );
-  const options = locations.isError
-    ? []
-    : flattenLocations(locations.data ?? []);
   const reportSource = source === "RESIDENT_REPORT";
-  const blocked =
-    save.isPending ||
-    reloading ||
-    !!sourceChoice ||
-    locations.isPending ||
-    locations.isError ||
-    !options.some((item) => item.id === locationId) ||
-    sourceBlocked(
-      source,
-      access.canReadReports,
-      expectedLocation,
-      report.isPending,
-      report.isError,
-      error
-    );
+  const cancel = useCallback(() => {
+    if (inspection.record) {
+      return navigate({
+        to: "/estates/$estateId/assets/$assetId",
+        params: { estateId, assetId: inspection.record.assetId },
+      });
+    }
+  }, [navigate, estateId, inspection.record]);
   return {
     access,
     asset,
@@ -209,17 +271,22 @@ export function useWorkOrderForm(estateId: string, sourceReportId?: string) {
     canUseSource,
     category,
     categoryChanged,
+    cancel,
     changeAsset,
     changeDescription,
     changeReference,
     description,
     error,
     expectedLocation,
+    inspection,
+    inspectionSource,
     keepWorkLocation,
     locationId,
+    locationOptions,
     locations,
     options,
     priority,
+    pending: save.isPending,
     reloadSource,
     report,
     reportId,
@@ -246,6 +313,7 @@ function workOrderFailure(failure: unknown): Error {
 function creationBody(input: WorkOrderInput): WorkOrderInput {
   const {
     sourceReportId,
+    sourceInspectionId,
     expectedSourceLocationId,
     sourceReference,
     ...common
@@ -253,6 +321,9 @@ function creationBody(input: WorkOrderInput): WorkOrderInput {
   const body = { ...common, description: common.description.trim() };
   if (input.source === "RESIDENT_REPORT") {
     return { ...body, sourceReportId, expectedSourceLocationId };
+  }
+  if (input.source === "INSPECTION" && sourceInspectionId) {
+    return { ...body, sourceInspectionId, expectedSourceLocationId };
   }
   if (
     input.source === "INSPECTION" ||

@@ -953,7 +953,7 @@ class FaultReportLocationsIntegrationTests {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(
                                                 "{\"name\":\"Changed\",\"code\":\"CHANGED\",\"address\":\"Road\",\"postalCode\":\"123456\"}")))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mvc.perform(asStaff(patch("/estates/" + estate + "/locations/" + level)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Changed\",\"parentId\":\"" + block + "\",\"sortOrder\":1}")))

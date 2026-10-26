@@ -141,7 +141,7 @@ All new reads require the existing reader permission and return private/no-store
 Writes require an active owner/current Manager; a same-estate Resident overrides
 ownership. Reads preserve inactive history. Writes acquire the estate and order
 locks before checking the current version/state. Names are resolved before write
-locks. Crew cannot write; non-owner Managers gain no asset-register access.
+locks. Crew cannot update progress/completion; non-owner Managers gain no owner asset-register access.
 
 | Method | Path | Request | Success |
 | --- | --- | --- | --- |
@@ -277,3 +277,21 @@ the live API matches the generated contract. See decision 0035.
 Document associations and attachment endpoints: see
 [work-order-documents.md](work-order-documents.md). Linking preserves work-order
 status/version, completion outcomes and costs.
+
+## Linked inspection source
+
+`CreateWorkOrderRequest` additionally accepts `sourceInspectionId?: UUID`, and
+`WorkOrderResponse` includes nullable `sourceInspectionId`. With that ID, source
+must be INSPECTION, report source IDs are forbidden, the linked asset is required
+and must match the estate's failed inspection, and `expectedSourceLocationId`
+is required and must equal its current registered location. Work location must
+also equal that location. The source reference is derived from inspection
+date/ID; unlinked manual INSPECTION sources still require their text reference.
+A duplicate conversion returns 409 identifying the existing order reference.
+The unique nullable relation and estate-first transaction enforce at most one
+linked order; creation failure leaves the inspection saved and awaiting work.
+See [inspections](inspections.md) for the immutable result and lookup contracts.
+
+Creation, the limited asset picker, progress, completion and corrections require
+Owner/Manager authority. Crew have read-only work-order access, including orders
+linked to their recorded inspections.

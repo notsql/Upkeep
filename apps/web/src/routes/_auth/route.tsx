@@ -72,6 +72,33 @@ export const Route = createFileRoute("/_auth")({
   loader: ({ context }) => ({ user: context.user }),
 });
 
+function guardInspectionContext(
+  path: string,
+  estate: components["schemas"]["EstateAccessResponse"] | undefined
+): boolean {
+  const [, , , feature] = path.split("/");
+  if (!feature && estate?.canViewEstateDetails) {
+    return true;
+  }
+  if (feature !== "assets") {
+    return false;
+  }
+  const segments = path.split("/").filter(Boolean).slice(3);
+  if (segments.length === 3 && segments[1] === "inspections") {
+    const allowed =
+      segments[2] === "new"
+        ? estate?.canCreateInspectionResults
+        : estate?.canViewInspectionResults;
+    if (!allowed) {
+      throw notFound();
+    }
+    return true;
+  }
+  const context =
+    segments.length === 0 || (segments.length === 1 && segments[0] !== "new");
+  return context && !!estate?.canViewInspectionResults;
+}
+
 function guardEstatePath(
   path: string,
   access: components["schemas"]["AppAccessResponse"]
@@ -80,24 +107,25 @@ function guardEstatePath(
   if (!(path.startsWith("/estates/") && estateId) || estateId === "new") {
     return;
   }
-  {
-    const estate = access.estates.find((item) => item.estateId === estateId);
-    if (estate?.role === "RESIDENT") {
-      throw redirect({ href: "/reports/new" });
-    }
-    if (feature === "reports") {
+  const estate = access.estates.find((item) => item.estateId === estateId);
+  if (estate?.role === "RESIDENT") {
+    throw redirect({ href: "/reports/new" });
+  }
+  if (guardInspectionContext(path, estate)) {
+    return;
+  }
+  switch (feature) {
+    case "reports":
       if (!estate?.canViewFaultReports) {
         throw notFound();
       }
       return;
-    }
-    if (feature === "roles") {
+    case "roles":
       if (!estate?.canViewEstateRoles) {
         throw notFound();
       }
       return;
-    }
-    if (feature === "council") {
+    case "council":
       if (
         !(
           estate?.canViewEstateInvitations ||
@@ -108,13 +136,13 @@ function guardEstatePath(
         throw notFound();
       }
       return;
-    }
-    if (!estate?.canViewManagement) {
-      throw notFound();
-    }
-    if (feature === "assets" && !estate.canViewAssets) {
-      throw notFound();
-    }
+    default:
+      if (
+        !estate?.canViewManagement ||
+        (feature === "assets" && !estate.canViewAssets)
+      ) {
+        throw notFound();
+      }
   }
 }
 
