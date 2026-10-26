@@ -6,6 +6,7 @@ import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
+import { WorkOrderDocuments } from "./work-order-documents";
 import { WorkOrderProgress } from "./work-order-progress";
 export function WorkOrderDetailPage({
   estateId,
@@ -149,6 +150,13 @@ export function WorkOrderDetailPage({
           </div>
         </CardContent>
       </Card>
+      {access.canViewDocuments ? (
+        <WorkOrderDocuments
+          estateId={estateId}
+          key={`${access.userId}:${estateId}:${workOrderId}`}
+          workOrderId={workOrderId}
+        />
+      ) : null}
       <WorkOrderProgress
         canUpdate={access.canUpdate}
         estateId={estateId}

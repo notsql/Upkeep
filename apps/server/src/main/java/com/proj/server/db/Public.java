@@ -14,6 +14,7 @@ import com.proj.server.db.tables.Device;
 import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Document;
+import com.proj.server.db.tables.Documentworkorderevent;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateroledefinition;
@@ -101,6 +102,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.Document</code>.
      */
     public final Document DOCUMENT = Document.DOCUMENT;
+
+    /**
+     * The table <code>public.DocumentWorkOrderEvent</code>.
+     */
+    public final Documentworkorderevent DOCUMENTWORKORDEREVENT = Documentworkorderevent.DOCUMENTWORKORDEREVENT;
 
     /**
      * The table <code>public.Estate</code>.
@@ -203,6 +209,7 @@ public class Public extends SchemaImpl {
             Deviceflatlinepause.DEVICEFLATLINEPAUSE,
             Devicereading.DEVICEREADING,
             Document.DOCUMENT,
+            Documentworkorderevent.DOCUMENTWORKORDEREVENT,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
             Estateroledefinition.ESTATEROLEDEFINITION,

@@ -52,3 +52,7 @@ Desktop and estate navigation show Documents based on `canViewDocuments`.
 Outside a document estate, the Documents chooser offers authorized estates.
 The existing feature switcher preserves document context when possible and
 supports document-only accounts without management endpoint calls.
+
+Work-order row actions, association dialogs and history are described in
+[work-order-documents.md](work-order-documents.md). The action requires both
+document and work-order read capabilities; writes remain Owner/Manager-only.

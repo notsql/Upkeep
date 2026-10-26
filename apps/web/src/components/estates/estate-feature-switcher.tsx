@@ -11,7 +11,11 @@ import { Building2, Check, ChevronsUpDown } from "lucide-react";
 import { useAppAccess } from "@/lib/access";
 
 export type EstateFeature = "work-orders" | "reports" | "documents";
-type EstateContextFeature = EstateFeature | "management" | "resident";
+type EstateContextFeature =
+  | EstateFeature
+  | "management"
+  | "resident"
+  | "report-creation";
 const roleLabels: Record<string, string> = {
   MANAGER: "Manager",
   CREW: "Crew",
@@ -34,7 +38,7 @@ function estateDestination(
   feature: EstateContextFeature
 ) {
   if (estate.role === "RESIDENT") {
-    return "/reports/new";
+    return feature === "report-creation" ? "/reports/new" : "/reports";
   }
   if (feature === "documents" && estate.canViewDocuments) {
     return "/estates/$estateId/documents";
@@ -86,7 +90,8 @@ export function EstateFeatureSwitcher({
           <Button
             aria-description={current ? estateRoleLabel(current) : undefined}
             aria-label={`Switch estate: ${name}`}
-            className="h-auto min-h-11 w-full justify-start gap-2 rounded-xl px-3 py-3"
+            className="h-auto min-h-11 w-full min-w-0 max-w-full justify-start gap-2 rounded-xl px-3 py-3"
+            title={current ? `${name} (${estateRoleLabel(current)})` : name}
             variant="outline"
           />
         }
@@ -95,7 +100,7 @@ export function EstateFeatureSwitcher({
         <span className="min-w-0 flex-1 text-left">
           <span className="block truncate">{name}</span>
           {current ? (
-            <span className="block text-muted-foreground text-xs">
+            <span className="block truncate text-muted-foreground text-xs">
               {estateRoleLabel(current)}
             </span>
           ) : null}
@@ -104,18 +109,25 @@ export function EstateFeatureSwitcher({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         aria-label="Switch estate"
-        className="max-h-[min(20rem,var(--available-height))] min-w-48 rounded-xl p-2"
+        className="max-h-[min(20rem,var(--available-height))] min-w-48 max-w-[min(24rem,var(--available-width))] rounded-xl p-2"
       >
         {choices.map((estate) => {
           const resident = estate.role === "RESIDENT";
-          const unavailable =
+          const reportingUnavailable =
             resident &&
             !access.data?.residentEstates.some(
               (item) => item.id === estate.estateId
             );
+          const unavailable =
+            feature === "report-creation" && reportingUnavailable;
           const destination = estateDestination(estate, feature);
           return (
             <DropdownMenuItem
+              aria-description={
+                resident
+                  ? `Resident · ${feature === "report-creation" ? "Report a fault" : "My reports"}`
+                  : estateRoleLabel(estate)
+              }
               aria-label={estate.estateName}
               className="min-h-11 gap-3 rounded-lg text-sm"
               disabled={unavailable}
@@ -133,11 +145,22 @@ export function EstateFeatureSwitcher({
                 />
               }
             >
-              <span className="min-w-0 flex-1 break-words font-medium">
+              <span className="wrap-anywhere min-w-0 flex-1 whitespace-normal font-medium">
                 <span className="block">{estate.estateName}</span>
                 <span className="block font-normal text-muted-foreground text-xs">
-                  {estateRoleLabel(estate)}
-                  {unavailable ? " · Reporting unavailable" : ""}
+                  <span>{estateRoleLabel(estate)}</span>
+                  {resident ? (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span>
+                        {feature === "report-creation"
+                          ? "Report a fault"
+                          : "My reports"}
+                      </span>
+                    </>
+                  ) : null}
+                  {reportingUnavailable ? " · Reporting unavailable" : ""}
                 </span>
               </span>
               {estate.estateId === estateId ? (

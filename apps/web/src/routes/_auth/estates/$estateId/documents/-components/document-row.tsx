@@ -8,17 +8,23 @@ export function DocumentRow({
   downloading,
   onDownload,
   onDelete,
+  onAssociation,
 }: {
   document: EstateDocument;
   downloading: boolean;
   onDownload: (document: EstateDocument) => void;
   onDelete: (document: EstateDocument) => void;
+  onAssociation?: (document: EstateDocument) => void;
 }) {
   const download = useCallback(
     () => onDownload(document),
     [document, onDownload]
   );
   const remove = useCallback(() => onDelete(document), [document, onDelete]);
+  const association = useCallback(
+    () => onAssociation?.(document),
+    [document, onAssociation]
+  );
   return (
     <TableRow>
       <TableCell>{document.originalFilename}</TableCell>
@@ -34,7 +40,16 @@ export function DocumentRow({
         </time>
       </TableCell>
       <TableCell>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {onAssociation ? (
+            <Button
+              aria-label={`Work-order link for ${document.originalFilename}`}
+              onClick={association}
+              variant="outline"
+            >
+              Work order
+            </Button>
+          ) : null}
           <Button
             aria-label={`Download ${document.originalFilename}`}
             disabled={downloading}

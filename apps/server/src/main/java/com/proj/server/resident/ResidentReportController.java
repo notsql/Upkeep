@@ -115,7 +115,7 @@ public class ResidentReportController {
         @ApiResponse(responseCode = "200", description = "Own report history"),
         @ApiResponse(
                 responseCode = "400",
-                description = "Invalid cursor or limit",
+                description = "Invalid estate filter, cursor or limit",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "401",
@@ -124,9 +124,10 @@ public class ResidentReportController {
     })
     public IssueReportPageResponse list(
             @AuthenticationPrincipal Jwt principal,
+            @RequestParam(required = false) UUID estateId,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer limit) {
-        return reports.list(subject(principal), cursor, limit);
+        return reports.list(subject(principal), estateId, cursor, limit);
     }
 
     @GetMapping("/reports/{reportId}")

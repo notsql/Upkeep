@@ -103,31 +103,41 @@ public class ResidentReportService {
         }
     }
 
-    public IssueReportPageResponse list(String userId, String cursor, Integer requestedLimit) {
+    public IssueReportPageResponse list(String userId, UUID estateId, String cursor, Integer requestedLimit) {
         int limit = requestedLimit == null ? 20 : requestedLimit;
         if (limit < 1 || limit > 50) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Limit must be between 1 and 50.");
         }
         OffsetDateTime time = null;
         UUID id = null;
+        String scope = estateId == null ? "all" : estateId.toString();
         if (cursor != null) {
             try {
                 var decoded = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
-                var separator = decoded.lastIndexOf('|');
-                time = OffsetDateTime.parse(decoded.substring(0, separator));
-                id = UUID.fromString(decoded.substring(separator + 1));
+                var parts = decoded.split("\\|", -1);
+                if (parts.length == 4 && parts[0].equals("v1") && parts[1].equals(scope)) {
+                    time = OffsetDateTime.parse(parts[2]);
+                    id = UUID.fromString(parts[3]);
+                } else if (parts.length == 2 && estateId == null) {
+                    // Existing unfiltered history links remain usable.
+                    time = OffsetDateTime.parse(parts[0]);
+                    id = UUID.fromString(parts[1]);
+                } else {
+                    throw new IllegalArgumentException();
+                }
             } catch (RuntimeException error) {
                 throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Invalid report cursor.");
             }
         }
-        var found = reports.list(userId, time, id, limit + 1);
+        var found = reports.list(userId, estateId, time, id, limit + 1);
         var page = found.size() > limit ? found.subList(0, limit) : found;
         String next = null;
         if (found.size() > limit) {
             var last = page.getLast();
             next = Base64.getUrlEncoder()
                     .withoutPadding()
-                    .encodeToString((last.createdAt() + "|" + last.id()).getBytes(StandardCharsets.UTF_8));
+                    .encodeToString(("v1|" + scope + "|" + last.createdAt() + "|" + last.id())
+                            .getBytes(StandardCharsets.UTF_8));
         }
         return new IssueReportPageResponse(page, next);
     }

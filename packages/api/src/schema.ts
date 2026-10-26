@@ -571,6 +571,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/documents/{documentId}/work-order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getDocumentWorkOrder"];
+    put: operations["changeDocumentWorkOrder"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/documents/{documentId}/work-order/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getDocumentWorkOrderHistory"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/failure-risk": {
     parameters: {
       query?: never;
@@ -997,6 +1029,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/work-orders/{workOrderId}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getWorkOrderDocuments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/work-orders/{workOrderId}/status": {
     parameters: {
       query?: never;
@@ -1366,6 +1414,28 @@ export interface components {
       /** Format: int32 */
       durationMinutes: number | null;
       tolerance: number;
+    };
+    ChangeDocumentWorkOrderRequest: {
+      /**
+       * Format: uuid
+       * @description Send null explicitly to remove the work-order link
+       */
+      workOrderId: string | null;
+      /** Format: int32 */
+      expectedAssociationVersion: number;
+      correctionReason?: string;
+    };
+    DocumentWorkOrderResponse: {
+      /** Format: uuid */
+      documentId: string;
+      /** Format: uuid */
+      workOrderId?: string | null;
+      workOrderReference?: string | null;
+      /** Format: int32 */
+      associationVersion: number;
+      changedByName?: string | null;
+      /** Format: date-time */
+      changedAt?: string | null;
     };
     UserRoles: {
       roleSlugs?: string[];
@@ -2053,6 +2123,10 @@ export interface components {
       /** Format: int32 */
       version: number;
     };
+    DocumentPageResponse: {
+      items: components["schemas"]["DocumentResponse"][];
+      nextCursor: string | null;
+    };
     WorkOrderCompletionRevisionResponse: {
       /** Format: uuid */
       id: string;
@@ -2193,9 +2267,25 @@ export interface components {
       flagged: boolean;
       flagReasons: ("CONDITION" | "FAILURE_RISK" | "END_OF_LIFE")[];
     };
-    DocumentPageResponse: {
-      items: components["schemas"]["DocumentResponse"][];
-      nextCursor: string | null;
+    DocumentWorkOrderEventPageResponse: {
+      items: components["schemas"]["DocumentWorkOrderEventResponse"][];
+      nextCursor?: string | null;
+    };
+    DocumentWorkOrderEventResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      fromWorkOrderId?: string | null;
+      fromWorkOrderReference?: string | null;
+      /** Format: uuid */
+      toWorkOrderId?: string | null;
+      toWorkOrderReference?: string | null;
+      /** Format: int32 */
+      associationVersion: number;
+      correctionReason?: string | null;
+      changedByName?: string | null;
+      /** Format: date-time */
+      changedAt: string;
     };
     AssetLifecycleEventResponse: {
       /** Format: uuid */
@@ -2912,6 +3002,87 @@ export interface operations {
       };
       /** @description Storage unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  changeDocumentWorkOrder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeDocumentWorkOrderRequest"];
+      };
+    };
+    responses: {
+      /** @description Association saved, or unchanged target with current version */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentWorkOrderResponse"];
+        };
+      };
+      /** @description Invalid document association, reason, version or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document and work-order permissions required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing, deleted or inaccessible document/work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or stale association version */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -4299,6 +4470,163 @@ export interface operations {
       };
     };
   };
+  getDocumentWorkOrder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current document association, including an unlinked document */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentWorkOrderResponse"];
+        };
+      };
+      /** @description Invalid document association, reason, version or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document and work-order permissions required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing, deleted or inaccessible document/work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or stale association version */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getDocumentWorkOrderHistory: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Chronological paginated document association audit */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentWorkOrderEventPageResponse"];
+        };
+      };
+      /** @description Invalid document association, reason, version or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document and work-order permissions required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing, deleted or inaccessible document/work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or stale association version */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getEstateReport: {
     parameters: {
       query?: never;
@@ -4718,6 +5046,86 @@ export interface operations {
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getWorkOrderDocuments: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        workOrderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current nondeleted document attachments, newest uploads first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentPageResponse"];
+        };
+      };
+      /** @description Invalid document association, reason, version or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document and work-order permissions required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing, deleted or inaccessible document/work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or stale association version */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -6103,6 +6511,7 @@ export interface operations {
   listResidentReports: {
     parameters: {
       query?: {
+        estateId?: string;
         cursor?: string;
         limit?: number;
       };
@@ -6121,7 +6530,7 @@ export interface operations {
           "*/*": components["schemas"]["IssueReportPageResponse"];
         };
       };
-      /** @description Invalid cursor or limit */
+      /** @description Invalid estate filter, cursor or limit */
       400: {
         headers: {
           [name: string]: unknown;

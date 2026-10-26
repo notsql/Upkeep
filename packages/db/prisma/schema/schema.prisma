@@ -37,23 +37,50 @@ model Estate {
 }
 
 model Document {
-  id               String    @id @default(uuid()) @db.Uuid
-  estateId         String    @db.Uuid
-  documentType     String    @db.VarChar(20)
-  originalFilename String    @db.VarChar(255)
-  contentType      String    @db.VarChar(50)
-  sizeBytes        Int
-  storageKey       String    @unique @db.VarChar(500)
-  uploadedByUserId String    @db.VarChar(255)
-  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
-  deletedAt        DateTime? @db.Timestamptz(6)
-  deletedByUserId  String?   @db.VarChar(255)
-  storageDeletedAt DateTime? @db.Timestamptz(6)
+  id                          String    @id @default(uuid()) @db.Uuid
+  estateId                    String    @db.Uuid
+  documentType                String    @db.VarChar(20)
+  originalFilename            String    @db.VarChar(255)
+  contentType                 String    @db.VarChar(50)
+  sizeBytes                   Int
+  storageKey                  String    @unique @db.VarChar(500)
+  uploadedByUserId            String    @db.VarChar(255)
+  createdAt                   DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt                   DateTime? @db.Timestamptz(6)
+  deletedByUserId             String?   @db.VarChar(255)
+  storageDeletedAt            DateTime? @db.Timestamptz(6)
+  workOrderId                 String?   @db.Uuid
+  workOrderAssociationVersion Int       @default(0)
 
-  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  estate          Estate                   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  workOrder       WorkOrder?               @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  workOrderEvents DocumentWorkOrderEvent[]
 
+  @@unique([id, estateId])
+  @@index([estateId, workOrderId, createdAt, id])
   @@index([estateId, createdAt, id])
   @@index([deletedAt, storageDeletedAt])
+}
+
+// Association audit is independent of work-order completion/cost records.
+model DocumentWorkOrderEvent {
+  id                 String   @id @default(uuid()) @db.Uuid
+  documentId         String   @db.Uuid
+  estateId           String   @db.Uuid
+  fromWorkOrderId    String?  @db.Uuid
+  toWorkOrderId      String?  @db.Uuid
+  associationVersion Int
+  correctionReason   String?  @db.VarChar(500)
+  changedByUserId    String   @db.VarChar(255)
+  changedByName      String?  @db.VarChar(255)
+  changedAt          DateTime @default(now()) @db.Timestamptz(6)
+
+  document      Document   @relation(fields: [documentId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  fromWorkOrder WorkOrder? @relation("DocumentLinkFrom", fields: [fromWorkOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  toWorkOrder   WorkOrder? @relation("DocumentLinkTo", fields: [toWorkOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([documentId, associationVersion])
+  @@index([estateId, documentId, associationVersion])
 }
 
 // A block, level or common area inside an estate. Levels sit under blocks;
@@ -188,30 +215,33 @@ model Asset {
 // A job in an estate (decisions 0032 and 0034). Equipment links are optional;
 // several jobs may reference one resident report. References never change.
 model WorkOrder {
-  id                    String   @id @default(uuid()) @db.Uuid
-  estateId              String   @db.Uuid
-  reference             String   @db.VarChar(70)
-  description           String   @db.VarChar(2500)
-  locationId            String   @db.Uuid
-  assetId               String?  @db.Uuid
-  category              String   @db.VarChar(30)
-  priority              String   @db.VarChar(30)
-  source                String   @db.VarChar(30)
-  sourceReportId        String?  @db.Uuid
-  sourceReference       String?  @db.VarChar(500)
-  status                String   @default("OPEN") @db.VarChar(20)
-  version               Int      @default(0)
-  createdByUserId        String   @db.VarChar(255)
-  createdAt             DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt             DateTime @updatedAt @db.Timestamptz(6)
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  reference       String   @db.VarChar(70)
+  description     String   @db.VarChar(2500)
+  locationId      String   @db.Uuid
+  assetId         String?  @db.Uuid
+  category        String   @db.VarChar(30)
+  priority        String   @db.VarChar(30)
+  source          String   @db.VarChar(30)
+  sourceReportId  String?  @db.Uuid
+  sourceReference String?  @db.VarChar(500)
+  status          String   @default("OPEN") @db.VarChar(20)
+  version         Int      @default(0)
+  createdByUserId String   @db.VarChar(255)
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
 
-  estate       Estate      @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location     Location    @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  asset        Asset?      @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  estate       Estate       @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location     Location     @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  asset        Asset?       @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   sourceReport IssueReport? @relation(fields: [sourceReportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
-  statusEvents WorkOrderStatusEvent[]
-  completion   WorkOrderCompletion?
+  statusEvents      WorkOrderStatusEvent[]
+  completion        WorkOrderCompletion?
+  documents         Document[]
+  documentLinksFrom DocumentWorkOrderEvent[] @relation("DocumentLinkFrom")
+  documentLinksTo   DocumentWorkOrderEvent[] @relation("DocumentLinkTo")
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
