@@ -1916,7 +1916,7 @@ export interface components {
        * @description Derived from last-seen on every read (decision 0027)
        * @enum {string}
        */
-      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE";
+      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE" | "DEACTIVATED";
       /**
        * Format: date-time
        * @description When the device's current API key was issued. Null if it has none.
@@ -2363,7 +2363,7 @@ export interface components {
        * @description Derived from last-seen on every read (decision 0027)
        * @enum {string}
        */
-      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE";
+      status: "AWAITING_FIRST_READING" | "ONLINE" | "OFFLINE" | "DEACTIVATED";
       /**
        * Format: date-time
        * @description When the device's current API key was issued. Null if it has none.

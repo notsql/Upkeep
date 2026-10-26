@@ -201,4 +201,33 @@ class DeviceStatusIntegrationTests {
     void requiresSignIn() throws Exception {
         mvc.perform(get("/estates/" + estateId + "/devices")).andExpect(status().isUnauthorized());
     }
+
+    void deactivate(UUID device) {
+        db.execute("update \"Device\" set \"deactivatedAt\" = now(), \"credentialHash\" = null where id = ?", device);
+    }
+
+    @Test
+    void aDeactivatedDeviceIsDeactivatedEvenIfItReportedRecently() throws Exception {
+        var device = device();
+        lastSeenMinutesAgo(device, 1);
+        deactivate(device);
+        estateDevices("owner").andExpect(jsonPath("$[0].status").value("DEACTIVATED"));
+        assetDevices("owner").andExpect(jsonPath("$[0].status").value("DEACTIVATED"));
+    }
+
+    @Test
+    void listsDeactivatedDevicesAfterEveryActiveOne() throws Exception {
+        var deactivated = device();
+        var online = device();
+        var offline = device();
+        lastSeenMinutesAgo(deactivated, 30);
+        lastSeenMinutesAgo(online, 1);
+        lastSeenMinutesAgo(offline, 10);
+        deactivate(deactivated);
+        estateDevices("owner")
+                .andExpect(jsonPath("$[0].id").value(offline.toString()))
+                .andExpect(jsonPath("$[1].id").value(online.toString()))
+                .andExpect(jsonPath("$[2].id").value(deactivated.toString()))
+                .andExpect(jsonPath("$[2].status").value("DEACTIVATED"));
+    }
 }

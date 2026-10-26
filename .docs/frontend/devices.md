@@ -19,7 +19,7 @@ Linked as "Devices" from the estate page's actions for Managers
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
 | `EstateDevicesPage` (`devices/-components/estate-devices-page.tsx`) | PageHeader (Estates › Estate › Devices), "Refreshes every 60 seconds while this page is open." A table labelled "Devices" in the server's order (Offline, Awaiting first reading, Online): Device (`identifier`, `model`), Asset (link "`assetName`" to the asset page, `assetReference`, "Retired" badge when `assetRetired`), Location (path from `useLocations`, or "Location unavailable"), Last seen (`toLocaleString` in a `<time>`, or "Never"), Status (`DeviceStatusBadge`). Loading: "Loading devices…"; empty: "No devices are registered in this estate yet."; errors as a destructive Alert. | `Table`, `Badge`, `Alert` |
-| `DeviceStatusBadge` (`components/device-status-badge.tsx`, shared) | "Online" (secondary), "Offline" (destructive), "Awaiting first reading" (outline). | `Badge` |
+| `DeviceStatusBadge` (`components/device-status-badge.tsx`, shared) | "Online" (secondary), "Offline" (destructive), "Awaiting first reading" (outline), "Deactivated" (secondary, ID-45). | `Badge` |
 
 All four files are in `routes/_auth/estates/$estateId/assets/$assetId/-components/`.
 

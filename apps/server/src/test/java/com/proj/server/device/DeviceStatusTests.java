@@ -41,4 +41,19 @@ class DeviceStatusTests {
     void aOneSecondIntervalDeviceDoesNotFlickerOffline() {
         assertThat(silentFor(Duration.ofSeconds(10), 1)).isEqualTo(DeviceStatus.ONLINE);
     }
+
+    @Test
+    void aDeactivatedDeviceIsDeactivatedWhateverItsLastReading() {
+        var deactivatedAt = now.minusDays(1);
+        assertThat(DeviceStatus.of(deactivatedAt, now, 60, now.toInstant())).isEqualTo(DeviceStatus.DEACTIVATED);
+        assertThat(DeviceStatus.of(deactivatedAt, now.minusDays(30), 60, now.toInstant()))
+                .isEqualTo(DeviceStatus.DEACTIVATED);
+        assertThat(DeviceStatus.of(deactivatedAt, null, 60, now.toInstant())).isEqualTo(DeviceStatus.DEACTIVATED);
+    }
+
+    @Test
+    void anActiveDeviceFollowsTheReportingRule() {
+        assertThat(DeviceStatus.of(null, now, 60, now.toInstant())).isEqualTo(DeviceStatus.ONLINE);
+        assertThat(DeviceStatus.of(null, null, 60, now.toInstant())).isEqualTo(DeviceStatus.AWAITING_FIRST_READING);
+    }
 }

@@ -8,9 +8,16 @@ import java.time.OffsetDateTime;
 public enum DeviceStatus {
     AWAITING_FIRST_READING,
     ONLINE,
-    OFFLINE;
+    OFFLINE,
+    DEACTIVATED;
 
     static final Duration MINIMUM_OFFLINE_THRESHOLD = Duration.ofMinutes(5);
+
+    /** A deactivated device is {@code DEACTIVATED} whatever it last reported (ID-45). */
+    public static DeviceStatus of(
+            OffsetDateTime deactivatedAt, OffsetDateTime lastSeenAt, int reportingIntervalSeconds, Instant now) {
+        return deactivatedAt != null ? DEACTIVATED : of(lastSeenAt, reportingIntervalSeconds, now);
+    }
 
     /** Offline after 3 times the interval or 5 minutes of silence, whichever is longer. */
     public static DeviceStatus of(OffsetDateTime lastSeenAt, int reportingIntervalSeconds, Instant now) {

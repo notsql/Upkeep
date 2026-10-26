@@ -7950,7 +7950,12 @@
           "status": {
             "type": "string",
             "description": "Derived from last-seen on every read (decision 0027)",
-            "enum": ["AWAITING_FIRST_READING", "ONLINE", "OFFLINE"]
+            "enum": [
+              "AWAITING_FIRST_READING",
+              "ONLINE",
+              "OFFLINE",
+              "DEACTIVATED"
+            ]
           },
           "credentialIssuedAt": {
             "type": ["string", "null"],
@@ -8736,7 +8741,12 @@
           "status": {
             "type": "string",
             "description": "Derived from last-seen on every read (decision 0027)",
-            "enum": ["AWAITING_FIRST_READING", "ONLINE", "OFFLINE"]
+            "enum": [
+              "AWAITING_FIRST_READING",
+              "ONLINE",
+              "OFFLINE",
+              "DEACTIVATED"
+            ]
           },
           "credentialIssuedAt": {
             "type": ["string", "null"],

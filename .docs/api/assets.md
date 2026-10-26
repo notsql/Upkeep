@@ -280,7 +280,7 @@ Owner only (ID-45). Deactivates the device and registers a new one on the same a
 | metrics | DeviceMetricResponse[] | yes |  |
 | reportingIntervalSeconds | int32 | yes |  |
 | lastSeenAt | date-time | no |  |
-| status | AWAITING_FIRST_READING / ONLINE / OFFLINE | yes | Derived on read; see [device-status.md](device-status.md) |
+| status | AWAITING_FIRST_READING / ONLINE / OFFLINE / DEACTIVATED | yes | Derived on read; `DEACTIVATED` whenever `deactivatedAt` is set; see [device-status.md](device-status.md) |
 | credentialIssuedAt | date-time | no | null until a key is issued, and after deactivation |
 | deactivatedAt | date-time | no | null while active; set once, permanently |
 | replacesDeviceId | uuid | no | the deactivated device this one replaced |

@@ -32,6 +32,8 @@ device it took over from. The asset's readings must survive all of this.
 - A replacement shows "Replaces {identifier}", and the device it replaced shows "Replaced by {identifier}".
 - The asset's readings page already names each reading's device, so the old and new devices' readings stay distinguishable. No change.
 - Flatline monitoring and the estate's sensor list stop including a device once it is deactivated. Past flatline reviews stay.
+- A deactivated device's reporting status (ID-44) is `DEACTIVATED`, whatever its last reading. It takes precedence over Online, Offline and Awaiting first reading, so a switched-off device never shows as Offline.
+- The estate's Devices page lists deactivated devices last, after Offline, Awaiting first reading and Online, because they need no attention. Their badge reads "Deactivated".
 
 **Errors**
 - An unknown device, asset or estate, or one the caller does not own, returns 404.
@@ -54,7 +56,8 @@ Deactivation sets `credentialHash` to null. No reading rows change.
 | POST | /estates/{estateId}/assets/{assetId}/devices/{deviceId}/replace | CreateDeviceRequest (the new device) | 201 DeviceResponse (the new device) | Owner |
 
 `DeviceResponse` gains `deactivatedAt`, `replacesDeviceId` and
-`replacedByDeviceId`, all nullable. The device list returns active devices
+`replacedByDeviceId`, all nullable. `DeviceStatus` (ID-44) gains
+`DEACTIVATED`, on both `DeviceResponse` and `EstateDeviceResponse`. The device list returns active devices
 first, then deactivated ones, each newest first.
 
 ## Edge cases
@@ -68,5 +71,4 @@ first, then deactivated ones, each newest first.
 
 - Reactivating a device.
 - Moving a device to another asset.
-- Telling deactivated devices apart from offline ones in a reporting status. Status is ID-44's, which isn't built yet, so it can add `DEACTIVATED` using `deactivatedAt`.
 - Changing a device's details in place.

@@ -28,9 +28,9 @@ public class DeviceService {
     private final EstateRepository estates;
     private final Clock clock;
 
-    /** Offline first, then Awaiting first reading, then Online. */
-    private static final List<DeviceStatus> STATUS_ORDER =
-            List.of(DeviceStatus.OFFLINE, DeviceStatus.AWAITING_FIRST_READING, DeviceStatus.ONLINE);
+    /** Offline first, then Awaiting first reading, then Online; deactivated devices need no attention, so last. */
+    private static final List<DeviceStatus> STATUS_ORDER = List.of(
+            DeviceStatus.OFFLINE, DeviceStatus.AWAITING_FIRST_READING, DeviceStatus.ONLINE, DeviceStatus.DEACTIVATED);
 
     private static final Comparator<EstateDeviceResponse> ESTATE_ORDER = Comparator.comparingInt(
                     (EstateDeviceResponse device) -> STATUS_ORDER.indexOf(device.status()))
@@ -214,7 +214,7 @@ public class DeviceService {
                 metrics,
                 row.getReportingintervalseconds(),
                 row.getLastseenat(),
-                DeviceStatus.of(row.getLastseenat(), row.getReportingintervalseconds(), now),
+                DeviceStatus.of(row.getDeactivatedat(), row.getLastseenat(), row.getReportingintervalseconds(), now),
                 row.getCredentialissuedat(),
                 row.getDeactivatedat(),
                 row.getReplacesdeviceid(),
