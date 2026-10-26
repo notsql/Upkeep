@@ -133,3 +133,60 @@ export function useIssueDeviceCredential(estateId: string, assetId: string) {
       }),
   });
 }
+
+/** Permanent: removes the device's key and keeps its readings (ID-45). */
+export function useDeactivateDevice(estateId: string, assetId: string) {
+  const { userId } = useEstateSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      deviceId,
+      identifier,
+    }: {
+      deviceId: string;
+      identifier: string;
+    }): Promise<Device> => {
+      const { data, error, response } = await api.POST(
+        "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate",
+        {
+          params: { path: { estateId, assetId, deviceId } },
+          body: { identifier },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: devicesQueryKey(userId, estateId, assetId),
+      }),
+  });
+}
+
+/** Deactivates the device and registers its replacement in one step (ID-45). */
+export function useReplaceDevice(
+  estateId: string,
+  assetId: string,
+  deviceId: string
+) {
+  const { userId } = useEstateSession();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: DeviceInput): Promise<Device> => {
+      const { data, error, response } = await api.POST(
+        "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/replace",
+        { params: { path: { estateId, assetId, deviceId } }, body }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: devicesQueryKey(userId, estateId, assetId),
+      }),
+  });
+}

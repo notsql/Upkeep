@@ -102,7 +102,7 @@ public class FlatlineRepository {
                 .from(DEVICE)
                 .join(ASSET)
                 .on(ASSET.ID.eq(DEVICE.ASSETID), ASSET.ESTATEID.eq(DEVICE.ESTATEID))
-                .where(DEVICE.ESTATEID.eq(estateId), ASSET.DEACTIVATEDAT.isNull())
+                .where(DEVICE.ESTATEID.eq(estateId), ASSET.DEACTIVATEDAT.isNull(), DEVICE.DEACTIVATEDAT.isNull())
                 .orderBy(DEVICE.IDENTIFIER, DEVICE.ID)
                 .fetch(FlatlineRepository::device);
     }
@@ -209,7 +209,7 @@ public class FlatlineRepository {
                 .on(currentDeviceReading())
                 .join(ASSET)
                 .on(ASSET.ID.eq(DEVICE.ASSETID), ASSET.ESTATEID.eq(DEVICE.ESTATEID))
-                .where(DEVICE.ESTATEID.eq(estateId), ASSET.DEACTIVATEDAT.isNull())
+                .where(DEVICE.ESTATEID.eq(estateId), ASSET.DEACTIVATEDAT.isNull(), DEVICE.DEACTIVATEDAT.isNull())
                 .fetchSet(row -> new Series(
                         row.get(DEVICEREADING.DEVICEID), DeviceMetric.valueOf(row.get(DEVICEREADING.METRIC))));
     }
@@ -230,6 +230,7 @@ public class FlatlineRepository {
                 .where(
                         DEVICE.ESTATEID.eq(estateId),
                         ASSET.DEACTIVATEDAT.isNull(),
+                        DEVICE.DEACTIVATEDAT.isNull(),
                         DEVICEREADING.MEASUREDAT.le(utc(checkedAt)))
                 .orderBy(DEVICEREADING.DEVICEID, DEVICEREADING.METRIC, DEVICEREADING.MEASUREDAT)
                 .fetchLazy()) {

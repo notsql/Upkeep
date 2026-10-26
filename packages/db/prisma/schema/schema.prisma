@@ -9,27 +9,27 @@ datasource db {
 }
 
 model Estate {
-  id            String             @id @default(uuid()) @db.Uuid
-  ownerUserId   String             @db.VarChar(255)
-  name          String             @db.VarChar(200)
-  code          String             @unique @db.VarChar(50)
-  address       String             @db.VarChar(500)
-  postalCode    String             @db.VarChar(20)
-  description   String?            @db.VarChar(2000)
-  createdAt     DateTime           @default(now()) @db.Timestamptz(6)
-  updatedAt     DateTime           @updatedAt @db.Timestamptz(6)
-  deactivatedAt DateTime?          @db.Timestamptz(6)
-  locations     Location[]
-  users         EstateUser[]
-  assets        Asset[]
-  devices       Device[]
-  assessments   AssetAssessment[]
-  invitations   EstateInvitation[]
-  issueReports  IssueReport[]
-  documents     Document[]
-  events        AssetEvent[]
+  id               String             @id @default(uuid()) @db.Uuid
+  ownerUserId      String             @db.VarChar(255)
+  name             String             @db.VarChar(200)
+  code             String             @unique @db.VarChar(50)
+  address          String             @db.VarChar(500)
+  postalCode       String             @db.VarChar(20)
+  description      String?            @db.VarChar(2000)
+  createdAt        DateTime           @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime           @updatedAt @db.Timestamptz(6)
+  deactivatedAt    DateTime?          @db.Timestamptz(6)
+  locations        Location[]
+  users            EstateUser[]
+  assets           Asset[]
+  devices          Device[]
+  assessments      AssetAssessment[]
+  invitations      EstateInvitation[]
+  issueReports     IssueReport[]
+  documents        Document[]
+  events           AssetEvent[]
   flatlinePolicies FlatlinePolicy[]
-  workOrders    WorkOrder[]
+  workOrders       WorkOrder[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -119,13 +119,13 @@ model Location {
 // A WorkOS user an admin has assigned to an estate, giving them view access.
 // Ownership stays on Estate.ownerUserId; see decision 0012.
 model EstateUser {
-  customRoleId     String? @db.Uuid
-  customRole EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  role             String   @default("MEMBER") @db.VarChar(20)
-  canInviteMembers Boolean  @default(false)
-  estateId         String   @db.Uuid
-  userId           String   @db.VarChar(255)
-  createdAt        DateTime @default(now()) @db.Timestamptz(6)
+  customRoleId     String?               @db.Uuid
+  customRole       EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  role             String                @default("MEMBER") @db.VarChar(20)
+  canInviteMembers Boolean               @default(false)
+  estateId         String                @db.Uuid
+  userId           String                @db.VarChar(255)
+  createdAt        DateTime              @default(now()) @db.Timestamptz(6)
 
   estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
@@ -144,9 +144,9 @@ model IssueReport {
   createdAt         DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @db.Timestamptz(6)
 
-  estate   Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  images   IssueReportImage[]
+  estate     Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location   Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  images     IssueReportImage[]
   workOrders WorkOrder[]
 
   @@unique([id, estateId])
@@ -193,17 +193,17 @@ model Asset {
   lifecycleVersion Int                   @default(0)
   lifecycleEvents  AssetLifecycleEvent[]
 
-  estate        Estate            @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location      Location          @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  assetCategory AssetCategory     @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
-  manufacturer  Manufacturer?     @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  model         AssetModel?       @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
-  devices       Device[]
-  readings      DeviceReading[]
+  estate         Estate                @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location       Location              @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory  AssetCategory         @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  manufacturer   Manufacturer?         @relation(fields: [manufacturerId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  model          AssetModel?           @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
+  devices        Device[]
+  readings       DeviceReading[]
   flatlinePauses DeviceFlatlinePause[]
-  assessments   AssetAssessment[]
-  events        AssetEvent[]
-  workOrders    WorkOrder[]
+  assessments    AssetAssessment[]
+  events         AssetEvent[]
+  workOrders     WorkOrder[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -250,16 +250,16 @@ model WorkOrder {
 
 // Append-only status audit. Version zero is the initial Open event for new orders.
 model WorkOrderStatusEvent {
-  id                  String   @id @default(uuid()) @db.Uuid
-  estateId            String   @db.Uuid
-  workOrderId         String   @db.Uuid
-  fromStatus          String?  @db.VarChar(20)
-  toStatus            String   @db.VarChar(20)
-  changedByUserId     String   @db.VarChar(255)
-  changedByName       String?  @db.VarChar(255)
-  changedAt           DateTime @default(now()) @db.Timestamptz(6)
-  version             Int
-  workOrder           WorkOrder @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  id              String    @id @default(uuid()) @db.Uuid
+  estateId        String    @db.Uuid
+  workOrderId     String    @db.Uuid
+  fromStatus      String?   @db.VarChar(20)
+  toStatus        String    @db.VarChar(20)
+  changedByUserId String    @db.VarChar(255)
+  changedByName   String?   @db.VarChar(255)
+  changedAt       DateTime  @default(now()) @db.Timestamptz(6)
+  version         Int
+  workOrder       WorkOrder @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([workOrderId, version])
   @@index([estateId, workOrderId])
@@ -267,24 +267,24 @@ model WorkOrderStatusEvent {
 
 // Canonical outcome and costs; corrections retain identity and append revisions (decision 0035).
 model WorkOrderCompletion {
-  id                  String   @id @default(uuid()) @db.Uuid
-  estateId            String   @db.Uuid
-  workOrderId         String   @unique @db.Uuid
-  findings            String   @db.VarChar(2500)
-  workPerformed       String   @db.VarChar(2500)
-  partsUsed           String?  @db.VarChar(2500)
-  labourCost          Decimal? @db.Decimal(14, 2)
-  partsCost           Decimal? @db.Decimal(14, 2)
-  currency            String   @default("SGD") @db.VarChar(3)
-  downtimeMinutes     Int?
-  completedByUserId   String   @db.VarChar(255)
-  completedByName     String?  @db.VarChar(255)
-  completedAt         DateTime @default(now()) @db.Timestamptz(6)
-  editedByUserId      String?  @db.VarChar(255)
-  editedByName        String?  @db.VarChar(255)
-  editedAt            DateTime? @db.Timestamptz(6)
-  revisions           WorkOrderCompletionRevision[]
-  workOrder           WorkOrder @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  id                String                        @id @default(uuid()) @db.Uuid
+  estateId          String                        @db.Uuid
+  workOrderId       String                        @unique @db.Uuid
+  findings          String                        @db.VarChar(2500)
+  workPerformed     String                        @db.VarChar(2500)
+  partsUsed         String?                       @db.VarChar(2500)
+  labourCost        Decimal?                      @db.Decimal(14, 2)
+  partsCost         Decimal?                      @db.Decimal(14, 2)
+  currency          String                        @default("SGD") @db.VarChar(3)
+  downtimeMinutes   Int?
+  completedByUserId String                        @db.VarChar(255)
+  completedByName   String?                       @db.VarChar(255)
+  completedAt       DateTime                      @default(now()) @db.Timestamptz(6)
+  editedByUserId    String?                       @db.VarChar(255)
+  editedByName      String?                       @db.VarChar(255)
+  editedAt          DateTime?                     @db.Timestamptz(6)
+  revisions         WorkOrderCompletionRevision[]
+  workOrder         WorkOrder                     @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([workOrderId, estateId])
   @@index([estateId, completedAt, id])
@@ -292,18 +292,18 @@ model WorkOrderCompletion {
 
 // Append-only before/after audit for corrections to one canonical completion.
 model WorkOrderCompletionRevision {
-  id                  String   @id @default(uuid()) @db.Uuid
-  estateId            String   @db.Uuid
-  workOrderId         String   @db.Uuid
-  fromVersion         Int
-  version             Int
-  correctionReason    String   @db.VarChar(500)
-  changedByUserId     String   @db.VarChar(255)
-  changedByName       String?  @db.VarChar(255)
-  changedAt           DateTime @default(now()) @db.Timestamptz(6)
-  beforeOutcome       Json
-  afterOutcome        Json
-  completion          WorkOrderCompletion @relation(fields: [workOrderId, estateId], references: [workOrderId, estateId], onDelete: Restrict, onUpdate: Restrict)
+  id               String              @id @default(uuid()) @db.Uuid
+  estateId         String              @db.Uuid
+  workOrderId      String              @db.Uuid
+  fromVersion      Int
+  version          Int
+  correctionReason String              @db.VarChar(500)
+  changedByUserId  String              @db.VarChar(255)
+  changedByName    String?             @db.VarChar(255)
+  changedAt        DateTime            @default(now()) @db.Timestamptz(6)
+  beforeOutcome    Json
+  afterOutcome     Json
+  completion       WorkOrderCompletion @relation(fields: [workOrderId, estateId], references: [workOrderId, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([workOrderId, version])
   @@index([estateId, workOrderId])
@@ -392,16 +392,24 @@ model Device {
   // SHA-256 hex of the device's API key; the key itself is never stored (decision 0025).
   credentialHash           String?   @unique @db.Char(64)
   credentialIssuedAt       DateTime? @db.Timestamptz(6)
+  // Permanent: a deactivated device keeps its readings but has no key (ID-45).
+  deactivatedAt            DateTime? @db.Timestamptz(6)
+  // The deactivated device this one replaced, on the same asset (ID-45).
+  replacesDeviceId         String?   @db.Uuid
   createdAt                DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt                DateTime  @updatedAt @db.Timestamptz(6)
 
-  estate   Estate          @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  asset    Asset           @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  location Location        @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  readings DeviceReading[]
+  estate         Estate                @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset          Asset                 @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  location       Location              @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  readings       DeviceReading[]
   flatlinePauses DeviceFlatlinePause[]
+  replaces       Device?               @relation("DeviceReplacement", fields: [replacesDeviceId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  replacedBy     Device?               @relation("DeviceReplacement")
 
   @@unique([id, estateId])
+  // A device can be replaced only once.
+  @@unique([replacesDeviceId, estateId])
   @@index([estateId])
   @@index([assetId])
   @@index([locationId])
@@ -507,21 +515,21 @@ model AssetLifecycleEvent {
 
 // Estate-local Council invitations; WorkOS owns identity and email delivery.
 model EstateInvitation {
-  customRoleId String? @db.Uuid
-  customRole EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  id                   String    @id @default(uuid()) @db.Uuid
-  role                 String    @default("COUNCIL") @db.VarChar(20)
-  estateId             String    @db.Uuid
-  name                 String    @db.VarChar(200)
-  email                String    @db.VarChar(254)
-  inviterUserId        String    @db.VarChar(255)
-  providerInvitationId String?   @unique @db.VarChar(255)
-  status               String    @default("SENDING") @db.VarChar(20)
-  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
-  expiresAt            DateTime? @db.Timestamptz(6)
-  acceptedAt           DateTime? @db.Timestamptz(6)
-  acceptedUserId       String?   @db.VarChar(255)
-  estate               Estate    @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  customRoleId         String?               @db.Uuid
+  customRole           EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  id                   String                @id @default(uuid()) @db.Uuid
+  role                 String                @default("COUNCIL") @db.VarChar(20)
+  estateId             String                @db.Uuid
+  name                 String                @db.VarChar(200)
+  email                String                @db.VarChar(254)
+  inviterUserId        String                @db.VarChar(255)
+  providerInvitationId String?               @unique @db.VarChar(255)
+  status               String                @default("SENDING") @db.VarChar(20)
+  createdAt            DateTime              @default(now()) @db.Timestamptz(6)
+  expiresAt            DateTime?             @db.Timestamptz(6)
+  acceptedAt           DateTime?             @db.Timestamptz(6)
+  acceptedUserId       String?               @db.VarChar(255)
+  estate               Estate                @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([estateId, email])
   @@index([email, status])
@@ -529,36 +537,36 @@ model EstateInvitation {
 
 // Application-defined catalogue. Codes and enforcement change together through migrations.
 model Permission {
-  code String @id @db.VarChar(64)
-  label String @db.VarChar(120)
-  description String @db.VarChar(500)
-  roles EstateRolePermission[]
+  code        String                 @id @db.VarChar(64)
+  label       String                 @db.VarChar(120)
+  description String                 @db.VarChar(500)
+  roles       EstateRolePermission[]
 }
 
 model EstateRoleDefinition {
-  id String @id @default(uuid()) @db.Uuid
-  estateId String @db.Uuid
-  name String @db.VarChar(40)
-  normalizedName String @db.VarChar(40)
-  description String? @db.VarChar(500)
-  createdByUserId String @db.VarChar(255)
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt @db.Timestamptz(6)
-  version Int @default(1)
-  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  permissions EstateRolePermission[]
-  members EstateUser[]
-  invitations EstateInvitation[]
+  id              String                 @id @default(uuid()) @db.Uuid
+  estateId        String                 @db.Uuid
+  name            String                 @db.VarChar(40)
+  normalizedName  String                 @db.VarChar(40)
+  description     String?                @db.VarChar(500)
+  createdByUserId String                 @db.VarChar(255)
+  createdAt       DateTime               @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime               @updatedAt @db.Timestamptz(6)
+  version         Int                    @default(1)
+  estate          Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  permissions     EstateRolePermission[]
+  members         EstateUser[]
+  invitations     EstateInvitation[]
 
   @@unique([id, estateId])
   @@unique([estateId, normalizedName])
 }
 
 model EstateRolePermission {
-  roleId String @db.Uuid
-  permission String @db.VarChar(64)
-  role EstateRoleDefinition @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  catalogue Permission @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
+  roleId     String               @db.Uuid
+  permission String               @db.VarChar(64)
+  role       EstateRoleDefinition @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  catalogue  Permission           @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
 
   @@id([roleId, permission])
 }

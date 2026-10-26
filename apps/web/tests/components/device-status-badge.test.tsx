@@ -7,6 +7,7 @@ describe("DeviceStatusBadge", () => {
     ["ONLINE", "Online"],
     ["OFFLINE", "Offline"],
     ["AWAITING_FIRST_READING", "Awaiting first reading"],
+    ["DEACTIVATED", "Deactivated"],
   ] as const)("labels %s as %s", (status, label) => {
     render(<DeviceStatusBadge status={status} />);
     screen.getByText(label);

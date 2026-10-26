@@ -22,15 +22,19 @@ vi.mock("@tanstack/react-router", () => ({
     children,
     to,
     params,
+    "aria-label": ariaLabel,
   }: {
     children: React.ReactNode;
     to: string;
-    params?: { estateId: string; assetId: string };
+    params?: { estateId: string; assetId: string; deviceId?: string };
+    "aria-label"?: string;
   }) => (
     <a
+      aria-label={ariaLabel}
       href={to
         .replace("$estateId", params?.estateId ?? "")
-        .replace("$assetId", params?.assetId ?? "")}
+        .replace("$assetId", params?.assetId ?? "")
+        .replace("$deviceId", params?.deviceId ?? "")}
     >
       {children}
     </a>
@@ -266,5 +270,120 @@ describe("AssetDevicesSection credentials", () => {
     await waitFor(() => expect(api.POST).toHaveBeenCalledTimes(1));
     const shown = await screen.findByRole("textbox", { name: "API key" });
     expect((shown as HTMLInputElement).value).toBe(apiKey);
+  });
+});
+
+describe("device deactivation and replacement (ID-45)", () => {
+  const deactivatedAt = "2026-10-01T00:00:00Z";
+  const replacement: Device = {
+    ...device,
+    id: "new-id",
+    identifier: "PUMP-02",
+    replacesDeviceId: "device-id",
+  };
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    devices = [device];
+    serve();
+  });
+
+  it("marks a deactivated device and offers no actions on it", async () => {
+    devices = [{ ...device, deactivatedAt }];
+    renderSection();
+    const item = within(await screen.findByRole("listitem"));
+    item.getByText(`Deactivated ${new Date(deactivatedAt).toLocaleString()}`);
+    expect(item.queryByText("Awaiting first reading")).toBeNull();
+    expect(
+      item.queryByRole("button", { name: "Generate credential" })
+    ).toBeNull();
+    expect(item.queryByRole("link", { name: "Replace PUMP-01" })).toBeNull();
+    expect(
+      item.queryByRole("button", { name: "Deactivate PUMP-01" })
+    ).toBeNull();
+  });
+
+  it("shows which device replaced which", async () => {
+    devices = [
+      replacement,
+      { ...device, deactivatedAt, replacedByDeviceId: "new-id" },
+    ];
+    renderSection();
+    const [newer, older] = await screen.findAllByRole("listitem");
+    within(newer).getByText("Replaces PUMP-01");
+    within(older).getByText("Replaced by PUMP-02");
+  });
+
+  it("offers replacing and deactivating an active device", async () => {
+    renderSection();
+    const item = within(await screen.findByRole("listitem"));
+    expect(
+      item
+        .getByRole<HTMLAnchorElement>("link", { name: "Replace PUMP-01" })
+        .getAttribute("href")
+    ).toBe("/estates/estate-id/assets/asset-id/devices/device-id/replace");
+    item.getByRole("button", { name: "Deactivate PUMP-01" });
+  });
+
+  it("hides device actions on a retired asset", async () => {
+    renderSection(false);
+    const item = within(await screen.findByRole("listitem"));
+    expect(item.queryByRole("link", { name: "Replace PUMP-01" })).toBeNull();
+    expect(
+      item.queryByRole("button", { name: "Deactivate PUMP-01" })
+    ).toBeNull();
+  });
+
+  it("deactivates a device only after its identifier is typed exactly", async () => {
+    vi.mocked(api.POST).mockImplementation((() => {
+      devices = [{ ...device, deactivatedAt }];
+      return Promise.resolve({
+        data: devices[0],
+        response: new Response(),
+      });
+    }) as never);
+    renderSection();
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Deactivate PUMP-01" })
+    );
+    const dialog = within(
+      await screen.findByRole("dialog", { name: "Deactivate PUMP-01?" })
+    );
+    const confirm = dialog.getByRole<HTMLButtonElement>("button", {
+      name: "Deactivate device",
+    });
+    fireEvent.change(
+      dialog.getByRole("textbox", { name: "Device identifier" }),
+      {
+        target: { value: "pump-01" },
+      }
+    );
+    expect(confirm.disabled).toBe(true);
+    fireEvent.change(
+      dialog.getByRole("textbox", { name: "Device identifier" }),
+      {
+        target: { value: "PUMP-01" },
+      }
+    );
+    fireEvent.click(confirm);
+    await waitFor(() =>
+      expect(api.POST).toHaveBeenCalledWith(
+        "/estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate",
+        {
+          params: {
+            path: {
+              estateId: "estate-id",
+              assetId: "asset-id",
+              deviceId: "device-id",
+            },
+          },
+          body: { identifier: "PUMP-01" },
+        }
+      )
+    );
+    await screen.findByText(
+      `Deactivated ${new Date(deactivatedAt).toLocaleString()}`
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

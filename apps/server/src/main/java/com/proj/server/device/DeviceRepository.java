@@ -23,8 +23,37 @@ public class DeviceRepository {
     public List<DeviceRecord> listForAsset(UUID assetId) {
         return db.selectFrom(DEVICE)
                 .where(DEVICE.ASSETID.eq(assetId))
-                .orderBy(DEVICE.CREATEDAT.desc(), DEVICE.ID)
+                // Active devices first, then deactivated ones; each newest first.
+                .orderBy(DEVICE.DEACTIVATEDAT.isNotNull(), DEVICE.CREATEDAT.desc(), DEVICE.ID)
                 .fetch();
+    }
+
+    /** Scoped by asset and estate, so a device elsewhere is simply not found. */
+    public Optional<DeviceRecord> find(UUID deviceId, UUID assetId, UUID estateId, boolean lock) {
+        var query = db.selectFrom(DEVICE)
+                .where(DEVICE.ID.eq(deviceId), DEVICE.ASSETID.eq(assetId), DEVICE.ESTATEID.eq(estateId));
+        return lock ? query.forUpdate().fetchOptional() : query.fetchOptional();
+    }
+
+    /** The device that replaced this one, if any. */
+    public Optional<UUID> replacementOf(UUID deviceId) {
+        return db.select(DEVICE.ID)
+                .from(DEVICE)
+                .where(DEVICE.REPLACESDEVICEID.eq(deviceId))
+                .fetchOptional(DEVICE.ID);
+    }
+
+    /** Permanent. Removes the key, so it stops authenticating; readings are untouched. */
+    public DeviceRecord deactivate(UUID deviceId) {
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        return db.update(DEVICE)
+                .set(DEVICE.DEACTIVATEDAT, now)
+                .set(DEVICE.CREDENTIALHASH, (String) null)
+                .set(DEVICE.CREDENTIALISSUEDAT, (OffsetDateTime) null)
+                .set(DEVICE.UPDATEDAT, now)
+                .where(DEVICE.ID.eq(deviceId))
+                .returning()
+                .fetchSingle();
     }
 
     /** A device with the asset it reports for. */
@@ -51,6 +80,16 @@ public class DeviceRepository {
     }
 
     public DeviceRecord create(UUID estateId, UUID assetId, CreateDeviceRequest request) {
+        return insert(estateId, assetId, request, null);
+    }
+
+    /** A new device recording the deactivated one it replaced (ID-45). */
+    public DeviceRecord createReplacing(
+            UUID estateId, UUID assetId, CreateDeviceRequest request, UUID replacesDeviceId) {
+        return insert(estateId, assetId, request, replacesDeviceId);
+    }
+
+    private DeviceRecord insert(UUID estateId, UUID assetId, CreateDeviceRequest request, UUID replacesDeviceId) {
         var now = OffsetDateTime.now(ZoneOffset.UTC);
         return db.insertInto(DEVICE)
                 .set(DEVICE.ID, UUID.randomUUID())
@@ -61,6 +100,7 @@ public class DeviceRepository {
                 .set(DEVICE.MODEL, request.model())
                 .set(DEVICE.METRICS, request.metrics().stream().map(Enum::name).toArray(String[]::new))
                 .set(DEVICE.REPORTINGINTERVALSECONDS, request.reportingIntervalSeconds())
+                .set(DEVICE.REPLACESDEVICEID, replacesDeviceId)
                 .set(DEVICE.CREATEDAT, now)
                 .set(DEVICE.UPDATEDAT, now)
                 .returning()
@@ -71,7 +111,8 @@ public class DeviceRepository {
     public Optional<UUID> findIdByCredentialHash(String credentialHash) {
         return db.select(DEVICE.ID)
                 .from(DEVICE)
-                .where(DEVICE.CREDENTIALHASH.eq(credentialHash))
+                // Deactivation removes the hash; this also refuses a deactivated device should one remain.
+                .where(DEVICE.CREDENTIALHASH.eq(credentialHash), DEVICE.DEACTIVATEDAT.isNull())
                 .fetchOptional(DEVICE.ID);
     }
 

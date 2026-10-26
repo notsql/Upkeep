@@ -20,14 +20,15 @@ the threshold a device is Online; one second later it is Offline. Every 60 s
 `lastSeenAt` is the server's receipt time of the latest valid reading (see
 [device-readings.md](device-readings.md#last-seen)). A valid reading returns an
 Offline device to Online. Readings for a retired asset are accepted, so a device
-on a retired asset still shows Online while it reports. There is no Deactivated
-status yet (ID-45).
+on a retired asset still shows Online while it reports. A deactivated device
+(ID-45) is `DEACTIVATED`, which takes precedence over the reporting rule, so it
+never shows as Offline; it is listed after every active device.
 
 ## GET `/estates/{estateId}/devices`
 
 - Auth: estate Manager - the owner or a `MANAGER` member (`EstateRepository.findManaged`). Readable on an inactive estate.
 - path `estateId`: uuid (required)
-- 200: every device in the estate, retired assets included - EstateDeviceResponse[]. Order: `OFFLINE`, then `AWAITING_FIRST_READING`, then `ONLINE`; within a group the oldest `lastSeenAt` first, then `identifier`. Empty array when there are none.
+- 200: every device in the estate, retired assets included - EstateDeviceResponse[]. Order: `OFFLINE`, then `AWAITING_FIRST_READING`, then `ONLINE`, then `DEACTIVATED`; within a group the oldest `lastSeenAt` first, then `identifier`. Empty array when there are none.
 - 401: Sign in required - EstateError
 - 403: Caller is a resident of the estate - EstateError
 - 404: Estate not found, or the caller is not a Manager (council, crew, member, stranger) - EstateError
@@ -50,7 +51,7 @@ status yet (ID-45).
 | metrics | DeviceMetricResponse[] | yes |  |
 | reportingIntervalSeconds | int32 | yes |  |
 | lastSeenAt | date-time | no | null until the first valid reading |
-| status | AWAITING_FIRST_READING / ONLINE / OFFLINE | yes | See status rule |
+| status | AWAITING_FIRST_READING / ONLINE / OFFLINE / DEACTIVATED | yes | See status rule |
 | credentialIssuedAt | date-time | no |  |
 | createdAt | date-time | yes |  |
 | updatedAt | date-time | yes |  |

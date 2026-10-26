@@ -15,7 +15,8 @@ same change as the code.
 - [Estates](api/estates.md): creation by any authenticated account, estate details, owner/assigned-Manager/custom-permission editing and owner-only deactivation.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
   retirement, restoration and lifecycle history, plus device registration,
-  device credentials and `/device-api` authentication.
+  device credentials, device deactivation and replacement, and `/device-api`
+  authentication.
 - [Custom estate roles](api/estate-roles.md): versioned definitions, permission catalogue, bounded delegation, live enforcement, guarded deletion and release preparation.
 - [Estate invitations, roles and ownership](api/council-invitations.md): invitation,
   member roles, ownership transfer, acceptance and estate capability fields.
@@ -50,7 +51,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
-| [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details and dedicated device registration page |
+| [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
 | [frontend/readings.md](frontend/readings.md) | `/estates/$estateId/assets/$assetId/readings`: reading list, metric/time/suspect filters, flag badges, pagination |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |

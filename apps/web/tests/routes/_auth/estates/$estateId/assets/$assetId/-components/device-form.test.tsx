@@ -156,4 +156,41 @@ describe("DeviceForm", () => {
     expect(identifierField().value).toBe("PUMP-01");
     screen.getByRole("checkbox", { name: "Power (kW)", checked: true });
   });
+
+  it("starts from an existing device for a replacement, except its identifier", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(
+      <DeviceForm
+        defaultLocationId="b1"
+        estateId="estate-id"
+        initialDevice={{
+          model: "PT-100",
+          locationId: "plant",
+          metrics: ["PRESSURE"],
+          reportingIntervalSeconds: 300,
+        }}
+        onSave={onSave}
+        submitLabel="Replace device"
+      />
+    );
+    await waitFor(() =>
+      within(locationField()).getByText("Blk 101 › Plant room")
+    );
+    expect(identifierField().value).toBe("");
+    expect(modelField().value).toBe("PT-100");
+    expect(intervalField().value).toBe("300");
+    screen.getByRole("checkbox", { name: "Pressure (bar)", checked: true });
+    screen.getByRole("checkbox", { name: "Temperature (°C)", checked: false });
+    fireEvent.change(identifierField(), { target: { value: "PUMP-02" } });
+    fireEvent.click(screen.getByRole("button", { name: "Replace device" }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith({
+        identifier: "PUMP-02",
+        model: "PT-100",
+        locationId: "plant",
+        metrics: ["PRESSURE"],
+        reportingIntervalSeconds: 300,
+      })
+    );
+  });
 });

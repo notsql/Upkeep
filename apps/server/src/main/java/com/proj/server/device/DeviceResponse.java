@@ -38,5 +38,14 @@ public record DeviceResponse(
         @Schema(nullable = true, description = "When the device's current API key was issued. Null if it has none.")
         OffsetDateTime credentialIssuedAt,
 
+        @Schema(nullable = true, description = "When the device was deactivated. Permanent; null while active.")
+        OffsetDateTime deactivatedAt,
+
+        @Schema(nullable = true, description = "The deactivated device this one replaced")
+        UUID replacesDeviceId,
+
+        @Schema(nullable = true, description = "The device that replaced this one")
+        UUID replacedByDeviceId,
+
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt) {}

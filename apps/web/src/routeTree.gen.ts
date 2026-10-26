@@ -44,6 +44,7 @@ import { Route as AuthEstatesEstateIdWorkOrdersNewIndexRouteImport } from './rou
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/readings/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/new/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/index'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -239,6 +240,14 @@ const AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute =
     path: '/estates/$estateId/assets/$assetId/devices/new/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport.update(
+    {
+      id: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/',
+      path: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/',
+      getParentRoute: () => AuthRouteRoute,
+    } as any,
+  )
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -275,6 +284,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -311,6 +321,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  '/estates/$estateId/assets/$assetId/devices/$deviceId/replace': typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -349,6 +360,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -387,6 +399,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/edit/'
     | '/estates/$estateId/assets/$assetId/readings/'
     | '/estates/$estateId/assets/$assetId/devices/new/'
+    | '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -423,6 +436,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/edit'
     | '/estates/$estateId/assets/$assetId/readings'
     | '/estates/$estateId/assets/$assetId/devices/new'
+    | '/estates/$estateId/assets/$assetId/devices/$deviceId/replace'
   id:
     | '__root__'
     | '/'
@@ -460,6 +474,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
     | '/_auth/estates/$estateId/assets/$assetId/readings/'
     | '/_auth/estates/$estateId/assets/$assetId/devices/new/'
+    | '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -720,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
+      path: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace'
+      fullPath: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
   }
 }
 
@@ -751,6 +773,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
@@ -792,6 +815,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute,
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute:
     AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute,
+  AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute:
+    AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute,
 }
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(
@@ -811,3 +836,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

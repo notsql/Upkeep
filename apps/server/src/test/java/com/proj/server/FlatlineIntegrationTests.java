@@ -596,4 +596,22 @@ class FlatlineIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hasSensorReadings").value(false));
     }
+
+    @Test
+    void stopsMonitoringADeviceOnceItIsDeactivated() throws Exception {
+        policy(2, "0").andExpect(status().isOk());
+        flatline();
+        review("")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1));
+
+        db.execute("update \"Device\" set \"deactivatedAt\" = now(), \"credentialHash\" = null where id = ?", deviceId);
+
+        review("")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(0));
+        review("?view=ALL")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sensors.length()").value(0));
+    }
 }

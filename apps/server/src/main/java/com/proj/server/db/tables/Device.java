@@ -126,6 +126,16 @@ public class Device extends TableImpl<DeviceRecord> {
      */
     public final TableField<DeviceRecord, OffsetDateTime> CREDENTIALISSUEDAT = createField(DSL.name("credentialIssuedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
 
+    /**
+     * The column <code>public.Device.deactivatedAt</code>.
+     */
+    public final TableField<DeviceRecord, OffsetDateTime> DEACTIVATEDAT = createField(DSL.name("deactivatedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
+
+    /**
+     * The column <code>public.Device.replacesDeviceId</code>.
+     */
+    public final TableField<DeviceRecord, UUID> REPLACESDEVICEID = createField(DSL.name("replacesDeviceId"), SQLDataType.UUID, this, "");
+
     private Device(Name alias, Table<DeviceRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -195,7 +205,7 @@ public class Device extends TableImpl<DeviceRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.DEVICE_ASSETID_IDX, Indexes.DEVICE_CREDENTIALHASH_KEY, Indexes.DEVICE_ESTATEID_IDX, Indexes.DEVICE_ID_ESTATEID_KEY, Indexes.DEVICE_IDENTIFIER_KEY, Indexes.DEVICE_LOCATIONID_IDX);
+        return Arrays.asList(Indexes.DEVICE_ASSETID_IDX, Indexes.DEVICE_CREDENTIALHASH_KEY, Indexes.DEVICE_ESTATEID_IDX, Indexes.DEVICE_ID_ESTATEID_KEY, Indexes.DEVICE_IDENTIFIER_KEY, Indexes.DEVICE_LOCATIONID_IDX, Indexes.DEVICE_REPLACESDEVICEID_ESTATEID_KEY);
     }
 
     @Override

@@ -62,7 +62,7 @@ latest assessment. Search uses literal case-insensitive substring matching, so
 - 401: Sign in required — EstateError
 - 404: Estate, asset, location or device not found — EstateError
 - 409: Duplicate identifier, or an inactive estate, asset or location — EstateError
-- 200: The asset's devices, newest first — DeviceResponse[]
+- 200: The asset's devices: active first, then deactivated, each newest first — DeviceResponse[]
 
 ## POST `/estates/{estateId}/assets/{assetId}/devices`
 
@@ -87,6 +87,31 @@ Owner only. No body. See "Device credentials" below.
 - 404: Estate, asset, location or device not found — EstateError
 - 409: Duplicate identifier, or an inactive estate, asset or location — EstateError
 - 201: New API key, shown only this once. Replaces and revokes any earlier key. — DeviceCredentialResponse
+- A deactivated device returns 409: "This device is deactivated. It cannot be given a key."
+
+## POST `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate`
+
+Owner only (ID-45). Permanent. See "Device deactivation and replacement" below.
+
+- path `estateId`, `assetId`, `deviceId`: uuid (required)
+- Body: DeactivateDeviceRequest
+- 400: wrong confirmation identifier — EstateError
+- 401: Sign in required
+- 404: Estate, asset or device not found — EstateError
+- 409: retired asset or inactive estate — EstateError
+- 200: Device deactivated and its key removed. Permanent; readings are kept. — DeviceResponse
+
+## POST `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/replace`
+
+Owner only (ID-45). Deactivates the device and registers a new one on the same asset, in one transaction.
+
+- path `estateId`, `assetId`, `deviceId`: uuid (required)
+- Body: CreateDeviceRequest (the new device)
+- 400: Missing or invalid details, or an unsupported metric — EstateError
+- 401: Sign in required
+- 404: Estate, asset, device or location not found — EstateError
+- 409: duplicate identifier, retired asset, inactive estate, deactivated location, or the device is already deactivated — EstateError
+- 201: The old device deactivated and the new one registered on the same asset — DeviceResponse (the new device)
 
 ## GET `/estates/{estateId}/assets/{assetId}/assessments`
 
@@ -255,10 +280,19 @@ Owner only. No body. See "Device credentials" below.
 | metrics | DeviceMetricResponse[] | yes |  |
 | reportingIntervalSeconds | int32 | yes |  |
 | lastSeenAt | date-time | no |  |
-| status | AWAITING_FIRST_READING / ONLINE / OFFLINE | yes | Derived on read; see [device-status.md](device-status.md) |
-| credentialIssuedAt | date-time | no | null until a key is issued |
+| status | AWAITING_FIRST_READING / ONLINE / OFFLINE / DEACTIVATED | yes | Derived on read; `DEACTIVATED` whenever `deactivatedAt` is set; see [device-status.md](device-status.md) |
+| credentialIssuedAt | date-time | no | null until a key is issued, and after deactivation |
+| deactivatedAt | date-time | no | null while active; set once, permanently |
+| replacesDeviceId | uuid | no | the deactivated device this one replaced |
+| replacedByDeviceId | uuid | no | the device that replaced this one |
 | createdAt | date-time | yes |  |
 | updatedAt | date-time | yes |  |
+
+## DeactivateDeviceRequest
+
+| Field | Type | Required | Constraints |
+| --- | --- | --- | --- |
+| identifier | string | yes | must equal the device's identifier exactly |
 
 ## DeviceCredentialResponse
 
@@ -336,11 +370,24 @@ Decision 0025.
 - `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` is explicitly allowed through the JWT security chain for authenticated callers. The service enforces estate ownership; unsupported methods and nested credential actions remain denied.
 - The key is `upk_` plus 32 SecureRandom bytes, base64url without padding. It is returned once and never stored, logged or returned again. `Device.credentialHash` holds its SHA-256 hex, and `credentialIssuedAt` the issue time.
 - Issuing locks the estate, then the asset (as registration does), then updates the device scoped by id, asset and estate. An unknown device, a device on another asset or estate, or an estate the caller does not own returns 404. A retired asset or inactive estate returns 409. A key issued earlier keeps working once the asset is restored.
-- Issuing again overwrites the hash, so the previous key is rejected at once. Replacement is the only way to revoke a key for now.
+- Issuing again overwrites the hash, so the previous key is rejected at once. Deactivating the device also revokes its key (below).
 - Devices call `/device-api/**` with `Authorization: Bearer upk_...`. That path has its own stateless security chain (no CORS, no CSRF, no JWT), ordered before the main one. It always requires a device key, even when the JWT issuer is unset. A missing, malformed, unknown or replaced key returns 401 `{"message":"A valid device key is required."}`. A user's JWT is never accepted there, and a device key is never accepted on manager endpoints. The authenticated principal is the device's UUID. The only `/device-api` endpoint is `POST /device-api/readings`; see [device-readings.md](device-readings.md).
 
 Example: `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` returns 201
 `{"deviceId":"…","apiKey":"upk_…","issuedAt":"2026-10-10T00:00:00Z"}`.
+
+## Device deactivation and replacement
+
+ID-45; spec `.spec/features/device-replacement.md`.
+
+- Both endpoints are allowed through the JWT chain explicitly, like credential. They lock the estate, then the asset, then the device row, and refuse a retired asset or inactive estate (409).
+- Deactivation needs `{"identifier": …}` equal to the device's identifier (400 otherwise). It sets `deactivatedAt` and clears `credentialHash` and `credentialIssuedAt`, so the key is rejected by `/device-api` with the usual generic 401. The key lookup also ignores deactivated devices. Repeating it returns 200 with the original `deactivatedAt`. There is no reactivation.
+- Readings are never changed: each keeps its original `deviceId` and `assetId`.
+- Replacement refuses an already deactivated device (409), then checks the new device as registration does (location, duplicate identifier). Only then does it deactivate the old device and insert the new one with `replacesDeviceId`. Identifiers stay unique across deactivated devices. `Device(replacesDeviceId, estateId)` is unique and a foreign key to `Device(id, estateId)`, so a device is replaced at most once and only within its estate.
+- The new device has no key; issue one with the credential endpoint.
+- Flatline monitoring (`/estates/{estateId}/flatlined-sensors`) excludes deactivated devices.
+
+Example: `POST …/devices/{deviceId}/replace` with `{"identifier":"PUMP-02","model":"PT-200","locationId":"…","metrics":["TEMPERATURE"],"reportingIntervalSeconds":60}` returns 201 with the new device, `"replacesDeviceId":"{deviceId}"`.
 
 ## Historical location options
 

@@ -107,16 +107,30 @@ function MetricOption({
   );
 }
 
+/** Details a replacement starts from: everything but the identifier (ID-45). */
+export interface InitialDevice {
+  locationId: string;
+  metrics: DeviceMetric[];
+  model: string;
+  reportingIntervalSeconds: number;
+}
+
 export function DeviceForm({
   defaultLocationId,
   estateId,
+  initialDevice,
   onSave,
   onCancel,
+  submitLabel = "Register device",
+  pendingLabel = "Registering…",
 }: {
   defaultLocationId: string;
   estateId: string;
+  initialDevice?: InitialDevice;
   onSave: (values: DeviceInput) => Promise<unknown>;
   onCancel?: () => void;
+  submitLabel?: string;
+  pendingLabel?: string;
 }) {
   const id = useId();
   const locations = useLocations(estateId);
@@ -136,11 +150,13 @@ export function DeviceForm({
   );
   const [values, setValues] = useState<FormValues>({
     identifier: "",
-    model: "",
-    locationId: defaultLocationId,
-    interval: "60",
+    model: initialDevice?.model ?? "",
+    locationId: initialDevice?.locationId ?? defaultLocationId,
+    interval: String(initialDevice?.reportingIntervalSeconds ?? 60),
   });
-  const [metrics, setMetrics] = useState<Set<DeviceMetric>>(() => new Set());
+  const [metrics, setMetrics] = useState<Set<DeviceMetric>>(
+    () => new Set(initialDevice?.metrics)
+  );
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -217,6 +233,7 @@ export function DeviceForm({
       </p>
     ) : null;
 
+  const buttonLabel = pending ? pendingLabel : submitLabel;
   return (
     <form className="mt-4 grid gap-5" noValidate onSubmit={handleSubmit}>
       <fieldset className="grid gap-5" disabled={pending}>
@@ -339,7 +356,7 @@ export function DeviceForm({
           </Button>
         ) : null}
         <Button disabled={pending} type="submit">
-          {pending ? "Registering…" : "Register device"}
+          {buttonLabel}
         </Button>
       </div>
     </form>

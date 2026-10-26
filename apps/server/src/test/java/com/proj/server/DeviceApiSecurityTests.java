@@ -101,4 +101,13 @@ class DeviceApiSecurityTests {
                 .andExpect(status().isOk())
                 .andExpect(content().string(deviceId.toString()));
     }
+
+    @Test
+    void rejectsTheKeyOfADeactivatedDeviceEvenIfItsHashRemains() throws Exception {
+        db.execute("update \"Device\" set \"deactivatedAt\" = now() where id = ?", deviceId);
+
+        mvc.perform(get(WHOAMI).header("Authorization", "Bearer " + KEY))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value(REJECTED));
+    }
 }
