@@ -62,3 +62,8 @@ it("names the owning estate in asset detail breadcrumbs", async () => {
   await breadcrumbs.findByRole("link", { name: "Maple Grove" });
   expect(breadcrumbs.queryByRole("link", { name: "Estate" })).toBeNull();
 });
+
+it("shows the asset's maintenance costs", async () => {
+  renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
+  await screen.findByRole("region", { name: "Maintenance costs" });
+});

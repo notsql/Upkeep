@@ -1989,6 +1989,9 @@ export interface components {
       partsReplaced?: string;
       /** Format: int32 */
       downtimeMinutes?: number;
+      labourCost?: string;
+      partsCost?: string;
+      otherCost?: string;
     };
     AssetEventResponse: {
       /** Format: uuid */
@@ -2015,6 +2018,14 @@ export interface components {
       partsReplaced?: string | null;
       /** Format: int32 */
       downtimeMinutes?: number | null;
+      /** @description SGD, two decimals */
+      labourCost?: string | null;
+      /** @description SGD, two decimals */
+      partsCost?: string | null;
+      /** @description SGD, two decimals */
+      otherCost?: string | null;
+      /** @description SGD, two decimals; null when any cost is unknown */
+      totalCost?: string | null;
     };
     CreateDeviceRequest: {
       identifier: string;

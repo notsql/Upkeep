@@ -177,6 +177,56 @@ describe("RecordEventDialog", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
+  it("posts SGD costs as entered, leaving out the blank ones", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(
+      <RecordEventDialog
+        defaultType="BREAKDOWN_REPAIR"
+        onCancel={vi.fn()}
+        onSave={onSave}
+      />
+    );
+    fireEvent.change(dateField(), { target: { value: "2026-09-20" } });
+    fireEvent.change(notesField(), { target: { value: "Fixed." } });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Labour cost (SGD)" }),
+      { target: { value: " 120.50 " } }
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Other cost (SGD)" }),
+      { target: { value: "0" } }
+    );
+    fireEvent.click(submitButton());
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+    expect(onSave.mock.calls[0][0]).toStrictEqual({
+      type: "BREAKDOWN_REPAIR",
+      occurredOn: "2026-09-20",
+      notes: "Fixed.",
+      labourCost: "120.50",
+      otherCost: "0",
+    });
+  });
+
+  it("rejects a cost that is not an SGD amount", async () => {
+    const onSave = vi.fn();
+    renderWithProviders(
+      <RecordEventDialog
+        defaultType="BREAKDOWN_REPAIR"
+        onCancel={vi.fn()}
+        onSave={onSave}
+      />
+    );
+    fireEvent.change(notesField(), { target: { value: "Fixed." } });
+    const parts = screen.getByRole("textbox", { name: "Parts cost (SGD)" });
+    fireEvent.change(parts, { target: { value: "12.345" } });
+    fireEvent.click(submitButton());
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Enter an amount such as 120 or 120.50."
+    );
+    expect(parts.getAttribute("aria-invalid")).toBe("true");
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it("keeps what was entered and explains a server error", async () => {
     const onSave = vi
       .fn()

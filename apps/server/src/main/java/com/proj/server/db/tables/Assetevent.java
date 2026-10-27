@@ -11,6 +11,7 @@ import com.proj.server.db.tables.Estate.EstatePath;
 import com.proj.server.db.tables.Manufacturer.ManufacturerPath;
 import com.proj.server.db.tables.records.AsseteventRecord;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -142,6 +143,21 @@ public class Assetevent extends TableImpl<AsseteventRecord> {
      * The column <code>public.AssetEvent.workPerformed</code>.
      */
     public final TableField<AsseteventRecord, String> WORKPERFORMED = createField(DSL.name("workPerformed"), SQLDataType.VARCHAR(2500), this, "");
+
+    /**
+     * The column <code>public.AssetEvent.labourCost</code>.
+     */
+    public final TableField<AsseteventRecord, BigDecimal> LABOURCOST = createField(DSL.name("labourCost"), SQLDataType.NUMERIC(14, 2), this, "");
+
+    /**
+     * The column <code>public.AssetEvent.otherCost</code>.
+     */
+    public final TableField<AsseteventRecord, BigDecimal> OTHERCOST = createField(DSL.name("otherCost"), SQLDataType.NUMERIC(14, 2), this, "");
+
+    /**
+     * The column <code>public.AssetEvent.partsCost</code>.
+     */
+    public final TableField<AsseteventRecord, BigDecimal> PARTSCOST = createField(DSL.name("partsCost"), SQLDataType.NUMERIC(14, 2), this, "");
 
     private Assetevent(Name alias, Table<AsseteventRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
