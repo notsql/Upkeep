@@ -1,12 +1,19 @@
 # Invoices and service reports
 
+Uploaded documents can also be [linked to assets](asset-documents.md). The asset
+relation retains the document UUID/file and is independent of the
+[work-order link](work-order-documents.md). Asset owners can link/unlink ordinary
+uploads, including retired equipment, without a separate document-edit grant;
+the existing read/download and deletion rules below still apply. Deleted uploads
+disappear from both asset and work-order attachment lists.
+
 Source of truth: `packages/api/openapi.json`. Spring owns private R2 access and
 Postgres metadata. Files are independent of assets and work orders.
 
 | Method and path | Request | Success | Authorization |
 | --- | --- | --- | --- |
 | POST `/estates/{estateId}/documents` | Multipart `UploadDocumentRequest`: `documentType: INVOICE \| SERVICE_REPORT`, exactly one binary `file` | 201 `DocumentResponse`, `Location` points to the content endpoint | Current `EDIT_DOCUMENTS`, active estate |
-| GET `/estates/{estateId}/documents` | Optional query `filename: string` (trimmed, max 255), `cursor: string`, `limit: integer` (1–100, default 25) | 200 `DocumentPageResponse` | Current `VIEW_DOCUMENTS`, including inactive history |
+| GET `/estates/{estateId}/documents` | Optional query `filename: string` (trimmed, max 255), `documentType: INVOICE \| SERVICE_REPORT`, `cursor: string`, `limit: integer` (1–100, default 25) | 200 `DocumentPageResponse` | Current `VIEW_DOCUMENTS`, including inactive history |
 | GET `/estates/{estateId}/documents/{documentId}/content` | UUID path parameters, no body | 200 original PDF/JPEG/PNG attachment | Current `VIEW_DOCUMENTS` |
 | DELETE `/estates/{estateId}/documents/{documentId}` | UUID path parameters, no body | 204, no body | Current `EDIT_DOCUMENTS` and uploader or estate Manager/owner; inactive estates allowed |
 
@@ -42,9 +49,18 @@ Tomcat drains rejected bodies up to 20 MiB so ordinary over-limit requests can
 receive the JSON 413 response; accepted request/file limits stay unchanged.
 
 Lists filter in Postgres before cursor pagination, excluding deletion markers.
+The optional `documentType` filter combines with filename search using AND;
+omitting it returns both existing types. Unsupported API type values return 400.
+No additional document category is introduced, and size metadata remains in the API.
 Filename search is a case-insensitive literal substring, including extension;
 SQL wildcard characters are escaped by jOOQ. Ordering is descending
-`createdAt`, then UUID. Cursors are bound to the estate and trimmed search.
+`createdAt`, then UUID. Cursors are bound to the estate, trimmed search and type.
+Changing any active filter invalidates a cursor from the old result set. Existing
+unfiltered cursors retain their format and remain usable when type is omitted.
+
+Example: `GET /estates/{estateId}/documents?filename=lift&documentType=SERVICE_REPORT`
+returns only service reports whose filename contains “lift”, applying both
+constraints before page limits.
 Metadata responses use `Cache-Control: private, no-store`; downloads also use
 `X-Content-Type-Options: nosniff`, the validated media type and a UTF-8 encoded
 `Content-Disposition: attachment` filename.

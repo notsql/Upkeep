@@ -1,11 +1,31 @@
 # Estate documents
 
+The Asset column shows Associate Asset for an unlinked file when the user can
+edit asset associations. Linked files show the asset reference and name as a
+link to its detail page, with an Unlink button for asset editors that opens the
+confirmation directly. The confirmation identifies the document and asset and
+explains that the file and work-order link are retained; Cancel makes no change.
+Its searchable/filterable picker and unlink confirmation are described
+in [asset-documents.md](asset-documents.md).
+This authority is independent of upload/edit permission. The linked file appears
+in the asset detail Documents card; both views share estate document invalidation.
+
 Route `/estates/$estateId/documents` lives at
 `apps/web/src/routes/_auth/estates/$estateId/documents/index.tsx`. Its
-`-components/` folder contains `documents-page.tsx` and
-`upload-document-form.tsx`. The route validates `filename` and `cursor` URL
-search parameters, so refresh/back restore search and paging. Search/Clear reset
-the cursor. State remounts when the account or estate changes.
+`-components/` folder contains `documents-page.tsx`, `document-filters.tsx` and
+`upload-document-form.tsx`. The route validates `filename`, `documentType` and
+`cursor` URL search parameters, so refresh/back restore filtering and paging.
+Supported type values are `INVOICE` and `SERVICE_REPORT`; unsupported/empty URL
+type values redirect to the same document list without a type constraint,
+preserving filename and cursor. State remounts when the
+account or estate changes.
+
+`DocumentFiltersForm` uses shared shadcn Select, Input, Label and Button
+components. “Filter by type” offers All types, Invoice and Service report.
+Changing type resets the cursor and preserves the active filename. Search and
+Clear search reset pagination while retaining type; selecting All types removes
+the type constraint. Next and First page preserve both filters. The browser
+sends filters to the API, which applies them before pagination.
 
 The `_auth` guard requires `canViewDocuments` from the authenticated access
 projection before route entry. Live access comes from `useAppAccess`;
@@ -27,20 +47,33 @@ asks the user to refresh the list before retrying. No upload auto-retries.
 | Hook | Endpoint | Query/mutation behavior |
 | --- | --- | --- |
 | `useDocumentAccess` | GET `/access/context` via `useAppAccess` | `[userId, "app-access"]`; derives estate label/read/upload capability |
-| `useDocuments` | GET `/estates/{estateId}/documents` | `[userId, "documents", estateId, filters]`, filename/cursor query, abort signal, no retry |
+| `useDocuments` | GET `/estates/{estateId}/documents` | `[userId, "documents", estateId, filters]`, filename/documentType/cursor query, abort signal, no retry |
 | `useUploadDocument` | POST `/estates/{estateId}/documents` | FormData `documentType` + one `file`; accepts only confirmed 201; no retry |
 | `useDownloadDocument` | GET `/estates/{estateId}/documents/{documentId}/content` | `parseAs: "blob"`, authenticated client, temporary object URL downloaded then revoked; no retry |
 | `useDeleteDocument` | DELETE `/estates/{estateId}/documents/{documentId}` | Requires confirmed 204, no retry |
 
 Upload and deletion invalidate `[userId, "documents", estateId]`, covering every
-cached filename search/page. Refresh errors are displayed independently with
+cached filename/type filter and page. Refresh errors are displayed independently with
 Retry and never turn a completed mutation into failure. Query keys prevent
 account/estate cache sharing; the existing session hook clears old-account data.
 Frontend DTOs are aliases of generated OpenAPI types.
 
-The list shows filename/type/byte size/time, download actions, newest-first
+The list shows Filename, Type, Uploaded, Asset and Actions, with no Size column or size
+cells. `DocumentRow` accepts `showSize` (default true); this page passes false,
+while the asset Documents table retains its Size header and matching cells.
+`document-assets.tsx` loads each visible row's association through
+`useDocumentAsset`, sharing the existing account/estate/document query key and
+mutation invalidation. Pending/error reads show loading/Retry rather than an
+unlinked state. Without asset-read access, the cell shows a dash and makes no
+association request. Read-only/inactive access retains existing asset links
+without write controls.
+API `sizeBytes` metadata and upload size validation remain available.
+
+The list includes download actions, newest-first
 cursor navigation and distinct “No documents uploaded”/“No files match your
-search” messages. Clear search is available while filtering. Read-only/inactive
+search” messages. The no-matches state applies when either filename or type is
+active. Clear search is available for filename filtering; All types clears the
+type filter. Read-only/inactive
 access hides upload. Delete appears only when the server's per-row `canDelete`
 is true; inactivity alone does not remove an otherwise authorized delete action.
 Confirmation names the file; Cancel sends no request. Pending confirmation

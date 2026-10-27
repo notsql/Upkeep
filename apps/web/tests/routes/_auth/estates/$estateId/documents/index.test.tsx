@@ -89,6 +89,8 @@ const NO_DOCUMENTS = /no documents uploaded/i;
 const CANCEL = /^cancel$/i;
 const DELETE_SUCCESS = /April Invoice\.pdf.*removed/i;
 const DELETE_DENIED = /only the uploader/i;
+const TYPE_FILTER = "Filter by type";
+const DOCUMENT_ROW = /April Invoice\.pdf/;
 
 const estateId = "00000000-0000-0000-0000-000000000001";
 const documentId = "00000000-0000-0000-0000-000000000002";
@@ -668,4 +670,180 @@ it("a denied document deep link does not start a protected list request", async 
     documentsPath
   );
   expect(apiPost).not.toHaveBeenCalled();
+});
+
+it("shows the Documents table without a Size column or size cells", async () => {
+  await openDocuments();
+  const table = within(await screen.findByRole("table"));
+  expect(
+    table.getAllByRole("columnheader").map((header) => header.textContent)
+  ).toEqual(["Filename", "Type", "Uploaded", "Asset", "Actions"]);
+  const row = within(table.getByRole("row", { name: DOCUMENT_ROW }));
+  expect(row.getAllByRole("cell")).toHaveLength(5);
+});
+
+it("offers All types, Invoice and Service report in the type filter", async () => {
+  await openDocuments();
+  const filter = await screen.findByRole("combobox", { name: TYPE_FILTER });
+  expect(filter.textContent).toContain("All types");
+  fireEvent.click(filter);
+  expect(screen.getAllByRole("option")).toHaveLength(3);
+  screen.getByRole("option", { name: "All types" });
+  screen.getByRole("option", { name: "Invoice" });
+  screen.getByRole("option", { name: "Service report" });
+});
+
+it.each([
+  ["Invoice", "INVOICE"],
+  ["Service report", "SERVICE_REPORT"],
+])(
+  "filters by %s while retaining filename and resetting pagination",
+  async (label, type) => {
+    const { router } = await openDocuments("?filename=invoice&cursor=old-page");
+    await chooseOption(
+      await screen.findByRole("combobox", { name: TYPE_FILTER }),
+      label
+    );
+    await waitFor(() => {
+      expect(router.state.location.search).toHaveProperty("documentType", type);
+      expect(router.state.location.search).toHaveProperty(
+        "filename",
+        "invoice"
+      );
+      expect(router.state.location.search).not.toHaveProperty("cursor");
+      expect(apiGet).toHaveBeenCalledWith(
+        documentsPath,
+        expect.objectContaining({
+          params: expect.objectContaining({
+            path: { estateId },
+            query: expect.objectContaining({
+              filename: "invoice",
+              documentType: type,
+            }),
+          }),
+        })
+      );
+    });
+  }
+);
+
+it("restores the type from a direct link and browser back navigation", async () => {
+  const { router } = await openDocuments("?documentType=SERVICE_REPORT");
+  const filter = await screen.findByRole("combobox", { name: TYPE_FILTER });
+  expect(filter.textContent).toContain("Service report");
+  await chooseOption(filter, "All types");
+  await waitFor(() =>
+    expect(router.state.location.search).not.toHaveProperty("documentType")
+  );
+  await act(() => {
+    router.history.back();
+  });
+  await waitFor(() =>
+    expect(
+      screen.getByRole("combobox", { name: TYPE_FILTER }).textContent
+    ).toContain("Service report")
+  );
+});
+
+it.each(["search", "clear"])(
+  "retains the selected type when applying filename action %s",
+  async (action) => {
+    const { router } = await openDocuments(
+      "?filename=invoice&documentType=SERVICE_REPORT&cursor=old-page"
+    );
+    await screen.findByRole("combobox", { name: TYPE_FILTER });
+    if (action === "search") {
+      fireEvent.change(filenameSearch(), { target: { value: "maintenance" } });
+      fireEvent.click(screen.getByRole("button", { name: SEARCH }));
+    } else {
+      fireEvent.click(screen.getByRole("button", { name: CLEAR_SEARCH }));
+    }
+    await waitFor(() => {
+      expect(router.state.location.search).toHaveProperty(
+        "documentType",
+        "SERVICE_REPORT"
+      );
+      expect(router.state.location.search).not.toHaveProperty("cursor");
+      if (action === "search") {
+        expect(router.state.location.search).toHaveProperty(
+          "filename",
+          "maintenance"
+        );
+      } else {
+        expect(router.state.location.search).not.toHaveProperty("filename");
+      }
+    });
+  }
+);
+
+it("preserves type and filename through Next and First page", async () => {
+  nextCursor = "next-type-page";
+  const { router } = await openDocuments(
+    "?filename=invoice&documentType=INVOICE"
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Next" }));
+  await waitFor(() =>
+    expect(apiGet).toHaveBeenCalledWith(
+      documentsPath,
+      expect.objectContaining({
+        params: expect.objectContaining({
+          query: {
+            filename: "invoice",
+            documentType: "INVOICE",
+            cursor: "next-type-page",
+          },
+        }),
+      })
+    )
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "First page" }));
+  await waitFor(() => {
+    expect(router.state.location.search).toHaveProperty("filename", "invoice");
+    expect(router.state.location.search).toHaveProperty(
+      "documentType",
+      "INVOICE"
+    );
+    expect(router.state.location.search).not.toHaveProperty("cursor");
+  });
+});
+
+it("shows the filtered empty state and clears the type back to All types", async () => {
+  items = [];
+  const { router } = await openDocuments(
+    "?documentType=INVOICE&cursor=old-page"
+  );
+  await screen.findByText(NO_MATCHES);
+  await chooseOption(
+    screen.getByRole("combobox", { name: TYPE_FILTER }),
+    "All types"
+  );
+  await screen.findByText(NO_DOCUMENTS);
+  expect(router.state.location.search).not.toHaveProperty("documentType");
+  expect(router.state.location.search).not.toHaveProperty("cursor");
+});
+
+it("omits unsupported type values from URL filters", async () => {
+  const { router } = await openDocuments("?documentType=OTHERS");
+  const filter = await screen.findByRole("combobox", { name: TYPE_FILTER });
+  expect(filter.textContent).toContain("All types");
+  expect(router.state.location.search).not.toHaveProperty("documentType");
+});
+
+it("deletion invalidates cached pages for each document type", async () => {
+  const { queryClient } = await openDocuments();
+  const keys = ["INVOICE", "SERVICE_REPORT"].map((documentType) => [
+    "caller",
+    "documents",
+    estateId,
+    { documentType },
+  ]);
+  for (const key of keys) {
+    queryClient.setQueryData(key, { items: [saved], nextCursor: null });
+  }
+  await confirmDeletion();
+  await waitFor(() => {
+    for (const key of keys) {
+      expect(queryClient.getQueryState(key)?.isInvalidated).toBe(true);
+    }
+  });
 });

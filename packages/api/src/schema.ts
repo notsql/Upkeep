@@ -330,6 +330,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetDocuments"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/events": {
     parameters: {
       query?: never;
@@ -630,6 +646,22 @@ export interface paths {
     put?: never;
     post?: never;
     delete: operations["deleteDocument"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/documents/{documentId}/asset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getDocumentAsset"];
+    put: operations["changeDocumentAsset"];
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1566,6 +1598,27 @@ export interface components {
       changedByName?: string | null;
       /** Format: date-time */
       changedAt?: string | null;
+    };
+    ChangeDocumentAssetRequest: {
+      /**
+       * Format: uuid
+       * @description Send null explicitly to unlink; unlink before selecting another asset
+       */
+      assetId: string | null;
+      /** Format: int32 */
+      expectedAssociationVersion: number;
+    };
+    DocumentAssetResponse: {
+      /** Format: uuid */
+      documentId: string;
+      /** Format: uuid */
+      assetId: string | null;
+      assetReference: string | null;
+      assetName: string | null;
+      /** Format: int32 */
+      associationVersion: number;
+      /** Format: date-time */
+      changedAt: string | null;
     };
     UserRoles: {
       roleSlugs?: string[];
@@ -3254,6 +3307,87 @@ export interface operations {
       };
     };
   };
+  changeDocumentAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeDocumentAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Saved association or current-version no-op; retired assets allowed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentAssetResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   changeDocumentWorkOrder: {
     parameters: {
       query?: never;
@@ -4844,6 +4978,86 @@ export interface operations {
       };
     };
   };
+  getAssetDocuments: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current nondeleted documents, newest upload first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentPageResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getAssetFailureRisk: {
     parameters: {
       query?: never;
@@ -4876,6 +5090,83 @@ export interface operations {
       };
       /** @description Estate or asset not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getDocumentAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current document asset association, including unlinked state */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentAssetResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -6973,6 +7264,7 @@ export interface operations {
     parameters: {
       query?: {
         filename?: string;
+        documentType?: "INVOICE" | "SERVICE_REPORT";
         cursor?: string;
         limit?: number;
       };
