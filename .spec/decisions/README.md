@@ -27,3 +27,5 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0038 — Inspection form component boundaries](0038-inspection-form-component-boundaries.md)
 - [0039 — One work-order form for inspection follow-up](0039-unified-work-order-creation.md)
 - [0040 — Crew have read-only work-order access](0040-crew-read-only-work-orders.md)
+- [0041 - Fault report classification runs in Spring](0041-fault-classification-runs-in-spring.md)
+- [0042 - Contractors are reached by email dispatch on ID-36 work orders](0042-contractor-dispatch-on-work-orders.md)

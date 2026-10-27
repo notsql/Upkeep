@@ -1,9 +1,10 @@
+import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
 import { WorkOrderDocuments } from "./work-order-documents";
@@ -11,9 +12,15 @@ import { WorkOrderProgress } from "./work-order-progress";
 export function WorkOrderDetailPage({
   estateId,
   workOrderId,
+  sections,
 }: {
   estateId: string;
   workOrderId: string;
+  /** Feature sections shown after the order details, such as ID-70's contractor email. */
+  sections?: (
+    order: components["schemas"]["WorkOrderResponse"],
+    canCreate: boolean
+  ) => ReactNode;
 }) {
   const access = useWorkOrderAccess(estateId);
   const order = useWorkOrder(estateId, workOrderId);
@@ -150,6 +157,7 @@ export function WorkOrderDetailPage({
           </div>
         </CardContent>
       </Card>
+      {sections?.(data, access.canCreate)}
       {access.canViewDocuments ? (
         <WorkOrderDocuments
           estateId={estateId}

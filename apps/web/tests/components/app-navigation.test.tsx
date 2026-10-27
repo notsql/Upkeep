@@ -115,6 +115,7 @@ async function setup(
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
     "/estates/$estateId/work-orders",
+    "/estates/$estateId/contractors",
     "/estates/$estateId/documents",
     "/reports/new",
     "/reports",
@@ -984,3 +985,31 @@ it.each([
     }
   }
 );
+
+it("offers Contractors only where the account can create work orders", async () => {
+  accessOverride = {
+    ...workspaceAccess,
+    estates: [
+      { ...ownerEstateAccess, estateId: "maple" },
+      {
+        ...councilEstateAccess,
+        estateId: "oak",
+        canViewFaultReports: true,
+        canCreateWorkOrders: false,
+      },
+    ],
+  };
+  const { router } = await setup("/estates/maple/reports");
+  const navigation = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  expect(
+    (await navigation.findByRole("link", { name: "Contractors" })).getAttribute(
+      "href"
+    )
+  ).toBe("/estates/maple/contractors");
+
+  await router.navigate({ to: "/estates/oak/reports" as never });
+  await navigation.findByRole("link", { name: "Fault reports" });
+  expect(navigation.queryByRole("link", { name: "Contractors" })).toBeNull();
+});

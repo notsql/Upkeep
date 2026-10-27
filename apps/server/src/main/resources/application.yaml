@@ -23,6 +23,20 @@ spring:
     anthropic:
       api-key: ${ANTHROPIC_API_KEY:}
 
+  # Work order email (ID-70). SPRING_MAIL_HOST, SPRING_MAIL_USERNAME and
+  # SPRING_MAIL_PASSWORD bind from the environment. Do not give the host a
+  # default here: without one, no mail sender is created and work orders record
+  # MAIL_NOT_CONFIGURED instead of failing against a blank server.
+  mail:
+    port: ${SPRING_MAIL_PORT:587}
+    properties:
+      "[mail.smtp.auth]": true
+      "[mail.smtp.starttls.enable]": true
+      "[mail.smtp.starttls.required]": true
+      "[mail.smtp.connectiontimeout]": 10000
+      "[mail.smtp.timeout]": 10000
+      "[mail.smtp.writetimeout]": 30000
+
   autoconfigure:
     exclude:
       # Spring AI 2.0.1's Anthropic chat auto-config cannot bind
@@ -58,6 +72,13 @@ app:
     # Server-side secret for the WorkOS API (GET /users). Unlike the issuer
     # below, a blank default is safe: nothing auto-configures off it.
     api-key: ${WORKOS_API_KEY:}
+  routing:
+    # The model that classifies fault reports (ID-70); the key is ANTHROPIC_API_KEY.
+    model: claude-haiku-5-5
+  mail:
+    # Blank: send as the authenticated SMTP account, with no Reply-To.
+    from: ${APP_MAIL_FROM:}
+    reply-to: ${APP_MAIL_REPLY_TO:}
   r2:
     endpoint: ${S3_ENDPOINT:}
     access-id: ${R2_ACCESS_ID:}

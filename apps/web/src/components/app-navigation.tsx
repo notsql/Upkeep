@@ -12,6 +12,7 @@ import {
   ClipboardList,
   ClipboardPenLine,
   Files,
+  HardHat,
   Home,
   Layers,
   LayoutDashboard,
@@ -48,6 +49,7 @@ type Destination =
   | "/estates/$estateId/assets"
   | "/estates/$estateId/reports"
   | "/estates/$estateId/work-orders"
+  | "/estates/$estateId/contractors"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles"
   | "/estates/$estateId/documents";
@@ -307,6 +309,25 @@ function reportDestination(
   };
 }
 
+/** ID-70: contractors are managed by whoever can create work orders. */
+function contractorsDestination(
+  estateId: string,
+  permission: components["schemas"]["EstateAccessResponse"],
+  pathname: string
+): NavigationItem[] {
+  return permission.canCreateWorkOrders
+    ? [
+        {
+          label: "Contractors",
+          to: "/estates/$estateId/contractors",
+          estateId,
+          icon: HardHat,
+          active: pathname.startsWith(`/estates/${estateId}/contractors`),
+        },
+      ]
+    : [];
+}
+
 function estateDestinations(
   estateId: string | undefined,
   permission: components["schemas"]["EstateAccessResponse"] | undefined,
@@ -333,6 +354,7 @@ function estateDestinations(
         active: pathname.startsWith(`${base}/work-orders`),
       });
     }
+    local.push(...contractorsDestination(estateId, permission, pathname));
     if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
       local.push({
         label: "Overview",

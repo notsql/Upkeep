@@ -9,6 +9,7 @@ import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Estate.EstatePath;
 import com.proj.server.db.tables.Issuereportimage.IssuereportimagePath;
+import com.proj.server.db.tables.Reportclassification.ReportclassificationPath;
 import com.proj.server.db.tables.records.IssuereportRecord;
 
 import java.time.OffsetDateTime;
@@ -212,6 +213,19 @@ public class Issuereport extends TableImpl<IssuereportRecord> {
             _issuereportimage = new IssuereportimagePath(this, null, Keys.ISSUEREPORTIMAGE__ISSUEREPORTIMAGE_REPORTID_FKEY.getInverseKey());
 
         return _issuereportimage;
+    }
+
+    private transient ReportclassificationPath _reportclassification;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.ReportClassification</code> table
+     */
+    public ReportclassificationPath reportclassification() {
+        if (_reportclassification == null)
+            _reportclassification = new ReportclassificationPath(this, null, Keys.REPORTCLASSIFICATION__REPORTCLASSIFICATION_REPORTID_FKEY.getInverseKey());
+
+        return _reportclassification;
     }
 
     @Override

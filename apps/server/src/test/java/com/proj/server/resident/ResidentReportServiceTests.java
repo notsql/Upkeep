@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.proj.server.routing.RoutingRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -23,7 +24,9 @@ class ResidentReportServiceTests {
     private final ResidentImageValidator validator = mock(ResidentImageValidator.class);
     private final ResidentImageStore images = mock(ResidentImageStore.class);
     private final TransactionTemplate transactions = mock(TransactionTemplate.class);
-    private final ResidentReportService service = new ResidentReportService(reports, validator, images, transactions);
+    private final RoutingRepository routing = mock(RoutingRepository.class);
+    private final ResidentReportService service =
+            new ResidentReportService(reports, validator, images, transactions, routing);
 
     @Test
     void rejectsAFiftyOneCharacterTitleBeforeLookingUpTheEstate() {

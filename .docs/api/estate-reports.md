@@ -16,11 +16,11 @@ non-owner assignments; report authorization still checks current membership.
 
 | DTO | Fields |
 | --- | --- |
-| `IssueReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time` |
+| `EstateReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `routing: ReportRoutingResponse \| null` (null for reports from before ID-70; see [report-routing.md](report-routing.md)) |
 | `ReportLocation` | `id: UUID`, `label: string` (full current path, e.g. `Block A › Level 4 › Lift lobby`) |
-| `IssueReportDetailResponse` | Summary fields plus `images: ReportImage[]` |
+| `EstateReportDetailResponse` | Summary fields (including `routing`) plus `images: ReportImage[]` |
 | `ReportImage` | `id: UUID`, `contentType: string` (`image/jpeg` or `image/png`) |
-| `IssueReportPageResponse` | `items: IssueReportSummaryResponse[]`, `nextCursor: string \| null` |
+| `EstateReportPageResponse` | `items: EstateReportSummaryResponse[]`, `nextCursor: string \| null` |
 | `RelocateReportRequest` | Required, non-null `locationId: UUID`, `expectedLocationId: UUID` |
 | `EstateError` | `message: string` |
 
@@ -32,9 +32,9 @@ new submission constraints are documented in [resident-reports.md](resident-repo
 
 | Method/path | Request | Success | Other statuses |
 | --- | --- | --- | --- |
-| GET `/estates/{estateId}/reports` | Optional `locationId: UUID`, `blockId: UUID`, `minLevelPosition: int32`, `maxLevelPosition: int32`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `IssueReportPageResponse` | 400 invalid UUID/cursor/limit/range or non-block blockId; 401; 403; 404 |
-| GET `/estates/{estateId}/reports/{reportId}` | UUID paths | 200 `IssueReportDetailResponse` | 400; 401; 403; 404 |
-| PATCH `/estates/{estateId}/reports/{reportId}/location` | JSON `RelocateReportRequest` | 200 updated `IssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid UUID/body or block-only destination; 401; 403; 404; 409 |
+| GET `/estates/{estateId}/reports` | Optional `locationId: UUID`, `blockId: UUID`, `minLevelPosition: int32`, `maxLevelPosition: int32`, `routingState: CLASSIFYING \| NEEDS_REVIEW \| WORK_ORDER \| DISMISSED`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `EstateReportPageResponse` | 400 invalid UUID/cursor/limit/range/routing state or non-block blockId; 401; 403; 404 |
+| GET `/estates/{estateId}/reports/{reportId}` | UUID paths | 200 `EstateReportDetailResponse` | 400; 401; 403; 404 |
+| PATCH `/estates/{estateId}/reports/{reportId}/location` | JSON `RelocateReportRequest` | 200 updated `EstateReportDetailResponse` (unchanged on a valid no-op) | 400 invalid UUID/body or block-only destination; 401; 403; 404; 409 |
 | GET `/estates/{estateId}/reports/{reportId}/images/{imageId}` | UUID paths | 200 private JPEG/PNG bytes with the stored content type | 400; 401; 403; 404; 503 storage unavailable |
 
 403 means known estate access without responder authority, including conflicting
@@ -113,3 +113,10 @@ locations without VIEW_ESTATE or management detail/asset access. Read and
 relocation permissions are independently projected by access context and checked
 on each request; editing a definition or reassigning a member takes effect with
 the same token. No custom grant expands other report CRUD or Resident submissions.
+
+## Routing (ID-70)
+
+The estate DTOs are separate from the resident `IssueReport*Response` types, so
+`routing` never reaches residents. `routingState` filters before pagination,
+and reports without routing never match it. Relocation does not reclassify a
+report or change its work order. See [report-routing.md](report-routing.md).

@@ -216,6 +216,12 @@ export function NewReportForm({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
+          <p className="text-muted-foreground text-sm">
+            To get your report to the right people quickly, its text and photos
+            are analysed by an AI service (Anthropic) and may be emailed to the
+            estate's contractor. Please don't include personal details you don't
+            want shared.
+          </p>
           <Button
             disabled={
               create.isPending ||
