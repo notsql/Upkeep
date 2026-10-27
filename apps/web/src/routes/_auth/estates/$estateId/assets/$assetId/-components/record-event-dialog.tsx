@@ -43,8 +43,11 @@ import {
 interface FormValues {
   downtimeMinutes: string;
   findings: string;
+  labourCost: string;
   notes: string;
   occurredOn: string;
+  otherCost: string;
+  partsCost: string;
   partsReplaced: string;
   serviceProvider: string;
   type: string;
@@ -62,7 +65,15 @@ const DETAIL_FIELDS = [
   "partsReplaced",
 ] as const;
 
+// SGD amounts, validated as the server does; sent as entered, left out when blank.
+const COST_FIELDS = [
+  { name: "labourCost", label: "Labour cost (SGD)" },
+  { name: "partsCost", label: "Parts cost (SGD)" },
+  { name: "otherCost", label: "Other cost (SGD)" },
+] as const;
+
 const WHOLE_NUMBER = /^\d+$/;
+const SGD_AMOUNT = /^\d{1,12}(\.\d{1,2})?$/;
 
 const typeItems = [
   { value: "", label: "Select a type" },
@@ -93,6 +104,12 @@ function validate(values: FormValues, today: string): FieldErrors {
   if (values.downtimeMinutes && !WHOLE_NUMBER.test(values.downtimeMinutes)) {
     errors.downtimeMinutes = "Downtime must be a whole number of minutes.";
   }
+  for (const { name } of COST_FIELDS) {
+    const cost = values[name].trim();
+    if (cost && !SGD_AMOUNT.test(cost)) {
+      errors[name] = "Enter an amount such as 120 or 120.50.";
+    }
+  }
   return errors;
 }
 
@@ -116,6 +133,9 @@ export function RecordEventDialog({
     serviceProvider: "",
     partsReplaced: "",
     downtimeMinutes: "",
+    labourCost: "",
+    partsCost: "",
+    otherCost: "",
   });
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string>();
@@ -163,7 +183,10 @@ export function RecordEventDialog({
         occurredOn: values.occurredOn,
         notes: values.notes.trim(),
       };
-      for (const field of DETAIL_FIELDS) {
+      for (const field of [
+        ...DETAIL_FIELDS,
+        ...COST_FIELDS.map((cost) => cost.name),
+      ]) {
         const value = values[field].trim();
         if (value) {
           input[field] = value;
@@ -330,6 +353,20 @@ export function RecordEventDialog({
               />
               {errorText("downtimeMinutes")}
             </Field>
+            {COST_FIELDS.map(({ name, label }) => (
+              <Field key={name}>
+                <FieldLabel htmlFor={`${id}-${name}`}>{label}</FieldLabel>
+                <Input
+                  {...errorProps(name)}
+                  id={`${id}-${name}`}
+                  inputMode="decimal"
+                  name={name}
+                  onChange={handleChange}
+                  value={values[name]}
+                />
+                {errorText(name)}
+              </Field>
+            ))}
           </FieldSet>
           {error ? (
             <Alert variant="destructive">

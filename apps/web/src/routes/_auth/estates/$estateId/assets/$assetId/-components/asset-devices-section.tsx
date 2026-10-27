@@ -37,7 +37,7 @@ export function AssetDevicesSection({
       new Map(
         flattenLocations(locations.data ?? []).map((node) => [
           node.id,
-          node.path.join(" > "),
+          node.path.join(" › "),
         ])
       ),
     [locations.data]

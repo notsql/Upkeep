@@ -10794,7 +10794,7 @@
           },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
           },
           "installedOn": {
             "type": ["string", "null"],
@@ -10929,7 +10929,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "°C"
+            "description": "\u00b0C"
           },
           "flowRate": {
             "type": "number",
@@ -11153,6 +11153,18 @@
             "type": "integer",
             "format": "int32",
             "minimum": 0
+          },
+          "labourCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "partsCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
+          },
+          "otherCost": {
+            "type": "string",
+            "pattern": "[0-9]{1,12}(\\.[0-9]{1,2})?"
           }
         },
         "required": ["notes", "occurredOn", "type"]
@@ -11217,6 +11229,22 @@
           "downtimeMinutes": {
             "type": ["integer", "null"],
             "format": "int32"
+          },
+          "labourCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals"
+          },
+          "partsCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals"
+          },
+          "otherCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals"
+          },
+          "totalCost": {
+            "type": ["string", "null"],
+            "description": "SGD, two decimals; null when any cost is unknown"
           }
         },
         "required": [
@@ -11510,7 +11538,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "°C"
+            "example": "\u00b0C"
           },
           "measuredAt": {
             "type": "string",
