@@ -120,6 +120,11 @@ function guardEstatePath(
         throw notFound();
       }
       return;
+    case "contractors":
+      if (!estate?.canCreateWorkOrders) {
+        throw notFound();
+      }
+      return;
     case "roles":
       if (!estate?.canViewEstateRoles) {
         throw notFound();

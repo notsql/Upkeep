@@ -45,6 +45,13 @@ public class WorkOrderRepository {
                 .fetchOne(ISSUEREPORT.LOCATIONID);
     }
 
+    public com.proj.server.db.tables.records.IssuereportRecord report(UUID estateId, UUID reportId) {
+        var report = com.proj.server.db.tables.Issuereport.ISSUEREPORT;
+        return db.selectFrom(report)
+                .where(report.ID.eq(reportId).and(report.ESTATEID.eq(estateId)))
+                .fetchOne();
+    }
+
     public com.proj.server.db.tables.records.AssetRecord asset(UUID estateId, UUID assetId) {
         return db.selectFrom(ASSET)
                 .where(ASSET.ESTATEID.eq(estateId).and(ASSET.ID.eq(assetId)))

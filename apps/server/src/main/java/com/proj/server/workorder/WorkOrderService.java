@@ -14,17 +14,26 @@ public class WorkOrderService {
     private final WorkOrderRepository repository;
     private final EstateReportRepository locations;
     private final com.proj.server.workos.WorkOSService workOS;
+    private final com.proj.server.routing.RoutingRepository routing;
+
+    /** The creator and status changer recorded when ID-70 routes a report without a person. */
+    public static final String AUTOMATIC_ROUTING_USER = "system:report-routing";
+
+    public static final String AUTOMATIC_ROUTING_NAME = "Upkeep (automatic routing)";
 
     public WorkOrderService(
             WorkOrderRepository repository,
             EstateReportRepository locations,
-            com.proj.server.workos.WorkOSService workOS) {
+            com.proj.server.workos.WorkOSService workOS,
+            com.proj.server.routing.RoutingRepository routing) {
         this.repository = repository;
         this.locations = locations;
         this.workOS = workOS;
+        this.routing = routing;
     }
 
-    com.proj.server.db.tables.records.EstateRecord authorize(UUID estateId, String user, boolean create, boolean lock) {
+    public com.proj.server.db.tables.records.EstateRecord authorize(
+            UUID estateId, String user, boolean create, boolean lock) {
         var estate = repository.estate(estateId, lock);
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user);
@@ -99,7 +108,36 @@ public class WorkOrderService {
             reference = "Inspection " + source.getInspectedon() + " (" + source.getId() + ")";
         }
         var id = repository.create(estateId, estate.getCode(), user, request, reference);
+        if (report) routing.resolveReview(request.sourceReportId(), id, user);
         return repository.detail(estateId, id);
+    }
+
+    /**
+     * Creates an Open equipment-fault order from a routed report (ID-70), applying the same estate lock, active
+     * estate and active location rules as {@link #create}. The caller authorizes and owns the transaction; nothing is
+     * written when a rule fails, so the caller can still record a review instead.
+     */
+    public UUID createFromRoutedReport(UUID estateId, UUID reportId, String actor, WorkOrderPriority priority) {
+        var estate = repository.estate(estateId, true);
+        if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
+        if (estate.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
+        var report = repository.report(estateId, reportId);
+        if (report == null) throw error(HttpStatus.NOT_FOUND, "Report not found.");
+        var location = locations.location(estateId, report.getLocationid());
+        if (location == null || !Boolean.TRUE.equals(location.get("active", Boolean.class)))
+            throw error(HttpStatus.CONFLICT, "The report's location is inactive");
+        var request = new CreateWorkOrderRequest(
+                report.getDescription(),
+                report.getLocationid(),
+                null,
+                WorkOrderCategory.EQUIPMENT_FAULT,
+                priority,
+                WorkOrderSource.RESIDENT_REPORT,
+                reportId,
+                null,
+                null,
+                report.getLocationid());
+        return repository.create(estateId, estate.getCode(), actor, request, null);
     }
 
     private void requireActiveLocation(UUID estateId, UUID id) {
@@ -118,6 +156,8 @@ public class WorkOrderService {
 
     // Creation calls this after its transaction commits, so provider latency never holds the estate lock.
     public WorkOrderResponse resolveCreatorName(WorkOrderResponse order) {
+        if (AUTOMATIC_ROUTING_USER.equals(order.createdByUserId()))
+            return order.withCreatorName(AUTOMATIC_ROUTING_NAME);
         return order.withCreatorName(
                 workOS.findDisplayName(order.createdByUserId()).orElse(null));
     }

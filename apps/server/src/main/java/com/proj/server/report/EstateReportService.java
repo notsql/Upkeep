@@ -2,11 +2,13 @@ package com.proj.server.report;
 
 import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.resident.IssueReportDetailResponse;
-import com.proj.server.resident.IssueReportPageResponse;
+import com.proj.server.resident.IssueReportSummaryResponse;
 import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.resident.ResidentReportRepository;
 import com.proj.server.resident.ResidentReportService.ImageBytes;
+import com.proj.server.routing.RoutingRepository;
+import com.proj.server.routing.RoutingState;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.Base64;
@@ -22,12 +24,17 @@ public class EstateReportService {
     private final EstateReportRepository repository;
     private final ResidentReportRepository reports;
     private final ResidentImageStore images;
+    private final RoutingRepository routing;
 
     public EstateReportService(
-            EstateReportRepository repository, ResidentReportRepository reports, ResidentImageStore images) {
+            EstateReportRepository repository,
+            ResidentReportRepository reports,
+            ResidentImageStore images,
+            RoutingRepository routing) {
         this.repository = repository;
         this.reports = reports;
         this.images = images;
+        this.routing = routing;
     }
 
     public Record authorize(UUID estateId, String user, EstatePermissionCode permission, boolean lock) {
@@ -46,13 +53,14 @@ public class EstateReportService {
         return estate;
     }
 
-    public IssueReportPageResponse list(
+    public EstateReportPageResponse list(
             UUID estateId,
             String user,
             UUID locationId,
             UUID blockId,
             Integer minLevelPosition,
             Integer maxLevelPosition,
+            RoutingState routingState,
             String cursor,
             Integer requestedLimit) {
         authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
@@ -81,7 +89,15 @@ public class EstateReportService {
             }
         }
         var found = reports.estateList(
-                estateId, locationId, blockId, minLevelPosition, maxLevelPosition, time, id, limit + 1);
+                estateId,
+                locationId,
+                blockId,
+                minLevelPosition,
+                maxLevelPosition,
+                routingState == null ? null : routingState.name(),
+                time,
+                id,
+                limit + 1);
         var page = found.size() > limit ? found.subList(0, limit) : found;
         String next = null;
         if (found.size() > limit) {
@@ -90,10 +106,16 @@ public class EstateReportService {
                     .withoutPadding()
                     .encodeToString((last.createdAt() + "|" + last.id()).getBytes(StandardCharsets.UTF_8));
         }
-        return new IssueReportPageResponse(page, next);
+        var routings = routing.routings(
+                page.stream().map(IssueReportSummaryResponse::id).toList());
+        return new EstateReportPageResponse(
+                page.stream()
+                        .map(report -> EstateReportSummaryResponse.of(report, routings.get(report.id())))
+                        .toList(),
+                next);
     }
 
-    public IssueReportDetailResponse detail(UUID estateId, String user, UUID reportId) {
+    public EstateReportDetailResponse detail(UUID estateId, String user, UUID reportId) {
         authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         return find(estateId, reportId);
     }
@@ -106,7 +128,7 @@ public class EstateReportService {
     }
 
     @Transactional
-    public IssueReportDetailResponse relocate(
+    public EstateReportDetailResponse relocate(
             UUID estateId, String user, UUID reportId, RelocateReportRequest request) {
         var estate = authorize(estateId, user, EstatePermissionCode.RELOCATE_FAULT_REPORTS, true);
         if (estate.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
@@ -124,9 +146,11 @@ public class EstateReportService {
         return find(estateId, reportId);
     }
 
-    private IssueReportDetailResponse find(UUID estateId, UUID reportId) {
-        return reports.estateDetail(estateId, reportId)
+    private EstateReportDetailResponse find(UUID estateId, UUID reportId) {
+        IssueReportDetailResponse report = reports.estateDetail(estateId, reportId)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Report not found."));
+        return EstateReportDetailResponse.of(
+                report, routing.routings(java.util.List.of(reportId)).get(reportId));
     }
 
     private static ResidentReportException error(HttpStatus status, String message) {

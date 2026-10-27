@@ -43,6 +43,8 @@ locationId=4f34a3f5-5a2d-4de0-945f-7b8704653d8e
 images=<JPEG file>
 ```
 
+Submission also queues the report for routing (`ReportRouting`, `CLASSIFYING`) in the same transaction; see [report-routing.md](report-routing.md). The resident's response and view are unchanged.
+
 The server trims the title and rejects missing, blank or titles longer than 50 characters before uploading images or creating a report. Response DTOs and the database retain capacity for historical titles up to 150 characters; those titles remain readable without truncation. It sets `SUBMITTED`, the submitter and timestamps. It rechecks the assignment and location inside the write transaction after uploading validated images. Ownership is part of the detail and image database queries, so inaccessible identifiers return the same 404 as unknown ones. List cursors encode the `(createdAt, id)` key; the client treats them as opaque.
 
 Migration `20261013135000_resident_report_title` adds a required `VARCHAR(150)` title without a default. Existing rows receive the first 150 characters of their trimmed descriptions, or `Fault report` for blank descriptions. IDs, original descriptions, images and timestamps are retained. This migration is verified on disposable Postgres and applied to the configured Neon dev database; Prisma and jOOQ have been regenerated. Other environments must apply it together with the updated API; the previous API cannot insert reports into the new schema without a title.

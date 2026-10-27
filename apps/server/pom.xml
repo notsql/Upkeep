@@ -45,6 +45,11 @@
 			<artifactId>spring-boot-starter-jooq</artifactId>
 		</dependency>
 		<dependency>
+			<!-- SMTP for contractor work orders (ID-70); version from the Boot parent. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-restclient</artifactId>
 		</dependency>

@@ -948,3 +948,51 @@ it("does not mount responder queries when access capability lookup fails", async
     )
   ).toBe(false);
 });
+
+it("shows each report's routing state and filters the list by it", async () => {
+  get.mockImplementation((path: string) => {
+    if (path.endsWith("/reports")) {
+      return Promise.resolve({
+        data: {
+          items: [
+            {
+              ...report,
+              routing: {
+                state: "NEEDS_REVIEW",
+                reason: "Needs a check",
+                classification: null,
+                workOrder: null,
+                decidedAt: null,
+              },
+            },
+          ],
+          nextCursor: null,
+        },
+      });
+    }
+    return serve(path);
+  });
+  const { router } = await setup();
+  await screen.findByText("Routing: Needs review");
+
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Routing" }),
+    "Needs review"
+  );
+
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      routingState: "NEEDS_REVIEW",
+    })
+  );
+  await waitFor(() =>
+    expect(get).toHaveBeenCalledWith(
+      "/estates/{estateId}/reports",
+      expect.objectContaining({
+        params: expect.objectContaining({
+          query: expect.objectContaining({ routingState: "NEEDS_REVIEW" }),
+        }),
+      })
+    )
+  );
+});

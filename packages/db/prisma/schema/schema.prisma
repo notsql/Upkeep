@@ -31,6 +31,8 @@ model Estate {
   flatlinePolicies  FlatlinePolicy[]
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
+  serviceProviders  ServiceProvider[]
+  providerRoutes    EquipmentProviderRoute[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -150,6 +152,8 @@ model IssueReport {
   location   Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   images     IssueReportImage[]
   workOrders WorkOrder[]
+  routing    ReportRouting?
+  classifications ReportClassification[]
 
   @@unique([id, estateId])
   @@index([submittedByUserId, createdAt, id])
@@ -248,6 +252,9 @@ model WorkOrder {
   documents         Document[]
   documentLinksFrom DocumentWorkOrderEvent[] @relation("DocumentLinkFrom")
   documentLinksTo   DocumentWorkOrderEvent[] @relation("DocumentLinkTo")
+
+  dispatch WorkOrderDispatch?
+  routing  ReportRouting?
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -617,4 +624,108 @@ model EstateRolePermission {
   catalogue  Permission           @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
 
   @@id([roleId, permission])
+}
+
+// An external contractor of an estate, reached by email (ID-70). ID-37 extends
+// this record with provider management, reassignment and filtering.
+model ServiceProvider {
+  id        String   @id @default(uuid()) @db.Uuid
+  estateId  String   @db.Uuid
+  name      String   @db.VarChar(200)
+  email     String   @db.VarChar(254)
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @db.Timestamptz(6)
+
+  estate     Estate                   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  routes     EquipmentProviderRoute[]
+  dispatches WorkOrderDispatch[]
+
+  @@unique([id, estateId])
+  @@unique([estateId, email])
+}
+
+// Which provider receives an estate's work orders for one equipment type
+// (PUMP, LIFT, GATE, LIGHT; validated by Spring).
+model EquipmentProviderRoute {
+  estateId      String   @db.Uuid
+  equipmentType String   @db.VarChar(20)
+  providerId    String   @db.Uuid
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  estate   Estate          @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  provider ServiceProvider @relation(fields: [providerId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([estateId, equipmentType])
+  @@index([providerId])
+}
+
+// Where a fault report is in automatic routing. Created with the report, so
+// reports from before routing have no row and are never classified. Doubles as
+// the classification queue: workers claim rows with a lease.
+model ReportRouting {
+  reportId        String    @id @db.Uuid
+  estateId        String    @db.Uuid
+  state           String    @db.VarChar(20)
+  reason          String?   @db.VarChar(500)
+  attempts        Int       @default(0)
+  nextAttemptAt   DateTime  @default(now()) @db.Timestamptz(6)
+  leaseUntil      DateTime? @db.Timestamptz(6)
+  workOrderId     String?   @unique @db.Uuid
+  decidedByUserId String?   @db.VarChar(255)
+  decidedAt       DateTime? @db.Timestamptz(6)
+  createdAt       DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @db.Timestamptz(6)
+
+  report    IssueReport @relation(fields: [reportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  workOrder WorkOrder?  @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([reportId, estateId])
+  @@unique([workOrderId, estateId])
+  @@index([state, nextAttemptAt])
+}
+
+// Every valid answer the model gave about a report. Append-only.
+model ReportClassification {
+  id            String   @id @default(uuid()) @db.Uuid
+  reportId      String   @db.Uuid
+  outcome       String   @db.VarChar(20)
+  equipmentType String?  @db.VarChar(20)
+  confidence    Decimal  @db.Decimal(3, 2)
+  reason        String   @db.VarChar(500)
+  model         String   @db.VarChar(100)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+
+  report IssueReport @relation(fields: [reportId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([reportId, createdAt])
+}
+
+// The email that carries a work order to its provider, and the assignment it
+// records. The provider's name and address are copied so later edits never
+// redirect it. Delivered through an outbox with retries.
+model WorkOrderDispatch {
+  id               String    @id @default(uuid()) @db.Uuid
+  workOrderId      String    @unique @db.Uuid
+  estateId         String    @db.Uuid
+  providerId       String    @db.Uuid
+  equipmentType    String    @db.VarChar(20)
+  contractorName   String    @db.VarChar(200)
+  contractorEmail  String    @db.VarChar(254)
+  approvedByUserId String?   @db.VarChar(255)
+  status           String    @db.VarChar(20)
+  attempts         Int       @default(0)
+  nextAttemptAt    DateTime  @default(now()) @db.Timestamptz(6)
+  leaseUntil       DateTime? @db.Timestamptz(6)
+  sentAt           DateTime? @db.Timestamptz(6)
+  lastErrorCode    String?   @db.VarChar(50)
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @db.Timestamptz(6)
+
+  workOrder WorkOrder       @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  provider  ServiceProvider @relation(fields: [providerId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([workOrderId, estateId])
+  @@index([status, nextAttemptAt])
+  @@index([providerId])
 }

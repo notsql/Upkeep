@@ -359,3 +359,12 @@ it("lets a multi-estate resident choose an estate and clears the old location se
   });
   expect(post).not.toHaveBeenCalled();
 });
+
+const AI_NOTICE =
+  /text and photos are analysed by an AI service \(Anthropic\) and may be emailed to the estate's contractor/;
+
+it("tells residents an AI service reads the report and a contractor may receive it", async () => {
+  renderWithProviders(<Page />);
+  await screen.findByRole("heading", { name: REPORT_A_FAULT });
+  await screen.findByText(AI_NOTICE);
+});

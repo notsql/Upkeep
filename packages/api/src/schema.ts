@@ -539,6 +539,41 @@ export interface paths {
     patch: operations["correctAssetRetirement"];
     trace?: never;
   };
+  "/estates/{estateId}/contractors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The estate's external contractor per equipment type */
+    get: operations["listEquipmentContractors"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/contractors/{equipmentType}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Create or replace the contractor for one equipment type */
+    put: operations["saveEquipmentContractor"];
+    post?: never;
+    /** Remove the contractor for one equipment type */
+    delete: operations["removeEquipmentContractor"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/council-invitations": {
     parameters: {
       query?: never;
@@ -991,6 +1026,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/reports/{reportId}/dismiss": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Handle an escalated report without a contractor email */
+    post: operations["dismissReportRouting"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/reports/{reportId}/images/{imageId}": {
     parameters: {
       query?: never;
@@ -1021,6 +1073,23 @@ export interface paths {
     options?: never;
     head?: never;
     patch: operations["relocateEstateReport"];
+    trace?: never;
+  };
+  "/estates/{estateId}/reports/{reportId}/work-order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Create a work order from an escalated report and email the type's contractor */
+    post: operations["sendReportToContractor"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/estates/{estateId}/role-permissions": {
@@ -1151,6 +1220,41 @@ export interface paths {
     get: operations["getWorkOrderCompletionRevisions"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/work-orders/{workOrderId}/dispatch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The contractor email for a work order, if any */
+    get: operations["getWorkOrderDispatch"];
+    put?: never;
+    /** Assign an open equipment-fault work order to the type's contractor and email them */
+    post: operations["dispatchWorkOrder"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Queue a failed contractor email for another attempt */
+    post: operations["retryWorkOrderDispatch"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2774,6 +2878,108 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
+    };
+    EquipmentContractorRequest: {
+      name: string;
+      /** Format: email */
+      email: string;
+    };
+    EquipmentContractorResponse: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      name: string;
+      email: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    DispatchRequest: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+    };
+    WorkOrderDispatchResponse: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      contractorName: string;
+      contractorEmail: string;
+      /** @enum {string} */
+      approval: "AUTOMATIC" | "MANAGER";
+      /** @enum {string} */
+      status: "PENDING" | "SENT" | "FAILED";
+      /** Format: date-time */
+      sentAt: string | null;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    SendToContractorRequest: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      /** @enum {string} */
+      priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    };
+    ClassificationResponse: {
+      /** @enum {string} */
+      outcome: "EQUIPMENT_FAULT" | "INCONCLUSIVE" | "NOT_EQUIPMENT";
+      /** @enum {string|null} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | null;
+      confidence: number;
+      reason: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    ReportRoutingResponse: {
+      /** @enum {string} */
+      state: "CLASSIFYING" | "NEEDS_REVIEW" | "WORK_ORDER" | "DISMISSED";
+      reason: string | null;
+      classification: components["schemas"]["ClassificationResponse"];
+      workOrder: components["schemas"]["RoutedWorkOrder"];
+      /** Format: date-time */
+      decidedAt: string | null;
+    };
+    RoutedWorkOrder: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      /** @enum {string} */
+      status: "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "CLOSED";
+      dispatch: components["schemas"]["WorkOrderDispatchResponse"];
+    };
+    EstateReportDetailResponse: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      estateName: string;
+      location: components["schemas"]["ReportLocation"];
+      status: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      images: components["schemas"]["ReportImage"][];
+      /** @description Null for reports submitted before automatic routing */
+      routing: components["schemas"]["ReportRoutingResponse"];
+    };
+    WorkOrderDispatchStatusResponse: {
+      dispatch: components["schemas"]["WorkOrderDispatchResponse"];
+    };
+    EstateReportPageResponse: {
+      items: components["schemas"]["EstateReportSummaryResponse"][];
+      nextCursor: string | null;
+    };
+    EstateReportSummaryResponse: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      estateName: string;
+      location: components["schemas"]["ReportLocation"];
+      status: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** @description Null for reports submitted before automatic routing */
+      routing: components["schemas"]["ReportRoutingResponse"];
     };
   };
 }
@@ -4581,6 +4787,146 @@ export interface operations {
       };
     };
   };
+  dismissReportRouting: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The report's routing, now dismissed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReportRoutingResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type or priority */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report or work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  dispatchWorkOrder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        workOrderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DispatchRequest"];
+      };
+    };
+    responses: {
+      /** @description The dispatch, queued for email */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["WorkOrderDispatchResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type or priority */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report or work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   downloadDocument: {
     parameters: {
       query?: never;
@@ -5049,7 +5395,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportDetailResponse"];
+          "*/*": components["schemas"]["EstateReportDetailResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -5832,6 +6178,74 @@ export interface operations {
         };
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getWorkOrderDispatch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        workOrderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The dispatch, or null when no contractor has been emailed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["WorkOrderDispatchStatusResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type or priority */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report or work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report */
       409: {
         headers: {
           [name: string]: unknown;
@@ -7038,6 +7452,64 @@ export interface operations {
       };
     };
   };
+  listEquipmentContractors: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Contractors in equipment-type order; types without one are absent */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EquipmentContractorResponse"][];
+        };
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listEstateDevices: {
     parameters: {
       query?: never;
@@ -7137,6 +7609,12 @@ export interface operations {
         minLevelPosition?: number;
         /** @description Inclusive maximum LEVEL.sortOrder, including negative positions */
         maxLevelPosition?: number;
+        /** @description Only reports in this routing state; reports from before routing never match */
+        routingState?:
+          | "CLASSIFYING"
+          | "NEEDS_REVIEW"
+          | "WORK_ORDER"
+          | "DISMISSED";
         cursor?: string;
         limit?: number;
       };
@@ -7154,7 +7632,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportPageResponse"];
+          "*/*": components["schemas"]["EstateReportPageResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -8471,7 +8949,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportDetailResponse"];
+          "*/*": components["schemas"]["EstateReportDetailResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -8512,6 +8990,63 @@ export interface operations {
       };
       /** @description Stale placement, inactive estate or inactive destination/ancestor */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  removeEquipmentContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Removed, or there was none */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -8881,6 +9416,74 @@ export interface operations {
       };
     };
   };
+  retryWorkOrderDispatch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        workOrderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The dispatch, pending again */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["WorkOrderDispatchResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type or priority */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report or work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   review: {
     parameters: {
       query?: {
@@ -8961,6 +9564,69 @@ export interface operations {
       };
     };
   };
+  saveEquipmentContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["EquipmentContractorRequest"];
+      };
+    };
+    responses: {
+      /** @description The saved contractor */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EquipmentContractorResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   saveWorkOrderCompletion: {
     parameters: {
       query?: never;
@@ -9032,6 +9698,78 @@ export interface operations {
         };
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  sendReportToContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SendToContractorRequest"];
+      };
+    };
+    responses: {
+      /** @description The report's routing, with its assigned work order */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReportRoutingResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type or priority */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Work-order creation authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report or work order */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report */
       409: {
         headers: {
           [name: string]: unknown;

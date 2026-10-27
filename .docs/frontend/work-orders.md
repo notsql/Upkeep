@@ -373,3 +373,11 @@ unlinked failed record retains a Create work order action that reopens this same
 prefilled form. Linked results display their existing work order. Successful conversion invalidates user/estate/asset-scoped
 inspection detail/history and source lookup alongside work-order lists.
 See [inspection screens](inspections.md) for routes, query keys and failure states.
+
+## Contractor email (ID-70)
+
+`$workOrderId/index.tsx` passes a `sections` slot to `WorkOrderDetailPage`,
+which renders it after the order Card. For `EQUIPMENT_FAULT` orders from a
+resident report, the slot shows the "Contractor email" Card. See
+[report-routing.md](report-routing.md). Status `ASSIGNED` can now be reached
+by emailing a contractor.

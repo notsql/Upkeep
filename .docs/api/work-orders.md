@@ -295,3 +295,25 @@ See [inspections](inspections.md) for the immutable result and lookup contracts.
 Creation, the limited asset picker, progress, completion and corrections require
 Owner/Manager authority. Crew have read-only work-order access, including orders
 linked to their recorded inspections.
+
+## Routed reports and contractor dispatch (ID-70)
+
+See [report-routing.md](report-routing.md). ID-70 adds these hooks to this
+package:
+
+- `WorkOrderService.createFromRoutedReport(estate, report, actor, priority)`
+  creates an Open `EQUIPMENT_FAULT` order from a report, under the same estate
+  lock and active estate and location rules. The description is the resident's
+  description verbatim. It is not transactional itself, and throws before
+  writing, so routing can record a review instead.
+- Automatic orders have `createdByUserId = system:report-routing`, and
+  `createdByName` resolves to "Upkeep (automatic routing)" without a WorkOS
+  lookup.
+- `WorkOrderProgressService.assign` moves `OPEN` → `ASSIGNED` with a status
+  event and a version increment, when a contractor dispatch is created. Other
+  orders still reach `ASSIGNED` only through ID-37.
+- `POST /estates/{estateId}/work-orders` with a report source also moves that
+  report's routing from `NEEDS_REVIEW` to `WORK_ORDER`.
+- `WorkOrderException` is public, so the routing controllers return its status.
+- New endpoints: GET and POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch`,
+  and POST `…/dispatch/retry`.

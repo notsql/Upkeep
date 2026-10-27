@@ -32,7 +32,8 @@ same change as the code.
   historical reads, independent custom creation/editing and owner-only deactivation.
 - [Access projection and retired global grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
 - [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
-- [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, block/level-position and subtree filtering, private images and location correction.
+- [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, block/level-position, subtree and routing-state filtering, private images and location correction.
+- [Report routing and contractor email](api/report-routing.md): ID-70 classification, automatic work orders, service-provider routes, Manager send/dismiss and work-order dispatch email.
 
 Inspections: [API](api/inspections.md) · [Frontend](frontend/inspections.md).
 
@@ -60,3 +61,4 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer and /invitations |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
 | [frontend/estate-reports.md](frontend/estate-reports.md) | Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |
+| [frontend/report-routing.md](frontend/report-routing.md) | `/estates/$estateId/contractors`, routing badge/filter and card on reports, contractor email on work-order detail, resident AI notice |

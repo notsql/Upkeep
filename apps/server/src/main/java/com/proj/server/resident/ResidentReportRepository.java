@@ -5,6 +5,7 @@ import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Issuereport.ISSUEREPORT;
 import static com.proj.server.db.tables.Issuereportimage.ISSUEREPORTIMAGE;
 import static com.proj.server.db.tables.Location.LOCATION;
+import static com.proj.server.db.tables.Reportrouting.REPORTROUTING;
 import static org.jooq.impl.DSL.concatWs;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.field;
@@ -201,10 +202,15 @@ public class ResidentReportRepository {
             UUID blockId,
             Integer minLevelPosition,
             Integer maxLevelPosition,
+            String routingState,
             OffsetDateTime beforeTime,
             UUID beforeId,
             int limit) {
         var condition = ISSUEREPORT.ESTATEID.eq(estateId);
+        if (routingState != null) {
+            condition = condition.and(ISSUEREPORT.ID.in(
+                    db.select(REPORTROUTING.REPORTID).from(REPORTROUTING).where(REPORTROUTING.STATE.eq(routingState))));
+        }
         if (locationId != null) {
             var child = LOCATION.as("child");
             var subtreeId = field(name("subtree", "id"), UUID.class);

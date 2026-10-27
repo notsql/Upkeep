@@ -9,6 +9,7 @@ import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
 import { useWorkOrderAccess } from "@/lib/work-orders";
 import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
+import { RoutingCard } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/routing-card";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/reports/$reportId/"
@@ -99,6 +100,13 @@ function EstateReportDetailPage() {
             ))}
           </ReportDetails>
         </ReportCard>
+      ) : null}
+      {report.data?.routing && !report.isError ? (
+        <RoutingCard
+          estateId={estateId}
+          reportId={reportId}
+          routing={report.data.routing}
+        />
       ) : null}
     </main>
   );

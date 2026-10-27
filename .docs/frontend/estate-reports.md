@@ -133,3 +133,10 @@ filters; Change location additionally requires canRelocateFaultReports from
 RELOCATE_FAULT_REPORTS and an active estate. The existing query keys, correction
 DTO and invalidations remain. Live definition edits/reassignment update access
 and the API independently rejects stale UI authority with the same token.
+
+## Routing (ID-70)
+
+The list shows a "Routing: <state>" Badge per report and a "Routing" filter
+(`routingState`). The detail page adds the routing card, with send, dismiss and
+retry for work-order creators, and polls every 5 s while classifying. See
+[report-routing.md](report-routing.md).

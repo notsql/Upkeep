@@ -98,6 +98,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/work-orders/{workOrderId}",
                                 "/estates/{estateId}/work-orders/{workOrderId}/status-history",
                                 "/estates/{estateId}/work-orders/{workOrderId}/completion-revisions",
+                                "/estates/{estateId}/work-orders/{workOrderId}/dispatch",
+                                "/estates/{estateId}/contractors",
                                 "/estates/{estateId}/assets/{assetId}/work-order-completions",
                                 "/estates/{estateId}/work-order-assets",
                                 "/estates/{estateId}/inspection-assets",
@@ -152,7 +154,11 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings/anomaly-check",
                                 "/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}",
-                                "/estates/{estateId}/council-invitations")
+                                "/estates/{estateId}/council-invitations",
+                                "/estates/{estateId}/reports/{reportId}/work-order",
+                                "/estates/{estateId}/reports/{reportId}/dismiss",
+                                "/estates/{estateId}/work-orders/{workOrderId}/dispatch",
+                                "/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PATCH,
@@ -172,14 +178,16 @@ public class SecurityConfig {
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
                                 "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}/role",
-                                "/estates/{estateId}/flatline-policies/{metric}")
+                                "/estates/{estateId}/flatline-policies/{metric}",
+                                "/estates/{estateId}/contractors/{equipmentType}")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,
                                 "/estates/{estateId}/documents/{documentId}",
                                 "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}",
-                                "/estates/{estateId}/council-invitations/{invitationId}")
+                                "/estates/{estateId}/council-invitations/{invitationId}",
+                                "/estates/{estateId}/contractors/{equipmentType}")
                         .authenticated()
                         .anyRequest()
                         .denyAll())

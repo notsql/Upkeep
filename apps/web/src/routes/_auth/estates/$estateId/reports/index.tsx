@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback } from "react";
@@ -10,7 +11,13 @@ import {
   useEstateReportList,
   useEstateReportLocations,
 } from "@/lib/estate-reports";
+import {
+  ROUTING_STATES,
+  type RoutingState,
+  routingStateLabel,
+} from "@/lib/report-routing";
 import { ReportFilters } from "./-components/report-filters";
+import { RoutingStateFilter } from "./-components/routing-state-filter";
 
 const INTEGER_POSITION = /^-?\d+$/;
 
@@ -33,6 +40,9 @@ export const Route = createFileRoute("/_auth/estates/$estateId/reports/")({
         : {}),
       ...(minLevelPosition === undefined ? {} : { minLevelPosition }),
       ...(maxLevelPosition === undefined ? {} : { maxLevelPosition }),
+      ...(parseRoutingState(search.routingState)
+        ? { routingState: parseRoutingState(search.routingState) }
+        : {}),
       ...(typeof search.cursor === "string" && search.cursor
         ? { cursor: search.cursor }
         : {}),
@@ -44,20 +54,38 @@ export const Route = createFileRoute("/_auth/estates/$estateId/reports/")({
 
 function EstateReportsPage() {
   const { estateId } = Route.useParams();
-  const { blockId, minLevelPosition, maxLevelPosition, cursor } =
+  const { blockId, minLevelPosition, maxLevelPosition, routingState, cursor } =
     Route.useSearch();
   const filters = { blockId, minLevelPosition, maxLevelPosition };
   const filtered =
     !!blockId ||
     minLevelPosition !== undefined ||
-    maxLevelPosition !== undefined;
+    maxLevelPosition !== undefined ||
+    !!routingState;
   const navigate = Route.useNavigate();
   const access = useEstateReportAccess(estateId);
-  const reports = useEstateReportList(estateId, filters, cursor);
+  const reports = useEstateReportList(
+    estateId,
+    { ...filters, routingState },
+    cursor
+  );
   const locations = useEstateReportLocations(estateId);
   const filter = useCallback(
-    (values: EstateReportFilters) => navigate({ search: values }),
-    [navigate]
+    (values: EstateReportFilters) =>
+      navigate({ search: { ...values, routingState } }),
+    [navigate, routingState]
+  );
+  const filterRouting = useCallback(
+    (value: RoutingState | undefined) =>
+      navigate({
+        search: {
+          blockId,
+          minLevelPosition,
+          maxLevelPosition,
+          routingState: value,
+        },
+      }),
+    [blockId, minLevelPosition, maxLevelPosition, navigate]
   );
   const retry = useCallback(() => reports.refetch(), [reports.refetch]);
   const retryLocations = useCallback(
@@ -70,6 +98,7 @@ function EstateReportsPage() {
         blockId,
         minLevelPosition,
         maxLevelPosition,
+        routingState,
         cursor: reports.data?.nextCursor ?? undefined,
       },
     });
@@ -77,12 +106,16 @@ function EstateReportsPage() {
     blockId,
     minLevelPosition,
     maxLevelPosition,
+    routingState,
     navigate,
     reports.data?.nextCursor,
   ]);
   const first = useCallback(
-    () => navigate({ search: { blockId, minLevelPosition, maxLevelPosition } }),
-    [blockId, minLevelPosition, maxLevelPosition, navigate]
+    () =>
+      navigate({
+        search: { blockId, minLevelPosition, maxLevelPosition, routingState },
+      }),
+    [blockId, minLevelPosition, maxLevelPosition, routingState, navigate]
   );
   if (access.pending) {
     return <p role="status">Loading access…</p>;
@@ -112,6 +145,7 @@ function EstateReportsPage() {
           onChange={filter}
         />
       ) : null}
+      <RoutingStateFilter onChange={filterRouting} value={routingState} />
       {locations.isPending ? <p role="status">Loading locations…</p> : null}
       {locations.isError ? (
         <Alert role="alert">
@@ -151,7 +185,15 @@ function EstateReportsPage() {
                   {report.title}
                 </Link>
               }
-            />
+            >
+              {report.routing ? (
+                <div>
+                  <Badge variant="outline">
+                    Routing: {routingStateLabel(report.routing.state)}
+                  </Badge>
+                </div>
+              ) : null}
+            </ReportCard>
           ))}
       <div className="flex gap-2">
         {cursor ? (
@@ -167,6 +209,10 @@ function EstateReportsPage() {
       </div>
     </main>
   );
+}
+
+function parseRoutingState(value: unknown): RoutingState | undefined {
+  return ROUTING_STATES.find((state) => state.value === value)?.value;
 }
 
 function position(value: unknown): number | undefined {

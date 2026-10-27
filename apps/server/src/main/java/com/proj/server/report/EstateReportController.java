@@ -1,9 +1,8 @@
 package com.proj.server.report;
 
 import com.proj.server.estate.EstateError;
-import com.proj.server.resident.IssueReportDetailResponse;
-import com.proj.server.resident.IssueReportPageResponse;
 import com.proj.server.resident.ResidentReportException;
+import com.proj.server.routing.RoutingState;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -57,7 +56,7 @@ public class EstateReportController {
             operationId = "listEstateReports",
             summary = "List fault reports by location subtree, block and inclusive level-position range")
     @ApiResponse(responseCode = "200", description = "Reports ordered by creation time and ID, newest first")
-    public ResponseEntity<IssueReportPageResponse> list(
+    public ResponseEntity<EstateReportPageResponse> list(
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @RequestParam(required = false) UUID locationId,
@@ -70,16 +69,27 @@ public class EstateReportController {
             @Parameter(description = "Inclusive maximum LEVEL.sortOrder, including negative positions")
                     @RequestParam(required = false)
                     Integer maxLevelPosition,
+            @Parameter(description = "Only reports in this routing state; reports from before routing never match")
+                    @RequestParam(required = false)
+                    RoutingState routingState,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer limit) {
         return privateResponse(reports.list(
-                estateId, subject(principal), locationId, blockId, minLevelPosition, maxLevelPosition, cursor, limit));
+                estateId,
+                subject(principal),
+                locationId,
+                blockId,
+                minLevelPosition,
+                maxLevelPosition,
+                routingState,
+                cursor,
+                limit));
     }
 
     @GetMapping("/{reportId}")
     @Operation(operationId = "getEstateReport")
     @ApiResponse(responseCode = "200", description = "Report with current location path and private image metadata")
-    public ResponseEntity<IssueReportDetailResponse> detail(
+    public ResponseEntity<EstateReportDetailResponse> detail(
             @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID reportId) {
         return privateResponse(reports.detail(estateId, subject(principal), reportId));
     }
@@ -91,7 +101,7 @@ public class EstateReportController {
             responseCode = "409",
             description = "Stale placement, inactive estate or inactive destination/ancestor",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
-    public ResponseEntity<IssueReportDetailResponse> relocate(
+    public ResponseEntity<EstateReportDetailResponse> relocate(
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @PathVariable UUID reportId,
