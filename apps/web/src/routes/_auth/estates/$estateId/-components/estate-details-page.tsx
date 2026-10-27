@@ -71,13 +71,22 @@ function EstateActions({
         </Link>
       ) : null}
       {estate.owned || estate.canManageInvitationPermissions ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/devices"
-        >
-          Devices
-        </Link>
+        <>
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            params={{ estateId: estate.id }}
+            to="/estates/$estateId/devices"
+          >
+            Devices
+          </Link>
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            params={{ estateId: estate.id }}
+            to="/estates/$estateId/asset-categories"
+          >
+            Asset categories
+          </Link>
+        </>
       ) : null}
       {canViewSensors ? (
         <Link

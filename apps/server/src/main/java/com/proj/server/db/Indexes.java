@@ -6,6 +6,7 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetcategoryflagchange;
 import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetinspectionphoto;
 import com.proj.server.db.tables.Assetinspectionresult;
@@ -52,6 +53,7 @@ public class Indexes {
     public static final Index ASSET_MODELID_IDX = Internal.createIndex(DSL.name("Asset_modelId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.MODELID }, false);
     public static final Index ASSETASSESSMENT_ASSETID_ASSESSEDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetAssessment_assetId_assessedOn_createdAt_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ASSETID, Assetassessment.ASSETASSESSMENT.ASSESSEDON, Assetassessment.ASSETASSESSMENT.CREATEDAT }, false);
     public static final Index ASSETASSESSMENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetAssessment_estateId_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ESTATEID }, false);
+    public static final Index ASSETCATEGORYFLAGCHANGE_ESTATEID_CATEGORY_CHANGEDAT_IDX = Internal.createIndex(DSL.name("AssetCategoryFlagChange_estateId_category_changedAt_idx"), Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE, new OrderField[] { Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE.ESTATEID, Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE.CATEGORY, Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE.CHANGEDAT }, false);
     public static final Index ASSETEVENT_ASSETID_OCCURREDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetEvent_assetId_occurredOn_createdAt_idx"), Assetevent.ASSETEVENT, new OrderField[] { Assetevent.ASSETEVENT.ASSETID, Assetevent.ASSETEVENT.OCCURREDON, Assetevent.ASSETEVENT.CREATEDAT }, false);
     public static final Index ASSETEVENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetEvent_estateId_idx"), Assetevent.ASSETEVENT, new OrderField[] { Assetevent.ASSETEVENT.ESTATEID }, false);
     public static final Index ASSETINSPECTIONPHOTO_ESTATEID_INSPECTIONRESULTID_IDX = Internal.createIndex(DSL.name("AssetInspectionPhoto_estateId_inspectionResultId_idx"), Assetinspectionphoto.ASSETINSPECTIONPHOTO, new OrderField[] { Assetinspectionphoto.ASSETINSPECTIONPHOTO.ESTATEID, Assetinspectionphoto.ASSETINSPECTIONPHOTO.INSPECTIONRESULTID }, false);
