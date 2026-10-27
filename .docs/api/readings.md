@@ -1,4 +1,64 @@
-# Asset readings API
+# Readings API
+
+## Estate browser (ID-60)
+
+The following endpoints are read-only. Current estate Owners, Managers and Crew
+may read, including retired assets and inactive-estate history. Resident,
+Member, Council and custom-role memberships alone do not grant access. Current
+membership is checked on each request. `canViewReadings: boolean` is a required
+`EstateAccessResponse` field under the same policy. Minimal asset labels do not
+grant asset-register, cost, editing or credential access. No migration is needed.
+
+Both GET paths are explicit SecurityConfig entries. Missing authentication is
+401; a same-estate unauthorized role is 403; a missing/foreign estate or selected
+asset is 404; invalid filters/pagination are 400. All errors use
+`EstateError { message: string }`. Valid lists, including empty lists, return 200.
+No new reading write endpoint is allowed.
+
+### GET `/estates/{estateId}/readings`
+
+Operation `listEstateReadings`. Required path `estateId: UUID`; query:
+
+| Field | Type / default | Meaning |
+| --- | --- | --- |
+| assetId | UUID, optional | One asset, otherwise all assets in this estate |
+| metric | DeviceMetric, optional | Catalogue metric |
+| from | date-time, optional | Inclusive measured time |
+| to | date-time, optional | Exclusive measured time; after `from` if both are supplied |
+| flag | ReadingFlagType[], optional, repeated | Match any selected GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE flag |
+| page | int32, default 0 | Non-negative offset page |
+| size | int32, default 50 | 1–200 |
+
+Filters combine before counting/pagination. Order: `measuredAt DESC, id DESC`.
+`EstateReadingPage { items: EstateReadingResponse[], page: int32, size: int32,
+totalItems: int64 }`. Each `EstateReadingResponse` contains all the existing
+`AssetReadingResponse` fields below plus required `assetId: UUID`,
+`assetReference: string`, `assetName: string`.
+
+Reading ownership follows its recorded asset, including after device movement.
+Flags are calculated per asset/metric; different assets cannot create duplicate
+or gap flags together. A time filter never hides the earlier timestamp needed
+for a gap. The predecessor query uses an indexed strictly-earlier lookup instead
+of an unbounded EXCLUDE GROUP window. This optimization also serves the legacy
+endpoint and preserves its flag/DTO/access contracts.
+
+Example: `GET /estates/{estateId}/readings?assetId={assetId}&metric=PRESSURE&from=2026-10-01T00:00:00Z&to=2026-11-01T00:00:00Z&size=50`.
+An excessive page returns empty items with the matching total; offset paging is
+live, without a snapshot guarantee across concurrent submissions.
+
+### GET `/estates/{estateId}/readings/assets`
+
+Operation `listReadingAssets`; same role policy. Required path `estateId: UUID`.
+Query: `search?: string` (trimmed, literal case-insensitive name/reference
+substring), `page?: int32 = 0`, `size?: int32 = 50` (1–200).
+
+`ReadingAssetOptionPage { items: ReadingAssetOption[], page: int32, size: int32,
+totalItems: int64 }`. Each option has required `id: UUID`, `reference: string`,
+`name: string`, `retired: boolean`. Includes retired assets and those without
+readings. Results order by name, reference and ID ascending; search/count remain
+estate-scoped. No financial or credential fields are returned.
+
+## Legacy owner-only per-asset browser (ID-67)
 
 Contract: `packages/api/openapi.json` (operationId `listAssetReadings`). Read-only:
 lists the readings stored in ID-43's `DeviceReading` table (see

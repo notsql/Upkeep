@@ -240,3 +240,12 @@ form/detail routes and history table are documented in
 [inspections](inspections.md). Both Owner and restricted Manager/Crew asset
 details mount the shared Inspection records table, with paged canonical reads,
 saved-record links and work-order follow-up under independent permissions.
+
+
+## Estate reading browser entry (ID-60)
+
+The owner asset-detail Devices section's Readings action now opens
+`/estates/$estateId/readings?assetId=$assetId`, using the estate browser and
+preselecting the current asset. Existing per-asset reading bookmarks still work.
+The dedicated browser supports Owner/Manager/Crew reads independently of asset
+register access; see [readings.md](readings.md).

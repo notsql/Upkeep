@@ -43,9 +43,13 @@ function ReadingRow({ reading }: { reading: AssetReading }) {
       <TableCell>{`${reading.value} ${reading.unit}`}</TableCell>
       <TableCell className="break-all">{reading.deviceIdentifier}</TableCell>
       <TableCell>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex min-w-32 flex-wrap items-start gap-1">
           {reading.flags.map((flag) => (
-            <Badge key={flag.type} variant="outline">
+            <Badge
+              className="h-auto max-w-full whitespace-normal py-0.5 text-left leading-snug [overflow-wrap:anywhere]"
+              key={flag.type}
+              variant="outline"
+            >
               {flagLabel(flag, reading.unit)}
             </Badge>
           ))}

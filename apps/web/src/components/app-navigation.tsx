@@ -8,6 +8,7 @@ import {
 } from "@proj/ui/components/dropdown-menu";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  Activity,
   Building2,
   ClipboardList,
   ClipboardPenLine,
@@ -50,6 +51,7 @@ type Destination =
   | "/estates/$estateId/work-orders"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles"
+  | "/estates/$estateId/readings"
   | "/estates/$estateId/documents";
 interface NavigationItem {
   active: boolean;
@@ -118,6 +120,7 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
     (item) => item.estateId === candidate
   );
   const allowed =
+    permission?.canViewReadings ||
     permission?.canViewDocuments ||
     permission?.canViewManagement ||
     permission?.canViewFaultReports ||
@@ -313,75 +316,85 @@ function estateDestinations(
   pathname: string
 ): NavigationItem[] {
   const local: NavigationItem[] = [];
-  if (estateId && permission) {
-    const base = `/estates/${estateId}`;
-    if (permission.canViewDocuments) {
-      local.push({
-        label: "Documents",
-        to: "/estates/$estateId/documents",
-        estateId,
-        icon: Files,
-        active: pathname.startsWith(`${base}/documents`),
-      });
-    }
-    if (permission.canViewWorkOrders) {
-      local.push({
-        label: "Work orders",
-        to: "/estates/$estateId/work-orders",
-        estateId,
-        icon: Wrench,
-        active: pathname.startsWith(`${base}/work-orders`),
-      });
-    }
-    if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
-      local.push({
-        label: "Overview",
-        to: "/estates/$estateId",
-        estateId,
-        icon: LayoutDashboard,
-        active: pathname === base || pathname === `${base}/`,
-      });
-    }
-    if (permission.canViewEstateRoles) {
-      local.push({
-        label: "Roles",
-        to: "/estates/$estateId/roles",
-        estateId,
-        icon: ShieldCheck,
-        active: pathname.startsWith(`${base}/roles`),
-      });
-    }
-    if (permission?.canViewFaultReports) {
-      local.push({
-        label: "Fault reports",
-        to: "/estates/$estateId/reports",
-        estateId,
-        icon: ClipboardList,
-        active: pathname.startsWith(`${base}/reports`),
-      });
-    }
-    if (permission?.canViewAssets || permission?.canViewInspectionResults) {
-      local.push({
-        label: "Assets",
-        to: "/estates/$estateId/assets",
-        estateId,
-        icon: Layers,
-        active: pathname.startsWith(`${base}/assets`),
-      });
-    }
-    if (
-      permission?.canViewEstateInvitations ||
-      permission?.canInviteMembers ||
-      permission?.canManageInvitationPermissions
-    ) {
-      local.push({
-        label: "Estate members",
-        to: "/estates/$estateId/council",
-        estateId,
-        icon: Users,
-        active: pathname.startsWith(`${base}/council`),
-      });
-    }
+  if (!(estateId && permission)) {
+    return local;
+  }
+  const base = `/estates/${estateId}`;
+  if (permission.canViewReadings) {
+    local.push({
+      label: "Readings",
+      to: "/estates/$estateId/readings",
+      estateId,
+      icon: Activity,
+      active: pathname.startsWith(`${base}/readings`),
+    });
+  }
+  if (permission.canViewDocuments) {
+    local.push({
+      label: "Documents",
+      to: "/estates/$estateId/documents",
+      estateId,
+      icon: Files,
+      active: pathname.startsWith(`${base}/documents`),
+    });
+  }
+  if (permission.canViewWorkOrders) {
+    local.push({
+      label: "Work orders",
+      to: "/estates/$estateId/work-orders",
+      estateId,
+      icon: Wrench,
+      active: pathname.startsWith(`${base}/work-orders`),
+    });
+  }
+  if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
+    local.push({
+      label: "Overview",
+      to: "/estates/$estateId",
+      estateId,
+      icon: LayoutDashboard,
+      active: pathname === base || pathname === `${base}/`,
+    });
+  }
+  if (permission.canViewEstateRoles) {
+    local.push({
+      label: "Roles",
+      to: "/estates/$estateId/roles",
+      estateId,
+      icon: ShieldCheck,
+      active: pathname.startsWith(`${base}/roles`),
+    });
+  }
+  if (permission?.canViewFaultReports) {
+    local.push({
+      label: "Fault reports",
+      to: "/estates/$estateId/reports",
+      estateId,
+      icon: ClipboardList,
+      active: pathname.startsWith(`${base}/reports`),
+    });
+  }
+  if (permission?.canViewAssets || permission?.canViewInspectionResults) {
+    local.push({
+      label: "Assets",
+      to: "/estates/$estateId/assets",
+      estateId,
+      icon: Layers,
+      active: pathname.startsWith(`${base}/assets`),
+    });
+  }
+  if (
+    permission?.canViewEstateInvitations ||
+    permission?.canInviteMembers ||
+    permission?.canManageInvitationPermissions
+  ) {
+    local.push({
+      label: "Estate members",
+      to: "/estates/$estateId/council",
+      estateId,
+      icon: Users,
+      active: pathname.startsWith(`${base}/council`),
+    });
   }
   return local;
 }
@@ -531,15 +544,18 @@ function NavigationEstateSwitcher({
   const documents = useRouterState({
     select: (state) => state.location.pathname.split("/")[3] === "documents",
   });
+  const readings = useRouterState({
+    select: (state) => state.location.pathname.split("/")[3] === "readings",
+  });
   const creatingReport = useRouterState({
     select: (state) => state.location.pathname.startsWith("/reports/new"),
   });
-  if (documents) {
+  if (documents || readings) {
     return (
       <EstateFeatureSwitcher
         estateId={estateId}
         estates={access.data?.estates ?? []}
-        feature="documents"
+        feature={readings ? "readings" : "documents"}
       />
     );
   }

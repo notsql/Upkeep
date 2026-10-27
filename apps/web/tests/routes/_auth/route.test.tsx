@@ -77,6 +77,7 @@ function routerFor(path: string) {
     "/estates/$estateId/assets/$assetId",
     "/estates/$estateId/assets/$assetId/edit",
     "/estates/$estateId/assets/$assetId/readings",
+    "/estates/$estateId/readings",
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
     "/estates/$estateId/edit",
@@ -128,6 +129,52 @@ beforeEach(() => {
   });
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
 });
+
+it.each([crewEstateAccess, { ...ownerEstateAccess, canViewAssets: false }])(
+  "allows an estate readings reader without owner-only asset access: $role",
+  async (estate) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [{ ...estate, canViewReadings: true }],
+      },
+      response: new Response(),
+    });
+    const path = `/estates/${estate.estateId}/readings`;
+    const router = routerFor(path);
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(false);
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+  }
+);
+
+it.each([
+  residentAccess,
+  unassignedAccess,
+  {
+    ...unassignedAccess,
+    canEnterWorkspace: true,
+    estates: [{ ...councilEstateAccess, canViewReadings: false }],
+  },
+])(
+  "hides unauthorized readings URLs before loaders without redirecting to reporting: %j",
+  async (access) => {
+    get.mockResolvedValue({ data: access, response: new Response() });
+    const estateId = access.estates[0]?.estateId ?? "foreign";
+    const path = `/estates/${estateId}/readings`;
+    const router = routerFor(path);
+    await router.load();
+    expect(router.state.location.pathname).toBe(path);
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
 
 it.each(
   [residentAccess, mixedAccess, unassignedAccess].flatMap((access) =>

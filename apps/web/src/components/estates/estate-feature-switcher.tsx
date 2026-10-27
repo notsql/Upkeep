@@ -13,6 +13,7 @@ import { useAppAccess } from "@/lib/access";
 export type EstateFeature = "work-orders" | "reports" | "documents";
 type EstateContextFeature =
   | EstateFeature
+  | "readings"
   | "management"
   | "resident"
   | "report-creation";
@@ -42,6 +43,9 @@ function estateDestination(
   }
   if (feature === "documents" && estate.canViewDocuments) {
     return "/estates/$estateId/documents";
+  }
+  if (feature === "readings" && estate.canViewReadings) {
+    return "/estates/$estateId/readings";
   }
   if (feature === "reports" && estate.canViewFaultReports) {
     return "/estates/$estateId/reports";

@@ -25,7 +25,7 @@ same change as the code.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
 - [Device status](api/device-status.md): derived Online/Offline/Awaiting first reading status and the Manager's estate-wide device list.
-- [Asset readings](api/readings.md): an owner's paginated, filterable list of an asset's readings with GAP, DUPLICATE_TIMESTAMP and OUT_OF_RANGE flags.
+- [Readings](api/readings.md): Owner/Manager/Crew estate-wide filtering, minimal asset options, pagination and flags; legacy owner-only asset readings retained.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
 - [Locations](api/locations.md): member/responder-readable hierarchy, owner/responder
@@ -54,7 +54,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
-| [frontend/readings.md](frontend/readings.md) | `/estates/$estateId/assets/$assetId/readings`: reading list, metric/time/suspect filters, flag badges, pagination |
+| [frontend/readings.md](frontend/readings.md) | Estate-wide and legacy per-asset reading browsers, filters, access, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer and /invitations |

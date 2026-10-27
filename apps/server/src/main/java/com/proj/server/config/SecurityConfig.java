@@ -115,6 +115,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings",
+                                "/estates/{estateId}/readings",
+                                "/estates/{estateId}/readings/assets",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
                                 "/estates/{estateId}/devices",
                                 "/estates/{estateId}/failure-risk",

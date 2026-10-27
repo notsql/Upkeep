@@ -5,9 +5,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 
-@RestControllerAdvice(assignableTypes = AssetReadingController.class)
+@RestControllerAdvice(assignableTypes = {AssetReadingController.class, EstateReadingController.class})
 public class AssetReadingExceptionHandler {
+    @ExceptionHandler(ResponseStatusException.class)
+    ResponseEntity<EstateError> access(ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));
+    }
+
     @ExceptionHandler(ReadingException.class)
     ResponseEntity<EstateError> reading(ReadingException error) {
         return ResponseEntity.status(error.status()).body(new EstateError(error.getMessage()));

@@ -116,6 +116,7 @@ async function setup(
     "/estates/$estateId/reports/$reportId",
     "/estates/$estateId/work-orders",
     "/estates/$estateId/documents",
+    "/estates/$estateId/readings",
     "/reports/new",
     "/reports",
   ].map((path) =>
@@ -200,6 +201,48 @@ it("shows the assigned custom role name in the estate dropdown", async () => {
     "Auditor"
   );
 });
+
+it.each(["entry", "switch"])(
+  "supports Crew readings navigation: %s",
+  async (action) => {
+    accessOverride = {
+      ...workspaceAccess,
+      estates: [
+        {
+          ...crewEstateAccess,
+          estateId: "maple",
+          estateName: "Maple Estate",
+          canViewReadings: true,
+        },
+        {
+          ...crewEstateAccess,
+          estateId: "oak",
+          estateName: "Oak Park",
+          canViewReadings: true,
+        },
+      ],
+    };
+    const { router } = await setup("/estates/maple/readings");
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    if (action === "entry") {
+      expect(
+        (await desktop.findByRole("link", { name: "Readings" })).getAttribute(
+          "href"
+        )
+      ).toBe("/estates/maple/readings");
+      return;
+    }
+    fireEvent.click(
+      await desktop.findByRole("button", { name: SWITCH_ESTATE })
+    );
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Oak Park" }));
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe("/estates/oak/readings")
+    );
+  }
+);
 
 it.each(["roles", "council"])(
   "switches to a custom estate's permitted %s screen without report or overview access",

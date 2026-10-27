@@ -14,6 +14,12 @@ below relies on. Paths are relative to `apps/web/src/`.
 
 ## Routes
 
+ID-60 adds `/estates/$estateId/readings`, checked before general management
+fallbacks using `canViewReadings`. Owner/Manager/Crew may browse; unavailable
+estate/role URLs render Page not found. Estate navigation uses the same
+capability and switching preserves Readings when permitted. See
+[readings.md](readings.md).
+
 | File | URL | Guard | Screen |
 | --- | --- | --- | --- |
 | `routes/index.tsx` | `/` | none | Home: `routes/-components/home-page.tsx`, public introduction/authentication and secondary System status; signed-in `workspace-home.tsx` shows portfolio summaries and attention actions (see [dashboard.md](dashboard.md)). |

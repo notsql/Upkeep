@@ -958,6 +958,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/readings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateReadings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listReadingAssets"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/reports": {
     parameters: {
       query?: never;
@@ -2785,6 +2817,61 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
+      canViewReadings: boolean;
+    };
+    EstateReadingPage: {
+      items: components["schemas"]["EstateReadingResponse"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
+    };
+    EstateReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      /**
+       * Format: date-time
+       * @description In UTC
+       */
+      measuredAt: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      value: number;
+      /** Format: uuid */
+      deviceId: string;
+      deviceIdentifier: string;
+      flags: components["schemas"]["ReadingFlagResponse"][];
+    };
+    ReadingAssetOption: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      name: string;
+      retired: boolean;
+    };
+    ReadingAssetOptionPage: {
+      items: components["schemas"]["ReadingAssetOption"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
     };
   };
 }
@@ -7138,6 +7225,82 @@ export interface operations {
       };
     };
   };
+  listEstateReadings: {
+    parameters: {
+      query?: {
+        assetId?: string;
+        metric?:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+        /** @description Inclusive */
+        from?: string;
+        /** @description Exclusive */
+        to?: string;
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+        page?: number;
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Matching sensor readings, newest first, with per-asset flags */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateReadingPage"];
+        };
+      };
+      /** @description Malformed filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listEstateReports: {
     parameters: {
       query?: {
@@ -7493,6 +7656,68 @@ export interface operations {
       };
       /** @description Sign in required */
       401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listReadingAssets: {
+    parameters: {
+      query?: {
+        search?: string;
+        page?: number;
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Minimal same-estate asset labels, including retired assets */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingAssetOptionPage"];
+        };
+      };
+      /** @description Malformed filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
