@@ -990,6 +990,56 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/readings/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Export every matching manual and sensor reading as CSV v1 */
+    get: operations["exportEstateReadings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/manual": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Record an attributed human measurement */
+    post: operations["createManualReading"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listReadingMetrics"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/reports": {
     parameters: {
       query?: never;
@@ -2653,10 +2703,16 @@ export interface components {
       /** @description As stored: rounded to 6 decimal places */
       value: number;
       /** Format: uuid */
-      deviceId: string;
-      deviceIdentifier: string;
+      deviceId: string | null;
+      deviceIdentifier: string | null;
       /** @description Empty when nothing is suspect */
       flags: components["schemas"]["ReadingFlagResponse"][];
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string | null;
+      recordedByName: string | null;
+      /** Format: date-time */
+      recordedAt: string;
     };
     ReadingFlagResponse: {
       /** @enum {string} */
@@ -2818,6 +2874,7 @@ export interface components {
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
       canViewReadings: boolean;
+      canRecordReadings: boolean;
     };
     EstateReadingPage: {
       items: components["schemas"]["EstateReadingResponse"][];
@@ -2853,9 +2910,15 @@ export interface components {
       unit: string;
       value: number;
       /** Format: uuid */
-      deviceId: string;
-      deviceIdentifier: string;
+      deviceId: string | null;
+      deviceIdentifier: string | null;
       flags: components["schemas"]["ReadingFlagResponse"][];
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string | null;
+      recordedByName: string | null;
+      /** Format: date-time */
+      recordedAt: string;
     };
     ReadingAssetOption: {
       /** Format: uuid */
@@ -2872,6 +2935,76 @@ export interface components {
       size: number;
       /** Format: int64 */
       totalItems: number;
+    };
+    CreateManualReadingRequest: {
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /** @description JSON number; rounded half-up to six decimal places, at most twelve integer digits */
+      value: number;
+      unit: string;
+      /**
+       * Format: date-time
+       * @description Timestamp with UTC offset; backdating allowed, at most five minutes ahead
+       */
+      measuredAt: string;
+      /**
+       * Format: uuid
+       * @description Reuse for an identical retry; generate a new UUID for an edited submission
+       */
+      submissionId: string;
+    };
+    ManualReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      value: number;
+      unit: string;
+      /** Format: date-time */
+      measuredAt: string;
+      /** Format: date-time */
+      recordedAt: string;
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string;
+      recordedByName: string | null;
+    };
+    ReadingMetricOption: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** Format: double */
+      validMin: number;
+      /** Format: double */
+      validMax: number;
     };
   };
 }
@@ -4098,6 +4231,86 @@ export interface operations {
       };
     };
   };
+  createManualReading: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateManualReadingRequest"];
+      };
+    };
+    responses: {
+      /** @description Identical retry; original reading returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ManualReadingResponse"];
+        };
+      };
+      /** @description Manual reading recorded */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ManualReadingResponse"];
+        };
+      };
+      /** @description Invalid request payload, filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired asset or conflicting submission */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   createResidentReport: {
     parameters: {
       query?: never;
@@ -4754,6 +4967,91 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  exportEstateReadings: {
+    parameters: {
+      query?: {
+        assetId?: string;
+        metric?:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+        from?: string;
+        to?: string;
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description CSV v1; X-Export-Row-Count is the complete matching count, including beyond any browser page */
+      200: {
+        headers: {
+          /** @description Complete row count from the same query snapshot */
+          "X-Export-Row-Count": number;
+          /** @description CSV v1 attachment filename */
+          "Content-Disposition": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": string;
+        };
+      };
+      /** @description Invalid filters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Export capacity busy; retry later */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
         };
       };
     };
@@ -7254,7 +7552,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Matching sensor readings, newest first, with per-asset flags */
+      /** @description Matching sensor and manual readings, newest first, with provenance and per-asset flags */
       200: {
         headers: {
           [name: string]: unknown;
@@ -7263,7 +7561,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateReadingPage"];
         };
       };
-      /** @description Malformed filters or pagination */
+      /** @description Invalid request payload, filters or pagination */
       400: {
         headers: {
           [name: string]: unknown;
@@ -7689,7 +7987,65 @@ export interface operations {
           "*/*": components["schemas"]["ReadingAssetOptionPage"];
         };
       };
-      /** @description Malformed filters or pagination */
+      /** @description Invalid request payload, filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listReadingMetrics: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Fixed metric catalogue with units and expected ranges */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingMetricOption"][];
+        };
+      };
+      /** @description Invalid request payload, filters or pagination */
       400: {
         headers: {
           [name: string]: unknown;

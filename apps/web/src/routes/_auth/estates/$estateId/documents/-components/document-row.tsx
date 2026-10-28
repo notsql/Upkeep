@@ -3,19 +3,21 @@ import { TableCell, TableRow } from "@proj/ui/components/table";
 import { useCallback } from "react";
 import type { EstateDocument } from "@/lib/documents";
 
-export function DocumentRow({
+export interface DocumentRowProps {
+  document: EstateDocument;
+  downloading: boolean;
+  onAssociation?: (document: EstateDocument) => void;
+  onDelete: (document: EstateDocument) => void;
+  onDownload: (document: EstateDocument) => void;
+}
+
+export function DocumentActions({
   document,
   downloading,
   onDownload,
   onDelete,
   onAssociation,
-}: {
-  document: EstateDocument;
-  downloading: boolean;
-  onDownload: (document: EstateDocument) => void;
-  onDelete: (document: EstateDocument) => void;
-  onAssociation?: (document: EstateDocument) => void;
-}) {
+}: DocumentRowProps) {
   const download = useCallback(
     () => onDownload(document),
     [document, onDownload]
@@ -25,6 +27,40 @@ export function DocumentRow({
     () => onAssociation?.(document),
     [document, onAssociation]
   );
+  return (
+    <div className="flex flex-wrap gap-2">
+      {onAssociation ? (
+        <Button
+          aria-label={`Work-order link for ${document.originalFilename}`}
+          onClick={association}
+          variant="outline"
+        >
+          Work order
+        </Button>
+      ) : null}
+      <Button
+        aria-label={`Download ${document.originalFilename}`}
+        disabled={downloading}
+        onClick={download}
+        variant="outline"
+      >
+        Download
+      </Button>
+      {document.canDelete ? (
+        <Button
+          aria-label={`Delete ${document.originalFilename}`}
+          onClick={remove}
+          variant="destructive"
+        >
+          Delete
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+export function DocumentRow(props: DocumentRowProps) {
+  const { document } = props;
   return (
     <TableRow>
       <TableCell>{document.originalFilename}</TableCell>
@@ -40,34 +76,7 @@ export function DocumentRow({
         </time>
       </TableCell>
       <TableCell>
-        <div className="flex flex-wrap gap-2">
-          {onAssociation ? (
-            <Button
-              aria-label={`Work-order link for ${document.originalFilename}`}
-              onClick={association}
-              variant="outline"
-            >
-              Work order
-            </Button>
-          ) : null}
-          <Button
-            aria-label={`Download ${document.originalFilename}`}
-            disabled={downloading}
-            onClick={download}
-            variant="outline"
-          >
-            Download
-          </Button>
-          {document.canDelete ? (
-            <Button
-              aria-label={`Delete ${document.originalFilename}`}
-              onClick={remove}
-              variant="destructive"
-            >
-              Delete
-            </Button>
-          ) : null}
-        </div>
+        <DocumentActions {...props} />
       </TableCell>
     </TableRow>
   );

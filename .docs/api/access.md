@@ -15,7 +15,10 @@ EstateError { message: string }. Cache-Control is private, no-store.
 Managers and Crew, including inactive-estate history. It is false for Resident,
 Member, Council and custom-role memberships alone. Minimal reading asset options
 use the same policy without granting `canViewAssets`, editing, financial or
-credential authority. Legacy per-asset readings remain owner-only. See
+credential authority. `canRecordReadings` is a separate required boolean for
+Owners, Managers and Crew in active estates. It enables manual recording without
+asset-register editing and becomes false when the estate is inactive. Legacy
+per-asset readings remain owner-only. See
 [readings.md](readings.md).
 
 AppAccessResponse fields: canEnterWorkspace/canCreateEstate/canAccessPlatformAdmin/
@@ -23,7 +26,7 @@ hasResidentMembership/canSubmitReport: boolean; residentEstates: { id: UUID,
 name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is false.
 
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
-CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewReadings/canInviteMembers/
+CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewReadings/canRecordReadings/canInviteMembers/
 canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
 canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments: boolean. Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot

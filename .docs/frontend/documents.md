@@ -2,8 +2,8 @@
 
 Route `/estates/$estateId/documents` lives at
 `apps/web/src/routes/_auth/estates/$estateId/documents/index.tsx`. Its
-`-components/` folder contains `documents-page.tsx` and
-`upload-document-form.tsx`. The route validates `filename` and `cursor` URL
+`-components/` folder contains `documents-page.tsx`, `document-list.tsx`,
+`document-row.tsx` and `upload-document-form.tsx`. The route validates `filename` and `cursor` URL
 search parameters, so refresh/back restore search and paging. Search/Clear reset
 the cursor. State remounts when the account or estate changes.
 
@@ -56,3 +56,16 @@ supports document-only accounts without management endpoint calls.
 Work-order row actions, association dialogs and history are described in
 [work-order-documents.md](work-order-documents.md). The action requires both
 document and work-order read capabilities; writes remain Owner/Manager-only.
+
+## Responsive document list
+
+`-components/document-list.tsx` uses the existing `useMobile` media query:
+under 768px it renders a labelled `Documents` list of shadcn Cards; desktop keeps
+a semantic table labelled Documents. Both use the existing page query result.
+Cards show the full wrapping filename, type, formatted byte size and uploaded
+time. `DocumentActions` in `document-row.tsx` is shared by both presentations:
+download stays disabled while pending, association is offered only with existing
+document/work-order read access, and Delete still depends on per-row `canDelete`.
+The same page-level dialogs, errors, mutations and invalidations handle all
+mobile actions; no second list request or hidden duplicate controls are added.
+Search and cursor paging remain URL-backed; pagination buttons wrap.

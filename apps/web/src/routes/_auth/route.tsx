@@ -179,7 +179,10 @@ function guardFeaturePath(
       guardDocuments(path, access);
       return true;
     case "readings":
-      if (!estate?.canViewReadings) {
+      if (
+        !estate?.canViewReadings ||
+        (path.split("/")[4] === "new" && !estate.canRecordReadings)
+      ) {
         throw notFound();
       }
       return true;

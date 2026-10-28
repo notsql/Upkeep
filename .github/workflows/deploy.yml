@@ -79,6 +79,7 @@ jobs:
             --cpu=1
             --memory=2Gi
             --cpu-boost
+            --timeout=300
             --concurrency=80
             --min-instances=0
             --max-instances=2

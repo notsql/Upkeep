@@ -23,6 +23,7 @@ import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
@@ -99,6 +100,8 @@ public class Indexes {
     public static final Index LOCATION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_ID_TYPE_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_type_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.TYPE, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_PARENTID_IDX = Internal.createIndex(DSL.name("Location_parentId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.PARENTID }, false);
+    public static final Index MANUALREADING_ASSETID_METRIC_MEASUREDAT_IDX = Internal.createIndex(DSL.name("ManualReading_assetId_metric_measuredAt_idx"), Manualreading.MANUALREADING, new OrderField[] { Manualreading.MANUALREADING.ASSETID, Manualreading.MANUALREADING.METRIC, Manualreading.MANUALREADING.MEASUREDAT }, false);
+    public static final Index MANUALREADING_ESTATEID_RECORDEDBYUSERID_SUBMISSIONID_KEY = Internal.createIndex(DSL.name("ManualReading_estateId_recordedByUserId_submissionId_key"), Manualreading.MANUALREADING, new OrderField[] { Manualreading.MANUALREADING.ESTATEID, Manualreading.MANUALREADING.RECORDEDBYUSERID, Manualreading.MANUALREADING.SUBMISSIONID }, true);
     public static final Index MANUFACTURER_NAME_KEY = Internal.createIndex(DSL.name("Manufacturer_name_key"), Manufacturer.MANUFACTURER, new OrderField[] { Manufacturer.MANUFACTURER.NAME }, true);
     public static final Index WORKORDER_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrder_estateId_createdAt_id_idx"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.CREATEDAT, Workorder.WORKORDER.ID }, false);
     public static final Index WORKORDER_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("WorkOrder_estateId_reference_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.REFERENCE }, true);

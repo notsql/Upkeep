@@ -10,13 +10,17 @@ import { Link } from "@tanstack/react-router";
 import { Building2, Check, ChevronsUpDown } from "lucide-react";
 import { useAppAccess } from "@/lib/access";
 
-export type EstateFeature = "work-orders" | "reports" | "documents";
+export type EstateFeature =
+  | "work-orders"
+  | "reports"
+  | "documents"
+  | "resident-reports"
+  | "report-creation";
 type EstateContextFeature =
   | EstateFeature
   | "readings"
   | "management"
-  | "resident"
-  | "report-creation";
+  | "resident";
 const roleLabels: Record<string, string> = {
   MANAGER: "Manager",
   CREW: "Crew",

@@ -1,5 +1,10 @@
 import type { components } from "@proj/api/schema";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { assetQueryKey } from "@/lib/assets";
@@ -118,6 +123,16 @@ export function useReadings(
   });
 }
 
+export function readingFilterQuery(filters: ReadingSearch) {
+  return {
+    assetId: filters.assetId,
+    metric: filters.metric as DeviceMetric | undefined,
+    from: instant(filters.from),
+    to: instant(filters.to),
+    flag: filters.suspect ? SUSPECT_FLAGS : undefined,
+  };
+}
+
 export function useEstateReadings(estateId: string, filters: ReadingSearch) {
   const { userId, ready } = useEstateSession();
   const access = useAppAccess();
@@ -139,11 +154,7 @@ export function useEstateReadings(estateId: string, filters: ReadingSearch) {
           params: {
             path: { estateId },
             query: {
-              assetId: filters.assetId,
-              metric: filters.metric as DeviceMetric | undefined,
-              from: instant(filters.from),
-              to: instant(filters.to),
-              flag: filters.suspect ? SUSPECT_FLAGS : undefined,
+              ...readingFilterQuery(filters),
               page: filters.page ?? 0,
               size: READINGS_PAGE_SIZE,
             },
@@ -187,6 +198,90 @@ export function useReadingAssets(
         throw estateError(error, response.status);
       }
       return data;
+    },
+  });
+}
+
+export type ManualReading = components["schemas"]["ManualReadingResponse"];
+export type CreateManualReading =
+  components["schemas"]["CreateManualReadingRequest"];
+export type ReadingMetricOption = components["schemas"]["ReadingMetricOption"];
+
+export function useReadingMetrics(estateId: string) {
+  const { userId, ready } = useEstateSession();
+  const access = useAppAccess();
+  const allowed = access.data?.estates.some(
+    (estate) => estate.estateId === estateId && estate.canViewReadings
+  );
+  return useQuery({
+    queryKey: [userId, "reading-metrics", estateId],
+    enabled: ready && !!allowed,
+    retry: false,
+    queryFn: async () => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/readings/metrics",
+        { params: { path: { estateId } } }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+  });
+}
+
+export function useCreateManualReading(estateId: string) {
+  const { userId, ready } = useEstateSession();
+  const access = useAppAccess();
+  const client = useQueryClient();
+  const allowed = access.data?.estates.some(
+    (estate) => estate.estateId === estateId && estate.canRecordReadings
+  );
+  return useMutation({
+    mutationFn: async (body: CreateManualReading) => {
+      if (!(ready && allowed)) {
+        throw new Error(
+          "Manual reading entry is not available for this estate."
+        );
+      }
+      const { data, error, response } = await api
+        .POST("/estates/{estateId}/readings/manual", {
+          params: { path: { estateId } },
+          body,
+        })
+        .catch((failure: unknown) => {
+          if (failure instanceof TypeError) {
+            throw new Error(
+              "Could not save the reading. Check your connection and try again. Your entries have been kept."
+            );
+          }
+          throw failure;
+        });
+      if (error || !data) {
+        if ([403, 404, 409].includes(response.status)) {
+          await Promise.all([
+            client.invalidateQueries({ queryKey: [userId, "app-access"] }),
+            client.invalidateQueries({
+              queryKey: [userId, "reading-assets", estateId],
+            }),
+          ]);
+        }
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: async (reading) => {
+      await Promise.all([
+        client.invalidateQueries({
+          queryKey: [userId, "estate-readings", estateId],
+        }),
+        client.invalidateQueries({
+          queryKey: [
+            ...assetQueryKey(userId, estateId, reading.assetId),
+            "readings",
+          ],
+        }),
+      ]);
     },
   });
 }

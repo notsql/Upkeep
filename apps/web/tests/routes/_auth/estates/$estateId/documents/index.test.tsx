@@ -88,6 +88,7 @@ const NO_MATCHES = /no files match your search/i;
 const NO_DOCUMENTS = /no documents uploaded/i;
 const CANCEL = /^cancel$/i;
 const DELETE_SUCCESS = /April Invoice\.pdf.*removed/i;
+const DELETION_DESCRIPTION = /will be removed/;
 const DELETE_DENIED = /only the uploader/i;
 
 const estateId = "00000000-0000-0000-0000-000000000001";
@@ -669,3 +670,46 @@ it("a denied document deep link does not start a protected list request", async 
   );
   expect(apiPost).not.toHaveBeenCalled();
 });
+
+it.each([true, false])(
+  "shows mobile document details and only permitted actions: canDelete=%s",
+  async (canDelete) => {
+    const original = window.matchMedia;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      ...original(query),
+      matches: query === "(max-width: 767px)",
+    }));
+    allowDocuments({ edit: false });
+    items = [{ ...saved, canDelete }];
+    nextCursor = "more-documents";
+    const { router } = await openDocuments("?filename=Invoice");
+    const list = within(await screen.findByRole("list", { name: "Documents" }));
+    list.getByText(filename);
+    list.getByText("Invoice");
+    list.getByText("1,234 bytes");
+    list.getByRole("button", { name: `Download ${filename}` });
+    expect(
+      list.queryByRole("button", { name: `Delete ${filename}` }) !== null
+    ).toBe(canDelete);
+    expect(
+      list.queryByRole("button", { name: `Work-order link for ${filename}` })
+    ).toBeNull();
+    expect(screen.queryByRole("table")).toBeNull();
+    if (canDelete) {
+      fireEvent.click(list.getByRole("button", { name: `Delete ${filename}` }));
+      const dialog = within(
+        await screen.findByRole("dialog", { name: "Delete file" })
+      );
+      dialog.getByText(DELETION_DESCRIPTION);
+      fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+      expect(apiDelete).not.toHaveBeenCalled();
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        filename: "Invoice",
+        cursor: "more-documents",
+      })
+    );
+  }
+);

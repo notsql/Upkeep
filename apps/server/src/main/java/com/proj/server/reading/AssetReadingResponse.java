@@ -8,7 +8,21 @@ import java.util.List;
 import java.util.UUID;
 
 /** One stored reading as the owner sees it on an asset. */
-@Schema(requiredProperties = {"id", "measuredAt", "metric", "unit", "value", "deviceId", "deviceIdentifier", "flags"})
+@Schema(
+        requiredProperties = {
+            "id",
+            "measuredAt",
+            "metric",
+            "unit",
+            "value",
+            "deviceId",
+            "deviceIdentifier",
+            "flags",
+            "source",
+            "recordedByUserId",
+            "recordedByName",
+            "recordedAt"
+        })
 public record AssetReadingResponse(
         UUID id,
         @Schema(description = "In UTC") OffsetDateTime measuredAt,
@@ -18,8 +32,13 @@ public record AssetReadingResponse(
         @Schema(description = "As stored: rounded to 6 decimal places")
         BigDecimal value,
 
-        UUID deviceId,
-        String deviceIdentifier,
+        @Schema(nullable = true) UUID deviceId,
+        @Schema(nullable = true) String deviceIdentifier,
 
         @Schema(description = "Empty when nothing is suspect")
-        List<ReadingFlagResponse> flags) {}
+        List<ReadingFlagResponse> flags,
+
+        ReadingSource source,
+        @Schema(nullable = true) String recordedByUserId,
+        @Schema(nullable = true) String recordedByName,
+        OffsetDateTime recordedAt) {}

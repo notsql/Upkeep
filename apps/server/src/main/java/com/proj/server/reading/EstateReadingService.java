@@ -22,7 +22,7 @@ public class EstateReadingService {
         this.assets = assets;
     }
 
-    private void authorize(UUID estate, String user) {
+    void authorize(UUID estate, String user) {
         var authority = EstatePermissions.authority(db, estate, user, false);
         if (!authority.manager() && !"CREW".equals(authority.role())) {
             throw new ReadingException(HttpStatus.FORBIDDEN, "Readings access to this estate is required.");
@@ -47,6 +47,15 @@ public class EstateReadingService {
             int page,
             int size) {
         validatePage(page, size);
+        validateExport(estate, user, asset, from, to);
+        return new EstateReadingPage(
+                readings.listEstate(estate, asset, metric, from, to, flags, page, size),
+                page,
+                size,
+                readings.countEstate(estate, asset, metric, from, to, flags));
+    }
+
+    void validateExport(UUID estate, String user, UUID asset, OffsetDateTime from, OffsetDateTime to) {
         if (from != null && to != null && !from.isBefore(to)) {
             throw new ReadingException(HttpStatus.BAD_REQUEST, "from: must be before to.");
         }
@@ -54,11 +63,6 @@ public class EstateReadingService {
         if (asset != null)
             assets.find(asset, estate, false)
                     .orElseThrow(() -> new ReadingException(HttpStatus.NOT_FOUND, "Asset not found."));
-        return new EstateReadingPage(
-                readings.listEstate(estate, asset, metric, from, to, flags, page, size),
-                page,
-                size,
-                readings.countEstate(estate, asset, metric, from, to, flags));
     }
 
     public ReadingAssetOptionPage assets(UUID estate, String user, String search, int page, int size) {

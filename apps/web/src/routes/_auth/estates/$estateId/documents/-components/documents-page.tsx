@@ -9,13 +9,6 @@ import {
 } from "@proj/ui/components/dialog";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@proj/ui/components/table";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
@@ -28,7 +21,7 @@ import {
   useDownloadDocument,
 } from "@/lib/documents";
 import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
-import { DocumentRow } from "./document-row";
+import { DocumentList } from "./document-list";
 import { DocumentWorkOrderDialog } from "./document-work-order-dialog";
 import { UploadDocumentForm } from "./upload-document-form";
 
@@ -177,41 +170,18 @@ export function DocumentsPage({
         </div>
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
-      {!documents.isError && documents.data?.items.length === 0 ? (
-        <p>
-          {filters.filename
-            ? "No files match your search"
-            : "No documents uploaded"}
-        </p>
-      ) : null}
-      {!documents.isError && documents.data?.items.length ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Filename</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Size</TableHead>
-              <TableHead>Uploaded</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.data.items.map((document) => (
-              <DocumentRow
-                document={document}
-                downloading={download.isPending}
-                key={document.id}
-                onAssociation={
-                  associations.canRead ? setAssociationDocument : undefined
-                }
-                onDelete={chooseDeletion}
-                onDownload={downloadDocument}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      ) : null}
-      <div className="flex gap-2">
+      <DocumentList
+        downloading={download.isPending}
+        failed={documents.isError}
+        filename={filters.filename}
+        items={documents.data?.items}
+        onAssociation={
+          associations.canRead ? setAssociationDocument : undefined
+        }
+        onDelete={chooseDeletion}
+        onDownload={downloadDocument}
+      />
+      <div className="flex flex-wrap gap-2">
         {filters.cursor ? (
           <Button onClick={first} variant="outline">
             First page

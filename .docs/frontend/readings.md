@@ -1,6 +1,6 @@
 # Readings (frontend)
 
-Estate-wide and per-asset sensor readings with suspect-data flags. Paths are
+Estate-wide and per-asset sensor/manual readings with provenance and suspect-data flags. Paths are
 relative to `apps/web/src/`. API: [../api/readings.md](../api/readings.md).
 
 ## Estate readings browser (ID-60)
@@ -27,10 +27,11 @@ All new components are in the route's `-components/` folder:
 | `reading-asset-picker.tsx` | Button/Dialog picker, name/reference search, retired labels, All assets and option pagination |
 | `reading-results.tsx` | Loading, validation, errors/Retry, empty states and page recovery |
 | `reading-pagination.tsx` | Previous/Next, current-page indicator, numbered page jumps and ellipses |
-| `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, device and flag Badges |
+| `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, source/recorder, device and flag Badges |
 
-Filters stack on mobile; long labels wrap without widening the page. Both estate-wide and legacy tables use auto-height, width-bounded flag badges with wrapping, left-aligned text and a readable line height; long flag labels stay inside their borders. Both Flags columns reserve a minimum width so labels remain readable on mobile; the table scrolls within its own region. Browser checks cover 1280, 375 and 320 px. Crew rows
-do not link to owner-only asset pages. The screen adds no mutations.
+Filters stack on mobile; long labels wrap without widening the page. Both estate-wide and legacy tables use auto-height, width-bounded flag badges with wrapping, left-aligned text and a readable line height; long flag labels stay inside their borders. Device columns reserve a readable minimum width rather than wrapping identifiers into tall strips. Both Flags columns reserve a minimum width so labels remain readable on mobile; the table scrolls within its own region. Browser checks cover 1280, 375 and 320 px. Crew rows
+do not link to owner-only asset pages. **Record manual reading** appears only
+with `canRecordReadings` and preselects the current asset/metric.
 
 The estate table shows every page for up to six pages. Longer results show the
 first/last pages plus an edge window or the current page and its neighbours, with
@@ -109,11 +110,43 @@ per case: first-page p95 275 ms (median 253), deep page 800 p95 293 ms (median
 (median 251). The suspect filter matched 4,320 rows. These include browser
 transport and JSON parsing and also meet the 2-second target.
 
-The browser QA server uses a controlled JWT subject with real database-backed
+The isolated browser QA server uses a controlled JWT subject with real database-backed
 role guards; frontend WorkOS sign-in is real. This checks role-specific feature
 behaviour, not live WorkOS membership provisioning. It does not load the regular
 Infisical WorkOS management API key, so Pending invitations can show WorkOS is
 not configured in this isolated setup. R2 is disabled and Neon is untouched.
+
+### Mixed manual/sensor performance (ID-63 / ID-64)
+
+On 2026-10-28 the same opt-in benchmark was rerun with
+`-Dreadings.benchmark.manual=true`: each of three assets had 43,200 sensor rows
+and 4,320 manual rows (142,560 total, including the foreign-estate fixture).
+Manual rows share timestamps with sensor rows, exercising mixed duplicates.
+Warm-up/sampling and the two-second p95 target are unchanged.
+
+| Case | Median | p95 |
+| --- | --- | --- |
+| Selected asset/month, first page | 454.0 ms | 485.4 ms |
+| Selected asset/month, page 800 | 482.2 ms | 525.6 ms |
+| Suspect first page | 472.6 ms | 510.2 ms |
+| Suspect page 800 | 544.7 ms | 775.4 ms |
+| All same-estate assets, first page | 910.5 ms | 1060.3 ms |
+
+Selected totals were 47,520 and the two-asset estate total 95,040. All cases
+passed response/count assertions and the agreed local p95 target. These are
+MockMvc request/authorization/query/serialization measurements, not network or
+production SLA measurements. Source data and all benchmark records were disposable.
+
+### Live child-branch QA
+
+On 2026-10-28, the user also authorized persistent demo records on their Neon
+child branch. Normal `pnpm dev` and real WorkOS identity/recorder lookup were
+used. The labelled demo contained 100 sensor and ten manual readings, including
+an actual mobile form save, alongside active/retired assets and work orders.
+Numbered paging, seven suspect results, retired history, recorder names and
+320/375 px layouts passed. This run changed only the labelled demo records and
+applied existing pending migrations; the earlier isolated runs above did not
+use Neon. Demo UUIDs and credentials are not part of the committed documentation.
 
 ### Manual review
 
@@ -128,8 +161,83 @@ not configured in this isolated setup. R2 is disabled and Neon is untouched.
 5. Open a legacy per-asset bookmark and the asset-detail preselected entry.
 6. Switch estates/accounts, including Resident destinations and denied URLs;
    old scoped cached rows must not appear in the new context.
-7. At 320/375 px check long labels, stacked filters, table-local scrolling,
+7. At 320/375 px check long labels, stacked filters, compact reading cards,
    dialog options/paging, keyboard focus/selection and Escape.
+
+## Manual entry and provenance (ID-63 / ID-64)
+
+Route `/estates/$estateId/readings/new` lives in
+`routes/_auth/estates/$estateId/readings/new/index.tsx`. It is protected by
+`canRecordReadings`, checked before management/Resident fallbacks. Owners,
+Managers and Crew receive this capability only in active estates. A refreshed
+access projection immediately hides the form if recording access is revoked.
+
+Components in `readings/new/-components/`:
+
+| File | Responsibility |
+| --- | --- |
+| `manual-reading-form.tsx` | Access/header, local state, options feedback, warning and save/cancel UI |
+| `manual-measurement-fields.tsx` | Existing shadcn asset picker in record mode, metric Select, numeric Value and local measurement-time Input |
+| `use-manual-reading-submission.ts` | Validation, stable retry UUID/fingerprint, pending/saved state and success callback |
+
+`lib/manual-reading-form.ts` contains local form state and date/value validation,
+not API DTOs. The clock defaults to the user's current local minute. The fixed
+catalogue comes from the server, including units and expected ranges. Numeric
+values outside that range show a warning and remain saveable. No custom metrics
+are created. Measurement time accepts backdating and converts to UTC on save.
+
+The existing `reading-asset-picker.tsx` has `mode="record"`: it offers an active
+asset selection, disables retired assets and omits All assets. Its default
+filter mode still includes retired history. No owner-only asset query is used.
+An initial asset beyond the first option page uses a Selected asset fallback;
+the server validates its current estate/lifecycle state on submit.
+
+Hook contracts in `lib/readings.ts`:
+
+| Hook | Endpoint / cache effects |
+| --- | --- |
+| `useReadingMetrics(estateId)` | GET `/estates/{estateId}/readings/metrics`; `[userId, "reading-metrics", estateId]`; gated by ready/read access, explicit Retry |
+| `useCreateManualReading(estateId)` | POST `/estates/{estateId}/readings/manual`; checks ready/write capability and throws API errors |
+
+Successful creation invalidates `[userId, "estate-readings", estateId]` and
+`[...assetQueryKey(userId, estateId, assetId), "readings"]`. The route then returns
+to Readings with only that asset selected, clearing stale time/metric/suspect/page
+filters. Ordering remains newest first, so a backdated entry may require paging
+or time filtering. The mutation invalidates access and asset options on
+403/404/409 to refresh stale permissions/lifecycle state.
+
+Fields and errors remain on failed save. Network failures explain that the
+reading could not be saved, ask the user to check the connection/retry and
+confirm their entries were kept. Server validation messages remain intact.
+Identical uncertain retries reuse a
+submission UUID; changing the effective asset/metric/value/time generates a new
+one. There is no automatic mutation retry. Fieldset/save disable while pending,
+and a successful form cannot submit again during navigation.
+
+`components/readings/reading-provenance.tsx` is shared by both reading tables.
+Every row has a text Manual or Sensor Badge in the Source column. Manual rows
+show the stored recorder name, falling back to Name unavailable with the stable
+subject. Sensor rows show their device identifier; manual device cells show an
+em dash. Long names wrap. Desktop tables retain contained horizontal scrolling; mobile
+uses labelled cards.
+Read pagination/filters/counts cover both sources on the server. Manual values
+never fill sensor gaps or change device last-seen/monitoring state.
+
+ID-61 now exports source and recorder metadata as described below, completing
+ID-64's CSV criterion. Manual reading edits and deletion remain outside scope.
+
+Manual review additions:
+
+1. Owner/Manager/Crew: open Record manual reading, choose an asset without a
+   device, verify local default time, set a backdated time/value and save.
+2. Verify name and Manual source in the unified table; compare a Sensor row.
+   Combine filters and numbered page jumps; verify mixed matching totals.
+3. Change the metric and confirm unit/range update. Save an extreme value and
+   check its warning and subsequent Out of range flag.
+4. Check retired options disabled; direct retired/inactive saves fail clearly.
+   Resident/Council/unassigned entry URLs must return Page not found.
+5. Simulate a failed response, verify fields survive and retry creates one row.
+6. Check keyboard access, long recorder/asset names and 320/375 px layouts.
 
 ## Routes
 
@@ -161,7 +269,7 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | "Back to asset" link; `PageHeader` "Readings" with breadcrumbs Estates / estate name / Assets / asset name / Readings (from `useEstate`, `useAsset`) and description "Sensor readings for this asset, newest first. Suspect readings are flagged."; the filters; "Loading readings…" (`role="status"`) while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`, `Empty`, `EmptyHeader`, `EmptyTitle` |
+| `ReadingsPage` (`readings-page.tsx`) | "Back to asset" link; `PageHeader` "Readings" with breadcrumbs Estates / estate name / Assets / asset name / Readings (from `useEstate`, `useAsset`) and description "Sensor readings for this asset, newest first. Suspect readings are flagged."; the filters; "Loading readings…" (`role="status"`) while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`, `Empty`, `EmptyHeader`, `EmptyTitle` |
 | `ReadingFilterControls` (`reading-filters.tsx`) | "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `datetime-local` inputs, and a "Suspect only" checkbox. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Input`, `Checkbox`, `Label` |
 
 ### Badges (`flagLabel`)
@@ -203,3 +311,87 @@ params are left out. `enabled: ready`, `retry: false`,
 next loads); errors via `estateError`.
 
 No mutations, so nothing is invalidated.
+
+## Mobile reading records
+
+Below 768px, `components/readings/reading-cards.tsx` renders both the estate-wide
+and legacy asset lists as a single accessible `Readings` list. Each shadcn Card
+shows the metric/value/unit, measured time, Manual/Sensor provenance (including
+manual recorder name/ID fallback), applicable device, all flags and estate-list
+asset name/reference. Long labels and flags wrap. Manual entries do not invent
+a device. The estate `reading-table.tsx` and asset `readings-page.tsx` use the
+existing `useMobile` hook to select cards or desktop tables from the same query
+result; filters, query keys, numbered estate paging and legacy paging are
+unchanged. Only the current presentation mounts. Cards expose refresh busy
+state while existing data remains visible.
+
+
+## Export CSV (ID-61 / ID-64)
+
+The estate Readings screen has a shadcn Export CSV Button with help: Exports all
+matching readings, across every page. `-components/reading-export.tsx` supplies
+pending Spinner, Cancel export Button, destructive error Alert and cancellation
+status. Visibility follows current `canViewReadings` plus a ready authenticated
+session; no new permission is introduced. The action is disabled for invalid
+filters, an initial/refreshing list, errors and an already-running transfer.
+Completed empty results may export their schema header.
+
+`lib/use-reading-export.ts` owns the React Query mutation. It calls the generated
+client GET `/estates/{estateId}/readings/export`, `parseAs: "stream"`, an
+AbortSignal and no automatic retry. `readingFilterQuery` in `lib/readings.ts`
+serializes the same asset/metric/local-time-to-UTC/suspect fields for the list and
+export. Page/size are never sent to export. The request captures applied filters
+at click time; changing filters afterward does not rewrite an in-flight export.
+
+A transfer ref scopes its controller to user and estate. Cancel, unmount,
+revoked/failed access and a user/estate change abort it. Synchronous repeat starts
+are guarded before React Query's pending render. Late responses cannot save a
+file for another scope. Export does not invalidate reading data or create DB/R2
+records. Errors preserve the current filters; retry is explicit.
+
+The server prefixes the CSV with one UTF-8 BOM for Excel encoding detection.
+`lib/reading-csv-download.ts` consumes bytes incrementally with UTF-8 validation,
+tracks quoting/columns across chunks, checks the fixed v1 header and compares
+records with X-Export-Row-Count. This handles quoted multiline fields without
+counting their embedded newlines as extra records. Missing metadata, truncated
+responses or stream failures never create a download. It collects the validated
+bytes into a browser Blob; browser memory is proportional to the file, while
+server fetching stays bounded. A safe server attachment filename is used with a
+`readings-v1.csv` fallback. The temporary object URL/link is cleaned up after use.
+
+The API document defines every CSV column, UTC/decimal/null/source/escaping rule
+and a pipeline parser example. No legacy per-asset export button, CSV import,
+source filter, chart, scheduled export or background job is included.
+
+The validation decoder consumes the leading BOM, while the downloaded Blob
+preserves the original bytes. This also works when the three BOM bytes arrive
+in separate stream chunks, including header-only exports.
+
+### Performance and browser review
+
+Opt-in benchmark, disposable Postgres only:
+
+```bash
+./mvnw -o -pl com.proj:server -Dtest=ReadingExportBenchmark -Dreadings.export.rows=1000000 test
+```
+
+The benchmark runs the actual Spring/Tomcat HTTP endpoint with controlled JWT
+identity against a migrated Testcontainers database. It seeds two same-estate
+assets with 70% sensor/30% manual rows and a foreign-estate control, checks exact
+row count and transport metadata and consumes bytes with a small buffer. It also
+cancels an HTTP download and waits for both worker and database connection to
+return, then checks a suspect-filter export. It is excluded from normal Surefire
+`*Tests` selection; machine-dependent timing is asserted only in this opt-in run.
+
+Observed 2026-10-28: 100,000 rows / 44,642,742 bytes in 4.801s; final stress run
+1,000,000 rows / 446,426,066 bytes in 13.282s; 27,272 out-of-range rows /
+11,672,552 bytes in 5.022s. HTTP/1.1 chunked transfer was verified, including files
+over 32 MiB. These are local measurements, with all responses below the proposed
+120s budget. Cancellation returned worker/connection successfully. No production
+Cloud Run revision was manually deployed.
+
+Manual/browser checks: export a multi-page result; compare the downloaded CSV's
+records with the filter and total rather than just the visible page. Repeat for
+asset/metric/time/suspect filters and an empty result. Verify both source labels,
+manual recorder IDs/names, disabled/pending/cancel/error/retry states, narrow
+320/375px controls and existing Owner/Manager/Crew versus Resident/Council access.

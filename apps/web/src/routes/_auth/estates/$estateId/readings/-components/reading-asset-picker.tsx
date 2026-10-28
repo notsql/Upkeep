@@ -15,7 +15,9 @@ import { type ReadingAsset, useReadingAssets } from "@/lib/readings";
 function ReadingAssetChoice({
   asset,
   onChoose,
+  activeOnly,
 }: {
+  activeOnly: boolean;
   asset: ReadingAsset;
   onChoose: (asset: ReadingAsset) => void;
 }) {
@@ -23,6 +25,7 @@ function ReadingAssetChoice({
   return (
     <Button
       className="h-auto min-h-11 justify-start whitespace-normal text-left [overflow-wrap:anywhere]"
+      disabled={activeOnly && asset.retired}
       onClick={choose}
       variant="outline"
     >
@@ -36,7 +39,9 @@ export function ReadingAssetPicker({
   estateId,
   label,
   onChoose,
+  mode = "filter",
 }: {
+  mode?: "filter" | "record";
   estateId: string;
   label: string;
   onChoose: (asset: ReadingAsset | undefined) => void;
@@ -65,7 +70,7 @@ export function ReadingAssetPicker({
       <DialogTrigger
         render={
           <Button
-            aria-label={`Filter by asset: ${label}`}
+            aria-label={`${mode === "record" ? "Choose asset" : "Filter by asset"}: ${label}`}
             className="h-auto min-h-11 w-full justify-start whitespace-normal text-left [overflow-wrap:anywhere]"
             variant="outline"
           />
@@ -75,9 +80,13 @@ export function ReadingAssetPicker({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Filter by asset</DialogTitle>
+          <DialogTitle>
+            {mode === "record" ? "Choose asset" : "Filter by asset"}
+          </DialogTitle>
           <DialogDescription>
-            Choose an asset in this estate, including retired equipment.
+            {mode === "record"
+              ? "Choose an active asset to record a manual reading."
+              : "Choose an asset in this estate, including retired equipment."}
           </DialogDescription>
         </DialogHeader>
         <Label htmlFor="reading-asset-search">Search assets</Label>
@@ -87,9 +96,11 @@ export function ReadingAssetPicker({
           placeholder="Name or reference"
           value={search}
         />
-        <Button onClick={clear} variant="outline">
-          All assets
-        </Button>
+        {mode === "filter" ? (
+          <Button onClick={clear} variant="outline">
+            All assets
+          </Button>
+        ) : null}
         {assets.isPending ? <p role="status">Loading assets…</p> : null}
         {assets.error ? (
           <p role="alert">
@@ -105,6 +116,7 @@ export function ReadingAssetPicker({
         <div className="grid max-h-64 gap-2 overflow-y-auto">
           {assets.data?.items.map((asset) => (
             <ReadingAssetChoice
+              activeOnly={mode === "record"}
               asset={asset}
               key={asset.id}
               onChoose={choose}

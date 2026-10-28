@@ -25,7 +25,7 @@ same change as the code.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
 - [Device status](api/device-status.md): derived Online/Offline/Awaiting first reading status and the Manager's estate-wide device list.
-- [Readings](api/readings.md): Owner/Manager/Crew estate-wide filtering, minimal asset options, pagination and flags; legacy owner-only asset readings retained.
+- [Readings](api/readings.md): Owner/Manager/Crew estate-wide filtering, minimal asset options, pagination and flags; attributed manual entry, Manual/Sensor provenance and filtered CSV export; legacy owner-only asset readings retained; complete filtered CSV v1 exports with provenance.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
 - [Locations](api/locations.md): member/responder-readable hierarchy, owner/responder
@@ -43,9 +43,9 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | File | Covers |
 | --- | --- |
 | [frontend/work-order-documents.md](frontend/work-order-documents.md) | Document/work-order association dialog, correction history and work-order attachments |
-| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, file validation, upload/download/deletion, filename search and capability-based navigation |
+| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, responsive table/cards, permitted actions, file validation, upload/download/deletion and filename search |
 | [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
-| [frontend/shell.md](frontend/shell.md) | Root layout, providers, header nav, home page (`/`), and conventions shared by every feature (API client, session gate, query-key prefix, errors) |
+| [frontend/shell.md](frontend/shell.md) | Root layout, providers, ordered estate navigation/mobile section menu, estate-scoped resident reporting, home page (`/`), and shared API/session/query/error conventions |
 | [frontend/dashboard.md](frontend/dashboard.md) | Signed-in Home portfolio totals, condition breakdown, attention links and compact invitations |
 | [frontend/auth.md](frontend/auth.md) | `/login`, `/register`, `/logout`, `/api/auth/*` handlers, `_auth` guard, idle sign-out, `AuthButton`, token bridge |
 | [frontend/account.md](frontend/account.md) | `/account` |
@@ -54,7 +54,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
-| [frontend/readings.md](frontend/readings.md) | Estate-wide and legacy per-asset reading browsers, filters, access, pagination and month-sized performance evidence |
+| [frontend/readings.md](frontend/readings.md) | Estate-wide/legacy reading browsers, attributed manual entry, provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer and /invitations |

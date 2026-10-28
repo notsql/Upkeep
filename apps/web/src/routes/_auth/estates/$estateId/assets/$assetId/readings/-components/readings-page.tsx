@@ -13,6 +13,8 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
+import { ReadingCards } from "@/components/readings/reading-cards";
+import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { useAsset } from "@/lib/assets";
 import { deviceMetrics } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
@@ -23,6 +25,7 @@ import {
   type ReadingFilters,
   useReadings,
 } from "@/lib/readings";
+import { useMobile } from "@/lib/use-mobile";
 import { ReadingFilterControls } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/reading-filters";
 
 function emptyMessage(filters: ReadingFilters): string {
@@ -41,7 +44,12 @@ function ReadingRow({ reading }: { reading: AssetReading }) {
       <TableCell>{new Date(reading.measuredAt).toLocaleString()}</TableCell>
       <TableCell>{deviceMetrics[reading.metric].name}</TableCell>
       <TableCell>{`${reading.value} ${reading.unit}`}</TableCell>
-      <TableCell className="break-all">{reading.deviceIdentifier}</TableCell>
+      <TableCell>
+        <ReadingProvenance reading={reading} />
+      </TableCell>
+      <TableCell className="min-w-36 max-w-48 whitespace-normal [overflow-wrap:anywhere]">
+        {reading.deviceIdentifier ?? "—"}
+      </TableCell>
       <TableCell>
         <div className="flex min-w-32 flex-wrap items-start gap-1">
           {reading.flags.map((flag) => (
@@ -70,6 +78,7 @@ export function ReadingsPage({
   filters: ReadingFilters;
   onFiltersChange: (filters: ReadingFilters) => void;
 }) {
+  const mobile = useMobile();
   const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
   const readings = useReadings(estateId, assetId, filters);
@@ -132,22 +141,34 @@ export function ReadingsPage({
       ) : null}
       {readings.data && total > 0 ? (
         <>
-          <Table aria-label="Readings">
-            <TableHeader>
-              <TableRow>
-                {["Measured", "Metric", "Value", "Device", "Flags"].map(
-                  (label) => (
+          {mobile ? (
+            <ReadingCards
+              items={readings.data.items}
+              refreshing={readings.isFetching}
+            />
+          ) : (
+            <Table aria-label="Readings">
+              <TableHeader>
+                <TableRow>
+                  {[
+                    "Measured",
+                    "Metric",
+                    "Value",
+                    "Source",
+                    "Device",
+                    "Flags",
+                  ].map((label) => (
                     <TableHead key={label}>{label}</TableHead>
-                  )
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {readings.data.items.map((reading) => (
-                <ReadingRow key={reading.id} reading={reading} />
-              ))}
-            </TableBody>
-          </Table>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {readings.data.items.map((reading) => (
+                  <ReadingRow key={reading.id} reading={reading} />
+                ))}
+              </TableBody>
+            </Table>
+          )}
           <nav
             aria-label="Pagination"
             className="flex flex-wrap items-center justify-between gap-3"

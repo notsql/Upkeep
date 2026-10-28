@@ -1,19 +1,20 @@
 # Readings API
 
-## Estate browser (ID-60)
+## Estate browser (ID-60 / ID-63 / ID-64)
 
 The following endpoints are read-only. Current estate Owners, Managers and Crew
 may read, including retired assets and inactive-estate history. Resident,
 Member, Council and custom-role memberships alone do not grant access. Current
 membership is checked on each request. `canViewReadings: boolean` is a required
 `EstateAccessResponse` field under the same policy. Minimal asset labels do not
-grant asset-register, cost, editing or credential access. No migration is needed.
+grant asset-register, cost, editing or credential access. ID-63 adds the
+`ManualReading` table through Prisma migration `20261027190834_manual_readings`.
 
-Both GET paths are explicit SecurityConfig entries. Missing authentication is
+The reading GET paths and manual POST are explicit SecurityConfig entries. Missing authentication is
 401; a same-estate unauthorized role is 403; a missing/foreign estate or selected
 asset is 404; invalid filters/pagination are 400. All errors use
 `EstateError { message: string }`. Valid lists, including empty lists, return 200.
-No new reading write endpoint is allowed.
+Manual writes use the separate authenticated endpoint documented below.
 
 ### GET `/estates/{estateId}/readings`
 
@@ -40,7 +41,8 @@ Flags are calculated per asset/metric; different assets cannot create duplicate
 or gap flags together. A time filter never hides the earlier timestamp needed
 for a gap. The predecessor query uses an indexed strictly-earlier lookup instead
 of an unbounded EXCLUDE GROUP window. This optimization also serves the legacy
-endpoint and preserves its flag/DTO/access contracts.
+endpoint. ID-63/64 extend row DTOs with provenance and mixed-source duplicate
+flags while preserving legacy ownership checks and sensor-only gap cadence.
 
 Example: `GET /estates/{estateId}/readings?assetId={assetId}&metric=PRESSURE&from=2026-10-01T00:00:00Z&to=2026-11-01T00:00:00Z&size=50`.
 An excessive page returns empty items with the matching total; offset paging is
@@ -58,10 +60,70 @@ totalItems: int64 }`. Each option has required `id: UUID`, `reference: string`,
 readings. Results order by name, reference and ID ascending; search/count remain
 estate-scoped. No financial or credential fields are returned.
 
+## Manual entry (ID-63 / ID-64)
+
+### GET `/estates/{estateId}/readings/metrics`
+
+Operation `listReadingMetrics`. Path `estateId: UUID`; no query/body. The same
+read policy applies, including inactive-estate history. Returns 200
+`ReadingMetricOption[]`, each with required `metric: DeviceMetric`, `unit: string`,
+`validMin: double`, `validMax: double`. Exactly the existing eight catalogue
+metrics and units/ranges are returned (table below). No custom metric creation.
+Errors: 401 unauthenticated; 403 unsupported membership; 404 missing/foreign estate.
+
+### POST `/estates/{estateId}/readings/manual`
+
+Operation `createManualReading`. Owners, Managers and Crew may create against an
+active estate and active same-estate asset, including an asset with no device.
+An inactive location alone does not retire an asset. `canRecordReadings` is true
+only for those roles in an active estate; the server checks authority again.
+
+`CreateManualReadingRequest` has exactly six required fields; unknown fields,
+duplicate keys, trailing JSON and type coercion are rejected:
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| assetId | UUID | Same-estate asset |
+| metric | DeviceMetric | Existing catalogue metric |
+| value | number | At most 12 integer digits; half-up to 6 decimals |
+| unit | string | Exactly the catalogue unit, including case/Unicode |
+| measuredAt | date-time | UTC offset required; backdating allowed; at most 5 minutes ahead |
+| submissionId | UUID | Stable for identical/uncertain retries; new for a changed payload |
+
+Out-of-range values are saved, then flagged by read APIs. The server derives
+recorder subject from the JWT and snapshots the display name via the existing
+WorkOS lookup. Name lookup failure is allowed; subject remains available.
+
+201 creates one row; 200 returns the original for a numerically/timestamp-equivalent
+retry. The `(estateId, recordedByUserId, submissionId)` key scopes retry identity.
+The estate row lock serializes manual submissions with lifecycle changes and
+concurrent retries. An existing identical retry remains readable after retirement
+or estate deactivation, but revoked recording roles cannot use the endpoint.
+A changed asset/metric/value/time under the same key returns 409.
+
+Both success responses use `ManualReadingResponse` with required fields:
+`id: UUID`, `assetId: UUID`, `metric: DeviceMetric`, `value: number`, `unit: string`,
+`measuredAt: date-time (UTC)`, `recordedAt: date-time (UTC)`, `source: MANUAL`,
+`recordedByUserId: string`, `recordedByName: string | null`.
+`Cache-Control: private, no-store`. The device-ingestion contract is unchanged.
+
+Errors use `EstateError`: 400 invalid payload/unit/value/time/UUID, 401 signed out,
+403 unsupported role, 404 missing/foreign estate or asset, 409 inactive estate,
+retired asset or conflicting submission. No edit/delete endpoint is provided.
+
+Example body (use real UUIDs):
+
+```json
+{"assetId":"c4d20000-0000-4000-8000-000000000001","metric":"TEMPERATURE","value":151,"unit":"°C","measuredAt":"2026-10-01T16:00:00+08:00","submissionId":"a1b20000-0000-4000-8000-000000000001"}
+```
+
+ID-61 now exports source and recorder metadata through the endpoint below,
+completing ID-64's CSV provenance criterion.
+
 ## Legacy owner-only per-asset browser (ID-67)
 
 Contract: `packages/api/openapi.json` (operationId `listAssetReadings`). Read-only:
-lists the readings stored in ID-43's `DeviceReading` table (see
+lists the union of `ManualReading` and ID-43's `DeviceReading` table (see
 [device-readings.md](device-readings.md)) for one asset, with the suspect-data
 flags computed on every request. Nothing is written; flags are never stored.
 Spec: `.spec/features/suspect-readings.md`. Code: `com.proj.server.reading`
@@ -126,9 +188,13 @@ Checked in that order (page, size, from/to), then estate, then asset.
 | metric | TEMPERATURE / HUMIDITY / PRESSURE / FLOW_RATE / VIBRATION / VIBRATION_ACCELERATION / POWER / ENERGY | yes |  |
 | unit | string | yes | The metric's catalogue unit |
 | value | number | yes | As stored: rounded to 6 decimal places |
-| deviceId | uuid | yes | The device that sent it |
-| deviceIdentifier | string | yes | That device's `identifier` |
+| deviceId | uuid or null | yes | Device for SENSOR; null for MANUAL |
+| deviceIdentifier | string or null | yes | Device identifier for SENSOR; null for MANUAL |
 | flags | ReadingFlagResponse[] | yes | Empty when nothing is suspect; order GAP, DUPLICATE_TIMESTAMP, OUT_OF_RANGE |
+| source | SENSOR / MANUAL | yes | Derived from the stored table, never client-assigned |
+| recordedByUserId | string or null | yes | Authenticated recorder subject for MANUAL; null for SENSOR |
+| recordedByName | string or null | yes | Recorder display-name snapshot; nullable when unavailable |
+| recordedAt | date-time | yes | UTC time of manual recording or sensor receipt |
 
 ## ReadingFlagResponse
 
@@ -162,16 +228,17 @@ are all flagged.
 - **DUPLICATE_TIMESTAMP**: at least one other reading shares the asset, metric
   and `measuredAt` at stored (microsecond) precision. Every such reading is
   flagged, equal values or not. One device cannot store two readings of a metric
-  at one instant (unique index, decision 0028), so this only arises across
-  devices.
-- **GAP**: the previous reading is the latest one for the same asset and metric
+  at one instant (unique index, decision 0028); duplicates may be across
+  devices, manual entries or sources. Identical submission retries add no row.
+- **GAP**: applies only to SENSOR rows. The previous sensor reading is the latest one for the same asset and metric
   with a **strictly earlier** `measuredAt`, from any device. Flagged when the
   difference is more than **1.5 ×** the `reportingIntervalSeconds` of the
   reading's own device (the device's current interval). Exactly 1.5 × is not
   flagged. The earliest stored reading has no predecessor and is never flagged.
   `gapSeconds` is the difference rounded down to whole seconds. Readings sharing
   an instant never precede each other, so duplicates ending a gap all carry it.
-  A late reading stored inside a gap clears the flag on the next request.
+  A late sensor reading stored inside a gap clears the flag on the next request.
+  Manual entries do not fill sensor gaps and never receive GAP themselves.
 
 ## Valid ranges
 
@@ -189,7 +256,10 @@ are all flagged.
 ## Storage
 
 Reads `DeviceReading` joined to `Device` (for `identifier` and
-`reportingIntervalSeconds`), using the `(assetId, metric, measuredAt)` index.
+`reportingIntervalSeconds`) and `ManualReading` as a SQL union before duplicate
+calculation, filtering, counting and pagination. Both tables have an
+`(assetId, metric, measuredAt)` index. Manual entries preserve recorder identity
+and do not affect device last-seen, flatline or inference paths.
 A reading keeps the `assetId` it arrived with, so it stays on the old asset
 after its device moves.
 
@@ -203,5 +273,118 @@ Authorization: Bearer <jwt>
 200:
 
 ```json
-{"items":[{"id":"9d3e...","measuredAt":"2026-10-17T12:00:00Z","metric":"TEMPERATURE","unit":"°C","value":151.000000,"deviceId":"2b1e...","deviceIdentifier":"pump-1-temp","flags":[{"type":"GAP","gapSeconds":5400},{"type":"OUT_OF_RANGE","validMin":-40.0,"validMax":150.0}]}],"page":0,"size":2,"totalItems":1}
+{"items":[{"id":"9d3e...","measuredAt":"2026-10-17T12:00:00Z","metric":"TEMPERATURE","unit":"°C","value":151.000000,"deviceId":"2b1e...","deviceIdentifier":"pump-1-temp","source":"SENSOR","recordedByUserId":null,"recordedByName":null,"recordedAt":"2026-10-17T12:00:01Z","flags":[{"type":"GAP","gapSeconds":5400},{"type":"OUT_OF_RANGE","validMin":-40.0,"validMax":150.0}]}],"page":0,"size":2,"totalItems":1}
 ```
+
+
+## Filtered CSV export (ID-61 / ID-64)
+
+### GET `/estates/{estateId}/readings/export`
+
+Operation `exportEstateReadings`. Current Owners, Managers and Crew may export,
+including inactive-estate and retired-asset history. Identity and estate/asset
+scope are checked before response creation and again on the streaming worker.
+Resident, Council, Member and custom roles alone do not grant this capability.
+
+Path `estateId: UUID`. Optional query fields: `assetId: UUID`, `metric:
+DeviceMetric`, `from: date-time` (inclusive), `to: date-time` (exclusive), and
+repeated `flag: ReadingFlagType`. These have exactly the list endpoint's filter
+semantics. Page/size are not export parameters and do not limit matching rows.
+Order is measuredAt DESC / id DESC. Flags retain full required history before
+time/flag filtering. Sensor/manual rows share one query snapshot; concurrent new
+measurements need not appear in an already-open export.
+
+200 has binary `text/csv; charset=utf-8` content and these headers:
+
+- `Content-Disposition: attachment; filename="readings-v1-<estate UUID>-<UTC uuuuMMddTHHmmssZ>.csv"`.
+- `X-Export-Row-Count: <integer>` is the complete number of data records from the
+  same query snapshot, excluding the header. Both download headers are exposed
+  through CORS. Clients must validate complete transfer/record count.
+- `Cache-Control: private, no-store`.
+
+An empty result is a header-only CSV with count 0. Errors before output use JSON
+`EstateError { message: string }`: 400 invalid metric/flag/UUID/time/range, 401
+signed out, 403 unsupported membership, 404 missing/foreign estate or selected
+asset, 503 export capacity busy. Busy message: Reading exports are busy. Please
+retry shortly. An interrupted stream is not a complete CSV, even if headers had
+already been sent; do not append/interpret an error as a valid measurement.
+
+### CSV schema v1
+
+UTF-8 with one leading BOM (EF BB BF) for Excel encoding detection;
+comma-separated; CRLF record endings. After the BOM, the first record is the
+fixed unquoted header below. Data fields are double-quoted, and double quotes in
+fields are doubled. Embedded commas/newlines and Unicode remain valid CSV.
+
+| Column, in order | Meaning and format |
+| --- | --- |
+| reading_id | Measurement UUID; combine with source for identity |
+| measured_at | UTC `uuuu-MM-ddTHH:mm:ss.SSSSSSZ`, exactly six fractional digits |
+| asset_id | Recorded asset UUID |
+| asset_reference | Current asset reference, text escaping below |
+| asset_name | Current asset name, text escaping below |
+| metric | Stable DeviceMetric enum code |
+| value | Decimal with exactly six fractional digits; no grouping or exponent |
+| unit | Catalogue unit, e.g. °C / bar / kWh |
+| source | SENSOR or MANUAL |
+| device_id | Sensor device UUID, empty for manual |
+| device_identifier | Sensor device identifier, empty for manual |
+| recorded_by_user_id | Stored authenticated manual recorder subject, empty for sensor |
+| recorded_by_name | Stored manual display-name snapshot, empty when unavailable or sensor |
+| recorded_at | Sensor receipt/manual recording instant, same UTC format |
+| flags | Semicolon-separated GAP;DUPLICATE_TIMESTAMP;OUT_OF_RANGE in that order, empty if none |
+
+A missing name stays empty while its stable recorder ID remains available.
+Manual rows never gain a fake device. Empty metadata and numeric `0.000000` are
+distinct. This export performs no interpolation, aggregation, rounding beyond
+stored six-decimal precision, anonymization or model-specific transformation.
+
+Spreadsheet-safe text columns are asset_reference, asset_name,
+device_identifier, recorded_by_user_id and recorded_by_name. A leading apostrophe
+is added if the original starts with an apostrophe or ASCII control character,
+or its first non-whitespace character is `=`, `+`, `-` or `@`. Leading whitespace
+means Java whitespace characters or codepoints <= U+0020. Original leading
+apostrophes are also doubled, so decoding is reversible: remove exactly one
+leading apostrophe in these text columns. Other characters, numeric values and
+units are unchanged. Example: original `=Pump` exports as `'=Pump`; original
+`'Pump` exports as `''Pump`. Standard CSV quote escaping applies afterward.
+
+The BOM identifies UTF-8 when opening directly in Excel, so `°C` displays
+correctly. BOM-aware readers remove the marker before interpreting the first
+column name; it is not a data cell or an extra record. A minimal Python consumer
+(no additional packages):
+
+```python
+import csv
+from decimal import Decimal
+
+text_columns = {
+    "asset_reference", "asset_name", "device_identifier",
+    "recorded_by_user_id", "recorded_by_name",
+}
+with open("readings.csv", encoding="utf-8-sig", newline="") as source:
+    for row in csv.DictReader(source):
+        for column in text_columns:
+            if row[column].startswith("'"):
+                row[column] = row[column][1:]
+        measurement = Decimal(row["value"])
+        flags = row["flags"].split(";") if row["flags"] else []
+        # source identifies SENSOR/MANUAL; empty metadata is not a fabricated name.
+```
+
+### Streaming and limits
+
+`ReadingExportController`, `ReadingExportAdmission`, `ReadingExportService` and
+`ReadingCsvWriter` own the export. Admission reserves capacity before response
+creation, with at most two active transfers per instance. MVC's executor has two
+workers and no waiting queue. A read-only transaction starts on the actual worker;
+jOOQ fetches 512 rows per batch and output flushes every 128 records. Its query
+shares the browser projection, adds a window count and has no pagination or
+whole-result Java list. Cursor and connection close on output failure.
+
+Timeouts: transaction 230s, MVC 240s, Cloud Run deployment 300s. No persisted file,
+background job, migration, storage dependency or export history is created.
+Request cancellation frees the cursor/worker; the frontend verifies completion
+before saving its Blob. Large-file evidence and opt-in benchmark commands are in
+the frontend document and ID-61 spec. The benchmark is local real HTTP, not a
+claim that a manual production Cloud Run deployment was performed.

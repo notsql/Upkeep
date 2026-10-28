@@ -48,6 +48,7 @@ class ReadingBrowserBenchmark {
         var secondAsset = data.asset(ids[0], ids[1]);
         seed(new UUID[] {ids[0], ids[1], secondAsset}, data.device(ids[0], ids[1], secondAsset, null));
         db.execute("analyze \"DeviceReading\"");
+        db.execute("analyze \"ManualReading\"");
         db.execute("set local statement_timeout='20s'");
         boolean legacy = Boolean.getBoolean("readings.benchmark.legacy");
         String base = "/estates/" + ids[0] + (legacy ? "/assets/" + ids[2] : "") + "/readings";
@@ -56,11 +57,12 @@ class ReadingBrowserBenchmark {
         System.out.printf(
                 "ID60 benchmark: %s; %s; Java %s; 43,200 readings per device, 129,600 total%n",
                 legacy ? "legacy" : "estate browser", db.dialect(), System.getProperty("java.version"));
-        measure("selected-first", base + month, 43200);
-        measure("selected-deep", base + month + "&page=800", 43200);
-        measure("suspect-first", base + month + "&flag=OUT_OF_RANGE", 43200);
-        measure("suspect-deep", base + month + "&flag=OUT_OF_RANGE&page=800", 43200);
-        if (!legacy) measure("all-assets-first", base + "?metric=TEMPERATURE", 86400);
+        int manualRows = Boolean.getBoolean("readings.benchmark.manual") ? 4320 : 0;
+        measure("selected-first", base + month, 43200 + manualRows);
+        measure("selected-deep", base + month + "&page=800", 43200 + manualRows);
+        measure("suspect-first", base + month + "&flag=OUT_OF_RANGE", 43200 + manualRows);
+        measure("suspect-deep", base + month + "&flag=OUT_OF_RANGE&page=800", 43200 + manualRows);
+        if (!legacy) measure("all-assets-first", base + "?metric=TEMPERATURE", 86400 + manualRows * 2);
         // Capture an index plan separately from HTTP timing; the actual flagged SQL is inspected
         // when timings show a bottleneck, without printing credentials or business data.
         db.fetch(
@@ -75,6 +77,12 @@ class ReadingBrowserBenchmark {
                 ids[0],
                 ids[2],
                 device);
+        if (Boolean.getBoolean("readings.benchmark.manual")) {
+            db.execute(
+                    "insert into \"ManualReading\" (id,\"estateId\",\"assetId\",metric,value,\"measuredAt\",\"recordedAt\",\"recordedByUserId\",\"submissionId\") select gen_random_uuid(),?,?,'TEMPERATURE',151,'2026-09-01T00:00:00Z'::timestamptz+n*interval '10 minutes',now(),'benchmark-owner',gen_random_uuid() from generate_series(0,4319) n",
+                    ids[0],
+                    ids[2]);
+        }
     }
 
     void measure(String label, String url, int total) throws Exception {

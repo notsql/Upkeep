@@ -27,3 +27,7 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0038 — Inspection form component boundaries](0038-inspection-form-component-boundaries.md)
 - [0039 — One work-order form for inspection follow-up](0039-unified-work-order-creation.md)
 - [0040 — Crew have read-only work-order access](0040-crew-read-only-work-orders.md)
+
+- [0041 — Manual readings and source provenance](0041-manual-readings-and-source-provenance.md)
+
+- [0042 - Filtered reading CSV streams and completion metadata](0042-filtered-reading-csv-streams.md)

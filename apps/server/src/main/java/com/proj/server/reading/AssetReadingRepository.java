@@ -3,6 +3,7 @@ package com.proj.server.reading;
 import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Device.DEVICE;
 import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
+import static com.proj.server.db.tables.Manualreading.MANUALREADING;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
@@ -45,6 +46,11 @@ public class AssetReadingRepository {
     private static final Field<BigDecimal> VALUE = field(name("value"), SQLDataType.NUMERIC);
     private static final Field<UUID> DEVICE_ID = field(name("deviceId"), SQLDataType.UUID);
     private static final Field<String> IDENTIFIER = field(name("identifier"), SQLDataType.VARCHAR);
+    private static final Field<String> SOURCE = field(name("source"), SQLDataType.VARCHAR);
+    private static final Field<String> RECORDED_BY = field(name("recordedByUserId"), SQLDataType.VARCHAR);
+    private static final Field<String> RECORDED_NAME = field(name("recordedByName"), SQLDataType.VARCHAR);
+    private static final Field<OffsetDateTime> RECORDED_AT =
+            field(name("recordedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6));
     private static final Field<Integer> INTERVAL = field(name("interval"), SQLDataType.INTEGER);
     private static final Field<OffsetDateTime> PREVIOUS_AT =
             field(name("previousAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6));
@@ -81,7 +87,20 @@ public class AssetReadingRepository {
             int size) {
         var readings = flagged(assetId, metric);
         return db.select(
-                        ID, MEASURED_AT, METRIC, VALUE, DEVICE_ID, IDENTIFIER, GAP, DUPLICATE, OUT_OF_RANGE, GAP_LENGTH)
+                        ID,
+                        MEASURED_AT,
+                        METRIC,
+                        VALUE,
+                        DEVICE_ID,
+                        IDENTIFIER,
+                        GAP,
+                        DUPLICATE,
+                        OUT_OF_RANGE,
+                        GAP_LENGTH,
+                        SOURCE,
+                        RECORDED_BY,
+                        RECORDED_NAME,
+                        RECORDED_AT)
                 .from(readings)
                 .where(matching(from, to, flags))
                 .orderBy(MEASURED_AT.desc(), ID.desc())
@@ -104,40 +123,81 @@ public class AssetReadingRepository {
             Set<ReadingFlagType> flags,
             int page,
             int size) {
-        return db.select(
-                        ID,
-                        ASSET_ID,
-                        ASSET_NAME,
-                        ASSET_REFERENCE,
-                        MEASURED_AT,
-                        METRIC,
-                        VALUE,
-                        DEVICE_ID,
-                        IDENTIFIER,
-                        GAP,
-                        DUPLICATE,
-                        OUT_OF_RANGE,
-                        GAP_LENGTH)
-                .from(flagged(estateId, assetId, metric))
-                .where(matching(from, to, flags))
-                .orderBy(MEASURED_AT.desc(), ID.desc())
-                .limit(size)
-                .offset((long) page * size)
-                .fetch(row -> {
-                    var reading = toResponse(row);
-                    return new EstateReadingResponse(
-                            reading.id(),
-                            row.get(ASSET_ID),
-                            row.get(ASSET_REFERENCE),
-                            row.get(ASSET_NAME),
-                            reading.measuredAt(),
-                            reading.metric(),
-                            reading.unit(),
-                            reading.value(),
-                            reading.deviceId(),
-                            reading.deviceIdentifier(),
-                            reading.flags());
-                });
+        var query = estateQuery(estateId, assetId, metric, from, to, flags);
+        query.addLimit(size);
+        query.addOffset((long) page * size);
+        return query.fetch(AssetReadingRepository::toEstateResponse);
+    }
+
+    static final Field<Long> EXPORT_ROWS =
+            DSL.count().over().cast(SQLDataType.BIGINT).as("exportRows");
+
+    org.jooq.Cursor<Record> exportEstate(
+            UUID estate,
+            UUID asset,
+            DeviceMetric metric,
+            OffsetDateTime from,
+            OffsetDateTime to,
+            Set<ReadingFlagType> flags) {
+        var query = estateQuery(estate, asset, metric, from, to, flags);
+        query.addSelect(EXPORT_ROWS);
+        // Per-record DEBUG result logging would duplicate an entire large export into logs.
+        query.attach(db.configuration()
+                .derive(org.jooq.conf.SettingsTools.clone(db.settings()).withExecuteLogging(false)));
+        query.fetchSize(512);
+        return query.fetchLazy();
+    }
+
+    private org.jooq.SelectQuery<Record> estateQuery(
+            UUID estate,
+            UUID asset,
+            DeviceMetric metric,
+            OffsetDateTime from,
+            OffsetDateTime to,
+            Set<ReadingFlagType> flags) {
+        var query = db.selectQuery();
+        query.addSelect(
+                ID,
+                ASSET_ID,
+                ASSET_NAME,
+                ASSET_REFERENCE,
+                MEASURED_AT,
+                METRIC,
+                VALUE,
+                DEVICE_ID,
+                IDENTIFIER,
+                GAP,
+                DUPLICATE,
+                OUT_OF_RANGE,
+                GAP_LENGTH,
+                SOURCE,
+                RECORDED_BY,
+                RECORDED_NAME,
+                RECORDED_AT);
+        query.addFrom(flagged(estate, asset, metric));
+        query.addConditions(matching(from, to, flags));
+        query.addOrderBy(MEASURED_AT.desc(), ID.desc());
+        return query;
+    }
+
+    static EstateReadingResponse toEstateResponse(Record row) {
+        var reading = toResponse(row);
+        return new EstateReadingResponse(
+                reading.id(),
+                row.get(ASSET_ID),
+                row.get(ASSET_REFERENCE),
+                row.get(ASSET_NAME),
+                reading.measuredAt(),
+                reading.metric(),
+                reading.unit(),
+                reading.value(),
+                reading.deviceId(),
+                reading.deviceIdentifier(),
+                reading.flags(),
+                reading.source(),
+                reading.recordedByUserId(),
+                reading.recordedByName(),
+                reading.recordedAt());
     }
 
     public long countEstate(
@@ -190,14 +250,14 @@ public class AssetReadingRepository {
                         previous.MEASUREDAT.lt(DEVICEREADING.MEASUREDAT))
                 .orderBy(previous.MEASUREDAT.desc())
                 .limit(1)
-                .asField();
+                .<OffsetDateTime>asField();
         var conditions = new ArrayList<Condition>();
         if (estateId != null) conditions.add(DEVICEREADING.ESTATEID.eq(estateId));
         if (assetId != null) conditions.add(DEVICEREADING.ASSETID.eq(assetId));
         if (metric != null) {
             conditions.add(DEVICEREADING.METRIC.eq(metric.name()));
         }
-        return select(
+        var sensor = select(
                         DEVICEREADING.ID.as(ID),
                         DEVICEREADING.ASSETID.as(ASSET_ID),
                         ASSET.NAME.as(ASSET_NAME),
@@ -209,16 +269,46 @@ public class AssetReadingRepository {
                         DEVICE.IDENTIFIER.as(IDENTIFIER),
                         DEVICE.REPORTINGINTERVALSECONDS.as(INTERVAL),
                         predecessor.as(PREVIOUS_AT),
-                        DSL.count()
-                                .over(partitionBy(
-                                        DEVICEREADING.ASSETID, DEVICEREADING.METRIC, DEVICEREADING.MEASUREDAT))
-                                .as(SAME_INSTANT))
+                        DSL.inline("SENSOR").as(SOURCE),
+                        DSL.val((String) null).as(RECORDED_BY),
+                        DSL.val((String) null).as(RECORDED_NAME),
+                        DEVICEREADING.RECEIVEDAT.as(RECORDED_AT))
                 .from(DEVICEREADING)
                 .join(DEVICE)
                 .on(DEVICE.ID.eq(DEVICEREADING.DEVICEID))
                 .join(ASSET)
                 .on(ASSET.ID.eq(DEVICEREADING.ASSETID).and(ASSET.ESTATEID.eq(DEVICEREADING.ESTATEID)))
-                .where(conditions)
+                .where(conditions);
+        var manualConditions = new ArrayList<Condition>();
+        if (estateId != null) manualConditions.add(MANUALREADING.ESTATEID.eq(estateId));
+        if (assetId != null) manualConditions.add(MANUALREADING.ASSETID.eq(assetId));
+        if (metric != null) manualConditions.add(MANUALREADING.METRIC.eq(metric.name()));
+        var manual = select(
+                        MANUALREADING.ID,
+                        MANUALREADING.ASSETID,
+                        ASSET.NAME,
+                        ASSET.REFERENCE,
+                        MANUALREADING.MEASUREDAT,
+                        MANUALREADING.METRIC,
+                        MANUALREADING.VALUE,
+                        DSL.val((UUID) null, SQLDataType.UUID),
+                        DSL.val((String) null),
+                        DSL.val((Integer) null),
+                        DSL.val((OffsetDateTime) null, SQLDataType.TIMESTAMPWITHTIMEZONE(6)),
+                        DSL.inline("MANUAL"),
+                        MANUALREADING.RECORDEDBYUSERID,
+                        MANUALREADING.RECORDEDBYNAME,
+                        MANUALREADING.RECORDEDAT)
+                .from(MANUALREADING)
+                .join(ASSET)
+                .on(ASSET.ID.eq(MANUALREADING.ASSETID).and(ASSET.ESTATEID.eq(MANUALREADING.ESTATEID)))
+                .where(manualConditions);
+        var sources = sensor.unionAll(manual).asTable("source_reading");
+        return select(sources.fields())
+                .select(DSL.count()
+                        .over(partitionBy(sources.field(ASSET_ID), sources.field(METRIC), sources.field(MEASURED_AT)))
+                        .as(SAME_INSTANT))
+                .from(sources)
                 .asTable("reading");
     }
 
@@ -278,6 +368,10 @@ public class AssetReadingRepository {
                 row.get(VALUE),
                 row.get(DEVICE_ID),
                 row.get(IDENTIFIER),
-                flags);
+                flags,
+                ReadingSource.valueOf(row.get(SOURCE)),
+                row.get(RECORDED_BY),
+                row.get(RECORDED_NAME),
+                row.get(RECORDED_AT).withOffsetSameInstant(ZoneOffset.UTC));
     }
 }

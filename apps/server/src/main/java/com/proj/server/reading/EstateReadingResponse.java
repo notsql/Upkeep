@@ -19,7 +19,11 @@ import java.util.UUID;
             "value",
             "deviceId",
             "deviceIdentifier",
-            "flags"
+            "flags",
+            "source",
+            "recordedByUserId",
+            "recordedByName",
+            "recordedAt"
         })
 public record EstateReadingResponse(
         UUID id,
@@ -30,6 +34,10 @@ public record EstateReadingResponse(
         DeviceMetric metric,
         String unit,
         BigDecimal value,
-        UUID deviceId,
-        String deviceIdentifier,
-        List<ReadingFlagResponse> flags) {}
+        @Schema(nullable = true) UUID deviceId,
+        @Schema(nullable = true) String deviceIdentifier,
+        List<ReadingFlagResponse> flags,
+        ReadingSource source,
+        @Schema(nullable = true) String recordedByUserId,
+        @Schema(nullable = true) String recordedByName,
+        OffsetDateTime recordedAt) {}

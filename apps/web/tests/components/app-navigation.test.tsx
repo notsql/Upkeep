@@ -117,6 +117,7 @@ async function setup(
     "/estates/$estateId/work-orders",
     "/estates/$estateId/documents",
     "/estates/$estateId/readings",
+    "/estates/$estateId/readings/new",
     "/reports/new",
     "/reports",
   ].map((path) =>
@@ -166,6 +167,11 @@ function getEstates(path: string, options?: unknown) {
   } as never);
 }
 beforeEach(() => {
+  const originalMedia = window.matchMedia;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    ...originalMedia(query),
+    matches: query === "(max-width: 767px)",
+  }));
   vi.mocked(api.GET).mockClear();
   accessOverride = undefined;
   auth.user = { id: "owner" };
@@ -453,29 +459,45 @@ it("shows resident navigation from database access while WorkOS has an ordinary 
   auth.user = { id: "resident-a" };
   auth.role = "user";
   await setup("/reports/new");
-
-  await Promise.all(
-    ["Desktop navigation", "Mobile navigation"].map(async (name) => {
-      const navigation = within(screen.getByRole("navigation", { name }));
-      expect(
-        (
-          await navigation.findByRole("link", { name: "Report a fault" })
-        ).getAttribute("href")
-      ).toBe("/reports/new?estateId=maple");
-      expect(
-        navigation
-          .getByRole("link", { name: "My reports" })
-          .getAttribute("href")
-      ).toBe("/reports?estateId=maple");
-      expect(navigation.queryByRole("link", { name: "Home" })).toBeNull();
-      expect(
-        navigation.getByRole("link", { name: "Estates" }).getAttribute("href")
-      ).toBe("/estates");
-      expect(
-        navigation.queryByRole("link", { name: "Admin users" })
-      ).toBeNull();
-    })
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
   );
+  expect(
+    (await desktop.findByRole("link", { name: "Report a fault" })).getAttribute(
+      "href"
+    )
+  ).toBe("/reports/new?estateId=maple");
+  expect(
+    desktop.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe("/reports?estateId=maple");
+  const mobile = within(
+    screen.getByRole("navigation", { name: "Mobile navigation" })
+  );
+  expect(mobile.queryByRole("link", { name: "Report a fault" })).toBeNull();
+  const local = within(
+    screen.getByRole("navigation", { name: "Estate navigation" })
+  );
+  fireEvent.click(
+    await local.findByRole("button", { name: "Estate section: Report a fault" })
+  );
+  const sections = within(
+    await screen.findByRole("menu", { name: "Estate sections" })
+  );
+  expect(
+    sections
+      .getByRole("menuitem", { name: "Report a fault" })
+      .getAttribute("href")
+  ).toBe("/reports/new?estateId=maple");
+  expect(
+    sections.getByRole("menuitem", { name: "My reports" }).getAttribute("href")
+  ).toBe("/reports?estateId=maple");
+  for (const navigation of [desktop, mobile]) {
+    expect(navigation.queryByRole("link", { name: "Home" })).toBeNull();
+    expect(
+      navigation.getByRole("link", { name: "Estates" }).getAttribute("href")
+    ).toBe("/estates");
+    expect(navigation.queryByRole("link", { name: "Admin users" })).toBeNull();
+  }
   expect(
     vi.mocked(api.GET).mock.calls.some((call) => call[0] === "/estates")
   ).toBe(false);
@@ -494,9 +516,23 @@ it.each([ownerEstateAccess, crewEstateAccess])(
         const navigation = within(
           await screen.findByRole("navigation", { name })
         );
-        const link = await navigation.findByRole("link", {
-          name: "Fault reports",
-        });
+        if (name === "Estate navigation") {
+          fireEvent.click(
+            await navigation.findByRole("button", {
+              name: "Estate section: Fault reports",
+            })
+          );
+        }
+        const target =
+          name === "Estate navigation"
+            ? within(
+                await screen.findByRole("menu", { name: "Estate sections" })
+              )
+            : navigation;
+        const link = await target.findByRole(
+          name === "Estate navigation" ? "menuitem" : "link",
+          { name: "Fault reports" }
+        );
         expect(link.getAttribute("href")).toBe("/estates/oak/reports");
         expect(link.getAttribute("aria-current")).toBe("page");
         expect(
@@ -649,31 +685,39 @@ it("removes fault-report navigation after responder access is revoked on refetch
   );
 });
 
-it("shows reporting and management navigation together for different estate roles", async () => {
+it("keeps estate reporting scoped to the database role while retaining global resident entry", async () => {
   accessOverride = mixedAccess;
   auth.user = { id: "mixed-user" };
-  auth.role = "resident"; // This stale WorkOS claim must not hide B's permissions.
+  auth.role = "resident"; // A stale WorkOS claim must not hide estate permissions.
   await setup("/estates/oak/council");
   const desktop = within(
     screen.getByRole("navigation", { name: "Desktop navigation" })
   );
   await desktop.findByRole("link", { name: "Estates" });
   desktop.getByRole("link", { name: "Home" });
-  desktop.getByRole("link", { name: "Report a fault" });
-  desktop.getByRole("link", { name: "My reports" });
   desktop.getByRole("link", { name: "Estate members" });
   expect(desktop.queryByRole("link", { name: "Assets" })).toBeNull();
+  expect(desktop.queryByRole("link", { name: "Report a fault" })).toBeNull();
+  expect(desktop.queryByRole("link", { name: "My reports" })).toBeNull();
   const mobile = within(
     screen.getByRole("navigation", { name: "Mobile navigation" })
   );
-  const mobileHistory = mobile.queryByRole("link", { name: "My reports" });
-  if (mobileHistory) {
-    expect(mobileHistory.getAttribute("href")).toBe("/reports");
-  } else {
-    fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
-    const history = await screen.findByRole("menuitem", { name: "My reports" });
-    expect(history.getAttribute("href")).toBe("/reports");
-  }
+  fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
+  await screen.findByRole("menuitem", { name: "Settings" });
+  expect(screen.queryByRole("menuitem", { name: "My reports" })).toBeNull();
+  fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+  fireEvent.click(desktop.getByRole("link", { name: "Estates" }));
+  expect(
+    (await desktop.findByRole("link", { name: "Report a fault" })).getAttribute(
+      "href"
+    )
+  ).toBe("/reports/new?estateId=maple");
+  fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
+  expect(
+    (await screen.findByRole("menuitem", { name: "My reports" })).getAttribute(
+      "href"
+    )
+  ).toBe("/reports?estateId=maple");
 });
 
 it("keeps estate creation discoverable after the resident membership is deleted", async () => {
@@ -824,8 +868,13 @@ it("offers inactive accessible estates above mobile estate links and opens their
     expect(router.state.location.pathname).toBe("/estates/inactive");
   });
   await local.findByRole("button", { name: "Switch estate: Old Estate" });
+  fireEvent.click(
+    await local.findByRole("button", { name: "Estate section: Overview" })
+  );
   expect(
-    local.getByRole("link", { name: "Overview" }).getAttribute("href")
+    (await screen.findByRole("menuitem", { name: "Overview" })).getAttribute(
+      "href"
+    )
   ).toBe("/estates/inactive");
   const global = within(
     screen.getByRole("navigation", { name: "Mobile navigation" })
@@ -1027,3 +1076,326 @@ it.each([
     }
   }
 );
+
+it("orders desktop estate destinations from overview through operational sections to administration", async () => {
+  const fullAccess = {
+    ...ownerEstateAccess,
+    estateId: "maple",
+    estateName: "Maple Estate",
+    canViewDocuments: true,
+  };
+  accessOverride = { ...workspaceAccess, estates: [fullAccess] };
+  await setup("/estates/maple/readings");
+  const navigation = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  await navigation.findByRole("link", { name: "Readings" });
+  const names = navigation
+    .getAllByRole("link")
+    .filter((link) => link.getAttribute("href")?.startsWith("/estates/maple"))
+    .map((link) => link.textContent);
+  expect(names).toEqual([
+    "Overview",
+    "Assets",
+    "Work orders",
+    "Fault reports",
+    "Readings",
+    "Documents",
+    "Estate members",
+    "Roles",
+  ]);
+});
+
+it("uses a compact section menu on nested pages and navigates within the selected estate", async () => {
+  const fullAccess = {
+    ...ownerEstateAccess,
+    estateId: "maple",
+    estateName: "Maple Estate",
+    canViewDocuments: true,
+  };
+  accessOverride = { ...workspaceAccess, estates: [fullAccess] };
+  const { router } = await setup("/estates/maple/readings/new");
+  const local = within(
+    await screen.findByRole("navigation", { name: "Estate navigation" })
+  );
+  const trigger = await local.findByRole("button", {
+    name: "Estate section: Readings",
+  });
+  expect(local.queryByRole("link", { name: "Documents" })).toBeNull();
+  fireEvent.click(trigger);
+  const menu = within(
+    await screen.findByRole("menu", { name: "Estate sections" })
+  );
+  expect(menu.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(
+    [
+      "Overview",
+      "Assets",
+      "Work orders",
+      "Fault reports",
+      "Readings",
+      "Documents",
+      "Estate members",
+      "Roles",
+    ]
+  );
+  expect(
+    menu
+      .getByRole("menuitem", { name: "Readings" })
+      .getAttribute("aria-current")
+  ).toBe("page");
+  fireEvent.click(menu.getByRole("menuitem", { name: "Documents" }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe("/estates/maple/documents")
+  );
+  await local.findByRole("button", { name: "Estate section: Documents" });
+  await waitFor(() =>
+    expect(screen.queryByRole("menu", { name: "Estate sections" })).toBeNull()
+  );
+});
+
+it("shows Crew only their authorized sections in the shared order", async () => {
+  const crewAccess = {
+    ...crewEstateAccess,
+    estateId: "maple",
+    estateName: "Maple Estate",
+    canViewEstateDetails: false,
+    canViewManagement: false,
+    canViewInspectionResults: false,
+    canViewDocuments: true,
+  };
+  accessOverride = { ...workspaceAccess, estates: [crewAccess] };
+  await setup("/estates/maple/work-orders");
+  const local = within(
+    await screen.findByRole("navigation", { name: "Estate navigation" })
+  );
+  fireEvent.click(
+    await local.findByRole("button", { name: "Estate section: Work orders" })
+  );
+  const menu = within(
+    await screen.findByRole("menu", { name: "Estate sections" })
+  );
+  expect(menu.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(
+    ["Work orders", "Fault reports", "Readings", "Documents"]
+  );
+});
+
+it.each(["MANAGER", "CREW"])(
+  "keeps resident reporting out of the selected %s estate",
+  async (role) => {
+    accessOverride = {
+      ...mixedAccess,
+      estates: [
+        {
+          ...ownerEstateAccess,
+          role,
+          estateId: "pine",
+          estateName: "Pine Estate",
+        },
+        ...residentAccess.estates,
+      ],
+    };
+    await setup("/estates/pine/work-orders");
+    const desktop = within(
+      screen.getByRole("navigation", { name: "Desktop navigation" })
+    );
+    await desktop.findByRole("link", { name: "Work orders" });
+    expect(desktop.queryByRole("link", { name: "Report a fault" })).toBeNull();
+    expect(desktop.queryByRole("link", { name: "My reports" })).toBeNull();
+    const mobile = within(
+      screen.getByRole("navigation", { name: "Mobile navigation" })
+    );
+    fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
+    await screen.findByRole("menuitem", { name: "Settings" });
+    expect(
+      screen.queryByRole("menuitem", { name: "Report a fault" })
+    ).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: "My reports" })).toBeNull();
+  }
+);
+
+it("puts resident reporting in the selected estate's section menu and retains its estate ID", async () => {
+  accessOverride = mixedAccess;
+  const { router } = await setup("/reports?estateId=maple");
+  const local = within(
+    await screen.findByRole("navigation", { name: "Estate navigation" })
+  );
+  fireEvent.click(
+    await local.findByRole("button", { name: "Estate section: My reports" })
+  );
+  const menu = within(
+    await screen.findByRole("menu", { name: "Estate sections" })
+  );
+  expect(menu.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(
+    ["My reports", "Report a fault"]
+  );
+  expect(
+    menu
+      .getByRole("menuitem", { name: "My reports" })
+      .getAttribute("aria-current")
+  ).toBe("page");
+  expect(
+    menu.getByRole("menuitem", { name: "Report a fault" }).getAttribute("href")
+  ).toBe("/reports/new?estateId=maple");
+  fireEvent.click(menu.getByRole("menuitem", { name: "Report a fault" }));
+  await waitFor(() =>
+    expect(router.state.location.href).toBe("/reports/new?estateId=maple")
+  );
+  await local.findByRole("button", { name: "Estate section: Report a fault" });
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  expect(desktop.getAllByRole("link", { name: "Report a fault" })).toHaveLength(
+    1
+  );
+  expect(
+    desktop.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe("/reports?estateId=maple");
+});
+
+it.each([
+  {
+    label: "Report a fault",
+    title: "Choose an estate for reporting a fault",
+    destination: "/reports/new",
+    mobile: false,
+  },
+  {
+    label: "My reports",
+    title: "Choose an estate for my reports",
+    destination: "/reports",
+    mobile: false,
+  },
+  {
+    label: "Report a fault",
+    title: "Choose an estate for reporting a fault",
+    destination: "/reports/new",
+    mobile: true,
+  },
+  {
+    label: "My reports",
+    title: "Choose an estate for my reports",
+    destination: "/reports",
+    mobile: true,
+  },
+])(
+  "asks which resident estate for $label from global navigation (mobile=$mobile)",
+  async ({ label, title, destination, mobile }) => {
+    accessOverride = {
+      ...mixedAccess,
+      residentEstates: [
+        { id: "maple", name: "Maple Estate" },
+        { id: "birch", name: "Birch Estate" },
+      ],
+      estates: [
+        ...mixedAccess.estates,
+        {
+          ...residentAccess.estates[0],
+          estateId: "birch",
+          estateName: "Birch Estate",
+        },
+      ],
+    };
+    const { router } = await setup("/estates");
+    const nav = within(
+      screen.getByRole("navigation", {
+        name: mobile ? "Mobile navigation" : "Desktop navigation",
+      })
+    );
+    if (mobile) {
+      fireEvent.click(
+        await nav.findByRole("button", { name: "More navigation" })
+      );
+      fireEvent.click(await screen.findByRole("menuitem", { name: label }));
+    } else {
+      fireEvent.click(await nav.findByRole("button", { name: label }));
+    }
+    const chooser = within(await screen.findByRole("dialog", { name: title }));
+    expect(router.state.location.pathname).toBe("/estates");
+    expect(
+      chooser.getAllByRole("link").map((link) => link.textContent)
+    ).toEqual(["Maple Estate", "Birch Estate"]);
+    expect(chooser.queryByRole("link", { name: "Pine Estate" })).toBeNull();
+    fireEvent.click(chooser.getByRole("link", { name: "Birch Estate" }));
+    await waitFor(() =>
+      expect(router.state.location.href).toBe(`${destination}?estateId=birch`)
+    );
+  }
+);
+
+it("names the sole resident estate explicitly in global reporting links", async () => {
+  accessOverride = mixedAccess;
+  await setup("/estates");
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  expect(
+    (await desktop.findByRole("link", { name: "Report a fault" })).getAttribute(
+      "href"
+    )
+  ).toBe("/reports/new?estateId=maple");
+  expect(
+    desktop.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe("/reports?estateId=maple");
+});
+
+it("keeps inactive resident history but hides unavailable fault creation", async () => {
+  accessOverride = {
+    ...mixedAccess,
+    canSubmitReport: false,
+    residentEstates: [],
+  };
+  await setup("/reports?estateId=maple");
+  const desktop = within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  );
+  await desktop.findByRole("link", { name: "My reports" });
+  expect(desktop.queryByRole("link", { name: "Report a fault" })).toBeNull();
+  const local = within(
+    await screen.findByRole("navigation", { name: "Estate navigation" })
+  );
+  fireEvent.click(
+    await local.findByRole("button", { name: "Estate section: My reports" })
+  );
+  const menu = within(
+    await screen.findByRole("menu", { name: "Estate sections" })
+  );
+  expect(menu.getAllByRole("menuitem").map((item) => item.textContent)).toEqual(
+    ["My reports"]
+  );
+});
+
+it("closes mobile estate navigation on resize to desktop", async () => {
+  let mobile = true;
+  const events = new EventTarget();
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    media: query,
+    onchange: null,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: events.dispatchEvent.bind(events),
+    matches: query === "(max-width: 767px)" && mobile,
+    addEventListener: events.addEventListener.bind(events),
+    removeEventListener: events.removeEventListener.bind(events),
+  }));
+  await setup("/estates/maple/readings");
+  const local = within(
+    await screen.findByRole("navigation", { name: "Estate navigation" })
+  );
+  fireEvent.click(
+    await local.findByRole("button", { name: "Estate section: Readings" })
+  );
+  await screen.findByRole("menu", { name: "Estate sections" });
+  act(() => {
+    mobile = false;
+    events.dispatchEvent(new Event("change"));
+  });
+  await waitFor(() =>
+    expect(screen.queryByRole("menu", { name: "Estate sections" })).toBeNull()
+  );
+  expect(
+    screen.queryByRole("navigation", { name: "Estate navigation" })
+  ).toBeNull();
+  within(
+    screen.getByRole("navigation", { name: "Desktop navigation" })
+  ).getByRole("link", { name: "Readings" });
+});

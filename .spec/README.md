@@ -31,6 +31,9 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [export-filtered-readings-csv.md](features/export-filtered-readings-csv.md) | ID-61 / ID-64 CSV | implemented and verified; complete filtered CSV v1 with provenance, bounded streaming and cancellation; 1,470 server / 866 web tests, types, formatting/build, live role/mobile QA and million-row HTTP check pass |
+| [mobile-estate-navigation-and-lists.md](features/mobile-estate-navigation-and-lists.md) | readings/mobile QA follow-up | built and verified 2026-10-28; estate-scoped resident reporting, responsive lists and resize recovery; 849 web / 1,449 server tests, types, formatting/build and live Chrome mobile/role checks pass |
+| [manual-readings-and-provenance.md](features/manual-readings-and-provenance.md) | ID-63 / ID-64 | implemented and verified; final 1,470 server / 866 web tests, types, formatting/build, role/mobile/browser and mixed-data performance pass; CSV provenance complete through ID-61 |
 | [browse-raw-sensor-readings.md](features/browse-raw-sensor-readings.md) | ID-60 | implemented; 1,420 server / 818 web tests, types, lint and build pass; browser roles/mobile, flag layout and performance checked |
 | [crew-work-orders-read-only.md](features/crew-work-orders-read-only.md) | - | built and verified 2026-10-26; Crew work-order reads retained and creation/writes denied; tests first, 1,354 backend and 754 web tests, type checks and formatting passed |
 | [work-order-document-association.md](features/work-order-document-association.md) | ID-26 | link/change/remove, audit and attachments implemented on ID-22 PR #37 base; automated, isolated live and real Neon/R2 checks passed; database/bucket cleanup coordination and ID-23/24/25 integration pending |

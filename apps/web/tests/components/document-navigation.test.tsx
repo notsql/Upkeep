@@ -6,6 +6,7 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
+import { fireEvent } from "@testing-library/react";
 import { residentEstateAccess, unassignedAccess } from "@tests/fixtures/access";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -79,6 +80,11 @@ function documentAccess(role: string, read: boolean) {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  const originalMedia = window.matchMedia;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    ...originalMedia(query),
+    matches: query === "(max-width: 767px)",
+  }));
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
   documentAccess("CUSTOM", true);
   apiGet.mockImplementation((path) =>
@@ -105,9 +111,17 @@ it.each(["MANAGER", "COUNCIL", "CREW", "CUSTOM"])(
     const link = await desktop.findByRole("link", { name: "Documents" });
     expect(link.getAttribute("href")).toBe("/estates/maple/documents");
     expect(link.getAttribute("aria-current")).toBe("page");
-    within(
+    const local = within(
       screen.getByRole("navigation", { name: "Estate navigation" })
-    ).getByRole("link", { name: "Documents" });
+    );
+    fireEvent.click(
+      local.getByRole("button", { name: "Estate section: Documents" })
+    );
+    expect(
+      (await screen.findByRole("menuitem", { name: "Documents" })).getAttribute(
+        "href"
+      )
+    ).toBe("/estates/maple/documents");
     expect(apiGet.mock.calls.map(([path]) => String(path))).not.toContain(
       "/estates/{id}"
     );

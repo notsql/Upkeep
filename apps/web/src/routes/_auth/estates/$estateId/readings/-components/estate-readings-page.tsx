@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { useAppAccess } from "@/lib/access";
@@ -10,6 +11,7 @@ import {
   useEstateReadings,
   useReadingAssets,
 } from "@/lib/readings";
+import { ReadingExport } from "./reading-export";
 import { ReadingFilterControls } from "./reading-filter-controls";
 import { ReadingResults } from "./reading-results";
 
@@ -87,6 +89,29 @@ export function EstateReadingsPage({
         ]}
         description={estate?.estateName}
         title="Readings"
+      />
+      {estate?.canRecordReadings ? (
+        <Button
+          render={
+            <Link
+              params={{ estateId }}
+              search={{ assetId: filters.assetId, metric: filters.metric }}
+              to="/estates/$estateId/readings/new"
+            />
+          }
+        >
+          Record manual reading
+        </Button>
+      ) : null}
+      <ReadingExport
+        disabled={
+          !!error ||
+          readings.isFetching ||
+          readings.isPending ||
+          readings.isError
+        }
+        estateId={estateId}
+        filters={filters}
       />
       <ReadingFilterControls
         assetLabel={label}

@@ -9441,7 +9441,7 @@
         ],
         "responses": {
           "400": {
-            "description": "Malformed filters or pagination",
+            "description": "Invalid request payload, filters or pagination",
             "content": {
               "*/*": {
                 "schema": {
@@ -9481,7 +9481,7 @@
             }
           },
           "200": {
-            "description": "Matching sensor readings, newest first, with per-asset flags",
+            "description": "Matching sensor and manual readings, newest first, with provenance and per-asset flags",
             "content": {
               "*/*": {
                 "schema": {
@@ -9538,7 +9538,7 @@
         ],
         "responses": {
           "400": {
-            "description": "Malformed filters or pagination",
+            "description": "Invalid request payload, filters or pagination",
             "content": {
               "*/*": {
                 "schema": {
@@ -9583,6 +9583,335 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ReadingAssetOptionPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/readings/manual": {
+      "post": {
+        "tags": ["estate-reading-controller"],
+        "summary": "Record an attributed human measurement",
+        "operationId": "createManualReading",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualReadingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Manual reading recorded",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualReadingResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Identical retry; original reading returned",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualReadingResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, retired asset or conflicting submission",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload, filters or pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner, Manager or Crew readings access required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or selected asset not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/readings/metrics": {
+      "get": {
+        "tags": ["estate-reading-controller"],
+        "operationId": "listReadingMetrics",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request payload, filters or pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner, Manager or Crew readings access required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or selected asset not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Fixed metric catalogue with units and expected ranges",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReadingMetricOption"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/readings/export": {
+      "get": {
+        "tags": ["reading-export-controller"],
+        "summary": "Export every matching manual and sensor reading as CSV v1",
+        "operationId": "exportEstateReadings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "VIBRATION_ACCELERATION",
+                "POWER",
+                "ENERGY"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "flag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV v1; X-Export-Row-Count is the complete matching count, including beyond any browser page",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Export-Row-Count": {
+                "description": "Complete row count from the same query snapshot",
+                "style": "simple",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "required": true
+              },
+              "Content-Disposition": {
+                "description": "CSV v1 attachment filename",
+                "style": "simple",
+                "schema": {
+                  "type": "string"
+                },
+                "required": true
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Readings access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Export capacity busy; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
                 }
               }
             }
@@ -12784,11 +13113,11 @@
             "description": "As stored: rounded to 6 decimal places"
           },
           "deviceId": {
-            "type": "string",
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "deviceIdentifier": {
-            "type": "string"
+            "type": ["string", "null"]
           },
           "flags": {
             "type": "array",
@@ -12796,6 +13125,20 @@
             "items": {
               "$ref": "#/components/schemas/ReadingFlagResponse"
             }
+          },
+          "source": {
+            "type": "string",
+            "enum": ["SENSOR", "MANUAL"]
+          },
+          "recordedByUserId": {
+            "type": ["string", "null"]
+          },
+          "recordedByName": {
+            "type": ["string", "null"]
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -12805,6 +13148,10 @@
           "id",
           "measuredAt",
           "metric",
+          "recordedAt",
+          "recordedByName",
+          "recordedByUserId",
+          "source",
           "unit",
           "value"
         ]
@@ -13266,6 +13613,9 @@
           },
           "canViewReadings": {
             "type": "boolean"
+          },
+          "canRecordReadings": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -13281,6 +13631,7 @@
           "canManageEstate",
           "canManageInvitationPermissions",
           "canReassignRoles",
+          "canRecordReadings",
           "canRelocateFaultReports",
           "canUpdateWorkOrders",
           "canUploadDocuments",
@@ -13367,17 +13718,31 @@
             "type": "number"
           },
           "deviceId": {
-            "type": "string",
+            "type": ["string", "null"],
             "format": "uuid"
           },
           "deviceIdentifier": {
-            "type": "string"
+            "type": ["string", "null"]
           },
           "flags": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReadingFlagResponse"
             }
+          },
+          "source": {
+            "type": "string",
+            "enum": ["SENSOR", "MANUAL"]
+          },
+          "recordedByUserId": {
+            "type": ["string", "null"]
+          },
+          "recordedByName": {
+            "type": ["string", "null"]
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
@@ -13390,6 +13755,10 @@
           "id",
           "measuredAt",
           "metric",
+          "recordedAt",
+          "recordedByName",
+          "recordedByUserId",
+          "source",
           "unit",
           "value"
         ]
@@ -13436,6 +13805,146 @@
           }
         },
         "required": ["items", "page", "size", "totalItems"]
+      },
+      "CreateManualReadingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "description": "JSON number; rounded half-up to six decimal places, at most twelve integer digits"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp with UTC offset; backdating allowed, at most five minutes ahead"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Reuse for an identical retry; generate a new UUID for an edited submission"
+          }
+        },
+        "required": [
+          "assetId",
+          "measuredAt",
+          "metric",
+          "submissionId",
+          "unit",
+          "value"
+        ]
+      },
+      "ManualReadingResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["SENSOR", "MANUAL"]
+          },
+          "recordedByUserId": {
+            "type": "string"
+          },
+          "recordedByName": {
+            "type": ["string", "null"]
+          }
+        },
+        "required": [
+          "assetId",
+          "id",
+          "measuredAt",
+          "metric",
+          "recordedAt",
+          "recordedByName",
+          "recordedByUserId",
+          "source",
+          "unit",
+          "value"
+        ]
+      },
+      "ReadingMetricOption": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "validMin": {
+            "type": "number",
+            "format": "double"
+          },
+          "validMax": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": ["metric", "unit", "validMax", "validMin"]
       }
     },
     "securitySchemes": {

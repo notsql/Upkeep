@@ -373,3 +373,16 @@ unlinked failed record retains a Create work order action that reopens this same
 prefilled form. Linked results display their existing work order. Successful conversion invalidates user/estate/asset-scoped
 inspection detail/history and source lookup alongside work-order lists.
 See [inspection screens](inspections.md) for routes, query keys and failure states.
+
+## Responsive work-order list
+
+Below 768px, `-components/work-order-table.tsx` uses the existing `useMobile`
+hook to render `work-order-cards.tsx` and `work-order-sort-controls.tsx` instead
+of the table. The single `Work orders` list shows reference/detail link,
+description, priority, readable status/category and created time using shadcn
+Cards. The shadcn Select labelled Sort work orders by offers Reference, Category,
+Priority and Created; Reverse sort direction invokes the same sort callback as
+a repeated desktop header click. Filters, cursor trail, scroll preservation and
+the server's stable priority tie order are unchanged. Cards expose refreshing
+busy state and retain previous data while the request is pending. Desktop at
+>=768px keeps the sortable table; only one presentation is mounted.

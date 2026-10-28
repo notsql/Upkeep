@@ -26,6 +26,7 @@ import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Permission;
 import com.proj.server.db.tables.Workorder;
@@ -149,6 +150,11 @@ public class Tables {
      * The table <code>public.Location</code>.
      */
     public static final Location LOCATION = Location.LOCATION;
+
+    /**
+     * The table <code>public.ManualReading</code>.
+     */
+    public static final Manualreading MANUALREADING = Manualreading.MANUALREADING;
 
     /**
      * The table <code>public.Manufacturer</code>.

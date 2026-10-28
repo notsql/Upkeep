@@ -64,6 +64,10 @@ const reading = {
   value: 151.5,
   deviceId: "d1",
   deviceIdentifier: "PUMP-01",
+  source: "SENSOR" as const,
+  recordedByUserId: null,
+  recordedByName: null,
+  recordedAt: "2026-10-01T08:00:01Z",
   flags: [
     { type: "GAP" as const, gapSeconds: 7500 },
     { type: "DUPLICATE_TIMESTAMP" as const },
@@ -180,4 +184,22 @@ describe("ReadingsPage", () => {
     renderPage();
     await screen.findByText("from must be before to");
   });
+});
+
+it("shows asset readings as labelled mobile records with all suspect flags", async () => {
+  const original = window.matchMedia;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    ...original(query),
+    matches: query === "(max-width: 767px)",
+  }));
+  readingPage = { items: [reading], page: 0, size: 50, totalItems: 1 };
+  serve();
+  renderPage();
+  const record = within(await screen.findByRole("list", { name: "Readings" }));
+  record.getByText("151.5 °C");
+  record.getByText("PUMP-01");
+  record.getByText("Sensor");
+  record.getByText("Duplicate timestamp");
+  record.getByText("Out of range (valid -40 to 150 °C)");
+  expect(screen.queryByRole("table", { name: "Readings" })).toBeNull();
 });

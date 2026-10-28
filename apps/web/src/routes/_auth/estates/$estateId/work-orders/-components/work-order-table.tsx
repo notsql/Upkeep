@@ -9,7 +9,10 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { SortableTableHead } from "@/components/sortable-table-head";
+import { useMobile } from "@/lib/use-mobile";
 import type { WorkOrder, WorkOrderListSearch } from "@/lib/work-orders";
+import { WorkOrderCards } from "./work-order-cards";
+import { WorkOrderSortControls } from "./work-order-sort-controls";
 
 type SortColumn = NonNullable<WorkOrderListSearch["sortBy"]>;
 const columns: { label: string; sortBy?: SortColumn }[] = [
@@ -35,6 +38,19 @@ export function WorkOrderTable({
   onSort: (column: SortColumn) => void;
   loading: boolean;
 }) {
+  const mobile = useMobile();
+  if (mobile) {
+    return (
+      <div className="space-y-4">
+        <WorkOrderSortControls
+          descending={descending}
+          onSort={onSort}
+          sortBy={sortBy}
+        />
+        <WorkOrderCards estateId={estateId} loading={loading} orders={orders} />
+      </div>
+    );
+  }
   return (
     <Table aria-busy={loading} aria-label="Work orders">
       <TableHeader>

@@ -7,8 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { ReadingCards } from "@/components/readings/reading-cards";
+import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { deviceMetrics } from "@/lib/devices";
 import { type EstateReading, flagLabel } from "@/lib/readings";
+import { useMobile } from "@/lib/use-mobile";
 
 export function ReadingTable({
   items,
@@ -17,6 +20,10 @@ export function ReadingTable({
   items: EstateReading[];
   refreshing: boolean;
 }) {
+  const mobile = useMobile();
+  if (mobile) {
+    return <ReadingCards items={items} refreshing={refreshing} />;
+  }
   return (
     <div
       aria-busy={refreshing}
@@ -25,11 +32,17 @@ export function ReadingTable({
       <Table aria-label="Readings">
         <TableHeader>
           <TableRow>
-            {["Measured", "Asset", "Metric", "Value", "Device", "Flags"].map(
-              (label) => (
-                <TableHead key={label}>{label}</TableHead>
-              )
-            )}
+            {[
+              "Measured",
+              "Asset",
+              "Metric",
+              "Value",
+              "Source",
+              "Device",
+              "Flags",
+            ].map((label) => (
+              <TableHead key={label}>{label}</TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -46,8 +59,11 @@ export function ReadingTable({
               <TableCell className="whitespace-nowrap">
                 {reading.value} {reading.unit}
               </TableCell>
-              <TableCell className="max-w-48 whitespace-normal [overflow-wrap:anywhere]">
-                {reading.deviceIdentifier}
+              <TableCell>
+                <ReadingProvenance reading={reading} />
+              </TableCell>
+              <TableCell className="min-w-36 max-w-48 whitespace-normal [overflow-wrap:anywhere]">
+                {reading.deviceIdentifier ?? "—"}
               </TableCell>
               <TableCell>
                 <div className="flex min-w-32 flex-wrap items-start gap-1">

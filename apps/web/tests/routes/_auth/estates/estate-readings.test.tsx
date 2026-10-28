@@ -14,7 +14,7 @@ import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-c
 
 const { get, permission } = vi.hoisted(() => ({
   get: vi.fn(),
-  permission: { canRead: true },
+  permission: { canRead: true, canRecord: true },
 }));
 vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
@@ -33,6 +33,7 @@ vi.mock("@/lib/access", () => ({
           estateId: "estate",
           estateName: "Maple Estate",
           canViewReadings: permission.canRead,
+          canRecordReadings: permission.canRecord,
           canViewAssets: false,
         },
       ],
@@ -57,10 +58,22 @@ const reading = {
   unit: "°C",
   deviceId: "device",
   deviceIdentifier: "SENSOR-001",
+  source: "SENSOR",
+  recordedAt: "2026-10-01T08:00:01Z",
+  recordedByUserId: null,
+  recordedByName: null,
   flags: [{ type: "OUT_OF_RANGE", validMin: -40, validMax: 150 }],
 };
 let page: {
-  items: (typeof reading)[];
+  items: (Omit<
+    typeof reading,
+    "deviceId" | "deviceIdentifier" | "recordedByUserId" | "recordedByName"
+  > & {
+    deviceId: string | null;
+    deviceIdentifier: string | null;
+    recordedByUserId: string | null;
+    recordedByName: string | null;
+  })[];
   page: number;
   size: number;
   totalItems: number;
@@ -88,6 +101,7 @@ function show(filters: ReadingSearch = {}) {
 beforeEach(() => {
   vi.resetAllMocks();
   permission.canRead = true;
+  permission.canRecord = true;
   fail = false;
   page = { items: [reading], page: 0, size: 50, totalItems: 1 };
   options = {
@@ -117,6 +131,36 @@ beforeEach(() => {
 });
 
 describe("estate reading browser", () => {
+  it("shows manual provenance and the entry action without inventing a device", async () => {
+    page.items = [
+      {
+        ...reading,
+        source: "MANUAL",
+        deviceId: null,
+        deviceIdentifier: null,
+        recordedByUserId: "crew",
+        recordedByName: "Alex Technician",
+      },
+    ];
+    show({ assetId: ASSET, metric: "TEMPERATURE" });
+    const table = await screen.findByRole("table", { name: "Readings" });
+    within(table).getByRole("columnheader", { name: "Source" });
+    within(table).getByText("Manual");
+    within(table).getByText("Alex Technician");
+    expect(within(table).queryByText("SENSOR-001")).toBeNull();
+    screen.getByRole("link", { name: "Record manual reading" });
+  });
+
+  it("shows Sensor labels and hides recording when only historical reads are allowed", async () => {
+    permission.canRecord = false;
+    show();
+    const table = await screen.findByRole("table", { name: "Readings" });
+    within(table).getByText("Sensor");
+    expect(
+      screen.queryByRole("link", { name: "Record manual reading" })
+    ).toBeNull();
+  });
+
   it("hides cached readings as soon as access context revokes permission", async () => {
     const change = vi.fn();
     const view = renderWithProviders(
@@ -414,5 +458,44 @@ describe("estate reading browser", () => {
     fail = false;
     fireEvent.click(screen.getByRole("button", { name: "Retry readings" }));
     await screen.findByRole("table", { name: "Readings" });
+  });
+});
+
+it("shows mobile reading records with provenance and flags, retaining filter-aware numbered paging", async () => {
+  const original = window.matchMedia;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    ...original(query),
+    matches: query === "(max-width: 767px)",
+  }));
+  page.items = [
+    {
+      ...reading,
+      source: "MANUAL",
+      deviceId: null,
+      deviceIdentifier: null,
+      recordedByUserId: "crew",
+      recordedByName: "Alex Technician",
+    },
+    { ...reading, id: "sensor-2" },
+  ];
+  page.totalItems = 151;
+  const change = show({ assetId: ASSET, metric: "TEMPERATURE" });
+  const records = within(await screen.findByRole("list", { name: "Readings" }));
+  expect(records.getAllByRole("listitem")).toHaveLength(2);
+  const manual = within(records.getAllByRole("listitem")[0]);
+  manual.getByText("151 °C");
+  manual.getByText("Water pump");
+  manual.getByText("PUMP-001");
+  manual.getByText("Manual");
+  manual.getByText("Alex Technician");
+  manual.getByText("Out of range (valid -40 to 150 °C)");
+  expect(manual.queryByText("SENSOR-001")).toBeNull();
+  within(records.getAllByRole("listitem")[1]).getByText("SENSOR-001");
+  expect(screen.queryByRole("table", { name: "Readings" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Go to page 3" }));
+  expect(change).toHaveBeenLastCalledWith({
+    assetId: ASSET,
+    metric: "TEMPERATURE",
+    page: 2,
   });
 });

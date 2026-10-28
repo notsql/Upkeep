@@ -78,6 +78,7 @@ function routerFor(path: string) {
     "/estates/$estateId/assets/$assetId/edit",
     "/estates/$estateId/assets/$assetId/readings",
     "/estates/$estateId/readings",
+    "/estates/$estateId/readings/new",
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
     "/estates/$estateId/edit",
@@ -128,6 +129,31 @@ beforeEach(() => {
     accessToken: "ordinary-user-token",
   });
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
+});
+
+it("denies a bookmarked manual-entry route when write capability is unavailable", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...unassignedAccess,
+      canEnterWorkspace: true,
+      estates: [
+        {
+          ...crewEstateAccess,
+          canViewReadings: true,
+          canRecordReadings: false,
+        },
+      ],
+    },
+    response: new Response(),
+  });
+  const router = routerFor(
+    `/estates/${crewEstateAccess.estateId}/readings/new`
+  );
+  await router.load();
+  expect(
+    router.state.matches.some((match) => match.status === "notFound")
+  ).toBe(true);
+  expect(managementLoader).not.toHaveBeenCalled();
 });
 
 it.each([crewEstateAccess, { ...ownerEstateAccess, canViewAssets: false }])(
