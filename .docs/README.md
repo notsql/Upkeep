@@ -21,6 +21,7 @@ same change as the code.
 - [Estate invitations, roles and ownership](api/council-invitations.md): invitation,
   member roles, ownership transfer, acceptance and estate capability fields.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
+- [Estate asset categories](api/asset-categories.md): per-estate silent-failure flags (LIGHTING by default), active-asset counts and append-only change history.
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
@@ -53,6 +54,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
+| [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories`: silent-failure flags per asset category with asset counts and last change |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
 | [frontend/readings.md](frontend/readings.md) | `/estates/$estateId/assets/$assetId/readings`: reading list, metric/time/suspect filters, flag badges, pagination |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |

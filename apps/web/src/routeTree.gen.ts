@@ -26,6 +26,7 @@ import { Route as AuthReportsNewIndexRouteImport } from './routes/_auth/reports/
 import { Route as ApiAuthCallbackIndexRouteImport } from './routes/api/auth/callback/index'
 import { Route as ApiAuthSignInIndexRouteImport } from './routes/api/auth/sign-in/index'
 import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-up/index'
+import { Route as AuthEstatesEstateIdAssetCategoriesIndexRouteImport } from './routes/_auth/estates/$estateId/asset-categories/index'
 import { Route as AuthEstatesEstateIdAssetsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/index'
 import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_auth/estates/$estateId/council/index'
 import { Route as AuthEstatesEstateIdDevicesIndexRouteImport } from './routes/_auth/estates/$estateId/devices/index'
@@ -134,6 +135,12 @@ const ApiAuthSignUpIndexRoute = ApiAuthSignUpIndexRouteImport.update({
   path: '/api/auth/sign-up/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthEstatesEstateIdAssetCategoriesIndexRoute =
+  AuthEstatesEstateIdAssetCategoriesIndexRouteImport.update({
+    id: '/estates/$estateId/asset-categories/',
+    path: '/estates/$estateId/asset-categories/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdAssetsIndexRoute =
   AuthEstatesEstateIdAssetsIndexRouteImport.update({
     id: '/estates/$estateId/assets/',
@@ -282,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
+  '/estates/$estateId/asset-categories/': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/devices/': typeof AuthEstatesEstateIdDevicesIndexRoute
@@ -321,6 +329,7 @@ export interface FileRoutesByTo {
   '/api/auth/callback': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up': typeof ApiAuthSignUpIndexRoute
+  '/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/estates/$estateId/assets': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/devices': typeof AuthEstatesEstateIdDevicesIndexRoute
@@ -362,6 +371,7 @@ export interface FileRoutesById {
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
+  '/_auth/estates/$estateId/asset-categories/': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/_auth/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/_auth/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/_auth/estates/$estateId/devices/': typeof AuthEstatesEstateIdDevicesIndexRoute
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
+    | '/estates/$estateId/asset-categories/'
     | '/estates/$estateId/assets/'
     | '/estates/$estateId/council/'
     | '/estates/$estateId/devices/'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback'
     | '/api/auth/sign-in'
     | '/api/auth/sign-up'
+    | '/estates/$estateId/asset-categories'
     | '/estates/$estateId/assets'
     | '/estates/$estateId/council'
     | '/estates/$estateId/devices'
@@ -482,6 +494,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
+    | '/_auth/estates/$estateId/asset-categories/'
     | '/_auth/estates/$estateId/assets/'
     | '/_auth/estates/$estateId/council/'
     | '/_auth/estates/$estateId/devices/'
@@ -636,6 +649,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/auth/sign-up/'
       preLoaderRoute: typeof ApiAuthSignUpIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_auth/estates/$estateId/asset-categories/': {
+      id: '/_auth/estates/$estateId/asset-categories/'
+      path: '/estates/$estateId/asset-categories'
+      fullPath: '/estates/$estateId/asset-categories/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetCategoriesIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
     }
     '/_auth/estates/$estateId/assets/': {
       id: '/_auth/estates/$estateId/assets/'
@@ -797,6 +817,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesNewIndexRoute: typeof AuthEstatesNewIndexRoute
   AuthReportsReportIdIndexRoute: typeof AuthReportsReportIdIndexRoute
   AuthReportsNewIndexRoute: typeof AuthReportsNewIndexRoute
+  AuthEstatesEstateIdAssetCategoriesIndexRoute: typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   AuthEstatesEstateIdAssetsIndexRoute: typeof AuthEstatesEstateIdAssetsIndexRoute
   AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
   AuthEstatesEstateIdDevicesIndexRoute: typeof AuthEstatesEstateIdDevicesIndexRoute
@@ -830,6 +851,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthEstatesNewIndexRoute: AuthEstatesNewIndexRoute,
   AuthReportsReportIdIndexRoute: AuthReportsReportIdIndexRoute,
   AuthReportsNewIndexRoute: AuthReportsNewIndexRoute,
+  AuthEstatesEstateIdAssetCategoriesIndexRoute:
+    AuthEstatesEstateIdAssetCategoriesIndexRoute,
   AuthEstatesEstateIdAssetsIndexRoute: AuthEstatesEstateIdAssetsIndexRoute,
   AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
   AuthEstatesEstateIdDevicesIndexRoute: AuthEstatesEstateIdDevicesIndexRoute,
@@ -884,3 +907,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

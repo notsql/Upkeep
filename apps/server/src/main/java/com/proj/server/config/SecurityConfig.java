@@ -117,6 +117,7 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/readings",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
                                 "/estates/{estateId}/devices",
+                                "/estates/{estateId}/asset-categories",
                                 "/estates/{estateId}/failure-risk",
                                 "/estates/{estateId}/flatline-policies",
                                 "/estates/{estateId}/flatlined-sensors",
@@ -168,6 +169,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.PUT,
                                 "/estates/{estateId}/documents/{documentId}/work-order",
+                                "/estates/{estateId}/asset-categories/{category}/silent-failure",
                                 "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
                                 "/estates/{estateId}/roles/{roleId}",
