@@ -34,7 +34,7 @@ export function ReadingCards({
                     {deviceMetrics[reading.metric].name}
                   </h2>
                   <p className="font-semibold text-lg">
-                    {reading.value} {reading.unit}
+                    {reading.valueText ?? reading.value} {reading.unit}
                   </p>
                 </div>
                 <ReadingProvenance reading={reading} />

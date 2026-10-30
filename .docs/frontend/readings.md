@@ -395,3 +395,128 @@ records with the filter and total rather than just the visible page. Repeat for
 asset/metric/time/suspect filters and an empty result. Verify both source labels,
 manual recorder IDs/names, disabled/pending/cancel/error/retry states, narrow
 320/375px controls and existing Owner/Manager/Crew versus Resident/Council access.
+
+## Combined acceptance QA — 2026-10-31
+
+Reviewed the current Jira acceptance criteria for ID-60, ID-61, ID-63 and ID-64
+against `feat/browse-raw-sensor-readings` at `09fde7d`. Application source was
+not changed during this review. One manual-entry precision issue remains below;
+the passing automated suite does not cover that edge case.
+
+Verified together:
+
+- ID-60: actual asset/metric/suspect controls, combined local-time boundaries,
+  numbered page jumps (50/50/10 on the initial 110-reading demo), first-page
+  recovery, Back/Forward restoration, retired history and clear empty/no-match
+  states. A combined asset/metric/time/suspect filter returned the expected row.
+- ID-63/64: on mobile, selected an asset without a device, checked the current
+  local default time, backdated a temperature reading to 2026-10-30 08:23 SGT,
+  and saved 151.246813. The warning allowed saving as agreed. The resulting row
+  showed Manual, the authenticated recorder and Out of range; its filtered CSV
+  preserved 151.246813, the recorder identity/name, UTC measurement/recording
+  instants, no fabricated device and the flag. This added one labelled-demo
+  reading; demo readings now total 111. Retired choices were disabled for entry
+  and remained available for historical filtering.
+- ID-61: full 110-row initial export beyond the visible page, pressure-only
+  export (25), empty suspect-pressure export (0), combined filtered export (1),
+  source/recorder columns and the leading UTF-8 BOM. Celsius remained `°C`.
+  Cancelling a throttled export saved no file and preserved filters. Blocking
+  just the save request showed connection feedback and preserved entered fields;
+  blocking was removed afterward.
+- Actual mixed-role session: Owner demo flow and Manager/Crew reading lists,
+  manual-entry forms and CSV exports passed. Resident, Council and a foreign
+  estate's reading/list-entry routes showed Page not found. Manager/Crew retained
+  only the pre-existing restricted inspection asset context, without asset
+  registration controls; that context is intentional, not owner-register access.
+  Actual estate switching cleared the Owner demo rows in the Crew context;
+  selecting a Resident estate opened its My reports page as agreed.
+- Visual review at 320, 375, 768 and 1280 px: no horizontal page overflow; mobile
+  reading cards and source/flag labels remained readable, the asset picker fit,
+  and desktop/tablet table scrolling stayed contained. Escape closed the picker
+  and returned focus to its trigger. Browser emulation was used, not a physical
+  phone; Excel encoding was checked from downloaded bytes, not by automating Excel.
+
+Fresh uncached combined regression: **1,470 server / 866 web tests passed**.
+Workspace types, read-only lint/format checks and the production web build passed.
+Disposable mixed-source month benchmark (43,200 sensor plus 4,320 manual rows per
+asset): p95 selected first/deep 509/584 ms, suspect first/deep 672/604 ms and
+all-assets first 934 ms, each below the agreed 2-second local target. Real HTTP
+export of 1,000,000 mixed rows / 446,426,069 bytes completed in 13.645 seconds;
+27,272 suspect rows completed in 5.024 seconds. HTTP cancellation released both
+worker and connection. These are local measurements, not a deployed Cloud Run SLA.
+
+### Resolved QA finding: manual-entry decimal precision (ID-63)
+
+Original QA finding, corrected by the follow-up below. The form accepted up to
+12 integer digits, but `new/-components/use-manual-reading-submission.ts` converted
+the user's string with `Number(fields.value)` before JSON serialization.
+Entering `999999999999.123456` produced the actual outbound numeric payload
+`999999999999.1234`. This changes the requested six-decimal measurement before
+the backend receives it. The value is implausible for the metric, but retaining
+flagged extreme values is explicitly supported. This is separate from the
+server's intentional rounding beyond six fractional places.
+
+Reproduced in the real form with only the manual-save URL blocked: the request
+body lost the digits, the original input remained in the form after the failure,
+and no incorrect row was stored. The backend's decimal parser cannot recover
+original digits lost in the client. The pre-fix passing suite missed this case.
+The follow-up added failing regressions for exact submission, boundary values,
+retry identity and reading display, then verified storage/CSV consistency.
+No fix was applied during that QA review; the user subsequently approved the
+precision correction documented below.
+
+
+## Exact manual decimal transport — 2026-10-31
+
+`lib/manual-reading-form.ts` parses and canonicalizes the editable number as
+text, including exponent notation. It checks twelve integer / six meaningful
+fractional digits before any decimal expansion, so enormous exponents cannot
+allocate huge strings. Invalid/excess precision shows feedback without a request
+and preserves input. Trailing zeroes and equivalent exponent forms normalize to
+the same canonical value. Out-of-range warnings still allow valid stored values.
+
+`use-manual-reading-submission.ts` sends canonical decimal text in the generated
+CreateManualReadingRequest value union, without converting the measurement to
+Number. The exact canonical value also determines the uncertain-retry fingerprint:
+changing the last decimal digit changes the key; equivalent decimal text reuses it.
+The server still accepts legacy numeric requests. The contract was regenerated
+from the running Spring OpenAPI document; the uncached Maven exporter cannot run
+offline under the repository's no-install rule, so the installed type generator
+consumes that actual runtime export.
+
+Both reading lists, legacy asset history and shared mobile cards prefer optional
+valueText from the server, falling back to value for older responses. Exact display
+text removes unnecessary trailing zeroes while retaining every significant digit;
+CSV still writes the stored decimal with six fractional places. No schema change,
+new dependency, manual API type or device-ingestion change is involved.
+
+TDD evidence: the initial web run observed eight failures across the form and
+read screens; canonical-value/retry additions also failed before implementation.
+The server run observed two failures (string submission and exact response).
+Legacy display was separately observed failing before its renderer changed.
+Focused verification now passes 60 backend and 57 web cases; actual form requests,
+storage-backed responses, mobile/desktop/legacy display and CSV retain
+999999999999.123456 exactly. Excess fractional precision retains the input and
+shows a clear error. The live demo now has 112 readings after this valid QA save.
+
+Final verification: 1,480 backend tests passed in the clean uncached run;
+the full 880-case web suite passed after the readiness correction below. Types,
+formatting and production web build passed. One unrelated inspection/work-order
+test failed once
+with an unedited description; its unchanged 32-case file and the full 880-case
+web suite passed on recheck. The cached combined retry restored older Java
+classes, confirmed with javap: valueText and decimal-string parsing were absent.
+The prescribed generated-output/Nx reset restored current bytecode and the clean
+backend run passed. A separate unhandled React Query callback identified a premature
+absence assertion in document-navigation.test.tsx; that test now waits for the
+loaded denied-access UI before asserting absence. No assertions were removed and
+no errors were suppressed; its five cases and the full web run then passed.
+No inspection source/test changes, schema migrations, dependencies, commits or
+pushes were made. The final parser uses equivalent String.match instead of
+RegExp.exec to avoid Biome's nullable-result inference false positive.
+
+
+When checking very large CSV values in Excel, import the value column as Text
+before numeric conversion. The CSV retains all stored digits, but Excel numeric
+cells support only 15 significant digits; formatting a previously rounded cell
+cannot restore its original digits. See [Microsoft's import guidance](https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers).

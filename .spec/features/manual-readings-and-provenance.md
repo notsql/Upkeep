@@ -1,6 +1,6 @@
 # Manual readings and reading provenance
 
-**Status:** implemented and verified — final combined 1,470 server / 866 web tests; browser, performance, types, formatting and build passed; ID-64 CSV provenance completed by ID-61
+**Status:** implemented and verified — 2026-10-31 precision correction complete; 1,480 server / 880 web tests, types, formatting, production build and live exact-value mobile/desktop/legacy/CSV checks passed
 **Owner:** Chan Ding Jie
 **Jira:** [ID-63](https://notjira.atlassian.net/browse/ID-63),
 [ID-64](https://notjira.atlassian.net/browse/ID-64)
@@ -286,3 +286,59 @@ TDD evidence, scope/cancellation/transport checks, the million-row benchmark and
 live Neon demo downloads. Final combined checks passed: 1,469 server / 864 web
 tests, types, formatting and web build. Earlier pending-CSV notes above describe
 the state before this follow-up.
+
+
+### Combined QA follow-up — 2026-10-31
+
+Current Jira criteria and all four readings stories were reviewed together at
+`09fde7d`. Fresh regression passes 1,470 server / 866 web tests; types, lint,
+web build and both disposable benchmarks pass. Live combined filtering, manual
+save/provenance/CSV, cancellation, role guards and 320–1280px layouts passed.
+A real manual-entry request revealed precision loss for large decimals before
+transport: `999999999999.123456` became `999999999999.1234`. That request was
+blocked, so no incorrect row was stored. This is an uncovered ID-63 edge case;
+implementation is not an unconditional merge recommendation until it is fixed.
+The frontend guide records reproduction, scope and follow-up requirements.
+Application code was left unchanged for discussion.
+
+
+### Precision correction agreed — 2026-10-31
+
+The user approved fixing the combined-QA decimal precision finding. Preserve
+exact values rather than silently converting form text through JavaScript Number.
+The existing manual endpoint will additionally accept a decimal string in value;
+numeric requests retain their current compatibility/rounding behaviour. Decimal
+strings are parsed directly as BigDecimal, validate the existing twelve integer /
+six fractional digit storage limits, and retain the existing out-of-range policy.
+The browser canonicalizes numeric input with string operations, including exponent
+notation, without losing digits or expanding unbounded exponents. Excess meaningful
+fractional precision gets a readable error before a request; fields remain intact.
+Exact canonical decimals also determine uncertain-retry identity.
+
+Keep existing numeric response fields compatible; add optional valueText to reading
+DTOs for exact display by newer clients. Lists, mobile cards and legacy asset
+history prefer this field and fall back to numeric value against older responses.
+Regenerate the API contract instead of hand-writing request/response types. No
+schema migration or dependency is needed. CSV continues using the stored BigDecimal.
+Start with failing form/transport, endpoint/storage, display and CSV regressions;
+then run the combined suite, formatting/types/build and a live mobile save/read/
+export check. Application commits and pushes remain the human's step.
+
+
+### Precision correction verification — 2026-10-31
+
+Completed the agreed exact-text submission/display path with compatible numeric
+fields and regenerated OpenAPI types. Original precision/retry/display regressions
+were observed failing before implementation; endpoint/storage and CSV checks now
+pass. Full verification: 1,480 server tests after generated Java/Nx recovery,
+880 web tests after correcting the document-navigation denial test's premature
+absence assertion, workspace types, formatting and web build. The untouched
+inspection test that failed once passed in isolation and subsequent full runs.
+
+Live QA submitted 999999999999.123456 as text and verified exact stored/API-backed
+mobile (320/375px), desktop and legacy history display and CSV output. Entering
+1.0000001 shows a clear error and keeps the field without a request. Normal
+out-of-range warning/save behaviour and numeric-client compatibility remain.
+No migration, dependency, commit or push is needed/was made; demo data remains
+on the authorized child branch for inspection. Excel's own 15-digit numeric limit
+is documented separately: import very large CSV values as Text when reviewing.

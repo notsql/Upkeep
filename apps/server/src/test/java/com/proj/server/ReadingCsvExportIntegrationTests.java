@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -41,6 +42,9 @@ class ReadingCsvExportIntegrationTests {
 
     @MockitoBean
     JwtDecoder decoder;
+
+    @MockitoBean
+    com.proj.server.workos.WorkOSService workOS;
 
     DeviceTestData data;
     UUID estate, location, asset, device;
@@ -143,6 +147,24 @@ class ReadingCsvExportIntegrationTests {
         assertThat(quoted).isFalse();
         assertThat(cell).isEmpty();
         return rows;
+    }
+
+    @Test
+    void exactManualDecimalSurvivesSubmissionAndCsvExport() throws Exception {
+        var value = "999999999999.123456";
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(
+                                "/estates/" + estate + "/readings/manual")
+                        .with(jwt().jwt(j -> j.subject("csv-owner")))
+                        .contentType("application/json")
+                        .content("""
+                                {"assetId":"%s","metric":"TEMPERATURE","value":"%s","unit":"°C","measuredAt":"2026-10-01T00:00:00Z","submissionId":"%s"}
+                                """.formatted(asset, value, UUID.randomUUID())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.valueText").value(value));
+        var csv = rows(export(request("csv-owner")).getContentAsString(StandardCharsets.UTF_8));
+        assertThat(csv).hasSize(2);
+        assertThat(csv.get(1).get(6)).isEqualTo(value);
+        assertThat(csv.get(1).get(8)).isEqualTo("MANUAL");
     }
 
     @Test

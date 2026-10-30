@@ -2713,6 +2713,8 @@ export interface components {
       recordedByName: string | null;
       /** Format: date-time */
       recordedAt: string;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
     };
     ReadingFlagResponse: {
       /** @enum {string} */
@@ -2919,6 +2921,8 @@ export interface components {
       recordedByName: string | null;
       /** Format: date-time */
       recordedAt: string;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
     };
     ReadingAssetOption: {
       /** Format: uuid */
@@ -2949,8 +2953,8 @@ export interface components {
         | "VIBRATION_ACCELERATION"
         | "POWER"
         | "ENERGY";
-      /** @description JSON number; rounded half-up to six decimal places, at most twelve integer digits */
-      value: number;
+      /** @description Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places. */
+      value: number | string;
       unit: string;
       /**
        * Format: date-time
@@ -2988,6 +2992,8 @@ export interface components {
       source: "SENSOR" | "MANUAL";
       recordedByUserId: string;
       recordedByName: string | null;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
     };
     ReadingMetricOption: {
       /** @enum {string} */

@@ -13,7 +13,10 @@ public record CreateManualReadingRequest(
         UUID assetId,
         DeviceMetric metric,
 
-        @Schema(description = "JSON number; rounded half-up to six decimal places, at most twelve integer digits")
+        @Schema(
+                types = {"number", "string"},
+                description =
+                        "Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places.")
         BigDecimal value,
 
         String unit,

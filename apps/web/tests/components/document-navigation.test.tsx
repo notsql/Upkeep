@@ -132,5 +132,12 @@ it("hides document navigation without document read access", async () => {
   documentAccess("CUSTOM", false);
   await openNavigation();
 
+  // This link appears only after the denied access response has rendered.
+  // Checking absence before then passes even while access is still loading.
+  const desktop = within(
+    await screen.findByRole("navigation", { name: "Desktop navigation" })
+  );
+  await desktop.findByRole("link", { name: "Sign out" });
+
   expect(screen.queryByRole("link", { name: "Documents" })).toBeNull();
 });

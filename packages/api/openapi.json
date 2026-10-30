@@ -13139,6 +13139,10 @@
           "recordedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "valueText": {
+            "type": "string",
+            "description": "Exact stored decimal for display without binary floating-point conversion"
           }
         },
         "required": [
@@ -13743,6 +13747,10 @@
           "recordedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "valueText": {
+            "type": "string",
+            "description": "Exact stored decimal for display without binary floating-point conversion"
           }
         },
         "required": [
@@ -13828,8 +13836,8 @@
             ]
           },
           "value": {
-            "type": "number",
-            "description": "JSON number; rounded half-up to six decimal places, at most twelve integer digits"
+            "type": ["number", "string"],
+            "description": "Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places."
           },
           "unit": {
             "type": "string"
@@ -13901,6 +13909,10 @@
           },
           "recordedByName": {
             "type": ["string", "null"]
+          },
+          "valueText": {
+            "type": "string",
+            "description": "Exact stored decimal for display without binary floating-point conversion"
           }
         },
         "required": [

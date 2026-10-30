@@ -93,6 +93,35 @@ class ManualReadingsIntegrationTests {
                 time);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"999999999999.123456", "999999999999.999999", "-999999999999.123456"})
+    void preservesExactDecimalTextThroughStorageAndBothReadingViews(String value) throws Exception {
+        save("owner", body(UUID.randomUUID(), "\"" + value + "\"", TIME))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.valueText").value(value));
+        assertThat(db.fetchValue("select value from \"ManualReading\" where \"estateId\"=?", estate))
+                .isEqualTo(new java.math.BigDecimal(value));
+        list("").andExpect(jsonPath("$.items[0].valueText").value(value));
+        mvc.perform(get("/estates/" + estate + "/assets/" + asset + "/readings")
+                        .with(jwt().jwt(j -> j.subject("owner"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].valueText").value(value));
+    }
+
+    @Test
+    void numericClientsRetainCompatibilityAndReceiveExactDisplayText() throws Exception {
+        save("owner", body(UUID.randomUUID(), "999999999999.123456", TIME))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.value").isNumber())
+                .andExpect(jsonPath("$.valueText").value("999999999999.123456"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1.0000001", "1e-7", "NaN", "1e999999999", "1e-999999999"})
+    void rejectsInvalidOrOverPreciseDecimalStrings(String value) throws Exception {
+        save("owner", body(UUID.randomUUID(), "\"" + value + "\"", TIME)).andExpect(status().isBadRequest());
+    }
+
     @Test
     void ownerRecordsAgainstAnAssetWithNoDeviceAndServerAttributesIt() throws Exception {
         save("owner", body(UUID.randomUUID(), "21.1234567", TIME))
@@ -181,7 +210,7 @@ class ManualReadingsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"\"21\"", "true", "null", "1000000000000", "999999999999.9999999"})
+    @ValueSource(strings = {"\"not-a-number\"", "true", "null", "1000000000000", "999999999999.9999999"})
     void invalidValuesAreRejected(String value) throws Exception {
         save("owner", body(UUID.randomUUID(), value, TIME)).andExpect(status().isBadRequest());
     }

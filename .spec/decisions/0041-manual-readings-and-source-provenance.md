@@ -45,3 +45,12 @@ rows. Read APIs gain source/recorder metadata and nullable device fields,
 and the generated web contract must change with them. Existing sensor
 behaviour and the month-sized query target require regression checks.
 CSV provenance acceptance remains pending until ID-61 implements the export.
+
+
+Precision correction agreed 2026-10-31: manual value additionally accepts an
+exact decimal string, parsed directly as BigDecimal with the existing storage
+bounds and no excess meaningful fractional precision. Legacy JSON-number inputs
+retain their prior rounding behaviour. Reading DTOs add optional canonical
+valueText for exact browser display while retaining numeric value for existing
+clients. CSV remains based on the stored BigDecimal. New UI submissions and
+retry fingerprints use canonical decimal text, not binary floating point.

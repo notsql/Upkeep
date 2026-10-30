@@ -57,7 +57,7 @@ export function ReadingTable({
               </TableCell>
               <TableCell>{deviceMetrics[reading.metric].name}</TableCell>
               <TableCell className="whitespace-nowrap">
-                {reading.value} {reading.unit}
+                {reading.valueText ?? reading.value} {reading.unit}
               </TableCell>
               <TableCell>
                 <ReadingProvenance reading={reading} />

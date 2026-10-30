@@ -2,6 +2,7 @@ import { type FormEvent, useCallback, useRef, useState } from "react";
 import {
   type ManualReadingFields,
   manualReadingError,
+  parseManualReadingValue,
 } from "@/lib/manual-reading-form";
 import {
   type ManualReading,
@@ -33,6 +34,11 @@ export function useManualReadingSubmission(
         setError(validation);
         return;
       }
+      const value = parseManualReadingValue(fields.value);
+      if ("error" in value) {
+        setError(value.error);
+        return;
+      }
       if (!selectedMetric) {
         setError("Choose a supported metric.");
         return;
@@ -44,7 +50,7 @@ export function useManualReadingSubmission(
       const payload = {
         assetId: fields.assetId as string,
         metric: selectedMetric.metric,
-        value: Number(fields.value),
+        value: value.decimal,
         unit: selectedMetric.unit,
         measuredAt: new Date(fields.measuredAt).toISOString(),
       };

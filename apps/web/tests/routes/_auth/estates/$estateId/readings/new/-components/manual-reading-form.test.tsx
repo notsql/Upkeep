@@ -124,6 +124,81 @@ async function fill(value = "21.5") {
 }
 
 describe("manual reading form", () => {
+  it.each([
+    ["00021.5000000", "21.5"],
+    ["1e-6", "0.000001"],
+    ["-0", "0"],
+    ["1.2e3", "1200"],
+  ])("canonicalizes %s exactly as %s", async (input, expected) => {
+    const { onSaved } = show();
+    await fill(input);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(post.mock.calls[0][1].body.value).toBe(expected);
+  });
+  it("keeps retry identity for equivalent decimal text", async () => {
+    fail = true;
+    show();
+    await fill("21.5");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await screen.findByText("Connection failed. Try again.");
+    const first = post.mock.calls[0][1].body.submissionId;
+    await fill("021.5000000");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(post.mock.calls[1][1].body.submissionId).toBe(first);
+    expect(post.mock.calls[1][1].body.value).toBe("21.5");
+  });
+  it.each([
+    "999999999999.123456",
+    "999999999999.999999",
+    "-999999999999.123456",
+    "0.000001",
+  ])("sends %s as exact decimal text without losing digits", async (value) => {
+    const { onSaved } = show();
+    await fill(value);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(post.mock.calls[0][1].body.value).toBe(value);
+  });
+  it("rejects excess decimal precision clearly without changing the entered value", async () => {
+    show();
+    await fill("1.0000001");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await screen.findByText("Value can have at most six decimal places.");
+    expect(post).not.toHaveBeenCalled();
+    expect(
+      (screen.getByRole("spinbutton", { name: "Value" }) as HTMLInputElement)
+        .value
+    ).toBe("1.0000001");
+  });
+  it("changes retry identity when only the last large-decimal digit changes", async () => {
+    fail = true;
+    show();
+    await fill("999999999999.123456");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await screen.findByText("Connection failed. Try again.");
+    const first = post.mock.calls[0][1].body.submissionId;
+    await fill("999999999999.123457");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
+    expect(post.mock.calls[1][1].body.submissionId).not.toBe(first);
+    expect(post.mock.calls[1][1].body.value).toBe("999999999999.123457");
+  });
   it("defaults time to now and displays the server's unit and expected range", async () => {
     const before = Date.now();
     show();
@@ -178,7 +253,7 @@ describe("manual reading form", () => {
       body: expect.objectContaining({
         assetId: ASSET,
         metric: "TEMPERATURE",
-        value: 21.5,
+        value: "21.5",
         unit: "°C",
         measuredAt: new Date("2026-10-01T16:00").toISOString(),
         submissionId: expect.any(String),

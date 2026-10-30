@@ -82,6 +82,19 @@ describe("ReadingsPage", () => {
     serve();
   });
 
+  it("preserves exact decimal text in legacy asset history", async () => {
+    readingPage.items = [
+      {
+        ...reading,
+        value: 999_999_999_999.1234,
+        valueText: "999999999999.123456",
+      },
+    ];
+    renderPage();
+    await screen.findByText("999999999999.123456 °C");
+    expect(screen.queryByText("999999999999.1234 °C")).toBeNull();
+  });
+
   it("lists readings with unit, device and a badge per flag", async () => {
     renderPage();
     const table = await screen.findByRole("table", { name: "Readings" });

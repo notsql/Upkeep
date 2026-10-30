@@ -1,6 +1,7 @@
 package com.proj.server.reading;
 
 import com.proj.server.device.DeviceMetric;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.Set;
@@ -36,6 +37,18 @@ final class ManualReadingValidator {
         for (var field : node.propertyNames()) if (!FIELDS.contains(field)) throw invalid(field + " is not accepted.");
         var payload = JSON.createObjectNode();
         for (var field : new String[] {"metric", "value", "unit", "measuredAt"}) payload.set(field, node.get(field));
+        if (node.get("value").isString()) {
+            var text = node.get("value").stringValue();
+            if (text.length() > 64) throw invalid("value decimal text must have at most 64 characters.");
+            BigDecimal decimal;
+            try {
+                decimal = new BigDecimal(text);
+            } catch (NumberFormatException error) {
+                throw invalid("value must be a decimal number.");
+            }
+            if (decimal.stripTrailingZeros().scale() > 6) throw invalid("Value can have at most six decimal places.");
+            payload.put("value", decimal);
+        }
         var reading = ReadingValidator.parse(JSON.writeValueAsBytes(payload), EnumSet.allOf(DeviceMetric.class), now);
         return new CreateManualReadingRequest(
                 uuid(node, "assetId"),

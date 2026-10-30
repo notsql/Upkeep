@@ -43,7 +43,7 @@ function ReadingRow({ reading }: { reading: AssetReading }) {
     <TableRow>
       <TableCell>{new Date(reading.measuredAt).toLocaleString()}</TableCell>
       <TableCell>{deviceMetrics[reading.metric].name}</TableCell>
-      <TableCell>{`${reading.value} ${reading.unit}`}</TableCell>
+      <TableCell>{`${reading.valueText ?? reading.value} ${reading.unit}`}</TableCell>
       <TableCell>
         <ReadingProvenance reading={reading} />
       </TableCell>

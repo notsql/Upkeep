@@ -79,13 +79,13 @@ An inactive location alone does not retire an asset. `canRecordReadings` is true
 only for those roles in an active estate; the server checks authority again.
 
 `CreateManualReadingRequest` has exactly six required fields; unknown fields,
-duplicate keys, trailing JSON and type coercion are rejected:
+duplicate keys, trailing JSON and unsupported value types are rejected:
 
 | Field | Type | Meaning |
 | --- | --- | --- |
 | assetId | UUID | Same-estate asset |
 | metric | DeviceMetric | Existing catalogue metric |
-| value | number | At most 12 integer digits; half-up to 6 decimals |
+| value | number or string | Prefer exact decimal text, at most 12 integer / 6 meaningful fractional digits; legacy numbers retain half-up rounding to 6 places |
 | unit | string | Exactly the catalogue unit, including case/Unicode |
 | measuredAt | date-time | UTC offset required; backdating allowed; at most 5 minutes ahead |
 | submissionId | UUID | Stable for identical/uncertain retries; new for a changed payload |
@@ -101,10 +101,23 @@ concurrent retries. An existing identical retry remains readable after retiremen
 or estate deactivation, but revoked recording roles cannot use the endpoint.
 A changed asset/metric/value/time under the same key returns 409.
 
+Decimal strings are parsed directly to BigDecimal and never through double.
+At most 64 characters are accepted; decimal/exponent notation is supported.
+Redundant trailing fractional zeroes do not count as excess precision. Text with
+more than six meaningful fractional places gets 400 (`Value can have at most six
+decimal places.`). Invalid text, excessive integer digits and out-of-storage-range
+values also get 400. Numeric clients keep their documented rounding behaviour;
+booleans/null/objects and spoofed recorder metadata remain rejected. Outside-
+expected-range measurements remain saveable and flagged.
+
 Both success responses use `ManualReadingResponse` with required fields:
 `id: UUID`, `assetId: UUID`, `metric: DeviceMetric`, `value: number`, `unit: string`,
 `measuredAt: date-time (UTC)`, `recordedAt: date-time (UTC)`, `source: MANUAL`,
 `recordedByUserId: string`, `recordedByName: string | null`.
+An optional `valueText: string` is also emitted: the exact stored decimal in
+plain notation, without unnecessary trailing zeroes. New clients use it for
+lossless display; the existing numeric value remains compatible. The same field
+is emitted by estate and legacy asset reading responses for both sources.
 `Cache-Control: private, no-store`. The device-ingestion contract is unchanged.
 
 Errors use `EstateError`: 400 invalid payload/unit/value/time/UUID, 401 signed out,
@@ -114,7 +127,7 @@ retired asset or conflicting submission. No edit/delete endpoint is provided.
 Example body (use real UUIDs):
 
 ```json
-{"assetId":"c4d20000-0000-4000-8000-000000000001","metric":"TEMPERATURE","value":151,"unit":"°C","measuredAt":"2026-10-01T16:00:00+08:00","submissionId":"a1b20000-0000-4000-8000-000000000001"}
+{"assetId":"c4d20000-0000-4000-8000-000000000001","metric":"TEMPERATURE","value":"151","unit":"°C","measuredAt":"2026-10-01T16:00:00+08:00","submissionId":"a1b20000-0000-4000-8000-000000000001"}
 ```
 
 ID-61 now exports source and recorder metadata through the endpoint below,
@@ -187,7 +200,8 @@ Checked in that order (page, size, from/to), then estate, then asset.
 | measuredAt | date-time | yes | In UTC (`Z`) |
 | metric | TEMPERATURE / HUMIDITY / PRESSURE / FLOW_RATE / VIBRATION / VIBRATION_ACCELERATION / POWER / ENERGY | yes |  |
 | unit | string | yes | The metric's catalogue unit |
-| value | number | yes | As stored: rounded to 6 decimal places |
+| value | number | yes | Compatibility numeric representation, rounded to 6 places in storage |
+| valueText | string | no | Exact stored decimal in plain notation; prefer for display, numeric value is the older-server fallback |
 | deviceId | uuid or null | yes | Device for SENSOR; null for MANUAL |
 | deviceIdentifier | string or null | yes | Device identifier for SENSOR; null for MANUAL |
 | flags | ReadingFlagResponse[] | yes | Empty when nothing is suspect; order GAP, DUPLICATE_TIMESTAMP, OUT_OF_RANGE |
@@ -333,6 +347,10 @@ fields are doubled. Embedded commas/newlines and Unicode remain valid CSV.
 | recorded_by_name | Stored manual display-name snapshot, empty when unavailable or sensor |
 | recorded_at | Sensor receipt/manual recording instant, same UTC format |
 | flags | Semicolon-separated GAP;DUPLICATE_TIMESTAMP;OUT_OF_RANGE in that order, empty if none |
+
+For values beyond 15 significant digits, Excel imports must treat value as Text
+to preserve all digits; decimal-aware pipeline readers should use Decimal as in
+the example below. See [Microsoft guidance](https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers).
 
 A missing name stays empty while its stable recorder ID remains available.
 Manual rows never gain a fake device. Empty metadata and numeric `0.000000` are

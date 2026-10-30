@@ -55,6 +55,7 @@ const reading = {
   measuredAt: "2026-10-01T08:00:00Z",
   metric: "TEMPERATURE",
   value: 151,
+  valueText: undefined as string | undefined,
   unit: "°C",
   deviceId: "device",
   deviceIdentifier: "SENSOR-001",
@@ -460,6 +461,30 @@ describe("estate reading browser", () => {
     await screen.findByRole("table", { name: "Readings" });
   });
 });
+
+it.each([false, true])(
+  "displays exact decimal text on readings screens (mobile=%s)",
+  async (mobile) => {
+    const original = window.matchMedia;
+    const media = vi
+      .spyOn(window, "matchMedia")
+      .mockImplementation((query) => ({
+        ...original(query),
+        matches: mobile && query === "(max-width: 767px)",
+      }));
+    page.items = [
+      {
+        ...reading,
+        value: 999_999_999_999.1234,
+        valueText: "999999999999.123456",
+      },
+    ];
+    show();
+    await screen.findByText("999999999999.123456 °C");
+    expect(screen.queryByText("999999999999.1234 °C")).toBeNull();
+    media.mockRestore();
+  }
+);
 
 it("shows mobile reading records with provenance and flags, retaining filter-aware numbered paging", async () => {
   const original = window.matchMedia;
