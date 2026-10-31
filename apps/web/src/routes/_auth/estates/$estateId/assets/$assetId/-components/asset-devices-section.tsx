@@ -56,8 +56,9 @@ export function AssetDevicesSection({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             className={buttonVariants({ variant: "outline" })}
-            params={{ estateId, assetId }}
-            to="/estates/$estateId/assets/$assetId/readings"
+            params={{ estateId }}
+            search={{ assetId }}
+            to="/estates/$estateId/readings"
           >
             Readings
           </Link>

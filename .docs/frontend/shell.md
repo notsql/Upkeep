@@ -14,6 +14,14 @@ below relies on. Paths are relative to `apps/web/src/`.
 
 ## Routes
 
+ID-60 adds `/estates/$estateId/readings`, checked before general management
+fallbacks using `canViewReadings`. Owner/Manager/Crew may browse; unavailable
+estate/role URLs render Page not found. Estate navigation uses the same
+capability and switching preserves Readings when permitted. See
+[readings.md](readings.md). The `/estates/$estateId/readings/new` route also
+requires `canRecordReadings`; bookmarked read-only/inactive entry URLs return
+Page not found before loading the form.
+
 | File | URL | Guard | Screen |
 | --- | --- | --- | --- |
 | `routes/index.tsx` | `/` | none | Home: `routes/-components/home-page.tsx`, public introduction/authentication and secondary System status; signed-in `workspace-home.tsx` shows portfolio summaries and attention actions (see [dashboard.md](dashboard.md)). |
@@ -39,11 +47,11 @@ existing auth controls. Authenticated workspace navigation lives in AppNavigatio
 
 `components/app-navigation.tsx` subscribes to the router pathname and selected resident estate search field rather than
 the whole location and uses the session-gated, cached `useEstate(estateId)` query.
-Estates is available to every authenticated account, including Residents, Crew and unassigned users, so all can reach Create estate. `canEnterWorkspace` still controls the workspace Home. Resident-only accounts also see Report a fault, My reports, Invitations and Sign out; unassigned accounts see those links except My reports. Mixed accounts see reporting and management links together. My reports is hidden without a current Resident membership, including in mobile More; existing owned history remains readable by direct URL after membership deletion. Platform admin capability remains false. Account is reached through Settings in the profile menu.
+Estates is available to every authenticated account, including Residents, Crew and unassigned users, so all can reach Create estate. `canEnterWorkspace` still controls the workspace Home. Resident-only accounts see Estates, Invitations and Sign out, with reporting actions scoped to their selected Resident estate. Unassigned accounts retain estate creation/invitation entry without resident-only navigation. Mixed accounts use each selected estate's database role; global Home/Estates retains explicit resident reporting entry. My reports is hidden without a current Resident membership, including in mobile More; existing owned history remains readable by direct URL after membership deletion. Platform admin capability remains false. Account is reached through Settings in the profile menu.
 
 Target-estate capabilities control Overview, Assets and Council. The estate detail query mounts only after the projection grants management access; the context switcher uses access context for all roles. Assets requires `canViewAssets`; Council requires `canInviteMembers || canManageInvitationPermissions`. `/estates/new` has no estate context.
 
-Desktop navigation is a 240px sidebar at widths >=768px. Management-capable accounts get mobile Home / Estates / More, with reporting links in More; resident-only/unassigned accounts get Estates and reporting/invitation/sign-out links directly. EstateNavigation shows the authorized estate switcher and local destinations. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
+Desktop navigation is a 240px sidebar at widths >=768px. Management-capable accounts get mobile Home / Estates / More; resident-only/unassigned accounts get Estates, Invitations and Sign out. Reporting is shown in the selected Resident estate's section menu, or in global navigation when no estate is selected. EstateNavigation shows the authorized estate switcher and a compact section menu on mobile. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
 has no estate selector. Context comes from the route, named breadcrumbs, headings
 and desktop sidebar. The obsolete header `EstateSwitcher` and its remembered-estate
 storage logic remain removed. Navigation links use exact router matching
@@ -88,6 +96,42 @@ PageHeader and Go to home recovery navigation. The pending screen remains Loader
 
 See [design-system.md](design-system.md) for exact tokens, layouts, shared header
 and form patterns, mobile safe-area spacing and manual verification checklist.
+
+## Estate section navigation on mobile
+
+Desktop estate destinations and the mobile section menu share this order,
+filtered by existing per-estate capabilities: Overview, Assets, Work orders,
+Fault reports, Readings, Documents, Estate members, Roles. Overview is first
+when the account may view it; no role gains new access from this order.
+
+`components/estate-section-menu.tsx` replaces the wrapping mobile link rows with
+an existing shadcn Button/DropdownMenu. The full-width trigger announces
+`Estate section: <current section>` and shows its icon, name and chevron.
+`Estate sections` is a scrollable menu with real routed links, a selected check
+and `aria-current="page"`. Nested pages retain the parent section; selecting a
+link closes the menu. With no authorized section, the section control is absent.
+The separate estate switcher above it still shows name/role and preserves its
+existing permission-aware estate-switching fallbacks. Desktop keeps its sidebar;
+the mobile estate navigation mounts only below 768px. Resizing to desktop
+unmounts the mobile navigation and closes any open section popup.
+
+## Resident reporting context
+
+`components/estates/resident-navigation.ts` derives reporting destinations from
+current access context, independently of WorkOS role claims. Selecting a staff
+estate hides Report a fault/My reports in both desktop navigation and mobile
+More. Selecting a Resident estate adds My reports then Report a fault to its
+local sidebar/section menu; every link includes `estateId`. Creation is shown
+only when the selected estate is in active `residentEstates`; inactive resident
+memberships retain history.
+
+Outside a selected estate, a sole eligible Resident estate is linked explicitly
+by ID. Multiple eligible estates make the reporting action open the existing
+EstateFeatureChooser dialog, now also supporting report-creation/resident-reports.
+Only resident choices appear; creation choices must be active. Choosing one
+opens the requested screen with its estate ID and closes the dialog. Manager and
+Crew estates do not become resident choices. Historical own-report direct URLs
+and API authorization remain unchanged.
 
 ## Conventions used by every feature
 

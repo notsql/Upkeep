@@ -38,11 +38,32 @@ export function EstateFeatureChooser({
       path: "/estates/$estateId/work-orders",
       capability: "canViewWorkOrders",
     },
+    "resident-reports": {
+      label: "my reports",
+      path: "/reports",
+      capability: null,
+    },
+    "report-creation": {
+      label: "reporting a fault",
+      path: "/reports/new",
+      capability: null,
+    },
   } as const;
   const { label, path: destination, capability } = destinations[feature];
   const choices = access.isError
     ? []
-    : (access.data?.estates.filter((estate) => estate[capability]) ?? []);
+    : (access.data?.estates.filter((estate) => {
+        if (capability) {
+          return estate[capability];
+        }
+        return (
+          estate.role === "RESIDENT" &&
+          (feature !== "report-creation" ||
+            access.data?.residentEstates.some(
+              (assignment) => assignment.id === estate.estateId
+            ))
+        );
+      }) ?? []);
   const close = useCallback(() => onOpenChange(false), [onOpenChange]);
   const retry = useCallback(() => access.refetch(), [access.refetch]);
   return (
@@ -51,7 +72,9 @@ export function EstateFeatureChooser({
         <DialogHeader>
           <DialogTitle>Choose an estate for {label}</DialogTitle>
           <DialogDescription>
-            Select the estate whose {label} you want to open.
+            {capability
+              ? `Select the estate whose ${label} you want to open.`
+              : "Select the estate you live in to continue."}
           </DialogDescription>
         </DialogHeader>
         {access.isPending ? <p role="status">Loading estates…</p> : null}
@@ -72,8 +95,8 @@ export function EstateFeatureChooser({
               className="flex min-h-11 items-center gap-3 rounded-xl border p-3 hover:bg-accent"
               key={estate.estateId}
               onClick={close}
-              params={{ estateId: estate.estateId }}
-              search={{}}
+              params={capability ? { estateId: estate.estateId } : undefined}
+              search={capability ? {} : { estateId: estate.estateId }}
               to={destination}
             >
               <Building2 aria-hidden="true" className="size-4 shrink-0" />

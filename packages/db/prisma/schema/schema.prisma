@@ -209,6 +209,7 @@ model Asset {
   model             AssetModel?             @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
   devices           Device[]
   readings          DeviceReading[]
+  manualReadings    ManualReading[]
   flatlinePauses    DeviceFlatlinePause[]
   assessments       AssetAssessment[]
   events            AssetEvent[]
@@ -514,6 +515,26 @@ model DeviceReading {
   asset  Asset  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([deviceId, metric, measuredAt])
+  @@index([assetId, metric, measuredAt])
+}
+
+// Human measurements remain separate from device ingestion and monitoring.
+// Source is derived by the unified reading query, never chosen by the caller.
+model ManualReading {
+  id               String   @id @default(uuid()) @db.Uuid
+  estateId         String   @db.Uuid
+  assetId          String   @db.Uuid
+  metric           String   @db.VarChar(30)
+  value            Decimal  @db.Decimal(18, 6)
+  measuredAt       DateTime @db.Timestamptz(6)
+  recordedAt       DateTime @db.Timestamptz(6)
+  recordedByUserId String
+  recordedByName   String?  @db.VarChar(200)
+  submissionId     String   @db.Uuid
+
+  asset Asset @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, recordedByUserId, submissionId])
   @@index([assetId, metric, measuredAt])
 }
 

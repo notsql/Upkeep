@@ -122,6 +122,8 @@ public class AccessService {
                     canViewManagement,
                     canManageEstate,
                     canViewAssets,
+                    manager || "CREW".equals(row.get(ESTATEUSER.ROLE)),
+                    active && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
                     canViewManagement || responder,
                     !resident && (owner || responder),
                     !resident && (owner || responder) && active,

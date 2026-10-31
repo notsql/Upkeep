@@ -12,6 +12,7 @@ interface Breadcrumb {
     | "/admin/users"
     | "/estates/$estateId"
     | "/estates/$estateId/assets"
+    | "/estates/$estateId/readings"
     | "/estates/$estateId/work-orders"
     | "/estates/$estateId/reports"
     | "/estates/$estateId/assets/$assetId";

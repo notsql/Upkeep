@@ -22,19 +22,24 @@ vi.mock("@tanstack/react-router", () => ({
     children,
     to,
     params,
+    search,
     "aria-label": ariaLabel,
   }: {
     children: React.ReactNode;
     to: string;
-    params?: { estateId: string; assetId: string; deviceId?: string };
+    params?: { estateId: string; assetId?: string; deviceId?: string };
+    search?: { assetId?: string };
     "aria-label"?: string;
   }) => (
     <a
       aria-label={ariaLabel}
-      href={to
-        .replace("$estateId", params?.estateId ?? "")
-        .replace("$assetId", params?.assetId ?? "")
-        .replace("$deviceId", params?.deviceId ?? "")}
+      href={
+        to
+          .replace("$estateId", params?.estateId ?? "")
+          .replace("$assetId", params?.assetId ?? "")
+          .replace("$deviceId", params?.deviceId ?? "") +
+        (search?.assetId ? `?assetId=${search.assetId}` : "")
+      }
     >
       {children}
     </a>
@@ -103,6 +108,15 @@ describe("AssetDevicesSection", () => {
     serve();
   });
 
+  it("opens the estate reading browser prefiltered to this asset", async () => {
+    renderSection();
+    expect(
+      (await screen.findByRole("link", { name: "Readings" })).getAttribute(
+        "href"
+      )
+    ).toBe("/estates/estate-id/readings?assetId=asset-id");
+  });
+
   it("shows a newly registered device as awaiting its first reading", async () => {
     renderSection();
     const item = within(await screen.findByRole("listitem"));
@@ -150,12 +164,12 @@ it("links to a dedicated device form from the asset", () => {
   expect(screen.queryByRole("textbox", { name: "Identifier" })).toBeNull();
 });
 
-it("links to the asset's readings, even on a deactivated asset", () => {
+it("links to the estate browser preselected to the asset, even when deactivated", () => {
   serve();
   renderSection(false);
   expect(
     screen.getByRole<HTMLAnchorElement>("link", { name: "Readings" }).href
-  ).toContain("/estates/estate-id/assets/asset-id/readings");
+  ).toContain("/estates/estate-id/readings?assetId=asset-id");
 });
 
 describe("AssetDevicesSection credentials", () => {

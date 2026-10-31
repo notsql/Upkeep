@@ -4,6 +4,11 @@
 **Owner:** Zheng Kai
 **Jira:** [ID-67](https://notjira.atlassian.net/browse/ID-67) (epic [ID-5](https://notjira.atlassian.net/browse/ID-5) Telemetry Ingestion); also lays the minimum of [ID-60](https://notjira.atlassian.net/browse/ID-60) Browse raw sensor readings
 
+ID-63/64 extends reading lists with human provenance and mixed-source duplicate
+flags; GAP still uses sensor predecessors only. See
+[manual-readings-and-provenance.md](manual-readings-and-provenance.md) and
+[decision 0041](../decisions/0041-manual-readings-and-source-provenance.md).
+
 ## Problem
 
 A manager looking at an asset's readings cannot tell good data from bad. A

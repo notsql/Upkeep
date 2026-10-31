@@ -291,12 +291,6 @@ h2 {
   .estate-navigation {
     @apply mx-auto grid max-w-6xl gap-2 border-b px-4 py-2 sm:px-6 md:hidden;
   }
-  .estate-nav-link {
-    @apply flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 font-medium text-muted-foreground text-sm;
-  }
-  .estate-nav-link[aria-current="page"] {
-    @apply bg-accent text-accent-foreground;
-  }
 }
 
 .topbar-controls [data-slot="button"] {

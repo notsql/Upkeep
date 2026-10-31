@@ -5,12 +5,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 
-@RestControllerAdvice(assignableTypes = AssetReadingController.class)
+@RestControllerAdvice(
+        assignableTypes = {AssetReadingController.class, EstateReadingController.class, ReadingExportController.class})
 public class AssetReadingExceptionHandler {
+    @ExceptionHandler(org.springframework.core.task.TaskRejectedException.class)
+    ResponseEntity<EstateError> busy() {
+        return ResponseEntity.status(503)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(new EstateError("Reading exports are busy. Please retry shortly."));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    ResponseEntity<EstateError> access(ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));
+    }
+
     @ExceptionHandler(ReadingException.class)
     ResponseEntity<EstateError> reading(ReadingException error) {
-        return ResponseEntity.status(error.status()).body(new EstateError(error.getMessage()));
+        return ResponseEntity.status(error.status())
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(new EstateError(error.getMessage()));
     }
 
     // An unknown metric, a malformed time or a non-numeric page or size.
