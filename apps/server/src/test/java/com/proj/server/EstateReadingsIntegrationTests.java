@@ -1,5 +1,13 @@
 package com.proj.server;
 
+import static com.proj.server.db.tables.Asset.ASSET;
+import static com.proj.server.db.tables.Device.DEVICE;
+import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
+import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Estateroledefinition.ESTATEROLEDEFINITION;
+import static com.proj.server.db.tables.Estaterolepermission.ESTATEROLEPERMISSION;
+import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -55,25 +63,34 @@ class EstateReadingsIntegrationTests {
         device = data.device(estate, location, asset, null);
         secondAsset = data.asset(estate, location);
         secondDevice = data.device(estate, location, secondAsset, null);
-        db.execute("update \"Asset\" set name='Booster pump', reference='PUMP-002' where id=?", secondAsset);
+        db.update(ASSET)
+                .set(ASSET.NAME, "Booster pump")
+                .set(ASSET.REFERENCE, "PUMP-002")
+                .where(ASSET.ID.eq(secondAsset))
+                .execute();
         path = "/estates/" + estate + "/readings";
     }
 
     void member(String user, String role) {
-        db.execute("insert into \"EstateUser\" (\"estateId\",\"userId\",role) values (?,?,?)", estate, user, role);
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, estate)
+                .set(ESTATEUSER.USERID, user)
+                .set(ESTATEUSER.ROLE, role)
+                .execute();
     }
 
     UUID reading(UUID onAsset, UUID onDevice, String metric, String value, OffsetDateTime at) {
         var id = UUID.randomUUID();
-        db.execute(
-                "insert into \"DeviceReading\" (id,\"estateId\",\"assetId\",\"deviceId\",metric,value,\"measuredAt\",\"receivedAt\") values (?,?,?,?,?,?,?::timestamptz,now())",
-                id,
-                estate,
-                onAsset,
-                onDevice,
-                metric,
-                new BigDecimal(value),
-                at);
+        db.insertInto(DEVICEREADING)
+                .set(DEVICEREADING.ID, id)
+                .set(DEVICEREADING.ESTATEID, estate)
+                .set(DEVICEREADING.ASSETID, onAsset)
+                .set(DEVICEREADING.DEVICEID, onDevice)
+                .set(DEVICEREADING.METRIC, metric)
+                .set(DEVICEREADING.VALUE, new BigDecimal(value))
+                .set(DEVICEREADING.MEASUREDAT, at)
+                .set(DEVICEREADING.RECEIVEDAT, currentOffsetDateTime())
+                .execute();
         return id;
     }
 
@@ -89,13 +106,16 @@ class EstateReadingsIntegrationTests {
         var newest = a.toString().compareTo(b.toString()) > 0 ? a : b;
         var foreign = data.estateWithAsset("owner");
         var foreignDevice = data.device(foreign[0], foreign[1], foreign[2], null);
-        db.execute(
-                "insert into \"DeviceReading\" (id,\"estateId\",\"assetId\",\"deviceId\",metric,value,\"measuredAt\",\"receivedAt\") values (?,?,?,?,'TEMPERATURE',99,?::timestamptz,now())",
-                UUID.randomUUID(),
-                foreign[0],
-                foreign[2],
-                foreignDevice,
-                T0.plusDays(1));
+        db.insertInto(DEVICEREADING)
+                .set(DEVICEREADING.ID, UUID.randomUUID())
+                .set(DEVICEREADING.ESTATEID, foreign[0])
+                .set(DEVICEREADING.ASSETID, foreign[2])
+                .set(DEVICEREADING.DEVICEID, foreignDevice)
+                .set(DEVICEREADING.METRIC, "TEMPERATURE")
+                .set(DEVICEREADING.VALUE, BigDecimal.valueOf(99))
+                .set(DEVICEREADING.MEASUREDAT, T0.plusDays(1))
+                .set(DEVICEREADING.RECEIVEDAT, currentOffsetDateTime())
+                .execute();
         list("?size=1")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(3))
@@ -152,7 +172,10 @@ class EstateReadingsIntegrationTests {
     @Test
     void historicalReadingsStayWithTheirOriginalAssetWhenADeviceMoves() throws Exception {
         reading(asset, device, "TEMPERATURE", "21", T0);
-        db.execute("update \"Device\" set \"assetId\"=? where id=?", secondAsset, device);
+        db.update(DEVICE)
+                .set(DEVICE.ASSETID, secondAsset)
+                .where(DEVICE.ID.eq(device))
+                .execute();
         list("?assetId=" + asset)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(1))
@@ -197,18 +220,25 @@ class EstateReadingsIntegrationTests {
     @Test
     void customDocumentAndEstatePermissionsDoNotGrantReadingsAccess() throws Exception {
         var role = UUID.randomUUID();
-        db.execute(
-                "insert into \"EstateRoleDefinition\" (id,\"estateId\",name,\"normalizedName\",\"createdByUserId\",\"updatedAt\") values (?,?,'Viewer','viewer','owner',now())",
-                role,
-                estate);
-        db.execute(
-                "insert into \"EstateRolePermission\" (\"roleId\",permission) values (?,'VIEW_ESTATE'),(?,'VIEW_DOCUMENTS')",
-                role,
-                role);
-        db.execute(
-                "insert into \"EstateUser\" (\"estateId\",\"userId\",role,\"customRoleId\") values (?,'custom','CUSTOM',?)",
-                estate,
-                role);
+        db.insertInto(ESTATEROLEDEFINITION)
+                .set(ESTATEROLEDEFINITION.ID, role)
+                .set(ESTATEROLEDEFINITION.ESTATEID, estate)
+                .set(ESTATEROLEDEFINITION.NAME, "Viewer")
+                .set(ESTATEROLEDEFINITION.NORMALIZEDNAME, "viewer")
+                .set(ESTATEROLEDEFINITION.CREATEDBYUSERID, "owner")
+                .set(ESTATEROLEDEFINITION.UPDATEDAT, currentOffsetDateTime())
+                .execute();
+        db.insertInto(ESTATEROLEPERMISSION)
+                .columns(ESTATEROLEPERMISSION.ROLEID, ESTATEROLEPERMISSION.PERMISSION)
+                .values(role, "VIEW_ESTATE")
+                .values(role, "VIEW_DOCUMENTS")
+                .execute();
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, estate)
+                .set(ESTATEUSER.USERID, "custom")
+                .set(ESTATEUSER.ROLE, "CUSTOM")
+                .set(ESTATEUSER.CUSTOMROLEID, role)
+                .execute();
         mvc.perform(get(path).with(jwt().jwt(j -> j.subject("custom")))).andExpect(status().isForbidden());
         mvc.perform(get(path + "/assets").with(jwt().jwt(j -> j.subject("custom"))))
                 .andExpect(status().isForbidden());
@@ -217,8 +247,14 @@ class EstateReadingsIntegrationTests {
     @Test
     void ownerHasCapabilityEvenOnAnInactiveEstateAndCanReadRetiredAssets() throws Exception {
         reading(asset, device, "TEMPERATURE", "21", T0);
-        db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
-        db.execute("update \"Asset\" set \"deactivatedAt\"=now() where id=?", asset);
+        db.update(ESTATE)
+                .set(ESTATE.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ESTATE.ID.eq(estate))
+                .execute();
+        db.update(ASSET)
+                .set(ASSET.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ASSET.ID.eq(asset))
+                .execute();
         list("?assetId=" + asset)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(1));
@@ -230,7 +266,9 @@ class EstateReadingsIntegrationTests {
     void revokingCrewMembershipImmediatelyRemovesReadAccess() throws Exception {
         member("crew", "CREW");
         mvc.perform(get(path).with(jwt().jwt(j -> j.subject("crew")))).andExpect(status().isOk());
-        db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='crew'", estate);
+        db.deleteFrom(ESTATEUSER)
+                .where(ESTATEUSER.ESTATEID.eq(estate), ESTATEUSER.USERID.eq("crew"))
+                .execute();
         mvc.perform(get(path).with(jwt().jwt(j -> j.subject("crew")))).andExpect(status().isNotFound());
     }
 
@@ -254,7 +292,10 @@ class EstateReadingsIntegrationTests {
 
     @Test
     void searchesAndPaginatesMinimalSameEstateAssetOptionsIncludingRetiredAssets() throws Exception {
-        db.execute("update \"Asset\" set \"deactivatedAt\"=now() where id=?", secondAsset);
+        db.update(ASSET)
+                .set(ASSET.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ASSET.ID.eq(secondAsset))
+                .execute();
         data.estateWithAsset("owner");
         list("/assets?search=booster&size=1")
                 .andExpect(status().isOk())

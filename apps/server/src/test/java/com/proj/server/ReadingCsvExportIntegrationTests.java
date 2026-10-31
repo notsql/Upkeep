@@ -1,6 +1,14 @@
 package com.proj.server;
 
+import static com.proj.server.db.tables.Asset.ASSET;
+import static com.proj.server.db.tables.Device.DEVICE;
+import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
+import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
+import static com.proj.server.db.tables.Location.LOCATION;
+import static com.proj.server.db.tables.Manualreading.MANUALREADING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -71,37 +80,45 @@ class ReadingCsvExportIntegrationTests {
     @AfterEach
     void cleanup() {
         for (var id : estates) {
-            for (var table : List.of("DeviceReading", "ManualReading", "Device", "Asset", "Location", "EstateUser"))
-                db.execute("delete from \"" + table + "\" where \"estateId\"=?", id);
-            db.execute("delete from \"Estate\" where id=?", id);
+            db.deleteFrom(DEVICEREADING).where(DEVICEREADING.ESTATEID.eq(id)).execute();
+            db.deleteFrom(MANUALREADING).where(MANUALREADING.ESTATEID.eq(id)).execute();
+            db.deleteFrom(DEVICE).where(DEVICE.ESTATEID.eq(id)).execute();
+            db.deleteFrom(ASSET).where(ASSET.ESTATEID.eq(id)).execute();
+            db.deleteFrom(LOCATION).where(LOCATION.ESTATEID.eq(id)).execute();
+            db.deleteFrom(ESTATEUSER).where(ESTATEUSER.ESTATEID.eq(id)).execute();
+            db.deleteFrom(ESTATE).where(ESTATE.ID.eq(id)).execute();
         }
     }
 
     UUID sensor(String metric, String value, String time) {
         var id = UUID.randomUUID();
-        db.execute(
-                "insert into \"DeviceReading\" (id,\"estateId\",\"assetId\",\"deviceId\",metric,value,\"measuredAt\",\"receivedAt\") values (?,?,?,?,?,?,?::timestamptz,'2026-10-02T00:00:00Z')",
-                id,
-                estate,
-                asset,
-                device,
-                metric,
-                new BigDecimal(value),
-                time);
+        db.insertInto(DEVICEREADING)
+                .set(DEVICEREADING.ID, id)
+                .set(DEVICEREADING.ESTATEID, estate)
+                .set(DEVICEREADING.ASSETID, asset)
+                .set(DEVICEREADING.DEVICEID, device)
+                .set(DEVICEREADING.METRIC, metric)
+                .set(DEVICEREADING.VALUE, new BigDecimal(value))
+                .set(DEVICEREADING.MEASUREDAT, OffsetDateTime.parse(time))
+                .set(DEVICEREADING.RECEIVEDAT, OffsetDateTime.parse("2026-10-02T00:00:00Z"))
+                .execute();
         return id;
     }
 
     UUID manual(String value, String time, String name) {
         var id = UUID.randomUUID();
-        db.execute(
-                "insert into \"ManualReading\" (id,\"estateId\",\"assetId\",metric,value,\"measuredAt\",\"recordedAt\",\"recordedByUserId\",\"recordedByName\",\"submissionId\") values (?,?,?,'TEMPERATURE',?,?::timestamptz,'2026-10-02T01:00:00Z','technician',?,?)",
-                id,
-                estate,
-                asset,
-                new BigDecimal(value),
-                time,
-                name,
-                UUID.randomUUID());
+        db.insertInto(MANUALREADING)
+                .set(MANUALREADING.ID, id)
+                .set(MANUALREADING.ESTATEID, estate)
+                .set(MANUALREADING.ASSETID, asset)
+                .set(MANUALREADING.METRIC, "TEMPERATURE")
+                .set(MANUALREADING.VALUE, new BigDecimal(value))
+                .set(MANUALREADING.MEASUREDAT, OffsetDateTime.parse(time))
+                .set(MANUALREADING.RECORDEDAT, OffsetDateTime.parse("2026-10-02T01:00:00Z"))
+                .set(MANUALREADING.RECORDEDBYUSERID, "technician")
+                .set(MANUALREADING.RECORDEDBYNAME, name)
+                .set(MANUALREADING.SUBMISSIONID, UUID.randomUUID())
+                .execute();
         return id;
     }
 
@@ -215,7 +232,11 @@ class ReadingCsvExportIntegrationTests {
     @ParameterizedTest
     @ValueSource(strings = {"MANAGER", "CREW"})
     void supportsNonOwnerReadingRoles(String role) throws Exception {
-        db.execute("insert into \"EstateUser\" (\"estateId\",\"userId\",role) values (?,'csv-reader',?)", estate, role);
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, estate)
+                .set(ESTATEUSER.USERID, "csv-reader")
+                .set(ESTATEUSER.ROLE, role)
+                .execute();
         sensor("TEMPERATURE", "21", "2026-10-01T00:00:00Z");
         assertThat(rows(export(request("csv-reader")).getContentAsString(StandardCharsets.UTF_8)))
                 .hasSize(2);
@@ -224,7 +245,11 @@ class ReadingCsvExportIntegrationTests {
     @ParameterizedTest
     @ValueSource(strings = {"RESIDENT", "COUNCIL", "MEMBER"})
     void deniesOtherRoles(String role) throws Exception {
-        db.execute("insert into \"EstateUser\" (\"estateId\",\"userId\",role) values (?,'csv-reader',?)", estate, role);
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, estate)
+                .set(ESTATEUSER.USERID, "csv-reader")
+                .set(ESTATEUSER.ROLE, role)
+                .execute();
         mvc.perform(request("csv-reader")).andExpect(status().isForbidden());
     }
 
@@ -259,8 +284,14 @@ class ReadingCsvExportIntegrationTests {
     @Test
     void exportsRetiredHistoryAndAHeaderOnlyForNoMatches() throws Exception {
         sensor("TEMPERATURE", "0", "2026-10-01T00:00:00Z");
-        db.execute("update \"Asset\" set \"deactivatedAt\"=now() where id=?", asset);
-        db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
+        db.update(ASSET)
+                .set(ASSET.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ASSET.ID.eq(asset))
+                .execute();
+        db.update(ESTATE)
+                .set(ESTATE.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ESTATE.ID.eq(estate))
+                .execute();
         assertThat(rows(export(request("csv-owner")).getContentAsString(StandardCharsets.UTF_8)))
                 .hasSize(2);
         var empty = export(request("csv-owner").param("metric", "PRESSURE"));
@@ -270,7 +301,10 @@ class ReadingCsvExportIntegrationTests {
 
     @Test
     void quotesUnicodeCommasQuotesAndNewlinesAndEscapesSpreadsheetTextReversibly() throws Exception {
-        db.execute("update \"Asset\" set name=? where id=?", "Water, \"泵\"\nRoom", asset);
+        db.update(ASSET)
+                .set(ASSET.NAME, "Water, \"泵\"\nRoom")
+                .where(ASSET.ID.eq(asset))
+                .execute();
         manual("0", "2026-10-01T08:00:00.123456+08:00", " \t=HYPERLINK(\"unsafe\")");
         var parsed = rows(export(request("csv-owner")).getContentAsString(StandardCharsets.UTF_8));
         assertThat(parsed.get(1).get(4)).isEqualTo("Water, \"泵\"\nRoom");

@@ -1,6 +1,14 @@
 package com.proj.server;
 
+import static com.proj.server.db.tables.Asset.ASSET;
+import static com.proj.server.db.tables.Device.DEVICE;
+import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
+import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
+import static com.proj.server.db.tables.Location.LOCATION;
+import static com.proj.server.db.tables.Manualreading.MANUALREADING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.proj.server.workos.WorkOSService;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -78,19 +88,25 @@ class ManualReadingsIntegrationTests {
     }
 
     void member(String role) {
-        db.execute(
-                "insert into \"EstateUser\" (\"estateId\",\"userId\",role) values (?, 'technician', ?)", estate, role);
+        db.insertInto(ESTATEUSER)
+                .set(ESTATEUSER.ESTATEID, estate)
+                .set(ESTATEUSER.USERID, "technician")
+                .set(ESTATEUSER.ROLE, role)
+                .execute();
     }
 
     void sensor(String time) {
         var device = data.device(estate, location, asset, null);
-        db.execute(
-                "insert into \"DeviceReading\" (id,\"estateId\",\"assetId\",\"deviceId\",metric,value,\"measuredAt\",\"receivedAt\") values (?,?,?,?,'TEMPERATURE',20,?::timestamptz,now())",
-                UUID.randomUUID(),
-                estate,
-                asset,
-                device,
-                time);
+        db.insertInto(DEVICEREADING)
+                .set(DEVICEREADING.ID, UUID.randomUUID())
+                .set(DEVICEREADING.ESTATEID, estate)
+                .set(DEVICEREADING.ASSETID, asset)
+                .set(DEVICEREADING.DEVICEID, device)
+                .set(DEVICEREADING.METRIC, "TEMPERATURE")
+                .set(DEVICEREADING.VALUE, BigDecimal.valueOf(20))
+                .set(DEVICEREADING.MEASUREDAT, OffsetDateTime.parse(time))
+                .set(DEVICEREADING.RECEIVEDAT, currentOffsetDateTime())
+                .execute();
     }
 
     @ParameterizedTest
@@ -99,8 +115,11 @@ class ManualReadingsIntegrationTests {
         save("owner", body(UUID.randomUUID(), "\"" + value + "\"", TIME))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.valueText").value(value));
-        assertThat(db.fetchValue("select value from \"ManualReading\" where \"estateId\"=?", estate))
-                .isEqualTo(new java.math.BigDecimal(value));
+        assertThat(db.select(MANUALREADING.VALUE)
+                        .from(MANUALREADING)
+                        .where(MANUALREADING.ESTATEID.eq(estate))
+                        .fetchOne(MANUALREADING.VALUE))
+                .isEqualTo(new BigDecimal(value));
         list("").andExpect(jsonPath("$.items[0].valueText").value(value));
         mvc.perform(get("/estates/" + estate + "/assets/" + asset + "/readings")
                         .with(jwt().jwt(j -> j.subject("owner"))))
@@ -133,7 +152,7 @@ class ManualReadingsIntegrationTests {
                 .andExpect(jsonPath("$.measuredAt").value(TIME))
                 .andExpect(jsonPath("$.recordedAt").isString())
                 .andExpect(jsonPath("$.deviceId").doesNotExist());
-        assertThat(db.fetchCount(org.jooq.impl.DSL.table("\"Device\""))).isZero();
+        assertThat(db.fetchCount(DEVICE)).isZero();
         list("").andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(1))
                 .andExpect(jsonPath("$.items[0].recordedByName").value("Owner Technician"));
@@ -177,9 +196,15 @@ class ManualReadingsIntegrationTests {
     @Test
     void retiredAssetAndInactiveEstateCannotReceiveNewEntriesButHistoryRemainsReadable() throws Exception {
         save("owner", body(UUID.randomUUID(), "21", TIME)).andExpect(status().isCreated());
-        db.execute("update \"Asset\" set \"deactivatedAt\"=now() where id=?", asset);
+        db.update(ASSET)
+                .set(ASSET.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ASSET.ID.eq(asset))
+                .execute();
         save("owner", body(UUID.randomUUID(), "21", TIME)).andExpect(status().isConflict());
-        db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
+        db.update(ESTATE)
+                .set(ESTATE.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ESTATE.ID.eq(estate))
+                .execute();
         save("owner", body(UUID.randomUUID(), "21", TIME)).andExpect(status().isConflict());
         list("").andExpect(status().isOk()).andExpect(jsonPath("$.totalItems").value(1));
         mvc.perform(get("/access/context").with(jwt().jwt(j -> j.subject("owner"))))
@@ -189,7 +214,10 @@ class ManualReadingsIntegrationTests {
 
     @Test
     void inactiveLocationDoesNotRetireAnAsset() throws Exception {
-        db.execute("update \"Location\" set \"deactivatedAt\"=now() where id=?", location);
+        db.update(LOCATION)
+                .set(LOCATION.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(LOCATION.ID.eq(location))
+                .execute();
         save("owner", body(UUID.randomUUID(), "21", TIME)).andExpect(status().isCreated());
     }
 
@@ -254,7 +282,10 @@ class ManualReadingsIntegrationTests {
     void aRetryOfAnExistingEntryStillWorksAfterRetirement() throws Exception {
         var json = body(UUID.randomUUID(), "21", TIME);
         save("owner", json).andExpect(status().isCreated());
-        db.execute("update \"Asset\" set \"deactivatedAt\"=now() where id=?", asset);
+        db.update(ASSET)
+                .set(ASSET.DEACTIVATEDAT, currentOffsetDateTime())
+                .where(ASSET.ID.eq(asset))
+                .execute();
         save("owner", json).andExpect(status().isOk());
     }
 
@@ -324,10 +355,12 @@ class ManualReadingsIntegrationTests {
             assertThat(statuses).containsExactlyInAnyOrder(201, 200);
             list("").andExpect(jsonPath("$.totalItems").value(1));
         } finally {
-            db.execute("delete from \"ManualReading\" where \"estateId\"=?", estate);
-            db.execute("delete from \"Asset\" where \"estateId\"=?", estate);
-            db.execute("delete from \"Location\" where \"estateId\"=?", estate);
-            db.execute("delete from \"Estate\" where id=?", estate);
+            db.deleteFrom(MANUALREADING)
+                    .where(MANUALREADING.ESTATEID.eq(estate))
+                    .execute();
+            db.deleteFrom(ASSET).where(ASSET.ESTATEID.eq(estate)).execute();
+            db.deleteFrom(LOCATION).where(LOCATION.ESTATEID.eq(estate)).execute();
+            db.deleteFrom(ESTATE).where(ESTATE.ID.eq(estate)).execute();
         }
     }
 

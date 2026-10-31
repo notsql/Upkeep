@@ -83,6 +83,24 @@ different estate, 129,600 rows total. Fixture times are UTC. Reproduce with Dock
 ./mvnw -o -pl com.proj:server test -Dtest=ReadingBrowserBenchmark
 ```
 
+The ID-60/61/63/64 integration tests and both reading benchmarks use generated
+jOOQ tables for fixture inserts, updates, cleanup and storage assertions. Bulk
+benchmark data is produced with jOOQ `generateSeries`, with typed decimal values
+and UTC timestamps. The browser benchmark sets its transaction-local timeout
+through jOOQ and prints the plan through `DSLContext.explain`. Both benchmarks
+leave statistics collection to PostgreSQL; they no longer issue explicit
+`ANALYZE`, and the plan output does not include execution or buffer statistics.
+The 2026-10-27/28 measurements below predate this fixture refactor.
+
+Rechecked on 2026-10-31 with the refactored fixtures: all 89 reading integration
+cases and both opt-in benchmarks passed. The mixed browser workload had p95s of
+569 ms (first page), 1,375 ms (page 800), 605 ms (suspect first page), 601 ms
+(suspect page 800) and 1,058 ms (all assets). The real HTTP export produced
+100,000 rows / 44,642,745 bytes in 2.441 seconds; its filtered export and
+cancellation cleanup also passed. These are disposable-database measurements.
+The full uncached workspace run passed 1,480 backend tests and 880 web tests;
+`pnpm check-types` and `pnpm fix` also completed successfully.
+
 Measured 2026-10-27 in Ubuntu WSL / Java 25.0.5. MockMvc exercises the actual
 Spring request, authorization, SQL and serialization path; timings exclude
 network latency and process/database startup. Each case uses two warm-ups and

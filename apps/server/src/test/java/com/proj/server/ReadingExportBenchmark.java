@@ -1,16 +1,32 @@
 package com.proj.server;
 
+import static com.proj.server.db.tables.Asset.ASSET;
+import static com.proj.server.db.tables.Device.DEVICE;
+import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
+import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Location.LOCATION;
+import static com.proj.server.db.tables.Manualreading.MANUALREADING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.generateSeries;
+import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.uuid;
+import static org.jooq.impl.DSL.val;
+import static org.jooq.impl.DSL.when;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.jooq.types.DayToSecond;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,12 +76,13 @@ class ReadingExportBenchmark {
                         .subject("csv-benchmark")
                         .build());
         try {
-            db.execute("update \"Asset\" set name=repeat('QA synthetic pump ',8) where \"estateId\"=?", estate[0]);
-            seed(estate[0], estate[1], estate[2], data.device(estate[0], estate[1], estate[2], null), total / 2);
-            seed(estate[0], estate[1], second, data.device(estate[0], estate[1], second, null), total - total / 2);
-            seed(foreign[0], foreign[1], foreign[2], data.device(foreign[0], foreign[1], foreign[2], null), 10000);
-            db.execute("analyze \"DeviceReading\"");
-            db.execute("analyze \"ManualReading\"");
+            db.update(ASSET)
+                    .set(ASSET.NAME, "QA synthetic pump ".repeat(8))
+                    .where(ASSET.ESTATEID.eq(estate[0]))
+                    .execute();
+            seed(estate[0], estate[2], data.device(estate[0], estate[1], estate[2], null), total / 2);
+            seed(estate[0], second, data.device(estate[0], estate[1], second, null), total - total / 2);
+            seed(foreign[0], foreign[2], data.device(foreign[0], foreign[1], foreign[2], null), 10000);
             measure(estate[0], "", total, true);
             try (var client = HttpClient.newHttpClient()) {
                 var cancel = HttpRequest.newBuilder(
@@ -85,27 +102,81 @@ class ReadingExportBenchmark {
                 });
                 System.out.println("ID61 HTTP cancellation: export worker and database connection released");
             }
-            long suspect = db.fetchOne(
-                            "select count(*) from \"ManualReading\" where \"estateId\"=? and value>150", estate[0])
-                    .get(0, Long.class);
+            long suspect = db.fetchCount(
+                    MANUALREADING,
+                    MANUALREADING.ESTATEID.eq(estate[0]).and(MANUALREADING.VALUE.gt(BigDecimal.valueOf(150))));
             measure(estate[0], "?flag=OUT_OF_RANGE", suspect, false);
         } finally {
             for (var id : estates) {
-                for (var table : List.of("DeviceReading", "ManualReading", "Device", "Asset", "Location"))
-                    db.execute("delete from \"" + table + "\" where \"estateId\"=?", id);
-                db.execute("delete from \"Estate\" where id=?", id);
+                db.deleteFrom(DEVICEREADING)
+                        .where(DEVICEREADING.ESTATEID.eq(id))
+                        .execute();
+                db.deleteFrom(MANUALREADING)
+                        .where(MANUALREADING.ESTATEID.eq(id))
+                        .execute();
+                db.deleteFrom(DEVICE).where(DEVICE.ESTATEID.eq(id)).execute();
+                db.deleteFrom(ASSET).where(ASSET.ESTATEID.eq(id)).execute();
+                db.deleteFrom(LOCATION).where(LOCATION.ESTATEID.eq(id)).execute();
+                db.deleteFrom(ESTATE).where(ESTATE.ID.eq(id)).execute();
             }
         }
     }
 
-    private void seed(UUID estate, UUID location, UUID asset, UUID device, int total) {
+    private void seed(UUID estate, UUID asset, UUID device, int total) {
         int sensors = total * 7 / 10;
-        db.execute(
-                "insert into \"DeviceReading\" (id,\"estateId\",\"assetId\",\"deviceId\",metric,value,\"measuredAt\",\"receivedAt\") select gen_random_uuid(),?,?,?,'TEMPERATURE',20+(n%3),'2026-01-01'::timestamptz+n*interval '60 seconds',now() from generate_series(1,?) n",
-                estate, asset, device, sensors);
-        db.execute(
-                "insert into \"ManualReading\" (id,\"estateId\",\"assetId\",metric,value,\"measuredAt\",\"recordedAt\",\"recordedByUserId\",\"recordedByName\",\"submissionId\") select gen_random_uuid(),?,?,'TEMPERATURE',case when n%11=0 then 151 else 23 end,'2026-01-01'::timestamptz+n*interval '63 seconds',now(),'benchmark-recorder','QA technician',gen_random_uuid() from generate_series(1,?) n",
-                estate, asset, total - sensors);
+        var series = generateSeries(1, sensors);
+        var n = series.field(0, Integer.class);
+        var start = val(OffsetDateTime.parse("2026-01-01T00:00:00Z"));
+        var second = val(DayToSecond.valueOf(Duration.ofSeconds(1)));
+        db.insertInto(DEVICEREADING)
+                .columns(
+                        DEVICEREADING.ID,
+                        DEVICEREADING.ESTATEID,
+                        DEVICEREADING.ASSETID,
+                        DEVICEREADING.DEVICEID,
+                        DEVICEREADING.METRIC,
+                        DEVICEREADING.VALUE,
+                        DEVICEREADING.MEASUREDAT,
+                        DEVICEREADING.RECEIVEDAT)
+                .select(select(
+                                uuid(),
+                                val(estate),
+                                val(asset),
+                                val(device),
+                                inline("TEMPERATURE"),
+                                n.mod(3).add(20).cast(BigDecimal.class),
+                                start.add(second.mul(n.mul(60))),
+                                currentOffsetDateTime())
+                        .from(series))
+                .execute();
+        var manualSeries = generateSeries(1, total - sensors);
+        var manualN = manualSeries.field(0, Integer.class);
+        db.insertInto(MANUALREADING)
+                .columns(
+                        MANUALREADING.ID,
+                        MANUALREADING.ESTATEID,
+                        MANUALREADING.ASSETID,
+                        MANUALREADING.METRIC,
+                        MANUALREADING.VALUE,
+                        MANUALREADING.MEASUREDAT,
+                        MANUALREADING.RECORDEDAT,
+                        MANUALREADING.RECORDEDBYUSERID,
+                        MANUALREADING.RECORDEDBYNAME,
+                        MANUALREADING.SUBMISSIONID)
+                .select(select(
+                                uuid(),
+                                val(estate),
+                                val(asset),
+                                inline("TEMPERATURE"),
+                                when(manualN.mod(11).eq(0), BigDecimal.valueOf(151))
+                                        .otherwise(BigDecimal.valueOf(23)),
+                                start.add(second.mul(manualN.mul(63))),
+                                currentOffsetDateTime(),
+                                inline("benchmark-recorder"),
+                                inline("QA technician"),
+                                uuid())
+                        .from(manualSeries))
+                .execute();
     }
 
     private void measure(UUID estate, String query, long expected, boolean large) throws Exception {
