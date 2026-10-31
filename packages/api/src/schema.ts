@@ -234,6 +234,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/asset-categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateAssetCategories"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/asset-categories/{category}/silent-failure": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setAssetCategorySilentFailure"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets": {
     parameters: {
       query?: never;
@@ -2838,6 +2870,34 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
+    };
+    SetSilentFailureRequest: {
+      failsSilently: boolean;
+    };
+    EstateAssetCategoryResponse: {
+      code: string;
+      label: string;
+      failsSilently: boolean;
+      /** @description True until the flag has been changed in this estate */
+      isDefault: boolean;
+      /**
+       * Format: int32
+       * @description Active (not retired) assets of this category in the estate
+       */
+      activeAssetCount: number;
+      lastChange: components["schemas"]["FlagChangeResponse"];
+    };
+    FlagChangeResponse: {
+      failsSilently: boolean;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
+    EstateAssetCategoriesResponse: {
+      estateActive: boolean;
+      /** @description Flagged categories first, then the rest, each by label */
+      categories: components["schemas"]["EstateAssetCategoryResponse"][];
     };
   };
 }
@@ -7341,6 +7401,55 @@ export interface operations {
       };
     };
   };
+  listEstateAssetCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every asset category with its flag and active-asset count */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoriesResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listEstateDevices: {
     parameters: {
       query?: never;
@@ -9335,6 +9444,78 @@ export interface operations {
         };
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setAssetCategorySilentFailure: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        category: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetSilentFailureRequest"];
+      };
+    };
+    responses: {
+      /** @description The category with its current flag */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoryResponse"];
+        };
+      };
+      /** @description failsSilently missing or not a boolean */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
       409: {
         headers: {
           [name: string]: unknown;

@@ -31,6 +31,7 @@ model Estate {
   flatlinePolicies  FlatlinePolicy[]
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
+  categoryFlags     AssetCategoryFlagChange[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -362,10 +363,28 @@ model WorkOrderCompletionRevision {
 // An asset category (decision 0026). `code` is stable and is what assets and
 // catalogue models store. Rows are added only by migrations.
 model AssetCategory {
-  code   String       @id @db.VarChar(30)
-  label  String       @db.VarChar(100)
+  code   String                    @id @db.VarChar(30)
+  label  String                    @db.VarChar(100)
   assets Asset[]
   models AssetModel[]
+  flags  AssetCategoryFlagChange[]
+}
+
+// Append-only history of an estate's silent-failure flag per asset category (ID-83).
+// The current flag is the latest row; with no rows, LIGHTING defaults to flagged.
+model AssetCategoryFlagChange {
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  category        String   @db.VarChar(30)
+  failsSilently   Boolean
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  estate        Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory AssetCategory @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, category, changedAt])
 }
 
 // A manufacturer, shared by all estates (decision 0026). `name` is stored

@@ -7,6 +7,7 @@ package com.proj.server.db.tables;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Asset.AssetPath;
+import com.proj.server.db.tables.Assetcategoryflagchange.AssetcategoryflagchangePath;
 import com.proj.server.db.tables.Assetmodel.AssetmodelPath;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
 
@@ -148,6 +149,19 @@ public class Assetcategory extends TableImpl<AssetcategoryRecord> {
             _asset = new AssetPath(this, null, Keys.ASSET__ASSET_CATEGORY_FKEY.getInverseKey());
 
         return _asset;
+    }
+
+    private transient AssetcategoryflagchangePath _assetcategoryflagchange;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.AssetCategoryFlagChange</code> table
+     */
+    public AssetcategoryflagchangePath assetcategoryflagchange() {
+        if (_assetcategoryflagchange == null)
+            _assetcategoryflagchange = new AssetcategoryflagchangePath(this, null, Keys.ASSETCATEGORYFLAGCHANGE__ASSETCATEGORYFLAGCHANGE_CATEGORY_FKEY.getInverseKey());
+
+        return _assetcategoryflagchange;
     }
 
     private transient AssetmodelPath _assetmodel;

@@ -7865,6 +7865,162 @@
           "204": { "description": "Invitation cancelled for this estate" }
         }
       }
+    },
+    "/estates/{estateId}/asset-categories/{category}/silent-failure": {
+      "put": {
+        "tags": ["asset-category-settings-controller"],
+        "operationId": "setAssetCategorySilentFailure",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSilentFailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The category with its current flag",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "failsSilently missing or not a boolean",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-categories": {
+      "get": {
+        "tags": ["asset-category-settings-controller"],
+        "operationId": "listEstateAssetCategories",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Every asset category with its flag and active-asset count",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -10359,6 +10515,90 @@
           "estateName",
           "role"
         ]
+      },
+      "SetSilentFailureRequest": {
+        "type": "object",
+        "properties": {
+          "failsSilently": {
+            "type": "boolean"
+          }
+        },
+        "required": ["failsSilently"]
+      },
+      "EstateAssetCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "failsSilently": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "True until the flag has been changed in this estate"
+          },
+          "activeAssetCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Active (not retired) assets of this category in the estate"
+          },
+          "lastChange": {
+            "type": "null",
+            "$ref": "#/components/schemas/FlagChangeResponse"
+          }
+        },
+        "required": [
+          "activeAssetCount",
+          "code",
+          "failsSilently",
+          "isDefault",
+          "label",
+          "lastChange"
+        ]
+      },
+      "FlagChangeResponse": {
+        "type": "object",
+        "properties": {
+          "failsSilently": {
+            "type": "boolean"
+          },
+          "changedByUserId": {
+            "type": "string"
+          },
+          "changedByName": {
+            "type": ["string", "null"]
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "changedAt",
+          "changedByName",
+          "changedByUserId",
+          "failsSilently"
+        ]
+      },
+      "EstateAssetCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "estateActive": {
+            "type": "boolean"
+          },
+          "categories": {
+            "type": "array",
+            "description": "Flagged categories first, then the rest, each by label",
+            "items": {
+              "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+            }
+          }
+        },
+        "required": ["categories", "estateActive"]
       }
     },
     "securitySchemes": {

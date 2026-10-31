@@ -7,6 +7,7 @@ package com.proj.server.db;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
+import com.proj.server.db.tables.Assetcategoryflagchange;
 import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetinspectionphoto;
 import com.proj.server.db.tables.Assetinspectionresult;
@@ -69,6 +70,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.AssetCategory</code>.
      */
     public final Assetcategory ASSETCATEGORY = Assetcategory.ASSETCATEGORY;
+
+    /**
+     * The table <code>public.AssetCategoryFlagChange</code>.
+     */
+    public final Assetcategoryflagchange ASSETCATEGORYFLAGCHANGE = Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE;
 
     /**
      * The table <code>public.AssetEvent</code>.
@@ -214,6 +220,7 @@ public class Public extends SchemaImpl {
             Asset.ASSET,
             Assetassessment.ASSETASSESSMENT,
             Assetcategory.ASSETCATEGORY,
+            Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE,
             Assetevent.ASSETEVENT,
             Assetinspectionphoto.ASSETINSPECTIONPHOTO,
             Assetinspectionresult.ASSETINSPECTIONRESULT,
