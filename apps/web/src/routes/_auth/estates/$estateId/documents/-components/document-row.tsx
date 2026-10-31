@@ -1,6 +1,6 @@
 import { Button } from "@proj/ui/components/button";
 import { TableCell, TableRow } from "@proj/ui/components/table";
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import type { EstateDocument } from "@/lib/documents";
 
 export function DocumentRow({
@@ -9,18 +9,25 @@ export function DocumentRow({
   onDownload,
   onDelete,
   onAssociation,
+  assets,
+  onUnlink,
+  showSize = true,
 }: {
   document: EstateDocument;
   downloading: boolean;
   onDownload: (document: EstateDocument) => void;
-  onDelete: (document: EstateDocument) => void;
+  onDelete?: (document: EstateDocument) => void;
   onAssociation?: (document: EstateDocument) => void;
+  assets?: ReactNode;
+  onUnlink?: (document: EstateDocument) => void;
+  showSize?: boolean;
 }) {
   const download = useCallback(
     () => onDownload(document),
     [document, onDownload]
   );
-  const remove = useCallback(() => onDelete(document), [document, onDelete]);
+  const remove = useCallback(() => onDelete?.(document), [document, onDelete]);
+  const unlink = useCallback(() => onUnlink?.(document), [document, onUnlink]);
   const association = useCallback(
     () => onAssociation?.(document),
     [document, onAssociation]
@@ -31,16 +38,28 @@ export function DocumentRow({
       <TableCell>
         {document.documentType === "INVOICE" ? "Invoice" : "Service report"}
       </TableCell>
-      <TableCell>
-        {new Intl.NumberFormat().format(document.sizeBytes)} bytes
-      </TableCell>
+      {showSize ? (
+        <TableCell>
+          {new Intl.NumberFormat().format(document.sizeBytes)} bytes
+        </TableCell>
+      ) : null}
       <TableCell>
         <time dateTime={document.createdAt}>
           {new Date(document.createdAt).toLocaleString()}
         </time>
       </TableCell>
+      {assets === undefined ? null : <TableCell>{assets}</TableCell>}
       <TableCell>
         <div className="flex flex-wrap gap-2">
+          {onUnlink ? (
+            <Button
+              aria-label={`Unlink ${document.originalFilename}`}
+              onClick={unlink}
+              variant="outline"
+            >
+              Unlink
+            </Button>
+          ) : null}
           {onAssociation ? (
             <Button
               aria-label={`Work-order link for ${document.originalFilename}`}
@@ -58,7 +77,7 @@ export function DocumentRow({
           >
             Download
           </Button>
-          {document.canDelete ? (
+          {document.canDelete && onDelete ? (
             <Button
               aria-label={`Delete ${document.originalFilename}`}
               onClick={remove}

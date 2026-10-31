@@ -7,7 +7,8 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
-- [Invoices and service reports](api/documents.md): private document upload, search, download, deletion and cleanup.
+- [Invoices and service reports](api/documents.md): private document upload, filename/type filtering, download, deletion and cleanup.
+- [Asset document association](api/asset-documents.md): owner-authorized link/unlink, retired assets, attachment reads and work-order consistency.
 
 - [Admin role updates](api/admin-roles.md): retired global WorkOS organization-role contracts; use estate-local roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
@@ -43,8 +44,9 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 
 | File | Covers |
 | --- | --- |
+| [frontend/asset-documents.md](frontend/asset-documents.md) | Document/asset link picker, explicit unlink and the asset detail Documents section |
 | [frontend/work-order-documents.md](frontend/work-order-documents.md) | Document/work-order association dialog, correction history and work-order attachments |
-| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, file validation, upload/download/deletion, filename search and capability-based navigation |
+| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, file validation, upload/download/deletion, filename/type filters, table columns and capability-based navigation |
 | [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
 | [frontend/shell.md](frontend/shell.md) | Root layout, providers, header nav, home page (`/`), and conventions shared by every feature (API client, session gate, query-key prefix, errors) |
 | [frontend/dashboard.md](frontend/dashboard.md) | Signed-in Home portfolio totals, condition breakdown, attention links and compact invitations |
