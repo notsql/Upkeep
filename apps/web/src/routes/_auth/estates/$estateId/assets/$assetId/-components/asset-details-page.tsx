@@ -17,6 +17,7 @@ import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$asse
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
+import { AssetDocumentsSection } from "./asset-documents-section";
 import { InspectionHistoryTable } from "./inspection-history-table";
 
 const NOT_RECORDED = "Not recorded";
@@ -182,6 +183,7 @@ export function AssetDetailsPage({
               <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
             </div>
           </dl>
+          <AssetDocumentsSection assetId={assetId} estateId={estateId} />
           <InspectionHistoryTable assetId={assetId} estateId={estateId} />
           <AssetRetirementPanel asset={asset.data} />
           <AssetConditionSection

@@ -1,6 +1,11 @@
 # Work-order document association (ID-26)
 
 API: [work-order-documents.md](../api/work-order-documents.md).
+
+Documents can independently [link to an asset](asset-documents.md). Both server
+association write paths reject different non-null document/work-order asset IDs
+with 409, which uses this dialog's existing refresh/review recovery. Removing the
+asset relation preserves the work-order link, file and audit history.
 No new URL route is required: the existing Documents list and work-order detail
 are extended. UI uses folder routes and shared shadcn components.
 

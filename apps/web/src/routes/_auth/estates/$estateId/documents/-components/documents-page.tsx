@@ -7,11 +7,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@proj/ui/components/dialog";
-import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
-import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import {
+  type DocumentAsset,
+  useAssetDocumentAccess,
+} from "@/lib/asset-documents";
 import {
   type DocumentFilters,
   type EstateDocument,
@@ -21,53 +23,16 @@ import {
   useDownloadDocument,
 } from "@/lib/documents";
 import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
+import { DocumentAssetDialog } from "./document-asset-dialog";
+import { DocumentAssets } from "./document-assets";
+import { DocumentFiltersForm } from "./document-filters";
 import { DocumentList } from "./document-list";
 import { DocumentWorkOrderDialog } from "./document-work-order-dialog";
 import { UploadDocumentForm } from "./upload-document-form";
 
-function FilenameSearch({
-  filename,
-  onSearch,
-}: {
-  filename?: string;
-  onSearch: (filters: DocumentFilters) => void;
-}) {
-  const [value, setValue] = useState(filename ?? "");
-  const changeValue = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setValue(event.target.value),
-    []
-  );
-  const clear = useCallback(() => {
-    setValue("");
-    onSearch({});
-  }, [onSearch]);
-  const submit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      onSearch(value.trim() ? { filename: value.trim() } : {});
-    },
-    [onSearch, value]
-  );
-  return (
-    <form className="flex flex-wrap items-end gap-2" onSubmit={submit}>
-      <div className="grid flex-1 gap-2">
-        <Label htmlFor="document-search">Search by filename</Label>
-        <Input
-          id="document-search"
-          maxLength={255}
-          onChange={changeValue}
-          type="search"
-          value={value}
-        />
-      </div>
-      <Button type="submit">Search</Button>
-      {filename || value ? (
-        <Button onClick={clear} type="button" variant="outline">
-          Clear search
-        </Button>
-      ) : null}
-    </form>
-  );
+interface AssetDocumentSelection {
+  association: DocumentAsset;
+  document: EstateDocument;
 }
 
 export function DocumentsPage({
@@ -81,6 +46,36 @@ export function DocumentsPage({
 }) {
   const access = useDocumentAccess(estateId);
   const associations = useWorkOrderDocumentAccess(estateId);
+  const assets = useAssetDocumentAccess(estateId);
+  const [assetSelection, setAssetSelection] =
+    useState<AssetDocumentSelection>();
+  const closeAsset = useCallback(() => setAssetSelection(undefined), []);
+  const selectAssetDocument = useCallback(
+    (document: EstateDocument, association: DocumentAsset) =>
+      setAssetSelection({ document, association }),
+    []
+  );
+  const renderAssets = useCallback(
+    (document: EstateDocument) =>
+      assets.canRead ? (
+        <DocumentAssets
+          canWrite={assets.canWrite}
+          document={document}
+          estateId={estateId}
+          key={`${assets.userId}:${estateId}:${document.id}`}
+          onManage={selectAssetDocument}
+        />
+      ) : (
+        <span>—</span>
+      ),
+    [
+      assets.canRead,
+      assets.canWrite,
+      assets.userId,
+      estateId,
+      selectAssetDocument,
+    ]
+  );
   const [associationDocument, setAssociationDocument] =
     useState<EstateDocument>();
   const documents = useDocuments(estateId, filters);
@@ -101,8 +96,12 @@ export function DocumentsPage({
   );
   const retry = useCallback(() => documents.refetch(), [documents.refetch]);
   const first = useCallback(
-    () => onSearch(filters.filename ? { filename: filters.filename } : {}),
-    [filters.filename, onSearch]
+    () =>
+      onSearch({
+        filename: filters.filename,
+        documentType: filters.documentType,
+      }),
+    [filters.filename, filters.documentType, onSearch]
   );
   const next = useCallback(
     () =>
@@ -154,8 +153,8 @@ export function DocumentsPage({
       {access.permission?.canUploadDocuments ? (
         <UploadDocumentForm estateId={estateId} />
       ) : null}
-      <FilenameSearch
-        filename={filters.filename}
+      <DocumentFiltersForm
+        filters={filters}
         key={filters.filename ?? ""}
         onSearch={onSearch}
       />
@@ -171,6 +170,7 @@ export function DocumentsPage({
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
       <DocumentList
+        documentType={filters.documentType}
         downloading={download.isPending}
         failed={documents.isError}
         filename={filters.filename}
@@ -180,6 +180,7 @@ export function DocumentsPage({
         }
         onDelete={chooseDeletion}
         onDownload={downloadDocument}
+        renderAssets={renderAssets}
       />
       <div className="flex flex-wrap gap-2">
         {filters.cursor ? (
@@ -201,6 +202,12 @@ export function DocumentsPage({
           onClose={closeAssociation}
         />
       ) : null}
+      <AssetAssociationSelection
+        estateId={estateId}
+        onClose={closeAsset}
+        selection={assetSelection}
+        userId={assets.userId}
+      />
       <Dialog onOpenChange={changeDialog} open={!!selected}>
         <DialogContent>
           <DialogHeader>
@@ -232,5 +239,31 @@ export function DocumentsPage({
         </DialogContent>
       </Dialog>
     </main>
+  );
+}
+
+function AssetAssociationSelection({
+  selection,
+  estateId,
+  userId,
+  onClose,
+}: {
+  selection?: AssetDocumentSelection;
+  estateId: string;
+  userId?: string;
+  onClose: () => void;
+}) {
+  if (!selection) {
+    return null;
+  }
+  return (
+    <DocumentAssetDialog
+      document={selection.document}
+      estateId={estateId}
+      initialAssociation={selection.association}
+      initialUnlink={!!selection.association.assetId}
+      key={`${userId}:${estateId}:${selection.document.id}`}
+      onClose={onClose}
+    />
   );
 }

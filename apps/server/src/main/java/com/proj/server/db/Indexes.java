@@ -6,6 +6,7 @@ package com.proj.server.db;
 
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
+import com.proj.server.db.tables.Assetcategoryflagchange;
 import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetinspectionphoto;
 import com.proj.server.db.tables.Assetinspectionresult;
@@ -53,6 +54,7 @@ public class Indexes {
     public static final Index ASSET_MODELID_IDX = Internal.createIndex(DSL.name("Asset_modelId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.MODELID }, false);
     public static final Index ASSETASSESSMENT_ASSETID_ASSESSEDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetAssessment_assetId_assessedOn_createdAt_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ASSETID, Assetassessment.ASSETASSESSMENT.ASSESSEDON, Assetassessment.ASSETASSESSMENT.CREATEDAT }, false);
     public static final Index ASSETASSESSMENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetAssessment_estateId_idx"), Assetassessment.ASSETASSESSMENT, new OrderField[] { Assetassessment.ASSETASSESSMENT.ESTATEID }, false);
+    public static final Index ASSETCATEGORYFLAGCHANGE_ESTATEID_CATEGORY_CHANGEDAT_IDX = Internal.createIndex(DSL.name("AssetCategoryFlagChange_estateId_category_changedAt_idx"), Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE, new OrderField[] { Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE.ESTATEID, Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE.CATEGORY, Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE.CHANGEDAT }, false);
     public static final Index ASSETEVENT_ASSETID_OCCURREDON_CREATEDAT_IDX = Internal.createIndex(DSL.name("AssetEvent_assetId_occurredOn_createdAt_idx"), Assetevent.ASSETEVENT, new OrderField[] { Assetevent.ASSETEVENT.ASSETID, Assetevent.ASSETEVENT.OCCURREDON, Assetevent.ASSETEVENT.CREATEDAT }, false);
     public static final Index ASSETEVENT_ESTATEID_IDX = Internal.createIndex(DSL.name("AssetEvent_estateId_idx"), Assetevent.ASSETEVENT, new OrderField[] { Assetevent.ASSETEVENT.ESTATEID }, false);
     public static final Index ASSETINSPECTIONPHOTO_ESTATEID_INSPECTIONRESULTID_IDX = Internal.createIndex(DSL.name("AssetInspectionPhoto_estateId_inspectionResultId_idx"), Assetinspectionphoto.ASSETINSPECTIONPHOTO, new OrderField[] { Assetinspectionphoto.ASSETINSPECTIONPHOTO.ESTATEID, Assetinspectionphoto.ASSETINSPECTIONPHOTO.INSPECTIONRESULTID }, false);
@@ -75,6 +77,7 @@ public class Indexes {
     public static final Index DEVICEREADING_ASSETID_METRIC_MEASUREDAT_IDX = Internal.createIndex(DSL.name("DeviceReading_assetId_metric_measuredAt_idx"), Devicereading.DEVICEREADING, new OrderField[] { Devicereading.DEVICEREADING.ASSETID, Devicereading.DEVICEREADING.METRIC, Devicereading.DEVICEREADING.MEASUREDAT }, false);
     public static final Index DEVICEREADING_DEVICEID_METRIC_MEASUREDAT_KEY = Internal.createIndex(DSL.name("DeviceReading_deviceId_metric_measuredAt_key"), Devicereading.DEVICEREADING, new OrderField[] { Devicereading.DEVICEREADING.DEVICEID, Devicereading.DEVICEREADING.METRIC, Devicereading.DEVICEREADING.MEASUREDAT }, true);
     public static final Index DOCUMENT_DELETEDAT_STORAGEDELETEDAT_IDX = Internal.createIndex(DSL.name("Document_deletedAt_storageDeletedAt_idx"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.DELETEDAT, Document.DOCUMENT.STORAGEDELETEDAT }, false);
+    public static final Index DOCUMENT_ESTATEID_ASSETID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("Document_estateId_assetId_createdAt_id_idx"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.ESTATEID, Document.DOCUMENT.ASSETID, Document.DOCUMENT.CREATEDAT, Document.DOCUMENT.ID }, false);
     public static final Index DOCUMENT_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("Document_estateId_createdAt_id_idx"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.ESTATEID, Document.DOCUMENT.CREATEDAT, Document.DOCUMENT.ID }, false);
     public static final Index DOCUMENT_ESTATEID_WORKORDERID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("Document_estateId_workOrderId_createdAt_id_idx"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.ESTATEID, Document.DOCUMENT.WORKORDERID, Document.DOCUMENT.CREATEDAT, Document.DOCUMENT.ID }, false);
     public static final Index DOCUMENT_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Document_id_estateId_key"), Document.DOCUMENT, new OrderField[] { Document.DOCUMENT.ID, Document.DOCUMENT.ESTATEID }, true);

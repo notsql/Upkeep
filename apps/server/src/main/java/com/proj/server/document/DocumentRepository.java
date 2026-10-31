@@ -1,6 +1,7 @@
 package com.proj.server.document;
 
 import static com.proj.server.db.tables.Document.DOCUMENT;
+import static com.proj.server.db.tables.Workorder.WORKORDER;
 
 import com.proj.server.db.tables.records.DocumentRecord;
 import com.proj.server.estate.EstatePermissionCode;
@@ -55,9 +56,11 @@ public class DocumentRepository {
         return row;
     }
 
-    public List<DocumentRecord> list(UUID estate, String filename, OffsetDateTime before, UUID id, int limit) {
+    public List<DocumentRecord> list(
+            UUID estate, String filename, DocumentType documentType, OffsetDateTime before, UUID id, int limit) {
         var condition = DOCUMENT.ESTATEID.eq(estate).and(DOCUMENT.DELETEDAT.isNull());
         if (!filename.isEmpty()) condition = condition.and(DOCUMENT.ORIGINALFILENAME.containsIgnoreCase(filename));
+        if (documentType != null) condition = condition.and(DOCUMENT.DOCUMENTTYPE.eq(documentType.name()));
         if (before != null)
             condition = condition.and(DOCUMENT.CREATEDAT
                     .lt(before)
@@ -94,5 +97,17 @@ public class DocumentRepository {
 
     public boolean references(String key) {
         return db.fetchExists(DOCUMENT, DOCUMENT.STORAGEKEY.eq(key));
+    }
+
+    /** Call under the shared estate lock for either association's write. */
+    public void requireCompatibleWorkOrder(UUID estate, UUID order, UUID asset) {
+        if (order == null) return;
+        var work = db.selectFrom(WORKORDER)
+                .where(WORKORDER.ID.eq(order).and(WORKORDER.ESTATEID.eq(estate)))
+                .fetchOptional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Work order not found."));
+        if (asset != null && work.getAssetid() != null && !asset.equals(work.getAssetid()))
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "The document and work order must concern the same asset.");
     }
 }

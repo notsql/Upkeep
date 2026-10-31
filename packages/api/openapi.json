@@ -6,7 +6,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8080",
+      "url": "http://localhost",
       "description": "Generated server url"
     }
   ],
@@ -946,6 +946,307 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/DocumentWorkOrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/documents/{documentId}/asset": {
+      "get": {
+        "tags": ["asset-document-controller"],
+        "operationId": "getDocumentAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid asset, version, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Asset authority or document read permission required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or missing, foreign or deleted document/asset",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, stale version, direct reassignment or conflicting work-order asset",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Current document asset association, including unlinked state",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentAssetResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["asset-document-controller"],
+        "operationId": "changeDocumentAsset",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "documentId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeDocumentAssetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid asset, version, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Asset authority or document read permission required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or missing, foreign or deleted document/asset",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, stale version, direct reassignment or conflicting work-order asset",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Saved association or current-version no-op; retired assets allowed",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentAssetResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-categories/{category}/silent-failure": {
+      "put": {
+        "tags": ["asset-category-settings-controller"],
+        "operationId": "setAssetCategorySilentFailure",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSilentFailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The category with its current flag",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "failsSilently missing or not a boolean",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
                 }
               }
             }
@@ -1988,6 +2289,106 @@
         }
       }
     },
+    "/estates/{estateId}/readings/manual": {
+      "post": {
+        "tags": ["estate-reading-controller"],
+        "summary": "Record an attributed human measurement",
+        "operationId": "createManualReading",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualReadingRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Manual reading recorded",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualReadingResponse"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Identical retry; original reading returned",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualReadingResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, retired asset or conflicting submission",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request payload, filters or pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner, Manager or Crew readings access required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or selected asset not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/ownership-transfer": {
       "post": {
         "tags": ["council-controller"],
@@ -2485,6 +2886,15 @@
             "schema": {
               "type": "string",
               "maxLength": 255
+            }
+          },
+          {
+            "name": "documentType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["INVOICE", "SERVICE_REPORT"]
             }
           },
           {
@@ -6935,6 +7345,480 @@
         }
       }
     },
+    "/estates/{estateId}/readings": {
+      "get": {
+        "tags": ["estate-reading-controller"],
+        "operationId": "listEstateReadings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "VIBRATION_ACCELERATION",
+                "POWER",
+                "ENERGY"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Inclusive",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Exclusive",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "flag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+              }
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request payload, filters or pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner, Manager or Crew readings access required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or selected asset not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Matching sensor and manual readings, newest first, with provenance and per-asset flags",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateReadingPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/readings/metrics": {
+      "get": {
+        "tags": ["estate-reading-controller"],
+        "operationId": "listReadingMetrics",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request payload, filters or pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner, Manager or Crew readings access required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or selected asset not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Fixed metric catalogue with units and expected ranges",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReadingMetricOption"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/readings/export": {
+      "get": {
+        "tags": ["reading-export-controller"],
+        "summary": "Export every matching manual and sensor reading as CSV v1",
+        "operationId": "exportEstateReadings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "TEMPERATURE",
+                "HUMIDITY",
+                "PRESSURE",
+                "FLOW_RATE",
+                "VIBRATION",
+                "VIBRATION_ACCELERATION",
+                "POWER",
+                "ENERGY"
+              ]
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "flag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV v1; X-Export-Row-Count is the complete matching count, including beyond any browser page",
+            "headers": {
+              "X-Export-Row-Count": {
+                "description": "Complete row count from the same query snapshot",
+                "required": true,
+                "style": "simple",
+                "schema": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              },
+              "Content-Disposition": {
+                "description": "CSV v1 attachment filename",
+                "required": true,
+                "style": "simple",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid filters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Readings access required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Export capacity busy; retry later",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/readings/assets": {
+      "get": {
+        "tags": ["estate-reading-controller"],
+        "operationId": "listReadingAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request payload, filters or pagination",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner, Manager or Crew readings access required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or selected asset not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Minimal same-estate asset labels, including retired assets",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingAssetOptionPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members": {
       "get": {
         "tags": ["council-controller"],
@@ -8713,6 +9597,198 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/documents": {
+      "get": {
+        "tags": ["asset-document-controller"],
+        "operationId": "getAssetDocuments",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid asset, version, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Asset authority or document read permission required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or missing, foreign or deleted document/asset",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, stale version, direct reassignment or conflicting work-order asset",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Document association operation failed",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Current nondeleted documents, newest upload first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-categories": {
+      "get": {
+        "tags": ["asset-category-settings-controller"],
+        "operationId": "listEstateAssetCategories",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Every asset category with its flag and active-asset count",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/device-api/test/whoami": {
+      "get": {
+        "tags": ["device-api-echo-controller"],
+        "operationId": "whoami",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/summary": {
       "get": {
         "tags": ["dashboard-controller"],
@@ -9344,580 +10420,6 @@
           }
         }
       }
-    },
-    "/estates/{estateId}/readings": {
-      "get": {
-        "tags": ["estate-reading-controller"],
-        "operationId": "listEstateReadings",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "metric",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "TEMPERATURE",
-                "HUMIDITY",
-                "PRESSURE",
-                "FLOW_RATE",
-                "VIBRATION",
-                "VIBRATION_ACCELERATION",
-                "POWER",
-                "ENERGY"
-              ]
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "description": "Inclusive",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "description": "Exclusive",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "flag",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
-              }
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 50
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid request payload, filters or pagination",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Owner, Manager or Crew readings access required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate or selected asset not found",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Matching sensor and manual readings, newest first, with provenance and per-asset flags",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateReadingPage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/readings/assets": {
-      "get": {
-        "tags": ["estate-reading-controller"],
-        "operationId": "listReadingAssets",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 50
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid request payload, filters or pagination",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Owner, Manager or Crew readings access required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate or selected asset not found",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Minimal same-estate asset labels, including retired assets",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReadingAssetOptionPage"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/readings/manual": {
-      "post": {
-        "tags": ["estate-reading-controller"],
-        "summary": "Record an attributed human measurement",
-        "operationId": "createManualReading",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateManualReadingRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "description": "Manual reading recorded",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ManualReadingResponse"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Identical retry; original reading returned",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ManualReadingResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive estate, retired asset or conflicting submission",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request payload, filters or pagination",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Owner, Manager or Crew readings access required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate or selected asset not found",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/readings/metrics": {
-      "get": {
-        "tags": ["estate-reading-controller"],
-        "operationId": "listReadingMetrics",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid request payload, filters or pagination",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Owner, Manager or Crew readings access required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate or selected asset not found",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Fixed metric catalogue with units and expected ranges",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ReadingMetricOption"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/readings/export": {
-      "get": {
-        "tags": ["reading-export-controller"],
-        "summary": "Export every matching manual and sensor reading as CSV v1",
-        "operationId": "exportEstateReadings",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "assetId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "metric",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "TEMPERATURE",
-                "HUMIDITY",
-                "PRESSURE",
-                "FLOW_RATE",
-                "VIBRATION",
-                "VIBRATION_ACCELERATION",
-                "POWER",
-                "ENERGY"
-              ]
-            }
-          },
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "flag",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string",
-                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "CSV v1; X-Export-Row-Count is the complete matching count, including beyond any browser page",
-            "content": {
-              "text/csv": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            },
-            "headers": {
-              "X-Export-Row-Count": {
-                "description": "Complete row count from the same query snapshot",
-                "style": "simple",
-                "schema": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "required": true
-              },
-              "Content-Disposition": {
-                "description": "CSV v1 attachment filename",
-                "style": "simple",
-                "schema": {
-                  "type": "string"
-                },
-                "required": true
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid filters",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Readings access required",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate or asset not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Export capacity busy; retry later",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -10414,6 +10916,125 @@
         },
         "required": ["associationVersion", "documentId"]
       },
+      "ChangeDocumentAssetRequest": {
+        "type": "object",
+        "properties": {
+          "assetId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Send null explicitly to unlink; unlink before selecting another asset"
+          },
+          "expectedAssociationVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["assetId", "expectedAssociationVersion"]
+      },
+      "DocumentAssetResponse": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "assetReference": {
+            "type": ["string", "null"]
+          },
+          "assetName": {
+            "type": ["string", "null"]
+          },
+          "associationVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "changedAt": {
+            "type": ["string", "null"],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "associationVersion",
+          "changedAt",
+          "documentId"
+        ]
+      },
+      "SetSilentFailureRequest": {
+        "type": "object",
+        "properties": {
+          "failsSilently": {
+            "type": "boolean"
+          }
+        },
+        "required": ["failsSilently"]
+      },
+      "EstateAssetCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "failsSilently": {
+            "type": "boolean"
+          },
+          "isDefault": {
+            "type": "boolean",
+            "description": "True until the flag has been changed in this estate"
+          },
+          "activeAssetCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Active (not retired) assets of this category in the estate"
+          },
+          "lastChange": {
+            "type": "null",
+            "$ref": "#/components/schemas/FlagChangeResponse"
+          }
+        },
+        "required": [
+          "activeAssetCount",
+          "code",
+          "failsSilently",
+          "isDefault",
+          "label",
+          "lastChange"
+        ]
+      },
+      "FlagChangeResponse": {
+        "type": "object",
+        "properties": {
+          "failsSilently": {
+            "type": "boolean"
+          },
+          "changedByUserId": {
+            "type": "string"
+          },
+          "changedByName": {
+            "type": ["string", "null"]
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "changedAt",
+          "changedByName",
+          "changedByUserId",
+          "failsSilently"
+        ]
+      },
       "UserRoles": {
         "type": "object",
         "properties": {
@@ -10732,6 +11353,120 @@
           }
         },
         "required": ["name", "permissions"]
+      },
+      "CreateManualReadingRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": ["number", "string"],
+            "description": "Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places."
+          },
+          "unit": {
+            "type": "string"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp with UTC offset; backdating allowed, at most five minutes ahead"
+          },
+          "submissionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Reuse for an identical retry; generate a new UUID for an edited submission"
+          }
+        },
+        "required": [
+          "assetId",
+          "measuredAt",
+          "metric",
+          "submissionId",
+          "unit",
+          "value"
+        ]
+      },
+      "ManualReadingResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["SENSOR", "MANUAL"]
+          },
+          "recordedByUserId": {
+            "type": "string"
+          },
+          "recordedByName": {
+            "type": ["string", "null"]
+          },
+          "valueText": {
+            "type": "string",
+            "description": "Exact stored decimal for display without binary floating-point conversion"
+          }
+        },
+        "required": [
+          "assetId",
+          "id",
+          "measuredAt",
+          "metric",
+          "recordedAt",
+          "recordedByName",
+          "recordedByUserId",
+          "source",
+          "unit",
+          "value"
+        ]
       },
       "TransferOwnershipRequest": {
         "type": "object",
@@ -12453,6 +13188,219 @@
         },
         "required": ["items"]
       },
+      "EstateReadingPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstateReadingResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": ["items", "page", "size", "totalItems"]
+      },
+      "EstateReadingResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetReference": {
+            "type": "string"
+          },
+          "assetName": {
+            "type": "string"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "In UTC"
+          },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          },
+          "deviceId": {
+            "type": ["string", "null"],
+            "format": "uuid"
+          },
+          "deviceIdentifier": {
+            "type": ["string", "null"]
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadingFlagResponse"
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": ["SENSOR", "MANUAL"]
+          },
+          "recordedByUserId": {
+            "type": ["string", "null"]
+          },
+          "recordedByName": {
+            "type": ["string", "null"]
+          },
+          "recordedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "valueText": {
+            "type": "string",
+            "description": "Exact stored decimal for display without binary floating-point conversion"
+          }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "deviceId",
+          "deviceIdentifier",
+          "flags",
+          "id",
+          "measuredAt",
+          "metric",
+          "recordedAt",
+          "recordedByName",
+          "recordedByUserId",
+          "source",
+          "unit",
+          "value"
+        ]
+      },
+      "ReadingFlagResponse": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+          },
+          "gapSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "description": "GAP only: whole seconds since the previous reading of this metric on the asset"
+          },
+          "validMin": {
+            "type": "number",
+            "format": "double",
+            "description": "OUT_OF_RANGE only: the metric's inclusive minimum"
+          },
+          "validMax": {
+            "type": "number",
+            "format": "double",
+            "description": "OUT_OF_RANGE only: the metric's inclusive maximum"
+          }
+        },
+        "required": ["type"]
+      },
+      "ReadingMetricOption": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "validMin": {
+            "type": "number",
+            "format": "double"
+          },
+          "validMax": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "required": ["metric", "unit", "validMax", "validMin"]
+      },
+      "ReadingAssetOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reference": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "retired": {
+            "type": "boolean"
+          }
+        },
+        "required": ["id", "name", "reference", "retired"]
+      },
+      "ReadingAssetOptionPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReadingAssetOption"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalItems": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "required": ["items", "page", "size", "totalItems"]
+      },
       "EstateInvitationRoleOptionResponse": {
         "type": "object",
         "properties": {
@@ -13160,31 +14108,6 @@
           "value"
         ]
       },
-      "ReadingFlagResponse": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
-          },
-          "gapSeconds": {
-            "type": "integer",
-            "format": "int64",
-            "description": "GAP only: whole seconds since the previous reading of this metric on the asset"
-          },
-          "validMin": {
-            "type": "number",
-            "format": "double",
-            "description": "OUT_OF_RANGE only: the metric's inclusive minimum"
-          },
-          "validMax": {
-            "type": "number",
-            "format": "double",
-            "description": "OUT_OF_RANGE only: the metric's inclusive maximum"
-          }
-        },
-        "required": ["type"]
-      },
       "InspectionResultPageResponse": {
         "type": "object",
         "properties": {
@@ -13199,6 +14122,22 @@
           }
         },
         "required": ["items", "nextCursor"]
+      },
+      "EstateAssetCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "estateActive": {
+            "type": "boolean"
+          },
+          "categories": {
+            "type": "array",
+            "description": "Flagged categories first, then the rest, each by label",
+            "items": {
+              "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+            }
+          }
+        },
+        "required": ["categories", "estateActive"]
       },
       "DashboardConditionCounts": {
         "type": "object",
@@ -13545,6 +14484,12 @@
           "canViewAssets": {
             "type": "boolean"
           },
+          "canViewReadings": {
+            "type": "boolean"
+          },
+          "canRecordReadings": {
+            "type": "boolean"
+          },
           "canViewEstateDetails": {
             "type": "boolean"
           },
@@ -13614,12 +14559,6 @@
           },
           "canUploadDocuments": {
             "type": "boolean"
-          },
-          "canViewReadings": {
-            "type": "boolean"
-          },
-          "canRecordReadings": {
-            "type": "boolean"
           }
         },
         "required": [
@@ -13655,308 +14594,6 @@
           "estateName",
           "role"
         ]
-      },
-      "EstateReadingPage": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EstateReadingResponse"
-            }
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalItems": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": ["items", "page", "size", "totalItems"]
-      },
-      "EstateReadingResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetReference": {
-            "type": "string"
-          },
-          "assetName": {
-            "type": "string"
-          },
-          "measuredAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "In UTC"
-          },
-          "metric": {
-            "type": "string",
-            "enum": [
-              "TEMPERATURE",
-              "HUMIDITY",
-              "PRESSURE",
-              "FLOW_RATE",
-              "VIBRATION",
-              "VIBRATION_ACCELERATION",
-              "POWER",
-              "ENERGY"
-            ]
-          },
-          "unit": {
-            "type": "string"
-          },
-          "value": {
-            "type": "number"
-          },
-          "deviceId": {
-            "type": ["string", "null"],
-            "format": "uuid"
-          },
-          "deviceIdentifier": {
-            "type": ["string", "null"]
-          },
-          "flags": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReadingFlagResponse"
-            }
-          },
-          "source": {
-            "type": "string",
-            "enum": ["SENSOR", "MANUAL"]
-          },
-          "recordedByUserId": {
-            "type": ["string", "null"]
-          },
-          "recordedByName": {
-            "type": ["string", "null"]
-          },
-          "recordedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "valueText": {
-            "type": "string",
-            "description": "Exact stored decimal for display without binary floating-point conversion"
-          }
-        },
-        "required": [
-          "assetId",
-          "assetName",
-          "assetReference",
-          "deviceId",
-          "deviceIdentifier",
-          "flags",
-          "id",
-          "measuredAt",
-          "metric",
-          "recordedAt",
-          "recordedByName",
-          "recordedByUserId",
-          "source",
-          "unit",
-          "value"
-        ]
-      },
-      "ReadingAssetOption": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "reference": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "retired": {
-            "type": "boolean"
-          }
-        },
-        "required": ["id", "name", "reference", "retired"]
-      },
-      "ReadingAssetOptionPage": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ReadingAssetOption"
-            }
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalItems": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "required": ["items", "page", "size", "totalItems"]
-      },
-      "CreateManualReadingRequest": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "assetId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "metric": {
-            "type": "string",
-            "enum": [
-              "TEMPERATURE",
-              "HUMIDITY",
-              "PRESSURE",
-              "FLOW_RATE",
-              "VIBRATION",
-              "VIBRATION_ACCELERATION",
-              "POWER",
-              "ENERGY"
-            ]
-          },
-          "value": {
-            "type": ["number", "string"],
-            "description": "Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places."
-          },
-          "unit": {
-            "type": "string"
-          },
-          "measuredAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp with UTC offset; backdating allowed, at most five minutes ahead"
-          },
-          "submissionId": {
-            "type": "string",
-            "format": "uuid",
-            "description": "Reuse for an identical retry; generate a new UUID for an edited submission"
-          }
-        },
-        "required": [
-          "assetId",
-          "measuredAt",
-          "metric",
-          "submissionId",
-          "unit",
-          "value"
-        ]
-      },
-      "ManualReadingResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "metric": {
-            "type": "string",
-            "enum": [
-              "TEMPERATURE",
-              "HUMIDITY",
-              "PRESSURE",
-              "FLOW_RATE",
-              "VIBRATION",
-              "VIBRATION_ACCELERATION",
-              "POWER",
-              "ENERGY"
-            ]
-          },
-          "value": {
-            "type": "number"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "measuredAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "recordedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "source": {
-            "type": "string",
-            "enum": ["SENSOR", "MANUAL"]
-          },
-          "recordedByUserId": {
-            "type": "string"
-          },
-          "recordedByName": {
-            "type": ["string", "null"]
-          },
-          "valueText": {
-            "type": "string",
-            "description": "Exact stored decimal for display without binary floating-point conversion"
-          }
-        },
-        "required": [
-          "assetId",
-          "id",
-          "measuredAt",
-          "metric",
-          "recordedAt",
-          "recordedByName",
-          "recordedByUserId",
-          "source",
-          "unit",
-          "value"
-        ]
-      },
-      "ReadingMetricOption": {
-        "type": "object",
-        "properties": {
-          "metric": {
-            "type": "string",
-            "enum": [
-              "TEMPERATURE",
-              "HUMIDITY",
-              "PRESSURE",
-              "FLOW_RATE",
-              "VIBRATION",
-              "VIBRATION_ACCELERATION",
-              "POWER",
-              "ENERGY"
-            ]
-          },
-          "unit": {
-            "type": "string"
-          },
-          "validMin": {
-            "type": "number",
-            "format": "double"
-          },
-          "validMax": {
-            "type": "number",
-            "format": "double"
-          }
-        },
-        "required": ["metric", "unit", "validMax", "validMin"]
       }
     },
     "securitySchemes": {

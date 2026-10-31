@@ -8,6 +8,8 @@ without knowing what it cost.
 
 Decisions are append-only. To reverse one, add a new record that supersedes it.
 
+- [0041 - Asset document associations](0041-asset-document-associations.md)
+
 - [0037 - Audited work-order document associations](0037-audited-work-order-document-associations.md)
 - [0036 - Private estate documents and durable deletion](0036-private-estate-documents-and-durable-deletion.md)
 

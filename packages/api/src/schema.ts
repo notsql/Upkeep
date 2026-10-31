@@ -216,6 +216,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/device-api/test/whoami": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["whoami"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates": {
     parameters: {
       query?: never;
@@ -228,6 +244,38 @@ export interface paths {
     put?: never;
     /** Create an estate as any signed-in user; become its owner and Manager */
     post: operations["create"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/asset-categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateAssetCategories"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/asset-categories/{category}/silent-failure": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setAssetCategorySilentFailure"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -324,6 +372,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["replaceDevice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetDocuments"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -630,6 +694,22 @@ export interface paths {
     put?: never;
     post?: never;
     delete: operations["deleteDocument"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/documents/{documentId}/asset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getDocumentAsset"];
+    put: operations["changeDocumentAsset"];
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1649,6 +1729,50 @@ export interface components {
       /** Format: date-time */
       changedAt?: string | null;
     };
+    ChangeDocumentAssetRequest: {
+      /**
+       * Format: uuid
+       * @description Send null explicitly to unlink; unlink before selecting another asset
+       */
+      assetId: string | null;
+      /** Format: int32 */
+      expectedAssociationVersion: number;
+    };
+    DocumentAssetResponse: {
+      /** Format: uuid */
+      documentId: string;
+      /** Format: uuid */
+      assetId: string | null;
+      assetReference: string | null;
+      assetName: string | null;
+      /** Format: int32 */
+      associationVersion: number;
+      /** Format: date-time */
+      changedAt: string | null;
+    };
+    SetSilentFailureRequest: {
+      failsSilently: boolean;
+    };
+    EstateAssetCategoryResponse: {
+      code: string;
+      label: string;
+      failsSilently: boolean;
+      /** @description True until the flag has been changed in this estate */
+      isDefault: boolean;
+      /**
+       * Format: int32
+       * @description Active (not retired) assets of this category in the estate
+       */
+      activeAssetCount: number;
+      lastChange: components["schemas"]["FlagChangeResponse"];
+    };
+    FlagChangeResponse: {
+      failsSilently: boolean;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
     UserRoles: {
       roleSlugs?: string[];
     };
@@ -1756,6 +1880,61 @@ export interface components {
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
       )[];
+    };
+    CreateManualReadingRequest: {
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /** @description Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places. */
+      value: number | string;
+      unit: string;
+      /**
+       * Format: date-time
+       * @description Timestamp with UTC offset; backdating allowed, at most five minutes ahead
+       */
+      measuredAt: string;
+      /**
+       * Format: uuid
+       * @description Reuse for an identical retry; generate a new UUID for an edited submission
+       */
+      submissionId: string;
+    };
+    ManualReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      value: number;
+      unit: string;
+      /** Format: date-time */
+      measuredAt: string;
+      /** Format: date-time */
+      recordedAt: string;
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string;
+      recordedByName: string | null;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
     };
     TransferOwnershipRequest: {
       newOwnerUserId: string;
@@ -2452,6 +2631,104 @@ export interface components {
       items: components["schemas"]["WorkOrderAssetOptionResponse"][];
       nextCursor?: string;
     };
+    EstateReadingPage: {
+      items: components["schemas"]["EstateReadingResponse"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
+    };
+    EstateReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      /**
+       * Format: date-time
+       * @description In UTC
+       */
+      measuredAt: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      value: number;
+      /** Format: uuid */
+      deviceId: string | null;
+      deviceIdentifier: string | null;
+      flags: components["schemas"]["ReadingFlagResponse"][];
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string | null;
+      recordedByName: string | null;
+      /** Format: date-time */
+      recordedAt: string;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
+    };
+    ReadingFlagResponse: {
+      /** @enum {string} */
+      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE";
+      /**
+       * Format: int64
+       * @description GAP only: whole seconds since the previous reading of this metric on the asset
+       */
+      gapSeconds?: number;
+      /**
+       * Format: double
+       * @description OUT_OF_RANGE only: the metric's inclusive minimum
+       */
+      validMin?: number;
+      /**
+       * Format: double
+       * @description OUT_OF_RANGE only: the metric's inclusive maximum
+       */
+      validMax?: number;
+    };
+    ReadingMetricOption: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** Format: double */
+      validMin: number;
+      /** Format: double */
+      validMax: number;
+    };
+    ReadingAssetOption: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      name: string;
+      retired: boolean;
+    };
+    ReadingAssetOptionPage: {
+      items: components["schemas"]["ReadingAssetOption"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
+    };
     EstateInvitationRoleOptionResponse: {
       /** @enum {string} */
       role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
@@ -2716,28 +2993,14 @@ export interface components {
       /** @description Exact stored decimal for display without binary floating-point conversion */
       valueText?: string;
     };
-    ReadingFlagResponse: {
-      /** @enum {string} */
-      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE";
-      /**
-       * Format: int64
-       * @description GAP only: whole seconds since the previous reading of this metric on the asset
-       */
-      gapSeconds?: number;
-      /**
-       * Format: double
-       * @description OUT_OF_RANGE only: the metric's inclusive minimum
-       */
-      validMin?: number;
-      /**
-       * Format: double
-       * @description OUT_OF_RANGE only: the metric's inclusive maximum
-       */
-      validMax?: number;
-    };
     InspectionResultPageResponse: {
       items: components["schemas"]["InspectionResultResponse"][];
       nextCursor: string | null;
+    };
+    EstateAssetCategoriesResponse: {
+      estateActive: boolean;
+      /** @description Flagged categories first, then the rest, each by label */
+      categories: components["schemas"]["EstateAssetCategoryResponse"][];
     };
     DashboardConditionCounts: {
       /** Format: int64 */
@@ -2851,6 +3114,8 @@ export interface components {
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
+      canViewReadings: boolean;
+      canRecordReadings: boolean;
       canViewEstateDetails: boolean;
       canViewInspectionResults: boolean;
       canCreateInspectionResults: boolean;
@@ -2875,142 +3140,6 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
-      canViewReadings: boolean;
-      canRecordReadings: boolean;
-    };
-    EstateReadingPage: {
-      items: components["schemas"]["EstateReadingResponse"][];
-      /** Format: int32 */
-      page: number;
-      /** Format: int32 */
-      size: number;
-      /** Format: int64 */
-      totalItems: number;
-    };
-    EstateReadingResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      assetId: string;
-      assetReference: string;
-      assetName: string;
-      /**
-       * Format: date-time
-       * @description In UTC
-       */
-      measuredAt: string;
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      unit: string;
-      value: number;
-      /** Format: uuid */
-      deviceId: string | null;
-      deviceIdentifier: string | null;
-      flags: components["schemas"]["ReadingFlagResponse"][];
-      /** @enum {string} */
-      source: "SENSOR" | "MANUAL";
-      recordedByUserId: string | null;
-      recordedByName: string | null;
-      /** Format: date-time */
-      recordedAt: string;
-      /** @description Exact stored decimal for display without binary floating-point conversion */
-      valueText?: string;
-    };
-    ReadingAssetOption: {
-      /** Format: uuid */
-      id: string;
-      reference: string;
-      name: string;
-      retired: boolean;
-    };
-    ReadingAssetOptionPage: {
-      items: components["schemas"]["ReadingAssetOption"][];
-      /** Format: int32 */
-      page: number;
-      /** Format: int32 */
-      size: number;
-      /** Format: int64 */
-      totalItems: number;
-    };
-    CreateManualReadingRequest: {
-      /** Format: uuid */
-      assetId: string;
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      /** @description Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places. */
-      value: number | string;
-      unit: string;
-      /**
-       * Format: date-time
-       * @description Timestamp with UTC offset; backdating allowed, at most five minutes ahead
-       */
-      measuredAt: string;
-      /**
-       * Format: uuid
-       * @description Reuse for an identical retry; generate a new UUID for an edited submission
-       */
-      submissionId: string;
-    };
-    ManualReadingResponse: {
-      /** Format: uuid */
-      id: string;
-      /** Format: uuid */
-      assetId: string;
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      value: number;
-      unit: string;
-      /** Format: date-time */
-      measuredAt: string;
-      /** Format: date-time */
-      recordedAt: string;
-      /** @enum {string} */
-      source: "SENSOR" | "MANUAL";
-      recordedByUserId: string;
-      recordedByName: string | null;
-      /** @description Exact stored decimal for display without binary floating-point conversion */
-      valueText?: string;
-    };
-    ReadingMetricOption: {
-      /** @enum {string} */
-      metric:
-        | "TEMPERATURE"
-        | "HUMIDITY"
-        | "PRESSURE"
-        | "FLOW_RATE"
-        | "VIBRATION"
-        | "VIBRATION_ACCELERATION"
-        | "POWER"
-        | "ENERGY";
-      unit: string;
-      /** Format: double */
-      validMin: number;
-      /** Format: double */
-      validMax: number;
     };
   };
 }
@@ -3471,6 +3600,87 @@ export interface operations {
       };
       /** @description Storage unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  changeDocumentAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeDocumentAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Saved association or current-version no-op; retired assets allowed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentAssetResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -5235,6 +5445,86 @@ export interface operations {
       };
     };
   };
+  getAssetDocuments: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current nondeleted documents, newest upload first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentPageResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getAssetFailureRisk: {
     parameters: {
       query?: never;
@@ -5267,6 +5557,83 @@ export interface operations {
       };
       /** @description Estate or asset not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getDocumentAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current document asset association, including unlinked state */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentAssetResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -7364,6 +7731,7 @@ export interface operations {
     parameters: {
       query?: {
         filename?: string;
+        documentType?: "INVOICE" | "SERVICE_REPORT";
         cursor?: string;
         limit?: number;
       };
@@ -7431,6 +7799,55 @@ export interface operations {
       };
       /** @description Document storage unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listEstateAssetCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every asset category with its flag and active-asset count */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoriesResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -9640,6 +10057,78 @@ export interface operations {
       };
     };
   };
+  setAssetCategorySilentFailure: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        category: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetSilentFailureRequest"];
+      };
+    };
+    responses: {
+      /** @description The category with its current flag */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoryResponse"];
+        };
+      };
+      /** @description failsSilently missing or not a boolean */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   setPolicy: {
     parameters: {
       query?: never;
@@ -10479,6 +10968,26 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  whoami: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": string;
         };
       };
     };

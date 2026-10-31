@@ -1,14 +1,17 @@
 import { Button } from "@proj/ui/components/button";
 import { TableCell, TableRow } from "@proj/ui/components/table";
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import type { EstateDocument } from "@/lib/documents";
 
 export interface DocumentRowProps {
+  assets?: ReactNode;
   document: EstateDocument;
   downloading: boolean;
   onAssociation?: (document: EstateDocument) => void;
-  onDelete: (document: EstateDocument) => void;
+  onDelete?: (document: EstateDocument) => void;
   onDownload: (document: EstateDocument) => void;
+  onUnlink?: (document: EstateDocument) => void;
+  showSize?: boolean;
 }
 
 export function DocumentActions({
@@ -17,18 +20,29 @@ export function DocumentActions({
   onDownload,
   onDelete,
   onAssociation,
+  onUnlink,
 }: DocumentRowProps) {
   const download = useCallback(
     () => onDownload(document),
     [document, onDownload]
   );
-  const remove = useCallback(() => onDelete(document), [document, onDelete]);
+  const remove = useCallback(() => onDelete?.(document), [document, onDelete]);
+  const unlink = useCallback(() => onUnlink?.(document), [document, onUnlink]);
   const association = useCallback(
     () => onAssociation?.(document),
     [document, onAssociation]
   );
   return (
     <div className="flex flex-wrap gap-2">
+      {onUnlink ? (
+        <Button
+          aria-label={`Unlink ${document.originalFilename}`}
+          onClick={unlink}
+          variant="outline"
+        >
+          Unlink
+        </Button>
+      ) : null}
       {onAssociation ? (
         <Button
           aria-label={`Work-order link for ${document.originalFilename}`}
@@ -46,7 +60,7 @@ export function DocumentActions({
       >
         Download
       </Button>
-      {document.canDelete ? (
+      {document.canDelete && onDelete ? (
         <Button
           aria-label={`Delete ${document.originalFilename}`}
           onClick={remove}
@@ -60,21 +74,24 @@ export function DocumentActions({
 }
 
 export function DocumentRow(props: DocumentRowProps) {
-  const { document } = props;
+  const { document, assets, showSize = true } = props;
   return (
     <TableRow>
       <TableCell>{document.originalFilename}</TableCell>
       <TableCell>
         {document.documentType === "INVOICE" ? "Invoice" : "Service report"}
       </TableCell>
-      <TableCell>
-        {new Intl.NumberFormat().format(document.sizeBytes)} bytes
-      </TableCell>
+      {showSize ? (
+        <TableCell>
+          {new Intl.NumberFormat().format(document.sizeBytes)} bytes
+        </TableCell>
+      ) : null}
       <TableCell>
         <time dateTime={document.createdAt}>
           {new Date(document.createdAt).toLocaleString()}
         </time>
       </TableCell>
+      {assets === undefined ? null : <TableCell>{assets}</TableCell>}
       <TableCell>
         <DocumentActions {...props} />
       </TableCell>

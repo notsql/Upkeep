@@ -22,8 +22,8 @@ but linking, changing or removing a document association returns 403.
 Responses use `Cache-Control: private, no-store`. Errors use
 `EstateError { message: string }`: 400 invalid target/version/reason/cursor/limit;
 401 missing identity; 403 missing document or work-order authority; 404 inaccessible
-estate or missing/foreign/deleted document/work order; 409 inactive write or stale
-association version; 500 persistence failure. Authentication filters may return
+estate or missing/foreign/deleted document/work order; 409 inactive write, stale
+association version or conflicting asset link; 500 persistence failure. Authentication filters may return
 401 without JSON. No storage key or uploader subject is exposed.
 
 ## Endpoints and DTOs
@@ -70,9 +70,11 @@ be used for attachments, or a cursor reused against another document/job.
 
 A document links to at most one same-estate work order. Open/In Progress/Closed
 jobs remain eligible; historical jobs do not require an active linked asset or
-location. Successful uploaded documents need no extraction/verification. ID-25's
-document asset field is absent; the agreed conflicting-asset policy must be
-integrated when that real relation exists, without fabricating an asset field.
+location. Successful uploaded documents need no extraction/verification.
+[Asset association](asset-documents.md) supplies the real `Document.assetId`.
+Both association write paths reject different non-null document/work-order asset
+IDs with 409; either absent asset remains allowed. The shared estate/document
+locks prevent concurrent linking from creating a mismatch.
 
 Writes lock the estate then document, matching ID-22 deletion. Version must match
 the reviewed `Document.workOrderAssociationVersion`. A real change appends one

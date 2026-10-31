@@ -7,7 +7,8 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
-- [Invoices and service reports](api/documents.md): private document upload, search, download, deletion and cleanup.
+- [Invoices and service reports](api/documents.md): private document upload, filename/type filtering, download, deletion and cleanup.
+- [Asset document association](api/asset-documents.md): owner-authorized link/unlink, retired assets, attachment reads and work-order consistency.
 
 - [Admin role updates](api/admin-roles.md): retired global WorkOS organization-role contracts; use estate-local roles.
 - [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
@@ -21,6 +22,7 @@ same change as the code.
 - [Estate invitations, roles and ownership](api/council-invitations.md): invitation,
   member roles, ownership transfer, acceptance and estate capability fields.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
+- [Estate asset categories](api/asset-categories.md): per-estate silent-failure flags (LIGHTING by default), active-asset counts and append-only change history.
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
@@ -42,8 +44,9 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 
 | File | Covers |
 | --- | --- |
+| [frontend/asset-documents.md](frontend/asset-documents.md) | Document/asset link picker, explicit unlink and the asset detail Documents section |
 | [frontend/work-order-documents.md](frontend/work-order-documents.md) | Document/work-order association dialog, correction history and work-order attachments |
-| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, responsive table/cards, permitted actions, file validation, upload/download/deletion and filename search |
+| [frontend/documents.md](frontend/documents.md) | Estate Documents screen, responsive table/cards, asset links, permitted actions, upload/download/deletion and filename/type filtering |
 | [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
 | [frontend/shell.md](frontend/shell.md) | Root layout, providers, ordered estate navigation/mobile section menu, estate-scoped resident reporting, home page (`/`), and shared API/session/query/error conventions |
 | [frontend/dashboard.md](frontend/dashboard.md) | Signed-in Home portfolio totals, condition breakdown, attention links and compact invitations |
@@ -53,6 +56,7 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
+| [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories`: silent-failure flags per asset category with asset counts and last change |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
 | [frontend/readings.md](frontend/readings.md) | Estate-wide/legacy reading browsers, attributed manual entry, provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |

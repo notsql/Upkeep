@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import type { EstateDocument } from "@/lib/documents";
+import type { ReactNode } from "react";
+import type { DocumentFilters, EstateDocument } from "@/lib/documents";
 import { useMobile } from "@/lib/use-mobile";
 import {
   DocumentActions,
@@ -23,11 +24,15 @@ export function DocumentList({
   items,
   failed,
   filename,
+  documentType,
+  renderAssets,
   ...actions
-}: Omit<DocumentRowProps, "document"> & {
+}: Omit<DocumentRowProps, "document" | "assets" | "showSize"> & {
   items?: EstateDocument[];
   failed: boolean;
   filename?: string;
+  documentType?: DocumentFilters["documentType"];
+  renderAssets?: (document: EstateDocument) => ReactNode;
 }) {
   const mobile = useMobile();
   if (failed || !items) {
@@ -35,7 +40,11 @@ export function DocumentList({
   }
   if (!items.length) {
     return (
-      <p>{filename ? "No files match your search" : "No documents uploaded"}</p>
+      <p>
+        {filename || documentType
+          ? "No files match your search"
+          : "No documents uploaded"}
+      </p>
     );
   }
   if (mobile) {
@@ -63,12 +72,6 @@ export function DocumentList({
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-muted-foreground">Size</dt>
-                    <dd>
-                      {new Intl.NumberFormat().format(document.sizeBytes)} bytes
-                    </dd>
-                  </div>
-                  <div>
                     <dt className="text-muted-foreground">Uploaded</dt>
                     <dd>
                       <time dateTime={document.createdAt}>
@@ -76,6 +79,12 @@ export function DocumentList({
                       </time>
                     </dd>
                   </div>
+                  {renderAssets ? (
+                    <div>
+                      <dt className="text-muted-foreground">Asset</dt>
+                      <dd>{renderAssets(document)}</dd>
+                    </div>
+                  ) : null}
                 </dl>
               </CardContent>
               <CardFooter>
@@ -91,14 +100,26 @@ export function DocumentList({
     <Table aria-label="Documents">
       <TableHeader>
         <TableRow>
-          {["Filename", "Type", "Size", "Uploaded", "Actions"].map((label) => (
+          {[
+            "Filename",
+            "Type",
+            "Uploaded",
+            ...(renderAssets ? ["Asset"] : []),
+            "Actions",
+          ].map((label) => (
             <TableHead key={label}>{label}</TableHead>
           ))}
         </TableRow>
       </TableHeader>
       <TableBody>
         {items.map((document) => (
-          <DocumentRow document={document} key={document.id} {...actions} />
+          <DocumentRow
+            assets={renderAssets?.(document)}
+            document={document}
+            key={document.id}
+            showSize={false}
+            {...actions}
+          />
         ))}
       </TableBody>
     </Table>

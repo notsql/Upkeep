@@ -1,5 +1,12 @@
 # Assets and condition assessments (frontend)
 
+The asset detail page now includes the route-local `AssetDocumentsSection` before
+inspection history. It uses a shadcn Card/Table to show authorized linked files
+with type, size, upload date and Download. Owners can Unlink even when the asset
+is retired; inactive estates retain reads only. See
+[asset-documents.md](asset-documents.md) for its routes, API calls, query keys,
+reviewed-version confirmation and conflict handling.
+
 Building assets registered in an estate, and their condition history. Paths
 are relative to `apps/web/src/`; route folders below are under
 `routes/_auth/estates/$estateId/assets/`. All require sign-in.
