@@ -87,6 +87,7 @@ beforeEach(() => {
     dueCount: 1,
     doneCount: 1,
     checks: [overdue, due, done],
+    flaggedCategoryCount: 1,
     unscheduled: [
       {
         assetId: "a-9",
@@ -302,4 +303,36 @@ it("shows a load error", () => {
   state.error = new Error("Estate not found.");
   renderWithProviders(<InspectionsPage estateId="oak" />);
   expect(screen.getByRole("alert").textContent).toContain("Estate not found.");
+});
+
+it("explains that nothing can be due when no category is flagged", () => {
+  state.data = {
+    ...(state.data as object),
+    checks: [],
+    flaggedCategoryCount: 0,
+  };
+  renderWithProviders(<InspectionsPage estateId="oak" />);
+  const note = within(
+    screen.getByRole("note", { name: "No flagged categories" })
+  );
+  note.getByText(
+    "No asset categories are flagged as failing silently, so no checks can be due."
+  );
+  expect(
+    note.getByRole("link", { name: "Flag categories" }).getAttribute("href")
+  ).toBe("/estates/oak/asset-categories");
+});
+
+it("keeps the note alongside checks still open from before", () => {
+  state.data = { ...(state.data as object), flaggedCategoryCount: 0 };
+  renderWithProviders(<InspectionsPage estateId="oak" />);
+  screen.getByRole("note", { name: "No flagged categories" });
+  screen.getByRole("row", { name: L1 });
+});
+
+it("has no note while a category is flagged", () => {
+  renderWithProviders(<InspectionsPage estateId="oak" />);
+  expect(
+    screen.queryByRole("note", { name: "No flagged categories" })
+  ).toBeNull();
 });

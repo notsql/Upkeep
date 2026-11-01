@@ -113,7 +113,8 @@ a technician opens the result form from a due check". This spec does that.
     last generated;
   - the counts of Overdue, Due and Done checks;
   - every Overdue check, plus every check generated for this month;
-  - the eligible assets that are not scheduled (no interval or prediction).
+  - the eligible assets that are not scheduled (no interval or prediction);
+  - how many categories are flagged as failing silently in the estate.
 - Each check includes the asset's reference, name and category label, its
   **block** and **level** (from its current location), the due date, basis,
   interval used, status, and, when Done, the result's ID, outcome and date.
@@ -155,6 +156,12 @@ a technician opens the result form from a due check". This spec does that.
   category. The Not scheduled card's **Set service intervals** link goes to
   the Asset categories page.
 - With nothing Overdue, Due or Done, the page shows "No checks this month."
+- When **no category is flagged** as failing silently, a note explains why
+  nothing can be due: "No asset categories are flagged as failing silently,
+  so no checks can be due." It has a **Flag categories** link to the Asset
+  categories page. It shows whether or not there are checks, since earlier
+  checks can still be open after a category is unflagged. (Added after
+  review, 2026-11-01.)
 
 ## Data
 
@@ -240,6 +247,8 @@ The response types:
   - `overdueCount`, `dueCount`, `doneCount`: integers
   - `checks`: `InspectionCheckResponse[]`
   - `unscheduled`: `UnscheduledAssetResponse[]`
+  - `flaggedCategoryCount`: integer, the categories flagged as failing
+    silently in the estate
 - `InspectionCheckResponse`:
   - `id`
   - `assetId`, `assetReference`, `assetName`, `categoryLabel`
@@ -358,6 +367,9 @@ owner. Each says where to change it.
       invitation acceptance, pending invitations). The new POST endpoint
       pushed the union of POST response types past what TypeScript can match
       against an uncast mock. Their assertions are unchanged.
+    - `apps/web/src/index.css` now rounds `[data-slot="alert"]` with the same
+      radius as cards, tables and dialogs. Alerts were square everywhere in
+      the app, which stood out next to the Inspections page's cards.
 
 ## Implementation phases
 

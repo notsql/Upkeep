@@ -262,6 +262,29 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
               </Alert>
             ) : null}
           </div>
+          {data.flaggedCategoryCount === 0 ? (
+            <Alert
+              aria-label="No flagged categories"
+              className="gap-3 p-4"
+              role="note"
+            >
+              <AlertDescription className="text-sm">
+                No asset categories are flagged as failing silently, so no
+                checks can be due.
+              </AlertDescription>
+              <Link
+                className={buttonVariants({
+                  className: "justify-self-start",
+                  size: "sm",
+                  variant: "outline",
+                })}
+                params={{ estateId }}
+                to="/estates/$estateId/asset-categories"
+              >
+                Flag categories
+              </Link>
+            </Alert>
+          ) : null}
           {data.checks.length === 0 ? (
             <p className="text-muted-foreground">No checks this month.</p>
           ) : (

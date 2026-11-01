@@ -15,7 +15,8 @@ import java.util.List;
             "dueCount",
             "doneCount",
             "checks",
-            "unscheduled"
+            "unscheduled",
+            "flaggedCategoryCount"
         })
 public record InspectionListResponse(
         @Schema(description = "The first day of the current month (Singapore)")
@@ -34,4 +35,7 @@ public record InspectionListResponse(
         @Schema(description = "Overdue checks and this month's checks, by block, level, status, due date and reference")
         List<InspectionCheckResponse> checks,
 
-        List<UnscheduledAssetResponse> unscheduled) {}
+        List<UnscheduledAssetResponse> unscheduled,
+
+        @Schema(description = "Categories flagged as failing silently in the estate; 0 means nothing can be due")
+        int flaggedCategoryCount) {}

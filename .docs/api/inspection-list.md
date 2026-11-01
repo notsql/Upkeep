@@ -29,7 +29,7 @@ MEMBER, strangers and unknown estates get 404. Both paths are explicitly allowed
 | DTO | Fields |
 | --- | --- |
 | GenerateInspectionListResponse | added: integer; list: InspectionListResponse |
-| InspectionListResponse | month: date (first of the month); estateActive: boolean; generatedAt: date-time or null (latest run this month); generatedByName: string or null; overdueCount, dueCount, doneCount: integer; checks: InspectionCheckResponse[]; unscheduled: UnscheduledAssetResponse[] |
+| InspectionListResponse | month: date (first of the month); estateActive: boolean; generatedAt: date-time or null (latest run this month); generatedByName: string or null; overdueCount, dueCount, doneCount: integer; checks: InspectionCheckResponse[]; unscheduled: UnscheduledAssetResponse[]; flaggedCategoryCount: integer (categories flagged as failing silently in the estate; 0 means nothing can be due) |
 | InspectionCheckResponse | id; assetId; assetReference; assetName; categoryLabel; block: InspectionLocationResponse; level: InspectionLocationResponse or null; dueOn: date; dueBasis: `PREDICTION \| INTERVAL \| NEVER_INSPECTED`; interval: ServiceInterval or null; intervalSource: `ASSET \| CATEGORY` or null; status: `OVERDUE \| DUE \| DONE`; result: CheckResultResponse or null |
 | InspectionLocationResponse | id: uuid; name: string |
 | CheckResultResponse | id: uuid (the inspection result); outcome: `PASS \| FAIL`; inspectedOn: date |
@@ -76,5 +76,5 @@ Example: `POST /estates/{estateId}/inspection-list/generate`
  "checks":[{"id":"…","assetId":"…","assetReference":"L-1","assetName":"Lobby light",
   "categoryLabel":"Lighting","block":{"id":"…","name":"Block A"},"level":null,
   "dueOn":"2026-11-01","dueBasis":"NEVER_INSPECTED","interval":null,"intervalSource":null,
-  "status":"DUE","result":null}],"unscheduled":[]}}
+  "status":"DUE","result":null}],"unscheduled":[],"flaggedCategoryCount":1}}
 ```

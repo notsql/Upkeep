@@ -9220,6 +9220,11 @@
           "unscheduled": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/UnscheduledAssetResponse" }
+          },
+          "flaggedCategoryCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Categories flagged as failing silently in the estate; 0 means nothing can be due"
           }
         },
         "required": [
@@ -9227,6 +9232,7 @@
           "doneCount",
           "dueCount",
           "estateActive",
+          "flaggedCategoryCount",
           "generatedAt",
           "generatedByName",
           "month",

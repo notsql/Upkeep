@@ -1990,6 +1990,11 @@ export interface components {
       /** @description Overdue checks and this month's checks, by block, level, status, due date and reference */
       checks: components["schemas"]["InspectionCheckResponse"][];
       unscheduled: components["schemas"]["UnscheduledAssetResponse"][];
+      /**
+       * Format: int32
+       * @description Categories flagged as failing silently in the estate; 0 means nothing can be due
+       */
+      flaggedCategoryCount: number;
     };
     InspectionLocationResponse: {
       /** Format: uuid */

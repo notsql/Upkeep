@@ -43,6 +43,10 @@ e.g. "November 2026"), then:
   **Due**, green **Done · Pass/Fail**), and an unlabelled action column: **Record inspection**
   (ID-85's `/estates/$estateId/assets/$assetId/inspections/new`, only with `canCreate`) or **View
   result** (`/estates/$estateId/assets/$assetId/inspections/$inspectionId`) for Done.
+- When `flaggedCategoryCount` is 0, an `Alert` with `role="note"` and the accessible name "No
+  flagged categories": "No asset categories are flagged as failing silently, so no checks can be
+  due." It has an outline **Flag categories** link to `/estates/$estateId/asset-categories`. It is
+  shown whether or not there are checks.
 - "No checks this month." when there are none.
 - A **Not scheduled assets** section (`h2`) listing "<reference> · <name>" and the category label.
 

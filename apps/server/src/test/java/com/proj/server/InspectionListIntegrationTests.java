@@ -190,6 +190,17 @@ class InspectionListIntegrationTests {
     }
 
     @Test
+    void countsTheFlaggedCategories() throws Exception {
+        list("owner").andExpect(jsonPath("$.flaggedCategoryCount").value(1));
+        db.execute(
+                "insert into \"AssetCategoryFlagChange\" (id, \"estateId\", category, \"failsSilently\", \"changedByUserId\") values (?, ?, 'LIGHTING', false, 'owner')",
+                UUID.randomUUID(),
+                estateId);
+        list("owner").andExpect(jsonPath("$.flaggedCategoryCount").value(0));
+        generate("owner").andExpect(jsonPath("$.list.flaggedCategoryCount").value(0));
+    }
+
+    @Test
     void generatingAddsANeverInspectedFlaggedAsset() throws Exception {
         lamp("L-1");
         generate("owner")

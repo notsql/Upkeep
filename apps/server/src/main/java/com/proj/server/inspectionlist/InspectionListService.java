@@ -203,7 +203,8 @@ public class InspectionListService {
                 count(listed, CheckStatus.DUE),
                 count(listed, CheckStatus.DONE),
                 listed,
-                unscheduled);
+                unscheduled,
+                categorySettings.flaggedCategories(estateId).size());
     }
 
     private static Row row(
