@@ -946,6 +946,306 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/service-interval": {
+      "get": {
+        "tags": ["service-interval-controller"],
+        "operationId": "getAssetServiceInterval",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category or asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The asset's effective interval, override and category interval",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetServiceIntervalResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["service-interval-controller"],
+        "operationId": "setAssetServiceInterval",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetServiceIntervalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The asset's interval after the change",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetServiceIntervalResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10)",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, or retired asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category or asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-categories/{category}/silent-failure": {
+      "put": {
+        "tags": ["asset-category-settings-controller"],
+        "operationId": "setAssetCategorySilentFailure",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSilentFailureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The category with its current flag",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "failsSilently missing or not a boolean",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-categories/{category}/service-interval": {
+      "put": {
+        "tags": ["service-interval-controller"],
+        "operationId": "setAssetCategoryServiceInterval",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "category",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetServiceIntervalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The category with its current interval",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10)",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category or asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/users/{userId}/estates/{estateId}": {
       "put": {
         "tags": ["estate-user-controller"],
@@ -7343,6 +7643,56 @@
         }
       }
     },
+    "/estates/{estateId}/asset-categories": {
+      "get": {
+        "tags": ["asset-category-settings-controller"],
+        "operationId": "listEstateAssetCategories",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller, or unknown category",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Every asset category with its flag and active-asset count",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateAssetCategoriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/dashboard/summary": {
       "get": {
         "tags": ["dashboard-controller"],
@@ -7865,162 +8215,6 @@
           "204": { "description": "Invitation cancelled for this estate" }
         }
       }
-    },
-    "/estates/{estateId}/asset-categories/{category}/silent-failure": {
-      "put": {
-        "tags": ["asset-category-settings-controller"],
-        "operationId": "setAssetCategorySilentFailure",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "category",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SetSilentFailureRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "The category with its current flag",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateAssetCategoryResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "failsSilently missing or not a boolean",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Inactive estate",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Resident membership does not grant management access",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate not found or not managed by the caller, or unknown category",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/estates/{estateId}/asset-categories": {
-      "get": {
-        "tags": ["asset-category-settings-controller"],
-        "operationId": "listEstateAssetCategories",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Resident membership does not grant management access",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Estate not found or not managed by the caller, or unknown category",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateError"
-                }
-              }
-            }
-          },
-          "200": {
-            "description": "Every asset category with its flag and active-asset count",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EstateAssetCategoriesResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -8302,7 +8496,7 @@
           },
           "tolerance": {
             "type": "number",
-            "maximum": 999999999999.999999,
+            "maximum": 1000000000000.0,
             "minimum": 0
           }
         },
@@ -8396,6 +8590,153 @@
           "associationVersion",
           "changedAt",
           "documentId"
+        ]
+      },
+      "ServiceInterval": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "format": "int32",
+            "description": "1-3650 days, 1-120 months or 1-10 years",
+            "minimum": 1
+          },
+          "unit": { "type": "string", "enum": ["DAY", "MONTH", "YEAR"] }
+        },
+        "required": ["unit", "value"]
+      },
+      "SetServiceIntervalRequest": {
+        "type": "object",
+        "properties": {
+          "interval": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": ["interval"]
+      },
+      "AssetServiceIntervalResponse": {
+        "type": "object",
+        "properties": {
+          "effective": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          },
+          "source": { "type": "string", "enum": ["ASSET", "CATEGORY", "NONE"] },
+          "override": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          },
+          "categoryInterval": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          },
+          "categoryLabel": { "type": "string" },
+          "lastOverrideChange": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/IntervalChangeResponse" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "categoryInterval",
+          "categoryLabel",
+          "effective",
+          "lastOverrideChange",
+          "override",
+          "source"
+        ]
+      },
+      "IntervalChangeResponse": {
+        "type": "object",
+        "properties": {
+          "interval": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          },
+          "changedByUserId": { "type": "string" },
+          "changedByName": { "type": ["string", "null"] },
+          "changedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "changedAt",
+          "changedByName",
+          "changedByUserId",
+          "interval"
+        ]
+      },
+      "SetSilentFailureRequest": {
+        "type": "object",
+        "properties": { "failsSilently": { "type": "boolean" } },
+        "required": ["failsSilently"]
+      },
+      "EstateAssetCategoryResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "label": { "type": "string" },
+          "failsSilently": { "type": "boolean" },
+          "isDefault": {
+            "type": "boolean",
+            "description": "True until the flag has been changed in this estate"
+          },
+          "activeAssetCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Active (not retired) assets of this category in the estate"
+          },
+          "lastChange": {
+            "type": "null",
+            "$ref": "#/components/schemas/FlagChangeResponse"
+          },
+          "serviceInterval": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          },
+          "lastIntervalChange": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/IntervalChangeResponse" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "activeAssetCount",
+          "code",
+          "failsSilently",
+          "isDefault",
+          "label",
+          "lastChange",
+          "lastIntervalChange",
+          "serviceInterval"
+        ]
+      },
+      "FlagChangeResponse": {
+        "type": "object",
+        "properties": {
+          "failsSilently": { "type": "boolean" },
+          "changedByUserId": { "type": "string" },
+          "changedByName": { "type": ["string", "null"] },
+          "changedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "changedAt",
+          "changedByName",
+          "changedByUserId",
+          "failsSilently"
         ]
       },
       "UserRoles": {
@@ -8875,7 +9216,7 @@
           "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
           },
           "installedOn": { "type": ["string", "null"], "format": "date" },
           "manufacturer": { "type": ["string", "null"] },
@@ -8971,7 +9312,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "°C"
+            "description": "\u00b0C"
           },
           "flowRate": {
             "type": "number",
@@ -9383,7 +9724,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "°C"
+            "example": "\u00b0C"
           },
           "measuredAt": {
             "type": "string",
@@ -10260,6 +10601,20 @@
         },
         "required": ["items", "nextCursor"]
       },
+      "EstateAssetCategoriesResponse": {
+        "type": "object",
+        "properties": {
+          "estateActive": { "type": "boolean" },
+          "categories": {
+            "type": "array",
+            "description": "Flagged categories first, then the rest, each by label",
+            "items": {
+              "$ref": "#/components/schemas/EstateAssetCategoryResponse"
+            }
+          }
+        },
+        "required": ["categories", "estateActive"]
+      },
       "DashboardConditionCounts": {
         "type": "object",
         "properties": {
@@ -10515,90 +10870,6 @@
           "estateName",
           "role"
         ]
-      },
-      "SetSilentFailureRequest": {
-        "type": "object",
-        "properties": {
-          "failsSilently": {
-            "type": "boolean"
-          }
-        },
-        "required": ["failsSilently"]
-      },
-      "EstateAssetCategoryResponse": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          },
-          "failsSilently": {
-            "type": "boolean"
-          },
-          "isDefault": {
-            "type": "boolean",
-            "description": "True until the flag has been changed in this estate"
-          },
-          "activeAssetCount": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Active (not retired) assets of this category in the estate"
-          },
-          "lastChange": {
-            "type": "null",
-            "$ref": "#/components/schemas/FlagChangeResponse"
-          }
-        },
-        "required": [
-          "activeAssetCount",
-          "code",
-          "failsSilently",
-          "isDefault",
-          "label",
-          "lastChange"
-        ]
-      },
-      "FlagChangeResponse": {
-        "type": "object",
-        "properties": {
-          "failsSilently": {
-            "type": "boolean"
-          },
-          "changedByUserId": {
-            "type": "string"
-          },
-          "changedByName": {
-            "type": ["string", "null"]
-          },
-          "changedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "changedAt",
-          "changedByName",
-          "changedByUserId",
-          "failsSilently"
-        ]
-      },
-      "EstateAssetCategoriesResponse": {
-        "type": "object",
-        "properties": {
-          "estateActive": {
-            "type": "boolean"
-          },
-          "categories": {
-            "type": "array",
-            "description": "Flagged categories first, then the rest, each by label",
-            "items": {
-              "$ref": "#/components/schemas/EstateAssetCategoryResponse"
-            }
-          }
-        },
-        "required": ["categories", "estateActive"]
       }
     },
     "securitySchemes": {

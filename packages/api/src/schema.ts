@@ -250,6 +250,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/asset-categories/{category}/service-interval": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setAssetCategoryServiceInterval"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/asset-categories/{category}/silent-failure": {
     parameters: {
       query?: never;
@@ -484,6 +500,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["checkAssetReadings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/service-interval": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetServiceInterval"];
+    put: operations["setAssetServiceInterval"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1652,6 +1684,63 @@ export interface components {
       /** Format: date-time */
       changedAt: string | null;
     };
+    ServiceInterval: {
+      /**
+       * Format: int32
+       * @description 1-3650 days, 1-120 months or 1-10 years
+       */
+      value: number;
+      /** @enum {string} */
+      unit: "DAY" | "MONTH" | "YEAR";
+    };
+    SetServiceIntervalRequest: {
+      interval: components["schemas"]["ServiceInterval"] | null;
+    };
+    AssetServiceIntervalResponse: {
+      effective: components["schemas"]["ServiceInterval"] | null;
+      /** @enum {string} */
+      source: "ASSET" | "CATEGORY" | "NONE";
+      override: components["schemas"]["ServiceInterval"] | null;
+      categoryInterval: components["schemas"]["ServiceInterval"] | null;
+      categoryLabel: string;
+      lastOverrideChange:
+        | components["schemas"]["IntervalChangeResponse"]
+        | null;
+    };
+    IntervalChangeResponse: {
+      interval: components["schemas"]["ServiceInterval"] | null;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
+    SetSilentFailureRequest: {
+      failsSilently: boolean;
+    };
+    EstateAssetCategoryResponse: {
+      code: string;
+      label: string;
+      failsSilently: boolean;
+      /** @description True until the flag has been changed in this estate */
+      isDefault: boolean;
+      /**
+       * Format: int32
+       * @description Active (not retired) assets of this category in the estate
+       */
+      activeAssetCount: number;
+      lastChange: components["schemas"]["FlagChangeResponse"];
+      serviceInterval: components["schemas"]["ServiceInterval"] | null;
+      lastIntervalChange:
+        | components["schemas"]["IntervalChangeResponse"]
+        | null;
+    };
+    FlagChangeResponse: {
+      failsSilently: boolean;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
     UserRoles: {
       roleSlugs?: string[];
     };
@@ -2734,6 +2823,11 @@ export interface components {
       items: components["schemas"]["InspectionResultResponse"][];
       nextCursor: string | null;
     };
+    EstateAssetCategoriesResponse: {
+      estateActive: boolean;
+      /** @description Flagged categories first, then the rest, each by label */
+      categories: components["schemas"]["EstateAssetCategoryResponse"][];
+    };
     DashboardConditionCounts: {
       /** Format: int64 */
       good: number;
@@ -2870,34 +2964,6 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
-    };
-    SetSilentFailureRequest: {
-      failsSilently: boolean;
-    };
-    EstateAssetCategoryResponse: {
-      code: string;
-      label: string;
-      failsSilently: boolean;
-      /** @description True until the flag has been changed in this estate */
-      isDefault: boolean;
-      /**
-       * Format: int32
-       * @description Active (not retired) assets of this category in the estate
-       */
-      activeAssetCount: number;
-      lastChange: components["schemas"]["FlagChangeResponse"];
-    };
-    FlagChangeResponse: {
-      failsSilently: boolean;
-      changedByUserId: string;
-      changedByName: string | null;
-      /** Format: date-time */
-      changedAt: string;
-    };
-    EstateAssetCategoriesResponse: {
-      estateActive: boolean;
-      /** @description Flagged categories first, then the rest, each by label */
-      categories: components["schemas"]["EstateAssetCategoryResponse"][];
     };
   };
 }
@@ -5149,6 +5215,56 @@ export interface operations {
         };
       };
       /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getAssetServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's effective interval, override and category interval */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetServiceIntervalResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
       404: {
         headers: {
           [name: string]: unknown;
@@ -9454,6 +9570,78 @@ export interface operations {
       };
     };
   };
+  setAssetCategoryServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        category: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetServiceIntervalRequest"];
+      };
+    };
+    responses: {
+      /** @description The category with its current interval */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoryResponse"];
+        };
+      };
+      /** @description interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   setAssetCategorySilentFailure: {
     parameters: {
       query?: never;
@@ -9516,6 +9704,78 @@ export interface operations {
         };
       };
       /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setAssetServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetServiceIntervalRequest"];
+      };
+    };
+    responses: {
+      /** @description The asset's interval after the change */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetServiceIntervalResponse"];
+        };
+      };
+      /** @description interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, or retired asset */
       409: {
         headers: {
           [name: string]: unknown;

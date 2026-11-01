@@ -1,7 +1,23 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
-import { expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { AssetDetailsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
+
+const page = vi.hoisted(() => ({
+  estate: {} as Record<string, unknown>,
+  asset: {} as Record<string, unknown>,
+}));
+
+beforeEach(() => {
+  page.estate = { id: "estate", name: "Maple Grove" };
+  page.asset = {
+    id: "asset",
+    name: "Water pump",
+    reference: "MG-A0001",
+    category: "PUMP",
+    lifecycleVersion: 0,
+  };
+});
 
 // Sections that fetch their own data stay pending: this test is about breadcrumbs.
 vi.mock("@/lib/api", () => ({
@@ -23,19 +39,11 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 vi.mock("@/lib/estates", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/estates")>()),
-  useEstate: () => ({ data: { id: "estate", name: "Maple Grove" } }),
+  useEstate: () => ({ data: page.estate }),
 }));
 vi.mock("@/lib/assets", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/assets")>()),
-  useAsset: () => ({
-    data: {
-      id: "asset",
-      name: "Water pump",
-      reference: "MG-A0001",
-      category: "PUMP",
-      lifecycleVersion: 0,
-    },
-  }),
+  useAsset: () => ({ data: page.asset }),
   useDeactivateAsset: () => ({ mutateAsync: vi.fn() }),
 }));
 vi.mock("@/lib/catalogue", () => ({
@@ -54,6 +62,15 @@ vi.mock(
   () => ({ AssetDevicesSection: () => null })
 );
 
+vi.mock(
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-service-interval-card",
+  () => ({
+    AssetServiceIntervalCard: ({ locked }: { locked?: string }) => (
+      <output>{`Service interval card${locked ? `: ${locked}` : ""}`}</output>
+    ),
+  })
+);
+
 it("names the owning estate in asset detail breadcrumbs", async () => {
   renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
   const breadcrumbs = within(
@@ -66,4 +83,32 @@ it("names the owning estate in asset detail breadcrumbs", async () => {
 it("shows the asset's maintenance costs", async () => {
   renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
   await screen.findByRole("region", { name: "Maintenance costs" });
+});
+
+it.each([
+  [{ owned: true }, true],
+  [{ owned: false, canManageInvitationPermissions: true }, true],
+  [{ owned: false, canManageInvitationPermissions: false }, false],
+])("shows the service interval to Managers only (%o)", (access, shown) => {
+  page.estate = { ...page.estate, ...access };
+  renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
+  expect(screen.queryByText("Service interval card") !== null).toBe(shown);
+});
+
+it.each([
+  [
+    { deactivatedAt: "2026-10-01T00:00:00Z" },
+    {},
+    "This asset is retired, so its service interval cannot be changed.",
+  ],
+  [
+    {},
+    { deactivatedAt: "2026-10-01T00:00:00Z" },
+    "This estate is inactive, so its service intervals cannot be changed.",
+  ],
+])("locks the service interval with a reason", (asset, estate, reason) => {
+  page.asset = { ...page.asset, ...asset };
+  page.estate = { ...page.estate, owned: true, ...estate };
+  renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
+  screen.getByText(`Service interval card: ${reason}`);
 });

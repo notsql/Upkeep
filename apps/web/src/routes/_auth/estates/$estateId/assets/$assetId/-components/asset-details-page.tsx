@@ -16,11 +16,25 @@ import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$as
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-forecast-card";
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
+import { AssetServiceIntervalCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-service-interval-card";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
 import { AssetDocumentsSection } from "./asset-documents-section";
 import { InspectionHistoryTable } from "./inspection-history-table";
 
 const NOT_RECORDED = "Not recorded";
+
+/** Why the service-interval override is read-only, if it is. */
+function intervalLock(
+  estateInactive: boolean,
+  assetRetired: boolean
+): string | undefined {
+  if (estateInactive) {
+    return "This estate is inactive, so its service intervals cannot be changed.";
+  }
+  if (assetRetired) {
+    return "This asset is retired, so its service interval cannot be changed.";
+  }
+}
 
 function InspectionRecordAction({
   estateId,
@@ -200,6 +214,16 @@ export function AssetDetailsPage({
             estateId={estateId}
           />
           <AssetCostsSection assetId={assetId} estateId={estateId} />
+          {estate.data?.owned || estate.data?.canManageInvitationPermissions ? (
+            <AssetServiceIntervalCard
+              assetId={assetId}
+              estateId={estateId}
+              locked={intervalLock(
+                Boolean(estate.data.deactivatedAt),
+                Boolean(asset.data.deactivatedAt)
+              )}
+            />
+          ) : null}
           <AssetDevicesSection
             assetId={assetId}
             canRegister={!asset.data.deactivatedAt}

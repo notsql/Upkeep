@@ -10,6 +10,7 @@ import com.proj.server.db.Public;
 import com.proj.server.db.tables.Asset.AssetPath;
 import com.proj.server.db.tables.Assetassessment.AssetassessmentPath;
 import com.proj.server.db.tables.Assetcategoryflagchange.AssetcategoryflagchangePath;
+import com.proj.server.db.tables.Assetcategoryintervalchange.AssetcategoryintervalchangePath;
 import com.proj.server.db.tables.Assetevent.AsseteventPath;
 import com.proj.server.db.tables.Assetinspectionresult.AssetinspectionresultPath;
 import com.proj.server.db.tables.Device.DevicePath;
@@ -237,6 +238,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _assetcategoryflagchange = new AssetcategoryflagchangePath(this, null, Keys.ASSETCATEGORYFLAGCHANGE__ASSETCATEGORYFLAGCHANGE_ESTATEID_FKEY.getInverseKey());
 
         return _assetcategoryflagchange;
+    }
+
+    private transient AssetcategoryintervalchangePath _assetcategoryintervalchange;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.AssetCategoryIntervalChange</code> table
+     */
+    public AssetcategoryintervalchangePath assetcategoryintervalchange() {
+        if (_assetcategoryintervalchange == null)
+            _assetcategoryintervalchange = new AssetcategoryintervalchangePath(this, null, Keys.ASSETCATEGORYINTERVALCHANGE__ASSETCATEGORYINTERVALCHANGE_ESTATEID_FKEY.getInverseKey());
+
+        return _assetcategoryintervalchange;
     }
 
     private transient AsseteventPath _assetevent;

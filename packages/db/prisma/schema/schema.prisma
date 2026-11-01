@@ -9,16 +9,16 @@ datasource db {
 }
 
 model Estate {
-  id                String                  @id @default(uuid()) @db.Uuid
-  ownerUserId       String                  @db.VarChar(255)
-  name              String                  @db.VarChar(200)
-  code              String                  @unique @db.VarChar(50)
-  address           String                  @db.VarChar(500)
-  postalCode        String                  @db.VarChar(20)
-  description       String?                 @db.VarChar(2000)
-  createdAt         DateTime                @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime                @updatedAt @db.Timestamptz(6)
-  deactivatedAt     DateTime?               @db.Timestamptz(6)
+  id                String                        @id @default(uuid()) @db.Uuid
+  ownerUserId       String                        @db.VarChar(255)
+  name              String                        @db.VarChar(200)
+  code              String                        @unique @db.VarChar(50)
+  address           String                        @db.VarChar(500)
+  postalCode        String                        @db.VarChar(20)
+  description       String?                       @db.VarChar(2000)
+  createdAt         DateTime                      @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime                      @updatedAt @db.Timestamptz(6)
+  deactivatedAt     DateTime?                     @db.Timestamptz(6)
   locations         Location[]
   users             EstateUser[]
   assets            Asset[]
@@ -32,6 +32,7 @@ model Estate {
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
   categoryFlags     AssetCategoryFlagChange[]
+  categoryIntervals AssetCategoryIntervalChange[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -214,6 +215,7 @@ model Asset {
   events            AssetEvent[]
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
+  intervalChanges   AssetIntervalChange[]
 
   documents Document[]
 
@@ -363,11 +365,12 @@ model WorkOrderCompletionRevision {
 // An asset category (decision 0026). `code` is stable and is what assets and
 // catalogue models store. Rows are added only by migrations.
 model AssetCategory {
-  code   String                    @id @db.VarChar(30)
-  label  String                    @db.VarChar(100)
-  assets Asset[]
-  models AssetModel[]
-  flags  AssetCategoryFlagChange[]
+  code      String                        @id @db.VarChar(30)
+  label     String                        @db.VarChar(100)
+  assets    Asset[]
+  models    AssetModel[]
+  flags     AssetCategoryFlagChange[]
+  intervals AssetCategoryIntervalChange[]
 }
 
 // Append-only history of an estate's silent-failure flag per asset category (ID-83).
@@ -385,6 +388,40 @@ model AssetCategoryFlagChange {
   assetCategory AssetCategory @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([estateId, category, changedAt])
+}
+
+// Append-only history of an estate's service interval per asset category (ID-81).
+// The current interval is the latest row; a null value and unit clears it. No rows means no interval.
+model AssetCategoryIntervalChange {
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  category        String   @db.VarChar(30)
+  intervalValue   Int?
+  intervalUnit    String?  @db.VarChar(5)
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  estate        Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory AssetCategory @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, category, changedAt])
+}
+
+// Append-only history of one asset's service-interval override (ID-81).
+// The current override is the latest row; a null value and unit removes it.
+model AssetIntervalChange {
+  id              String   @id @default(uuid()) @db.Uuid
+  assetId         String   @db.Uuid
+  intervalValue   Int?
+  intervalUnit    String?  @db.VarChar(5)
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([assetId, changedAt])
 }
 
 // A manufacturer, shared by all estates (decision 0026). `name` is stored
