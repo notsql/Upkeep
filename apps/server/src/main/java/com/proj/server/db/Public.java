@@ -26,6 +26,8 @@ import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
+import com.proj.server.db.tables.Inspectioncheck;
+import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
@@ -169,6 +171,16 @@ public class Public extends SchemaImpl {
     public final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
 
     /**
+     * The table <code>public.InspectionCheck</code>.
+     */
+    public final Inspectioncheck INSPECTIONCHECK = Inspectioncheck.INSPECTIONCHECK;
+
+    /**
+     * The table <code>public.InspectionListRun</code>.
+     */
+    public final Inspectionlistrun INSPECTIONLISTRUN = Inspectionlistrun.INSPECTIONLISTRUN;
+
+    /**
      * The table <code>public.IssueReport</code>.
      */
     public final Issuereport ISSUEREPORT = Issuereport.ISSUEREPORT;
@@ -251,6 +263,8 @@ public class Public extends SchemaImpl {
             Estaterolepermission.ESTATEROLEPERMISSION,
             Estateuser.ESTATEUSER,
             Flatlinepolicy.FLATLINEPOLICY,
+            Inspectioncheck.INSPECTIONCHECK,
+            Inspectionlistrun.INSPECTIONLISTRUN,
             Issuereport.ISSUEREPORT,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,

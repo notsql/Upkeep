@@ -33,6 +33,8 @@ model Estate {
   inspectionResults AssetInspectionResult[]
   categoryFlags     AssetCategoryFlagChange[]
   categoryIntervals AssetCategoryIntervalChange[]
+  inspectionChecks  InspectionCheck[]
+  inspectionRuns    InspectionListRun[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -216,6 +218,7 @@ model Asset {
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
   intervalChanges   AssetIntervalChange[]
+  inspectionChecks  InspectionCheck[]
 
   documents Document[]
 
@@ -283,6 +286,7 @@ model AssetInspectionResult {
   location         Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   photos           AssetInspectionPhoto[]
   workOrders       WorkOrder[]
+  completedCheck   InspectionCheck?
 
   @@unique([id, estateId])
   @@index([estateId, assetId, inspectedOn, createdAt, id])
@@ -422,6 +426,48 @@ model AssetIntervalChange {
   asset Asset @relation(fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([assetId, changedAt])
+}
+
+// A spot check due for one asset (ID-84). Open until an inspection result completes
+// it; an open check from an earlier month is overdue (ID-86). One open check per asset.
+model InspectionCheck {
+  id                  String    @id @default(uuid()) @db.Uuid
+  estateId            String    @db.Uuid
+  assetId             String    @db.Uuid
+  month               DateTime  @db.Date
+  dueOn               DateTime  @db.Date
+  dueBasis            String    @db.VarChar(15)
+  intervalValue       Int?
+  intervalUnit        String?   @db.VarChar(5)
+  intervalSource      String?   @db.VarChar(8)
+  generatedByUserId   String    @db.VarChar(255)
+  generatedByName     String?   @db.VarChar(255)
+  generatedAt         DateTime  @default(now()) @db.Timestamptz(6)
+  completedByResultId String?   @unique @db.Uuid
+  completedAt         DateTime? @db.Timestamptz(6)
+
+  estate      Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset       Asset                  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  completedBy AssetInspectionResult? @relation(fields: [completedByResultId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([assetId, month])
+  @@index([estateId, month])
+}
+
+// Append-only record of each generation of an estate's monthly inspection list (ID-84),
+// so a run that added nothing still counts as generated.
+model InspectionListRun {
+  id                String   @id @default(uuid()) @db.Uuid
+  estateId          String   @db.Uuid
+  month             DateTime @db.Date
+  added             Int
+  generatedByUserId String   @db.VarChar(255)
+  generatedByName   String?  @db.VarChar(255)
+  generatedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, month, generatedAt])
 }
 
 // A manufacturer, shared by all estates (decision 0026). `name` is stored

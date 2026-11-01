@@ -26,6 +26,8 @@ import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
+import com.proj.server.db.tables.Inspectioncheck;
+import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
@@ -152,6 +154,16 @@ public class Tables {
      * The table <code>public.FlatlinePolicy</code>.
      */
     public static final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
+
+    /**
+     * The table <code>public.InspectionCheck</code>.
+     */
+    public static final Inspectioncheck INSPECTIONCHECK = Inspectioncheck.INSPECTIONCHECK;
+
+    /**
+     * The table <code>public.InspectionListRun</code>.
+     */
+    public static final Inspectionlistrun INSPECTIONLISTRUN = Inspectionlistrun.INSPECTIONLISTRUN;
 
     /**
      * The table <code>public.IssueReport</code>.

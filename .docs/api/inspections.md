@@ -93,6 +93,9 @@ objects older than 24 hours under the private `inspections/` prefix. Photo-free
 submissions work without configured storage. Resident-report APIs cannot read
 inspection evidence; no keys or public bucket URLs appear in DTOs.
 
+In the same write transaction, saving a result completes the asset's open monthly check, if it
+has one ([inspection-list.md](inspection-list.md)). The request and response are unchanged.
+
 ## Work-order conversion
 
 See [work-orders](work-orders.md). Its existing POST additionally accepts

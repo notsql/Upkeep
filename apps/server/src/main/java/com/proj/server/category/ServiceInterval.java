@@ -19,7 +19,7 @@ public record ServiceInterval(
         @NotNull IntervalUnit unit) {
 
     /** The stored columns as an interval; null when cleared. */
-    static ServiceInterval of(Integer value, String unit) {
+    public static ServiceInterval of(Integer value, String unit) {
         return value == null || unit == null ? null : new ServiceInterval(value, IntervalUnit.valueOf(unit));
     }
 

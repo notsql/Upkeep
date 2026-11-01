@@ -1,5 +1,6 @@
 package com.proj.server.category;
 
+import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Assetcategoryintervalchange.ASSETCATEGORYINTERVALCHANGE;
 import static com.proj.server.db.tables.Assetintervalchange.ASSETINTERVALCHANGE;
 
@@ -44,6 +45,21 @@ public class ServiceIntervalRepository {
                 .orderBy(ASSETCATEGORYINTERVALCHANGE.CHANGEDAT.desc(), ASSETCATEGORYINTERVALCHANGE.ID.desc())
                 .limit(1)
                 .fetchOptional();
+    }
+
+    /** The latest override change of each of the estate's assets, by asset ID. */
+    public Map<UUID, AssetintervalchangeRecord> latestAssetChanges(UUID estateId) {
+        return db.select(ASSETINTERVALCHANGE.fields())
+                .distinctOn(ASSETINTERVALCHANGE.ASSETID)
+                .from(ASSETINTERVALCHANGE)
+                .join(ASSET)
+                .on(ASSET.ID.eq(ASSETINTERVALCHANGE.ASSETID))
+                .where(ASSET.ESTATEID.eq(estateId))
+                .orderBy(
+                        ASSETINTERVALCHANGE.ASSETID,
+                        ASSETINTERVALCHANGE.CHANGEDAT.desc(),
+                        ASSETINTERVALCHANGE.ID.desc())
+                .fetchMap(ASSETINTERVALCHANGE.ASSETID, AssetintervalchangeRecord.class);
     }
 
     public Optional<AssetintervalchangeRecord> latestAssetChange(UUID assetId) {

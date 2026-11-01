@@ -6,6 +6,9 @@ import com.proj.server.db.tables.records.AssetintervalchangeRecord;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
 import com.proj.server.workos.WorkOSService;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -44,6 +47,24 @@ public class ServiceIntervalService {
         return effective(
                 interval(repository.latestAssetChange(assetId).orElse(null)),
                 categoryInterval(estateId, asset.getCategory()));
+    }
+
+    /** {@link #effective(UUID, UUID)} for many of the estate's assets at once, by asset ID. No access check. */
+    public Map<UUID, EffectiveInterval> effectiveForEstate(UUID estateId, Collection<AssetRecord> estateAssets) {
+        var overrides = repository.latestAssetChanges(estateId);
+        var byCategory = repository.latestCategoryChanges(estateId);
+        var result = new HashMap<UUID, EffectiveInterval>();
+        for (var asset : estateAssets) {
+            var category = byCategory.get(asset.getCategory());
+            result.put(
+                    asset.getId(),
+                    effective(
+                            interval(overrides.get(asset.getId())),
+                            category == null
+                                    ? null
+                                    : ServiceInterval.of(category.getIntervalvalue(), category.getIntervalunit())));
+        }
+        return result;
     }
 
     public AssetServiceIntervalResponse get(UUID estateId, UUID assetId, String user) {

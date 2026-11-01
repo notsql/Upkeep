@@ -211,7 +211,7 @@ it.each([401, 409, 503])(
     vi.mocked(api.POST).mockResolvedValue({
       error: { message: "Unable to create estate." },
       response: new Response(null, { status }),
-    });
+    } as never);
     renderWithProviders(<EstateEditorPage />);
     submitNewEstate();
     await screen.findByRole("alert");

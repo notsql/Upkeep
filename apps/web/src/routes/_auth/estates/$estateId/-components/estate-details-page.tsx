@@ -86,6 +86,13 @@ function EstateActions({
           >
             Asset categories
           </Link>
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            params={{ estateId: estate.id }}
+            to="/estates/$estateId/inspections"
+          >
+            Inspections
+          </Link>
         </>
       ) : null}
       {canViewSensors ? (

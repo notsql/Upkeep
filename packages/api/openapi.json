@@ -2472,6 +2472,64 @@
         }
       }
     },
+    "/estates/{estateId}/inspection-list/generate": {
+      "post": {
+        "tags": ["inspection-list-controller"],
+        "operationId": "generateInspectionList",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Checks added (possibly none) and the list after generating",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateInspectionListResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/documents": {
       "get": {
         "tags": ["document-controller"],
@@ -6379,6 +6437,56 @@
         }
       }
     },
+    "/estates/{estateId}/inspection-list": {
+      "get": {
+        "tags": ["inspection-list-controller"],
+        "operationId": "getInspectionList",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "This month's checks, overdue checks and unscheduled assets",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/InspectionListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/inspection-assets": {
       "get": {
         "tags": ["inspection-controller"],
@@ -9008,6 +9116,141 @@
           }
         },
         "required": ["created", "skipped"]
+      },
+      "CheckResultResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "inspectedOn": { "type": "string", "format": "date" }
+        },
+        "required": ["id", "inspectedOn", "outcome"]
+      },
+      "GenerateInspectionListResponse": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Checks added by this generation; 0 when nothing new is due"
+          },
+          "list": { "$ref": "#/components/schemas/InspectionListResponse" }
+        },
+        "required": ["added", "list"]
+      },
+      "InspectionCheckResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "categoryLabel": { "type": "string" },
+          "block": {
+            "$ref": "#/components/schemas/InspectionLocationResponse"
+          },
+          "level": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/InspectionLocationResponse" },
+              { "type": "null" }
+            ]
+          },
+          "dueOn": { "type": "string", "format": "date" },
+          "dueBasis": {
+            "type": "string",
+            "enum": ["PREDICTION", "INTERVAL", "NEVER_INSPECTED"]
+          },
+          "interval": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceInterval" },
+              { "type": "null" }
+            ]
+          },
+          "intervalSource": {
+            "type": ["string", "null"],
+            "enum": ["ASSET", "CATEGORY"]
+          },
+          "status": { "type": "string", "enum": ["OVERDUE", "DUE", "DONE"] },
+          "result": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/CheckResultResponse" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "block",
+          "categoryLabel",
+          "dueBasis",
+          "dueOn",
+          "id",
+          "interval",
+          "intervalSource",
+          "level",
+          "result",
+          "status"
+        ]
+      },
+      "InspectionListResponse": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "format": "date",
+            "description": "The first day of the current month (Singapore)"
+          },
+          "estateActive": { "type": "boolean" },
+          "generatedAt": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "The latest generation this month, or null when not yet generated"
+          },
+          "generatedByName": { "type": ["string", "null"] },
+          "overdueCount": { "type": "integer", "format": "int32" },
+          "dueCount": { "type": "integer", "format": "int32" },
+          "doneCount": { "type": "integer", "format": "int32" },
+          "checks": {
+            "type": "array",
+            "description": "Overdue checks and this month's checks, by block, level, status, due date and reference",
+            "items": { "$ref": "#/components/schemas/InspectionCheckResponse" }
+          },
+          "unscheduled": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UnscheduledAssetResponse" }
+          }
+        },
+        "required": [
+          "checks",
+          "doneCount",
+          "dueCount",
+          "estateActive",
+          "generatedAt",
+          "generatedByName",
+          "month",
+          "overdueCount",
+          "unscheduled"
+        ]
+      },
+      "InspectionLocationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" }
+        },
+        "required": ["id", "name"]
+      },
+      "UnscheduledAssetResponse": {
+        "type": "object",
+        "properties": {
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "categoryLabel": { "type": "string" }
+        },
+        "required": ["assetId", "assetName", "assetReference", "categoryLabel"]
       },
       "UploadDocumentRequest": {
         "type": "object",

@@ -47,7 +47,8 @@ never the only signal.
 
 ## Asset categories page additions
 
-- `CategorySummaryCards` (`asset-categories/-components/category-summary-cards.tsx`): three `Card`s
+- `CategorySummaryCards` (`asset-categories/-components/category-summary-cards.tsx`): three shared
+  `SummaryCard`s (`src/components/summary-card.tsx`, a `Card`)
   in a `sm:grid-cols-3` grid, each a `region` named by its `h2` title, with a large count and a
   lucide icon:
   - **Fails silently** (`EyeOff`): flagged count, "Categories flagged for spot checks".

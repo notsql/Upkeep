@@ -19,6 +19,8 @@ import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
 import com.proj.server.db.tables.Estateroledefinition.EstateroledefinitionPath;
 import com.proj.server.db.tables.Estateuser.EstateuserPath;
 import com.proj.server.db.tables.Flatlinepolicy.FlatlinepolicyPath;
+import com.proj.server.db.tables.Inspectioncheck.InspectioncheckPath;
+import com.proj.server.db.tables.Inspectionlistrun.InspectionlistrunPath;
 import com.proj.server.db.tables.Issuereport.IssuereportPath;
 import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.Workorder.WorkorderPath;
@@ -355,6 +357,32 @@ public class Estate extends TableImpl<EstateRecord> {
             _flatlinepolicy = new FlatlinepolicyPath(this, null, Keys.FLATLINEPOLICY__FLATLINEPOLICY_ESTATEID_FKEY.getInverseKey());
 
         return _flatlinepolicy;
+    }
+
+    private transient InspectioncheckPath _inspectioncheck;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.InspectionCheck</code> table
+     */
+    public InspectioncheckPath inspectioncheck() {
+        if (_inspectioncheck == null)
+            _inspectioncheck = new InspectioncheckPath(this, null, Keys.INSPECTIONCHECK__INSPECTIONCHECK_ESTATEID_FKEY.getInverseKey());
+
+        return _inspectioncheck;
+    }
+
+    private transient InspectionlistrunPath _inspectionlistrun;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.InspectionListRun</code> table
+     */
+    public InspectionlistrunPath inspectionlistrun() {
+        if (_inspectionlistrun == null)
+            _inspectionlistrun = new InspectionlistrunPath(this, null, Keys.INSPECTIONLISTRUN__INSPECTIONLISTRUN_ESTATEID_FKEY.getInverseKey());
+
+        return _inspectionlistrun;
     }
 
     private transient IssuereportPath _issuereport;

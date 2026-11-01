@@ -1,6 +1,7 @@
 package com.proj.server.inspection;
 
 import com.proj.server.db.tables.records.AssetinspectionresultRecord;
+import com.proj.server.inspectionlist.InspectionListRepository;
 import com.proj.server.resident.ResidentImageValidator;
 import com.proj.server.workos.WorkOSService;
 import java.nio.charset.StandardCharsets;
@@ -22,18 +23,21 @@ public class InspectionService {
     private final InspectionImageStore images;
     private final TransactionTemplate transactions;
     private final WorkOSService identity;
+    private final InspectionListRepository checks;
 
     public InspectionService(
             InspectionRepository repository,
             ResidentImageValidator validator,
             InspectionImageStore images,
             TransactionTemplate transactions,
-            WorkOSService identity) {
+            WorkOSService identity,
+            InspectionListRepository checks) {
         this.repository = repository;
         this.validator = validator;
         this.images = images;
         this.transactions = transactions;
         this.identity = identity;
+        this.checks = checks;
     }
 
     private void authorize(UUID estateId, String user, boolean write, boolean lock) {
@@ -104,6 +108,8 @@ public class InspectionService {
                 authorize(estate, user, true, true);
                 var current = writableAsset(estate, asset, expectedLocation, date);
                 repository.create(id, current, outcome, date, text, user, name);
+                // The asset's open monthly check, if any, is done (ID-84).
+                checks.complete(asset, id);
                 for (var photo : uploaded)
                     repository.photo(photo.id(), estate, id, photo.key(), photo.type(), photo.size());
                 return repository.response(repository.result(estate, id));

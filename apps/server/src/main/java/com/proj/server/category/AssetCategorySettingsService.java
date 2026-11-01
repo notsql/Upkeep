@@ -8,7 +8,9 @@ import com.proj.server.estate.EstateResponse;
 import com.proj.server.workos.WorkOSService;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +56,17 @@ public class AssetCategorySettingsService {
                 .sorted(Comparator.comparing((EstateAssetCategoryResponse category) -> !category.failsSilently()))
                 .toList();
         return new EstateAssetCategoriesResponse(estate.deactivatedAt() == null, categories);
+    }
+
+    /** The codes of the categories flagged as failing silently in the estate. No access check. */
+    public Set<String> flaggedCategories(UUID estateId) {
+        var changes = repository.latestChanges(estateId);
+        return repository.categories().stream()
+                .map(AssetcategoryRecord::getCode)
+                .filter(code -> changes.containsKey(code)
+                        ? changes.get(code).getFailssilently()
+                        : FLAGGED_BY_DEFAULT.equals(code))
+                .collect(Collectors.toSet());
     }
 
     /** Records a change only when the flag actually changes, so the history holds real changes. */
