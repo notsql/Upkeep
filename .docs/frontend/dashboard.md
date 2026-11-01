@@ -55,7 +55,12 @@ The screen reports when the five rows represent a larger affected count.
 No assessed active assets needing attention and unassessed assets remain distinct.
 
 The Accessible estates card links to `/estates`, the directory and primary
-Create estate location. The redundant Browse estates button is removed; sidebar
+Create estate location. Clickable cards (Accessible estates, and Attention needed when it has a
+target) use the shared clickable-card hover of the estate and asset cards: on hover or focus the
+card tints (`bg-accent/40`), gains a small shadow and a primary tint on its own border, and darkens
+on press (`bg-accent`), with no transition under reduced motion. Keyboard focus also shows a 2px ring on the link, which uses the card's
+radius (`rounded-[var(--radius)]`) so the ring follows the corners. Every card and card link is
+`min-w-0`, so the two-column grid cannot overflow the viewport (ID-102). The redundant Browse estates button is removed; sidebar
 and mobile navigation retain Estates. Home does not duplicate its full estate
 cards or invitation names.
 Pending invitations are a compact count with Review invitations linking to

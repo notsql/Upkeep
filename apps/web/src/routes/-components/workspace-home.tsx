@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import {
   Building2,
@@ -37,8 +38,18 @@ function StatisticCard({
   to?: "/estates";
   onClick?: () => void;
 }) {
+  const interactive = Boolean(to || href);
   const card = (
-    <Card aria-label={label} className="h-full gap-3" role="region">
+    <Card
+      aria-label={label}
+      className={cn(
+        "h-full min-w-0 gap-3",
+        // The shared clickable-card hover, as on the estate and asset cards (ID-102).
+        interactive &&
+          "transition-[background-color,box-shadow] group-hover:bg-accent/40 group-hover:shadow-sm group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 motion-reduce:transition-none"
+      )}
+      role="region"
+    >
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <CardTitle>
           <h2 className="text-sm">{label}</h2>
@@ -54,8 +65,9 @@ function StatisticCard({
       </CardContent>
     </Card>
   );
+  // Same radius as the card, so the keyboard focus ring follows its corners.
   const linkClass =
-    "block rounded-xl outline-none transition-shadow hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+    "group block min-w-0 rounded-[var(--radius)] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   if (to) {
     return (
       <Link aria-label={label} className={linkClass} to={to}>
