@@ -3,25 +3,25 @@ import { TableCell, TableRow } from "@proj/ui/components/table";
 import { type ReactNode, useCallback } from "react";
 import type { EstateDocument } from "@/lib/documents";
 
-export function DocumentRow({
+export interface DocumentRowProps {
+  assets?: ReactNode;
+  document: EstateDocument;
+  downloading: boolean;
+  onAssociation?: (document: EstateDocument) => void;
+  onDelete?: (document: EstateDocument) => void;
+  onDownload: (document: EstateDocument) => void;
+  onUnlink?: (document: EstateDocument) => void;
+  showSize?: boolean;
+}
+
+export function DocumentActions({
   document,
   downloading,
   onDownload,
   onDelete,
   onAssociation,
-  assets,
   onUnlink,
-  showSize = true,
-}: {
-  document: EstateDocument;
-  downloading: boolean;
-  onDownload: (document: EstateDocument) => void;
-  onDelete?: (document: EstateDocument) => void;
-  onAssociation?: (document: EstateDocument) => void;
-  assets?: ReactNode;
-  onUnlink?: (document: EstateDocument) => void;
-  showSize?: boolean;
-}) {
+}: DocumentRowProps) {
   const download = useCallback(
     () => onDownload(document),
     [document, onDownload]
@@ -32,6 +32,49 @@ export function DocumentRow({
     () => onAssociation?.(document),
     [document, onAssociation]
   );
+  return (
+    <div className="flex flex-wrap gap-2">
+      {onUnlink ? (
+        <Button
+          aria-label={`Unlink ${document.originalFilename}`}
+          onClick={unlink}
+          variant="outline"
+        >
+          Unlink
+        </Button>
+      ) : null}
+      {onAssociation ? (
+        <Button
+          aria-label={`Work-order link for ${document.originalFilename}`}
+          onClick={association}
+          variant="outline"
+        >
+          Work order
+        </Button>
+      ) : null}
+      <Button
+        aria-label={`Download ${document.originalFilename}`}
+        disabled={downloading}
+        onClick={download}
+        variant="outline"
+      >
+        Download
+      </Button>
+      {document.canDelete && onDelete ? (
+        <Button
+          aria-label={`Delete ${document.originalFilename}`}
+          onClick={remove}
+          variant="destructive"
+        >
+          Delete
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+export function DocumentRow(props: DocumentRowProps) {
+  const { document, assets, showSize = true } = props;
   return (
     <TableRow>
       <TableCell>{document.originalFilename}</TableCell>
@@ -50,43 +93,7 @@ export function DocumentRow({
       </TableCell>
       {assets === undefined ? null : <TableCell>{assets}</TableCell>}
       <TableCell>
-        <div className="flex flex-wrap gap-2">
-          {onUnlink ? (
-            <Button
-              aria-label={`Unlink ${document.originalFilename}`}
-              onClick={unlink}
-              variant="outline"
-            >
-              Unlink
-            </Button>
-          ) : null}
-          {onAssociation ? (
-            <Button
-              aria-label={`Work-order link for ${document.originalFilename}`}
-              onClick={association}
-              variant="outline"
-            >
-              Work order
-            </Button>
-          ) : null}
-          <Button
-            aria-label={`Download ${document.originalFilename}`}
-            disabled={downloading}
-            onClick={download}
-            variant="outline"
-          >
-            Download
-          </Button>
-          {document.canDelete && onDelete ? (
-            <Button
-              aria-label={`Delete ${document.originalFilename}`}
-              onClick={remove}
-              variant="destructive"
-            >
-              Delete
-            </Button>
-          ) : null}
-        </div>
+        <DocumentActions {...props} />
       </TableCell>
     </TableRow>
   );

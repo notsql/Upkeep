@@ -61,13 +61,13 @@ mobile navigation. The circle uses the existing shadcn Button and UserRound icon
 | Context | Desktop sidebar | Mobile |
 | --- | --- | --- |
 | Global | Home, Estates, admin-only Admin users | Fixed Home / Estates / More |
-| Estate owner | Global links + Overview, Assets, Council | Same bottom bar + contextual Overview / Assets / Council links |
-| Estate member/delegate | Global links + Overview, allowed Council | Same bottom bar + Overview / allowed Council links |
+| Estate owner | Global links + Overview, Assets, Council | Same bottom bar + estate switcher / section menu |
+| Estate member/delegate | Global links + Overview, allowed Council | Same bottom bar + permission-filtered section menu |
 
 More uses shadcn DropdownMenu with Settings and allowed Admin users. Estate
 context comes from route/breadcrumbs/content/sidebar. On estate pages, a shadcn
-estate DropdownMenu replaces the sidebar estate heading and sits above mobile
-estate links. It lists accessible estates by name/code, labels inactive entries,
+estate DropdownMenu replaces the sidebar estate heading and sits above the mobile
+estate section menu. It lists accessible estates by name/code, labels inactive entries,
 and opens the chosen estate's Overview. The header stays compact. Estates remains
 the directory for browsing/searching/creating estates and appears in desktop and
 mobile navigation for every authenticated account. Unassigned users can create
@@ -188,3 +188,26 @@ Manual acceptance remains: 360px phone, 768px tablet, 1280–1440px desktop and
 keyboard-only navigation/More/dialogs; short dialog viewports/mobile keyboard;
 content clear of the bottom bar; theme persistence after refresh; owner/delegate/
 member/admin visibility. Keep ID-93 pending this visual review.
+
+## Responsive estate lists
+
+At widths below 768px, estate/asset readings, documents and work orders use
+compact shadcn Card records with labelled details. At >=768px they retain
+semantic tables. The existing `lib/use-mobile.ts` media-query subscription
+selects one presentation at a time; resizing does not fetch another dataset or
+reset filters/paging, and hidden duplicate actions are not mounted.
+
+Reading cards put metric/value first, retain Manual/Sensor provenance and
+recorder names, measured time, applicable asset/device labels and wrapping
+suspect badges. Document cards retain filename/type/size/time and the same
+permission-controlled actions/dialogs as desktop. Work-order cards retain
+reference links, description, priority/status/category/creation time; a shadcn
+Select and direction Button provide the same sort choices as desktop headers.
+Long labels wrap and controls reserve touch-friendly heights. Pagination and
+page-local actions wrap within the available width. Other screens retain their
+existing responsive layouts.
+
+Resident reporting follows the selected estate rather than the account's other
+memberships. Resident contexts use My reports / Report a fault in their local
+section menu; staff contexts hide those actions. Global reporting asks which
+estate when multiple eligible resident assignments exist. See [shell.md](shell.md).
