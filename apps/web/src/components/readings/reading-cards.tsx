@@ -30,10 +30,10 @@ export function ReadingCards({
             <CardHeader className="gap-2">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h2 className="font-medium text-sm">
+                  <h2 className="text-sm font-medium">
                     {deviceMetrics[reading.metric].name}
                   </h2>
-                  <p className="font-semibold text-lg">
+                  <p className="text-lg font-semibold">
                     {reading.valueText ?? reading.value} {reading.unit}
                   </p>
                 </div>
@@ -69,7 +69,7 @@ export function ReadingCards({
                 <div className="flex min-w-0 flex-wrap items-start gap-1">
                   {reading.flags.map((flag) => (
                     <Badge
-                      className="h-auto max-w-full whitespace-normal py-0.5 text-left leading-snug"
+                      className="h-auto max-w-full py-0.5 text-left leading-snug whitespace-normal"
                       key={flag.type}
                       variant="outline"
                     >

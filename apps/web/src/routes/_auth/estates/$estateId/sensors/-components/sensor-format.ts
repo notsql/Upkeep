@@ -4,7 +4,7 @@ export function metricLabel(metric: SensorPolicy["metric"]): string {
   return metric.charAt(0) + metric.slice(1).toLowerCase().replaceAll("_", " ");
 }
 
-const WHOLE_NUMBER = /^\d+$/;
+const WHOLE_NUMBER = /^\d+$/u;
 
 export function wholeMinutes(
   value: string,

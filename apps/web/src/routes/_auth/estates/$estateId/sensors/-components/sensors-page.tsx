@@ -59,7 +59,7 @@ export function SensorsPage({ estateId }: { estateId: string }) {
         description="Review device readings and manage metric policies and maintenance pauses."
         title="Device monitoring"
       />
-      <p className="my-4 text-muted-foreground">
+      <p className="text-muted-foreground my-4">
         Each row tracks one device and metric. A possible flatline means the
         device kept sending nearly unchanged values. It needs review; it does
         not prove the device or asset is faulty. Silence does not count as
@@ -90,7 +90,7 @@ export function SensorsPage({ estateId }: { estateId: string }) {
             aria-labelledby="monitoring-title"
             className="my-6 grid min-w-0 gap-4"
           >
-            <h2 className="font-semibold text-lg" id="monitoring-title">
+            <h2 className="text-lg font-semibold" id="monitoring-title">
               Device metrics
             </h2>
             <div className="flex flex-wrap items-center gap-3">
@@ -217,7 +217,7 @@ function SensorReviewResults({
           sensors={data.sensors}
         />
       ) : (
-        <p className="py-6 text-muted-foreground text-sm">
+        <p className="text-muted-foreground py-6 text-sm">
           {emptyMessage(data.estateActive, data.hasSensorReadings, view, page)}
         </p>
       )}

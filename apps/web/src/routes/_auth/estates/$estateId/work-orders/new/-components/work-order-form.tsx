@@ -142,7 +142,7 @@ export function WorkOrderForm({
           <Field>
             <FieldLabel htmlFor="work-linked-asset">Linked asset</FieldLabel>
             <Button
-              className="h-auto min-h-11 justify-start whitespace-normal text-left"
+              className="h-auto min-h-11 justify-start text-left whitespace-normal"
               disabled
               id="work-linked-asset"
               type="button"

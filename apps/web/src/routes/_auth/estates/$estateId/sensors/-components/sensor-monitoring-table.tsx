@@ -39,7 +39,7 @@ export function SensorMonitoringTable({
     return (
       <ul
         aria-label="Device metrics"
-        className="min-w-0 divide-y rounded-xl border bg-card"
+        className="bg-card min-w-0 divide-y rounded-xl border"
       >
         {sensors.map((sensor) => (
           <li
@@ -54,7 +54,7 @@ export function SensorMonitoringTable({
             </div>
             <SensorStatus sensor={sensor} />
             <div className="text-sm">
-              <p className="mb-1 text-muted-foreground">Last measurement</p>
+              <p className="text-muted-foreground mb-1">Last measurement</p>
               <SensorMeasurement sensor={sensor} />
             </div>
             <SensorMaintenance
@@ -70,7 +70,7 @@ export function SensorMonitoringTable({
   return (
     <Table
       aria-label="Device metrics"
-      className="[&_td]:whitespace-normal [&_td]:align-top"
+      className="[&_td]:align-top [&_td]:whitespace-normal"
     >
       <TableHeader>
         <TableRow>
@@ -136,11 +136,11 @@ function SensorIdentity({ sensor }: { sensor: MonitoredSensor }) {
       <p className="text-muted-foreground text-sm">{sensor.assetName}</p>
       <p className="text-muted-foreground text-sm">{sensor.assetReference}</p>
       {sensor.assetLocationPath === sensor.deviceLocationPath ? (
-        <p className="mt-2 text-muted-foreground text-sm">
+        <p className="text-muted-foreground mt-2 text-sm">
           Location: {sensor.assetLocationPath}
         </p>
       ) : (
-        <div className="mt-2 text-muted-foreground text-sm">
+        <div className="text-muted-foreground mt-2 text-sm">
           <p>Asset location: {sensor.assetLocationPath}</p>
           <p>Device location: {sensor.deviceLocationPath}</p>
         </div>
@@ -153,7 +153,7 @@ function SensorStatus({ sensor }: { sensor: MonitoredSensor }) {
   return (
     <div className="min-w-0 text-sm">
       <Badge
-        className="h-auto whitespace-normal text-left"
+        className="h-auto text-left whitespace-normal"
         variant={sensor.state === "FLATLINED" ? "destructive" : "secondary"}
       >
         {labels[sensor.state]}
@@ -211,7 +211,7 @@ function SensorMaintenance({
 }) {
   const pauseSensor = useCallback(() => onPause(sensor), [onPause, sensor]);
   return (
-    <div className="wrap-anywhere space-y-2 text-sm">
+    <div className="space-y-2 text-sm wrap-anywhere">
       {sensor.pause ? (
         <p className="text-muted-foreground">
           {sensor.state === "PAUSED" ? "Resumes" : "Fresh-start cutoff"}:{" "}

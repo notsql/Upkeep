@@ -31,7 +31,7 @@ function AttachmentRow({
   );
   return (
     <TableRow>
-      <TableCell className="max-w-xs whitespace-normal break-words">
+      <TableCell className="max-w-xs break-words whitespace-normal">
         {document.originalFilename}
       </TableCell>
       <TableCell>
@@ -78,7 +78,7 @@ export function WorkOrderDocuments({
   return (
     <Card>
       <CardContent className="min-w-0 space-y-4">
-        <h2 className="font-medium text-lg">Documents</h2>
+        <h2 className="text-lg font-medium">Documents</h2>
         {documents.isPending ? <p role="status">Loading documents…</p> : null}
         {documents.isError ? (
           <Alert variant="destructive">

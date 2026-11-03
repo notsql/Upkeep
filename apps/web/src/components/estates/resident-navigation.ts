@@ -2,7 +2,7 @@ import type { components } from "@proj/api/schema";
 import { ClipboardList, ClipboardPenLine } from "lucide-react";
 import type { NavigationItem } from "@/components/app-navigation";
 
-const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/;
+const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/u;
 
 export function residentNavigation(
   access: components["schemas"]["AppAccessResponse"],

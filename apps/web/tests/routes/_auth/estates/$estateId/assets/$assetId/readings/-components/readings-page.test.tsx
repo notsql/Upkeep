@@ -30,7 +30,7 @@ vi.mock("@/lib/assets", async (importOriginal) => ({
   useAsset: () => ({ data: { id: "asset-id", name: "Water pump" } }),
 }));
 
-const DEVICE_ROW = /PUMP-01/;
+const DEVICE_ROW = /PUMP-01/u;
 const READINGS_PATH = "/estates/{estateId}/assets/{assetId}/readings";
 
 let readingPage: AssetReadingPage;

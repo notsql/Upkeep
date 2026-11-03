@@ -25,7 +25,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const WILL_BE_DEACTIVATED =
-  /PUMP-01 will be deactivated and its key will stop working/;
+  /PUMP-01 will be deactivated and its key will stop working/u;
 const at = "2026-10-22T00:00:00Z";
 const locations: Location[] = [
   { id: "b1", type: "BLOCK", name: "Blk 101", createdAt: at, updatedAt: at },

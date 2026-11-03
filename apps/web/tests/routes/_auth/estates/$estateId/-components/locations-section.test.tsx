@@ -22,7 +22,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => auth,
 }));
 
-const ACTIONS_LABEL = /Actions for/;
+const ACTIONS_LABEL = /Actions for/u;
 const at = "2026-09-27T00:00:00Z";
 const estate = {
   id: "estate-id",

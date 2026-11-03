@@ -35,7 +35,7 @@ export function PageHeader({
       <div className="min-w-0">
         {breadcrumbs?.length ? (
           <nav aria-label="Breadcrumbs" className="mb-4">
-            <ol className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
+            <ol className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
               {breadcrumbs.map((item, index) => (
                 <li
                   className="flex min-w-0 items-center gap-2"
@@ -46,7 +46,7 @@ export function PageHeader({
                   ) : null}
                   {item.to ? (
                     <Link
-                      className="break-words hover:text-foreground hover:underline"
+                      className="hover:text-foreground break-words hover:underline"
                       params={item.params}
                       to={item.to}
                     >
@@ -55,7 +55,7 @@ export function PageHeader({
                   ) : (
                     <span
                       aria-current="page"
-                      className="break-words text-foreground"
+                      className="text-foreground break-words"
                     >
                       {item.label}
                     </span>

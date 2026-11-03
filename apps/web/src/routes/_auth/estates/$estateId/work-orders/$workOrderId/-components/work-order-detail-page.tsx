@@ -137,10 +137,10 @@ export function WorkOrderDetailPage({
               </div>
             ) : null}
           </dl>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-muted-foreground text-sm">
+          <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-sm">
             <p>
               Created by{" "}
-              <span className="font-medium text-foreground">
+              <span className="text-foreground font-medium">
                 {data.createdByName?.trim() || "Name unavailable"}
               </span>
             </p>

@@ -36,7 +36,7 @@ export function DeactivateLocation({
   }, [onConfirm, pending, onPendingChange]);
   return (
     <fieldset className="mt-2 grid gap-2 border p-3">
-      <legend className="font-medium text-sm">Deactivate {name}?</legend>
+      <legend className="text-sm font-medium">Deactivate {name}?</legend>
       <p className="text-muted-foreground text-sm">
         It stays on record so existing references keep working, but it is hidden
         from the hierarchy and cannot be changed or reactivated.

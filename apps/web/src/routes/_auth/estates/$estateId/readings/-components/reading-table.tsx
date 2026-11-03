@@ -27,7 +27,7 @@ export function ReadingTable({
   return (
     <div
       aria-busy={refreshing}
-      className="min-w-0 max-w-full overflow-x-auto rounded-xl border"
+      className="max-w-full min-w-0 overflow-x-auto rounded-xl border"
     >
       <Table aria-label="Readings">
         <TableHeader>
@@ -51,7 +51,7 @@ export function ReadingTable({
               <TableCell className="whitespace-nowrap">
                 {new Date(reading.measuredAt).toLocaleString()}
               </TableCell>
-              <TableCell className="min-w-36 max-w-64 whitespace-normal [overflow-wrap:anywhere]">
+              <TableCell className="max-w-64 min-w-36 [overflow-wrap:anywhere] whitespace-normal">
                 <span>{reading.assetReference}</span>
                 <p className="text-muted-foreground">{reading.assetName}</p>
               </TableCell>
@@ -62,14 +62,14 @@ export function ReadingTable({
               <TableCell>
                 <ReadingProvenance reading={reading} />
               </TableCell>
-              <TableCell className="min-w-36 max-w-48 whitespace-normal [overflow-wrap:anywhere]">
+              <TableCell className="max-w-48 min-w-36 [overflow-wrap:anywhere] whitespace-normal">
                 {reading.deviceIdentifier ?? "—"}
               </TableCell>
               <TableCell>
                 <div className="flex min-w-32 flex-wrap items-start gap-1">
                   {reading.flags.map((flag) => (
                     <Badge
-                      className="h-auto max-w-full whitespace-normal py-0.5 text-left leading-snug [overflow-wrap:anywhere]"
+                      className="h-auto max-w-full py-0.5 text-left leading-snug [overflow-wrap:anywhere] whitespace-normal"
                       key={flag.type}
                       variant="outline"
                     >

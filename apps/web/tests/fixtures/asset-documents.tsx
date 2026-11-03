@@ -73,10 +73,10 @@ export const associationPath =
   "/estates/{estateId}/documents/{documentId}/asset";
 export const attachmentsPath = "/estates/{estateId}/assets/{assetId}/documents";
 export const assetsPath = "/estates/{estateId}/assets";
-export const assetAction = /associate asset for invoice\.pdf/i;
-export const saveAction = /^save(?: link)?$/i;
-export const unlinkAction = /^(?:confirm )?unlink(?: document)?$/i;
-export const selectAsset = /select TT-A0001/i;
+export const assetAction = /associate asset for invoice\.pdf/iu;
+export const saveAction = /^save(?: link)?$/iu;
+export const unlinkAction = /^(?:confirm )?unlink(?: document)?$/iu;
+export const selectAsset = /select TT-A0001/iu;
 
 export const document = {
   id: documentId,

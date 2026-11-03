@@ -4,7 +4,7 @@ import { deviceMetrics } from "@/lib/devices";
 import type { ReadingFilters } from "@/lib/readings";
 import { ReadingsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/readings-page";
 
-const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/;
+const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/u;
 
 function localDateTime(value: unknown): string | undefined {
   return typeof value === "string" && LOCAL_DATE_TIME.test(value)

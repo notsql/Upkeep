@@ -429,10 +429,16 @@ class RoleInvitationsIntegrationTests {
                 2,
                 db.fetchCount(
                         org.jooq.impl.DSL.table("\"EstateUser\""),
-                        org.jooq.impl.DSL.field("\"userId\"").eq("recipient")));
+                        org.jooq
+                                .impl
+                                .DSL
+                                .field("\"userId\"")
+                                .eq("recipient")
+                                .and(org.jooq.impl.DSL.field("\"estateId\"").in(estateId, other))));
         mvc.perform(get("/resident/context").with(jwt().jwt(t -> t.subject("recipient"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates.length()").value(2));
+                .andExpect(jsonPath("$.estates[?(@.id == '" + estateId + "')]").exists())
+                .andExpect(jsonPath("$.estates[?(@.id == '" + other + "')]").exists());
         mvc.perform(get("/resident/locations")
                         .param("estateId", other.toString())
                         .with(jwt().jwt(t -> t.subject("recipient"))))

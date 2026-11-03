@@ -76,6 +76,7 @@ export function MetricPolicySettings({
   );
   useEffect(() => {
     if (!(selected || saving) && lastSelected.current) {
+      // biome-ignore lint/style/useDomQuerySelector: useId values are not valid CSS selectors
       document.getElementById(`${id}-${lastSelected.current}`)?.focus();
     }
   }, [id, saving, selected]);
@@ -101,19 +102,19 @@ export function MetricPolicySettings({
           aria-describedby={`${id}-description ${id}-count`}
           aria-expanded={expanded}
           aria-label="Metric policies"
-          className="grid h-auto w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 whitespace-normal p-0 text-left hover:bg-transparent sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center dark:hover:bg-transparent"
+          className="grid h-auto w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 p-0 text-left whitespace-normal hover:bg-transparent sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center dark:hover:bg-transparent"
           disabled={saving}
           onClick={toggleExpanded}
           variant="ghost"
         >
           <SlidersHorizontal
             aria-hidden="true"
-            className="mt-1 size-5 text-muted-foreground sm:mt-0"
+            className="text-muted-foreground mt-1 size-5 sm:mt-0"
           />
           <span className="min-w-0">
-            <span className="block font-semibold text-lg">Metric policies</span>
+            <span className="block text-lg font-semibold">Metric policies</span>
             <span
-              className="mt-1 block font-normal text-muted-foreground text-sm"
+              className="text-muted-foreground mt-1 block text-sm font-normal"
               id={`${id}-description`}
             >
               Manage estate-wide metric thresholds and tolerances.
@@ -128,7 +129,7 @@ export function MetricPolicySettings({
           </Badge>
           <ChevronDown
             aria-hidden="true"
-            className={`col-start-3 row-start-1 mt-1 size-5 text-muted-foreground transition-transform sm:col-start-4 sm:mt-0 ${expanded ? "rotate-180" : ""}`}
+            className={`text-muted-foreground col-start-3 row-start-1 mt-1 size-5 transition-transform sm:col-start-4 sm:mt-0 ${expanded ? "rotate-180" : ""}`}
           />
         </Button>
       </h2>
@@ -189,7 +190,7 @@ export function MetricPolicySettings({
                     <TableCell className="py-4">
                       <PolicyName policy={item} />
                     </TableCell>
-                    <TableCell className="whitespace-normal text-muted-foreground">
+                    <TableCell className="text-muted-foreground whitespace-normal">
                       <PolicySummary policy={item} />
                     </TableCell>
                     <TableCell>
@@ -211,7 +212,7 @@ export function MetricPolicySettings({
                   {selected === item.metric ? (
                     <TableRow>
                       <TableCell
-                        className="whitespace-normal p-0 pb-4"
+                        className="p-0 pb-4 whitespace-normal"
                         colSpan={canManage ? 4 : 3}
                       >
                         {form}
@@ -231,7 +232,7 @@ export function MetricPolicySettings({
 function PolicyName({ policy }: { policy: SensorPolicy }) {
   return (
     <>
-      <p className="wrap-anywhere font-medium">{metricLabel(policy.metric)}</p>
+      <p className="font-medium wrap-anywhere">{metricLabel(policy.metric)}</p>
       <p className="text-muted-foreground text-sm">{policy.unit}</p>
     </>
   );

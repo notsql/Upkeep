@@ -23,8 +23,8 @@ type AssetCategory = components["schemas"]["AssetCategoryResponse"];
 type Manufacturer = components["schemas"]["ManufacturerResponse"];
 type AssetModel = components["schemas"]["AssetModelResponse"];
 
-const MANUFACTURER_LABEL = /^Manufacturer/;
-const MODEL_LABEL = /^Model/;
+const MANUFACTURER_LABEL = /^Manufacturer/u;
+const MODEL_LABEL = /^Model/u;
 const MODELS_PATH = "/manufacturers/{manufacturerId}/models";
 
 const at = "2026-09-27T00:00:00Z";

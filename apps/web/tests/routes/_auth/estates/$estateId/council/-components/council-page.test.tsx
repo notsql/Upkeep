@@ -22,7 +22,7 @@ vi.mock("@tanstack/react-router", () => ({
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
-const removalLabel = /Remove access for/;
+const removalLabel = /Remove access for/u;
 const estate = {
   id: "estate-id",
   name: "Maple Grove",
@@ -399,7 +399,7 @@ it("does not expose owner removal controls to delegates", async () => {
   screen.getByRole("heading", { name: "Pending invitations" });
 });
 
-const ESTATES_GUIDANCE = /Existing users accept on Invitations\./;
+const ESTATES_GUIDANCE = /Existing users accept on Invitations\./u;
 it("uses Invitations consistently in invitation guidance", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   await screen.findByText(ESTATES_GUIDANCE);

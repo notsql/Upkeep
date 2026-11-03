@@ -41,9 +41,9 @@ vi.mock("@/lib/access", () => ({
   }),
 }));
 
-const SENSOR_ROW = /SENSOR-001/;
-const FILTER_ASSET = /Filter by asset/;
-const RETIRED_PUMP = /PUMP-001.*Retired/;
+const SENSOR_ROW = /SENSOR-001/u;
+const FILTER_ASSET = /Filter by asset/u;
+const RETIRED_PUMP = /PUMP-001.*Retired/u;
 const ASSET = "b6d6fe0d-32c5-4c77-a034-81aac211dfaa";
 const READINGS = "/estates/{estateId}/readings";
 const OPTIONS = "/estates/{estateId}/readings/assets";

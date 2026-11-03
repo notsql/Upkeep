@@ -11,7 +11,7 @@ export function ReadingProvenance({
 }) {
   const manual = reading.source === "MANUAL";
   return (
-    <div className="min-w-24 max-w-48 space-y-1 whitespace-normal [overflow-wrap:anywhere]">
+    <div className="max-w-48 min-w-24 space-y-1 [overflow-wrap:anywhere] whitespace-normal">
       <Badge variant={manual ? "secondary" : "outline"}>
         {manual ? "Manual" : "Sensor"}
       </Badge>

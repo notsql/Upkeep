@@ -42,7 +42,7 @@ export function renderInspectionWorkOrderStatus(
   if (record?.workOrder) {
     return (
       <main className="page-layout space-y-4">
-        <h1 className="font-semibold text-2xl">Work order already raised</h1>
+        <h1 className="text-2xl font-semibold">Work order already raised</h1>
         <Link
           className="underline"
           params={{

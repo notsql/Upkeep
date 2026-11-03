@@ -65,7 +65,7 @@ export function ReportSourcePicker({
         <DialogTrigger
           render={
             <Button
-              className="h-auto min-h-11 justify-start whitespace-normal text-left"
+              className="h-auto min-h-11 justify-start text-left whitespace-normal"
               id={id}
               type="button"
               variant="outline"
@@ -107,7 +107,7 @@ export function ReportSourcePicker({
                 {reports.data.items.map((report) => (
                   <Button
                     aria-pressed={report.id === value}
-                    className="h-auto min-h-11 justify-start whitespace-normal text-left"
+                    className="h-auto min-h-11 justify-start text-left whitespace-normal"
                     key={report.id}
                     onClick={choose}
                     type="button"

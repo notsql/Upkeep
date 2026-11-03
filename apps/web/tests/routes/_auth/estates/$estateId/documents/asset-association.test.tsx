@@ -24,30 +24,30 @@ import {
 import { chooseOption, screen, waitFor, within } from "@tests/test-utils";
 import { expect, it } from "vitest";
 
-const INVOICE_CONFIRMATION = /invoice\.pdf/;
-const DOWNLOAD_INVOICE = /download invoice\.pdf/i;
-const ASSET_REFERENCE = /TT-A0001/;
-const RETRY_BUTTON = /retry/i;
-const RETIRED_STATUS = /retired/i;
-const SEARCH_LABEL = /search/i;
-const CATEGORY_LABEL = /^category$/i;
-const LOCATION_LABEL = /^location$/i;
-const CONDITION_LABEL = /^condition$/i;
-const STATUS_LABEL = /^status$/i;
-const SEARCH_BUTTON = /^search$/i;
-const SELECTED_ASSET = /selected.*TT-A0001/i;
-const CANCEL_BUTTON = /^cancel$/i;
-const FILE_RETAINED = /file.*retain|file.*kept|keep.*file/i;
-const CORRECTION_REASON = /correction reason/i;
-const EMPTY_REGISTER = /no assets/i;
-const NO_MATCHES = /no.*match/i;
-const CLEAR_FILTERS = /clear/i;
-const REFRESH_ASSOCIATION = /refresh association|refresh link/i;
-const REVIEW_UPDATED = /reviewed.*updated|review.*updated/i;
+const INVOICE_CONFIRMATION = /invoice\.pdf/u;
+const DOWNLOAD_INVOICE = /download invoice\.pdf/iu;
+const ASSET_REFERENCE = /TT-A0001/u;
+const RETRY_BUTTON = /retry/iu;
+const RETIRED_STATUS = /retired/iu;
+const SEARCH_LABEL = /search/iu;
+const CATEGORY_LABEL = /^category$/iu;
+const LOCATION_LABEL = /^location$/iu;
+const CONDITION_LABEL = /^condition$/iu;
+const STATUS_LABEL = /^status$/iu;
+const SEARCH_BUTTON = /^search$/iu;
+const SELECTED_ASSET = /selected.*TT-A0001/iu;
+const CANCEL_BUTTON = /^cancel$/iu;
+const FILE_RETAINED = /file.*retain|file.*kept|keep.*file/iu;
+const CORRECTION_REASON = /correction reason/iu;
+const EMPTY_REGISTER = /no assets/iu;
+const NO_MATCHES = /no.*match/iu;
+const CLEAR_FILTERS = /clear/iu;
+const REFRESH_ASSOCIATION = /refresh association|refresh link/iu;
+const REVIEW_UPDATED = /reviewed.*updated|review.*updated/iu;
 
 const ASSOCIATE_ASSET = "Associate Asset";
-const SELECT_SECOND_ASSET = /select TT-A0002/i;
-const ASSET_LINK_ACTION = /(?:associate asset|unlink) for invoice\.pdf/i;
+const SELECT_SECOND_ASSET = /select TT-A0002/iu;
+const ASSET_LINK_ACTION = /(?:associate asset|unlink) for invoice\.pdf/iu;
 
 it("opens unlink confirmation directly from the Unlink button", async () => {
   linked();

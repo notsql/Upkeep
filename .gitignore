@@ -68,3 +68,5 @@ target/
 
 .claude/worktrees
 .claude/settings.local.json
+
+.attatch_pid*

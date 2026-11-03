@@ -111,9 +111,9 @@ class CustomEstateRoleConcurrencyIntegrationTests extends CustomEstateRoleTestSu
     void acceptanceAndDeletionEitherCreateMembershipAndBlockDeletionOrInvalidateTheOffer() throws Exception {
         var role = create("Reader", "VIEW_ESTATE");
         var invitation = invite("manager", role);
-        var result =
-                race(() -> accept(invitation, role).andReturn().getResponse().getStatus(), () -> mvc.perform(
-                                as("owner", delete(roles() + "/" + id(role))))
+        var result = race(
+                () -> accept(invitation, role).andReturn().getResponse().getStatus(),
+                () -> mvc.perform(as("owner", delete(roles() + "/" + id(role))))
                         .andReturn()
                         .getResponse()
                         .getStatus());

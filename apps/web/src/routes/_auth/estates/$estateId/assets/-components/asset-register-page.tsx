@@ -218,18 +218,18 @@ export function AssetRegisterPage({
             <li key={asset.id}>
               <Link
                 aria-label={`${asset.name} (${asset.reference})`}
-                className="group block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="group focus-visible:ring-ring block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
                 params={{ estateId, assetId: asset.id }}
                 to="/estates/$estateId/assets/$assetId"
               >
-                <Card className="h-full transition-[background-color,box-shadow] group-hover:bg-accent/40 group-hover:shadow-sm group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 motion-reduce:transition-none">
+                <Card className="group-hover:bg-accent/40 group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 h-full transition-[background-color,box-shadow] group-hover:shadow-sm motion-reduce:transition-none">
                   <CardContent className="grid gap-3">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h2 className="break-words font-semibold underline">
+                        <h2 className="font-semibold break-words underline">
                           {asset.name}
                         </h2>
-                        <p className="mt-1 text-muted-foreground text-sm">
+                        <p className="text-muted-foreground mt-1 text-sm">
                           {asset.reference}
                         </p>
                       </div>
@@ -250,7 +250,7 @@ export function AssetRegisterPage({
                         <dd className="break-words">{asset.locationPath}</dd>
                       </div>
                       <div>
-                        <dt className="mb-1 text-muted-foreground">
+                        <dt className="text-muted-foreground mb-1">
                           Current condition
                         </dt>
                         <dd>

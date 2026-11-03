@@ -46,8 +46,8 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
-const NOT_SHOWN_AGAIN = /won't be shown again/;
-const STOPS_WORKING = /current key stops working immediately/;
+const NOT_SHOWN_AGAIN = /won't be shown again/u;
+const STOPS_WORKING = /current key stops working immediately/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
 
 const at = "2026-09-28T00:00:00Z";

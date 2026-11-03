@@ -766,12 +766,11 @@ class FaultReportLocationsIntegrationTests {
         if (inactive.equals("estate")) {
             db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
         } else {
-            var id =
-                    switch (inactive) {
-                        case "destination" -> lobby;
-                        case "parent" -> level;
-                        default -> block;
-                    };
+            var id = switch (inactive) {
+                case "destination" -> lobby;
+                case "parent" -> level;
+                default -> block;
+            };
             db.execute("update \"Location\" set \"deactivatedAt\"=now() where id=?", id);
         }
         mvc.perform(relocate(estate, report, level, lobby)).andExpect(status().isConflict());

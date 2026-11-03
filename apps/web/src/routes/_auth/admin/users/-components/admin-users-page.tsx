@@ -176,7 +176,7 @@ function RoleEditor({
         roles={roles}
       />
       {(user.roleSlugs?.length ?? 0) > 1 && (
-        <p className="mt-1 text-muted-foreground text-xs">
+        <p className="text-muted-foreground mt-1 text-xs">
           Manage multiple roles in WorkOS.
         </p>
       )}
@@ -383,7 +383,7 @@ export function AdminUsersPage() {
           actions={
             <Card className="gap-1 px-4" size="sm">
               <p className="text-muted-foreground text-xs">Total users</p>
-              <p className="font-semibold text-2xl">
+              <p className="text-2xl font-semibold">
                 {members.data?.length ?? "—"}
               </p>
             </Card>
@@ -395,7 +395,7 @@ export function AdminUsersPage() {
 
         {error ? (
           <p
-            className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-destructive text-sm"
+            className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
             role="alert"
           >
             {error.message}
@@ -410,7 +410,7 @@ export function AdminUsersPage() {
 
         {Boolean(organizations.data?.length) && (
           <div className="flex flex-wrap items-center gap-3">
-            <Label className="font-medium text-sm" htmlFor="admin-estate">
+            <Label className="text-sm font-medium" htmlFor="admin-estate">
               Estate
             </Label>
             <Select
@@ -446,14 +446,14 @@ export function AdminUsersPage() {
 
         <section
           aria-labelledby="members-heading"
-          className="overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm"
+          className="border-border bg-card text-card-foreground overflow-hidden rounded-xl border shadow-sm"
         >
-          <div className="flex flex-col gap-4 border-border border-b p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="border-border flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="font-semibold" id="members-heading">
                 Members
               </h2>
-              <p className="mt-1 text-muted-foreground text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 Choose a role for each member.
               </p>
             </div>
@@ -479,8 +479,8 @@ export function AdminUsersPage() {
                   <li key={user.membershipId ?? user.userId ?? user.email}>
                     <Card className="gap-3 p-4">
                       <div>
-                        <h3 className="break-words font-semibold">{name}</h3>
-                        <p className="break-all text-muted-foreground text-sm">
+                        <h3 className="font-semibold break-words">{name}</h3>
+                        <p className="text-muted-foreground text-sm break-all">
                           {user.email}
                         </p>
                       </div>
@@ -513,28 +513,28 @@ export function AdminUsersPage() {
               <TableCaption className="sr-only">
                 Users and assigned roles
               </TableCaption>
-              <TableHeader className="bg-muted text-xs uppercase tracking-wide">
+              <TableHeader className="bg-muted text-xs tracking-wide uppercase">
                 <TableRow className="hover:bg-transparent">
                   <TableHead
-                    className="px-5 py-3 text-muted-foreground"
+                    className="text-muted-foreground px-5 py-3"
                     scope="col"
                   >
                     User
                   </TableHead>
                   <TableHead
-                    className="px-5 py-3 text-muted-foreground"
+                    className="text-muted-foreground px-5 py-3"
                     scope="col"
                   >
                     Joined
                   </TableHead>
                   <TableHead
-                    className="px-5 py-3 text-muted-foreground"
+                    className="text-muted-foreground px-5 py-3"
                     scope="col"
                   >
                     Current role
                   </TableHead>
                   <TableHead
-                    className="px-5 py-3 text-muted-foreground"
+                    className="text-muted-foreground px-5 py-3"
                     scope="col"
                   >
                     Estates
@@ -552,11 +552,11 @@ export function AdminUsersPage() {
                     >
                       <TableCell className="px-5 py-4">
                         <p className="font-medium">{name}</p>
-                        <p className="mt-1 text-muted-foreground">
+                        <p className="text-muted-foreground mt-1">
                           {user.email}
                         </p>
                       </TableCell>
-                      <TableCell className="px-5 py-4 text-muted-foreground">
+                      <TableCell className="text-muted-foreground px-5 py-4">
                         {user.joined
                           ? new Date(user.joined).toLocaleDateString()
                           : "—"}
@@ -586,13 +586,13 @@ export function AdminUsersPage() {
           )}
 
           {!organizationId && (
-            <p className="px-4 py-6 text-center text-muted-foreground text-sm">
+            <p className="text-muted-foreground px-4 py-6 text-center text-sm">
               Select an estate to view its members.
             </p>
           )}
 
           {members.isSuccess && filteredUsers.length === 0 && (
-            <p className="px-4 py-6 text-center text-muted-foreground text-sm">
+            <p className="text-muted-foreground px-4 py-6 text-center text-sm">
               {search.trim()
                 ? "No users match this search. Try another name or email."
                 : "No members belong to this estate yet."}

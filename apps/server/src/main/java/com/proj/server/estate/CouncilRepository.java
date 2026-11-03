@@ -138,14 +138,13 @@ public class CouncilRepository {
         if (access.manager()) {
             for (var role : EstateRole.values()) {
                 if (role == EstateRole.CUSTOM) continue;
-                String label =
-                        switch (role) {
-                            case MANAGER -> "Manager (Admin)";
-                            case COUNCIL -> "Council member";
-                            case RESIDENT -> "Resident";
-                            case CREW -> "Crew";
-                            default -> throw new IllegalStateException("Unsupported preset role");
-                        };
+                String label = switch (role) {
+                    case MANAGER -> "Manager (Admin)";
+                    case COUNCIL -> "Council member";
+                    case RESIDENT -> "Resident";
+                    case CREW -> "Crew";
+                    default -> throw new IllegalStateException("Unsupported preset role");
+                };
                 choices.add(new EstateInvitationRoleOptionResponse(role, label, null, null, null));
             }
         }

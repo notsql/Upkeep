@@ -72,8 +72,8 @@ const COST_FIELDS = [
   { name: "otherCost", label: "Other cost (SGD)" },
 ] as const;
 
-const WHOLE_NUMBER = /^\d+$/;
-const SGD_AMOUNT = /^\d{1,12}(\.\d{1,2})?$/;
+const WHOLE_NUMBER = /^\d+$/u;
+const SGD_AMOUNT = /^\d{1,12}(?:\.\d{1,2})?$/u;
 
 const typeItems = [
   { value: "", label: "Select a type" },

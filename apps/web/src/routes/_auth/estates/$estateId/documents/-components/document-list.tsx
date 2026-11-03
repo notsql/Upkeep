@@ -57,7 +57,7 @@ export function DocumentList({
               size="sm"
             >
               <CardHeader>
-                <h2 className="font-medium text-sm">
+                <h2 className="text-sm font-medium">
                   {document.originalFilename}
                 </h2>
               </CardHeader>

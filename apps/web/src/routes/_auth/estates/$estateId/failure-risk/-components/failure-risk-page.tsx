@@ -94,7 +94,7 @@ export function FailureRiskPage({ estateId }: { estateId: string }) {
         </Alert>
       ) : null}
       {risks.data && risks.data.length === 0 ? (
-        <Empty className="mt-6 border border-dashed bg-card" role="status">
+        <Empty className="bg-card mt-6 border border-dashed" role="status">
           There are no assets to forecast in this estate yet.
         </Empty>
       ) : null}
