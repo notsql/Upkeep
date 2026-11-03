@@ -341,11 +341,11 @@ class CouncilIntegrationTests {
             return new CouncilIdentity.Person("recipient", "Member", "member@example.com", true);
         });
         try (var executor = java.util.concurrent.Executors.newVirtualThreadPerTaskExecutor()) {
-            var removal = executor.submit(
-                    () -> mvc.perform(delete(path() + "/members/recipient").with(jwt().jwt(t -> t.subject("owner"))))
-                            .andReturn()
-                            .getResponse()
-                            .getStatus());
+            var removal = executor.submit(() -> mvc.perform(
+                            delete(path() + "/members/recipient").with(jwt().jwt(t -> t.subject("owner"))))
+                    .andReturn()
+                    .getResponse()
+                    .getStatus());
             var acceptance = executor.submit(() -> mvc.perform(
                             post("/council-invitations/" + id + "/accept").with(jwt().jwt(t -> t.subject("recipient"))))
                     .andReturn()

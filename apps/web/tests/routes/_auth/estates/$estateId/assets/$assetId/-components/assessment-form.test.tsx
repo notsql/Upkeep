@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { localToday } from "@/lib/assessments";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
 
-const REQUIRED = /required/i;
+const REQUIRED = /required/iu;
 
 function conditionField() {
   return screen.getByRole("combobox", { name: "Condition" });

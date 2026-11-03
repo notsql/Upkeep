@@ -45,12 +45,12 @@ function StatisticCard({
         </CardTitle>
         <Icon
           aria-hidden="true"
-          className="size-5 shrink-0 text-muted-foreground"
+          className="text-muted-foreground size-5 shrink-0"
         />
       </CardHeader>
       <CardContent>
-        <p className="font-semibold text-3xl tabular-nums">{value}</p>
-        <p className="mt-2 text-muted-foreground text-sm">{description}</p>
+        <p className="text-3xl font-semibold tabular-nums">{value}</p>
+        <p className="text-muted-foreground mt-2 text-sm">{description}</p>
       </CardContent>
     </Card>
   );
@@ -80,7 +80,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
   const focusAttention = useCallback(
     () =>
       document
-        .getElementById("attention-estates")
+        .querySelector<HTMLElement>("#attention-estates")
         ?.focus({ preventScroll: true }),
     []
   );
@@ -136,7 +136,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
             <h2 className="section-heading" id="asset-conditions">
               Asset conditions
             </h2>
-            <p className="mt-1 text-muted-foreground text-sm">
+            <p className="text-muted-foreground mt-1 text-sm">
               Latest assessment for each active asset. Not assessed does not
               mean Good.
             </p>
@@ -147,13 +147,13 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
             className="section-surface"
           >
             <h2
-              className="section-heading scroll-mt-24 rounded outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="section-heading focus-visible:ring-ring scroll-mt-24 rounded outline-none focus-visible:ring-2"
               id="attention-estates"
               tabIndex={-1}
             >
               Estates needing attention
             </h2>
-            <p className="mt-1 text-muted-foreground text-sm">
+            <p className="text-muted-foreground mt-1 text-sm">
               Ordered by active assets needing attention or marked faulty.
             </p>
             {summary.affectedEstateCount === 0 ? (
@@ -166,7 +166,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
             ) : null}
             {summary.affectedEstateCount >
             summary.estatesNeedingAttention.length ? (
-              <p className="mt-3 text-muted-foreground text-sm">
+              <p className="text-muted-foreground mt-3 text-sm">
                 Showing {summary.estatesNeedingAttention.length} of{" "}
                 {summary.affectedEstateCount} estates needing attention.
               </p>
@@ -176,10 +176,10 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
                 <li className="rounded-xl border p-4" key={estate.estateId}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <h3 className="break-words font-semibold">
+                      <h3 className="font-semibold break-words">
                         <Link
                           aria-label={`View active assets in ${estate.estateName}`}
-                          className="rounded underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                          className="focus-visible:outline-ring rounded underline-offset-4 hover:underline focus-visible:outline-2"
                           params={{ estateId: estate.estateId }}
                           search={{ status: "ACTIVE" }}
                           to="/estates/$estateId/assets"
@@ -187,7 +187,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
                           {estate.estateName}
                         </Link>
                       </h3>
-                      <p className="mt-1 text-muted-foreground text-sm">
+                      <p className="text-muted-foreground mt-1 text-sm">
                         {estate.estateCode} · {estate.totalActiveAssets} active
                         assets
                       </p>
@@ -288,7 +288,7 @@ export function WorkspaceHome() {
           </Alert>
         ) : null}
         {invitations.data?.length === 0 ? (
-          <p className="mt-3 text-muted-foreground text-sm">
+          <p className="text-muted-foreground mt-3 text-sm">
             You have no pending invitations.
           </p>
         ) : null}

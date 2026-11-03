@@ -126,7 +126,7 @@ function LocationItem({
   const toggle = useCallback(() => onToggle(node.id), [onToggle, node.id]);
   const title = (
     <span className="flex min-w-0 flex-col gap-1">
-      <span className="break-words font-medium" id={labelId}>
+      <span className="font-medium break-words" id={labelId}>
         {node.name}
       </span>
       <span className="text-muted-foreground text-xs">
@@ -139,7 +139,7 @@ function LocationItem({
       aria-labelledby={labelId}
       className={
         node.type === "BLOCK"
-          ? "rounded-lg border bg-muted/20 p-2"
+          ? "bg-muted/20 rounded-lg border p-2"
           : "border-l pl-3"
       }
     >
@@ -149,7 +149,7 @@ function LocationItem({
             aria-controls={childrenId}
             aria-expanded={expanded}
             aria-label={`${expanded ? "Collapse" : "Expand"} ${node.name}`}
-            className="h-auto min-w-0 flex-1 justify-start gap-3 whitespace-normal p-2 text-left"
+            className="h-auto min-w-0 flex-1 justify-start gap-3 p-2 text-left whitespace-normal"
             onClick={toggle}
             variant="ghost"
           >

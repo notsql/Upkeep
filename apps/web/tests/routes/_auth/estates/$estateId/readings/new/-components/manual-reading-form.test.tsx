@@ -55,9 +55,9 @@ const saved = {
   recordedByUserId: "crew",
   recordedByName: "Alex",
 };
-const chooseAsset = /Choose asset/;
-const pump = /PUMP-001/;
-const retiredPump = /OLD-001/;
+const chooseAsset = /Choose asset/u;
+const pump = /PUMP-001/u;
+const retiredPump = /OLD-001/u;
 let fail = false;
 
 beforeEach(() => {

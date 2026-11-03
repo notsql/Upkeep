@@ -13,8 +13,8 @@ import { api } from "@/lib/api";
 import { OwnerInvitations } from "@/routes/_auth/estates/$estateId/council/-components/access-controls";
 import { CouncilPage } from "@/routes/_auth/estates/$estateId/council/-components/council-page";
 
-const CONFIRM_ROLE = /confirm|change role|assign role/i;
-const RETRY = /retry/i;
+const CONFIRM_ROLE = /confirm|change role|assign role/iu;
+const RETRY = /retry/iu;
 
 const { apiGet } = vi.hoisted(() => ({ apiGet: vi.fn() }));
 

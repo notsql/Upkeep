@@ -186,7 +186,8 @@ abstract class CustomEstateRoleTestSupport {
     MockHttpServletRequestBuilder as(String user, MockHttpServletRequestBuilder request) {
         // A forged provider admin claim must never supply estate authority.
         return request.with(tokens.computeIfAbsent(
-                user, subject -> jwt().jwt(token -> token.subject(subject).claim("role", "admin"))
+                user,
+                subject -> jwt().jwt(token -> token.subject(subject).claim("role", "admin"))
                         .authorities(new SimpleGrantedAuthority("ROLE_admin"))));
     }
 

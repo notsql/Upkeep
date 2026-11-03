@@ -25,7 +25,7 @@ export function WorkOrderCards({
             size="sm"
           >
             <CardHeader className="gap-2">
-              <h2 className="font-semibold text-sm">
+              <h2 className="text-sm font-semibold">
                 <Link
                   className="underline underline-offset-4"
                   params={{ estateId, workOrderId: order.id }}
@@ -39,7 +39,7 @@ export function WorkOrderCards({
             <CardContent>
               <dl className="grid grid-cols-2 gap-3">
                 <div>
-                  <dt className="mb-1 text-muted-foreground">Priority</dt>
+                  <dt className="text-muted-foreground mb-1">Priority</dt>
                   <dd>
                     <Badge
                       variant={
@@ -51,7 +51,7 @@ export function WorkOrderCards({
                   </dd>
                 </div>
                 <div>
-                  <dt className="mb-1 text-muted-foreground">Status</dt>
+                  <dt className="text-muted-foreground mb-1">Status</dt>
                   <dd>{order.status.replaceAll("_", " ")}</dd>
                 </div>
                 <div className="col-span-2">

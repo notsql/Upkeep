@@ -73,20 +73,20 @@ const oldBlock = "00000000-0000-0000-0000-000000000012";
 const imageId = "00000000-0000-0000-0000-000000000011";
 const basePath = `/estates/${estateId}/reports`;
 const timestamp = "2026-10-01T00:00:00Z";
-const CHANGE_LOCATION = /Change location/i;
-const SAVE = /^Save/i;
-const NEXT = /^Next/i;
-const RETRY = /Retry/i;
-const RELOAD = /Reload/i;
-const LOCATION_CHANGED = /location.*changed|placement.*changed/i;
-const NO_MATCHES = /no.*reports.*location|no.*matching.*reports/i;
-const EMPTY_REPORTS = /no.*reports/i;
+const CHANGE_LOCATION = /Change location/iu;
+const SAVE = /^Save/iu;
+const NEXT = /^Next/iu;
+const RETRY = /Retry/iu;
+const RELOAD = /Reload/iu;
+const LOCATION_CHANGED = /location.*changed|placement.*changed/iu;
+const NO_MATCHES = /no.*reports.*location|no.*matching.*reports/iu;
+const EMPTY_REPORTS = /no.*reports/iu;
 
-const LEVEL_TWO = /Level 2/;
-const NONE = /none|no common area|level only/i;
-const UNAVAILABLE = /unavailable|unable|not found/i;
+const LEVEL_TWO = /Level 2/u;
+const NONE = /none|no common area|level only/iu;
+const UNAVAILABLE = /unavailable|unable|not found/iu;
 const NO_DESTINATIONS =
-  /no.*active.*locations|no.*destinations|no.*locations.*available/i;
+  /no.*active.*locations|no.*destinations|no.*locations.*available/iu;
 
 const report = {
   id: reportId,

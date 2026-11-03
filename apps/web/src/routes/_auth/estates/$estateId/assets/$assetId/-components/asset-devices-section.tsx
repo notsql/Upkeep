@@ -50,7 +50,7 @@ export function AssetDevicesSection({
   return (
     <section aria-labelledby="devices-heading" className="section-surface mt-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="font-semibold text-xl" id="devices-heading">
+        <h2 className="text-xl font-semibold" id="devices-heading">
           Devices
         </h2>
         <div className="flex flex-wrap items-center gap-2">
@@ -79,12 +79,12 @@ export function AssetDevicesSection({
         </p>
       ) : null}
       {devices.error ? (
-        <p className="mt-4 text-destructive" role="alert">
+        <p className="text-destructive mt-4" role="alert">
           {devices.error.message}
         </p>
       ) : null}
       {devices.data?.length === 0 ? (
-        <p className="mt-4 text-muted-foreground">
+        <p className="text-muted-foreground mt-4">
           No devices are registered to this asset yet.
         </p>
       ) : null}
@@ -144,7 +144,7 @@ function DeviceItem({
   return (
     <li className="rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h3 className="break-all font-medium">{device.identifier}</h3>
+        <h3 className="font-medium break-all">{device.identifier}</h3>
         <div className="flex flex-wrap items-center gap-2">
           {device.lastSeenAt ? (
             <Badge className="whitespace-normal" variant="outline">
@@ -161,12 +161,12 @@ function DeviceItem({
         </div>
       </div>
       {replaces ? (
-        <p className="mt-1 text-muted-foreground text-sm">
+        <p className="text-muted-foreground mt-1 text-sm">
           Replaces {replaces}
         </p>
       ) : null}
       {replacedBy ? (
-        <p className="mt-1 text-muted-foreground text-sm">
+        <p className="text-muted-foreground mt-1 text-sm">
           Replaced by {replacedBy}
         </p>
       ) : null}

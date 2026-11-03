@@ -36,7 +36,7 @@ export function RegistrationPage({ error }: { error?: string } = {}) {
       >
         <CardHeader>
           <CardTitle>
-            <h1 className="font-semibold text-2xl" id="registration-heading">
+            <h1 className="text-2xl font-semibold" id="registration-heading">
               Create an account
             </h1>
           </CardTitle>

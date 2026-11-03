@@ -35,7 +35,7 @@ function PhotoPreview({
           width={320}
         />
       ) : null}
-      <p className="break-all text-sm">{file.name}</p>
+      <p className="text-sm break-all">{file.name}</p>
       <Button onClick={remove} type="button" variant="outline">
         Remove {file.name}
       </Button>

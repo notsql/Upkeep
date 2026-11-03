@@ -30,12 +30,12 @@ const assetPath = `/estates/${estateId}/assets/${assetId}`;
 const newPath = `${assetPath}/inspections/new`;
 const detailPath = `${assetPath}/inspections/${inspectionId}`;
 const orderPath = `/estates/${estateId}/work-orders/new`;
-const OUTCOME = /^(Pass|Fail)$/;
-const NOTES = /notes/i;
-const HISTORY = /history/i;
-const UNAVAILABLE_INSPECTOR = /inspector unavailable|name unavailable/i;
-const MUTATION_ACTION = /edit|delete/i;
-const PHOTOS = /photos/i;
+const OUTCOME = /^(?:Pass|Fail)$/u;
+const NOTES = /notes/iu;
+const HISTORY = /history/iu;
+const UNAVAILABLE_INSPECTOR = /inspector unavailable|name unavailable/iu;
+const MUTATION_ACTION = /edit|delete/iu;
+const PHOTOS = /photos/iu;
 const inspection = {
   id: inspectionId,
   estateId,

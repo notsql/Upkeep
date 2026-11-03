@@ -5,7 +5,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { LocationsSection } from "@/routes/_auth/estates/$estateId/-components/locations-section";
 
-const DEACTIVATE = /deactivate/i;
+const DEACTIVATE = /deactivate/iu;
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },

@@ -116,14 +116,14 @@ export function MemberEstates({
           Estate access for {name}
         </h2>
       ) : null}
-      <p className="mt-1 text-muted-foreground text-sm">
+      <p className="text-muted-foreground mt-1 text-sm">
         {name} can view the estates ticked here. Owners always keep access to
         their own estates. Changes apply on their next request.
       </p>
 
       {error ? (
         <p
-          className="mt-4 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-destructive text-sm"
+          className="border-destructive/30 bg-destructive/10 text-destructive mt-4 rounded-md border p-3 text-sm"
           role="alert"
         >
           {error.message}
@@ -137,7 +137,7 @@ export function MemberEstates({
       ) : null}
 
       {access.data?.length === 0 ? (
-        <p className="mt-4 text-muted-foreground text-sm">No estates yet.</p>
+        <p className="text-muted-foreground mt-4 text-sm">No estates yet.</p>
       ) : null}
 
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">

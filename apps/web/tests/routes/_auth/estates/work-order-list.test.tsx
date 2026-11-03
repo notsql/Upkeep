@@ -49,7 +49,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 }));
 const estateId = "00000000-0000-0000-0000-000000000001";
 const basePath = `/estates/${estateId}/work-orders`;
-const WORK_ORDER_WRITES = /start work|complete work|correct outcome/i;
+const WORK_ORDER_WRITES = /start work|complete work|correct outcome/iu;
 const order = {
   id: "00000000-0000-0000-0000-000000000002",
   estateId,

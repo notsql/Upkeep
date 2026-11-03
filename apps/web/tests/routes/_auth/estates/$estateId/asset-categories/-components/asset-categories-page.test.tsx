@@ -65,7 +65,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 function row(label: string) {
-  return screen.getByRole("row", { name: new RegExp(`^${label}`) });
+  return screen.getByRole("row", { name: new RegExp(`^${label}`, "u") });
 }
 function cells(label: string) {
   return within(row(label))

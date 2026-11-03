@@ -4,7 +4,7 @@ import { expect, it, vi } from "vitest";
 import { WorkOrderRequestError } from "@/lib/work-orders";
 import { WorkOrderSaveError } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-save-error";
 
-const NETWORK_ADVICE = /If the connection was interrupted/;
+const NETWORK_ADVICE = /If the connection was interrupted/u;
 
 it("does not describe an inactive asset conflict as a changed report", () => {
   renderWithProviders(

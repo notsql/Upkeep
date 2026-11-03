@@ -9,11 +9,11 @@ const { get, auth, listeners } = vi.hoisted(() => ({
   auth: { user: { id: "resident-a" }, role: "user", loading: false },
   listeners: new Set<() => void>(),
 }));
-const LEAKING_PIPE = /Leaking pipe/i;
-const NO_REPORTS = /no reports/i;
-const REPORT_A_FAULT = /Report a fault/i;
-const NEXT = /Next/i;
-const RETRY = /Retry/i;
+const LEAKING_PIPE = /Leaking pipe/iu;
+const NO_REPORTS = /no reports/iu;
+const REPORT_A_FAULT = /Report a fault/iu;
+const NEXT = /Next/iu;
+const RETRY = /Retry/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),

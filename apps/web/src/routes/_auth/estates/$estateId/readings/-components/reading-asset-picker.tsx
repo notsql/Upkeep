@@ -24,7 +24,7 @@ function ReadingAssetChoice({
   const choose = useCallback(() => onChoose(asset), [asset, onChoose]);
   return (
     <Button
-      className="h-auto min-h-11 justify-start whitespace-normal text-left [overflow-wrap:anywhere]"
+      className="h-auto min-h-11 justify-start text-left [overflow-wrap:anywhere] whitespace-normal"
       disabled={activeOnly && asset.retired}
       onClick={choose}
       variant="outline"
@@ -71,7 +71,7 @@ export function ReadingAssetPicker({
         render={
           <Button
             aria-label={`${mode === "record" ? "Choose asset" : "Filter by asset"}: ${label}`}
-            className="h-auto min-h-11 w-full justify-start whitespace-normal text-left [overflow-wrap:anywhere]"
+            className="h-auto min-h-11 w-full justify-start text-left [overflow-wrap:anywhere] whitespace-normal"
             variant="outline"
           />
         }

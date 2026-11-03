@@ -36,7 +36,7 @@ import { useAppAccess } from "@/lib/access";
 import { useEstate } from "@/lib/estates";
 import { useMobile } from "@/lib/use-mobile";
 
-const ESTATE_PATH = /^\/estates\/([^/]+)/;
+const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
 type Destination =
   | "/"
   | "/estates"
@@ -110,7 +110,7 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
   });
   const residentPage =
     pathname === "/reports" || pathname.startsWith("/reports/");
-  let candidate = pathname.match(ESTATE_PATH)?.[1];
+  let candidate = pathname.match(ESTATE_PATH)?.groups?.estateId;
   if (!candidate && residentPage) {
     candidate = searchEstate;
     if (!candidate && access.data?.residentEstates.length === 1) {
@@ -625,7 +625,7 @@ export function AppNavigation() {
             </>
           )}
         </nav>
-        <p className="mt-auto px-3 pt-8 text-muted-foreground text-xs">
+        <p className="text-muted-foreground mt-auto px-3 pt-8 text-xs">
           Your estates, organised.
         </p>
       </aside>

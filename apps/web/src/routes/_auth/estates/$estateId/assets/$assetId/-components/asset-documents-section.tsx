@@ -71,7 +71,7 @@ function AssetDocumentsContent({
   return (
     <Card>
       <CardHeader>
-        <h2 className="font-semibold text-lg">Documents</h2>
+        <h2 className="text-lg font-semibold">Documents</h2>
       </CardHeader>
       <CardContent className="min-w-0 space-y-4">
         {documents.isPending ? <p role="status">Loading documents…</p> : null}

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Header from "@/components/header";
 
-const THEME_MODE = /Switch to .* mode/;
+const THEME_MODE = /Switch to .* mode/u;
 const { auth } = vi.hoisted(() => ({
   auth: { loading: false, user: null as { email: string } | null },
 }));

@@ -260,7 +260,7 @@ function OutcomeRevision({
   const id = useId();
   return (
     <div className="space-y-3 rounded-lg border p-4">
-      <p className="whitespace-pre-wrap break-words font-medium">
+      <p className="font-medium break-words whitespace-pre-wrap">
         {revision.correctionReason}
       </p>
       <p className="text-muted-foreground">

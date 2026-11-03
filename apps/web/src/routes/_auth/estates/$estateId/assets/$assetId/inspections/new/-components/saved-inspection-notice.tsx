@@ -15,7 +15,7 @@ export function SavedInspectionNotice({
 }) {
   return (
     <main className="page-layout space-y-4">
-      <h1 className="font-semibold text-2xl">Inspection saved</h1>
+      <h1 className="text-2xl font-semibold">Inspection saved</h1>
       {error ? <p role="alert">{error.message}</p> : null}
       <Link
         className={buttonVariants()}

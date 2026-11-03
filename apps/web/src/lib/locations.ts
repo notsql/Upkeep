@@ -117,8 +117,8 @@ function levelsHighestFirst(siblings: Location[]): Location[] {
 /** Floors per bulk request (ID-99). Most condo and HDB blocks have 50 storeys or fewer. */
 export const MAX_FLOORS = 50;
 
-const FLOOR = /^[LB]?\d+$/;
-const FLOOR_LETTER = /^[LB]/;
+const FLOOR = /^[LB]?\d+$/u;
+const FLOOR_LETTER = /^[LB]/u;
 
 /** "L25" or "25" is 25, "B2" is -2. Floor 0 and anything else is undefined. */
 export function parseFloor(text: string): number | undefined {

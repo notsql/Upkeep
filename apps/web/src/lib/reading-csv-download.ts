@@ -1,7 +1,8 @@
 const CSV_HEADER =
   "reading_id,measured_at,asset_id,asset_reference,asset_name,metric,value,unit,source,device_id,device_identifier,recorded_by_user_id,recorded_by_name,recorded_at,flags";
-const COUNT = /^\d+$/;
-const FILENAME = /filename="(readings-v1-[a-f\d-]+-\d{8}T\d{6}Z\.csv)"/;
+const COUNT = /^\d+$/u;
+const FILENAME =
+  /filename="(?<filename>readings-v1-[a-f\d-]+-\d{8}T\d{6}Z\.csv)"/u;
 const INCOMPLETE = "CSV download was incomplete. Please try again.";
 
 /** Incremental validation avoids decoding a second copy of a large downloaded file. */
@@ -112,7 +113,8 @@ export async function completeReadingCsv(
 
 export function saveReadingCsv(blob: Blob, response: Response) {
   const disposition = response.headers.get("Content-Disposition") ?? "";
-  const filename = disposition.match(FILENAME)?.[1] ?? "readings-v1.csv";
+  const filename =
+    disposition.match(FILENAME)?.groups?.filename ?? "readings-v1.csv";
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   try {

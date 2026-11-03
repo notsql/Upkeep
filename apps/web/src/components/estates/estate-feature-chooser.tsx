@@ -92,7 +92,7 @@ export function EstateFeatureChooser({
         <div className="grid max-h-80 gap-2 overflow-y-auto">
           {choices.map((estate) => (
             <Link
-              className="flex min-h-11 items-center gap-3 rounded-xl border p-3 hover:bg-accent"
+              className="hover:bg-accent flex min-h-11 items-center gap-3 rounded-xl border p-3"
               key={estate.estateId}
               onClick={close}
               params={capability ? { estateId: estate.estateId } : undefined}

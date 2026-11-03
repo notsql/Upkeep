@@ -6,9 +6,10 @@ export interface ManualReadingFields {
   value: string;
 }
 
-const DECIMAL = /^([+-]?)(?:(\d+)(?:\.(\d*))?|\.(\d+))(?:[eE]([+-]?\d+))?$/;
-const LEADING_ZEROES = /^0+/;
-const TRAILING_ZEROES = /0+$/;
+const DECIMAL =
+  /^(?<sign>[+-]?)(?:(?<whole>\d+)(?:\.(?<fraction>\d*))?|\.(?<bareFraction>\d+))(?:[eE](?<exponent>[+-]?\d+))?$/u;
+const LEADING_ZEROES = /^0+/u;
+const TRAILING_ZEROES = /0+$/u;
 const INTEGER_LIMIT =
   "Value must have at most 12 digits before the decimal point.";
 const FRACTION_LIMIT = "Value can have at most six decimal places.";
@@ -31,12 +32,15 @@ export function parseManualReadingValue(
   if (!match) {
     return { error: "Enter a numeric value." };
   }
-  const fraction = match[3] ?? match[4] ?? "";
-  const nonzero = ((match[2] ?? "") + fraction).replace(LEADING_ZEROES, "");
+  const fraction = match.groups?.fraction ?? match.groups?.bareFraction ?? "";
+  const nonzero = ((match.groups?.whole ?? "") + fraction).replace(
+    LEADING_ZEROES,
+    ""
+  );
   if (!nonzero) {
     return { decimal: "0" };
   }
-  const exponent = Number(match[5] ?? "0");
+  const exponent = Number(match.groups?.exponent ?? "0");
   if (!Number.isSafeInteger(exponent)) {
     return { error: exponent > 0 ? INTEGER_LIMIT : FRACTION_LIMIT };
   }
@@ -49,7 +53,7 @@ export function parseManualReadingValue(
     return { error: FRACTION_LIMIT };
   }
   // Expansion occurs only after both bounds have been checked, including exponents.
-  const sign = match[1] === "-" ? "-" : "";
+  const sign = match.groups?.sign === "-" ? "-" : "";
   return { decimal: sign + plainDecimal(digits, scale) };
 }
 

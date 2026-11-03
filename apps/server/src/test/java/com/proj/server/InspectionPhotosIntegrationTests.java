@@ -190,13 +190,12 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
     @ValueSource(strings = {"text", "empty", "mismatched", "unsupported", "truncated"})
     void serverValidatesContentRatherThanTrustingFilenameOrMimeType(String invalid) throws Exception {
         var data = asset();
-        byte[] bytes =
-                switch (invalid) {
-                    case "empty" -> new byte[0];
-                    case "mismatched" -> photo("jpeg", 1, 1).getBytes();
-                    case "truncated" -> Arrays.copyOf(photo("png", 1, 1).getBytes(), 24);
-                    default -> "not an image".getBytes(StandardCharsets.UTF_8);
-                };
+        byte[] bytes = switch (invalid) {
+            case "empty" -> new byte[0];
+            case "mismatched" -> photo("jpeg", 1, 1).getBytes();
+            case "truncated" -> Arrays.copyOf(photo("png", 1, 1).getBytes(), 24);
+            default -> "not an image".getBytes(StandardCharsets.UTF_8);
+        };
         mvc.perform(submission(data, "FAIL", today().toString())
                         .file(new MockMultipartFile(
                                 "photos",

@@ -47,14 +47,14 @@ function ReadingRow({ reading }: { reading: AssetReading }) {
       <TableCell>
         <ReadingProvenance reading={reading} />
       </TableCell>
-      <TableCell className="min-w-36 max-w-48 whitespace-normal [overflow-wrap:anywhere]">
+      <TableCell className="max-w-48 min-w-36 [overflow-wrap:anywhere] whitespace-normal">
         {reading.deviceIdentifier ?? "—"}
       </TableCell>
       <TableCell>
         <div className="flex min-w-32 flex-wrap items-start gap-1">
           {reading.flags.map((flag) => (
             <Badge
-              className="h-auto max-w-full whitespace-normal py-0.5 text-left leading-snug [overflow-wrap:anywhere]"
+              className="h-auto max-w-full py-0.5 text-left leading-snug [overflow-wrap:anywhere] whitespace-normal"
               key={flag.type}
               variant="outline"
             >

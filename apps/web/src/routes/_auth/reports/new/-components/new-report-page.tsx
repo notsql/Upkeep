@@ -16,7 +16,7 @@ export function NewReportPage({
   return (
     <main className="page-layout">
       {context.data ? (
-        <h1 className="mb-4 font-semibold text-2xl">Report a fault</h1>
+        <h1 className="mb-4 text-2xl font-semibold">Report a fault</h1>
       ) : null}
       {context.isPending ? <p role="status">Loading your estate…</p> : null}
       {context.isError ? (

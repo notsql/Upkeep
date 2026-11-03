@@ -130,7 +130,7 @@ function CostTable({
         </TableFooter>
       </Table>
       {unknown ? (
-        <p className="mt-2 text-muted-foreground">
+        <p className="text-muted-foreground mt-2">
           {unknown === 1 ? "1 entry has" : `${unknown} entries have`} unknown
           costs, not included in the totals.
         </p>
@@ -191,7 +191,7 @@ export function AssetCostsSection({
 
   return (
     <section aria-labelledby="costs-heading" className="section-surface mt-6">
-      <h2 className="font-semibold text-xl" id="costs-heading">
+      <h2 className="text-xl font-semibold" id="costs-heading">
         Maintenance costs
       </h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">

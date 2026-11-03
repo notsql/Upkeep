@@ -56,8 +56,8 @@ vi.mock("@workos/authkit-tanstack-react-start/client", async () => {
 });
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 
-const OTHER_ACCOUNT_ESTATES = /Maple Estate|Old Estate/;
-const SWITCH_ESTATE = /Switch estate/;
+const OTHER_ACCOUNT_ESTATES = /Maple Estate|Old Estate/u;
+const SWITCH_ESTATE = /Switch estate/u;
 
 type Estate = components["schemas"]["EstateResponse"];
 const maple: Estate = {

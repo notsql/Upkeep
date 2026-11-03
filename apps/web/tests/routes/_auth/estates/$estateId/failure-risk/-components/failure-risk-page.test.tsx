@@ -17,8 +17,8 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 type FailureRisk = components["schemas"]["FailureRiskResponse"];
 
-const PERCENT = /\d+%/;
-const EMPTY = /no assets to forecast/i;
+const PERCENT = /\d+%/u;
+const EMPTY = /no assets to forecast/iu;
 
 const estate = {
   id: "estate-id",

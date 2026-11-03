@@ -238,9 +238,12 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   const returnFocus = useCallback(() => {
     const nodeId = panel?.kind === "create" ? panel.parent?.id : panel?.node.id;
     return (
+      // biome-ignore lint/style/useDomQuerySelector: useId values are not valid CSS selectors
       document.getElementById(
         nodeId ? `location-actions-${nodeId}` : `${id}-add`
-      ) ?? document.getElementById(`${id}-add`)
+      ) ??
+      // biome-ignore lint/style/useDomQuerySelector: useId values are not valid CSS selectors
+      document.getElementById(`${id}-add`)
     );
   }, [panel, id]);
 
@@ -252,7 +255,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
         id="locations"
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="font-semibold text-xl" id={`${id}-heading`}>
+          <h2 className="text-xl font-semibold" id={`${id}-heading`}>
             Locations
           </h2>
           {canCreate ? (

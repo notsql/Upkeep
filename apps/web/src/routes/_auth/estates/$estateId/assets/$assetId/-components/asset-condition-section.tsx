@@ -61,7 +61,7 @@ export function AssetConditionSection({
         className="section-surface mt-6"
       >
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="font-semibold text-xl" id="condition-heading">
+          <h2 className="text-xl font-semibold" id="condition-heading">
             Condition
           </h2>
           {canRecord && !recording ? (
@@ -127,7 +127,7 @@ export function AssetConditionSection({
                       <p className="mt-2 whitespace-pre-wrap">
                         {assessment.notes}
                       </p>
-                      <p className="mt-2 text-muted-foreground">
+                      <p className="text-muted-foreground mt-2">
                         Recorded by{" "}
                         {assessment.recordedByUserId === ANOMALY_MODEL_USER_ID
                           ? "Anomaly detection"

@@ -18,19 +18,19 @@ import { routeTree } from "@/routeTree.gen";
 
 // Exercise the real registered route. Before it exists, assertions fail on the
 // missing screen rather than an unresolved import of a future component.
-const CREATE_ROLE = /^create role$/i;
-const PREREQUISITE = /requires.*view estate|view estate.*required/i;
-const SAVING = /creating|saving/i;
-const DELETE_REVIEWER = /delete.*fault reviewer/i;
-const REVIEWER_NAME = /Fault reviewer/;
-const INVITATION_HISTORY = /invitation.*history|history.*invitation/i;
-const PERMANENT = /permanent|cannot be undone/i;
-const DELETE_ROLE = /^delete role$/i;
-const REASSIGN = /reassign|remove.*members/i;
-const EDIT_REVIEWER = /edit.*fault reviewer/i;
-const OWN_ROLE = /own.*role|role.*assigned/i;
-const INACTIVE = /inactive|active estate.*required/i;
-const RETRY = /retry/i;
+const CREATE_ROLE = /^create role$/iu;
+const PREREQUISITE = /requires.*view estate|view estate.*required/iu;
+const SAVING = /creating|saving/iu;
+const DELETE_REVIEWER = /delete.*fault reviewer/iu;
+const REVIEWER_NAME = /Fault reviewer/u;
+const INVITATION_HISTORY = /invitation.*history|history.*invitation/iu;
+const PERMANENT = /permanent|cannot be undone/iu;
+const DELETE_ROLE = /^delete role$/iu;
+const REASSIGN = /reassign|remove.*members/iu;
+const EDIT_REVIEWER = /edit.*fault reviewer/iu;
+const OWN_ROLE = /own.*role|role.*assigned/iu;
+const INACTIVE = /inactive|active estate.*required/iu;
+const RETRY = /retry/iu;
 
 const { apiGet } = vi.hoisted(() => ({ apiGet: vi.fn() }));
 

@@ -19,14 +19,11 @@ public class ResidentImageValidator {
 
     public ValidatedImage validate(MultipartFile file) {
         String declared = file.getContentType();
-        String type =
-                switch (declared == null ? "" : declared.toLowerCase()) {
-                    case "image/jpeg", "image/jpg" -> "image/jpeg";
-                    case "image/png" -> "image/png";
-                    default ->
-                        throw new ResidentReportException(
-                                HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Use a JPEG or PNG image.");
-                };
+        String type = switch (declared == null ? "" : declared.toLowerCase()) {
+            case "image/jpeg", "image/jpg" -> "image/jpeg";
+            case "image/png" -> "image/png";
+            default -> throw new ResidentReportException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Use a JPEG or PNG image.");
+        };
         if (file.isEmpty()) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "The selected image is empty.");
         }

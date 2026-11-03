@@ -29,6 +29,8 @@
   --sidebar-accent: #def3ed;
   --sidebar-accent-foreground: #145c51;
   --sidebar-border: #dce3ec;
+  --status-attention: #fef3c7;
+  --status-attention-foreground: #92400e;
 }
 
 .dark {
@@ -59,6 +61,8 @@
   --sidebar-accent: #193d3b;
   --sidebar-accent-foreground: #a8ebd9;
   --sidebar-border: #30435c;
+  --status-attention: #3d3015;
+  --status-attention-foreground: #fde68a;
 }
 
 body {
@@ -102,6 +106,7 @@ h2 {
 [data-slot="card"],
 [data-slot="dialog-content"],
 [data-slot="select-content"] {
+  font-size: 0.875rem;
   border-radius: var(--radius);
 }
 [data-slot="dialog-content"] {
@@ -189,7 +194,7 @@ h2 {
     @apply mb-1 font-medium text-muted-foreground text-sm;
   }
   .detail-grid dd {
-    @apply break-words font-medium text-base;
+    @apply wrap-anywhere font-medium text-base;
   }
   .section-surface {
     @apply rounded-xl border bg-card p-4 sm:p-5;
@@ -228,11 +233,6 @@ h2 {
   }
 }
 
-[data-slot="card"],
-[data-slot="dialog-content"],
-[data-slot="select-content"] {
-  font-size: 0.875rem;
-}
 [data-slot="card-title"],
 [data-slot="dialog-title"] {
   font-size: 1.125rem;
@@ -240,10 +240,6 @@ h2 {
 [data-slot="card-description"],
 [data-slot="dialog-description"] {
   font-size: 0.875rem;
-}
-
-.detail-grid dd {
-  overflow-wrap: anywhere;
 }
 
 .profile-menu-trigger {
@@ -263,14 +259,6 @@ h2 {
   background: var(--status-inactive);
 }
 
-:root {
-  --status-attention: #fef3c7;
-  --status-attention-foreground: #92400e;
-}
-.dark {
-  --status-attention: #3d3015;
-  --status-attention-foreground: #fde68a;
-}
 .condition-badge[data-condition="GOOD"] {
   color: var(--status-active-foreground);
   background: var(--status-active);
