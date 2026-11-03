@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Empty } from "@proj/ui/components/empty";
 import { Field, FieldError, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
@@ -190,56 +191,65 @@ export function AssetCostsSection({
   const loaded = Boolean(events.data && completions.data);
 
   return (
-    <section aria-labelledby="costs-heading" className="section-surface mt-6">
-      <h2 className="text-xl font-semibold" id="costs-heading">
-        Maintenance costs
-      </h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <Field>
-          <FieldLabel htmlFor={`${id}-from`}>From</FieldLabel>
-          <Input
-            aria-describedby={reversed ? `${id}-range-error` : undefined}
-            aria-invalid={reversed || undefined}
-            id={`${id}-from`}
-            onChange={handleFrom}
-            type="date"
-            value={from}
-          />
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-to`}>To</FieldLabel>
-          <Input id={`${id}-to`} onChange={handleTo} type="date" value={to} />
-        </Field>
-      </div>
-      {reversed ? (
-        <FieldError className="mt-2" id={`${id}-range-error`}>
-          The start date must be on or before the end date.
-        </FieldError>
-      ) : null}
-      {events.isPending || completions.isPending ? (
-        <p aria-live="polite" className="mt-4">
-          Loading costs…
-        </p>
-      ) : null}
-      {events.error || completions.error ? (
-        <Alert className="mt-4" variant="destructive">
-          <AlertDescription>
-            {(events.error ?? completions.error)?.message}
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      {loaded && !reversed && rows.length === 0 ? (
-        <Empty className="mt-4 border border-dashed" role="status">
-          No maintenance costs in this period.
-        </Empty>
-      ) : null}
-      {loaded && !reversed && rows.length > 0 ? (
-        <CostTable
-          canView={Boolean(access.canView)}
-          estateId={estateId}
-          rows={rows}
-        />
-      ) : null}
-    </section>
+    <Card className="mt-6">
+      <CardContent>
+        <section aria-labelledby="costs-heading">
+          <h2 className="text-xl font-semibold" id="costs-heading">
+            Maintenance costs
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor={`${id}-from`}>From</FieldLabel>
+              <Input
+                aria-describedby={reversed ? `${id}-range-error` : undefined}
+                aria-invalid={reversed || undefined}
+                id={`${id}-from`}
+                onChange={handleFrom}
+                type="date"
+                value={from}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-to`}>To</FieldLabel>
+              <Input
+                id={`${id}-to`}
+                onChange={handleTo}
+                type="date"
+                value={to}
+              />
+            </Field>
+          </div>
+          {reversed ? (
+            <FieldError className="mt-2" id={`${id}-range-error`}>
+              The start date must be on or before the end date.
+            </FieldError>
+          ) : null}
+          {events.isPending || completions.isPending ? (
+            <p aria-live="polite" className="mt-4">
+              Loading costs…
+            </p>
+          ) : null}
+          {events.error || completions.error ? (
+            <Alert className="mt-4" variant="destructive">
+              <AlertDescription>
+                {(events.error ?? completions.error)?.message}
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {loaded && !reversed && rows.length === 0 ? (
+            <Empty className="mt-4 border border-dashed" role="status">
+              No maintenance costs in this period.
+            </Empty>
+          ) : null}
+          {loaded && !reversed && rows.length > 0 ? (
+            <CostTable
+              canView={Boolean(access.canView)}
+              estateId={estateId}
+              rows={rows}
+            />
+          ) : null}
+        </section>
+      </CardContent>
+    </Card>
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "@proj/ui/components/dialog";
 import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type EstateRoleDefinition,
   useCreateEstateRole,
@@ -242,7 +243,7 @@ export function EstateRolesPage({ estateId }: { estateId: string }) {
     return <p role="alert">Estate roles are unavailable.</p>;
   }
   return (
-    <main className="page-layout space-y-5">
+    <PageLayout className="space-y-5">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -253,6 +254,6 @@ export function EstateRolesPage({ estateId }: { estateId: string }) {
         title="Estate roles"
       />
       <RoleWorkspace estate={estate} estateId={estateId} />
-    </main>
+    </PageLayout>
   );
 }

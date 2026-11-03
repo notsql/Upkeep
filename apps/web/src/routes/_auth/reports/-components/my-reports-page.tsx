@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 
 import { useCallback, useState } from "react";
+import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { useAuthenticatedSession } from "@/lib/access";
 import { useReportList } from "@/lib/reports";
@@ -31,11 +32,11 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
   }, [cursor, reports.data?.nextCursor]);
 
   return (
-    <main className="page-layout">
-      <div className="page-header">
+    <PageLayout>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="page-title">My reports</h1>
-          <p className="page-description wrap-anywhere">
+          <h1 className="text-3xl font-semibold">My reports</h1>
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed wrap-anywhere">
             {estateName ??
               (estateId
                 ? "Your reports for the selected estate."
@@ -98,6 +99,6 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
           ) : null}
         </div>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

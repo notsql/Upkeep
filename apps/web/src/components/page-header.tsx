@@ -1,6 +1,12 @@
+import {
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  Breadcrumb as BreadcrumbRoot,
+  BreadcrumbSeparator,
+} from "@proj/ui/components/breadcrumb";
 import { Link } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 interface Breadcrumb {
   label: string;
@@ -31,47 +37,46 @@ export function PageHeader({
   status?: ReactNode;
 }) {
   return (
-    <header className="page-header">
+    <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
         {breadcrumbs?.length ? (
-          <nav aria-label="Breadcrumbs" className="mb-4">
-            <ol className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
+          <BreadcrumbRoot aria-label="Breadcrumbs" className="mb-4">
+            <BreadcrumbList>
               {breadcrumbs.map((item, index) => (
-                <li
-                  className="flex min-w-0 items-center gap-2"
-                  key={`${item.label}-${item.to ?? "current"}`}
-                >
-                  {index ? (
-                    <ChevronRight aria-hidden="true" className="size-3" />
-                  ) : null}
-                  {item.to ? (
-                    <Link
-                      className="hover:text-foreground break-words hover:underline"
-                      params={item.params}
-                      to={item.to}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <span
-                      aria-current="page"
-                      className="text-foreground break-words"
-                    >
-                      {item.label}
-                    </span>
-                  )}
-                </li>
+                <Fragment key={`${item.label}-${item.to ?? "current"}`}>
+                  {index ? <BreadcrumbSeparator /> : null}
+                  <BreadcrumbItem className="min-w-0 break-words">
+                    {item.to ? (
+                      <BreadcrumbLink
+                        render={<Link params={item.params} to={item.to} />}
+                      >
+                        {item.label}
+                      </BreadcrumbLink>
+                    ) : (
+                      // Not BreadcrumbPage: it sets role="link", and the current page is not a link.
+                      <span aria-current="page" className="text-foreground">
+                        {item.label}
+                      </span>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
               ))}
-            </ol>
-          </nav>
+            </BreadcrumbList>
+          </BreadcrumbRoot>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="page-title break-words">{title}</h1>
+          <h1 className="text-3xl font-semibold break-words">{title}</h1>
           {status}
         </div>
-        {description ? <p className="page-description">{description}</p> : null}
+        {description ? (
+          <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed">
+            {description}
+          </p>
+        ) : null}
       </div>
-      {actions ? <div className="page-actions">{actions}</div> : null}
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-3">{actions}</div>
+      ) : null}
     </header>
   );
 }

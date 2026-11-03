@@ -155,7 +155,7 @@ final authority for date validation.
 
 ## Dashboard presentation
 
-Register/detail/editor screens share `page-layout` and `PageHeader` breadcrumbs
+Register/detail/editor screens share `PageLayout` and `PageHeader` breadcrumbs
 through Estates / the actual estate name / Assets. The register shows a compact desktop filter grid and a named Assets table with
 a focusable overflow region. Below 768px it renders cards retaining all six
 fields. Each mobile card is one routed link labelled with its asset name and

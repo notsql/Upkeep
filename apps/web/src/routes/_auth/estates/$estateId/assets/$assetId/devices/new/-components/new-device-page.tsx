@@ -1,7 +1,9 @@
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useRegisterDevice } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
@@ -42,7 +44,7 @@ export function NewDevicePage({
     asset.data &&
     !asset.data.deactivatedAt;
   return (
-    <main className="page-layout max-w-3xl">
+    <PageLayout className="max-w-3xl">
       <Link
         className="text-sm underline"
         params={{ estateId, assetId }}
@@ -82,15 +84,19 @@ export function NewDevicePage({
         </p>
       )}
       {allowed && asset.data ? (
-        <div className="form-surface">
-          <DeviceForm
-            defaultLocationId={asset.data.locationId}
-            estateId={estateId}
-            onCancel={cancel}
-            onSave={save}
-          />
-        </div>
+        <Card>
+          <CardContent>
+            <div>
+              <DeviceForm
+                defaultLocationId={asset.data.locationId}
+                estateId={estateId}
+                onCancel={cancel}
+                onSave={save}
+              />
+            </div>
+          </CardContent>
+        </Card>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

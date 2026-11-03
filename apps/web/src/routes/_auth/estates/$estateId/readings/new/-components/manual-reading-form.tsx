@@ -1,8 +1,10 @@
 import { Alert, AlertDescription, AlertTitle } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import {
   currentLocalMeasurementTime,
@@ -112,7 +114,7 @@ export function ManualReadingForm({
     );
   }
   return (
-    <main className="page-layout min-w-0 space-y-6 [overflow-wrap:anywhere]">
+    <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -143,59 +145,65 @@ export function ManualReadingForm({
       ) : null}
       {metrics.isPending ? <p role="status">Loading metrics…</p> : null}
       {metrics.data ? (
-        <form
-          aria-label="Manual reading"
-          className="section-surface max-w-3xl space-y-6"
-          onSubmit={submit}
-        >
-          <fieldset
-            className="min-w-0 space-y-5"
-            disabled={mutation.isPending || saved}
-          >
-            <ManualMeasurementFields
-              assetLabel={label}
-              estateId={estateId}
-              fields={fields}
-              metrics={metrics.data}
-              onChange={change}
-              onChoose={choose}
-              selectedMetric={selectedMetric}
-            />
-          </fieldset>
-          {outside ? (
-            <Alert>
-              <AlertTitle>Check this measurement</AlertTitle>
-              <AlertDescription>
-                Outside the expected range. You can still save this measurement;
-                it will be flagged for review.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {saveError ? (
-            <Alert variant="destructive">
-              <AlertDescription>{saveError}</AlertDescription>
-            </Alert>
-          ) : null}
-          <div className="flex flex-wrap gap-3">
-            <Button disabled={mutation.isPending || saved} type="submit">
-              {mutation.isPending ? "Saving reading…" : "Save manual reading"}
-            </Button>
-            <Button
-              disabled={mutation.isPending}
-              render={
-                <Link
-                  params={{ estateId }}
-                  search={{ assetId: fields.assetId }}
-                  to="/estates/$estateId/readings"
-                />
-              }
-              variant="outline"
+        <Card className="max-w-3xl">
+          <CardContent>
+            <form
+              aria-label="Manual reading"
+              className="space-y-6"
+              onSubmit={submit}
             >
-              Cancel
-            </Button>
-          </div>
-        </form>
+              <fieldset
+                className="min-w-0 space-y-5"
+                disabled={mutation.isPending || saved}
+              >
+                <ManualMeasurementFields
+                  assetLabel={label}
+                  estateId={estateId}
+                  fields={fields}
+                  metrics={metrics.data}
+                  onChange={change}
+                  onChoose={choose}
+                  selectedMetric={selectedMetric}
+                />
+              </fieldset>
+              {outside ? (
+                <Alert>
+                  <AlertTitle>Check this measurement</AlertTitle>
+                  <AlertDescription>
+                    Outside the expected range. You can still save this
+                    measurement; it will be flagged for review.
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              {saveError ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{saveError}</AlertDescription>
+                </Alert>
+              ) : null}
+              <div className="flex flex-wrap gap-3">
+                <Button disabled={mutation.isPending || saved} type="submit">
+                  {mutation.isPending
+                    ? "Saving reading…"
+                    : "Save manual reading"}
+                </Button>
+                <Button
+                  disabled={mutation.isPending}
+                  render={
+                    <Link
+                      params={{ estateId }}
+                      search={{ assetId: fields.assetId }}
+                      to="/estates/$estateId/readings"
+                    />
+                  }
+                  variant="outline"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

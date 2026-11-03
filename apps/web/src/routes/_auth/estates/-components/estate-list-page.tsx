@@ -16,6 +16,7 @@ import { Link } from "@tanstack/react-router";
 import { type ChangeEvent, useCallback } from "react";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { type EstateStatus, useEstateList } from "@/lib/estates";
 import type {
   EstateAccess,
@@ -90,7 +91,7 @@ export function EstateListPage({
   }
 
   return (
-    <main className="page-layout">
+    <PageLayout>
       <PageHeader
         actions={
           <Link className={buttonVariants()} to="/estates/new">
@@ -215,6 +216,6 @@ export function EstateListPage({
           </li>
         ))}
       </ul>
-    </main>
+    </PageLayout>
   );
 }

@@ -4,7 +4,7 @@ const conditions = [
   {
     key: "good",
     label: "Good",
-    colour: "bg-[var(--status-active-foreground)]",
+    colour: "bg-emerald-600 dark:bg-emerald-400",
   },
   {
     key: "needsAttention",

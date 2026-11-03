@@ -9,7 +9,7 @@ export function FormActions({
   onCancel?: () => void;
 }) {
   return (
-    <div className="page-actions border-t pt-5">
+    <div className="flex flex-wrap items-center gap-3 border-t pt-5">
       <Button disabled={pending} type="submit">
         {label}
       </Button>

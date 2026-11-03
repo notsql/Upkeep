@@ -8,12 +8,7 @@ export function LifecycleStatusBadge({
   inactiveLabel: "Inactive" | "Retired";
 }) {
   return (
-    <Badge
-      className="lifecycle-status-badge"
-      data-state={inactive ? "inactive" : "active"}
-      role="status"
-      variant="secondary"
-    >
+    <Badge role="status" variant={inactive ? "destructive" : "default"}>
       {inactive ? inactiveLabel : "Active"}
     </Badge>
   );

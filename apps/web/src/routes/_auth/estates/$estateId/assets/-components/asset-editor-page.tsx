@@ -2,6 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type AssetInput,
   useAsset,
@@ -30,7 +31,7 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
     navigate({ to: "/estates/$estateId/assets", params: { estateId } });
   }, [navigate, estateId]);
   return (
-    <main className="page-layout max-w-3xl">
+    <PageLayout className="max-w-3xl">
       <Link
         className="text-sm underline"
         params={{ estateId }}
@@ -57,7 +58,7 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
         title="Register asset"
       />
       <AssetForm estateId={estateId} onCancel={cancel} onSave={save} />
-    </main>
+    </PageLayout>
   );
 }
 
@@ -90,7 +91,7 @@ export function EditAssetPage({
     });
   }, [navigate, estateId, assetId]);
   return (
-    <main className="page-layout max-w-3xl">
+    <PageLayout className="max-w-3xl">
       <Link
         className="text-sm underline"
         params={{ estateId, assetId }}
@@ -140,6 +141,6 @@ export function EditAssetPage({
           onSave={save}
         />
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

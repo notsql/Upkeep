@@ -8,6 +8,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type WorkOrderFilters as Filters,
   useWorkOrderAccess,
@@ -109,7 +110,7 @@ export function WorkOrderListPage({
     return <p role="alert">Work orders are unavailable.</p>;
   }
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         actions={
           access.canCreate ? (
@@ -174,7 +175,7 @@ export function WorkOrderListPage({
           />
         </>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }
 

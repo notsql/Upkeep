@@ -2,6 +2,7 @@ import { Button } from "@proj/ui/components/button";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Textarea } from "@proj/ui/components/textarea";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import type { WorkOrderInput } from "@/lib/work-orders";
 import { useWorkOrderForm } from "./use-work-order-form";
 import { WorkOrderAssetPicker } from "./work-order-asset-picker";
@@ -52,7 +53,7 @@ export function WorkOrderForm({
     return inspectionStatus;
   }
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -176,7 +177,7 @@ export function WorkOrderForm({
           reloadSource={form.reloadSource}
           reportSource={form.reportSource}
         />
-        <div className="page-actions border-t pt-5">
+        <div className="flex flex-wrap items-center gap-3 border-t pt-5">
           <Button disabled={form.blocked} type="submit">
             Create work order
           </Button>
@@ -192,6 +193,6 @@ export function WorkOrderForm({
           ) : null}
         </div>
       </form>
-    </main>
+    </PageLayout>
   );
 }

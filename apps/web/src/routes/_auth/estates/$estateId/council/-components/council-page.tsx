@@ -9,6 +9,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { useEstateMembers } from "@/lib/council-invitations";
 import {
@@ -128,7 +129,7 @@ export function CouncilPage({ estateId }: { estateId: string }) {
     );
   }
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       {permission.canViewManagement ? (
         <Link
           className="text-sm underline"
@@ -158,6 +159,6 @@ export function CouncilPage({ estateId }: { estateId: string }) {
       {manager ? (
         <EstateMembers estateId={estateId} permission={permission} />
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

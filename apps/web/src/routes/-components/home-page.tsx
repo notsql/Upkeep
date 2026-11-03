@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { Building2, Layers, Users } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { useHealth } from "@/lib/health";
 import { WorkspaceHome } from "@/routes/-components/workspace-home";
@@ -45,23 +46,23 @@ export function HomePage() {
   const access = useAppAccess();
   if (user && !loading && access.isPending) {
     return (
-      <main className="page-layout">
+      <PageLayout>
         <p role="status">Loading your access…</p>
-      </main>
+      </PageLayout>
     );
   }
   if (user && !loading && access.isError) {
     return (
-      <main className="page-layout">
+      <PageLayout>
         <Alert role="alert" variant="destructive">
           <AlertDescription>{access.error.message}</AlertDescription>
         </Alert>
-      </main>
+      </PageLayout>
     );
   }
   if (user && !loading && access.data && !access.data.canEnterWorkspace) {
     return (
-      <main className="page-layout">
+      <PageLayout>
         <PageHeader
           description={
             access.data.canSubmitReport
@@ -70,7 +71,7 @@ export function HomePage() {
           }
           title="Report a fault"
         />
-        <div className="page-actions">
+        <div className="flex flex-wrap items-center gap-3">
           <Link className={buttonVariants()} to="/reports/new">
             Report a fault
           </Link>
@@ -83,40 +84,44 @@ export function HomePage() {
             </Link>
           ) : null}
         </div>
-      </main>
+      </PageLayout>
     );
   }
   if (user && !loading && access.data?.canEnterWorkspace) {
     return <WorkspaceHome />;
   }
   return (
-    <main className="page-layout">
+    <PageLayout>
       <PageHeader
         description="Keep estates, equipment and council access organised in one place."
         title="Your estate workspace"
       />
-      <section className="section-surface mb-8">
-        <p className="text-muted-foreground mb-5 max-w-xl leading-relaxed">
-          A clear view of your estates, the assets within them, and the people
-          who help manage them.
-        </p>
-        <div className="page-actions">
-          {loading ? <p role="status">Checking your sign-in…</p> : null}
-          {loading || user ? null : (
-            <>
-              <a className={buttonVariants()} href="/api/auth/sign-in">
-                Sign in
-              </a>
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                to="/register"
-              >
-                Create account
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
+      <Card className="mb-8">
+        <CardContent>
+          <section>
+            <p className="text-muted-foreground mb-5 max-w-xl leading-relaxed">
+              A clear view of your estates, the assets within them, and the
+              people who help manage them.
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              {loading ? <p role="status">Checking your sign-in…</p> : null}
+              {loading || user ? null : (
+                <>
+                  <a className={buttonVariants()} href="/api/auth/sign-in">
+                    Sign in
+                  </a>
+                  <Link
+                    className={buttonVariants({ variant: "outline" })}
+                    to="/register"
+                  >
+                    Create account
+                  </Link>
+                </>
+              )}
+            </div>
+          </section>
+        </CardContent>
+      </Card>
       <div className="grid gap-5 sm:grid-cols-3">
         <Card>
           <CardHeader>
@@ -150,6 +155,6 @@ export function HomePage() {
         </Card>
       </div>
       <SystemStatus />
-    </main>
+    </PageLayout>
   );
 }

@@ -4,8 +4,10 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAsset, useDeactivateAsset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
@@ -69,7 +71,7 @@ export function AssetDetailsPage({
     [deactivate.mutateAsync]
   );
   return (
-    <main className="page-layout">
+    <PageLayout>
       <Link
         className="text-sm underline"
         params={{ estateId }}
@@ -149,7 +151,7 @@ export function AssetDetailsPage({
               </AlertDescription>
             </Alert>
           ) : null}
-          <dl className="detail-grid my-4">
+          <DetailCard className="my-4">
             <div>
               <dt className="font-medium">Reference</dt>
               <dd>{asset.data.reference}</dd>
@@ -182,7 +184,7 @@ export function AssetDetailsPage({
               <dt className="font-medium">Serial number</dt>
               <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
             </div>
-          </dl>
+          </DetailCard>
           <AssetDocumentsSection assetId={assetId} estateId={estateId} />
           <InspectionHistoryTable assetId={assetId} estateId={estateId} />
           <AssetRetirementPanel asset={asset.data} />
@@ -217,6 +219,6 @@ export function AssetDetailsPage({
           ) : null}
         </>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "@proj/ui/components/select";
 import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type MonitoredSensor,
   type SensorReview,
@@ -49,7 +50,7 @@ export function SensorsPage({ estateId }: { estateId: string }) {
     }
   }, []);
   return (
-    <main className="page-layout min-w-0">
+    <PageLayout className="min-w-0">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -153,7 +154,7 @@ export function SensorsPage({ estateId }: { estateId: string }) {
           ) : null}
         </>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }
 

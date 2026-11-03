@@ -3,6 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
 import {
@@ -76,7 +77,7 @@ export function EstateReadingsPage({
     );
   }
   return (
-    <main className="page-layout min-w-0 space-y-6 [overflow-wrap:anywhere]">
+    <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -139,6 +140,6 @@ export function EstateReadingsPage({
         readings={readings}
         validationError={error}
       />
-    </main>
+    </PageLayout>
   );
 }

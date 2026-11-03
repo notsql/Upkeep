@@ -5,6 +5,7 @@ import { Label } from "@proj/ui/components/label";
 import { Link } from "@tanstack/react-router";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useInspectionAccess, useInspectionAssets } from "@/lib/inspections";
 
 export function InspectionAssetList({ estateId }: { estateId: string }) {
@@ -38,7 +39,7 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
     return <p role="alert">Inspection assets are unavailable.</p>;
   }
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -110,6 +111,6 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
           </Button>
         ) : null}
       </div>
-    </main>
+    </PageLayout>
   );
 }

@@ -13,6 +13,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { ReadingCards } from "@/components/readings/reading-cards";
 import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { useAsset } from "@/lib/assets";
@@ -94,7 +95,7 @@ export function ReadingsPage({
     [filters, onFiltersChange, page]
   );
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <Link
         className="text-sm underline"
         params={{ estateId, assetId }}
@@ -191,6 +192,6 @@ export function ReadingsPage({
           </nav>
         </>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

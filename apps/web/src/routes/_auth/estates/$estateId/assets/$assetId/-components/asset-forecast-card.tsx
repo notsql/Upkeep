@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { DetailCard } from "@/components/detail-card";
 import {
   flagReasonLabel,
   formatProbability,
@@ -56,7 +57,7 @@ export function AssetForecastCard({
             {reason ? (
               <p className="text-muted-foreground">{reason}</p>
             ) : (
-              <dl className="detail-grid">
+              <DetailCard>
                 <div>
                   <dt className="font-medium">Within 30 days</dt>
                   <dd>{formatProbability(risk.data.probability30Days)}</dd>
@@ -81,7 +82,7 @@ export function AssetForecastCard({
                   <dt className="font-medium">Breakdowns observed</dt>
                   <dd>{risk.data.failuresObserved}</dd>
                 </div>
-              </dl>
+              </DetailCard>
             )}
             <p className="mt-3">
               Expected end of life:{" "}

@@ -1,3 +1,4 @@
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
@@ -54,48 +55,52 @@ export function ReadingFilterControls({
   );
   const value = filters.metric ?? "";
   return (
-    <div className="section-surface grid gap-3 md:grid-cols-4 md:items-end">
-      <Field className="min-w-0">
-        <FieldLabel>Metric</FieldLabel>
-        <Select onValueChange={metric} value={value}>
-          <SelectTrigger aria-label="Metric" className="w-full">
-            <SelectValue>{metricOptions[value]}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(metricOptions).map(([key, text]) => (
-              <SelectItem key={key} value={key}>
-                {text}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="readings-from">From</FieldLabel>
-        <Input
-          id="readings-from"
-          onChange={from}
-          type="datetime-local"
-          value={filters.from ?? ""}
-        />
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="readings-to">To</FieldLabel>
-        <Input
-          id="readings-to"
-          onChange={to}
-          type="datetime-local"
-          value={filters.to ?? ""}
-        />
-      </Field>
-      <div className="flex min-h-9 items-center gap-2">
-        <Checkbox
-          checked={Boolean(filters.suspect)}
-          id="readings-suspect"
-          onCheckedChange={suspect}
-        />
-        <Label htmlFor="readings-suspect">Suspect only</Label>
-      </div>
-    </div>
+    <Card>
+      <CardContent>
+        <div className="grid gap-3 md:grid-cols-4 md:items-end">
+          <Field className="min-w-0">
+            <FieldLabel>Metric</FieldLabel>
+            <Select onValueChange={metric} value={value}>
+              <SelectTrigger aria-label="Metric" className="w-full">
+                <SelectValue>{metricOptions[value]}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(metricOptions).map(([key, text]) => (
+                  <SelectItem key={key} value={key}>
+                    {text}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="readings-from">From</FieldLabel>
+            <Input
+              id="readings-from"
+              onChange={from}
+              type="datetime-local"
+              value={filters.from ?? ""}
+            />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="readings-to">To</FieldLabel>
+            <Input
+              id="readings-to"
+              onChange={to}
+              type="datetime-local"
+              value={filters.to ?? ""}
+            />
+          </Field>
+          <div className="flex min-h-9 items-center gap-2">
+            <Checkbox
+              checked={Boolean(filters.suspect)}
+              id="readings-suspect"
+              onCheckedChange={suspect}
+            />
+            <Label htmlFor="readings-suspect">Suspect only</Label>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -48,60 +49,64 @@ export function AssetDevicesSection({
     [devices.data]
   );
   return (
-    <section aria-labelledby="devices-heading" className="section-surface mt-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold" id="devices-heading">
-          Devices
-        </h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ estateId }}
-            search={{ assetId }}
-            to="/estates/$estateId/readings"
-          >
-            Readings
-          </Link>
-          {canRegister ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              params={{ estateId, assetId }}
-              to="/estates/$estateId/assets/$assetId/devices/new"
-            >
-              Register device
-            </Link>
+    <Card className="mt-6">
+      <CardContent>
+        <section aria-labelledby="devices-heading">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold" id="devices-heading">
+              Devices
+            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                params={{ estateId }}
+                search={{ assetId }}
+                to="/estates/$estateId/readings"
+              >
+                Readings
+              </Link>
+              {canRegister ? (
+                <Link
+                  className={buttonVariants({ variant: "outline" })}
+                  params={{ estateId, assetId }}
+                  to="/estates/$estateId/assets/$assetId/devices/new"
+                >
+                  Register device
+                </Link>
+              ) : null}
+            </div>
+          </div>
+          {devices.isPending ? (
+            <p aria-live="polite" className="mt-4">
+              Loading devices…
+            </p>
           ) : null}
-        </div>
-      </div>
-      {devices.isPending ? (
-        <p aria-live="polite" className="mt-4">
-          Loading devices…
-        </p>
-      ) : null}
-      {devices.error ? (
-        <p className="text-destructive mt-4" role="alert">
-          {devices.error.message}
-        </p>
-      ) : null}
-      {devices.data?.length === 0 ? (
-        <p className="text-muted-foreground mt-4">
-          No devices are registered to this asset yet.
-        </p>
-      ) : null}
-      <ul aria-label="Devices" className="mt-4 grid gap-3">
-        {devices.data?.map((device) => (
-          <DeviceItem
-            assetId={assetId}
-            canManage={canRegister}
-            device={device}
-            estateId={estateId}
-            identifiers={identifiers}
-            key={device.id}
-            locationPath={paths.get(device.locationId)}
-          />
-        ))}
-      </ul>
-    </section>
+          {devices.error ? (
+            <p className="text-destructive mt-4" role="alert">
+              {devices.error.message}
+            </p>
+          ) : null}
+          {devices.data?.length === 0 ? (
+            <p className="text-muted-foreground mt-4">
+              No devices are registered to this asset yet.
+            </p>
+          ) : null}
+          <ul aria-label="Devices" className="mt-4 grid gap-3">
+            {devices.data?.map((device) => (
+              <DeviceItem
+                assetId={assetId}
+                canManage={canRegister}
+                device={device}
+                estateId={estateId}
+                identifiers={identifiers}
+                key={device.id}
+                locationPath={paths.get(device.locationId)}
+              />
+            ))}
+          </ul>
+        </section>
+      </CardContent>
+    </Card>
   );
 }
 

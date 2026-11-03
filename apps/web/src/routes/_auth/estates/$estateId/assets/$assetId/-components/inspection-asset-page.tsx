@@ -2,7 +2,9 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { DetailCard } from "@/components/detail-card";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useInspectionAccess, useInspectionAsset } from "@/lib/inspections";
 import { InspectionHistoryTable } from "./inspection-history-table";
 
@@ -24,10 +26,10 @@ export function InspectionAssetPage({
   }
   if (asset.isError) {
     return (
-      <main className="page-layout">
+      <PageLayout>
         <p role="alert">{asset.error.message}</p>
         <Button onClick={retry}>Retry asset</Button>
-      </main>
+      </PageLayout>
     );
   }
   if (!asset.data) {
@@ -37,7 +39,7 @@ export function InspectionAssetPage({
   const active =
     context.assetActive && context.estateActive && context.locationActive;
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         actions={
           access.canCreate && active ? (
@@ -69,7 +71,7 @@ export function InspectionAssetPage({
       />
       <Card>
         <CardContent className="pt-6">
-          <dl className="detail-grid">
+          <DetailCard>
             <div>
               <dt>Reference</dt>
               <dd>{context.reference}</dd>
@@ -86,7 +88,7 @@ export function InspectionAssetPage({
               <dt>Installation date</dt>
               <dd>{context.installedOn ?? "Not recorded"}</dd>
             </div>
-          </dl>
+          </DetailCard>
         </CardContent>
       </Card>
       <InspectionHistoryTable assetId={assetId} estateId={estateId} />
@@ -96,6 +98,6 @@ export function InspectionAssetPage({
           inspections remain available.
         </p>
       )}
-    </main>
+    </PageLayout>
   );
 }

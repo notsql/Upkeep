@@ -11,6 +11,7 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type EstateAssetCategory,
   useEstateAssetCategories,
@@ -78,7 +79,7 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
     data?.categories.filter((category) => category.failsSilently).length ?? 0;
 
   return (
-    <main className="page-layout min-w-0">
+    <PageLayout className="min-w-0">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -135,6 +136,6 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
           </Table>
         </section>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

@@ -121,7 +121,7 @@ export function ReportFilters({
   );
 
   return (
-    <form className="report-filters space-y-3" noValidate onSubmit={apply}>
+    <form className="space-y-3" noValidate onSubmit={apply}>
       <div className="grid items-end gap-4 sm:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor={`${id}-block`}>Block</Label>

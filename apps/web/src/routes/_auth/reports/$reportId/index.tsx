@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { buttonVariants } from "@proj/ui/components/button";
 
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
 import { useReport } from "@/lib/reports";
@@ -22,7 +23,7 @@ function ReportDetailPage() {
   const { estateId } = useSearch({ strict: false });
   const report = useReport(reportId ?? "");
   return (
-    <main className="page-layout">
+    <PageLayout>
       <a
         className={buttonVariants({ size: "sm" })}
         href={
@@ -55,6 +56,6 @@ function ReportDetailPage() {
           </ReportDetails>
         </ReportCard>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

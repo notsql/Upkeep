@@ -37,7 +37,7 @@ export function AuthButton() {
         render={
           <Button
             aria-label="Open account menu"
-            className="profile-menu-trigger"
+            className="rounded-full"
             size="icon"
             variant="outline"
           />

@@ -1,13 +1,16 @@
 import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { FieldSet } from "@proj/ui/components/field";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
+import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { dashboardQueryKey } from "@/lib/dashboard";
@@ -50,7 +53,7 @@ function EstateActions({
   return (
     <FieldSet
       aria-label="Estate actions"
-      className="page-actions min-w-0 flex-row gap-3"
+      className="flex min-w-0 flex-row flex-wrap items-center gap-3"
     >
       {canViewWorkOrders ? (
         <Link
@@ -203,7 +206,7 @@ export function EstateDetailsPage({
   const openConfirmation = useCallback(() => setConfirming(true), []);
   const closeConfirmation = useCallback(() => setConfirming(false), []);
   return (
-    <main className="page-layout">
+    <PageLayout>
       <Link className="text-sm underline" to="/estates">
         Back to estates
       </Link>
@@ -256,7 +259,7 @@ export function EstateDetailsPage({
               </AlertDescription>
             </Alert>
           ) : null}
-          <dl className="detail-grid my-4">
+          <DetailCard className="my-4">
             <div>
               <dt className="font-medium">Estate code</dt>
               <dd>{estate.data.code}</dd>
@@ -275,7 +278,7 @@ export function EstateDetailsPage({
                 {estate.data.description || "No description provided."}
               </dd>
             </div>
-          </dl>
+          </DetailCard>
           {canEditDetails ? null : (
             <p className="text-muted-foreground mb-3 text-sm">
               Shared with you. Only the owner or an assigned Manager can edit
@@ -292,33 +295,34 @@ export function EstateDetailsPage({
           ) : null}
           {children}
           {estate.data.owned || permission?.canViewInspectionResults ? (
-            <section
-              aria-label="Estate assets"
-              className="section-surface mt-6 space-y-3"
-            >
-              <h2 className="text-xl font-semibold">Assets</h2>
-              <div className="flex flex-wrap gap-4">
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  params={{ estateId }}
-                  to="/estates/$estateId/assets"
-                >
-                  View assets
-                </Link>
-                {!estate.data.owned || estate.data.deactivatedAt ? null : (
-                  <Link
-                    className={buttonVariants({ variant: "outline" })}
-                    params={{ estateId }}
-                    to="/estates/$estateId/assets/new"
-                  >
-                    Register asset
-                  </Link>
-                )}
-              </div>
-            </section>
+            <Card className="mt-6">
+              <CardContent>
+                <section aria-label="Estate assets" className="space-y-3">
+                  <h2 className="text-xl font-semibold">Assets</h2>
+                  <div className="flex flex-wrap gap-4">
+                    <Link
+                      className={buttonVariants({ variant: "outline" })}
+                      params={{ estateId }}
+                      to="/estates/$estateId/assets"
+                    >
+                      View assets
+                    </Link>
+                    {!estate.data.owned || estate.data.deactivatedAt ? null : (
+                      <Link
+                        className={buttonVariants({ variant: "outline" })}
+                        params={{ estateId }}
+                        to="/estates/$estateId/assets/new"
+                      >
+                        Register asset
+                      </Link>
+                    )}
+                  </div>
+                </section>
+              </CardContent>
+            </Card>
           ) : null}
         </>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

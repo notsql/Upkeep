@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -249,70 +250,76 @@ export function LocationsSection({ estateId }: { estateId: string }) {
 
   return (
     <Dialog onOpenChange={changeOpen} open={Boolean(panel && canOpenPanel)}>
-      <section
-        aria-labelledby={`${id}-heading`}
-        className="section-surface mt-8 scroll-mt-24"
-        id="locations"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 className="text-xl font-semibold" id={`${id}-heading`}>
-            Locations
-          </h2>
-          {canCreate ? (
-            <Button id={`${id}-add`} onClick={addBlock} variant="outline">
-              Add block
-            </Button>
-          ) : null}
-        </div>
-        <div className="mt-4 grid gap-1">
-          <Label htmlFor={`${id}-search`}>Search locations</Label>
-          <Input
-            id={`${id}-search`}
-            onChange={search}
-            placeholder="Block, level or common area name"
-            type="search"
-            value={query}
-          />
-        </div>
-        {locations.isPending ? (
-          <p aria-live="polite" className="mt-4">
-            Loading locations…
-          </p>
-        ) : null}
-        {locations.error ? (
-          <Alert className="mt-4" variant="destructive">
-            <AlertDescription>{locations.error.message}</AlertDescription>
-          </Alert>
-        ) : null}
-        {locations.data ? (
-          <LocationTree
-            canCreate={canCreate}
-            canCreateFloors={canCreateFloors}
-            canDeactivate={canDeactivate}
-            canEdit={canEdit}
-            expandedIds={expandedIds ?? EMPTY_EXPANSION}
-            onPanel={setPanel}
-            onToggle={toggleLocation}
-            query={query}
-            searching={searching}
-            summaries={summaries}
-            tree={visibleTree}
-          />
-        ) : null}
-        {panelView ? (
-          <DialogContent
-            className="sm:max-w-lg"
-            finalFocus={returnFocus}
-            showCloseButton={!busy}
+      <Card className="mt-8">
+        <CardContent>
+          <section
+            aria-labelledby={`${id}-heading`}
+            className="scroll-mt-24"
+            id="locations"
           >
-            <DialogHeader>
-              <DialogTitle>{dialogTitle}</DialogTitle>
-              <DialogDescription>{dialogDescription(panel)}</DialogDescription>
-            </DialogHeader>
-            {panelView}
-          </DialogContent>
-        ) : null}
-      </section>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-xl font-semibold" id={`${id}-heading`}>
+                Locations
+              </h2>
+              {canCreate ? (
+                <Button id={`${id}-add`} onClick={addBlock} variant="outline">
+                  Add block
+                </Button>
+              ) : null}
+            </div>
+            <div className="mt-4 grid gap-1">
+              <Label htmlFor={`${id}-search`}>Search locations</Label>
+              <Input
+                id={`${id}-search`}
+                onChange={search}
+                placeholder="Block, level or common area name"
+                type="search"
+                value={query}
+              />
+            </div>
+            {locations.isPending ? (
+              <p aria-live="polite" className="mt-4">
+                Loading locations…
+              </p>
+            ) : null}
+            {locations.error ? (
+              <Alert className="mt-4" variant="destructive">
+                <AlertDescription>{locations.error.message}</AlertDescription>
+              </Alert>
+            ) : null}
+            {locations.data ? (
+              <LocationTree
+                canCreate={canCreate}
+                canCreateFloors={canCreateFloors}
+                canDeactivate={canDeactivate}
+                canEdit={canEdit}
+                expandedIds={expandedIds ?? EMPTY_EXPANSION}
+                onPanel={setPanel}
+                onToggle={toggleLocation}
+                query={query}
+                searching={searching}
+                summaries={summaries}
+                tree={visibleTree}
+              />
+            ) : null}
+            {panelView ? (
+              <DialogContent
+                className="sm:max-w-lg"
+                finalFocus={returnFocus}
+                showCloseButton={!busy}
+              >
+                <DialogHeader>
+                  <DialogTitle>{dialogTitle}</DialogTitle>
+                  <DialogDescription>
+                    {dialogDescription(panel)}
+                  </DialogDescription>
+                </DialogHeader>
+                {panelView}
+              </DialogContent>
+            ) : null}
+          </section>
+        </CardContent>
+      </Card>
     </Dialog>
   );
 }

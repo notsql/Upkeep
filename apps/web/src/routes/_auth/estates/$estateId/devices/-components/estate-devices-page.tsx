@@ -12,6 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { DeviceStatusBadge } from "@/components/device-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { type EstateDevice, useEstateDevices } from "@/lib/devices";
 import { flattenLocations, useLocations } from "@/lib/locations";
 
@@ -29,7 +30,7 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
     [locations.data]
   );
   return (
-    <main className="page-layout min-w-0">
+    <PageLayout className="min-w-0">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -78,7 +79,7 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
           </TableBody>
         </Table>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }
 
