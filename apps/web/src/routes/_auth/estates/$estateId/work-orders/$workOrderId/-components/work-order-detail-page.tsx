@@ -5,6 +5,7 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
 import { WorkOrderDocuments } from "./work-order-documents";
 import { WorkOrderProgress } from "./work-order-progress";
@@ -43,7 +44,7 @@ export function WorkOrderDetailPage({
   }
   const { data } = order;
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -164,7 +165,7 @@ export function WorkOrderDetailPage({
         onRefresh={refresh}
         order={data}
       />
-    </main>
+    </PageLayout>
   );
 }
 

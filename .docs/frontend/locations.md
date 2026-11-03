@@ -78,8 +78,8 @@ The owner-only asset register opts into `useLocations(estateId, true)` for inact
 
 ## Dashboard presentation
 
-Locations is a `section-surface` within estate overview, with `id="locations"`
-and scroll margin for the sticky header. It has no separate desktop/mobile
+Locations is a section inside a shadcn `Card` within estate overview, with `id="locations"`
+and scroll margin for the sticky header. It has no separate sidebar
 navigation destination; users reach it within Overview. Direct #locations links
 remain valid and keep Overview selected. Block groups, labelled expandable branches and compact Actions menus keep the
 hierarchy readable on narrow screens. Dialogs return focus to the node menu,

@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConditionBadge } from "@/components/condition-badge";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import {
   type AssetSort,
@@ -117,7 +118,7 @@ export function AssetRegisterPage({
     []
   );
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <Link className="underline" params={{ estateId }} to="/estates/$estateId">
         Back to estate
       </Link>
@@ -152,30 +153,34 @@ export function AssetRegisterPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <div className="section-surface grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:grid-cols-3 xl:grid-cols-5">
-        <Field>
-          <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
-          <Input
-            id="asset-search"
-            onChange={changeSearch}
-            placeholder="Name or reference"
-            value={search}
-          />
-        </Field>
-        {mobile ? (
-          <MobileAssetFilters
-            filters={filters}
-            locations={locationOptions}
-            onChange={onFiltersChange}
-          />
-        ) : (
-          <AssetFilterControls
-            filters={filters}
-            locations={locationOptions}
-            onChange={onFiltersChange}
-          />
-        )}
-      </div>
+      <Card>
+        <CardContent>
+          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:grid-cols-3 xl:grid-cols-5">
+            <Field>
+              <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
+              <Input
+                id="asset-search"
+                onChange={changeSearch}
+                placeholder="Name or reference"
+                value={search}
+              />
+            </Field>
+            {mobile ? (
+              <MobileAssetFilters
+                filters={filters}
+                locations={locationOptions}
+                onChange={onFiltersChange}
+              />
+            ) : (
+              <AssetFilterControls
+                filters={filters}
+                locations={locationOptions}
+                onChange={onFiltersChange}
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
       {mobile ? (
         <AssetSortControls onChange={onSortChange} sort={sort} />
       ) : null}
@@ -320,6 +325,6 @@ export function AssetRegisterPage({
           </TableBody>
         </Table>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

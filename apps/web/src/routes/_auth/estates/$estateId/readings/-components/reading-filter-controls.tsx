@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
@@ -56,70 +57,75 @@ export function ReadingFilterControls({
   );
   const clear = useCallback(() => onFiltersChange({}), [onFiltersChange]);
   return (
-    <section
-      aria-label="Reading filters"
-      className="section-surface grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-    >
-      <Field className="min-w-0">
-        <FieldLabel>Asset</FieldLabel>
-        <ReadingAssetPicker
-          estateId={estateId}
-          label={assetLabel}
-          onChoose={onChoose}
-        />
-      </Field>
-      <Field className="min-w-0">
-        <FieldLabel>Metric</FieldLabel>
-        <Select onValueChange={metricChange} value={filters.metric ?? ""}>
-          <SelectTrigger aria-label="Metric" className="w-full">
-            <SelectValue>
-              {filters.metric
-                ? (deviceMetrics[filters.metric as keyof typeof deviceMetrics]
-                    ?.name ?? "Invalid metric")
-                : "All metrics"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All metrics</SelectItem>
-            {Object.entries(deviceMetrics).map(([value, metric]) => (
-              <SelectItem key={value} value={value}>
-                {metric.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field className="min-w-0">
-        <FieldLabel htmlFor="estate-readings-from">From</FieldLabel>
-        <Input
-          aria-describedby={error ? "reading-filter-error" : undefined}
-          id="estate-readings-from"
-          onChange={fromChange}
-          type="datetime-local"
-          value={filters.from ?? ""}
-        />
-      </Field>
-      <Field className="min-w-0">
-        <FieldLabel htmlFor="estate-readings-to">To (exclusive)</FieldLabel>
-        <Input
-          aria-describedby={error ? "reading-filter-error" : undefined}
-          id="estate-readings-to"
-          onChange={toChange}
-          type="datetime-local"
-          value={filters.to ?? ""}
-        />
-      </Field>
-      <div className="flex items-center gap-2">
-        <Checkbox
-          checked={!!filters.suspect}
-          id="estate-readings-suspect"
-          onCheckedChange={suspectChange}
-        />
-        <Label htmlFor="estate-readings-suspect">Suspect only</Label>
-      </div>
-      <Button onClick={clear} variant="outline">
-        Clear filters
-      </Button>
-    </section>
+    <Card className="min-w-0">
+      <CardContent>
+        <section
+          aria-label="Reading filters"
+          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        >
+          <Field className="min-w-0">
+            <FieldLabel>Asset</FieldLabel>
+            <ReadingAssetPicker
+              estateId={estateId}
+              label={assetLabel}
+              onChoose={onChoose}
+            />
+          </Field>
+          <Field className="min-w-0">
+            <FieldLabel>Metric</FieldLabel>
+            <Select onValueChange={metricChange} value={filters.metric ?? ""}>
+              <SelectTrigger aria-label="Metric" className="w-full">
+                <SelectValue>
+                  {filters.metric
+                    ? (deviceMetrics[
+                        filters.metric as keyof typeof deviceMetrics
+                      ]?.name ?? "Invalid metric")
+                    : "All metrics"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All metrics</SelectItem>
+                {Object.entries(deviceMetrics).map(([value, metric]) => (
+                  <SelectItem key={value} value={value}>
+                    {metric.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field className="min-w-0">
+            <FieldLabel htmlFor="estate-readings-from">From</FieldLabel>
+            <Input
+              aria-describedby={error ? "reading-filter-error" : undefined}
+              id="estate-readings-from"
+              onChange={fromChange}
+              type="datetime-local"
+              value={filters.from ?? ""}
+            />
+          </Field>
+          <Field className="min-w-0">
+            <FieldLabel htmlFor="estate-readings-to">To (exclusive)</FieldLabel>
+            <Input
+              aria-describedby={error ? "reading-filter-error" : undefined}
+              id="estate-readings-to"
+              onChange={toChange}
+              type="datetime-local"
+              value={filters.to ?? ""}
+            />
+          </Field>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={!!filters.suspect}
+              id="estate-readings-suspect"
+              onCheckedChange={suspectChange}
+            />
+            <Label htmlFor="estate-readings-suspect">Suspect only</Label>
+          </div>
+          <Button onClick={clear} variant="outline">
+            Clear filters
+          </Button>
+        </section>
+      </CardContent>
+    </Card>
   );
 }

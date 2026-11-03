@@ -89,111 +89,114 @@ export function AssetMaintenanceSection({
   );
 
   return (
-    <section
-      aria-labelledby="maintenance-heading"
-      className="section-surface mt-6"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="text-xl font-semibold" id="maintenance-heading">
-          Maintenance
-        </h2>
-        {canRecord ? (
-          <Button onClick={open} variant="outline">
-            Record repair
-          </Button>
-        ) : null}
-      </div>
-      {events.isPending || completions.isPending ? (
-        <p aria-live="polite" className="mt-4">
-          Loading maintenance…
-        </p>
-      ) : null}
-      {events.error ? (
-        <Alert className="mt-4" variant="destructive">
-          <AlertDescription>{events.error.message}</AlertDescription>
-        </Alert>
-      ) : null}
-      {completions.error ? (
-        <Alert className="mt-4" variant="destructive">
-          <AlertDescription>
-            {completions.error.message}
-            <Button onClick={retryCompletions} variant="outline">
-              Retry completed work
-            </Button>
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      {events.data && completions.data && entries.length === 0 ? (
-        <Empty className="mt-4 border border-dashed" role="status">
-          No maintenance recorded yet.
-        </Empty>
-      ) : null}
-      {entries.length ? (
-        <ul className="mt-4 grid gap-3">
-          {entries.map((entry) => (
-            <li key={`${entry.kind}-${entry.id}`}>
-              <Card size="sm">
-                <CardContent>
-                  {entry.kind === "manual" ? (
-                    <>
-                      <p className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">Manual entry</Badge>
-                        <span className="font-medium">
-                          {assetEventTypeLabel[entry.event.type]}
-                        </span>
-                        <span>· {entry.event.occurredOn}</span>
-                        {entry.event.countsTowardForecast ? null : (
-                          <Badge variant="secondary">Previous unit</Badge>
-                        )}
-                      </p>
-                      <p className="mt-2 whitespace-pre-wrap">
-                        {entry.event.notes}
-                      </p>
-                      <ManualDetails event={entry.event} />
-                      <p className="text-muted-foreground mt-2">
-                        Recorded by{" "}
-                        {entry.event.recordedByName ?? "Unknown user"} on{" "}
-                        {new Date(entry.event.createdAt).toLocaleString()}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="mb-2 flex flex-wrap items-center gap-2">
-                        <Badge variant="outline">Work order</Badge>
-                        {access.canView ? (
-                          <Link
-                            className="text-primary underline underline-offset-4"
-                            params={{
-                              estateId,
-                              workOrderId: entry.work.workOrderId,
-                            }}
-                            to="/estates/$estateId/work-orders/$workOrderId"
-                          >
-                            {entry.work.reference}
-                          </Link>
-                        ) : (
-                          entry.work.reference
-                        )}
-                      </p>
-                      <p className="mb-4">
-                        Work location: {entry.work.locationPath}
-                      </p>
-                      <CompletionOutcome completion={entry.work.completion} />
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {recording && canRecord ? (
-        <RecordEventDialog
-          defaultType="BREAKDOWN_REPAIR"
-          onCancel={cancel}
-          onSave={save}
-        />
-      ) : null}
-    </section>
+    <Card className="mt-6">
+      <CardContent>
+        <section aria-labelledby="maintenance-heading">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold" id="maintenance-heading">
+              Maintenance
+            </h2>
+            {canRecord ? (
+              <Button onClick={open} variant="outline">
+                Record repair
+              </Button>
+            ) : null}
+          </div>
+          {events.isPending || completions.isPending ? (
+            <p aria-live="polite" className="mt-4">
+              Loading maintenance…
+            </p>
+          ) : null}
+          {events.error ? (
+            <Alert className="mt-4" variant="destructive">
+              <AlertDescription>{events.error.message}</AlertDescription>
+            </Alert>
+          ) : null}
+          {completions.error ? (
+            <Alert className="mt-4" variant="destructive">
+              <AlertDescription>
+                {completions.error.message}
+                <Button onClick={retryCompletions} variant="outline">
+                  Retry completed work
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {events.data && completions.data && entries.length === 0 ? (
+            <Empty className="mt-4 border border-dashed" role="status">
+              No maintenance recorded yet.
+            </Empty>
+          ) : null}
+          {entries.length ? (
+            <ul className="mt-4 grid gap-3">
+              {entries.map((entry) => (
+                <li key={`${entry.kind}-${entry.id}`}>
+                  <Card size="sm">
+                    <CardContent>
+                      {entry.kind === "manual" ? (
+                        <>
+                          <p className="flex flex-wrap items-center gap-2">
+                            <Badge variant="outline">Manual entry</Badge>
+                            <span className="font-medium">
+                              {assetEventTypeLabel[entry.event.type]}
+                            </span>
+                            <span>· {entry.event.occurredOn}</span>
+                            {entry.event.countsTowardForecast ? null : (
+                              <Badge variant="secondary">Previous unit</Badge>
+                            )}
+                          </p>
+                          <p className="mt-2 whitespace-pre-wrap">
+                            {entry.event.notes}
+                          </p>
+                          <ManualDetails event={entry.event} />
+                          <p className="text-muted-foreground mt-2">
+                            Recorded by{" "}
+                            {entry.event.recordedByName ?? "Unknown user"} on{" "}
+                            {new Date(entry.event.createdAt).toLocaleString()}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mb-2 flex flex-wrap items-center gap-2">
+                            <Badge variant="outline">Work order</Badge>
+                            {access.canView ? (
+                              <Link
+                                className="text-primary underline underline-offset-4"
+                                params={{
+                                  estateId,
+                                  workOrderId: entry.work.workOrderId,
+                                }}
+                                to="/estates/$estateId/work-orders/$workOrderId"
+                              >
+                                {entry.work.reference}
+                              </Link>
+                            ) : (
+                              entry.work.reference
+                            )}
+                          </p>
+                          <p className="mb-4">
+                            Work location: {entry.work.locationPath}
+                          </p>
+                          <CompletionOutcome
+                            completion={entry.work.completion}
+                          />
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {recording && canRecord ? (
+            <RecordEventDialog
+              defaultType="BREAKDOWN_REPAIR"
+              onCancel={cancel}
+              onSave={save}
+            />
+          ) : null}
+        </section>
+      </CardContent>
+    </Card>
   );
 }

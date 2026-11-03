@@ -1,3 +1,4 @@
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Label } from "@proj/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -105,11 +106,11 @@ export function MemberEstates({
 
   const error = access.error ?? change.error;
 
-  return (
+  const section = (
     <section
       aria-label={showTitle ? undefined : `Estates for ${name}`}
       aria-labelledby={showTitle ? "member-estates-heading" : undefined}
-      className={showTitle ? "section-surface" : "grid gap-3"}
+      className={showTitle ? undefined : "grid gap-3"}
     >
       {showTitle ? (
         <h2 className="font-semibold" id="member-estates-heading">
@@ -163,5 +164,13 @@ export function MemberEstates({
         ))}
       </ul>
     </section>
+  );
+  if (!showTitle) {
+    return section;
+  }
+  return (
+    <Card>
+      <CardContent>{section}</CardContent>
+    </Card>
   );
 }

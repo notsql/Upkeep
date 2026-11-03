@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Combobox,
   ComboboxContent,
@@ -307,146 +308,152 @@ export function AssetForm({
   const submitLabel = initialValues ? "Save changes" : "Register asset";
   const buttonLabel = pending ? "Saving…" : submitLabel;
   return (
-    <form
-      className="form-surface mt-6 grid gap-5"
-      noValidate
-      onSubmit={handleSubmit}
-    >
-      <FieldDescription>
-        All fields are required unless marked optional.
-      </FieldDescription>
-      <FieldSet disabled={pending}>
-        <FieldLegend className="sr-only">Asset details</FieldLegend>
-        {initialValues ? (
-          <Field>
-            <FieldLabel htmlFor={`${id}-reference`}>Reference</FieldLabel>
-            <Input
-              id={`${id}-reference`}
-              readOnly
-              value={initialValues.reference}
+    <Card className="mt-6">
+      <CardContent>
+        <form className="grid gap-5" noValidate onSubmit={handleSubmit}>
+          <FieldDescription>
+            All fields are required unless marked optional.
+          </FieldDescription>
+          <FieldSet disabled={pending}>
+            <FieldLegend className="sr-only">Asset details</FieldLegend>
+            {initialValues ? (
+              <Field>
+                <FieldLabel htmlFor={`${id}-reference`}>Reference</FieldLabel>
+                <Input
+                  id={`${id}-reference`}
+                  readOnly
+                  value={initialValues.reference}
+                />
+              </Field>
+            ) : null}
+            <Field>
+              <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
+              <Input
+                {...errorProps("name")}
+                id={`${id}-name`}
+                maxLength={200}
+                name="name"
+                onChange={handleChange}
+                required
+                value={values.name}
+              />
+              {errorText("name")}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
+              <Select
+                items={categoryItems}
+                onValueChange={handleCategoryChange}
+                required
+                value={values.category}
+              >
+                <SelectTrigger
+                  {...errorProps("category")}
+                  className="w-full"
+                  id={`${id}-category`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoryItems.slice(1).map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errorText("category")}
+              {categories.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    {categories.error.message}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-location`}>Location</FieldLabel>
+              <Select
+                items={locationItems}
+                onValueChange={handleLocationChange}
+                required
+                value={values.locationId}
+              >
+                <SelectTrigger
+                  {...errorProps("locationId")}
+                  className="w-full"
+                  id={`${id}-location`}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {locationItems.slice(1).map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errorText("locationId")}
+              {locations.error ? (
+                <Alert variant="destructive">
+                  <AlertDescription>{locations.error.message}</AlertDescription>
+                </Alert>
+              ) : null}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={`${id}-installed-on`}>
+                Installation date (optional)
+              </FieldLabel>
+              <Input
+                id={`${id}-installed-on`}
+                name="installedOn"
+                onChange={handleChange}
+                type="date"
+                value={values.installedOn}
+              />
+            </Field>
+            <SuggestField
+              id={`${id}-manufacturer`}
+              label="Manufacturer (optional)"
+              name="manufacturer"
+              onChange={handleManufacturerChange}
+              suggestions={manufacturerNames}
+              value={values.manufacturer}
             />
-          </Field>
-        ) : null}
-        <Field>
-          <FieldLabel htmlFor={`${id}-name`}>Name</FieldLabel>
-          <Input
-            {...errorProps("name")}
-            id={`${id}-name`}
-            maxLength={200}
-            name="name"
-            onChange={handleChange}
-            required
-            value={values.name}
-          />
-          {errorText("name")}
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
-          <Select
-            items={categoryItems}
-            onValueChange={handleCategoryChange}
-            required
-            value={values.category}
-          >
-            <SelectTrigger
-              {...errorProps("category")}
-              className="w-full"
-              id={`${id}-category`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {categoryItems.slice(1).map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errorText("category")}
-          {categories.error ? (
+            <SuggestField
+              id={`${id}-model`}
+              label="Model (optional)"
+              name="model"
+              onChange={handleModelChange}
+              suggestions={modelNames}
+              value={values.model}
+            />
+            <Field>
+              <FieldLabel htmlFor={`${id}-serial-number`}>
+                Serial number (optional)
+              </FieldLabel>
+              <Input
+                id={`${id}-serial-number`}
+                maxLength={200}
+                name="serialNumber"
+                onChange={handleChange}
+                value={values.serialNumber}
+              />
+            </Field>
+          </FieldSet>
+          {error ? (
             <Alert variant="destructive">
-              <AlertDescription>{categories.error.message}</AlertDescription>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-location`}>Location</FieldLabel>
-          <Select
-            items={locationItems}
-            onValueChange={handleLocationChange}
-            required
-            value={values.locationId}
-          >
-            <SelectTrigger
-              {...errorProps("locationId")}
-              className="w-full"
-              id={`${id}-location`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {locationItems.slice(1).map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errorText("locationId")}
-          {locations.error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{locations.error.message}</AlertDescription>
-            </Alert>
-          ) : null}
-        </Field>
-        <Field>
-          <FieldLabel htmlFor={`${id}-installed-on`}>
-            Installation date (optional)
-          </FieldLabel>
-          <Input
-            id={`${id}-installed-on`}
-            name="installedOn"
-            onChange={handleChange}
-            type="date"
-            value={values.installedOn}
+          <FormActions
+            label={buttonLabel}
+            onCancel={onCancel}
+            pending={pending}
           />
-        </Field>
-        <SuggestField
-          id={`${id}-manufacturer`}
-          label="Manufacturer (optional)"
-          name="manufacturer"
-          onChange={handleManufacturerChange}
-          suggestions={manufacturerNames}
-          value={values.manufacturer}
-        />
-        <SuggestField
-          id={`${id}-model`}
-          label="Model (optional)"
-          name="model"
-          onChange={handleModelChange}
-          suggestions={modelNames}
-          value={values.model}
-        />
-        <Field>
-          <FieldLabel htmlFor={`${id}-serial-number`}>
-            Serial number (optional)
-          </FieldLabel>
-          <Input
-            id={`${id}-serial-number`}
-            maxLength={200}
-            name="serialNumber"
-            onChange={handleChange}
-            value={values.serialNumber}
-          />
-        </Field>
-      </FieldSet>
-      {error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      ) : null}
-      <FormActions label={buttonLabel} onCancel={onCancel} pending={pending} />
-    </form>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

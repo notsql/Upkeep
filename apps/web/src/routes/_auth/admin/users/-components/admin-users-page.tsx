@@ -36,6 +36,7 @@ import {
   useState,
 } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { api } from "@/lib/api";
 import { useMobile } from "@/lib/use-mobile";
 import { MemberEstates } from "@/routes/_auth/admin/-components/member-estates";
@@ -377,7 +378,7 @@ export function AdminUsersPage() {
     !organizationRoles.isSuccess || organizationRoles.data.length === 0;
 
   return (
-    <main className="page-layout">
+    <PageLayout>
       <div className="mx-auto max-w-6xl space-y-6">
         <PageHeader
           actions={
@@ -631,6 +632,6 @@ export function AdminUsersPage() {
           be managed in WorkOS.
         </p>
       </div>
-    </main>
+    </PageLayout>
   );
 }

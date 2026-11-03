@@ -82,11 +82,11 @@ hooks, invalidation, and permission behavior.
 
 ## Dashboard presentation
 
-All estate screens use `page-layout` and shared `PageHeader`; editors use a narrow
-form surface and `FormActions`. Cancel returns to Estates on creation and to the
+All estate screens use `PageLayout` and shared `PageHeader`; editors use a narrow
+form `Card` and `FormActions`. Cancel returns to Estates on creation and to the
 estate on editing; Save/Cancel disable while saving. Optional fields are labelled
-and a form note explains required fields. Details use a responsive `detail-grid`,
-LifecycleStatusBadge (green Active / red Inactive) and separate Locations/Assets
+and a form note explains required fields. Details use a responsive `DetailCard`,
+LifecycleStatusBadge (Badge `default` Active / `destructive` Inactive) and separate Locations/Assets
 surfaces. The same status component is used on estate cards. Council members shares
 the wrapping shadcn FieldSet named Estate actions in PageHeader with Edit estate and Deactivate estate when
 the caller is permitted; delegates retain Council access without owner actions. Estate-list errors have

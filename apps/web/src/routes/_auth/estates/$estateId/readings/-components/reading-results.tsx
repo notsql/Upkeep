@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import { useCallback } from "react";
 import type { ReadingSearch } from "@/lib/reading-filters";
 import type { useEstateReadings } from "@/lib/readings";
@@ -63,19 +64,25 @@ export function ReadingResults({
     return assetsPending ? (
       <p role="status">Loading assets…</p>
     ) : (
-      <div className="section-surface" role="status">
-        {emptyMessage(filters, assetTotal)}
-      </div>
+      <Card>
+        <CardContent>
+          <div role="status">{emptyMessage(filters, assetTotal)}</div>
+        </CardContent>
+      </Card>
     );
   }
   if (data.items.length === 0) {
     return (
-      <div className="section-surface space-y-3" role="status">
-        <p>This page is beyond the available readings.</p>
-        <Button onClick={first} variant="outline">
-          Go to first page
-        </Button>
-      </div>
+      <Card>
+        <CardContent>
+          <div className="space-y-3" role="status">
+            <p>This page is beyond the available readings.</p>
+            <Button onClick={first} variant="outline">
+              Go to first page
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
   return (

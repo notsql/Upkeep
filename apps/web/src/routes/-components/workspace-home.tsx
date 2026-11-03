@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { usePendingCouncilInvitations } from "@/lib/council-invitations";
 import { type DashboardSummary, useDashboardSummary } from "@/lib/dashboard";
 import { AssetConditionDistribution } from "@/routes/-components/asset-condition-distribution";
@@ -134,118 +135,124 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
           : "Asset and member summaries are available for active estates you own."}
       </p>
       {summary.accessibleEstateCount === 0 ? (
-        <p className="section-surface text-muted-foreground">
-          No estates yet. Browse Estates to create an estate or review your
-          invitations.
-        </p>
+        <Card>
+          <CardContent>
+            <p className="text-muted-foreground">
+              No estates yet. Browse Estates to create an estate or review your
+              invitations.
+            </p>
+          </CardContent>
+        </Card>
       ) : null}
       {hasAssetScope ? (
         <>
-          <section
-            aria-labelledby="asset-conditions"
-            className="section-surface"
-          >
-            <h2 className="section-heading" id="asset-conditions">
-              Asset conditions
-            </h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Latest assessment for each active asset. Not assessed does not
-              mean Good.
-            </p>
-            <AssetConditionDistribution counts={conditions} />
-          </section>
-          <section
-            aria-labelledby="attention-estates"
-            className="section-surface"
-          >
-            <h2
-              className="section-heading focus-visible:ring-ring scroll-mt-24 rounded outline-none focus-visible:ring-2"
-              id="attention-estates"
-              tabIndex={-1}
-            >
-              Estates needing attention
-            </h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Ordered by active assets needing attention or marked faulty.
-            </p>
-            {summary.affectedEstateCount === 0 ? (
-              <p className="mt-4 text-sm">
-                No assessed active assets need attention.
-                {conditions.unassessed > 0
-                  ? " Some assets still need an assessment."
-                  : ""}
-              </p>
-            ) : null}
-            {summary.affectedEstateCount >
-            summary.estatesNeedingAttention.length ? (
-              <p className="text-muted-foreground mt-3 text-sm">
-                Showing {summary.estatesNeedingAttention.length} of{" "}
-                {summary.affectedEstateCount} estates needing attention.
-              </p>
-            ) : null}
-            <ul className="mt-3 grid gap-3">
-              {summary.estatesNeedingAttention.map((estate) => (
-                <li className="rounded-xl border p-4" key={estate.estateId}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold break-words">
-                        <Link
-                          aria-label={`View active assets in ${estate.estateName}`}
-                          className="focus-visible:outline-ring rounded underline-offset-4 hover:underline focus-visible:outline-2"
-                          params={{ estateId: estate.estateId }}
-                          search={{ status: "ACTIVE" }}
-                          to="/estates/$estateId/assets"
-                        >
-                          {estate.estateName}
-                        </Link>
-                      </h3>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        {estate.estateCode} · {estate.totalActiveAssets} active
-                        assets
-                      </p>
-                    </div>
-                    <p className="text-sm">
-                      {estate.needsAttentionCount} needs attention ·{" "}
-                      {estate.faultyCount} faulty
-                    </p>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {estate.faultyCount > 0 ? (
-                      <Link
-                        aria-label={`Review faulty assets in ${estate.estateName}`}
-                        className={buttonVariants({
-                          variant: "outline",
-                          size: "sm",
-                        })}
-                        params={{ estateId: estate.estateId }}
-                        search={{ condition: "FAULTY", status: "ACTIVE" }}
-                        to="/estates/$estateId/assets"
-                      >
-                        Review faulty
-                      </Link>
-                    ) : null}
-                    {estate.needsAttentionCount > 0 ? (
-                      <Link
-                        aria-label={`Review needs-attention assets in ${estate.estateName}`}
-                        className={buttonVariants({
-                          variant: "outline",
-                          size: "sm",
-                        })}
-                        params={{ estateId: estate.estateId }}
-                        search={{
-                          condition: "NEEDS_ATTENTION",
-                          status: "ACTIVE",
-                        }}
-                        to="/estates/$estateId/assets"
-                      >
-                        Review needs attention
-                      </Link>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <Card>
+            <CardContent>
+              <section aria-labelledby="asset-conditions">
+                <h2 className="text-xl font-semibold" id="asset-conditions">
+                  Asset conditions
+                </h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Latest assessment for each active asset. Not assessed does not
+                  mean Good.
+                </p>
+                <AssetConditionDistribution counts={conditions} />
+              </section>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent>
+              <section aria-labelledby="attention-estates">
+                <h2
+                  className="focus-visible:ring-ring scroll-mt-24 rounded text-xl font-semibold outline-none focus-visible:ring-2"
+                  id="attention-estates"
+                  tabIndex={-1}
+                >
+                  Estates needing attention
+                </h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Ordered by active assets needing attention or marked faulty.
+                </p>
+                {summary.affectedEstateCount === 0 ? (
+                  <p className="mt-4 text-sm">
+                    No assessed active assets need attention.
+                    {conditions.unassessed > 0
+                      ? " Some assets still need an assessment."
+                      : ""}
+                  </p>
+                ) : null}
+                {summary.affectedEstateCount >
+                summary.estatesNeedingAttention.length ? (
+                  <p className="text-muted-foreground mt-3 text-sm">
+                    Showing {summary.estatesNeedingAttention.length} of{" "}
+                    {summary.affectedEstateCount} estates needing attention.
+                  </p>
+                ) : null}
+                <ul className="mt-3 grid gap-3">
+                  {summary.estatesNeedingAttention.map((estate) => (
+                    <li className="rounded-xl border p-4" key={estate.estateId}>
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h3 className="font-semibold break-words">
+                            <Link
+                              aria-label={`View active assets in ${estate.estateName}`}
+                              className="focus-visible:outline-ring rounded underline-offset-4 hover:underline focus-visible:outline-2"
+                              params={{ estateId: estate.estateId }}
+                              search={{ status: "ACTIVE" }}
+                              to="/estates/$estateId/assets"
+                            >
+                              {estate.estateName}
+                            </Link>
+                          </h3>
+                          <p className="text-muted-foreground mt-1 text-sm">
+                            {estate.estateCode} · {estate.totalActiveAssets}{" "}
+                            active assets
+                          </p>
+                        </div>
+                        <p className="text-sm">
+                          {estate.needsAttentionCount} needs attention ·{" "}
+                          {estate.faultyCount} faulty
+                        </p>
+                      </div>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {estate.faultyCount > 0 ? (
+                          <Link
+                            aria-label={`Review faulty assets in ${estate.estateName}`}
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            })}
+                            params={{ estateId: estate.estateId }}
+                            search={{ condition: "FAULTY", status: "ACTIVE" }}
+                            to="/estates/$estateId/assets"
+                          >
+                            Review faulty
+                          </Link>
+                        ) : null}
+                        {estate.needsAttentionCount > 0 ? (
+                          <Link
+                            aria-label={`Review needs-attention assets in ${estate.estateName}`}
+                            className={buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                            })}
+                            params={{ estateId: estate.estateId }}
+                            search={{
+                              condition: "NEEDS_ATTENTION",
+                              status: "ACTIVE",
+                            }}
+                            to="/estates/$estateId/assets"
+                          >
+                            Review needs attention
+                          </Link>
+                        ) : null}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </CardContent>
+          </Card>
         </>
       ) : null}
     </>
@@ -261,7 +268,7 @@ export function WorkspaceHome() {
     [invitations.refetch]
   );
   return (
-    <main className="page-layout space-y-5">
+    <PageLayout className="space-y-5">
       <PageHeader
         description="See your portfolio and prioritise assets that need attention."
         title="Portfolio overview"
@@ -280,46 +287,50 @@ export function WorkspaceHome() {
         </Alert>
       ) : null}
       {summary.data ? <PortfolioSummary summary={summary.data} /> : null}
-      <section aria-labelledby="home-invitations" className="section-surface">
-        <h2 className="section-heading" id="home-invitations">
-          Pending invitations
-        </h2>
-        {invitations.isPending ? (
-          <p className="mt-3" role="status">
-            Loading invitations…
-          </p>
-        ) : null}
-        {invitations.error ? (
-          <Alert className="mt-3" variant="destructive">
-            <AlertDescription>
-              {invitations.error.message}
-              <Button onClick={retryInvitations} variant="outline">
-                Retry invitations
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {invitations.data?.length === 0 ? (
-          <p className="text-muted-foreground mt-3 text-sm">
-            You have no pending invitations.
-          </p>
-        ) : null}
-        {invitations.data?.length ? (
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm">
-              {invitations.data.length}{" "}
-              {invitations.data.length === 1 ? "invitation" : "invitations"}{" "}
-              waiting.
-            </p>
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              to="/estates"
-            >
-              Review invitations
-            </Link>
-          </div>
-        ) : null}
-      </section>
-    </main>
+      <Card>
+        <CardContent>
+          <section aria-labelledby="home-invitations">
+            <h2 className="text-xl font-semibold" id="home-invitations">
+              Pending invitations
+            </h2>
+            {invitations.isPending ? (
+              <p className="mt-3" role="status">
+                Loading invitations…
+              </p>
+            ) : null}
+            {invitations.error ? (
+              <Alert className="mt-3" variant="destructive">
+                <AlertDescription>
+                  {invitations.error.message}
+                  <Button onClick={retryInvitations} variant="outline">
+                    Retry invitations
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {invitations.data?.length === 0 ? (
+              <p className="text-muted-foreground mt-3 text-sm">
+                You have no pending invitations.
+              </p>
+            ) : null}
+            {invitations.data?.length ? (
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm">
+                  {invitations.data.length}{" "}
+                  {invitations.data.length === 1 ? "invitation" : "invitations"}{" "}
+                  waiting.
+                </p>
+                <Link
+                  className={buttonVariants({ variant: "outline" })}
+                  to="/estates"
+                >
+                  Review invitations
+                </Link>
+              </div>
+            ) : null}
+          </section>
+        </CardContent>
+      </Card>
+    </PageLayout>
   );
 }

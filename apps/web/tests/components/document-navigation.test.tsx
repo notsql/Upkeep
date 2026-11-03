@@ -1,3 +1,4 @@
+import { SidebarProvider } from "@proj/ui/components/sidebar";
 import {
   createMemoryHistory,
   createRootRoute,
@@ -23,11 +24,11 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 function NavigationLayout() {
   return (
-    <>
+    <SidebarProvider>
       <AppNavigation />
       <EstateNavigation />
       <Outlet />
-    </>
+    </SidebarProvider>
   );
 }
 
@@ -106,7 +107,7 @@ it.each(["MANAGER", "COUNCIL", "CREW", "CUSTOM"])(
     await openNavigation();
 
     const desktop = within(
-      await screen.findByRole("navigation", { name: "Desktop navigation" })
+      await screen.findByRole("navigation", { name: "Workspace navigation" })
     );
     const link = await desktop.findByRole("link", { name: "Documents" });
     expect(link.getAttribute("href")).toBe("/estates/maple/documents");
@@ -135,7 +136,7 @@ it("hides document navigation without document read access", async () => {
   // This link appears only after the denied access response has rendered.
   // Checking absence before then passes even while access is still loading.
   const desktop = within(
-    await screen.findByRole("navigation", { name: "Desktop navigation" })
+    await screen.findByRole("navigation", { name: "Workspace navigation" })
   );
   await desktop.findByRole("link", { name: "Sign out" });
 

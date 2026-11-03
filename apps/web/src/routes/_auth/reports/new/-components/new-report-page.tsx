@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { PageLayout } from "@/components/page-layout";
 import { useResidentContext } from "@/lib/reports";
 import { NewReportForm } from "@/routes/_auth/reports/new/-components/new-report-form";
 
@@ -14,7 +15,7 @@ export function NewReportPage({
     !context.data.estates.some((estate) => estate.id === requestedEstateId);
 
   return (
-    <main className="page-layout">
+    <PageLayout>
       {context.data ? (
         <h1 className="mb-4 text-2xl font-semibold">Report a fault</h1>
       ) : null}
@@ -48,6 +49,6 @@ export function NewReportPage({
           initialEstateId={requestedEstateId}
         />
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

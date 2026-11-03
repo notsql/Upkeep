@@ -1,11 +1,16 @@
 import type { components } from "@proj/api/schema";
-import { Button } from "@proj/ui/components/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@proj/ui/components/dropdown-menu";
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@proj/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
@@ -17,7 +22,6 @@ import {
   LayoutDashboard,
   LogOut,
   type LucideIcon,
-  MoreHorizontal,
   ShieldCheck,
   UserRound,
   Users,
@@ -166,10 +170,8 @@ function useNavigation() {
   };
   if (!access.data || access.isError) {
     return {
-      desktop: [],
+      items: [],
       local: [],
-      primary: [],
-      overflow: [],
       estateId: undefined,
       estateName: undefined,
     };
@@ -188,10 +190,8 @@ function useNavigation() {
     };
     const destinations = [estates, ...resident.global, invitations, signOut];
     return {
-      desktop: destinations,
+      items: destinations,
       local,
-      primary: destinations,
-      overflow: [],
       estateId,
       estateName,
     };
@@ -202,12 +202,9 @@ function useNavigation() {
     icon: Home,
     active: pathname === "/",
   };
-  const desktop = [home, estates, invitations];
-  const primary = [
+  const items: NavigationItem[] = [
     home,
-    { ...estates, active: pathname.startsWith("/estates") },
-  ];
-  const overflow: NavigationItem[] = [
+    estates,
     invitations,
     {
       label: "Settings",
@@ -223,12 +220,10 @@ function useNavigation() {
       icon: ShieldCheck,
       active: pathname.startsWith("/admin"),
     };
-    desktop.push(admin);
-    overflow.push(admin);
+    items.push(admin);
   }
   const scoped = scopedDestinations(access.data.estates, estateId);
-  desktop.push(...scoped);
-  overflow.push(...scoped);
+  items.push(...scoped);
   if (
     !permission?.canViewWorkOrders &&
     access.data.estates.some((item) => item.canViewWorkOrders)
@@ -240,8 +235,7 @@ function useNavigation() {
       icon: Wrench,
       active: false,
     };
-    desktop.push(entry);
-    overflow.push(entry);
+    items.push(entry);
   }
   if (
     !permission?.canViewDocuments &&
@@ -254,21 +248,16 @@ function useNavigation() {
       icon: Files,
       active: false,
     };
-    desktop.push(entry);
-    overflow.push(entry);
+    items.push(entry);
   }
   const responderEntry = reportDestination(access.data.estates, permission);
   if (responderEntry) {
-    desktop.push(responderEntry);
-    overflow.push(responderEntry);
+    items.push(responderEntry);
   }
-  desktop.push(...resident.global);
-  overflow.push(...resident.global);
+  items.push(...resident.global);
   return {
-    desktop,
+    items,
     local,
-    primary,
-    overflow,
     estateId,
     estateName,
   };
@@ -382,122 +371,57 @@ function estateDestinations(
 }
 function DestinationLink({
   item,
-  mobile = false,
   onChooseEstate,
 }: {
   item: NavigationItem;
-  mobile?: boolean;
   onChooseEstate?: (feature: EstateFeature) => void;
 }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const closeMobile = useCallback(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [isMobile, setOpenMobile]);
   const selectEstate = useCallback(() => {
+    closeMobile();
     if (item.chooseEstate) {
       onChooseEstate?.(item.chooseEstate);
     }
-  }, [item.chooseEstate, onChooseEstate]);
+  }, [closeMobile, item.chooseEstate, onChooseEstate]);
   const Icon = item.icon;
-  let linkClass = "sidebar-link";
-  if (mobile) {
-    linkClass = "bottom-nav-link";
-  }
   if (item.chooseEstate) {
     return (
-      <Button
-        aria-haspopup="dialog"
-        className={`${linkClass} h-auto w-full justify-start gap-3 rounded-xl border-0 px-3 py-3 text-left`}
-        onClick={selectEstate}
-        type="button"
-        variant="ghost"
-      >
-        <Icon aria-hidden="true" className="size-5 shrink-0" />
-        <span>{item.label}</span>
-      </Button>
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          aria-haspopup="dialog"
+          onClick={selectEstate}
+          type="button"
+        >
+          <Icon aria-hidden="true" />
+          <span>{item.label}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     );
   }
   return (
-    <Link
-      activeOptions={{ exact: true, includeSearch: false }}
-      aria-current={item.active ? "page" : undefined}
-      className={linkClass}
-      params={item.estateId ? { estateId: item.estateId } : undefined}
-      search={item.search}
-      to={item.to}
-    >
-      <Icon aria-hidden="true" className="size-5 shrink-0" />
-      <span>{item.label}</span>
-    </Link>
-  );
-}
-function OverflowNavigation({
-  items,
-  onChooseEstate,
-}: {
-  items: NavigationItem[];
-  onChooseEstate: (feature: EstateFeature) => void;
-}) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={item.active}
         render={
-          <Button
-            aria-label="More navigation"
-            className="bottom-nav-link h-auto rounded-none"
-            variant="ghost"
+          <Link
+            activeOptions={{ exact: true, includeSearch: false }}
+            aria-current={item.active ? "page" : undefined}
+            onClick={closeMobile}
+            params={item.estateId ? { estateId: item.estateId } : undefined}
+            search={item.search}
+            to={item.to}
           />
         }
       >
-        <MoreHorizontal aria-hidden="true" className="size-5" />
-        <span>More</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="min-w-48 rounded-xl p-2"
-        side="top"
-        sideOffset={12}
-      >
-        {items.map((item) => (
-          <OverflowDestination
-            item={item}
-            key={item.label}
-            onChooseEstate={onChooseEstate}
-          />
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function OverflowDestination({
-  item,
-  onChooseEstate,
-}: {
-  item: NavigationItem;
-  onChooseEstate: (feature: EstateFeature) => void;
-}) {
-  const choose = useCallback(() => {
-    if (item.chooseEstate) {
-      onChooseEstate(item.chooseEstate);
-    }
-  }, [item.chooseEstate, onChooseEstate]);
-  if (item.chooseEstate) {
-    return <DropdownMenuItem onClick={choose}>{item.label}</DropdownMenuItem>;
-  }
-  return (
-    <DropdownMenuItem
-      render={
-        <Link
-          activeOptions={{
-            exact: true,
-            includeSearch: false,
-          }}
-          aria-current={item.active ? "page" : undefined}
-          params={item.estateId ? { estateId: item.estateId } : undefined}
-          search={item.search}
-          to={item.to}
-        />
-      }
-    >
-      {item.label}
-    </DropdownMenuItem>
+        <Icon aria-hidden="true" />
+        <span>{item.label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
 
@@ -590,53 +514,57 @@ export function AppNavigation() {
       setChooserFeature(undefined);
     }
   }, []);
-  const { desktop, local, primary, overflow, estateId, estateName } =
-    useNavigation();
+  const { items, local, estateId, estateName } = useNavigation();
   return (
     <>
-      <aside className="app-sidebar">
-        <Link className="brand-mark" to="/">
-          <Building2 aria-hidden="true" className="size-6" />
-          <span>UpKeep</span>
-        </Link>
-        <p className="sidebar-eyebrow">Workspace</p>
-        <nav
-          aria-label="Desktop navigation"
-          className="grid min-w-0 grid-cols-1 gap-1"
-        >
-          {desktop.map((item) => (
-            <DestinationLink
-              item={item}
-              key={item.label}
-              onChooseEstate={chooseEstate}
-            />
-          ))}
-          {estateId === undefined ? null : (
-            <>
-              <div className="mt-6 mb-2 min-w-0">
-                <NavigationEstateSwitcher
-                  estateId={estateId}
-                  estateName={estateName}
-                />
-              </div>
-              {local.map((item) => (
-                <DestinationLink item={item} key={item.label} />
-              ))}
-            </>
-          )}
-        </nav>
-        <p className="text-muted-foreground mt-auto px-3 pt-8 text-xs">
-          Your estates, organised.
-        </p>
-      </aside>
-      <nav aria-label="Mobile navigation" className="mobile-app-bar">
-        {primary.map((item) => (
-          <DestinationLink item={item} key={item.label} mobile />
-        ))}
-        {overflow.length ? (
-          <OverflowNavigation items={overflow} onChooseEstate={chooseEstate} />
-        ) : null}
-      </nav>
+      <Sidebar>
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton render={<Link to="/" />} size="lg">
+                <Building2 aria-hidden="true" />
+                <span className="text-base font-semibold">UpKeep</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <nav aria-label="Workspace navigation">
+            <SidebarGroup>
+              <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+              <SidebarMenu>
+                {items.map((item) => (
+                  <DestinationLink
+                    item={item}
+                    key={item.label}
+                    onChooseEstate={chooseEstate}
+                  />
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+            {estateId === undefined ? null : (
+              <SidebarGroup>
+                <div className="min-w-0 pb-2">
+                  <NavigationEstateSwitcher
+                    estateId={estateId}
+                    estateName={estateName}
+                  />
+                </div>
+                <SidebarMenu>
+                  {local.map((item) => (
+                    <DestinationLink item={item} key={item.label} />
+                  ))}
+                </SidebarMenu>
+              </SidebarGroup>
+            )}
+          </nav>
+        </SidebarContent>
+        <SidebarFooter>
+          <p className="text-muted-foreground px-2 text-xs">
+            Your estates, organised.
+          </p>
+        </SidebarFooter>
+      </Sidebar>
       <EstateFeatureChooser
         feature={chooserFeature ?? "work-orders"}
         onOpenChange={changeChooser}
@@ -653,7 +581,10 @@ export function EstateNavigation() {
     return null;
   }
   return (
-    <nav aria-label="Estate navigation" className="estate-navigation">
+    <nav
+      aria-label="Estate navigation"
+      className="mx-auto grid max-w-6xl gap-2 border-b px-4 py-2 sm:px-6 md:hidden"
+    >
       <NavigationEstateSwitcher estateId={estateId} estateName={estateName} />
       <EstateSectionMenu items={local} key={estateId} />
     </nav>

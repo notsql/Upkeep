@@ -2,7 +2,7 @@ import { fireEvent } from "@testing-library/react";
 import { ownerEstateAccess, workspaceAccess } from "@tests/fixtures/access";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/app-shell";
 
 const { state } = vi.hoisted(() => ({
@@ -87,11 +87,16 @@ vi.mock("@/lib/api", () => ({
 
 async function desktopNavigation() {
   const nav = within(
-    await screen.findByRole("navigation", { name: "Desktop navigation" })
+    await screen.findByRole("navigation", { name: "Workspace navigation" })
   );
   await nav.findByRole("link", { name: "Home" });
   return nav;
 }
+
+const desktopWidth = window.innerWidth;
+afterEach(() => {
+  window.innerWidth = desktopWidth;
+});
 
 beforeEach(() => {
   state.pathname = "/estates/e/assets";
@@ -107,27 +112,42 @@ beforeEach(() => {
 });
 
 describe("dashboard navigation", () => {
-  it("keeps mobile Home and Estates stable and puts Settings in More", async () => {
+  it("opens the sidebar as a sheet on mobile with Home, Estates and Settings", async () => {
     state.pathname = "/estates";
+    window.innerWidth = 375;
+    renderWithProviders(
+      <AppShell>
+        <main>Content</main>
+      </AppShell>
+    );
+    expect(
+      screen.queryByRole("navigation", { name: "Workspace navigation" })
+    ).toBeNull();
+    screen.getByRole("button", { name: "Open account menu" });
+    fireEvent.click(screen.getByRole("button", { name: "Toggle Sidebar" }));
+    const mobile = await desktopNavigation();
+    expect(mobile.queryByRole("link", { name: "Account" })).toBeNull();
+    mobile.getByRole("link", { name: "Estates", current: "page" });
+    mobile.getByRole("link", { name: "Settings" });
+  });
+  it("puts the skip link first in the tab order, pointing at the main content", async () => {
     renderWithProviders(
       <AppShell>
         <main>Content</main>
       </AppShell>
     );
     await desktopNavigation();
-    expect(
-      within(
-        screen.getByRole("navigation", { name: "Desktop navigation" })
-      ).queryByRole("link", { name: "Account" })
-    ).toBeNull();
-    const mobile = within(
-      screen.getByRole("navigation", { name: "Mobile navigation" })
+    const first = document.body.querySelector(
+      "a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex='-1'])"
     );
-    mobile.getByRole("link", { name: "Home" });
-    mobile.getByRole("link", { name: "Estates" });
-    fireEvent.click(mobile.getByRole("button", { name: "More navigation" }));
-    await screen.findByRole("menuitem", { name: "Settings" });
-    screen.getByRole("button", { name: "Open account menu" });
+    const skip = screen.getByRole<HTMLAnchorElement>("link", {
+      name: "Skip to content",
+    });
+    expect(first).toBe(skip);
+    expect(skip.getAttribute("href")).toBe("#main-content");
+    expect(document.querySelector("#main-content")?.textContent).toContain(
+      "Content"
+    );
   });
   it("marks the asset destination current and supplies estate-specific links", async () => {
     const originalMedia = window.matchMedia;
@@ -148,12 +168,11 @@ describe("dashboard navigation", () => {
       nav.getByRole<HTMLAnchorElement>("link", { name: "Estate members" }).href
     ).toContain("/estates/e/council");
     screen.getByRole("link", { name: "Skip to content" });
-    const mobile = within(
-      screen.getByRole("navigation", { name: "Mobile navigation" })
-    );
-    mobile.getByRole("link", { name: "Estates" });
-    mobile.getByRole("link", { name: "Home" });
-    expect(mobile.queryByRole("link", { name: "Assets" })).toBeNull();
+    nav.getByRole("link", { name: "Estates" });
+    nav.getByRole("link", { name: "Home" });
+    expect(
+      screen.queryByRole("navigation", { name: "Mobile navigation" })
+    ).toBeNull();
     const context = within(
       screen.getByRole("navigation", { name: "Estate navigation" })
     );
@@ -167,7 +186,6 @@ describe("dashboard navigation", () => {
       sections.getByRole("menuitem", { name: "Overview" }).getAttribute("href")
     ).toBe("/estates/e");
     sections.getByRole("menuitem", { name: "Assets", current: "page" });
-    mobile.getByRole("button", { name: "More navigation" });
   });
   it("hides estate features outside an estate and admin features from ordinary users", async () => {
     state.pathname = "/estates";
@@ -197,20 +215,15 @@ describe("dashboard navigation", () => {
     expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
     nav.getByRole("link", { name: "Estate members" });
   });
-  it("keeps Settings in mobile More without duplicating the Locations section", async () => {
+  it("keeps Settings in the sidebar without duplicating the Locations section", async () => {
     renderWithProviders(
       <AppShell>
         <main>Content</main>
       </AppShell>
     );
-    await desktopNavigation();
-    fireEvent.click(
-      within(
-        screen.getByRole("navigation", { name: "Mobile navigation" })
-      ).getByRole("button", { name: "More navigation" })
-    );
-    await screen.findByRole("menuitem", { name: "Settings" });
-    expect(screen.queryByRole("menuitem", { name: "Locations" })).toBeNull();
+    const nav = await desktopNavigation();
+    nav.getByRole("link", { name: "Settings" });
+    expect(nav.queryByRole("link", { name: "Locations" })).toBeNull();
   });
   it("keeps the public header for signed-out visitors", () => {
     state.user = null;
@@ -220,8 +233,9 @@ describe("dashboard navigation", () => {
       </AppShell>
     );
     expect(
-      screen.queryByRole("navigation", { name: "Desktop navigation" })
+      screen.queryByRole("navigation", { name: "Workspace navigation" })
     ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Toggle Sidebar" })).toBeNull();
     screen.getByRole("link", { name: "Sign in" });
   });
 });

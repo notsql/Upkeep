@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Table,
   TableBody,
@@ -130,84 +131,85 @@ function InspectionHistoryPage({
   const retry = useCallback(() => history.refetch(), [history.refetch]);
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className="section-surface mt-6 max-w-full min-w-0 space-y-4"
-    >
-      <h2 className="text-xl font-semibold" id={headingId}>
-        Inspection records
-      </h2>
-      {history.isPending ? (
-        <p role="status">Loading inspection records…</p>
-      ) : null}
-      {history.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            {history.error.message}
-            <Button
-              disabled={history.isFetching}
-              onClick={retry}
-              variant="outline"
+    <Card className="mt-6 max-w-full min-w-0">
+      <CardContent>
+        <section aria-labelledby={headingId} className="space-y-4">
+          <h2 className="text-xl font-semibold" id={headingId}>
+            Inspection records
+          </h2>
+          {history.isPending ? (
+            <p role="status">Loading inspection records…</p>
+          ) : null}
+          {history.isError ? (
+            <Alert role="alert" variant="destructive">
+              <AlertDescription>
+                {history.error.message}
+                <Button
+                  disabled={history.isFetching}
+                  onClick={retry}
+                  variant="outline"
+                >
+                  Retry inspections
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {history.data && history.data.items.length > 0 ? (
+            <Table aria-label="Inspection records">
+              <TableHeader>
+                <TableRow>
+                  <TableHead scope="col">Inspection date</TableHead>
+                  <TableHead scope="col">Outcome</TableHead>
+                  <TableHead scope="col">Follow-up / work order</TableHead>
+                  <TableHead scope="col">Inspector</TableHead>
+                  <TableHead scope="col">View record</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {history.data.items.map((record) => (
+                  <InspectionHistoryRow
+                    canCreateWorkOrder={workAccess.canCreate && active}
+                    canViewWorkOrder={workAccess.canView}
+                    key={record.id}
+                    record={record}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          ) : null}
+          {history.data?.items.length === 0 ? (
+            <p role="status">No inspection records yet</p>
+          ) : null}
+          {asset.data && !active ? (
+            <p role="note">
+              New work orders are unavailable while the estate, asset or
+              location is inactive or retired.
+            </p>
+          ) : null}
+          {history.data?.items.length || cursors.length > 1 ? (
+            <nav
+              aria-label="Inspection history pages"
+              className="flex flex-wrap gap-2"
             >
-              Retry inspections
-            </Button>
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      {history.data && history.data.items.length > 0 ? (
-        <Table aria-label="Inspection records">
-          <TableHeader>
-            <TableRow>
-              <TableHead scope="col">Inspection date</TableHead>
-              <TableHead scope="col">Outcome</TableHead>
-              <TableHead scope="col">Follow-up / work order</TableHead>
-              <TableHead scope="col">Inspector</TableHead>
-              <TableHead scope="col">View record</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {history.data.items.map((record) => (
-              <InspectionHistoryRow
-                canCreateWorkOrder={workAccess.canCreate && active}
-                canViewWorkOrder={workAccess.canView}
-                key={record.id}
-                record={record}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      ) : null}
-      {history.data?.items.length === 0 ? (
-        <p role="status">No inspection records yet</p>
-      ) : null}
-      {asset.data && !active ? (
-        <p role="note">
-          New work orders are unavailable while the estate, asset or location is
-          inactive or retired.
-        </p>
-      ) : null}
-      {history.data?.items.length || cursors.length > 1 ? (
-        <nav
-          aria-label="Inspection history pages"
-          className="flex flex-wrap gap-2"
-        >
-          <Button
-            disabled={cursors.length === 1 || history.isFetching}
-            onClick={previous}
-            variant="outline"
-          >
-            Previous
-          </Button>
-          <Button
-            disabled={!nextCursor || history.isFetching}
-            onClick={next}
-            variant="outline"
-          >
-            Next
-          </Button>
-        </nav>
-      ) : null}
-    </section>
+              <Button
+                disabled={cursors.length === 1 || history.isFetching}
+                onClick={previous}
+                variant="outline"
+              >
+                Previous
+              </Button>
+              <Button
+                disabled={!nextCursor || history.isFetching}
+                onClick={next}
+                variant="outline"
+              >
+                Next
+              </Button>
+            </nav>
+          ) : null}
+        </section>
+      </CardContent>
+    </Card>
   );
 }
 

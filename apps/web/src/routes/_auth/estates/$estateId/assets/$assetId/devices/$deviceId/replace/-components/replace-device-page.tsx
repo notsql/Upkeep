@@ -1,7 +1,9 @@
+import { Card, CardContent } from "@proj/ui/components/card";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useDevices, useReplaceDevice } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
@@ -65,7 +67,7 @@ export function ReplaceDevicePage({
   }
   const title = device ? `Replace ${device.identifier}` : "Replace device";
   return (
-    <main className="page-layout max-w-3xl">
+    <PageLayout className="max-w-3xl">
       <Link
         className="text-sm underline"
         params={{ estateId, assetId }}
@@ -100,27 +102,31 @@ export function ReplaceDevicePage({
       {error ? <p role="alert">{error.message}</p> : null}
       {blocked ? <p role="alert">{blocked}</p> : null}
       {device && !blocked && !loading && !error ? (
-        <div className="form-surface">
-          <p className="mb-4 text-sm">
-            {device.identifier} will be deactivated and its key will stop
-            working. The new device needs its own identifier and credential.
-          </p>
-          <DeviceForm
-            defaultLocationId={device.locationId}
-            estateId={estateId}
-            initialDevice={{
-              model: device.model,
-              locationId: device.locationId,
-              metrics: device.metrics.map(({ metric }) => metric),
-              reportingIntervalSeconds: device.reportingIntervalSeconds,
-            }}
-            onCancel={cancel}
-            onSave={save}
-            pendingLabel="Replacing…"
-            submitLabel="Replace device"
-          />
-        </div>
+        <Card>
+          <CardContent>
+            <div>
+              <p className="mb-4 text-sm">
+                {device.identifier} will be deactivated and its key will stop
+                working. The new device needs its own identifier and credential.
+              </p>
+              <DeviceForm
+                defaultLocationId={device.locationId}
+                estateId={estateId}
+                initialDevice={{
+                  model: device.model,
+                  locationId: device.locationId,
+                  metrics: device.metrics.map(({ metric }) => metric),
+                  reportingIntervalSeconds: device.reportingIntervalSeconds,
+                }}
+                onCancel={cancel}
+                onSave={save}
+                pendingLabel="Replacing…"
+                submitLabel="Replace device"
+              />
+            </div>
+          </CardContent>
+        </Card>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

@@ -4,6 +4,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { useEstate, useSaveEstate } from "@/lib/estates";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-form";
@@ -72,7 +73,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
     );
   }, [navigate, estateId]);
   return (
-    <main className="page-layout max-w-3xl">
+    <PageLayout className="max-w-3xl">
       <Link className="text-sm underline" to="/estates">
         Back to estates
       </Link>
@@ -119,6 +120,6 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
           onSave={save.mutateAsync}
         />
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

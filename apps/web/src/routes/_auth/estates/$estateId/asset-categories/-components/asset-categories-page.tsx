@@ -13,6 +13,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { IntervalBadge } from "@/components/interval-badge";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { ServiceIntervalDialog } from "@/components/service-interval-dialog";
 import {
   type EstateAssetCategory,
@@ -162,7 +163,7 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
     data?.categories.filter((category) => matches(category, filter)) ?? [];
 
   return (
-    <main className="page-layout min-w-0">
+    <PageLayout className="min-w-0">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -246,7 +247,7 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
           )}
         </section>
       ) : null}
-      {editing ? (
+            {editing ? (
         <ServiceIntervalDialog
           description={`How often the manufacturer says ${editing.label.toLowerCase()} assets should be serviced. Assets can override it.`}
           interval={editing.serviceInterval ?? null}
@@ -255,6 +256,6 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
           title={`Service interval for ${editing.label}`}
         />
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

@@ -3,7 +3,9 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { DetailCard } from "@/components/detail-card";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type InspectionResult,
   useInspectionAccess,
@@ -134,10 +136,10 @@ export function InspectionDetail({
   }
   if (query.isError) {
     return (
-      <main className="page-layout">
+      <PageLayout>
         <p role="alert">{query.error.message}</p>
         <Button onClick={retry}>Retry inspection</Button>
-      </main>
+      </PageLayout>
     );
   }
   if (!query.data) {
@@ -149,7 +151,7 @@ export function InspectionDetail({
     asset.data.assetActive &&
     asset.data.locationActive;
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -175,7 +177,7 @@ export function InspectionDetail({
       <Card>
         <CardContent className="space-y-5 pt-6">
           <Badge>{record.outcome === "PASS" ? "Pass" : "Fail"}</Badge>
-          <dl className="detail-grid">
+          <DetailCard>
             <div>
               <dt>Inspection date</dt>
               <dd>
@@ -203,7 +205,7 @@ export function InspectionDetail({
                 </time>
               </dd>
             </div>
-          </dl>
+          </DetailCard>
           <div>
             <h2 className="font-semibold">Notes</h2>
             <p className="whitespace-pre-wrap">
@@ -241,6 +243,6 @@ export function InspectionDetail({
           </div>
         )}
       </section>
-    </main>
+    </PageLayout>
   );
 }

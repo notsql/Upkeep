@@ -8,7 +8,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { DetailCard } from "@/components/detail-card";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import {
   type InspectionAsset,
   type InspectionInput,
@@ -180,10 +182,10 @@ export function InspectionForm({
   }
   if (asset.isError) {
     return (
-      <main className="page-layout">
+      <PageLayout>
         <p role="alert">{asset.error.message}</p>
         <Button onClick={retryAsset}>Retry asset</Button>
-      </main>
+      </PageLayout>
     );
   }
   if (!observed) {
@@ -192,7 +194,7 @@ export function InspectionForm({
   const active =
     observed.estateActive && observed.assetActive && observed.locationActive;
   return (
-    <main className="page-layout space-y-6">
+    <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -211,7 +213,7 @@ export function InspectionForm({
         description={`${observed.reference} · ${observed.name}`}
         title="Create inspection record"
       />
-      <dl className="detail-grid">
+      <DetailCard>
         <div>
           <dt>Asset</dt>
           <dd>
@@ -222,7 +224,7 @@ export function InspectionForm({
           <dt>Location</dt>
           <dd>{observed.locationPath}</dd>
         </div>
-      </dl>
+      </DetailCard>
       {active ? null : (
         <p role="alert">
           This estate, asset or location is inactive or retired. Existing
@@ -270,6 +272,6 @@ export function InspectionForm({
           </Link>
         </div>
       </form>
-    </main>
+    </PageLayout>
   );
 }

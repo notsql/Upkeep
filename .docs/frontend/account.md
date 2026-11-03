@@ -18,10 +18,10 @@ loader data (`getRouteApi("/_auth").useLoaderData().user`) and shows a
 - **Email** - `user.email`.
 
 Read-only. Uses shared `PageHeader` with Home / Account breadcrumbs and the
-`detail-grid` summary surface. No edits or API calls are introduced.
+`DetailCard` summary surface. No edits or API calls are introduced.
 
-Desktop entry: Settings in the circular top-right profile menu. Mobile entry:
-Settings in the fixed mobile More menu. Settings opens
+Entry: Settings in the circular top-right profile menu and in the sidebar
+(desktop rail or mobile sheet). Settings opens
 this existing read-only profile screen; it does not introduce editable settings.
 
 ## Endpoints

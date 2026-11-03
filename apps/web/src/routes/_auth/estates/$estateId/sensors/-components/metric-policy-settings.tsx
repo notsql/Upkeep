@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Table,
   TableBody,
@@ -92,140 +93,148 @@ export function MetricPolicySettings({
   ) : null;
 
   return (
-    <section
-      aria-labelledby="policies-title"
-      className="section-surface min-w-0"
-    >
-      <h2 id="policies-title">
-        <Button
-          aria-controls={`${id}-content`}
-          aria-describedby={`${id}-description ${id}-count`}
-          aria-expanded={expanded}
-          aria-label="Metric policies"
-          className="grid h-auto w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 p-0 text-left whitespace-normal hover:bg-transparent sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center dark:hover:bg-transparent"
-          disabled={saving}
-          onClick={toggleExpanded}
-          variant="ghost"
-        >
-          <SlidersHorizontal
-            aria-hidden="true"
-            className="text-muted-foreground mt-1 size-5 sm:mt-0"
-          />
-          <span className="min-w-0">
-            <span className="block text-lg font-semibold">Metric policies</span>
-            <span
-              className="text-muted-foreground mt-1 block text-sm font-normal"
-              id={`${id}-description`}
+    <Card className="min-w-0">
+      <CardContent>
+        <section aria-labelledby="policies-title">
+          <h2 id="policies-title">
+            <Button
+              aria-controls={`${id}-content`}
+              aria-describedby={`${id}-description ${id}-count`}
+              aria-expanded={expanded}
+              aria-label="Metric policies"
+              className="grid h-auto w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 p-0 text-left whitespace-normal hover:bg-transparent sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center dark:hover:bg-transparent"
+              disabled={saving}
+              onClick={toggleExpanded}
+              variant="ghost"
             >
-              Manage estate-wide metric thresholds and tolerances.
-            </span>
-          </span>
-          <Badge
-            className="col-start-2 row-start-2 sm:col-start-3 sm:row-start-1"
-            id={`${id}-count`}
-            variant="secondary"
-          >
-            {configured} of {policies.length} configured
-          </Badge>
-          <ChevronDown
-            aria-hidden="true"
-            className={`text-muted-foreground col-start-3 row-start-1 mt-1 size-5 transition-transform sm:col-start-4 sm:mt-0 ${expanded ? "rotate-180" : ""}`}
-          />
-        </Button>
-      </h2>
-      <div className="space-y-4 pt-5" hidden={!expanded} id={`${id}-content`}>
-        {canManage ? null : (
-          <p className="text-muted-foreground text-sm">
-            Only estate owners and assigned managers can change metric policies.
-          </p>
-        )}
-        {mobile ? (
-          <ul aria-label="Metric policies" className="divide-y">
-            {policies.map((item) => (
-              <li
-                className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 first:pt-0"
-                key={item.metric}
+              <SlidersHorizontal
+                aria-hidden="true"
+                className="text-muted-foreground mt-1 size-5 sm:mt-0"
+              />
+              <span className="min-w-0">
+                <span className="block text-lg font-semibold">
+                  Metric policies
+                </span>
+                <span
+                  className="text-muted-foreground mt-1 block text-sm font-normal"
+                  id={`${id}-description`}
+                >
+                  Manage estate-wide metric thresholds and tolerances.
+                </span>
+              </span>
+              <Badge
+                className="col-start-2 row-start-2 sm:col-start-3 sm:row-start-1"
+                id={`${id}-count`}
+                variant="secondary"
               >
-                <div className="min-w-0 space-y-2">
-                  <PolicyName policy={item} />
-                  <p className="text-muted-foreground text-sm">
-                    <PolicySummary policy={item} />
-                  </p>
-                  <PolicyStatus policy={item} />
-                </div>
-                {canManage ? (
-                  <PolicyAction
-                    editorId={`${id}-editor`}
-                    id={`${id}-${item.metric}`}
-                    onToggle={toggle}
-                    policy={item}
-                    saving={saving}
-                    selected={selected === item.metric}
-                  />
-                ) : null}
-                {selected === item.metric ? (
-                  <div className="col-span-2 min-w-0">{form}</div>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Table aria-label="Metric policies">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Metric</TableHead>
-                <TableHead>Policy</TableHead>
-                <TableHead>Status</TableHead>
-                {canManage ? (
-                  <TableHead>
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                ) : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {policies.map((item) => (
-                <Fragment key={item.metric}>
-                  <TableRow>
-                    <TableCell className="py-4">
+                {configured} of {policies.length} configured
+              </Badge>
+              <ChevronDown
+                aria-hidden="true"
+                className={`text-muted-foreground col-start-3 row-start-1 mt-1 size-5 transition-transform sm:col-start-4 sm:mt-0 ${expanded ? "rotate-180" : ""}`}
+              />
+            </Button>
+          </h2>
+          <div
+            className="space-y-4 pt-5"
+            hidden={!expanded}
+            id={`${id}-content`}
+          >
+            {canManage ? null : (
+              <p className="text-muted-foreground text-sm">
+                Only estate owners and assigned managers can change metric
+                policies.
+              </p>
+            )}
+            {mobile ? (
+              <ul aria-label="Metric policies" className="divide-y">
+                {policies.map((item) => (
+                  <li
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 first:pt-0"
+                    key={item.metric}
+                  >
+                    <div className="min-w-0 space-y-2">
                       <PolicyName policy={item} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-normal">
-                      <PolicySummary policy={item} />
-                    </TableCell>
-                    <TableCell>
+                      <p className="text-muted-foreground text-sm">
+                        <PolicySummary policy={item} />
+                      </p>
                       <PolicyStatus policy={item} />
-                    </TableCell>
+                    </div>
                     {canManage ? (
-                      <TableCell className="text-right">
-                        <PolicyAction
-                          editorId={`${id}-editor`}
-                          id={`${id}-${item.metric}`}
-                          onToggle={toggle}
-                          policy={item}
-                          saving={saving}
-                          selected={selected === item.metric}
-                        />
-                      </TableCell>
+                      <PolicyAction
+                        editorId={`${id}-editor`}
+                        id={`${id}-${item.metric}`}
+                        onToggle={toggle}
+                        policy={item}
+                        saving={saving}
+                        selected={selected === item.metric}
+                      />
+                    ) : null}
+                    {selected === item.metric ? (
+                      <div className="col-span-2 min-w-0">{form}</div>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <Table aria-label="Metric policies">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Metric</TableHead>
+                    <TableHead>Policy</TableHead>
+                    <TableHead>Status</TableHead>
+                    {canManage ? (
+                      <TableHead>
+                        <span className="sr-only">Actions</span>
+                      </TableHead>
                     ) : null}
                   </TableRow>
-                  {selected === item.metric ? (
-                    <TableRow>
-                      <TableCell
-                        className="p-0 pb-4 whitespace-normal"
-                        colSpan={canManage ? 4 : 3}
-                      >
-                        {form}
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
-                </Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-    </section>
+                </TableHeader>
+                <TableBody>
+                  {policies.map((item) => (
+                    <Fragment key={item.metric}>
+                      <TableRow>
+                        <TableCell className="py-4">
+                          <PolicyName policy={item} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground whitespace-normal">
+                          <PolicySummary policy={item} />
+                        </TableCell>
+                        <TableCell>
+                          <PolicyStatus policy={item} />
+                        </TableCell>
+                        {canManage ? (
+                          <TableCell className="text-right">
+                            <PolicyAction
+                              editorId={`${id}-editor`}
+                              id={`${id}-${item.metric}`}
+                              onToggle={toggle}
+                              policy={item}
+                              saving={saving}
+                              selected={selected === item.metric}
+                            />
+                          </TableCell>
+                        ) : null}
+                      </TableRow>
+                      {selected === item.metric ? (
+                        <TableRow>
+                          <TableCell
+                            className="p-0 pb-4 whitespace-normal"
+                            colSpan={canManage ? 4 : 3}
+                          >
+                            {form}
+                          </TableCell>
+                        </TableRow>
+                      ) : null}
+                    </Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        </section>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -248,14 +257,7 @@ function PolicySummary({ policy }: { policy: SensorPolicy }) {
 function PolicyStatus({ policy }: { policy: SensorPolicy }) {
   const configured = policy.durationMinutes !== null;
   return (
-    <Badge
-      className={
-        configured
-          ? "border-status-active-foreground/20 bg-status-active text-status-active-foreground"
-          : undefined
-      }
-      variant="secondary"
-    >
+    <Badge variant={configured ? "default" : "secondary"}>
       {configured ? "Configured" : "Not set"}
     </Badge>
   );

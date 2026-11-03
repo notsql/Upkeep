@@ -11,6 +11,7 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { useEstate } from "@/lib/estates";
 import {
   type FailureRisk,
@@ -69,7 +70,7 @@ export function FailureRiskPage({ estateId }: { estateId: string }) {
   const estate = useEstate(estateId);
   const risks = useEstateFailureRisk(estateId);
   return (
-    <main className="page-layout">
+    <PageLayout>
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },
@@ -119,6 +120,6 @@ export function FailureRiskPage({ estateId }: { estateId: string }) {
           </TableBody>
         </Table>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

@@ -13,7 +13,7 @@ Paths are relative to `apps/web/src/`.
 | --- | --- | --- | --- |
 | `routes/_auth/admin/users/index.tsx` | `/admin/users` | `_auth`, then own loader: `getAuth()`; if no user or `role !== "admin"`, `redirect({ to: "/estates" })` | none set |
 
-Desktop navigation and mobile More show Admin users only to admins (see
+The sidebar (desktop rail and mobile sheet) shows Admin users only to admins (see
 [shell.md](shell.md)).
 
 ## Screens and components

@@ -3,6 +3,7 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
@@ -33,7 +34,7 @@ function EstateReportDetailPage() {
     return <p role="alert">Fault report unavailable.</p>;
   }
   return (
-    <main className="page-layout space-y-4">
+    <PageLayout className="space-y-4">
       <PageHeader
         actions={
           workOrders.canCreate && report.data && !report.isError ? (
@@ -100,6 +101,6 @@ function EstateReportDetailPage() {
           </ReportDetails>
         </ReportCard>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

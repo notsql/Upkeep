@@ -1,5 +1,6 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { PageLayout } from "@/components/page-layout";
 import type { InspectionResult } from "@/lib/inspections";
 
 export function SavedInspectionNotice({
@@ -14,7 +15,7 @@ export function SavedInspectionNotice({
   assetId: string;
 }) {
   return (
-    <main className="page-layout space-y-4">
+    <PageLayout className="space-y-4">
       <h1 className="text-2xl font-semibold">Inspection saved</h1>
       {error ? <p role="alert">{error.message}</p> : null}
       <Link
@@ -24,6 +25,6 @@ export function SavedInspectionNotice({
       >
         View saved inspection
       </Link>
-    </main>
+    </PageLayout>
   );
 }

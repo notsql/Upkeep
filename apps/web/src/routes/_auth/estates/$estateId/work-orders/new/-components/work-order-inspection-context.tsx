@@ -2,6 +2,8 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
+import { DetailCard } from "@/components/detail-card";
+import { PageLayout } from "@/components/page-layout";
 import type { InspectionResult } from "@/lib/inspections";
 import type { useWorkOrderInspection } from "./use-work-order-inspection";
 
@@ -27,12 +29,12 @@ export function renderInspectionWorkOrderStatus(
 ): ReactNode {
   if (inspection.failed) {
     return (
-      <main className="page-layout space-y-4">
+      <PageLayout className="space-y-4">
         <p role="alert">Source inspection or asset context is unavailable.</p>
         <Button onClick={reloadSource} variant="outline">
           Retry source
         </Button>
-      </main>
+      </PageLayout>
     );
   }
   if (inspection.pending) {
@@ -41,7 +43,7 @@ export function renderInspectionWorkOrderStatus(
   const { record } = inspection;
   if (record?.workOrder) {
     return (
-      <main className="page-layout space-y-4">
+      <PageLayout className="space-y-4">
         <h1 className="text-2xl font-semibold">Work order already raised</h1>
         <Link
           className="underline"
@@ -54,17 +56,17 @@ export function renderInspectionWorkOrderStatus(
           {record.workOrder.reference}
         </Link>
         <InspectionSourceLink record={record} />
-      </main>
+      </PageLayout>
     );
   }
   if (record && record.outcome !== "FAIL") {
     return (
-      <main className="page-layout space-y-4">
+      <PageLayout className="space-y-4">
         <p role="alert">
           Only a failed inspection can be converted to a work order.
         </p>
         <InspectionSourceLink record={record} />
-      </main>
+      </PageLayout>
     );
   }
   return null;
@@ -90,7 +92,7 @@ export function WorkOrderInspectionContext({
         <Alert>
           <AlertDescription>
             Review the recorded and current asset locations before continuing.
-            <dl className="detail-grid">
+            <DetailCard>
               <div>
                 <dt>Recorded inspection location</dt>
                 <dd>{inspection.record.locationPath}</dd>
@@ -99,7 +101,7 @@ export function WorkOrderInspectionContext({
                 <dt>Current work location</dt>
                 <dd>{inspection.asset.locationPath}</dd>
               </div>
-            </dl>
+            </DetailCard>
           </AlertDescription>
           <Button
             disabled={inspection.reloading}
