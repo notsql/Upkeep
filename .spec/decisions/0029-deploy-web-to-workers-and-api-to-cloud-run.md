@@ -21,7 +21,7 @@ runtime. Spec: `features/deployment.md`.
 - **Workers Builds deploys `web` on push to `main`** (watch paths
   `apps/web/**`, `packages/{api,ui,env}/**`). Non-production branch builds are
   off, since a preview shares production's secrets.
-- **`apps/server` is a Cloud Run service (`api`, `asia-southeast1`, beside
+- **`apps/server` is a Cloud Run service (`upkeep-server-prd`, `asia-southeast1`, beside
   Neon `prd`)** running `apps/server/Dockerfile`: 1 vCPU, 2 GiB,
   request-based billing, scale 0-2, startup CPU boost, startup probe on
   `GET /health`. The image unpacks the Spring Boot jar and ships a JDK AOT

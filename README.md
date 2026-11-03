@@ -270,7 +270,7 @@ pnpm docker:down
 Decision
 [0029](.spec/decisions/0029-deploy-web-to-workers-and-api-to-cloud-run.md):
 `apps/web` is the Cloudflare Worker `web` (`*.workers.dev`, deployed by
-Workers Builds), and Spring is the Cloud Run service `api` in
+Workers Builds), and Spring is the Cloud Run service `upkeep-server-prd` in
 `asia-southeast1` (`*.run.app`, deployed by `.github/workflows/deploy.yml`).
 Production data is Neon's `prd` branch.
 
@@ -278,7 +278,7 @@ Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
 
 - A PR into `dev` or `main` runs the PR checks.
 - A push to `dev` migrates Neon `dev`. Nothing deploys.
-- A push to `main` migrates Neon `prd`; `deploy.yml` deploys `api` when
+- A push to `main` migrates Neon `prd`; `deploy.yml` deploys `upkeep-server-prd` when
   `apps/server/**` or `pom.xml` changed, and Workers Builds deploys `web` when
   `apps/web/**` or `packages/{api,ui,env}/**` changed. There is no deploy
   command to run by hand (`deploy.yml` can be re-run manually, e.g. after a
@@ -292,7 +292,7 @@ no key, only these repository variables:
 | `GCP_PROJECT_ID` | The GCP project ID |
 | `GCP_WIF_PROVIDER` | `projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>` |
 | `GCP_DEPLOY_SA` | Deployer service account email |
-| `GCP_API_RUNTIME_SA` | Service account the `api` service runs as |
+| `GCP_API_RUNTIME_SA` | Service account the `upkeep-server-prd` service runs as |
 | `WEB_URL` | `https://web.<account>.workers.dev` (the API's CORS origin) |
 
 Runtime secrets come from Infisical `prd`: `/apps/server` is synced to GCP
