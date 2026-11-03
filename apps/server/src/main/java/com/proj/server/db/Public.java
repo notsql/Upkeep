@@ -8,9 +8,11 @@ import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
 import com.proj.server.db.tables.Assetcategoryflagchange;
+import com.proj.server.db.tables.Assetcategoryintervalchange;
 import com.proj.server.db.tables.Assetevent;
 import com.proj.server.db.tables.Assetinspectionphoto;
 import com.proj.server.db.tables.Assetinspectionresult;
+import com.proj.server.db.tables.Assetintervalchange;
 import com.proj.server.db.tables.Assetlifecycleevent;
 import com.proj.server.db.tables.Assetmodel;
 import com.proj.server.db.tables.Device;
@@ -24,6 +26,8 @@ import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
+import com.proj.server.db.tables.Inspectioncheck;
+import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
@@ -78,6 +82,11 @@ public class Public extends SchemaImpl {
     public final Assetcategoryflagchange ASSETCATEGORYFLAGCHANGE = Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE;
 
     /**
+     * The table <code>public.AssetCategoryIntervalChange</code>.
+     */
+    public final Assetcategoryintervalchange ASSETCATEGORYINTERVALCHANGE = Assetcategoryintervalchange.ASSETCATEGORYINTERVALCHANGE;
+
+    /**
      * The table <code>public.AssetEvent</code>.
      */
     public final Assetevent ASSETEVENT = Assetevent.ASSETEVENT;
@@ -91,6 +100,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.AssetInspectionResult</code>.
      */
     public final Assetinspectionresult ASSETINSPECTIONRESULT = Assetinspectionresult.ASSETINSPECTIONRESULT;
+
+    /**
+     * The table <code>public.AssetIntervalChange</code>.
+     */
+    public final Assetintervalchange ASSETINTERVALCHANGE = Assetintervalchange.ASSETINTERVALCHANGE;
 
     /**
      * The table <code>public.AssetLifecycleEvent</code>.
@@ -156,6 +170,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.FlatlinePolicy</code>.
      */
     public final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
+
+    /**
+     * The table <code>public.InspectionCheck</code>.
+     */
+    public final Inspectioncheck INSPECTIONCHECK = Inspectioncheck.INSPECTIONCHECK;
+
+    /**
+     * The table <code>public.InspectionListRun</code>.
+     */
+    public final Inspectionlistrun INSPECTIONLISTRUN = Inspectionlistrun.INSPECTIONLISTRUN;
 
     /**
      * The table <code>public.IssueReport</code>.
@@ -227,9 +251,11 @@ public class Public extends SchemaImpl {
             Assetassessment.ASSETASSESSMENT,
             Assetcategory.ASSETCATEGORY,
             Assetcategoryflagchange.ASSETCATEGORYFLAGCHANGE,
+            Assetcategoryintervalchange.ASSETCATEGORYINTERVALCHANGE,
             Assetevent.ASSETEVENT,
             Assetinspectionphoto.ASSETINSPECTIONPHOTO,
             Assetinspectionresult.ASSETINSPECTIONRESULT,
+            Assetintervalchange.ASSETINTERVALCHANGE,
             Assetlifecycleevent.ASSETLIFECYCLEEVENT,
             Assetmodel.ASSETMODEL,
             Device.DEVICE,
@@ -243,6 +269,8 @@ public class Public extends SchemaImpl {
             Estaterolepermission.ESTATEROLEPERMISSION,
             Estateuser.ESTATEUSER,
             Flatlinepolicy.FLATLINEPOLICY,
+            Inspectioncheck.INSPECTIONCHECK,
+            Inspectionlistrun.INSPECTIONLISTRUN,
             Issuereport.ISSUEREPORT,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,

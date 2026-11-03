@@ -2,7 +2,17 @@ package com.proj.server.category;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(requiredProperties = {"code", "label", "failsSilently", "isDefault", "activeAssetCount", "lastChange"})
+@Schema(
+        requiredProperties = {
+            "code",
+            "label",
+            "failsSilently",
+            "isDefault",
+            "activeAssetCount",
+            "lastChange",
+            "serviceInterval",
+            "lastIntervalChange"
+        })
 public record EstateAssetCategoryResponse(
         String code,
         String label,
@@ -14,4 +24,9 @@ public record EstateAssetCategoryResponse(
         @Schema(description = "Active (not retired) assets of this category in the estate")
         int activeAssetCount,
 
-        @Schema(nullable = true) FlagChangeResponse lastChange) {}
+        @Schema(nullable = true) FlagChangeResponse lastChange,
+
+        @Schema(nullable = true, description = "This estate's service interval, or null when not set")
+        ServiceInterval serviceInterval,
+
+        @Schema(nullable = true) IntervalChangeResponse lastIntervalChange) {}

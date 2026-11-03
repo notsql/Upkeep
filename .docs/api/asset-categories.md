@@ -35,7 +35,7 @@ Works for inactive estates (`estateActive: false`).
 | --- | --- |
 | SetSilentFailureRequest | failsSilently: boolean, required |
 | EstateAssetCategoriesResponse | estateActive: boolean; categories: EstateAssetCategoryResponse[] (flagged first, then the rest, each ordered by label) |
-| EstateAssetCategoryResponse | code: string; label: string; failsSilently: boolean; isDefault: boolean (no change recorded in this estate yet); activeAssetCount: integer (assets of this category in the estate with `deactivatedAt` null); lastChange: FlagChangeResponse or null |
+| EstateAssetCategoryResponse | code: string; label: string; failsSilently: boolean; isDefault: boolean (no flag change recorded in this estate yet); activeAssetCount: integer (assets of this category in the estate with `deactivatedAt` null); lastChange: FlagChangeResponse or null; serviceInterval: ServiceInterval (`{ value, unit }`) or null; lastIntervalChange: IntervalChangeResponse or null (see [service-intervals.md](service-intervals.md)) |
 | FlagChangeResponse | failsSilently: boolean; changedByUserId: string; changedByName: string or null (WorkOS snapshot); changedAt: date-time |
 
 ## Rules
@@ -47,6 +47,9 @@ Works for inactive estates (`estateActive: false`).
 - Setting the value a category already has (including its default) records nothing and returns the
   current state, so the history only holds real changes. A default stays a default.
 - Flags are per estate; one estate's changes never affect another's.
+- Service intervals (ID-81) live beside the flag; they are set with PUT
+  `/estates/{estateId}/asset-categories/{category}/service-interval`, documented in
+  [service-intervals.md](service-intervals.md).
 
 Example: `PUT /estates/{estateId}/asset-categories/PUMP/silent-failure`
 
@@ -56,5 +59,6 @@ Example: `PUT /estates/{estateId}/asset-categories/PUMP/silent-failure`
 
 ```json
 {"code":"PUMP","label":"Pump","failsSilently":true,"isDefault":false,"activeAssetCount":3,
- "lastChange":{"failsSilently":true,"changedByUserId":"user_01","changedByName":"Casey Doe","changedAt":"2026-10-27T04:00:00Z"}}
+ "lastChange":{"failsSilently":true,"changedByUserId":"user_01","changedByName":"Casey Doe","changedAt":"2026-10-27T04:00:00Z"},
+ "serviceInterval":null,"lastIntervalChange":null}
 ```

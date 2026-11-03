@@ -24,12 +24,16 @@ Both throw `estateError(...)` on failure.
 `AssetCategoriesPage`: `PageHeader` (breadcrumbs Estates › Estate › Asset categories), then a
 `section` labelled "Asset categories" with:
 
-- summary "N categories flagged as failing silently" ("1 category" when one);
+- summary cards (Fails silently, Missing service interval, Intervals set), described in
+  [service-intervals.md](service-intervals.md);
 - when `estateActive` is false, a `role="note"` paragraph "This estate is inactive, so its asset
   categories cannot be changed." and every checkbox disabled;
 - a `Table`: Category (row header), Assets (`activeAssetCount`), Fails silently (`Checkbox`
-  labelled "<Label> fails silently"), Last changed ("Default" when `lastChange` is null, else
-  "<name or Unknown user> · <local date-time>"). Rows keep the server order (flagged first).
+  labelled "<Label> fails silently"), Service interval, Last changed ("Default" when neither
+  `lastChange` nor `lastIntervalChange` is set, else "<name or Unknown user> · <local date-time>"
+  of the more recent one) and an Edit interval button. Rows keep the server order (flagged first).
+- the service-interval summary, unit labels, filter by interval and dialog (ID-81), described in
+  [service-intervals.md](service-intervals.md).
 
 Ticking/unticking calls the mutation (checkboxes disabled while it is pending). The checkbox is
 not optimistic: it shows the server value, so a failed save leaves it unchanged and shows the

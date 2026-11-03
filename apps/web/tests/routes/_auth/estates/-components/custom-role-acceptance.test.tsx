@@ -97,7 +97,7 @@ it("refreshes a stale preview after 409 and waits for another explicit confirmat
     return Promise.resolve({
       error: { message: "Role changed. Review the updated permissions." },
       response: new Response(null, { status: 409 }),
-    });
+    } as never);
   });
   renderWithProviders(<PendingInvitations />);
   fireEvent.click(await screen.findByRole("button", { name: acceptLabel }));

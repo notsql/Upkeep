@@ -305,7 +305,7 @@ it("keeps a failed custom invitation's email and role selection for the same ret
   vi.mocked(api.POST).mockResolvedValue({
     error: { message: "Invitation delivery failed." },
     response: new Response(null, { status: 502 }),
-  });
+  } as never);
   renderWithProviders(<CouncilPage estateId="estate" />);
   await chooseOption(
     await screen.findByRole("combobox", { name: "Invitation role" }),

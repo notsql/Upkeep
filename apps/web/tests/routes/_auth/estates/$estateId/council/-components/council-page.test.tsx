@@ -205,7 +205,7 @@ it("retains input and reports a failed invitation", async () => {
   vi.mocked(api.POST).mockResolvedValue({
     error: { message: "Already invited." },
     response: new Response(null, { status: 409 }),
-  });
+  } as never);
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
     target: { value: "council@example.com" },

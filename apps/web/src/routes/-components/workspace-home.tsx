@@ -46,7 +46,7 @@ function StatisticCard({
         "h-full min-w-0 gap-3",
         // The shared clickable-card hover, as on the estate and asset cards (ID-102).
         interactive &&
-          "transition-[background-color,box-shadow] group-hover:bg-accent/40 group-hover:shadow-sm group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 motion-reduce:transition-none"
+          "group-hover:bg-accent/40 group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 transition-[background-color,box-shadow] group-hover:shadow-sm motion-reduce:transition-none"
       )}
       role="region"
     >

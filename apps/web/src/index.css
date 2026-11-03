@@ -103,6 +103,7 @@ h2 {
   min-height: 2.75rem;
   background: var(--card);
 }
+[data-slot="alert"],
 [data-slot="card"],
 [data-slot="dialog-content"],
 [data-slot="select-content"] {
