@@ -8,6 +8,7 @@ import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Estate.EstatePath;
+import com.proj.server.db.tables.Inspectioncheck.InspectioncheckPath;
 import com.proj.server.db.tables.records.AssetinspectionresultRecord;
 
 import java.time.LocalDate;
@@ -211,6 +212,19 @@ public class Assetinspectionresult extends TableImpl<AssetinspectionresultRecord
             _estate = new EstatePath(this, Keys.ASSETINSPECTIONRESULT__ASSETINSPECTIONRESULT_ESTATEID_FKEY, null);
 
         return _estate;
+    }
+
+    private transient InspectioncheckPath _inspectioncheck;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.InspectionCheck</code> table
+     */
+    public InspectioncheckPath inspectioncheck() {
+        if (_inspectioncheck == null)
+            _inspectioncheck = new InspectioncheckPath(this, null, Keys.INSPECTIONCHECK__INSPECTIONCHECK_COMPLETEDBYRESULTID_FKEY.getInverseKey());
+
+        return _inspectioncheck;
     }
 
     @Override

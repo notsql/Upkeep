@@ -58,7 +58,7 @@ it("keeps failed invitations visible and reports why acceptance failed", async (
   vi.mocked(api.POST).mockResolvedValue({
     error: { message: "This invitation is no longer available." },
     response: new Response(null, { status: 409 }),
-  });
+  } as never);
   renderWithProviders(<PendingInvitations />);
   fireEvent.click(
     await screen.findByRole("button", {

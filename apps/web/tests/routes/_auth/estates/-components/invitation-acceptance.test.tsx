@@ -38,7 +38,7 @@ it("offers a retry when invitation verification fails", async () => {
   vi.mocked(api.POST).mockResolvedValueOnce({
     error: { message: "Unable to verify invitations." },
     response: new Response(null, { status: 502 }),
-  });
+  } as never);
   renderWithProviders(<InvitationAcceptance />);
   expect((await screen.findByRole("alert")).textContent).toContain(
     "Unable to verify invitations."

@@ -8,6 +8,7 @@ import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Asset.AssetPath;
 import com.proj.server.db.tables.Assetcategoryflagchange.AssetcategoryflagchangePath;
+import com.proj.server.db.tables.Assetcategoryintervalchange.AssetcategoryintervalchangePath;
 import com.proj.server.db.tables.Assetmodel.AssetmodelPath;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
 
@@ -162,6 +163,19 @@ public class Assetcategory extends TableImpl<AssetcategoryRecord> {
             _assetcategoryflagchange = new AssetcategoryflagchangePath(this, null, Keys.ASSETCATEGORYFLAGCHANGE__ASSETCATEGORYFLAGCHANGE_CATEGORY_FKEY.getInverseKey());
 
         return _assetcategoryflagchange;
+    }
+
+    private transient AssetcategoryintervalchangePath _assetcategoryintervalchange;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.AssetCategoryIntervalChange</code> table
+     */
+    public AssetcategoryintervalchangePath assetcategoryintervalchange() {
+        if (_assetcategoryintervalchange == null)
+            _assetcategoryintervalchange = new AssetcategoryintervalchangePath(this, null, Keys.ASSETCATEGORYINTERVALCHANGE__ASSETCATEGORYINTERVALCHANGE_CATEGORY_FKEY.getInverseKey());
+
+        return _assetcategoryintervalchange;
     }
 
     private transient AssetmodelPath _assetmodel;

@@ -216,22 +216,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/device-api/test/whoami": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["whoami"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/estates": {
     parameters: {
       query?: never;
@@ -259,6 +243,22 @@ export interface paths {
     };
     get: operations["listEstateAssetCategories"];
     put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/asset-categories/{category}/service-interval": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setAssetCategoryServiceInterval"];
     post?: never;
     delete?: never;
     options?: never;
@@ -500,6 +500,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["checkAssetReadings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/service-interval": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetServiceInterval"];
+    put: operations["setAssetServiceInterval"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -853,6 +869,38 @@ export interface paths {
     get: operations["getInspectionAsset"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInspectionList"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-list/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["generateInspectionList"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1750,6 +1798,36 @@ export interface components {
       /** Format: date-time */
       changedAt: string | null;
     };
+    ServiceInterval: {
+      /**
+       * Format: int32
+       * @description 1-3650 days, 1-120 months or 1-10 years
+       */
+      value: number;
+      /** @enum {string} */
+      unit: "DAY" | "MONTH" | "YEAR";
+    };
+    SetServiceIntervalRequest: {
+      interval: components["schemas"]["ServiceInterval"] | null;
+    };
+    AssetServiceIntervalResponse: {
+      effective: components["schemas"]["ServiceInterval"] | null;
+      /** @enum {string} */
+      source: "ASSET" | "CATEGORY" | "NONE";
+      override: components["schemas"]["ServiceInterval"] | null;
+      categoryInterval: components["schemas"]["ServiceInterval"] | null;
+      categoryLabel: string;
+      lastOverrideChange:
+        | components["schemas"]["IntervalChangeResponse"]
+        | null;
+    };
+    IntervalChangeResponse: {
+      interval: components["schemas"]["ServiceInterval"] | null;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
     SetSilentFailureRequest: {
       failsSilently: boolean;
     };
@@ -1765,6 +1843,10 @@ export interface components {
        */
       activeAssetCount: number;
       lastChange: components["schemas"]["FlagChangeResponse"];
+      serviceInterval: components["schemas"]["ServiceInterval"] | null;
+      lastIntervalChange:
+        | components["schemas"]["IntervalChangeResponse"]
+        | null;
     };
     FlagChangeResponse: {
       failsSilently: boolean;
@@ -1985,6 +2067,83 @@ export interface components {
       created: components["schemas"]["LocationResponse"][];
       /** @description Names of floors the block already had, highest first */
       skipped: string[];
+    };
+    CheckResultResponse: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      outcome: "PASS" | "FAIL";
+      /** Format: date */
+      inspectedOn: string;
+    };
+    GenerateInspectionListResponse: {
+      /**
+       * Format: int32
+       * @description Checks added by this generation; 0 when nothing new is due
+       */
+      added: number;
+      list: components["schemas"]["InspectionListResponse"];
+    };
+    InspectionCheckResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      categoryLabel: string;
+      block: components["schemas"]["InspectionLocationResponse"];
+      level: components["schemas"]["InspectionLocationResponse"] | null;
+      /** Format: date */
+      dueOn: string;
+      /** @enum {string} */
+      dueBasis: "PREDICTION" | "INTERVAL" | "NEVER_INSPECTED";
+      interval: components["schemas"]["ServiceInterval"] | null;
+      /** @enum {string|null} */
+      intervalSource: "ASSET" | "CATEGORY" | null;
+      /** @enum {string} */
+      status: "OVERDUE" | "DUE" | "DONE";
+      result: components["schemas"]["CheckResultResponse"] | null;
+    };
+    InspectionListResponse: {
+      /**
+       * Format: date
+       * @description The first day of the current month (Singapore)
+       */
+      month: string;
+      estateActive: boolean;
+      /**
+       * Format: date-time
+       * @description The latest generation this month, or null when not yet generated
+       */
+      generatedAt: string | null;
+      generatedByName: string | null;
+      /** Format: int32 */
+      overdueCount: number;
+      /** Format: int32 */
+      dueCount: number;
+      /** Format: int32 */
+      doneCount: number;
+      /** @description Overdue checks and this month's checks, by block, level, status, due date and reference */
+      checks: components["schemas"]["InspectionCheckResponse"][];
+      unscheduled: components["schemas"]["UnscheduledAssetResponse"][];
+      /**
+       * Format: int32
+       * @description Categories flagged as failing silently in the estate; 0 means nothing can be due
+       */
+      flaggedCategoryCount: number;
+    };
+    InspectionLocationResponse: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
+    UnscheduledAssetResponse: {
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      categoryLabel: string;
     };
     UploadDocumentRequest: {
       /** @enum {string} */
@@ -5272,6 +5431,64 @@ export interface operations {
       };
     };
   };
+  generateInspectionList: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Checks added (possibly none) and the list after generating */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["GenerateInspectionListResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   get: {
     parameters: {
       query?: never;
@@ -5556,6 +5773,56 @@ export interface operations {
         };
       };
       /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getAssetServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's effective interval, override and category interval */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetServiceIntervalResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
       404: {
         headers: {
           [name: string]: unknown;
@@ -6020,6 +6287,55 @@ export interface operations {
       };
       /** @description Storage or persistence unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getInspectionList: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description This month's checks, overdue checks and unscheduled assets */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionListResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -10057,6 +10373,78 @@ export interface operations {
       };
     };
   };
+  setAssetCategoryServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        category: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetServiceIntervalRequest"];
+      };
+    };
+    responses: {
+      /** @description The category with its current interval */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoryResponse"];
+        };
+      };
+      /** @description interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   setAssetCategorySilentFailure: {
     parameters: {
       query?: never;
@@ -10119,6 +10507,78 @@ export interface operations {
         };
       };
       /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setAssetServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetServiceIntervalRequest"];
+      };
+    };
+    responses: {
+      /** @description The asset's interval after the change */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetServiceIntervalResponse"];
+        };
+      };
+      /** @description interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, or retired asset */
       409: {
         headers: {
           [name: string]: unknown;
@@ -10968,26 +11428,6 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  whoami: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": string;
         };
       };
     };

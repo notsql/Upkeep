@@ -147,6 +147,7 @@ Assigned Crew may open a read-only estate overview using canViewEstateDetails.
 It exposes Assets/inspection entry and work orders without estate edit, member
 administration or the management locations section. Work-order breadcrumbs and
 context switching retain the current estate/feature. Existing Owners/Managers
-also retain their Devices action on the estate overview, with an Asset categories
-action beside it under the same condition ([asset-categories.md](asset-categories.md)).
+also retain their Devices action on the estate overview, with Asset categories and
+Inspections actions beside it under the same condition ([asset-categories.md](asset-categories.md),
+[inspection-list.md](inspection-list.md)).
 See [inspections](inspections.md) for limited asset screens and recording.

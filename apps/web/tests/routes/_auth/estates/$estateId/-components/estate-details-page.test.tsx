@@ -286,3 +286,23 @@ describe("estate details page", () => {
     }
   );
 });
+
+it.each([
+  [true, true, true],
+  [false, true, true],
+  [false, false, false],
+])(
+  "links to Inspections for Managers only (owned: %s, manager: %s)",
+  async (owned, manager, shown) => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: { ...estate, owned, canManageInvitationPermissions: manager },
+      response: new Response(),
+    });
+    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
+    await screen.findByRole("heading", { name: "Maple Grove" });
+    const link = screen.queryByRole("link", { name: "Inspections" });
+    expect(link?.getAttribute("href") ?? null).toBe(
+      shown ? "/estates/$estateId/inspections" : null
+    );
+  }
+);
