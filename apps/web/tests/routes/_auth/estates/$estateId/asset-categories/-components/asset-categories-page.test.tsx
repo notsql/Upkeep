@@ -9,7 +9,7 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetCategoriesPage } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
 
-const EDIT_INTERVAL = /^Edit service interval/;
+const EDIT_INTERVAL = /^Edit service interval/u;
 
 const lighting = {
   code: "LIGHTING",
@@ -95,7 +95,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 function row(label: string) {
-  return screen.getByRole("row", { name: new RegExp(`^${label}`) });
+  return screen.getByRole("row", { name: new RegExp(`^${label}`, "u") });
 }
 function cells(label: string) {
   return within(row(label))

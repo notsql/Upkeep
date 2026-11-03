@@ -121,7 +121,7 @@ export function AssetServiceIntervalCard({
             <>
               <div className="grid gap-1">
                 <div className="flex flex-wrap items-center gap-3">
-                  <p className="font-semibold text-2xl">
+                  <p className="text-2xl font-semibold">
                     {formatInterval(data.effective)}
                   </p>
                   <SourceBadge interval={data} />
@@ -131,7 +131,7 @@ export function AssetServiceIntervalCard({
                 </p>
               </div>
               {change ? (
-                <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <History aria-hidden="true" className="size-3.5 shrink-0" />
                   <span>
                     Override last changed by{" "}

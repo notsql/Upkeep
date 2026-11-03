@@ -25,7 +25,7 @@ export function ReportCard({
     <Card>
       <CardHeader>
         <CardTitle>
-          <h2 className="wrap-anywhere font-semibold">{title}</h2>
+          <h2 className="font-semibold wrap-anywhere">{title}</h2>
         </CardTitle>
       </CardHeader>
       <CardContent className="grid gap-4">

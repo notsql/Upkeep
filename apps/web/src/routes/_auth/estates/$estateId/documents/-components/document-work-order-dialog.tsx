@@ -115,7 +115,7 @@ export function DocumentWorkOrderDialog({
   return (
     <Dialog onOpenChange={state.close} open>
       <DialogContent
-        className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-y-auto overflow-x-hidden sm:max-w-2xl [&>*]:min-w-0"
+        className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-x-hidden overflow-y-auto sm:max-w-2xl [&>*]:min-w-0"
         showCloseButton={!state.mutation.isPending}
       >
         <DialogHeader>

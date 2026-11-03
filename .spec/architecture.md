@@ -182,7 +182,7 @@ Decision 0029, spec `features/deployment.md`. No custom domain:
 | Piece | Runs as | Config |
 | --- | --- | --- |
 | `apps/web` | Cloudflare Worker `web` on `*.workers.dev` (`@cloudflare/vite-plugin`, `nodejs_compat`), deployed by Workers Builds | `apps/web/wrangler.jsonc` |
-| `apps/server` | Cloud Run service `api` in `asia-southeast1` on `*.run.app`, image from `apps/server/Dockerfile`, deployed by GitHub Actions | `.github/workflows/deploy.yml` |
+| `apps/server` | Cloud Run service `upkeep-server-prd` in `asia-southeast1` on `*.run.app`, image from `apps/server/Dockerfile`, deployed by GitHub Actions | `.github/workflows/deploy.yml` |
 | Postgres | Neon `prd` branch | Infisical `prd`, `/packages/db` |
 
 Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
@@ -191,12 +191,12 @@ Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
 | --- | --- |
 | PR into `dev` or `main` | `pr-checks.yml`: no database, no migrations; context tests use Testcontainers (0019) |
 | Push to `dev` | `migrate.yml` migrates Neon `dev` (Infisical `dev`) |
-| Push to `main` | `migrate.yml` migrates Neon `prd` (Infisical `prd`); `deploy.yml` deploys `api` if `apps/server/**` or `pom.xml` changed; Workers Builds deploys `web` if its watch paths changed |
+| Push to `main` | `migrate.yml` migrates Neon `prd` (Infisical `prd`); `deploy.yml` deploys `upkeep-server-prd` if `apps/server/**` or `pom.xml` changed; Workers Builds deploys `web` if its watch paths changed |
 
 Runtime secrets live in Infisical `prd`: `/apps/web` syncs to the `web`
 Worker's secrets, `/apps/server` to GCP Secret Manager, which Cloud Run reads
 at deploy time. `deploy.yml` authenticates to GCP with Workload Identity
-Federation (no key in GitHub). `api` scales to zero (request-based billing,
+Federation (no key in GitHub). `upkeep-server-prd` scales to zero (request-based billing,
 startup CPU boost, startup probe on `GET /health`, JDK AOT cache in the image),
 so the first request after idle waits for Spring to boot. `VITE_API_URL` is a
 Workers Builds build variable.

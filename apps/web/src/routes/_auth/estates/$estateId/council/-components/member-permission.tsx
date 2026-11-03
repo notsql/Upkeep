@@ -86,10 +86,10 @@ export function MemberPermission({
     member.role;
   return (
     <TableRow>
-      <TableCell className="min-w-32 whitespace-normal break-words font-medium">
+      <TableCell className="min-w-32 font-medium break-words whitespace-normal">
         {member.name}
       </TableCell>
-      <TableCell className="min-w-44 max-w-64 whitespace-normal break-all">
+      <TableCell className="max-w-64 min-w-44 break-all whitespace-normal">
         {member.email}
       </TableCell>
       <TableCell className="whitespace-normal">

@@ -12,7 +12,7 @@ import {
 } from "@/lib/estate-reports";
 import { ReportFilters } from "./-components/report-filters";
 
-const INTEGER_POSITION = /^-?\d+$/;
+const INTEGER_POSITION = /^-?\d+$/u;
 
 export const Route = createFileRoute("/_auth/estates/$estateId/reports/")({
   validateSearch: (

@@ -94,7 +94,7 @@ export function AssetMaintenanceSection({
       className="section-surface mt-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h2 className="font-semibold text-xl" id="maintenance-heading">
+        <h2 className="text-xl font-semibold" id="maintenance-heading">
           Maintenance
         </h2>
         {canRecord ? (
@@ -150,7 +150,7 @@ export function AssetMaintenanceSection({
                         {entry.event.notes}
                       </p>
                       <ManualDetails event={entry.event} />
-                      <p className="mt-2 text-muted-foreground">
+                      <p className="text-muted-foreground mt-2">
                         Recorded by{" "}
                         {entry.event.recordedByName ?? "Unknown user"} on{" "}
                         {new Date(entry.event.createdAt).toLocaleString()}

@@ -20,17 +20,17 @@ const { get, post, navigate, auth } = vi.hoisted(() => ({
   navigate: vi.fn(),
   auth: { user: { id: "resident-a" }, role: "user", loading: false },
 }));
-const REPORT_A_FAULT = /Report a fault/i;
-const SUBMIT_REPORT = /Submit report/i;
-const BLOCK = /Block/i;
-const LEVEL = /Level/i;
-const DESCRIPTION = /Description/i;
-const TITLE = /^Title$/;
-const NO_ESTATE_ASSIGNED = /no estate assigned/i;
-const IMAGES = /Images/i;
-const IMAGE_PICKERS = /Images \(optional\)|Take photo/;
-const REMOVE_FAULT_IMAGE = /Remove fault.png/i;
-const ESTATE = /estate/i;
+const REPORT_A_FAULT = /Report a fault/iu;
+const SUBMIT_REPORT = /Submit report/iu;
+const BLOCK = /Block/iu;
+const LEVEL = /Level/iu;
+const DESCRIPTION = /Description/iu;
+const TITLE = /^Title$/u;
+const NO_ESTATE_ASSIGNED = /no estate assigned/iu;
+const IMAGES = /Images/iu;
+const IMAGE_PICKERS = /Images \(optional\)|Take photo/u;
+const REMOVE_FAULT_IMAGE = /Remove fault.png/iu;
+const ESTATE = /estate/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get, POST: post } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),

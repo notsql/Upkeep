@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import {
   Building2,
@@ -37,25 +38,36 @@ function StatisticCard({
   to?: "/estates";
   onClick?: () => void;
 }) {
+  const interactive = Boolean(to || href);
   const card = (
-    <Card aria-label={label} className="h-full gap-3" role="region">
+    <Card
+      aria-label={label}
+      className={cn(
+        "h-full min-w-0 gap-3",
+        // The shared clickable-card hover, as on the estate and asset cards (ID-102).
+        interactive &&
+          "group-hover:bg-accent/40 group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 transition-[background-color,box-shadow] group-hover:shadow-sm motion-reduce:transition-none"
+      )}
+      role="region"
+    >
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <CardTitle>
           <h2 className="text-sm">{label}</h2>
         </CardTitle>
         <Icon
           aria-hidden="true"
-          className="size-5 shrink-0 text-muted-foreground"
+          className="text-muted-foreground size-5 shrink-0"
         />
       </CardHeader>
       <CardContent>
-        <p className="font-semibold text-3xl tabular-nums">{value}</p>
-        <p className="mt-2 text-muted-foreground text-sm">{description}</p>
+        <p className="text-3xl font-semibold tabular-nums">{value}</p>
+        <p className="text-muted-foreground mt-2 text-sm">{description}</p>
       </CardContent>
     </Card>
   );
+  // Same radius as the card, so the keyboard focus ring follows its corners.
   const linkClass =
-    "block rounded-xl outline-none transition-shadow hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+    "group block min-w-0 rounded-[var(--radius)] outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   if (to) {
     return (
       <Link aria-label={label} className={linkClass} to={to}>
@@ -80,7 +92,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
   const focusAttention = useCallback(
     () =>
       document
-        .getElementById("attention-estates")
+        .querySelector<HTMLElement>("#attention-estates")
         ?.focus({ preventScroll: true }),
     []
   );
@@ -136,7 +148,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
             <h2 className="section-heading" id="asset-conditions">
               Asset conditions
             </h2>
-            <p className="mt-1 text-muted-foreground text-sm">
+            <p className="text-muted-foreground mt-1 text-sm">
               Latest assessment for each active asset. Not assessed does not
               mean Good.
             </p>
@@ -147,13 +159,13 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
             className="section-surface"
           >
             <h2
-              className="section-heading scroll-mt-24 rounded outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="section-heading focus-visible:ring-ring scroll-mt-24 rounded outline-none focus-visible:ring-2"
               id="attention-estates"
               tabIndex={-1}
             >
               Estates needing attention
             </h2>
-            <p className="mt-1 text-muted-foreground text-sm">
+            <p className="text-muted-foreground mt-1 text-sm">
               Ordered by active assets needing attention or marked faulty.
             </p>
             {summary.affectedEstateCount === 0 ? (
@@ -166,7 +178,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
             ) : null}
             {summary.affectedEstateCount >
             summary.estatesNeedingAttention.length ? (
-              <p className="mt-3 text-muted-foreground text-sm">
+              <p className="text-muted-foreground mt-3 text-sm">
                 Showing {summary.estatesNeedingAttention.length} of{" "}
                 {summary.affectedEstateCount} estates needing attention.
               </p>
@@ -176,10 +188,10 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
                 <li className="rounded-xl border p-4" key={estate.estateId}>
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <h3 className="break-words font-semibold">
+                      <h3 className="font-semibold break-words">
                         <Link
                           aria-label={`View active assets in ${estate.estateName}`}
-                          className="rounded underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                          className="focus-visible:outline-ring rounded underline-offset-4 hover:underline focus-visible:outline-2"
                           params={{ estateId: estate.estateId }}
                           search={{ status: "ACTIVE" }}
                           to="/estates/$estateId/assets"
@@ -187,7 +199,7 @@ function PortfolioSummary({ summary }: { summary: DashboardSummary }) {
                           {estate.estateName}
                         </Link>
                       </h3>
-                      <p className="mt-1 text-muted-foreground text-sm">
+                      <p className="text-muted-foreground mt-1 text-sm">
                         {estate.estateCode} · {estate.totalActiveAssets} active
                         assets
                       </p>
@@ -288,7 +300,7 @@ export function WorkspaceHome() {
           </Alert>
         ) : null}
         {invitations.data?.length === 0 ? (
-          <p className="mt-3 text-muted-foreground text-sm">
+          <p className="text-muted-foreground mt-3 text-sm">
             You have no pending invitations.
           </p>
         ) : null}

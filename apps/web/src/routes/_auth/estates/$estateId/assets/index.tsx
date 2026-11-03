@@ -7,7 +7,7 @@ import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-comp
 import { InspectionAssetList } from "./-components/inspection-asset-list";
 
 const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 function validateSearch(
   search: Record<string, unknown>
 ): AssetFilters & AssetSort {

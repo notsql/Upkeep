@@ -32,8 +32,8 @@ const assetPath = `/estates/${estateId}/assets/${assetId}`;
 const historyEndpoint = "/estates/{estateId}/assets/{assetId}/inspections";
 const historyKey = ["tester", "inspection-results", estateId, assetId, "list"];
 const cursor = "opaque-history-page-two";
-const ALEX_ROW = /Alex Tan/;
-const MUTATION_ACTION = /edit|delete/i;
+const ALEX_ROW = /Alex Tan/u;
+const MUTATION_ACTION = /edit|delete/iu;
 
 const inspection: components["schemas"]["InspectionResultResponse"] = {
   id: inspectionId,

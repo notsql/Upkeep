@@ -10,7 +10,7 @@ import { describe, expect, it, vi } from "vitest";
 import { localToday } from "@/lib/assessments";
 import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/record-event-dialog";
 
-const REQUIRED = /required/i;
+const REQUIRED = /required/iu;
 
 function typeField() {
   return screen.getByRole("combobox", { name: "Type" });

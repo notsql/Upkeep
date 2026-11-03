@@ -3,8 +3,8 @@ import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { expect, it, vi } from "vitest";
 import { DocumentAssetPicker } from "@/routes/_auth/estates/$estateId/documents/-components/document-asset-picker";
 
-const ASSET_REFERENCE = /TT-A0001/;
-const ASSESSMENT_COLUMN = /condition|assessment/i;
+const ASSET_REFERENCE = /TT-A0001/u;
+const ASSESSMENT_COLUMN = /condition|assessment/iu;
 
 it("puts the labelled selection checkbox in the leftmost table cell", async () => {
   renderWithProviders(

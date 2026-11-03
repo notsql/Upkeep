@@ -64,19 +64,19 @@ vi.mock("@workos/authkit-tanstack-react-start/client", async () => {
   };
 });
 
-const SELECT_ORDER = /select TT-W0001/i;
-const SAVE_LINK = /^save link$/i;
-const MUTATION_ACTIONS = /save link|change work order|remove link/i;
-const DOWNLOAD_INVOICE = /download invoice.pdf/i;
-const CHANGE_ORDER = /^change work order$/i;
-const CORRECTION_REASON = /correction reason/i;
-const REMOVE_LINK = /^remove link$/i;
-const CONFIRM_REMOVAL = /^confirm removal$/i;
-const UNLINKED = /not linked to a work order/i;
-const ASSOCIATION_CHANGED = /association changed/i;
-const REFRESH_ASSOCIATION = /refresh association/i;
-const REVIEW_UPDATED = /reviewed the updated link/i;
-const WRITE_ACTIONS = /save link|remove link|change work order/i;
+const SELECT_ORDER = /select TT-W0001/iu;
+const SAVE_LINK = /^save link$/iu;
+const MUTATION_ACTIONS = /save link|change work order|remove link/iu;
+const DOWNLOAD_INVOICE = /download invoice.pdf/iu;
+const CHANGE_ORDER = /^change work order$/iu;
+const CORRECTION_REASON = /correction reason/iu;
+const REMOVE_LINK = /^remove link$/iu;
+const CONFIRM_REMOVAL = /^confirm removal$/iu;
+const UNLINKED = /not linked to a work order/iu;
+const ASSOCIATION_CHANGED = /association changed/iu;
+const REFRESH_ASSOCIATION = /refresh association/iu;
+const REVIEW_UPDATED = /reviewed the updated link/iu;
+const WRITE_ACTIONS = /save link|remove link|change work order/iu;
 
 const estateId = "00000000-0000-0000-0000-000000000001";
 const documentId = "00000000-0000-0000-0000-000000000002";
@@ -107,7 +107,7 @@ const closedOrder = {
   priority: "MEDIUM",
   createdAt: "2026-10-01T01:00:00Z",
 };
-const linkAction = /work-order link for invoice.pdf/i;
+const linkAction = /work-order link for invoice.pdf/iu;
 
 function allow(role = "MANAGER", orders = true) {
   state.access = {

@@ -130,6 +130,11 @@ describe("dashboard navigation", () => {
     screen.getByRole("button", { name: "Open account menu" });
   });
   it("marks the asset destination current and supplies estate-specific links", async () => {
+    const originalMedia = window.matchMedia;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      ...originalMedia(query),
+      matches: query === "(max-width: 767px)",
+    }));
     renderWithProviders(
       <AppShell>
         <main>Content</main>
@@ -152,8 +157,16 @@ describe("dashboard navigation", () => {
     const context = within(
       screen.getByRole("navigation", { name: "Estate navigation" })
     );
-    context.getByRole("link", { name: "Overview" });
-    context.getByRole("link", { name: "Assets", current: "page" });
+    fireEvent.click(
+      context.getByRole("button", { name: "Estate section: Assets" })
+    );
+    const sections = within(
+      await screen.findByRole("menu", { name: "Estate sections" })
+    );
+    expect(
+      sections.getByRole("menuitem", { name: "Overview" }).getAttribute("href")
+    ).toBe("/estates/e");
+    sections.getByRole("menuitem", { name: "Assets", current: "page" });
     mobile.getByRole("button", { name: "More navigation" });
   });
   it("hides estate features outside an estate and admin features from ordinary users", async () => {

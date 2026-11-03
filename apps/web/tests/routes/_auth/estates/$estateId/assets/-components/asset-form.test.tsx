@@ -20,11 +20,11 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
 
-const INSTALLED_ON_LABEL = /^Installation date/;
-const MANUFACTURER_LABEL = /^Manufacturer/;
-const MODEL_LABEL = /^Model/;
-const SERIAL_NUMBER_LABEL = /^Serial number/;
-const REQUIRED = /required/i;
+const INSTALLED_ON_LABEL = /^Installation date/u;
+const MANUFACTURER_LABEL = /^Manufacturer/u;
+const MODEL_LABEL = /^Model/u;
+const SERIAL_NUMBER_LABEL = /^Serial number/u;
+const REQUIRED = /required/iu;
 
 const at = "2026-09-27T00:00:00Z";
 function location(

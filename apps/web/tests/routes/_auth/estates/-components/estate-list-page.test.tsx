@@ -1,9 +1,5 @@
 import { fireEvent } from "@testing-library/react";
 
-vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
-  PendingInvitations: () => null,
-}));
-
 import {
   chooseOption,
   renderWithProviders,
@@ -16,6 +12,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { EstateDirectoryFilters } from "@/routes/_auth/estates/-components/estate-directory-filters";
 import { EstateListPage } from "@/routes/_auth/estates/-components/estate-list-page";
+
+vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
+  PendingInvitations: () => null,
+}));
 
 // The real route owns URL-backed filters; isolated screen tests supply a controller.
 function Directory() {

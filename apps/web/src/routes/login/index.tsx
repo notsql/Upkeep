@@ -45,7 +45,7 @@ export function LoginPage({
       >
         <CardHeader>
           <CardTitle>
-            <h1 className="font-semibold text-2xl" id="login-heading">
+            <h1 className="text-2xl font-semibold" id="login-heading">
               Sign in
             </h1>
           </CardTitle>

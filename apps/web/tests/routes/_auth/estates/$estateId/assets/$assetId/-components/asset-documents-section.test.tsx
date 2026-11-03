@@ -23,18 +23,18 @@ import {
 import { screen, waitFor, within } from "@tests/test-utils";
 import { expect, it, vi } from "vitest";
 
-const DOCUMENTS_HEADING = /^documents$/i;
-const INVOICE_FILENAME = /invoice\.pdf/i;
-const INVOICE_CONFIRMATION = /invoice\.pdf/;
-const INVOICE_TYPE = /^invoice$/i;
-const UPLOAD_DATE = /25.*Oct|Oct.*25|2026-10-25|25\/10\/2026|10\/25\/2026/i;
-const DOWNLOAD_INVOICE = /download invoice\.pdf/i;
-const UNLINK_BUTTON = /unlink/i;
-const ASSET_REFERENCE = /TT-A0001/;
-const RETRY_BUTTON = /retry/i;
-const NO_LINKED_DOCUMENTS = /no.*documents.*link|no.*linked.*documents/i;
-const NEXT_PAGE = /^next(?: page)?$|load more/i;
-const SECOND_FILENAME = /second\.pdf/i;
+const DOCUMENTS_HEADING = /^documents$/iu;
+const INVOICE_FILENAME = /invoice\.pdf/iu;
+const INVOICE_CONFIRMATION = /invoice\.pdf/u;
+const INVOICE_TYPE = /^invoice$/iu;
+const UPLOAD_DATE = /25.*Oct|Oct.*25|2026-10-25|25\/10\/2026|10\/25\/2026/iu;
+const DOWNLOAD_INVOICE = /download invoice\.pdf/iu;
+const UNLINK_BUTTON = /unlink/iu;
+const ASSET_REFERENCE = /TT-A0001/u;
+const RETRY_BUTTON = /retry/iu;
+const NO_LINKED_DOCUMENTS = /no.*documents.*link|no.*linked.*documents/iu;
+const NEXT_PAGE = /^next(?: page)?$|load more/iu;
+const SECOND_FILENAME = /second\.pdf/iu;
 
 it("keeps the Size header aligned with the shared attachment row", async () => {
   linked();

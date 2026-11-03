@@ -18,7 +18,7 @@ Free default addresses only; no custom domain.
 | Piece | Today | Deployed as | Address |
 | --- | --- | --- | --- |
 | `apps/web` (TanStack Start SSR) | Nitro `node-server` | **Cloudflare Worker** `web`, built by `@cloudflare/vite-plugin` (already in the working tree) | `https://web.<account>.workers.dev` |
-| `apps/server` (Spring Boot, Java 25, ONNX in-process) | `apps/server/Dockerfile` | **Cloud Run service** `api`, image from that Dockerfile | `https://api-<hash>.asia-southeast1.run.app` |
+| `apps/server` (Spring Boot, Java 25, ONNX in-process) | `apps/server/Dockerfile` | **Cloud Run service** `upkeep-server-prd`, image from that Dockerfile | `https://upkeep-server-prd-<hash>.asia-southeast1.run.app` |
 | Images | none | Artifact Registry Docker repo `upkeep-ar-prd`, `asia-southeast1` | - |
 | Postgres | Neon `dev` branch | **Neon `prd` branch** (Spring connects over JDBC) | - |
 | Build and deploy | none | `web`: Workers Builds. `api`: GitHub Actions `deploy.yml`, keyless via Workload Identity Federation | - |
@@ -112,10 +112,10 @@ root.
 
 | Setting | Value |
 | --- | --- |
-| Build command | `pnpm install --frozen-lockfile && pnpm nx build web` |
+| Build command | `pnpm install --frozen-lockfile && pnpm --filter web build` (not `nx`: `@nx/maven` runs Maven to build the project graph, and the build image has no JDK) |
 | Deploy command | `cd apps/web && npx wrangler deploy` (picks up the `dist/server/wrangler.json` the Vite build writes) |
 | Watch paths | `apps/web/**`, `packages/{api,ui,env}/**` |
-| Build variables | `VITE_API_URL=https://api-<hash>.asia-southeast1.run.app`, `SKIP_ENV_VALIDATION=1` |
+| Build variables | `VITE_API_URL=https://upkeep-server-prd-<hash>.asia-southeast1.run.app`, `SKIP_ENV_VALIDATION=1` |
 
 No Cloudflare token lives in GitHub.
 
@@ -157,7 +157,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy api to Cloud Run
+    name: Deploy upkeep-server-prd to Cloud Run
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -187,7 +187,7 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:
-          service: api
+          service: upkeep-server-prd
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}
           # JAVA_TOOL_OPTIONS is Cloud Run only, so local compose keeps the JVM
@@ -205,7 +205,10 @@ jobs:
             SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:latest
             SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES=SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES:latest
           secrets_update_strategy: overwrite
+          # Public on purpose: the browser calls this service directly and
+          # Spring validates the WorkOS JWT.
           flags: >-
+            --allow-unauthenticated
             --service-account=${{ vars.GCP_API_RUNTIME_SA }}
             --port=8080
             --cpu=1
@@ -220,7 +223,7 @@ jobs:
 `CORS_ALLOWED_ORIGINS` comes from the `WEB_URL` repository variable rather
 than Secret Manager: it is not secret and is needed as plain env. The image is
 tagged with the commit SHA; rollback is routing traffic to the previous
-revision (`gcloud run services update-traffic api --to-revisions=...`).
+revision (`gcloud run services update-traffic upkeep-server-prd --to-revisions=...`).
 
 ## Branch flow
 
@@ -275,11 +278,13 @@ account has `roles/secretmanager.secretAccessor` on these secrets only.
    `/apps/server`; Cloudflare connection + Workers sync for `/apps/web`. No
    blank values.
 6. **First deploy, in this order:**
-   1. Run `deploy.yml` by hand; grant `allUsers` `roles/run.invoker` on `api`.
-   2. Put the `api` run.app URL into the Workers Builds `VITE_API_URL`.
+   1. Run `deploy.yml` by hand; `--allow-unauthenticated` grants `allUsers`
+      `roles/run.invoker` on `upkeep-server-prd`.
+   2. Put the `upkeep-server-prd` run.app URL into the Workers Builds `VITE_API_URL`.
    3. Put `https://web.<account>.workers.dev` into the `WEB_URL` repository
-      variable (`CORS_ALLOWED_ORIGINS`) and Infisical `prd`
-      `/apps/web/WORKOS_REDIRECT_URI`; re-run `deploy.yml`.
+      variable (`CORS_ALLOWED_ORIGINS`) and
+      `https://web.<account>.workers.dev/api/auth/callback` into Infisical
+      `prd` `/apps/web/WORKOS_REDIRECT_URI`; re-run `deploy.yml`.
    4. Connect the repo in Workers Builds with the settings above; it builds
       and deploys `web`.
 7. WorkOS: production environment with the `web` redirect URI and origin,

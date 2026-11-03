@@ -103,7 +103,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
         </Alert>
       ) : null}
       {estate.data?.deactivatedAt ? (
-        <p className="mt-4 text-muted-foreground">
+        <p className="text-muted-foreground mt-4">
           This estate is inactive. Editing its details will not reactivate it.
         </p>
       ) : null}

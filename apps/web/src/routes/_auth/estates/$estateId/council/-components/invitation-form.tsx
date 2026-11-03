@@ -67,7 +67,7 @@ export function CouncilInvitationForm({ estateId }: { estateId: string }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="mb-4 text-muted-foreground text-sm">
+        <p className="text-muted-foreground mb-4 text-sm">
           New users receive an email invitation. Existing users accept on
           Invitations. Existing accounts keep their current access.
         </p>

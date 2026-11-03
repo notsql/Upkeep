@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
 import { NotFoundPage } from "@/components/not-found-page";
 
-const HOME_PATH = /\/$/;
+const HOME_PATH = /\/$/u;
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (
     <a href={to}>{children}</a>

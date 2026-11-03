@@ -98,7 +98,7 @@ export function PendingInvitations({
   if (!invitations.data?.length) {
     if (showEmpty && invitations.isSuccess) {
       return (
-        <Empty className="my-4 rounded-xl border bg-card">
+        <Empty className="bg-card my-4 rounded-xl border">
           <EmptyHeader>
             <EmptyTitle>
               <h2>No pending invitations</h2>

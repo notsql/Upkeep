@@ -29,16 +29,14 @@ class CrewWorkOrderAccessIntegrationTests extends InspectionTestSupport {
                 report,
                 data[0],
                 data[1]);
-        String extra =
-                switch (source) {
-                    case "RESIDENT_REPORT" ->
-                        ",\"sourceReportId\":\"" + report + "\",\"expectedSourceLocationId\":\"" + data[1] + "\"";
-                    case "INSPECTION" ->
-                        ",\"sourceInspectionId\":\"" + inspection + "\",\"expectedSourceLocationId\":\"" + data[1]
-                                + "\"";
-                    case "MAINTENANCE_RECOMMENDATION" -> ",\"sourceReference\":\"Replace worn seal\"";
-                    default -> "";
-                };
+        String extra = switch (source) {
+            case "RESIDENT_REPORT" ->
+                ",\"sourceReportId\":\"" + report + "\",\"expectedSourceLocationId\":\"" + data[1] + "\"";
+            case "INSPECTION" ->
+                ",\"sourceInspectionId\":\"" + inspection + "\",\"expectedSourceLocationId\":\"" + data[1] + "\"";
+            case "MAINTENANCE_RECOMMENDATION" -> ",\"sourceReference\":\"Replace worn seal\"";
+            default -> "";
+        };
         var before =
                 db.fetchOne("select * from \"IssueReport\" where id=?", report).intoMap();
         create(data, "crew", source, extra).andExpect(status().isForbidden());

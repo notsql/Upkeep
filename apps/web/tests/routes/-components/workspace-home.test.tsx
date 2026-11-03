@@ -261,3 +261,30 @@ it("distinguishes an empty condition distribution from healthy assets", async ()
     screen.queryByRole("figure", { name: "Asset condition distribution" })
   ).toBeNull();
 });
+
+// ID-102: jsdom cannot hover or measure layout, so these pin the classes behind the bug.
+it("gives clickable stat cards the shared card hover, not a ring on the link", async () => {
+  renderWithProviders(<WorkspaceHome />);
+  await screen.findByRole("region", { name: "Active assets" });
+  for (const name of ["Accessible estates", "Attention needed"]) {
+    const link = screen.getByRole("link", { name });
+    expect(link.className).not.toContain("hover:ring");
+    expect(link.className).toContain("rounded-[var(--radius)]");
+    expect(link.className).toContain("focus-visible:ring-2");
+    // The same hover as the estate and asset cards: a tinted card, not a ring on the link.
+    expect(within(link).getByRole("region", { name }).className).toContain(
+      "group-hover:bg-accent/40"
+    );
+  }
+});
+
+it("lets every stat card shrink so the grid never overflows", async () => {
+  renderWithProviders(<WorkspaceHome />);
+  await screen.findByRole("region", { name: "Active assets" });
+  expect(
+    screen.getByRole("link", { name: "Accessible estates" }).className
+  ).toContain("min-w-0");
+  for (const name of ["Active assets", "Council members"]) {
+    expect(screen.getByRole("region", { name }).className).toContain("min-w-0");
+  }
+});

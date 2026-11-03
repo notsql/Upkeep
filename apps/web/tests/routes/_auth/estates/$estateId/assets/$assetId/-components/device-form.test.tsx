@@ -16,8 +16,8 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
 
-const REQUIRED = /required/i;
-const INTERVAL = /^Expected reporting interval/;
+const REQUIRED = /required/iu;
+const INTERVAL = /^Expected reporting interval/u;
 
 const at = "2026-09-28T00:00:00Z";
 function location(id: string, name: string, parentId?: string): Location {

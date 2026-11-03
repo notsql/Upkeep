@@ -24,22 +24,20 @@ public class DocumentValidator {
         if (file.getSize() > 5_000_000)
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Choose a file no larger than 5 MB.");
         String extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
-        String media =
-                switch (extension) {
-                    case "pdf" -> "application/pdf";
-                    case "jpg", "jpeg" -> "image/jpeg";
-                    case "png" -> "image/png";
-                    default -> throw unsupported();
-                };
+        String media = switch (extension) {
+            case "pdf" -> "application/pdf";
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            default -> throw unsupported();
+        };
         if (!media.equals(file.getContentType())) throw unsupported();
         try {
             byte[] bytes = file.getBytes();
-            byte[] signature =
-                    switch (media) {
-                        case "application/pdf" -> "%PDF-".getBytes(StandardCharsets.US_ASCII);
-                        case "image/jpeg" -> new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff};
-                        default -> new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10};
-                    };
+            byte[] signature = switch (media) {
+                case "application/pdf" -> "%PDF-".getBytes(StandardCharsets.US_ASCII);
+                case "image/jpeg" -> new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff};
+                default -> new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10};
+            };
             if (bytes.length < signature.length || !Arrays.equals(signature, Arrays.copyOf(bytes, signature.length)))
                 throw unsupported();
             if (!media.equals("application/pdf")) validateImage(bytes);

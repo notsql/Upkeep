@@ -33,7 +33,7 @@ function ReportDetailPage() {
       >
         Return to My Reports
       </a>
-      <h1 className="my-4 font-semibold text-2xl">Report details</h1>
+      <h1 className="my-4 text-2xl font-semibold">Report details</h1>
       {report.isPending ? <p role="status">Loading report…</p> : null}
       {report.isError ? (
         <Alert role="alert" variant="destructive">

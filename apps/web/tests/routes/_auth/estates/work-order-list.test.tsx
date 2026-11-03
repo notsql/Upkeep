@@ -49,7 +49,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 }));
 const estateId = "00000000-0000-0000-0000-000000000001";
 const basePath = `/estates/${estateId}/work-orders`;
-const WORK_ORDER_WRITES = /start work|complete work|correct outcome/i;
+const WORK_ORDER_WRITES = /start work|complete work|correct outcome/iu;
 const order = {
   id: "00000000-0000-0000-0000-000000000002",
   estateId,
@@ -531,4 +531,55 @@ it("offers First page for a directly opened cursor without inventing a previous 
   await screen.findByRole("button", { name: "First page" });
   expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
   screen.getByText("1 work order on this page");
+});
+
+it("shows mobile work-order summaries with sorting, filtering and paging intact", async () => {
+  const original = window.matchMedia;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    ...original(query),
+    matches: query === "(max-width: 767px)",
+  }));
+  state.crew = true;
+  const { router } = await setup(`${basePath}?priority=HIGH&q=TEST`);
+  const list = within(await screen.findByRole("list", { name: "Work orders" }));
+  list.getByRole("link", { name: "TEST-W0001" });
+  list.getByText("Leaking pipe");
+  list.getByText("HIGH");
+  list.getByText("OPEN");
+  list.getByText("CLEANLINESS");
+  expect(screen.queryByRole("table", { name: "Work orders" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Sort work orders by" }),
+    "Priority"
+  );
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      priority: "HIGH",
+      q: "TEST",
+      sortBy: "PRIORITY",
+      direction: "DESC",
+    })
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Reverse sort direction" })
+  );
+  await waitFor(() =>
+    expect(router.state.location.search.direction).toBe("ASC")
+  );
+  await waitFor(() =>
+    expect(
+      screen.getByRole("button", { name: "Next" }).hasAttribute("disabled")
+    ).toBe(false)
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      priority: "HIGH",
+      q: "TEST",
+      sortBy: "PRIORITY",
+      direction: "ASC",
+      cursor: "page-two",
+    })
+  );
 });

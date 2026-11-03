@@ -39,7 +39,7 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
         description="Every device in this estate and whether it is still reporting. Devices that have gone quiet are listed first."
         title="Devices"
       />
-      <p className="my-4 text-muted-foreground text-sm">
+      <p className="text-muted-foreground my-4 text-sm">
         Refreshes every 60 seconds while this page is open.
       </p>
       {devices.isPending ? <p role="status">Loading devices…</p> : null}
@@ -49,14 +49,14 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
         </Alert>
       ) : null}
       {devices.data?.length === 0 ? (
-        <p className="py-6 text-muted-foreground">
+        <p className="text-muted-foreground py-6">
           No devices are registered in this estate yet.
         </p>
       ) : null}
       {devices.data?.length ? (
         <Table
           aria-label="Devices"
-          className="[&_td]:whitespace-normal [&_td]:align-top"
+          className="[&_td]:align-top [&_td]:whitespace-normal"
         >
           <TableHeader>
             <TableRow>
@@ -92,14 +92,14 @@ function DeviceRow({
   return (
     <TableRow>
       <TableCell className="max-w-56 py-4">
-        <p className="wrap-anywhere font-medium">{device.identifier}</p>
-        <p className="wrap-anywhere text-muted-foreground text-sm">
+        <p className="font-medium wrap-anywhere">{device.identifier}</p>
+        <p className="text-muted-foreground text-sm wrap-anywhere">
           {device.model}
         </p>
       </TableCell>
       <TableCell className="max-w-56 py-4">
         <Link
-          className="wrap-anywhere font-medium underline-offset-4 hover:underline"
+          className="font-medium wrap-anywhere underline-offset-4 hover:underline"
           params={{ estateId: device.estateId, assetId: device.assetId }}
           to="/estates/$estateId/assets/$assetId"
         >

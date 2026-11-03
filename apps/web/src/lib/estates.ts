@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { dashboardQueryKey } from "@/lib/dashboard";
 
 const INTERNAL_ERROR =
-  /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/i;
+  /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/iu;
 
 export type EstateStatus = NonNullable<
   NonNullable<operations["list"]["parameters"]["query"]>["status"]

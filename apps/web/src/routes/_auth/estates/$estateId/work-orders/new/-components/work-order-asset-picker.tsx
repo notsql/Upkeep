@@ -102,7 +102,7 @@ export function WorkOrderAssetPicker({
           <DialogTrigger
             render={
               <Button
-                className="h-auto min-h-11 justify-start whitespace-normal text-left"
+                className="h-auto min-h-11 justify-start text-left whitespace-normal"
                 id="work-linked-asset"
                 type="button"
                 variant="outline"
@@ -165,7 +165,7 @@ export function WorkOrderAssetPicker({
                 {assets.data.items.map((asset) => (
                   <Button
                     aria-pressed={selected?.id === asset.id}
-                    className="h-auto justify-start whitespace-normal py-3 text-left"
+                    className="h-auto justify-start py-3 text-left whitespace-normal"
                     key={asset.id}
                     onClick={choose}
                     type="button"
@@ -176,7 +176,7 @@ export function WorkOrderAssetPicker({
                       <span className="block">
                         {asset.reference} — {asset.name}
                       </span>
-                      <span className="block text-muted-foreground text-xs">
+                      <span className="text-muted-foreground block text-xs">
                         {asset.locationPath}
                       </span>
                     </span>

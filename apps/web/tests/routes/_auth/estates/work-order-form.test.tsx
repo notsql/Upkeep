@@ -10,7 +10,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { WorkOrderRequestError } from "@/lib/work-orders";
 import { WorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form";
 
-const PUMP = /OAK-A0001.*Pump/;
+const PUMP = /OAK-A0001.*Pump/u;
 
 const mocks = vi.hoisted(() => ({
   save: vi.fn(),

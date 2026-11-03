@@ -101,7 +101,7 @@ export function DeviceCredential({
         </Button>
       ) : null}
       {error && !issued ? (
-        <p className="w-full text-destructive" role="alert">
+        <p className="text-destructive w-full" role="alert">
           {error}
         </p>
       ) : null}
@@ -109,7 +109,7 @@ export function DeviceCredential({
       <Dialog onOpenChange={cancelOnClose} open={confirming}>
         <DialogContent className="p-6 sm:max-w-md" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle className="font-semibold text-xl">
+            <DialogTitle className="text-xl font-semibold">
               Replace the credential for {device.identifier}?
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm">
@@ -131,7 +131,7 @@ export function DeviceCredential({
       <Dialog onOpenChange={doneOnClose} open={Boolean(issued)}>
         <DialogContent className="p-6 sm:max-w-lg" showCloseButton={false}>
           <DialogHeader>
-            <DialogTitle className="font-semibold text-xl">
+            <DialogTitle className="text-xl font-semibold">
               API key for {device.identifier}
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm">
