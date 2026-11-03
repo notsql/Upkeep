@@ -4,8 +4,8 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { PendingInvitations } from "@/routes/_auth/estates/-components/pending-invitations";
 
-const REVIEWER_NAME = /Fault reviewer/;
-const UPDATED_NAME = /Estate reviewer/;
+const REVIEWER_NAME = /Fault reviewer/u;
+const UPDATED_NAME = /Estate reviewer/u;
 
 const { apiGet } = vi.hoisted(() => ({ apiGet: vi.fn() }));
 

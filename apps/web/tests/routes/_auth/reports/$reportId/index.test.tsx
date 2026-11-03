@@ -14,8 +14,8 @@ const { get, auth, listeners, search } = vi.hoisted(() => ({
   auth: { user: { id: "resident-a" }, role: "user", loading: false },
   listeners: new Set<() => void>(),
 }));
-const INTERNAL_NOTE = /internal note/i;
-const REPORT_NOT_FOUND = /report.*not found|report.*unavailable/i;
+const INTERNAL_NOTE = /internal note/iu;
+const REPORT_NOT_FOUND = /report.*not found|report.*unavailable/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),

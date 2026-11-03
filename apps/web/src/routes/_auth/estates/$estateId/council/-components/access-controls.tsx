@@ -84,7 +84,7 @@ function OutstandingInvitation({
   }
   return (
     <li className="grid gap-2 rounded-lg border p-3">
-      <p className="break-all font-medium">{invitation.email}</p>
+      <p className="font-medium break-all">{invitation.email}</p>
       <p className="text-muted-foreground text-sm">
         {invitation.customRoleName ?? invitation.role} · {delivery}
         {invitation.expiresAt

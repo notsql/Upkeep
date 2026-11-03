@@ -27,7 +27,7 @@ import {
   wholeMinutes,
 } from "@/routes/_auth/estates/$estateId/sensors/-components/sensor-format";
 
-const TOLERANCE = /^\d{1,12}(\.\d{1,6})?$/;
+const TOLERANCE = /^\d{1,12}(?:\.\d{1,6})?$/u;
 
 export function useMetricPolicyEditor({
   estateId,
@@ -160,11 +160,11 @@ export function MetricPolicyForm({
     changeTolerance,
   } = editor;
   return (
-    <div className="rounded-xl bg-muted/40 p-4 sm:p-6" id={editorId}>
-      <h3 className="mb-4 font-semibold text-base" ref={heading} tabIndex={-1}>
+    <div className="bg-muted/40 rounded-xl p-4 sm:p-6" id={editorId}>
+      <h3 className="mb-4 text-base font-semibold" ref={heading} tabIndex={-1}>
         {label} policy
       </h3>
-      <p className="mb-3 text-muted-foreground">
+      <p className="text-muted-foreground mb-3">
         {policy.durationMinutes === null
           ? "Not configured"
           : `Current threshold: ${policy.durationMinutes} minutes; tolerance: ${policy.tolerance} ${policy.unit}`}

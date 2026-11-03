@@ -284,7 +284,7 @@ export function EstateDetailsPage({
             </div>
           </dl>
           {canEditDetails ? null : (
-            <p className="mb-3 text-muted-foreground text-sm">
+            <p className="text-muted-foreground mb-3 text-sm">
               Shared with you. Only the owner or an assigned Manager can edit
               estate details.
             </p>
@@ -303,7 +303,7 @@ export function EstateDetailsPage({
               aria-label="Estate assets"
               className="section-surface mt-6 space-y-3"
             >
-              <h2 className="font-semibold text-xl">Assets</h2>
+              <h2 className="text-xl font-semibold">Assets</h2>
               <div className="flex flex-wrap gap-4">
                 <Link
                   className={buttonVariants({ variant: "outline" })}

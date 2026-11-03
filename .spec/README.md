@@ -31,6 +31,10 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [export-filtered-readings-csv.md](features/export-filtered-readings-csv.md) | ID-61 / ID-64 CSV | implemented and verified; complete filtered CSV v1 with provenance, bounded streaming and cancellation; 1,470 server / 866 web tests, types, formatting/build, live role/mobile QA and million-row HTTP check pass |
+| [mobile-estate-navigation-and-lists.md](features/mobile-estate-navigation-and-lists.md) | readings/mobile QA follow-up | built and verified 2026-10-28; estate-scoped resident reporting, responsive lists and resize recovery; 849 web / 1,449 server tests, types, formatting/build and live Chrome mobile/role checks pass |
+| [manual-readings-and-provenance.md](features/manual-readings-and-provenance.md) | ID-63 / ID-64 | implemented and verified; exact-decimal correction complete; 1,480 server / 880 web tests, types, formatting/build, mobile/role/CSV checks pass |
+| [browse-raw-sensor-readings.md](features/browse-raw-sensor-readings.md) | ID-60 | implemented; 1,420 server / 818 web tests, types, lint and build pass; browser roles/mobile, flag layout and performance checked |
 | [document-type-filter.md](features/document-type-filter.md) | - | built and verified; filter existing types and remove Size from the Documents page; 1,425 Java and 815 web tests, types and formatting pass |
 | [document-asset-association.md](features/document-asset-association.md) | implemented; manual acceptance pending | Owner link/unlink for ordinary uploads and retired assets, asset Documents section, versioning and work-order consistency; automated tests pass |
 | [crew-work-orders-read-only.md](features/crew-work-orders-read-only.md) | - | built and verified 2026-10-26; Crew work-order reads retained and creation/writes denied; tests first, 1,354 backend and 754 web tests, type checks and formatting passed |

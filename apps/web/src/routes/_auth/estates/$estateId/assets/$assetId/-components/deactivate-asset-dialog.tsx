@@ -108,7 +108,7 @@ export function DeactivateAssetDialog({
     <Dialog onOpenChange={handleOpenChange} open>
       <DialogContent className="p-6 sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle className="font-semibold text-xl">
+          <DialogTitle className="text-xl font-semibold">
             Retire {name}?
           </DialogTitle>
           <DialogDescription className="mt-2 text-sm">

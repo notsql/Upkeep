@@ -16,7 +16,7 @@ let access:
   | typeof workspaceAccess
   | typeof unassignedAccess = workspaceAccess;
 
-const CREATE_ACCOUNT = /^(Register|Create account)$/;
+const CREATE_ACCOUNT = /^(?:Register|Create account)$/u;
 
 const { auth } = vi.hoisted(() => ({
   auth: { user: null as { id: string } | null, role: "user", loading: false },

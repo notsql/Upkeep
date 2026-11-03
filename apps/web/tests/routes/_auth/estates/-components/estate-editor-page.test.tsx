@@ -34,9 +34,9 @@ const estate = {
   updatedAt: "2026-09-25T00:00:00Z",
   owned: false,
 };
-const CREATED = /created/i;
-const ACCESS_FAILURE = /access|permission/i;
-const RETRY = /retry/i;
+const CREATED = /created/iu;
+const ACCESS_FAILURE = /access|permission/iu;
+const RETRY = /retry/iu;
 
 beforeEach(() => vi.resetAllMocks());
 

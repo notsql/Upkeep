@@ -31,6 +31,7 @@ import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
+import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Permission;
 import com.proj.server.db.tables.Workorder;
@@ -196,6 +197,11 @@ public class Public extends SchemaImpl {
     public final Location LOCATION = Location.LOCATION;
 
     /**
+     * The table <code>public.ManualReading</code>.
+     */
+    public final Manualreading MANUALREADING = Manualreading.MANUALREADING;
+
+    /**
      * The table <code>public.Manufacturer</code>.
      */
     public final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
@@ -268,6 +274,7 @@ public class Public extends SchemaImpl {
             Issuereport.ISSUEREPORT,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
+            Manualreading.MANUALREADING,
             Manufacturer.MANUFACTURER,
             Permission.PERMISSION,
             Workorder.WORKORDER,

@@ -9,7 +9,7 @@ export default function Header() {
         aria-label="Header navigation"
         className="flex items-center gap-5 text-sm"
       >
-        <Link className="font-semibold text-lg tracking-tight" to="/">
+        <Link className="text-lg font-semibold tracking-tight" to="/">
           UpKeep
         </Link>
       </nav>

@@ -31,17 +31,29 @@ export function renderWithProviders(
     },
   });
 
-  function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <QueryClientProvider client={queryClient}>
-          {children}
-        </QueryClientProvider>
-      </ThemeProvider>
-    );
-  }
+  return {
+    queryClient,
+    ...render(ui, {
+      wrapper: ({ children }) => (
+        <Providers queryClient={queryClient}>{children}</Providers>
+      ),
+      ...options,
+    }),
+  };
+}
 
-  return { queryClient, ...render(ui, { wrapper: Wrapper, ...options }) };
+function Providers({
+  children,
+  queryClient,
+}: {
+  children: ReactNode;
+  queryClient: QueryClient;
+}) {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </ThemeProvider>
+  );
 }
 
 /**

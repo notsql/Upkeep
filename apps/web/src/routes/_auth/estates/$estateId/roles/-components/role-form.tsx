@@ -54,12 +54,12 @@ function PermissionChoice({
           onCheckedChange={change}
         />
       </TableCell>
-      <TableCell className="whitespace-normal align-top">
+      <TableCell className="align-top whitespace-normal">
         <Label className="leading-normal" htmlFor={fieldId}>
           {permission.label}
         </Label>
       </TableCell>
-      <TableCell className="space-y-1 whitespace-normal align-top">
+      <TableCell className="space-y-1 align-top whitespace-normal">
         <p
           className="text-muted-foreground text-sm"
           id={`${fieldId}-description`}

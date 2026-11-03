@@ -10,12 +10,17 @@ import { Link } from "@tanstack/react-router";
 import { Building2, Check, ChevronsUpDown } from "lucide-react";
 import { useAppAccess } from "@/lib/access";
 
-export type EstateFeature = "work-orders" | "reports" | "documents";
+export type EstateFeature =
+  | "work-orders"
+  | "reports"
+  | "documents"
+  | "resident-reports"
+  | "report-creation";
 type EstateContextFeature =
   | EstateFeature
+  | "readings"
   | "management"
-  | "resident"
-  | "report-creation";
+  | "resident";
 const roleLabels: Record<string, string> = {
   MANAGER: "Manager",
   CREW: "Crew",
@@ -42,6 +47,9 @@ function estateDestination(
   }
   if (feature === "documents" && estate.canViewDocuments) {
     return "/estates/$estateId/documents";
+  }
+  if (feature === "readings" && estate.canViewReadings) {
+    return "/estates/$estateId/readings";
   }
   if (feature === "reports" && estate.canViewFaultReports) {
     return "/estates/$estateId/reports";
@@ -90,7 +98,7 @@ export function EstateFeatureSwitcher({
           <Button
             aria-description={current ? estateRoleLabel(current) : undefined}
             aria-label={`Switch estate: ${name}`}
-            className="h-auto min-h-11 w-full min-w-0 max-w-full justify-start gap-2 rounded-xl px-3 py-3"
+            className="h-auto min-h-11 w-full max-w-full min-w-0 justify-start gap-2 rounded-xl px-3 py-3"
             title={current ? `${name} (${estateRoleLabel(current)})` : name}
             variant="outline"
           />
@@ -100,7 +108,7 @@ export function EstateFeatureSwitcher({
         <span className="min-w-0 flex-1 text-left">
           <span className="block truncate">{name}</span>
           {current ? (
-            <span className="block truncate text-muted-foreground text-xs">
+            <span className="text-muted-foreground block truncate text-xs">
               {estateRoleLabel(current)}
             </span>
           ) : null}
@@ -109,7 +117,7 @@ export function EstateFeatureSwitcher({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         aria-label="Switch estate"
-        className="max-h-[min(20rem,var(--available-height))] min-w-48 max-w-[min(24rem,var(--available-width))] rounded-xl p-2"
+        className="max-h-[min(20rem,var(--available-height))] max-w-[min(24rem,var(--available-width))] min-w-48 rounded-xl p-2"
       >
         {choices.map((estate) => {
           const resident = estate.role === "RESIDENT";
@@ -145,9 +153,9 @@ export function EstateFeatureSwitcher({
                 />
               }
             >
-              <span className="wrap-anywhere min-w-0 flex-1 whitespace-normal font-medium">
+              <span className="min-w-0 flex-1 font-medium wrap-anywhere whitespace-normal">
                 <span className="block">{estate.estateName}</span>
-                <span className="block font-normal text-muted-foreground text-xs">
+                <span className="text-muted-foreground block text-xs font-normal">
                   <span>{estateRoleLabel(estate)}</span>
                   {resident ? (
                     <>

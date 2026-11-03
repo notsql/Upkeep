@@ -117,6 +117,10 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings",
+                                "/estates/{estateId}/readings",
+                                "/estates/{estateId}/readings/export",
+                                "/estates/{estateId}/readings/assets",
+                                "/estates/{estateId}/readings/metrics",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
                                 "/estates/{estateId}/assets/{assetId}/service-interval",
                                 "/estates/{estateId}/devices",
@@ -137,6 +141,7 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
                                 "/estates/{estateId}/documents",
+                                "/estates/{estateId}/readings/manual",
                                 "/estates/{estateId}/work-orders",
                                 "/estates/{estateId}/assets/{assetId}/inspections",
                                 "/estates/{estateId}/inspection-list/generate",
@@ -217,6 +222,7 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Content-Disposition", "X-Export-Row-Count"));
 
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

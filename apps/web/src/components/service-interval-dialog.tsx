@@ -31,7 +31,7 @@ import {
   type ServiceInterval,
 } from "@/lib/service-intervals";
 
-const WHOLE_NUMBER = /^\d+$/;
+const WHOLE_NUMBER = /^\d+$/u;
 
 const unitItems = Object.entries(INTERVAL_UNITS).map(([value, unit]) => ({
   value,

@@ -132,9 +132,9 @@ function InspectionHistoryPage({
   return (
     <section
       aria-labelledby={headingId}
-      className="section-surface mt-6 min-w-0 max-w-full space-y-4"
+      className="section-surface mt-6 max-w-full min-w-0 space-y-4"
     >
-      <h2 className="font-semibold text-xl" id={headingId}>
+      <h2 className="text-xl font-semibold" id={headingId}>
         Inspection records
       </h2>
       {history.isPending ? (

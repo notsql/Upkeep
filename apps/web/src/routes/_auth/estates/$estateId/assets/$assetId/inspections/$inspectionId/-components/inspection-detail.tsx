@@ -223,7 +223,7 @@ export function InspectionDetail({
         </CardContent>
       </Card>
       <section aria-label="Inspection photos" className="space-y-4">
-        <h2 className="font-semibold text-xl">Photos</h2>
+        <h2 className="text-xl font-semibold">Photos</h2>
         {record.photos.length === 0 ? (
           <p>No photos recorded.</p>
         ) : (

@@ -303,7 +303,7 @@ export function DeviceForm({
         {...errorProps("metrics")}
         className="grid gap-2 sm:grid-cols-2"
       >
-        <legend className="mb-2 font-medium text-sm">Supported metrics</legend>
+        <legend className="mb-2 text-sm font-medium">Supported metrics</legend>
         {catalogue.map(([metric, { name, unit }]) => (
           <MetricOption
             checked={metrics.has(metric)}

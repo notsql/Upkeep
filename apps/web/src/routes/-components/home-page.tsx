@@ -96,7 +96,7 @@ export function HomePage() {
         title="Your estate workspace"
       />
       <section className="section-surface mb-8">
-        <p className="mb-5 max-w-xl text-muted-foreground leading-relaxed">
+        <p className="text-muted-foreground mb-5 max-w-xl leading-relaxed">
           A clear view of your estates, the assets within them, and the people
           who help manage them.
         </p>
@@ -122,7 +122,7 @@ export function HomePage() {
           <CardHeader>
             <Building2
               aria-hidden="true"
-              className="mb-2 size-6 text-primary"
+              className="text-primary mb-2 size-6"
             />
             <CardTitle>Estates</CardTitle>
           </CardHeader>
@@ -132,7 +132,7 @@ export function HomePage() {
         </Card>
         <Card>
           <CardHeader>
-            <Layers aria-hidden="true" className="mb-2 size-6 text-primary" />
+            <Layers aria-hidden="true" className="text-primary mb-2 size-6" />
             <CardTitle>Assets</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
@@ -141,7 +141,7 @@ export function HomePage() {
         </Card>
         <Card>
           <CardHeader>
-            <Users aria-hidden="true" className="mb-2 size-6 text-primary" />
+            <Users aria-hidden="true" className="text-primary mb-2 size-6" />
             <CardTitle>Council access</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">

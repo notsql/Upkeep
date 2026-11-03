@@ -20,16 +20,16 @@
     "lint:fix": "ultracite fix"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.10.0",
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "catalog:",
     "@proj/env": "workspace:*",
     "dotenv": "catalog:",
-    "pg": "^8.23.0"
+    "pg": "^8.23.1"
   },
   "devDependencies": {
     "@proj/config": "workspace:*",
     "@types/pg": "^8.23.1",
-    "prisma": "^7.10.0",
+    "prisma": "^7.10.1",
     "typescript": "catalog:"
   }
 }

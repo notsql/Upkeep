@@ -3,7 +3,7 @@ import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetCostsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section";
 
-const UNKNOWN_COSTS = /unknown costs/;
+const UNKNOWN_COSTS = /unknown costs/u;
 
 function manual(overrides: Record<string, unknown>) {
   return {

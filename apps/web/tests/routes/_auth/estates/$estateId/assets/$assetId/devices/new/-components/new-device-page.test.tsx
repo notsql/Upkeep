@@ -23,7 +23,7 @@ vi.mock("@tanstack/react-router", () => ({
     <a href={to}>{children}</a>
   ),
 }));
-const INTERVAL = /^Expected reporting interval/;
+const INTERVAL = /^Expected reporting interval/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
 const at = "2026-09-28T00:00:00Z";
 const locations: Location[] = [

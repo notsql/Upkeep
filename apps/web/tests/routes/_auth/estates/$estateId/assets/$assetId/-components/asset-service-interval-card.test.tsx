@@ -9,7 +9,7 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetServiceIntervalCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-service-interval-card";
 
-const CASEY = /Casey Doe/;
+const CASEY = /Casey Doe/u;
 
 const none = {
   effective: null,

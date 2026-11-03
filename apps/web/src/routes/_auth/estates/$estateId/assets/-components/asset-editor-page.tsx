@@ -122,7 +122,7 @@ export function EditAssetPage({
         </p>
       ) : null}
       {asset.error ? (
-        <p className="mt-6 text-destructive" role="alert">
+        <p className="text-destructive mt-6" role="alert">
           {asset.error.message}
         </p>
       ) : null}

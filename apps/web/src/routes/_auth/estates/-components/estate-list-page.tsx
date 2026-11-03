@@ -102,7 +102,7 @@ export function EstateListPage({
       />
       <InvitationAcceptance />
       <PendingInvitations />
-      <div className="my-5 grid grid-cols-2 items-end gap-3 rounded-xl border bg-card p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <div className="bg-card my-5 grid grid-cols-2 items-end gap-3 rounded-xl border p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
         <div className="col-span-2 flex min-w-0 flex-col gap-2 sm:col-span-1">
           <Label className="text-sm leading-5" htmlFor="estate-search">
             Search estates
@@ -176,7 +176,7 @@ export function EstateListPage({
         </Alert>
       ) : null}
       {visible?.length === 0 ? (
-        <Empty className="mb-6 border border-dashed bg-card" role="status">
+        <Empty className="bg-card mb-6 border border-dashed" role="status">
           {emptyMessage}
         </Empty>
       ) : null}
@@ -185,13 +185,13 @@ export function EstateListPage({
           <li key={estate.id}>
             <Link
               aria-label={`${estate.name} (${estate.code})`}
-              className="group block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="group focus-visible:ring-ring block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
               params={{ estateId: estate.id }}
               to="/estates/$estateId"
             >
-              <Card className="h-full gap-0 px-5 text-sm transition-[background-color,box-shadow] group-hover:bg-accent/40 group-hover:shadow-sm group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 motion-reduce:transition-none">
+              <Card className="group-hover:bg-accent/40 group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 h-full gap-0 px-5 text-sm transition-[background-color,box-shadow] group-hover:shadow-sm motion-reduce:transition-none">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <h2 className="break-words font-medium text-lg underline-offset-4 group-hover:underline">
+                  <h2 className="text-lg font-medium break-words underline-offset-4 group-hover:underline">
                     {estate.name}
                   </h2>
                   <div className="flex flex-wrap gap-2">
@@ -204,7 +204,7 @@ export function EstateListPage({
                     />
                   </div>
                 </div>
-                <p className="mt-2 text-muted-foreground text-sm">
+                <p className="text-muted-foreground mt-2 text-sm">
                   {estate.code}
                 </p>
                 <p className="mt-3 text-sm">

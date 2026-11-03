@@ -144,7 +144,7 @@ export function ReportFilters({
           </Combobox>
         </div>
         <fieldset className="space-y-2 sm:col-span-2">
-          <legend className="font-medium text-sm">
+          <legend className="text-sm font-medium">
             <b>Level position</b>
           </legend>
           <div className="grid grid-cols-2 gap-4">

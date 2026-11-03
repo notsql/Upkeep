@@ -254,7 +254,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
           </div>
         </>
       ) : null}
-      <h2 className="font-semibold text-xl">Lifecycle history</h2>
+      <h2 className="text-xl font-semibold">Lifecycle history</h2>
       {history.isPending ? (
         <p role="status">Loading lifecycle history…</p>
       ) : null}
@@ -280,7 +280,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                 : "Not recorded"}{" "}
               (Singapore)
             </p>
-            <p className="break-all text-muted-foreground">
+            <p className="text-muted-foreground break-all">
               By {event.actorUserId}
             </p>
             <p>

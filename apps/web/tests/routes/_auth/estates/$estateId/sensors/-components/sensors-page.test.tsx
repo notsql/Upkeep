@@ -29,7 +29,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 const POLICY_PATH = "/estates/{estateId}/flatline-policies";
 const REVIEW_PATH = "/estates/{estateId}/flatlined-sensors";
-const POLICY_ACTION = /^(Edit|Set up).*policy$/;
+const POLICY_ACTION = /^(?:Edit|Set up).*policy$/u;
 const sensor: MonitoredSensor = {
   deviceId: "device-id",
   assetId: "asset-id",

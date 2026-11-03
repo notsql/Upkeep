@@ -9,9 +9,9 @@ vi.mock("@/lib/api", () => ({
 }));
 
 const path = "/api/admin/users/{userId}/estates/{estateId}";
-const maple = /Maple Grove/;
-const oak = /Oak Park/;
-const ownedPine = /Pine Court.*Owner/;
+const maple = /Maple Grove/u;
+const oak = /Oak Park/u;
+const ownedPine = /Pine Court.*Owner/u;
 
 // Disabled state as assistive tech sees it, whether the checkbox is a native
 // input or an ARIA widget.

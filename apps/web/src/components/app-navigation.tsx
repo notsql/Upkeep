@@ -8,9 +8,9 @@ import {
 } from "@proj/ui/components/dropdown-menu";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  Activity,
   Building2,
   ClipboardList,
-  ClipboardPenLine,
   Files,
   Home,
   Layers,
@@ -24,17 +24,19 @@ import {
   Wrench,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { EstateSectionMenu } from "@/components/estate-section-menu";
 import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
 import { EstateFeatureChooser } from "@/components/estates/estate-feature-chooser";
 import type { EstateFeature } from "@/components/estates/estate-feature-switcher";
 import { EstateFeatureSwitcher } from "@/components/estates/estate-feature-switcher";
+import { residentNavigation } from "@/components/estates/resident-navigation";
 import { WorkOrderEstateSwitcher } from "@/components/estates/work-order-estate-switcher";
 import { ReportEstateSwitcher } from "@/components/reports/report-estate-switcher";
 import { useAppAccess } from "@/lib/access";
 import { useEstate } from "@/lib/estates";
+import { useMobile } from "@/lib/use-mobile";
 
-const ESTATE_PATH = /^\/estates\/([^/]+)/;
-const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/;
+const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
 type Destination =
   | "/"
   | "/estates"
@@ -50,8 +52,9 @@ type Destination =
   | "/estates/$estateId/work-orders"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles"
+  | "/estates/$estateId/readings"
   | "/estates/$estateId/documents";
-interface NavigationItem {
+export interface NavigationItem {
   active: boolean;
   chooseEstate?: EstateFeature;
   estateId?: string;
@@ -107,7 +110,7 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
   });
   const residentPage =
     pathname === "/reports" || pathname.startsWith("/reports/");
-  let candidate = pathname.match(ESTATE_PATH)?.[1];
+  let candidate = pathname.match(ESTATE_PATH)?.groups?.estateId;
   if (!candidate && residentPage) {
     candidate = searchEstate;
     if (!candidate && access.data?.residentEstates.length === 1) {
@@ -118,6 +121,7 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
     (item) => item.estateId === candidate
   );
   const allowed =
+    permission?.canViewReadings ||
     permission?.canViewDocuments ||
     permission?.canViewManagement ||
     permission?.canViewFaultReports ||
@@ -144,30 +148,11 @@ function useNavigation() {
   const access = useAppAccess();
   const { pathname, estateId, permission, estateName } =
     useNavigationEstate(access);
-  const residentSearch =
-    permission?.role === "RESIDENT" && estateId ? { estateId } : undefined;
-  const reporting: NavigationItem = {
-    search: residentSearch,
-    label: "Report a fault",
-    to: "/reports/new",
-    icon: ClipboardPenLine,
-    active: pathname.startsWith("/reports/new"),
-  };
   const invitations: NavigationItem = {
     label: "Invitations",
     to: "/invitations",
     icon: Users,
     active: pathname.startsWith("/invitations"),
-  };
-  const history: NavigationItem = {
-    search: residentSearch,
-    label: "My reports",
-    to: "/reports",
-    icon: ClipboardList,
-    active:
-      pathname === "/reports" ||
-      (REPORT_DETAIL_PATH.test(pathname) &&
-        !pathname.startsWith("/reports/new")),
   };
   const estates: NavigationItem = {
     label: "Estates",
@@ -189,6 +174,11 @@ function useNavigation() {
       estateName: undefined,
     };
   }
+  const resident = residentNavigation(access.data, estateId, pathname);
+  const local = [
+    ...estateDestinations(estateId, permission, pathname),
+    ...resident.local,
+  ];
   if (!access.data.canEnterWorkspace) {
     const signOut: NavigationItem = {
       label: "Sign out",
@@ -196,12 +186,10 @@ function useNavigation() {
       icon: LogOut,
       active: false,
     };
-    const destinations = access.data.hasResidentMembership
-      ? [estates, reporting, history, invitations, signOut]
-      : [estates, reporting, invitations, signOut];
+    const destinations = [estates, ...resident.global, invitations, signOut];
     return {
       desktop: destinations,
-      local: [],
+      local,
       primary: destinations,
       overflow: [],
       estateId,
@@ -241,7 +229,6 @@ function useNavigation() {
   const scoped = scopedDestinations(access.data.estates, estateId);
   desktop.push(...scoped);
   overflow.push(...scoped);
-  const local = estateDestinations(estateId, permission, pathname);
   if (
     !permission?.canViewWorkOrders &&
     access.data.estates.some((item) => item.canViewWorkOrders)
@@ -275,10 +262,8 @@ function useNavigation() {
     desktop.push(responderEntry);
     overflow.push(responderEntry);
   }
-  if (access.data.hasResidentMembership) {
-    desktop.push(reporting, history);
-    overflow.push(reporting, history);
-  }
+  desktop.push(...resident.global);
+  overflow.push(...resident.global);
   return {
     desktop,
     local,
@@ -313,87 +298,95 @@ function estateDestinations(
   pathname: string
 ): NavigationItem[] {
   const local: NavigationItem[] = [];
-  if (estateId && permission) {
-    const base = `/estates/${estateId}`;
-    if (permission.canViewDocuments) {
-      local.push({
-        label: "Documents",
-        to: "/estates/$estateId/documents",
-        estateId,
-        icon: Files,
-        active: pathname.startsWith(`${base}/documents`),
-      });
-    }
-    if (permission.canViewWorkOrders) {
-      local.push({
-        label: "Work orders",
-        to: "/estates/$estateId/work-orders",
-        estateId,
-        icon: Wrench,
-        active: pathname.startsWith(`${base}/work-orders`),
-      });
-    }
-    if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
-      local.push({
-        label: "Overview",
-        to: "/estates/$estateId",
-        estateId,
-        icon: LayoutDashboard,
-        active: pathname === base || pathname === `${base}/`,
-      });
-    }
-    if (permission.canViewEstateRoles) {
-      local.push({
-        label: "Roles",
-        to: "/estates/$estateId/roles",
-        estateId,
-        icon: ShieldCheck,
-        active: pathname.startsWith(`${base}/roles`),
-      });
-    }
-    if (permission?.canViewFaultReports) {
-      local.push({
-        label: "Fault reports",
-        to: "/estates/$estateId/reports",
-        estateId,
-        icon: ClipboardList,
-        active: pathname.startsWith(`${base}/reports`),
-      });
-    }
-    if (permission?.canViewAssets || permission?.canViewInspectionResults) {
-      local.push({
-        label: "Assets",
-        to: "/estates/$estateId/assets",
-        estateId,
-        icon: Layers,
-        active: pathname.startsWith(`${base}/assets`),
-      });
-    }
-    if (
-      permission?.canViewEstateInvitations ||
-      permission?.canInviteMembers ||
-      permission?.canManageInvitationPermissions
-    ) {
-      local.push({
-        label: "Estate members",
-        to: "/estates/$estateId/council",
-        estateId,
-        icon: Users,
-        active: pathname.startsWith(`${base}/council`),
-      });
-    }
+  if (!(estateId && permission)) {
+    return local;
+  }
+  const base = `/estates/${estateId}`;
+  if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
+    local.push({
+      label: "Overview",
+      to: "/estates/$estateId",
+      estateId,
+      icon: LayoutDashboard,
+      active: pathname === base || pathname === `${base}/`,
+    });
+  }
+  if (permission?.canViewAssets || permission?.canViewInspectionResults) {
+    local.push({
+      label: "Assets",
+      to: "/estates/$estateId/assets",
+      estateId,
+      icon: Layers,
+      active: pathname.startsWith(`${base}/assets`),
+    });
+  }
+  if (permission.canViewWorkOrders) {
+    local.push({
+      label: "Work orders",
+      to: "/estates/$estateId/work-orders",
+      estateId,
+      icon: Wrench,
+      active: pathname.startsWith(`${base}/work-orders`),
+    });
+  }
+  if (permission?.canViewFaultReports) {
+    local.push({
+      label: "Fault reports",
+      to: "/estates/$estateId/reports",
+      estateId,
+      icon: ClipboardList,
+      active: pathname.startsWith(`${base}/reports`),
+    });
+  }
+  if (permission.canViewReadings) {
+    local.push({
+      label: "Readings",
+      to: "/estates/$estateId/readings",
+      estateId,
+      icon: Activity,
+      active: pathname.startsWith(`${base}/readings`),
+    });
+  }
+  if (permission.canViewDocuments) {
+    local.push({
+      label: "Documents",
+      to: "/estates/$estateId/documents",
+      estateId,
+      icon: Files,
+      active: pathname.startsWith(`${base}/documents`),
+    });
+  }
+  if (
+    permission?.canViewEstateInvitations ||
+    permission?.canInviteMembers ||
+    permission?.canManageInvitationPermissions
+  ) {
+    local.push({
+      label: "Estate members",
+      to: "/estates/$estateId/council",
+      estateId,
+      icon: Users,
+      active: pathname.startsWith(`${base}/council`),
+    });
+  }
+  if (permission.canViewEstateRoles) {
+    local.push({
+      label: "Roles",
+      to: "/estates/$estateId/roles",
+      estateId,
+      icon: ShieldCheck,
+      active: pathname.startsWith(`${base}/roles`),
+    });
   }
   return local;
 }
 function DestinationLink({
   item,
   mobile = false,
-  contextual = false,
   onChooseEstate,
 }: {
   item: NavigationItem;
   mobile?: boolean;
-  contextual?: boolean;
   onChooseEstate?: (feature: EstateFeature) => void;
 }) {
   const selectEstate = useCallback(() => {
@@ -405,9 +398,6 @@ function DestinationLink({
   let linkClass = "sidebar-link";
   if (mobile) {
     linkClass = "bottom-nav-link";
-  }
-  if (contextual) {
-    linkClass = "estate-nav-link";
   }
   if (item.chooseEstate) {
     return (
@@ -531,15 +521,18 @@ function NavigationEstateSwitcher({
   const documents = useRouterState({
     select: (state) => state.location.pathname.split("/")[3] === "documents",
   });
+  const readings = useRouterState({
+    select: (state) => state.location.pathname.split("/")[3] === "readings",
+  });
   const creatingReport = useRouterState({
     select: (state) => state.location.pathname.startsWith("/reports/new"),
   });
-  if (documents) {
+  if (documents || readings) {
     return (
       <EstateFeatureSwitcher
         estateId={estateId}
         estates={access.data?.estates ?? []}
-        feature="documents"
+        feature={readings ? "readings" : "documents"}
       />
     );
   }
@@ -632,7 +625,7 @@ export function AppNavigation() {
             </>
           )}
         </nav>
-        <p className="mt-auto px-3 pt-8 text-muted-foreground text-xs">
+        <p className="text-muted-foreground mt-auto px-3 pt-8 text-xs">
           Your estates, organised.
         </p>
       </aside>
@@ -655,17 +648,14 @@ export function AppNavigation() {
 
 export function EstateNavigation() {
   const { local, estateId, estateName } = useNavigation();
-  if (estateId === undefined) {
+  const mobile = useMobile();
+  if (!mobile || estateId === undefined) {
     return null;
   }
   return (
     <nav aria-label="Estate navigation" className="estate-navigation">
       <NavigationEstateSwitcher estateId={estateId} estateName={estateName} />
-      <div className="flex flex-wrap gap-2">
-        {local.map((item) => (
-          <DestinationLink contextual item={item} key={item.label} />
-        ))}
-      </div>
+      <EstateSectionMenu items={local} key={estateId} />
     </nav>
   );
 }

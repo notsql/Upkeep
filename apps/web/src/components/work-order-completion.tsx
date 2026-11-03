@@ -9,19 +9,19 @@ export function CompletionOutcome({
       <dl className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <dt className="font-medium">Findings</dt>
-          <dd className="whitespace-pre-wrap break-words">
+          <dd className="break-words whitespace-pre-wrap">
             {completion.findings}
           </dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="font-medium">Work performed</dt>
-          <dd className="whitespace-pre-wrap break-words">
+          <dd className="break-words whitespace-pre-wrap">
             {completion.workPerformed}
           </dd>
         </div>
         <div className="sm:col-span-2">
           <dt className="font-medium">Parts used</dt>
-          <dd className="whitespace-pre-wrap break-words">
+          <dd className="break-words whitespace-pre-wrap">
             {completion.partsUsed ?? "Not recorded"}
           </dd>
         </div>

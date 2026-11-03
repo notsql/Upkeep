@@ -47,7 +47,7 @@ export function SummaryCard({
         />
       </CardHeader>
       <CardContent className="grid gap-2">
-        <p className="font-semibold text-3xl tabular-nums">{value}</p>
+        <p className="text-3xl font-semibold tabular-nums">{value}</p>
         {children}
       </CardContent>
     </Card>

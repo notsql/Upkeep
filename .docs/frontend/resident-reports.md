@@ -15,7 +15,7 @@ location action and opt into the Updated timestamp.
 
 All routes nest under `apps/web/src/routes/_auth/reports/`. The `_auth` `beforeLoad` authenticates report routes without requiring current membership. Management routes await a request-scoped access lookup before any child loader starts. A resident-only account lands on `/reports/new`; mixed accounts retain permitted management deep links in their other estates, while denied work-order/document deep links retain Page not found. User-initiated estate switching to a Resident estate opens its scoped My reports. Unassigned accounts see the missing-assignment explanation. My reports navigation is visible only with a current Resident membership, including mixed-role accounts, and is hidden for management-only, platform-admin-only and former-resident accounts on desktop and mobile. Direct history/detail access retains existing authenticated ownership checks. Opening a report from scoped history preserves estateId in its URL and its Return to My Reports link.
 
-`lib/access-server.ts` uses AuthKit's session token with a fresh generated API client for each server request, returning profile/access data without tokens. `lib/access.ts` owns `GET /access/context` with key `[userId, "app-access"]`, mounted identity gating and focus refetch. Navigation waits for this projection; mixed accounts see both reporting and management destinations. Target-estate capabilities govern Assets/Estate members links. JWT resident role claims do not control any reporting UI. Identity changes cancel and remove the previous user's access, report and estate queries; image components revoke their blob URLs.
+`lib/access-server.ts` uses AuthKit's session token with a fresh generated API client for each server request, returning profile/access data without tokens. `lib/access.ts` owns `GET /access/context` with key `[userId, "app-access"]`, mounted identity gating and focus refetch. Navigation waits for this projection and follows the selected estate's database role. Resident actions live in that estate's sidebar/mobile section menu, while Manager/Crew contexts hide them. From global Home/Estates, multiple eligible resident estates require a chooser; a sole eligible estate is included explicitly in the URL. Target-estate capabilities govern Assets/Estate members links. JWT resident role claims do not control any reporting UI. Identity changes cancel and remove the previous user's access, report and estate queries; image components revoke their blob URLs.
 
 | Route folder | Screen and shadcn components | API calls |
 | --- | --- | --- |
@@ -88,3 +88,15 @@ The report detail route also validates optional estateId solely for navigation;
 its GET remains protected by report ownership. Scoped list links and the return
 link preserve the selection. Failed reads retain their existing error UI. No
 resident permissions or database schema changed with this navigation improvement.
+
+## Estate-scoped reporting navigation
+
+The shell's `resident-navigation.ts` builds My reports/Report a fault destinations
+for the selected Resident membership, preserving `estateId` when switching
+between history and creation. These are separate from the staff Fault reports
+queue. Inactive memberships retain history entry but not creation. Global entry
+uses `EstateFeatureChooser` for multiple current resident estates; its creation
+choices are additionally filtered by active resident assignments. No report API,
+permission, query key or history ownership rule changes. Direct `/reports`
+continues to support the caller's historic reports across estates, even after
+membership removal; navigation does not fabricate a new membership.

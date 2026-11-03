@@ -64,33 +64,34 @@ vi.mock("@workos/authkit-tanstack-react-start/client", async () => {
   };
 });
 
-const FILE_INPUT = /^file$|choose file|file to upload/i;
-const DOCUMENT_TYPE = /document type/i;
-const DELETE_INVOICE = /delete.*April Invoice/i;
-const DELETE_FILE = /^delete$|^delete file$/i;
-const DOCUMENTS_HEADING = /documents/i;
-const SUPPORTED_FORMATS = /PDF.*JPEG.*PNG/i;
-const MAX_FILE_SIZE = /5 MB/;
-const UPLOAD_FILE = /^upload$|^upload file$/i;
-const UPLOAD_SUCCESS = /invoice\.pdf.*uploaded successfully/i;
-const UPLOADING = /uploading/i;
-const EMPTY_FILE = /empty|at least one byte/i;
-const STORAGE_UNAVAILABLE = /storage.*unavailable/i;
-const ANY_UPLOAD_SUCCESS = /uploaded successfully/i;
-const UNCERTAIN_UPLOAD = /refresh|check.*list|confirm.*upload/i;
-const RETRY = /retry/i;
-const UPLOAD_FAILED = /upload failed/i;
-const DOWNLOAD_INVOICE = /download.*April Invoice/i;
-const UPLOAD_CONTROL = /upload/i;
-const SEARCH = /^search$/i;
-const CLEAR_SEARCH = /^clear$|^clear search$/i;
-const NO_MATCHES = /no files match your search/i;
-const NO_DOCUMENTS = /no documents uploaded/i;
-const CANCEL = /^cancel$/i;
-const DELETE_SUCCESS = /April Invoice\.pdf.*removed/i;
-const DELETE_DENIED = /only the uploader/i;
+const FILE_INPUT = /^file$|choose file|file to upload/iu;
+const DOCUMENT_TYPE = /document type/iu;
+const DELETE_INVOICE = /delete.*April Invoice/iu;
+const DELETE_FILE = /^delete$|^delete file$/iu;
+const DOCUMENTS_HEADING = /documents/iu;
+const SUPPORTED_FORMATS = /PDF.*JPEG.*PNG/iu;
+const MAX_FILE_SIZE = /5 MB/u;
+const UPLOAD_FILE = /^upload$|^upload file$/iu;
+const UPLOAD_SUCCESS = /invoice\.pdf.*uploaded successfully/iu;
+const UPLOADING = /uploading/iu;
+const EMPTY_FILE = /empty|at least one byte/iu;
+const STORAGE_UNAVAILABLE = /storage.*unavailable/iu;
+const ANY_UPLOAD_SUCCESS = /uploaded successfully/iu;
+const UNCERTAIN_UPLOAD = /refresh|check.*list|confirm.*upload/iu;
+const RETRY = /retry/iu;
+const UPLOAD_FAILED = /upload failed/iu;
+const DOWNLOAD_INVOICE = /download.*April Invoice/iu;
+const UPLOAD_CONTROL = /upload/iu;
+const SEARCH = /^search$/iu;
+const CLEAR_SEARCH = /^clear$|^clear search$/iu;
+const NO_MATCHES = /no files match your search/iu;
+const NO_DOCUMENTS = /no documents uploaded/iu;
+const CANCEL = /^cancel$/iu;
+const DELETE_SUCCESS = /April Invoice\.pdf.*removed/iu;
+const DELETION_DESCRIPTION = /will be removed/u;
+const DELETE_DENIED = /only the uploader/iu;
 const TYPE_FILTER = "Filter by type";
-const DOCUMENT_ROW = /April Invoice\.pdf/;
+const DOCUMENT_ROW = /April Invoice\.pdf/u;
 
 const estateId = "00000000-0000-0000-0000-000000000001";
 const documentId = "00000000-0000-0000-0000-000000000002";
@@ -512,7 +513,7 @@ it("names the file in deletion confirmation and Cancel leaves it untouched", asy
   await openDocuments();
   fireEvent.click(await screen.findByRole("button", { name: DELETE_INVOICE }));
   const confirmation = within(await screen.findByRole("dialog"));
-  confirmation.getByText(new RegExp(filename.replace(".", "\\.")));
+  confirmation.getByText(new RegExp(filename.replace(".", "\\."), "u"));
   fireEvent.click(confirmation.getByRole("button", { name: CANCEL }));
 
   expect(apiDelete).not.toHaveBeenCalled();
@@ -672,6 +673,48 @@ it("a denied document deep link does not start a protected list request", async 
   expect(apiPost).not.toHaveBeenCalled();
 });
 
+it.each([true, false])(
+  "shows mobile document details and only permitted actions: canDelete=%s",
+  async (canDelete) => {
+    const original = window.matchMedia;
+    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+      ...original(query),
+      matches: query === "(max-width: 767px)",
+    }));
+    allowDocuments({ edit: false });
+    items = [{ ...saved, canDelete }];
+    nextCursor = "more-documents";
+    const { router } = await openDocuments("?filename=Invoice");
+    const list = within(await screen.findByRole("list", { name: "Documents" }));
+    list.getByText(filename);
+    list.getByText("Invoice");
+    expect(list.queryByText("1,234 bytes")).toBeNull();
+    list.getByRole("button", { name: `Download ${filename}` });
+    expect(
+      list.queryByRole("button", { name: `Delete ${filename}` }) !== null
+    ).toBe(canDelete);
+    expect(
+      list.queryByRole("button", { name: `Work-order link for ${filename}` })
+    ).toBeNull();
+    expect(screen.queryByRole("table")).toBeNull();
+    if (canDelete) {
+      fireEvent.click(list.getByRole("button", { name: `Delete ${filename}` }));
+      const dialog = within(
+        await screen.findByRole("dialog", { name: "Delete file" })
+      );
+      dialog.getByText(DELETION_DESCRIPTION);
+      fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+      expect(apiDelete).not.toHaveBeenCalled();
+    }
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        filename: "Invoice",
+        cursor: "more-documents",
+      })
+    );
+  }
+);
 it("shows the Documents table without a Size column or size cells", async () => {
   await openDocuments();
   const table = within(await screen.findByRole("table"));

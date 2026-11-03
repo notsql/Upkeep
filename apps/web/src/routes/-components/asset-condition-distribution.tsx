@@ -29,8 +29,8 @@ export function AssetConditionDistribution({
   if (total === 0) {
     return (
       <div className="mt-4">
-        <div aria-hidden="true" className="h-3 rounded-full bg-muted" />
-        <p className="mt-3 text-muted-foreground text-sm">
+        <div aria-hidden="true" className="bg-muted h-3 rounded-full" />
+        <p className="text-muted-foreground mt-3 text-sm">
           No active assets to assess.
         </p>
       </div>
@@ -48,7 +48,7 @@ export function AssetConditionDistribution({
       </figcaption>
       <div
         aria-hidden="true"
-        className="flex h-3 gap-px overflow-hidden rounded-full bg-card"
+        className="bg-card flex h-3 gap-px overflow-hidden rounded-full"
       >
         {conditions
           .filter(({ key }) => counts[key] > 0)
@@ -66,16 +66,16 @@ export function AssetConditionDistribution({
             className="flex min-w-0 items-center justify-between gap-3"
             key={key}
           >
-            <dt className="flex items-center gap-2 font-medium text-sm">
+            <dt className="flex items-center gap-2 text-sm font-medium">
               <span
                 aria-hidden="true"
                 className={`size-2.5 shrink-0 rounded-full ${colour}`}
               />
               {label}
             </dt>
-            <dd className="shrink-0 font-semibold text-sm tabular-nums">
+            <dd className="shrink-0 text-sm font-semibold tabular-nums">
               {counts[key]}{" "}
-              <span className="font-normal text-muted-foreground">
+              <span className="text-muted-foreground font-normal">
                 ({Math.round((counts[key] / total) * 1000) / 10}%)
               </span>
             </dd>

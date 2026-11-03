@@ -7,13 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@proj/ui/components/dialog";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@proj/ui/components/table";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
@@ -33,7 +26,7 @@ import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
 import { DocumentAssetDialog } from "./document-asset-dialog";
 import { DocumentAssets } from "./document-assets";
 import { DocumentFiltersForm } from "./document-filters";
-import { DocumentRow } from "./document-row";
+import { DocumentList } from "./document-list";
 import { DocumentWorkOrderDialog } from "./document-work-order-dialog";
 import { UploadDocumentForm } from "./upload-document-form";
 
@@ -61,6 +54,27 @@ export function DocumentsPage({
     (document: EstateDocument, association: DocumentAsset) =>
       setAssetSelection({ document, association }),
     []
+  );
+  const renderAssets = useCallback(
+    (document: EstateDocument) =>
+      assets.canRead ? (
+        <DocumentAssets
+          canWrite={assets.canWrite}
+          document={document}
+          estateId={estateId}
+          key={`${assets.userId}:${estateId}:${document.id}`}
+          onManage={selectAssetDocument}
+        />
+      ) : (
+        <span>—</span>
+      ),
+    [
+      assets.canRead,
+      assets.canWrite,
+      assets.userId,
+      estateId,
+      selectAssetDocument,
+    ]
   );
   const [associationDocument, setAssociationDocument] =
     useState<EstateDocument>();
@@ -155,51 +169,20 @@ export function DocumentsPage({
         </div>
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
-      {!documents.isError && documents.data?.items.length === 0 ? (
-        <DocumentEmptyState filters={filters} />
-      ) : null}
-      {!documents.isError && documents.data?.items.length ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Filename</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Uploaded</TableHead>
-              <TableHead>Asset</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.data.items.map((document) => (
-              <DocumentRow
-                assets={
-                  assets.canRead ? (
-                    <DocumentAssets
-                      canWrite={assets.canWrite}
-                      document={document}
-                      estateId={estateId}
-                      key={`${assets.userId}:${estateId}:${document.id}`}
-                      onManage={selectAssetDocument}
-                    />
-                  ) : (
-                    <span>—</span>
-                  )
-                }
-                document={document}
-                downloading={download.isPending}
-                key={document.id}
-                onAssociation={
-                  associations.canRead ? setAssociationDocument : undefined
-                }
-                onDelete={chooseDeletion}
-                onDownload={downloadDocument}
-                showSize={false}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      ) : null}
-      <div className="flex gap-2">
+      <DocumentList
+        documentType={filters.documentType}
+        downloading={download.isPending}
+        failed={documents.isError}
+        filename={filters.filename}
+        items={documents.data?.items}
+        onAssociation={
+          associations.canRead ? setAssociationDocument : undefined
+        }
+        onDelete={chooseDeletion}
+        onDownload={downloadDocument}
+        renderAssets={renderAssets}
+      />
+      <div className="flex flex-wrap gap-2">
         {filters.cursor ? (
           <Button onClick={first} variant="outline">
             First page
@@ -256,13 +239,6 @@ export function DocumentsPage({
         </DialogContent>
       </Dialog>
     </main>
-  );
-}
-
-function DocumentEmptyState({ filters }: { filters: DocumentFilters }) {
-  const filtered = !!(filters.filename || filters.documentType);
-  return (
-    <p>{filtered ? "No files match your search" : "No documents uploaded"}</p>
   );
 }
 

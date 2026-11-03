@@ -69,7 +69,7 @@ export function DeactivateEstateDialog({
     <Dialog onOpenChange={handleOpenChange} open>
       <DialogContent className="p-6 sm:max-w-md" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle className="font-semibold text-xl">
+          <DialogTitle className="text-xl font-semibold">
             Deactivate {name}?
           </DialogTitle>
           <DialogDescription className="mt-2 text-sm">

@@ -9,17 +9,18 @@ import { getSessionAccess, getSessionIdentity } from "@/lib/access-server";
 
 import { buildSignInPath } from "@/lib/auth-redirect";
 
+const PERSONAL_PATHS = new Set([
+  "/reports",
+  "/account",
+  "/invitations",
+  "/invitations/",
+]);
+
 export const Route = createFileRoute("/_auth")({
   component: Outlet,
   beforeLoad: async ({ location, context }) => {
     const path = location.pathname;
-    if (
-      path === "/reports" ||
-      path.startsWith("/reports/") ||
-      path === "/account" ||
-      path === "/invitations" ||
-      path === "/invitations/"
-    ) {
+    if (PERSONAL_PATHS.has(path) || path.startsWith("/reports/")) {
       const user = await getSessionIdentity();
       if (!user) {
         throw redirect({ href: buildSignInPath(location.href) });
@@ -51,16 +52,7 @@ export const Route = createFileRoute("/_auth")({
       }
       return { user };
     }
-    if (path.startsWith("/estates/") && path.split("/")[3] === "work-orders") {
-      const [, , estateId] = path.split("/");
-      guardWorkOrders(
-        path,
-        access.estates.find((estate) => estate.estateId === estateId)
-      );
-      return { user };
-    }
-    if (path.startsWith("/estates/") && path.split("/")[3] === "documents") {
-      guardDocuments(path, access);
+    if (guardFeaturePath(path, access)) {
       return { user };
     }
     if (!access.canEnterWorkspace) {
@@ -167,5 +159,34 @@ function guardDocuments(
   );
   if (!estate?.canViewDocuments) {
     throw notFound();
+  }
+}
+
+function guardFeaturePath(
+  path: string,
+  access: components["schemas"]["AppAccessResponse"]
+): boolean {
+  if (!path.startsWith("/estates/")) {
+    return false;
+  }
+  const [, , estateId, feature] = path.split("/");
+  const estate = access.estates.find((item) => item.estateId === estateId);
+  switch (feature) {
+    case "work-orders":
+      guardWorkOrders(path, estate);
+      return true;
+    case "documents":
+      guardDocuments(path, access);
+      return true;
+    case "readings":
+      if (
+        !estate?.canViewReadings ||
+        (path.split("/")[4] === "new" && !estate.canRecordReadings)
+      ) {
+        throw notFound();
+      }
+      return true;
+    default:
+      return false;
   }
 }

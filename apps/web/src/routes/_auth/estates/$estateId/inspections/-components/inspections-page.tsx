@@ -78,7 +78,7 @@ function BlockSection({
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className="grid gap-4">
-      <h2 className="font-semibold text-lg" id={headingId}>
+      <h2 className="text-lg font-semibold" id={headingId}>
         {block.name}
       </h2>
       {block.groups.map((group) => (
@@ -87,7 +87,7 @@ function BlockSection({
           className="grid gap-2"
           key={group.key}
         >
-          <h3 className="font-medium text-muted-foreground text-sm">
+          <h3 className="text-muted-foreground text-sm font-medium">
             {group.level}
           </h3>
           <CheckTable
@@ -168,7 +168,7 @@ function Unscheduled({ data }: { data: InspectionList }) {
   }
   return (
     <section aria-labelledby={headingId} className="grid gap-2">
-      <h2 className="font-semibold text-lg" id={headingId}>
+      <h2 className="text-lg font-semibold" id={headingId}>
         Not scheduled assets
       </h2>
       <p className="text-muted-foreground text-sm">
