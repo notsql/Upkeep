@@ -11,8 +11,9 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { LogOut, Settings, UserRound } from "lucide-react";
+import type { ReactNode } from "react";
 
-export function AuthButton() {
+export function AuthButton({ menu }: { menu?: ReactNode }) {
   const { loading, user } = useAuth();
 
   if (loading) {
@@ -55,6 +56,7 @@ export function AuthButton() {
             {user.email}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          {menu}
           <DropdownMenuItem
             className="min-h-11 text-sm"
             render={<Link to="/account" />}

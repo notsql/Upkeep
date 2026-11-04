@@ -60,6 +60,8 @@ describe("estate details page", () => {
     renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
     await screen.findByRole("heading", { name: estate.name });
     screen.getByRole("link", { name: "View assets" });
+    screen.getByText("MCST number");
+    screen.getByText("MCST MG-001");
     expect(screen.queryByRole("link", { name: "Edit estate" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Estate members" })).toBeNull();
     expect(

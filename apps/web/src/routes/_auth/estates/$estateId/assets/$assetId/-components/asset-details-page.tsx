@@ -4,6 +4,7 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { BackLink } from "@/components/back-link";
 import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
@@ -86,20 +87,9 @@ export function AssetDetailsPage({
   );
   return (
     <PageLayout>
-      <Link
-        className="text-sm underline"
-        params={{ estateId }}
-        to="/estates/$estateId"
-      >
-        Back to estate
-      </Link>
-      <Link
-        className="ml-4 text-sm underline"
-        params={{ estateId }}
-        to="/estates/$estateId/assets"
-      >
+      <BackLink params={{ estateId }} to="/estates/$estateId/assets">
         Back to assets
-      </Link>
+      </BackLink>
       {asset.isPending ? (
         <p aria-live="polite" className="mt-6">
           Loading asset…

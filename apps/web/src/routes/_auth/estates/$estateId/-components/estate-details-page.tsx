@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
+import { BackLink } from "@/components/back-link";
 import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
@@ -14,7 +15,12 @@ import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { dashboardQueryKey } from "@/lib/dashboard";
-import { estateError, useEstate, useEstateSession } from "@/lib/estates";
+import {
+  estateError,
+  formatMcst,
+  useEstate,
+  useEstateSession,
+} from "@/lib/estates";
 import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
 
 function EstateActions({
@@ -214,9 +220,7 @@ export function EstateDetailsPage({
   const closeConfirmation = useCallback(() => setConfirming(false), []);
   return (
     <PageLayout>
-      <Link className="text-sm underline" to="/estates">
-        Back to estates
-      </Link>
+      <BackLink to="/estates">Back to estates</BackLink>
       {estate.isPending ? (
         <p aria-live="polite" className="mt-6">
           Loading estate…
@@ -268,8 +272,8 @@ export function EstateDetailsPage({
           ) : null}
           <DetailCard className="my-4">
             <div>
-              <dt className="font-medium">Estate code</dt>
-              <dd>{estate.data.code}</dd>
+              <dt className="font-medium">MCST number</dt>
+              <dd>{formatMcst(estate.data.code)}</dd>
             </div>
             <div>
               <dt className="font-medium">Address</dt>

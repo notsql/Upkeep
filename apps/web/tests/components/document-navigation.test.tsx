@@ -138,7 +138,8 @@ it("hides document navigation without document read access", async () => {
   const desktop = within(
     await screen.findByRole("navigation", { name: "Workspace navigation" })
   );
-  await desktop.findByRole("link", { name: "Sign out" });
+  await desktop.findByRole("link", { name: "Estates" });
 
   expect(screen.queryByRole("link", { name: "Documents" })).toBeNull();
+  expect(desktop.queryByRole("link", { name: "Sign out" })).toBeNull();
 });

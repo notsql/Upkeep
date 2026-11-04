@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
@@ -45,13 +46,12 @@ export function NewDevicePage({
     !asset.data.deactivatedAt;
   return (
     <PageLayout className="max-w-3xl">
-      <Link
-        className="text-sm underline"
+      <BackLink
         params={{ estateId, assetId }}
         to="/estates/$estateId/assets/$assetId"
       >
         Back to asset
-      </Link>
+      </BackLink>
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },

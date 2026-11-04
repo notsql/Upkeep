@@ -8,6 +8,14 @@ import { dashboardQueryKey } from "@/lib/dashboard";
 const INTERNAL_ERROR =
   /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/iu;
 
+const MCST_PREFIX = /^mcst/iu;
+
+// Estate codes are Singapore MCST numbers, stored without the "MCST" prefix.
+// Legacy codes that already carry it are shown as-is.
+export function formatMcst(code: string): string {
+  return MCST_PREFIX.test(code) ? code : `MCST ${code}`;
+}
+
 export type EstateStatus = NonNullable<
   NonNullable<operations["list"]["parameters"]["query"]>["status"]
 >;

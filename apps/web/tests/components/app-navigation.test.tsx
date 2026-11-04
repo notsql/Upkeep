@@ -735,7 +735,9 @@ it.each([false, true])(
       : within(
           screen.getByRole("navigation", { name: "Workspace navigation" })
         );
-    await navigation.findByRole("link", { name: "Sign out" });
+    await navigation.findByRole("link", { name: "Estates" });
+    expect(navigation.queryByRole("link", { name: "Invitations" })).toBeNull();
+    expect(navigation.queryByRole("link", { name: "Sign out" })).toBeNull();
     expect(navigation.queryByRole("link", { name: "My reports" })).toBeNull();
     expect(
       navigation.getByRole("link", { name: "Estates" }).getAttribute("href")
@@ -840,7 +842,12 @@ it("switches from desktop assets to a shared estate overview with that estate's 
   expect(current.getAttribute("href")).toBe("/estates/maple");
   const target = screen.getByRole("menuitem", { name: "Oak Park" });
   expect(target.getAttribute("href")).toBe("/estates/oak");
-  expect(screen.getAllByRole("menuitem")).toHaveLength(3);
+  const choices = screen
+    .getAllByRole("menuitem")
+    .filter((item) => item.getAttribute("href")?.startsWith("/estates/"));
+  expect(
+    choices.filter((item) => item.getAttribute("href") !== "/estates/new")
+  ).toHaveLength(3);
   await waitFor(() => {
     fireEvent.click(target);
     expect(router.state.location.pathname).toBe("/estates/oak");

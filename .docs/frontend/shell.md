@@ -45,15 +45,30 @@ targeting the focusable `#main-content` wrapper. Route screens own their main
 landmark (they render `PageLayout`, a `<main>`), so the shell does not use
 `SidebarInset` (also a `<main>`); a plain flex `div` takes its place. While AuthKit
 is loading or signed out, the shell is skip link + `Header` + content with no
-`SidebarProvider` and no sidebar. Signed in, it is `SidebarProvider` >
+`SidebarProvider` and no sidebar. Signed in, the sidebar appears **only inside an
+estate** (`/estates/$estateId/...`; `isEstateScoped` in `app-navigation.tsx`, which
+matches `/estates/<id>` with `<id>` other than `new`). There it is `SidebarProvider` >
 `AppNavigation` (the `Sidebar`) + content column (`Header` with a `SidebarTrigger`
-passed as `start`, then `#main-content` holding `EstateNavigation` and the page).
-`Header` is the shared sticky top bar with optional leading slot, brand, theme
+passed as `start`, then `#main-content` holding `EstateNavigation` and the page), and
+the account menu carries no navigation links (no duplication of the sidebar).
+Every other signed-in page (`/`, `/estates`, `/estates/new`, `/account`, `/admin/...`,
+`/reports/...`) renders full width with no `SidebarProvider`, sidebar or
+`SidebarTrigger` - skip link + `WorkspaceHeader` (in `app-shell.tsx`) + content.
+`WorkspaceHeader` passes `menu={<WorkspaceMenuItems onChooseEstate={...} />}` to
+`Header`, which puts the sidebar's global links (same `useNavigation` data and
+permission rules: Home, Estates, Admin users, scoped Roles/invitations, Work orders,
+Documents, Respond to faults, resident Report a fault / My reports) as
+`DropdownMenuItem`s at the top of the account menu, with `aria-current="page"` on the
+active link. Settings is left out (the menu already has it). Entries that need an
+estate first (Work orders, Documents, Respond to faults, multi-estate resident
+entries) are `aria-haspopup="dialog"` items: selecting one closes the menu and
+`WorkspaceHeader` opens the same `EstateFeatureChooser` dialog the sidebar uses.
+`Header` is the shared sticky top bar with optional leading slot, brand (Building2 mark in a primary-tinted square plus the UpKeep wordmark, linking to `/`), theme
 toggle and auth controls.
 
 `components/app-navigation.tsx` subscribes to the router pathname and selected resident estate search field rather than
 the whole location and uses the session-gated, cached `useEstate(estateId)` query.
-Estates is available to every authenticated account, including Residents, Crew and unassigned users, so all can reach Create estate. `canEnterWorkspace` still controls the workspace Home. Resident-only accounts see Estates, Invitations and Sign out, with reporting actions scoped to their selected Resident estate. Unassigned accounts retain estate creation/invitation entry without resident-only navigation. Mixed accounts use each selected estate's database role; global Home/Estates retains explicit resident reporting entry. My reports is hidden without a current Resident membership, including in the sidebar; existing owned history remains readable by direct URL after membership deletion. Platform admin capability remains false. Account is reached through Settings in the profile menu.
+Estates is available to every authenticated account, including Residents, Crew and unassigned users, so all can reach Create estate. `canEnterWorkspace` still controls the workspace Home. Resident-only accounts see Estates (pending invitations show on /estates), with reporting actions scoped to their selected Resident estate. Unassigned accounts retain estate creation/invitation entry without resident-only navigation. Mixed accounts use each selected estate's database role; global Home/Estates retains explicit resident reporting entry. My reports is hidden without a current Resident membership, including in the sidebar; existing owned history remains readable by direct URL after membership deletion. Platform admin capability remains false. Account is reached through Settings in the profile menu.
 
 Target-estate capabilities control Overview, Assets and Council. The estate detail query mounts only after the projection grants management access; the context switcher uses access context for all roles. Assets requires `canViewAssets`; Council requires `canInviteMembers || canManageInvitationPermissions`. `/estates/new` has no estate context.
 
@@ -65,9 +80,8 @@ is an off-canvas collapsible rail toggled by the top-bar `SidebarTrigger`
 ("Toggle Sidebar") or Cmd/Ctrl+B. Below 768px (`@proj/ui/hooks/use-mobile`, which
 reads `window.innerWidth`) the same content opens as a `Sheet`; following a link or
 an estate-chooser button closes it. There is no bottom tab bar. Management-capable
-accounts see Home, Estates, Invitations, Settings, then admin/scoped/chooser and
-resident entries; resident-only/unassigned accounts get Estates, resident entries,
-Invitations and Sign out. Each entry is a `SidebarMenuButton` (rendering the router
+accounts see Home, Estates, Settings, then admin/scoped/chooser and
+resident entries; resident-only/unassigned accounts get Estates and resident entries. Sign out is not in the sidebar; it lives only in the header profile menu. Each entry is a `SidebarMenuButton` (rendering the router
 `Link`) with `isActive` and `aria-current="page"`. Reporting is shown in the selected Resident estate's section menu, or in global navigation when no estate is selected. EstateNavigation shows the authorized estate switcher and a compact section menu on mobile. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
 has no estate selector. Context comes from the route, named breadcrumbs, headings
 and sidebar. The obsolete header `EstateSwitcher` and its remembered-estate
@@ -81,7 +95,8 @@ are hidden. Overview remains selected when visiting section anchors such as
 EstateContextSwitcher, WorkOrderEstateSwitcher and ReportEstateSwitcher share
 EstateFeatureSwitcher (shadcn Button/DropdownMenu). Choices come from
 GET /access/context, key [userId, "app-access"], with no management estate-list
-request. The trigger and choices show estate name plus estate-local Manager,
+request. After the estate choices, a separator, then "All estates" (`/estates`)
+and, when `canCreateEstate`, "Create estate" (`/estates/new`). The trigger and choices show estate name plus estate-local Manager,
 Crew, Council, Member or Resident role, or the assigned custom-role name.
 Even a single estate retains the dropdown, including role-only and
 invitation-only custom contexts.
@@ -106,7 +121,7 @@ searchable directory. There is no remembered-selection storage or new API.
 saved light/dark preferences, and a label naming the next mode. It is disabled
 before client mount to avoid a server/client theme mismatch. `AuthButton` shows a circular profile button at the top right for signed-in
 users. Its shadcn DropdownMenu displays their email, Settings (`/account`) and
-Sign out (`/logout`). Settings is also a sidebar link.
+Sign out (`/logout`); this menu is the only place to sign out, on every viewport. Settings is also a sidebar link. Outside an estate the menu also carries the global workspace links (above).
 
 `components/not-found-page.tsx` is the router's default not-found screen, with
 PageHeader and Go to home recovery navigation. The pending screen remains Loader.

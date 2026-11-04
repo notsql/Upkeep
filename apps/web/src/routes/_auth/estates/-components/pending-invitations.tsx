@@ -1,11 +1,11 @@
 import type { components } from "@proj/api/schema";
-import { Button } from "@proj/ui/components/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@proj/ui/components/alert";
+import { Button } from "@proj/ui/components/button";
 import {
   Empty,
   EmptyDescription,
@@ -50,24 +50,33 @@ function PendingInvitation({
     roleName = invitation.customRoleName ?? "Unavailable custom role";
   }
   return (
-    <li className="space-y-2 border-b py-4 last:border-b-0">
-      <p className="font-medium">{invitation.estateName}</p>
-      <p>Offered role: {roleName}</p>
-      <p className="text-muted-foreground text-sm">
-        Expires {new Date(invitation.expiresAt).toLocaleDateString()}
-      </p>
-      <Button
-        aria-label={`Accept invitation to ${invitation.estateName}`}
-        disabled={
-          acceptance.isPending ||
-          acceptance.isSuccess ||
-          (invitation.role === "CUSTOM" && !invitation.customRoleVersion)
-        }
-        onClick={accept}
-      >
-        {acceptance.isPending ? "Accepting…" : "Accept invitation"}
-      </Button>
-      {acceptance.error ? <p role="alert">{acceptance.error.message}</p> : null}
+    <li>
+      <Alert role="none">
+        <AlertTitle>You're invited to {invitation.estateName}</AlertTitle>
+        <AlertDescription>
+          Offered role: {roleName} · Expires{" "}
+          {new Date(invitation.expiresAt).toLocaleDateString()}
+          {acceptance.error ? (
+            <p className="text-destructive" role="alert">
+              {acceptance.error.message}
+            </p>
+          ) : null}
+        </AlertDescription>
+        <AlertAction>
+          <Button
+            aria-label={`Accept invitation to ${invitation.estateName}`}
+            disabled={
+              acceptance.isPending ||
+              acceptance.isSuccess ||
+              (invitation.role === "CUSTOM" && !invitation.customRoleVersion)
+            }
+            onClick={accept}
+            size="sm"
+          >
+            {acceptance.isPending ? "Accepting…" : "Accept"}
+          </Button>
+        </AlertAction>
+      </Alert>
     </li>
   );
 }
@@ -113,23 +122,10 @@ export function PendingInvitations({
     return null;
   }
   return (
-    <Card className="my-4">
-      <CardHeader>
-        <CardTitle>
-          <h2>Pending estate invitations</h2>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>
-          Accept an invitation to gain the offered role in that estate. Your
-          existing access stays unchanged.
-        </p>
-        <ul>
-          {invitations.data.map((invitation) => (
-            <PendingInvitation invitation={invitation} key={invitation.id} />
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+    <ul aria-label="Pending estate invitations" className="mb-6 space-y-2">
+      {invitations.data.map((invitation) => (
+        <PendingInvitation invitation={invitation} key={invitation.id} />
+      ))}
+    </ul>
   );
 }

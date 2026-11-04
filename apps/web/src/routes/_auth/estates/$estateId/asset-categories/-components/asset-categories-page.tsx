@@ -247,7 +247,7 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
           )}
         </section>
       ) : null}
-            {editing ? (
+      {editing ? (
         <ServiceIntervalDialog
           description={`How often the manufacturer says ${editing.label.toLowerCase()} assets should be serviced. Assets can override it.`}
           interval={editing.serviceInterval ?? null}

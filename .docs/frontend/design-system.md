@@ -76,6 +76,18 @@ Shared app pieces live in `apps/web/src/components/`:
   `BreadcrumbItem` / `BreadcrumbLink` (rendering the router `Link`) /
   `BreadcrumbSeparator`. The current item is a plain `span aria-current="page"`,
   because the stock `BreadcrumbPage` claims `role="link"`.
+- `BackLink` (`back-link.tsx`): the single "Back to …" link above a page's
+  `PageHeader`. A router `Link` styled `buttonVariants({ variant: "ghost", size: "sm" })`
+  with an `aria-hidden` lucide `ArrowLeft`, muted text that turns foreground on
+  hover, `-ml-2.5` so the arrow aligns with the title and `mb-2`. `to`/`params`
+  are typed via `ValidateLinkOptions`; the label is `children` and is the
+  accessible name. Each page has exactly one, to its nearest parent: estate
+  details/editor -> Estates ("Back to estates"); council, asset register ->
+  estate ("Back to estate"); asset details and asset creation -> register
+  ("Back to assets"); asset edit, readings, new/replace device -> asset
+  ("Back to asset"); the work-order-from-inspection status screens -> the
+  inspection ("Back to inspection"). Breadcrumbs stay alongside: they show the
+  full trail, the back link is the primary one-step return.
 
 Independent sections and forms sit in `Card` > `CardContent` (outer margins on the
 Card, the section/form element and its heading inside). Avoid wrapping every

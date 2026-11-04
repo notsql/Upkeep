@@ -65,7 +65,7 @@ function AccessDestinations() {
 function submitNewEstate() {
   for (const [name, value] of [
     ["Name", "Maple Grove"],
-    ["Estate code", "MG-001"],
+    ["MCST number", "MG-001"],
     ["Address", "1 Grove Road"],
     ["Postal code", "123456"],
   ]) {
@@ -219,7 +219,7 @@ it.each([401, 409, 503])(
       screen.getByRole<HTMLInputElement>("textbox", { name: "Name" }).value
     ).toBe("Maple Grove");
     expect(
-      screen.getByRole<HTMLInputElement>("textbox", { name: "Estate code" })
+      screen.getByRole<HTMLInputElement>("textbox", { name: "MCST number" })
         .value
     ).toBe("MG-001");
     expect(navigate).not.toHaveBeenCalled();

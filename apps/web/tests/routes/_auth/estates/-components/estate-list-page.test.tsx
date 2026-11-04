@@ -14,7 +14,7 @@ import type { EstateDirectoryFilters } from "@/routes/_auth/estates/-components/
 import { EstateListPage } from "@/routes/_auth/estates/-components/estate-list-page";
 
 vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
-  PendingInvitations: () => null,
+  PendingInvitations: () => <p>Pending invitations banner</p>,
 }));
 
 // The real route owns URL-backed filters; isolated screen tests supply a controller.
@@ -81,7 +81,7 @@ describe("estate list page", () => {
       response: new Response(),
     });
     const { queryClient } = renderWithProviders(<Directory />);
-    await screen.findByRole("link", { name: "Maple Grove (MG-001)" });
+    await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
     await chooseOption(
       screen.getByRole("combobox", { name: "Status" }),
       "Inactive"
@@ -116,7 +116,7 @@ describe("estate list page", () => {
       response: new Response(),
     });
     renderWithProviders(<Directory />);
-    await screen.findByRole("link", { name: "Maple Grove (MG-001)" });
+    await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
     within(screen.getByRole("listitem")).getByText("Shared with you");
   });
 
@@ -160,28 +160,73 @@ it("searches estate names, codes and addresses and filters ownership", async () 
     response: new Response(),
   });
   renderWithProviders(<Directory />);
-  await screen.findByRole("link", { name: "Maple Grove (MG-001)" });
+  await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
   const search = screen.getByRole("searchbox", { name: "Search estates" });
+  expect(search.getAttribute("placeholder")).toBe(
+    "Search by name, MCST number or address"
+  );
   for (const text of ["oak", "op-002", "river"]) {
     fireEvent.change(search, { target: { value: text } });
-    screen.getByRole("link", { name: "Oak Park (OP-002)" });
+    screen.getByRole("link", { name: "Oak Park (MCST OP-002)" });
     expect(
-      screen.queryByRole("link", { name: "Maple Grove (MG-001)" })
+      screen.queryByRole("link", { name: "Maple Grove (MCST MG-001)" })
     ).toBeNull();
   }
   fireEvent.change(search, { target: { value: "" } });
   await chooseOption(screen.getByRole("combobox", { name: "Access" }), "Owner");
-  expect(screen.queryByRole("link", { name: "Oak Park (OP-002)" })).toBeNull();
+  expect(
+    screen.queryByRole("link", { name: "Oak Park (MCST OP-002)" })
+  ).toBeNull();
   await chooseOption(
     screen.getByRole("combobox", { name: "Access" }),
     "Shared with you"
   );
-  screen.getByRole("link", { name: "Oak Park (OP-002)" });
+  screen.getByRole("link", { name: "Oak Park (MCST OP-002)" });
   expect(
-    screen.queryByRole("link", { name: "Maple Grove (MG-001)" })
+    screen.queryByRole("link", { name: "Maple Grove (MCST MG-001)" })
   ).toBeNull();
   fireEvent.change(search, { target: { value: "missing" } });
   await screen.findByText("No estates match your search or access filter.");
   fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
-  await screen.findByRole("link", { name: "Maple Grove (MG-001)" });
+  await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
+});
+
+it("shows pending invitations above the Estates header", () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [],
+    response: new Response(),
+  } as never);
+  renderWithProviders(<Directory />);
+  const banner = screen.getByText("Pending invitations banner");
+  const heading = screen.getByRole("heading", { name: "Estates" });
+  const nodes = [...document.querySelectorAll("p, h1")];
+  expect(nodes.indexOf(banner)).toBeLessThan(nodes.indexOf(heading));
+});
+
+it("announces loading and reports how many estates are shown", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [estate],
+    response: new Response(),
+  });
+  renderWithProviders(<Directory />);
+  screen.getByText("Loading estates…");
+  await screen.findByText("1 estate");
+});
+
+it("offers clearing filters from the empty state instead of creation", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [estate],
+    response: new Response(),
+  });
+  renderWithProviders(<Directory />);
+  await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
+  expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search estates" }), {
+    target: { value: "missing" },
+  });
+  const empty = await screen.findByRole("status");
+  within(empty).getByRole("button", { name: "Clear filters" });
+  expect(
+    within(empty).queryByRole("link", { name: "Create estate" })
+  ).toBeNull();
 });

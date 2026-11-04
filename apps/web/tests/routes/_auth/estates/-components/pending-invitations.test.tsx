@@ -1,5 +1,10 @@
 import { fireEvent } from "@testing-library/react";
-import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { PendingInvitations } from "@/routes/_auth/estates/-components/pending-invitations";
@@ -71,4 +76,17 @@ it("keeps failed invitations visible and reports why acceptance failed", async (
   expect(
     screen.getByRole("button", { name: "Accept invitation to Maple Grove" })
   ).toBeTruthy();
+});
+it("shows each invitation as a compact banner row with an inline accept", async () => {
+  renderWithProviders(<PendingInvitations />);
+  const list = await screen.findByRole("list", {
+    name: "Pending estate invitations",
+  });
+  const row = within(list).getByRole("listitem");
+  expect(row.textContent).toContain("You're invited to Maple Grove");
+  expect(
+    within(row).getByRole("button", {
+      name: "Accept invitation to Maple Grove",
+    }).textContent
+  ).toBe("Accept");
 });

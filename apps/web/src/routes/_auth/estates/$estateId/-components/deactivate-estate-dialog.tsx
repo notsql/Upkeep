@@ -81,7 +81,7 @@ export function DeactivateEstateDialog({
           <p className="text-sm" id="deactivate-code-help">
             Type <strong>{code}</strong> to confirm.
           </p>
-          <Label htmlFor="deactivate-code">Estate code</Label>
+          <Label htmlFor="deactivate-code">MCST number</Label>
           <Input
             aria-describedby="deactivate-code-help"
             autoComplete="off"

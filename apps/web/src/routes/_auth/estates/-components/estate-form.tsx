@@ -70,20 +70,23 @@ export function EstateForm({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="estate-code">Estate code</Label>
+              <Label htmlFor="estate-code">MCST number</Label>
               <Input
                 aria-describedby="estate-code-help"
                 defaultValue={initialValues?.code}
                 id="estate-code"
+                inputMode="numeric"
                 maxLength={50}
                 name="code"
+                placeholder="e.g. 1234"
                 required
               />
               <p
                 className="text-muted-foreground text-sm"
                 id="estate-code-help"
               >
-                A unique identifier, such as MG-001. Saved in uppercase.
+                The Management Corporation Strata Title number. Enter the number
+                only, without "MCST".
               </p>
             </div>
             <div className="grid gap-2">

@@ -9,7 +9,7 @@ vi.mock("@/lib/api", () => ({
 }));
 
 const path = "/api/admin/users/{userId}/estates/{estateId}";
-const maple = /Maple Grove/u;
+const maple = /Maple Grove \(MCST MG-001\)/u;
 const oak = /Oak Park/u;
 const ownedPine = /Pine Court.*Owner/u;
 

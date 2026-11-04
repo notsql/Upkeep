@@ -10,7 +10,7 @@ describe("EstateForm", () => {
     fireEvent.change(screen.getByRole("textbox", { name: "Name" }), {
       target: { value: "Maple Grove" },
     });
-    fireEvent.change(screen.getByRole("textbox", { name: "Estate code" }), {
+    fireEvent.change(screen.getByRole("textbox", { name: "MCST number" }), {
       target: { value: "MG-001" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: "Address" }), {

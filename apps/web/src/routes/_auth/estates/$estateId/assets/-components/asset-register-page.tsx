@@ -17,6 +17,7 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { BackLink } from "@/components/back-link";
 import { ConditionBadge } from "@/components/condition-badge";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
@@ -119,9 +120,9 @@ export function AssetRegisterPage({
   );
   return (
     <PageLayout className="space-y-6">
-      <Link className="underline" params={{ estateId }} to="/estates/$estateId">
+      <BackLink params={{ estateId }} to="/estates/$estateId">
         Back to estate
-      </Link>
+      </BackLink>
       <PageHeader
         actions={
           estate.data?.deactivatedAt ? undefined : (

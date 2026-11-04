@@ -1,8 +1,9 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
@@ -74,9 +75,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
   }, [navigate, estateId]);
   return (
     <PageLayout className="max-w-3xl">
-      <Link className="text-sm underline" to="/estates">
-        Back to estates
-      </Link>
+      <BackLink to="/estates">Back to estates</BackLink>
       <PageHeader
         breadcrumbs={[
           { label: "Estates", to: "/estates" },

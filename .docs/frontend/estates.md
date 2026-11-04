@@ -22,11 +22,11 @@ with Create estate. Back, breadcrumb and Cancel on creation all lead to this dir
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/code/address, Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you), Create estate and a grid of whole-card details links with name, code, address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty`, `Button`, `Input`, `Label`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
+| `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/MCST number/address (placeholder "Search by name, MCST number or address"), Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you), Create estate (Plus icon), result count, Skeleton loading and a grid of whole-card details links with name, MCST number (`MCST <code>`), address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty` (+`EmptyHeader`/`EmptyMedia`/`EmptyTitle`/`EmptyDescription`/`EmptyContent`), `Button`, `InputGroup`, `InputGroupAddon`, `InputGroupInput`, `Skeleton`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
 | `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create or edit. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an alert and Retry access. | `Alert`, `AlertDescription`, `Button` |
-| `EstateForm` (`estates/-components/estate-form.tsx`) | Fields: `name` (req, max 200), `code` (req, max 50, "Saved in uppercase"), `address` (req, max 500), `postalCode` (req, max 20), `description` (optional, max 2000). Submit "Create estate" / "Save changes". | `Button`, `Input`, `Label`, `Textarea` |
-| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, code, address, postal code, description. Owners, target-estate Managers and custom EDIT_ESTATE get "Edit estate", including inactive estates. Only the current owner gets "Deactivate estate" while active. Other roles see "Shared with you. You do not have permission to edit estate details." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
-| `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the estate `code` exactly to enable "Deactivate estate". Closing is blocked while pending. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label` |
+| `EstateForm` (`estates/-components/estate-form.tsx`) | Fields: `name` (req, max 200), `code` labelled "MCST number" (req, max 50, placeholder "e.g. 1234", `inputMode="numeric"`, hint asks for the number only without "MCST"), `address` (req, max 500), `postalCode` (req, max 20), `description` (optional, max 2000). Submit "Create estate" / "Save changes". | `Button`, `Input`, `Label`, `Textarea` |
+| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, "MCST number" (`MCST <code>`), address, postal code, description. Owners, target-estate Managers and custom EDIT_ESTATE get "Edit estate", including inactive estates. Only the current owner gets "Deactivate estate" while active. Other roles see "Shared with you. You do not have permission to edit estate details." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
+| `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the stored estate `code` exactly (field labelled "MCST number") to enable "Deactivate estate". Closing is blocked while pending. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label` |
 
 ## Data (`lib/estates.ts`)
 
@@ -77,7 +77,8 @@ Estate details offers **Council members** when `EstateResponse.canInviteMembers`
 or `canManageInvitationPermissions` is true. The route is
 `estates/$estateId/council/index.tsx`. Estates mounts `InvitationAcceptance`
 for WorkOS email reconciliation and `PendingInvitations` for explicit in-app
-acceptance. See [council-invitations.md](council-invitations.md) for components,
+acceptance, both at the very top of the page above the "Estates" PageHeader
+(Firebase-console style banners), followed by filters and the estate grid. See [council-invitations.md](council-invitations.md) for components,
 hooks, invalidation, and permission behavior.
 
 ## Dashboard presentation
@@ -96,7 +97,10 @@ estate-list request, so their failures do not hide estate cards. See the shared
 
 The header has no estate selector. On estate routes, switch directly through
 the estate menu in the desktop sidebar or above mobile estate links (see
-[shell.md](shell.md)). Estates remains the searchable directory.
+[shell.md](shell.md)); that menu also links back to All estates and, if allowed,
+Create estate. Estates remains the searchable directory, and it and
+`/estates/new` render full width with no sidebar; global links move to the
+header account menu there.
 
 ## Directory filters and navigation
 
@@ -111,19 +115,22 @@ Status remains an API filter; text/access filter the returned accessible rows
 locally. Filter edits replace the URL entry, so going back from an opened estate
 restores the search and choices without an entry per keystroke.
 
-On phones search spans the row, with status/access together below. Each estate
-filter field uses the same label typography, 44px control height and label/control
-gap. Field wrappers use flex columns, and the grid aligns them at the bottom so
-search and selects line up on desktop. Each estate
-card is one real link named `estate name (code)`, with visible keyboard focus
-and no nested buttons/links.
-Desktop hover adds a subtle accent background, border and shadow; keyboard focus
-gets the accent highlight and existing focus ring. Touch users get a pressed
-highlight while tapping, rather than depending on hover. Transitions respect
-reduced-motion preferences. Badges distinguish Owner from Shared with you,
-without implying a council role from general estate access. Clear filters resets
-search/access/status to their defaults. No estates and no search/access matches
-have separate guidance. Home portfolio analytics are documented in [dashboard.md](dashboard.md).
+The filters are one slim toolbar with no outer card: an `InputGroup` search
+(leading Search icon, accessible name "Search estates") and the Status and Access
+`Select`s inline (accessible names via `aria-label`), wrapping on phones. The
+toolbar ends with a result count ("1 estate" / "N estates") and, when filters
+differ from the defaults and results are shown, a ghost Clear filters button.
+While loading, three `Skeleton` cards render inside an `aria-live` region with
+sr-only "Loading estates…". Cards sit in a 1/2/3-column grid (base/sm/lg). Each
+card is one real link named `estate name (MCST code)`, with visible keyboard focus
+and no nested buttons/links. It shows a monogram tile (initials, colour derived
+from the estate id), name, monospace `MCST <code>`, address with a MapPin icon, and the
+Owner/Shared with you and lifecycle badges; hover adds a ring, shadow and a
+chevron. Transitions respect reduced-motion preferences. The empty state is shadcn
+`Empty` (`role="status"`) with a Building2 `EmptyMedia`: with default filters it
+says "No active estates." (or the ALL/INACTIVE variant) and offers New estate;
+with filters active it says "No matching estates" and offers Clear filters, which
+resets search/access/status. Home portfolio analytics are documented in [dashboard.md](dashboard.md).
 
 ## Work-order overview entry
 
@@ -151,3 +158,11 @@ also retain their Devices action on the estate overview, with Asset categories a
 Inspections actions beside it under the same condition ([asset-categories.md](asset-categories.md),
 [inspection-list.md](inspection-list.md)).
 See [inspections](inspections.md) for limited asset screens and recording.
+
+## MCST number display
+
+Estates are Singapore condominiums; the API field `code` holds the MCST
+(Management Corporation Strata Title) number, stored without the prefix.
+`formatMcst(code)` in `apps/web/src/lib/estates.ts` renders `MCST <code>`
+and leaves codes that already start with "MCST" (case-insensitive) as-is.
+It is used on estate cards, the details page and admin member estates.

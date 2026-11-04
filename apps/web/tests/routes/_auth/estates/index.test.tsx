@@ -65,7 +65,7 @@ it("restores search, status and access filters after opening a whole estate card
   });
   await router.load();
   renderWithProviders(<RouterProvider router={router} />);
-  await screen.findByRole("link", { name: "Oak Park (OP-002)" });
+  await screen.findByRole("link", { name: "Oak Park (MCST OP-002)" });
   fireEvent.change(screen.getByRole("searchbox", { name: "Search estates" }), {
     target: { value: "Oak " },
   });
@@ -78,13 +78,13 @@ it("restores search, status and access filters after opening a whole estate card
     screen.getByRole("combobox", { name: "Access" }),
     "Shared with you"
   );
-  const card = screen.getByRole("link", { name: "Oak Park (OP-002)" });
+  const card = screen.getByRole("link", { name: "Oak Park (MCST OP-002)" });
   expect(within(card).queryAllByRole("link")).toHaveLength(0);
   expect(within(card).queryAllByRole("button")).toHaveLength(0);
   fireEvent.click(card);
   await screen.findByRole("heading", { name: "Estate destination" });
   router.history.back();
-  await screen.findByRole("link", { name: "Oak Park (OP-002)" });
+  await screen.findByRole("link", { name: "Oak Park (MCST OP-002)" });
   expect(
     screen.getByRole<HTMLInputElement>("searchbox", { name: "Search estates" })
       .value

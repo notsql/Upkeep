@@ -4,10 +4,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@proj/ui/components/dropdown-menu";
 import { Link } from "@tanstack/react-router";
-import { Building2, Check, ChevronsUpDown } from "lucide-react";
+import {
+  Building2,
+  Check,
+  ChevronsUpDown,
+  LayoutGrid,
+  Plus,
+} from "lucide-react";
 import { useAppAccess } from "@/lib/access";
 
 export type EstateFeature =
@@ -177,6 +184,23 @@ export function EstateFeatureSwitcher({
             </DropdownMenuItem>
           );
         })}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="min-h-11 gap-3 rounded-lg text-sm"
+          render={<Link to="/estates" />}
+        >
+          <LayoutGrid aria-hidden="true" />
+          All estates
+        </DropdownMenuItem>
+        {access.data?.canCreateEstate ? (
+          <DropdownMenuItem
+            className="min-h-11 gap-3 rounded-lg text-sm"
+            render={<Link to="/estates/new" />}
+          >
+            <Plus aria-hidden="true" />
+            Create estate
+          </DropdownMenuItem>
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

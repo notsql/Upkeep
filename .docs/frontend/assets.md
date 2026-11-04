@@ -20,7 +20,7 @@ are relative to `apps/web/src/`; route folders below are under
 | `$assetId/index.tsx` | `/estates/$estateId/assets/$assetId` | `estateId`, `assetId` | "Asset details" | `AssetDetailsPage` |
 | `$assetId/edit/index.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
 
-Entry point: Assets section beneath Locations on estate details. Owners have View assets and, for active estates, Register asset. Owners also get a "Failure risk" link to `/estates/$estateId/failure-risk` (see [failure-risk.md](failure-risk.md)). Details link back to the register and estate.
+Entry point: Assets section beneath Locations on estate details. Owners have View assets and, for active estates, Register asset. Owners also get a "Failure risk" link to `/estates/$estateId/failure-risk` (see [failure-risk.md](failure-risk.md)). Details, and asset creation, have one `BackLink` "Back to assets" to the register (estate is reached via breadcrumbs); asset edit has "Back to asset". See `BackLink` in [design-system.md](design-system.md).
 
 ## Screens and components
 

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ReactNode, useCallback, useEffect } from "react";
 
 import { api } from "@/lib/api";
+import { formatMcst } from "@/lib/estates";
 
 // Local mutation arguments; API request/response types remain inferred.
 interface AccessChange {
@@ -154,7 +155,8 @@ export function MemberEstates({
               estateId={estate.estateId}
               onChange={handleChange}
             >
-              {estate.name} ({estate.code}){estate.owner ? " · Owner" : ""}
+              {estate.name} ({formatMcst(estate.code)})
+              {estate.owner ? " · Owner" : ""}
               {estate.membershipRole === "RESIDENT"
                 ? " · Resident assignment (read-only)"
                 : ""}

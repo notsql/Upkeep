@@ -1,5 +1,9 @@
 import type { components } from "@proj/api/schema";
 import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@proj/ui/components/dropdown-menu";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -20,7 +24,6 @@ import {
   Home,
   Layers,
   LayoutDashboard,
-  LogOut,
   type LucideIcon,
   ShieldCheck,
   UserRound,
@@ -44,11 +47,9 @@ const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
 type Destination =
   | "/"
   | "/estates"
-  | "/invitations"
   | "/account"
   | "/reports"
   | "/reports/new"
-  | "/logout"
   | "/admin/users"
   | "/estates/$estateId"
   | "/estates/$estateId/assets"
@@ -152,12 +153,6 @@ function useNavigation() {
   const access = useAppAccess();
   const { pathname, estateId, permission, estateName } =
     useNavigationEstate(access);
-  const invitations: NavigationItem = {
-    label: "Invitations",
-    to: "/invitations",
-    icon: Users,
-    active: pathname.startsWith("/invitations"),
-  };
   const estates: NavigationItem = {
     label: "Estates",
     to: "/estates",
@@ -182,13 +177,7 @@ function useNavigation() {
     ...resident.local,
   ];
   if (!access.data.canEnterWorkspace) {
-    const signOut: NavigationItem = {
-      label: "Sign out",
-      to: "/logout",
-      icon: LogOut,
-      active: false,
-    };
-    const destinations = [estates, ...resident.global, invitations, signOut];
+    const destinations = [estates, ...resident.global];
     return {
       items: destinations,
       local,
@@ -205,7 +194,6 @@ function useNavigation() {
   const items: NavigationItem[] = [
     home,
     estates,
-    invitations,
     {
       label: "Settings",
       to: "/account",
@@ -588,5 +576,90 @@ export function EstateNavigation() {
       <NavigationEstateSwitcher estateId={estateId} estateName={estateName} />
       <EstateSectionMenu items={local} key={estateId} />
     </nav>
+  );
+}
+
+/** Only pages inside one estate show the sidebar; every other page is full width. */
+export function isEstateScoped(pathname: string): boolean {
+  const estateId = pathname.match(ESTATE_PATH)?.groups?.estateId;
+  return estateId !== undefined && estateId !== "new";
+}
+
+function ChooserMenuItem({
+  feature,
+  item,
+  onChooseEstate,
+}: {
+  feature: EstateFeature;
+  item: NavigationItem;
+  onChooseEstate: (feature: EstateFeature) => void;
+}) {
+  const choose = useCallback(
+    () => onChooseEstate(feature),
+    [feature, onChooseEstate]
+  );
+  const Icon = item.icon;
+  return (
+    <DropdownMenuItem
+      aria-haspopup="dialog"
+      className="min-h-11 text-sm"
+      onClick={choose}
+    >
+      <Icon aria-hidden="true" />
+      {item.label}
+    </DropdownMenuItem>
+  );
+}
+
+/**
+ * The sidebar's global links as account-menu items, for pages without a
+ * sidebar. Settings is already in the account menu, so it is left out. Items
+ * that need an estate first call `onChooseEstate`, so the caller can open the
+ * estate chooser outside the menu (which closes on selection).
+ */
+export function WorkspaceMenuItems({
+  onChooseEstate,
+}: {
+  onChooseEstate: (feature: EstateFeature) => void;
+}) {
+  const { items } = useNavigation();
+  const links = items.filter((item) => item.to !== "/account");
+  if (links.length === 0) {
+    return null;
+  }
+  return (
+    <>
+      {links.map((item) => {
+        const Icon = item.icon;
+        if (item.chooseEstate) {
+          return (
+            <ChooserMenuItem
+              feature={item.chooseEstate}
+              item={item}
+              key={item.label}
+              onChooseEstate={onChooseEstate}
+            />
+          );
+        }
+        return (
+          <DropdownMenuItem
+            className="min-h-11 text-sm"
+            key={item.label}
+            render={
+              <Link
+                aria-current={item.active ? "page" : undefined}
+                params={item.estateId ? { estateId: item.estateId } : undefined}
+                search={item.search}
+                to={item.to}
+              />
+            }
+          >
+            <Icon aria-hidden="true" />
+            {item.label}
+          </DropdownMenuItem>
+        );
+      })}
+      <DropdownMenuSeparator />
+    </>
   );
 }

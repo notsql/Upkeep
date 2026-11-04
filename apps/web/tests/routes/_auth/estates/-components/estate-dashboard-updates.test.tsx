@@ -95,7 +95,7 @@ for (const mode of ["create", "edit"]) {
       target: { value: mode === "edit" ? "Maple Gardens" : "Maple Grove" },
     });
     for (const [label, value] of [
-      ["Estate code", "MG-001"],
+      ["MCST number", "MG-001"],
       ["Address", "1 Road"],
       ["Postal code", "123456"],
     ]) {
@@ -149,7 +149,7 @@ it("refreshes the Home summary when an estate is deactivated", async () => {
   );
   fireEvent.click(screen.getByRole("button", { name: "Deactivate estate" }));
   const dialog = within(await screen.findByRole("dialog"));
-  fireEvent.change(dialog.getByRole("textbox", { name: "Estate code" }), {
+  fireEvent.change(dialog.getByRole("textbox", { name: "MCST number" }), {
     target: { value: "MG-001" },
   });
   fireEvent.click(dialog.getByRole("button", { name: "Deactivate estate" }));

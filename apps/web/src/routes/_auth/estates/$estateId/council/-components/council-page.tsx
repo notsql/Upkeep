@@ -6,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
@@ -131,13 +131,9 @@ export function CouncilPage({ estateId }: { estateId: string }) {
   return (
     <PageLayout className="space-y-6">
       {permission.canViewManagement ? (
-        <Link
-          className="text-sm underline"
-          params={{ estateId }}
-          to="/estates/$estateId"
-        >
+        <BackLink params={{ estateId }} to="/estates/$estateId">
           Back to estate
-        </Link>
+        </BackLink>
       ) : null}
       <PageHeader
         breadcrumbs={[

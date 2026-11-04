@@ -16,18 +16,22 @@ only the owner can transfer, to another existing Manager, with confirmation.
 Transfer refreshes ownership and capabilities. Removal/cancellation dialogs retain
 errors and explain their estate-only effects and pending-invitation cancellation.
 
-`/invitations` is `apps/web/src/routes/_auth/invitations/index.tsx`. Every signed-in
-identity can enter, including unassigned, Resident-only and Crew-only accounts.
-The auth guard checks identity without requiring workspace access. Desktop/mobile
-navigation includes Invitations. WorkOS invitation sign-in returns here with
-PKCE/state preserved. Existing estate/home invitation summaries remain.
-After the pending-invitations query succeeds with an empty list, this page shows
-a shadcn Empty panel headed "No pending invitations" with explanatory text.
-It stays hidden during loading or errors; failures keep the retry action instead.
+There is no separate invitations screen. Pending invitations (all of them, not
+truncated) render as Alert rows at the top of `/estates`, which every signed-in
+identity can open, including unassigned, Resident-only and Crew-only accounts;
+`/estates` also mounts `InvitationAcceptance`. `/invitations`
+(`apps/web/src/routes/_auth/invitations/index.tsx`) is kept only as a
+`beforeLoad` redirect to `/estates` so old links still land; there is no
+Invitations navigation entry. WorkOS invitation sign-in
+(`/api/auth/sign-in?invitation_token=...`) returns to `/estates` with PKCE/state
+preserved. The home page summary links to `/estates` ("Review invitations").
 The shared summary on the Estates page still hides an empty list.
 
-Shared pending/acceptance components remain in estates/-components. Pending cards
-show estate, offered role and expiry; Accept is explicit. Loading never explicitly
+Shared pending/acceptance components remain in estates/-components. Pending
+offers render as a `<ul aria-label="Pending estate invitations">` of compact
+shadcn Alert rows (MailOpen icon, subtle primary tint; "You're invited to <estate>", offered role and expiry) with an
+inline AlertAction "Accept" button (accessible name "Accept invitation to
+<estate>"); there is no decline, as the API has no decline endpoint. Accept is explicit. Loading never explicitly
 accepts. Failures retain the offer and permit retry. The separate email component
 reconciles only provider-accepted invitations once per mounted user, with Retry.
 Resident acceptance works with the estate selector in [resident-reports.md](resident-reports.md).
