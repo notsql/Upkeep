@@ -30,6 +30,55 @@ export function useCreateLocation(
   });
 }
 
+export async function updateLocation(
+  estateId: string,
+  id: string,
+  body: components["schemas"]["UpdateLocationRequest"]
+): Promise<void> {
+  const { error, response } = await api.PATCH(
+    "/estates/{estateId}/locations/{id}",
+    {
+      params: { path: { estateId, id } },
+      body,
+    }
+  );
+  if (error) {
+    throw estateError(error, response.status);
+  }
+}
+
+export async function addBlockFloors(
+  estateId: string,
+  blockId: string,
+  lowestFloor: number,
+  highestFloor: number
+) {
+  const { data, error, response } = await api.POST(
+    "/estates/{estateId}/locations/{blockId}/floors",
+    {
+      params: { path: { estateId, blockId } },
+      body: { lowestFloor, highestFloor },
+    }
+  );
+  if (error || !data) {
+    throw estateError(error, response.status);
+  }
+  return data;
+}
+
+export async function deactivateLocation(
+  estateId: string,
+  id: string
+): Promise<void> {
+  const { error, response } = await api.POST(
+    "/estates/{estateId}/locations/{id}/deactivate",
+    { params: { path: { estateId, id } } }
+  );
+  if (error) {
+    throw estateError(error, response.status);
+  }
+}
+
 export interface LocationNode extends Location {
   children: LocationNode[];
   /** Names from the block down to this node, for breadcrumbs. */

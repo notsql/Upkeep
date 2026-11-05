@@ -13,7 +13,11 @@ in the asset detail Documents card; both views share estate document invalidatio
 Route `/estates/$estateId/documents` lives at
 `apps/web/src/routes/_auth/estates/$estateId/documents/index.tsx`. Its
 `-components/` folder contains `documents-page.tsx`, `document-list.tsx`,
-`document-row.tsx`, `document-filters.tsx` and `upload-document-form.tsx`. The
+`document-row.tsx`, `document-filters.tsx` and `upload-document-form.tsx`.
+`documents-page.tsx` composes `documents-results.tsx` (notice, loading/error,
+list, pagination) and `documents-dialogs.tsx` (work-order, asset and delete
+dialogs); `use-documents-page.ts` and `use-upload-document-form.ts` hold their
+state and handlers. The
 route validates `filename`, `documentType` and `cursor` URL search parameters,
 so refresh/back restore filtering and paging.
 Supported type values are `INVOICE` and `SERVICE_REPORT`; unsupported/empty URL

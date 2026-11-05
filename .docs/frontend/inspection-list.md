@@ -5,7 +5,9 @@ API: [inspection-list.md](../api/inspection-list.md).
 ## Route
 
 `/estates/$estateId/inspections` — `src/routes/_auth/estates/$estateId/inspections/index.tsx`
-(title "Inspections") renders `-components/inspections-page.tsx`.
+(title "Inspections") renders `-components/inspections-page.tsx`, which composes
+`inspections-generation-status.tsx`, `inspections-no-flagged-categories.tsx` and
+`inspections-checks.tsx`; `use-inspections-page.ts` holds queries and generation.
 
 Entry: sidebar Operations › **Inspections**, shown by `canOpenInspections`
 (`owned || canManageInvitationPermissions`); the `_auth` guard 404s otherwise.

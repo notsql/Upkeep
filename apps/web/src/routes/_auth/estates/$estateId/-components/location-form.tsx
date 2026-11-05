@@ -1,14 +1,9 @@
 import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@proj/ui/components/select";
 import { type SubmitEvent, useCallback, useId, useState } from "react";
+import { LocationFormParentField } from "@/routes/_auth/estates/$estateId/-components/location-form-parent-field";
+import { LocationFormPositionField } from "@/routes/_auth/estates/$estateId/-components/location-form-position-field";
 
 export interface LocationFormValues {
   name: string;
@@ -93,49 +88,17 @@ export function LocationForm({
           />
         </div>
         {showPosition ? (
-          <div className="grid gap-1">
-            <Label htmlFor={`${id}-position`}>Position</Label>
-            <Input
-              aria-describedby={`${id}-position-help`}
-              defaultValue={initialSortOrder}
-              id={`${id}-position`}
-              name="sortOrder"
-              required
-              step={1}
-              type="number"
-            />
-            <p
-              className="text-muted-foreground text-sm"
-              id={`${id}-position-help`}
-            >
-              Orders levels from the bottom up, for example B1 is -1 and the
-              roof is one above the top floor. Must be unique in the block.
-            </p>
-          </div>
+          <LocationFormPositionField
+            id={id}
+            initialSortOrder={initialSortOrder}
+          />
         ) : null}
         {parentOptions ? (
-          <div className="grid gap-1">
-            <Label htmlFor={`${id}-parent`}>Inside</Label>
-            <Select
-              defaultValue={initialParentId}
-              items={parentOptions.map((option) => ({
-                value: option.id,
-                label: option.label,
-              }))}
-              name="parentId"
-            >
-              <SelectTrigger className="w-full" id={`${id}-parent`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {parentOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <LocationFormParentField
+            id={id}
+            initialParentId={initialParentId}
+            parentOptions={parentOptions}
+          />
         ) : null}
         {error ? (
           <p className="text-destructive text-sm" role="alert">

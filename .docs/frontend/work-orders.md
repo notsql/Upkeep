@@ -41,7 +41,9 @@ No work orders yet. Status/category filters share the same URL/pagination rules.
 Route-local components split source selection, optional asset search, location
 feedback and save errors. The existing ReportFilters is reused outside the
 creation form, so its filter form is never nested inside another form.
-`new/-components/work-order-form.tsx` composes the creation screen;
+`new/-components/work-order-form.tsx` composes the creation screen from
+`work-order-form-source-status.tsx`, `work-order-form-details-fields.tsx`,
+`work-order-form-asset-fields.tsx` and `work-order-form-footer.tsx`;
 `use-work-order-form.ts` owns its state, prefill, source-conflict choices and
 submission guard. `work-order-source-fields.tsx` renders the source selector,
 report picker and manual source reference. These share the existing feature
@@ -404,7 +406,8 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
 
 ## Shared page components
 
-- List (`work-order-list-page.tsx`): `ListPageHeader` (`Wrench`, title "Work
+- List (`work-order-list-page.tsx`; state in `use-work-order-list-page.ts`,
+  loading/error/table/pagination in `work-order-list-results.tsx`): `ListPageHeader` (`Wrench`, title "Work
   orders", no estate-name description) with `filters` = `FilterToggle` and
   `create` = `CreateButton` "Create" to `/estates/$estateId/work-orders/new`
   (only with create permission). `useFilterPanel(activeCount)` owns the panel;
@@ -412,7 +415,8 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   is collapsed until toggled (open on load when filters are in the URL).
   `countWorkOrderFilters` (in `work-order-filters.tsx`) gives `activeCount`.
   Load failure: `ErrorState` "Unable to load work orders".
-- Detail (`work-order-detail-page.tsx`): `DetailPageHeader` with breadcrumbs,
+- Detail (`work-order-detail-page.tsx`; the description/details card is
+  `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
   status `Badge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
   `work-order-progress.tsx` and `work-order-documents.tsx` use `ErrorState`
   ("Retry history", "Retry corrections", "Retry documents"). The completion

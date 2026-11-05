@@ -1,42 +1,13 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Activity } from "lucide-react";
-import { useCallback, useState } from "react";
 import { ErrorState } from "@/components/error-state";
-import { useFilterPanel } from "@/components/filter-bar";
 import { ListPageHeader } from "@/components/list-page-header";
-import type { CreateButtonProps } from "@/components/page-actions";
 import { PageLayout } from "@/components/page-layout";
-import { useAppAccess } from "@/lib/access";
-import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
-import {
-  type EstateReading,
-  type ReadingAsset,
-  useEstateReadings,
-  useReadingAssets,
-} from "@/lib/readings";
+import type { ReadingSearch } from "@/lib/reading-filters";
 import { ReadingExport } from "./reading-export";
-import {
-  countReadingFilters,
-  ReadingFilterControls,
-} from "./reading-filter-controls";
+import { ReadingFilterControls } from "./reading-filter-controls";
 import { ReadingResults } from "./reading-results";
-
-function selectedLabel(
-  id: string | undefined,
-  selected: ReadingAsset | undefined,
-  reading: EstateReading | undefined
-): string {
-  if (!id) {
-    return "All assets";
-  }
-  if (selected) {
-    return `${selected.reference} · ${selected.name}`;
-  }
-  if (reading) {
-    return `${reading.assetReference} · ${reading.assetName}`;
-  }
-  return "Selected asset";
-}
+import { useEstateReadingsPage } from "./use-estate-readings-page";
 
 export function EstateReadingsPage({
   estateId,
@@ -47,34 +18,19 @@ export function EstateReadingsPage({
   filters: ReadingSearch;
   onFiltersChange: (filters: ReadingSearch) => void;
 }) {
-  const access = useAppAccess();
-  const estate = access.data?.estates.find(
-    (item) => item.estateId === estateId
-  );
-  const readings = useEstateReadings(estateId, filters);
-  const assets = useReadingAssets(estateId);
-  const [chosen, setChosen] = useState<ReadingAsset>();
-  const chooseAsset = useCallback(
-    (asset: ReadingAsset | undefined) => {
-      setChosen(asset);
-      onFiltersChange({ ...filters, assetId: asset?.id, page: undefined });
-    },
-    [filters, onFiltersChange]
-  );
-  const retryAssets = useCallback(() => assets.refetch(), [assets.refetch]);
-  const activeCount = countReadingFilters(filters);
-  const panel = useFilterPanel(activeCount);
-  const error = readingFilterError(filters);
-  const selected =
-    chosen?.id === filters.assetId
-      ? chosen
-      : assets.data?.items.find((item) => item.id === filters.assetId);
-  const label = selectedLabel(
-    filters.assetId,
-    selected,
-    readings.data?.items.find((item) => item.assetId === filters.assetId)
-  );
-  if (access.data && !estate?.canViewReadings) {
+  const {
+    activeCount,
+    assets,
+    chooseAsset,
+    create,
+    error,
+    forbidden,
+    label,
+    panel,
+    readings,
+    retryAssets,
+  } = useEstateReadingsPage(estateId, filters, onFiltersChange);
+  if (forbidden) {
     return (
       <Alert variant="destructive">
         <AlertDescription>
@@ -83,13 +39,6 @@ export function EstateReadingsPage({
       </Alert>
     );
   }
-  const create: CreateButtonProps | undefined = estate?.canRecordReadings
-    ? {
-        params: { estateId },
-        search: { assetId: filters.assetId, metric: filters.metric },
-        to: "/estates/$estateId/readings/new",
-      }
-    : undefined;
   return (
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
       <ListPageHeader

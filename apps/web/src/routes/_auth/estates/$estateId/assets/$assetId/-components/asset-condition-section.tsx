@@ -1,5 +1,4 @@
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -9,21 +8,13 @@ import {
   DialogTrigger,
 } from "@proj/ui/components/dialog";
 import { HeartPulse } from "lucide-react";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { SectionCard } from "@/components/section-card";
-import {
-  type AssessmentInput,
-  useAssessments,
-  useRecordAssessment,
-} from "@/lib/assessments";
 import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
-
-/** The identity the server records anomaly-detection assessments under. */
-const ANOMALY_MODEL_USER_ID = "system:anomaly-model";
+import { AssetConditionHistory } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-history";
+import { useAssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/use-asset-condition-section";
 
 export function AssetConditionSection({
   assetId,
@@ -34,29 +25,16 @@ export function AssetConditionSection({
   canRecord: boolean;
   estateId: string;
 }) {
-  const assessments = useAssessments(estateId, assetId);
-  const recordAssessment = useRecordAssessment(estateId, assetId);
-  const [recording, setRecording] = useState(false);
-  const changeOpen = useCallback(
-    (open: boolean) => {
-      if (!recordAssessment.isPending) {
-        setRecording(open);
-      }
-    },
-    [recordAssessment.isPending]
-  );
-  const cancel = useCallback(() => setRecording(false), []);
-  const retry = useCallback(() => assessments.refetch(), [assessments.refetch]);
-  const save = useCallback(
-    async (values: AssessmentInput) => {
-      await recordAssessment.mutateAsync(values);
-      setRecording(false);
-      toast.success("Assessment recorded.");
-    },
-    [recordAssessment.mutateAsync]
-  );
-  // The API returns the current condition first.
-  const current = assessments.data?.[0];
+  const {
+    assessments,
+    cancel,
+    changeOpen,
+    current,
+    recordAssessment,
+    recording,
+    retry,
+    save,
+  } = useAssetConditionSection(estateId, assetId);
 
   return (
     <Dialog onOpenChange={changeOpen} open={recording && canRecord}>
@@ -111,34 +89,7 @@ export function AssetConditionSection({
             </DialogContent>
           ) : null}
           {assessments.data?.length ? (
-            <>
-              <h3 className="mt-6 font-medium">History</h3>
-              <ul className="mt-2 grid gap-3">
-                {assessments.data.map((assessment) => (
-                  <li key={assessment.id}>
-                    <Card size="sm">
-                      <CardContent>
-                        <p>
-                          <ConditionBadge condition={assessment.condition} /> ·
-                          assessed {assessment.assessedOn}
-                        </p>
-                        <p className="mt-2 whitespace-pre-wrap">
-                          {assessment.notes}
-                        </p>
-                        <p className="text-muted-foreground mt-2">
-                          Recorded by{" "}
-                          {assessment.recordedByUserId === ANOMALY_MODEL_USER_ID
-                            ? "Anomaly detection"
-                            : (assessment.recordedByName ??
-                              "Unknown user")}{" "}
-                          on {new Date(assessment.recordedAt).toLocaleString()}
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </li>
-                ))}
-              </ul>
-            </>
+            <AssetConditionHistory assessments={assessments.data} />
           ) : null}
         </div>
       </SectionCard>

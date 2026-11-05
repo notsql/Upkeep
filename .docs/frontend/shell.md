@@ -24,7 +24,7 @@ the form.
 
 | File | URL | Guard | Screen |
 | --- | --- | --- | --- |
-| `routes/index.tsx` | `/` | none | Signed out: public `HomePage` (`routes/-components/home-page.tsx`). Signed in: redirects (below), except resident-only accounts, who get `ResidentDashboard` (see [resident-dashboard.md](resident-dashboard.md)). |
+| `routes/index.tsx` | `/` | none | Signed out: public `HomePage` (`routes/-components/home-page.tsx`, composing `home-no-workspace.tsx`, `home-sign-in-card.tsx` and `home-feature-cards.tsx`). Signed in: redirects (below), except resident-only accounts, who get `ResidentDashboard` (see [resident-dashboard.md](resident-dashboard.md)). |
 
 The public home content has one Create account action and a secondary System
 status card (`useHealth()` from `lib/health.ts`: key `["health"]`,

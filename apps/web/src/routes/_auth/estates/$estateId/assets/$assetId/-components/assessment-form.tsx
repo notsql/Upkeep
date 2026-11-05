@@ -1,65 +1,7 @@
 import { Button } from "@proj/ui/components/button";
-import { Label } from "@proj/ui/components/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@proj/ui/components/select";
-import { Textarea } from "@proj/ui/components/textarea";
-import {
-  type ChangeEvent,
-  type SubmitEvent,
-  useCallback,
-  useId,
-  useState,
-} from "react";
-import { DatePicker } from "@/components/date-picker";
-import {
-  type AssessmentInput,
-  type AssetCondition,
-  conditionLabel,
-  localToday,
-} from "@/lib/assessments";
-
-interface FormValues {
-  assessedOn: string;
-  condition: string;
-  notes: string;
-}
-
-type Field = keyof FormValues;
-
-const conditionItems = [
-  { value: "", label: "Select a condition" },
-  ...Object.entries(conditionLabel).map(([value, label]) => ({
-    value,
-    label,
-  })),
-];
-type FieldErrors = Partial<Record<Field, string>>;
-
-function isCondition(value: string): value is AssetCondition {
-  return value in conditionLabel;
-}
-
-function validate(values: FormValues, today: string): FieldErrors {
-  const errors: FieldErrors = {};
-  if (!isCondition(values.condition)) {
-    errors.condition = "Condition is required.";
-  }
-  if (!values.assessedOn) {
-    errors.assessedOn = "Assessment date is required.";
-  } else if (values.assessedOn > today) {
-    // ISO dates compare correctly as strings.
-    errors.assessedOn = "The assessment date cannot be in the future.";
-  }
-  if (!values.notes.trim()) {
-    errors.notes = "Notes are required.";
-  }
-  return errors;
-}
+import type { AssessmentInput } from "@/lib/assessments";
+import { AssessmentFormFields } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form-fields";
+import { useAssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/use-assessment-form";
 
 export function AssessmentForm({
   onSave,
@@ -68,131 +10,33 @@ export function AssessmentForm({
   onSave: (values: AssessmentInput) => Promise<unknown>;
   onCancel?: () => void;
 }) {
-  const id = useId();
-  const [today] = useState(localToday);
-  const [values, setValues] = useState<FormValues>({
-    condition: "",
-    assessedOn: today,
-    notes: "",
-  });
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [error, setError] = useState<string>();
-  const [pending, setPending] = useState(false);
-
-  const handleChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const { name, value } = event.target;
-      setValues((current) => ({ ...current, [name]: value }));
-    },
-    []
-  );
-
-  const handleAssessedOnChange = useCallback((value: string) => {
-    setValues((current) => ({ ...current, assessedOn: value }));
-  }, []);
-
-  const handleConditionChange = useCallback((value: string | null) => {
-    setValues((current) => ({ ...current, condition: value ?? "" }));
-  }, []);
-
-  const handleSubmit = useCallback(
-    async (event: SubmitEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (pending) {
-        return;
-      }
-      const errors = validate(values, today);
-      setFieldErrors(errors);
-      if (Object.keys(errors).length > 0 || !isCondition(values.condition)) {
-        return;
-      }
-      setPending(true);
-      setError(undefined);
-      try {
-        await onSave({
-          condition: values.condition,
-          assessedOn: values.assessedOn,
-          notes: values.notes.trim(),
-        });
-      } catch (cause) {
-        setError(
-          cause instanceof Error
-            ? cause.message
-            : "Unable to record the assessment. Please try again."
-        );
-      } finally {
-        setPending(false);
-      }
-    },
-    [onSave, pending, today, values]
-  );
-
-  const errorProps = (field: Field) =>
-    fieldErrors[field]
-      ? { "aria-describedby": `${id}-${field}-error`, "aria-invalid": true }
-      : {};
-  const errorText = (field: Field) =>
-    fieldErrors[field] ? (
-      <p className="text-destructive text-sm" id={`${id}-${field}-error`}>
-        {fieldErrors[field]}
-      </p>
-    ) : null;
+  const {
+    error,
+    errorProps,
+    fieldErrors,
+    handleAssessedOnChange,
+    handleChange,
+    handleConditionChange,
+    handleSubmit,
+    id,
+    pending,
+    today,
+    values,
+  } = useAssessmentForm(onSave);
 
   return (
     <form className="mt-4 grid gap-5" noValidate onSubmit={handleSubmit}>
-      <fieldset className="grid gap-5" disabled={pending}>
-        <legend className="sr-only">Condition assessment</legend>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-condition`}>Condition</Label>
-          <Select
-            items={conditionItems}
-            onValueChange={handleConditionChange}
-            required
-            value={values.condition}
-          >
-            <SelectTrigger
-              {...errorProps("condition")}
-              className="w-full"
-              id={`${id}-condition`}
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {conditionItems.slice(1).map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errorText("condition")}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-assessed-on`}>Assessment date</Label>
-          <DatePicker
-            {...errorProps("assessedOn")}
-            clearable={false}
-            id={`${id}-assessed-on`}
-            max={today}
-            onChange={handleAssessedOnChange}
-            value={values.assessedOn}
-          />
-          {errorText("assessedOn")}
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-notes`}>Notes</Label>
-          <Textarea
-            {...errorProps("notes")}
-            id={`${id}-notes`}
-            maxLength={2000}
-            name="notes"
-            onChange={handleChange}
-            required
-            value={values.notes}
-          />
-          {errorText("notes")}
-        </div>
-      </fieldset>
+      <AssessmentFormFields
+        errorProps={errorProps}
+        fieldErrors={fieldErrors}
+        handleAssessedOnChange={handleAssessedOnChange}
+        handleChange={handleChange}
+        handleConditionChange={handleConditionChange}
+        id={id}
+        pending={pending}
+        today={today}
+        values={values}
+      />
       {error ? (
         <p className="text-destructive text-sm" role="alert">
           {error}

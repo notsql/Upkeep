@@ -1,0 +1,46 @@
+import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
+import type {
+  EstateReportFilters,
+  useEstateReportLocations,
+} from "@/lib/estate-reports";
+import { ReportFilters } from "@/routes/_auth/estates/$estateId/reports/-components/report-filters";
+
+export function EstateReportsLocations({
+  locations,
+  filters,
+  onChange,
+  onRetry,
+  barProps,
+}: {
+  locations: ReturnType<typeof useEstateReportLocations>;
+  filters: EstateReportFilters;
+  onChange: (values: EstateReportFilters) => void;
+  onRetry: () => void;
+  barProps: { id: string; open: boolean };
+}) {
+  const { blockId, minLevelPosition, maxLevelPosition } = filters;
+  return (
+    <>
+      {locations.data ? (
+        <ReportFilters
+          filters={filters}
+          key={`${blockId ?? "all"}:${minLevelPosition ?? ""}:${maxLevelPosition ?? ""}`}
+          locations={locations.data}
+          onChange={onChange}
+          {...barProps}
+        />
+      ) : null}
+      {locations.isPending ? (
+        <LoadingState label="Loading locations…" rows={1} />
+      ) : null}
+      {locations.isError ? (
+        <ErrorState
+          message="Unable to load locations"
+          onRetry={onRetry}
+          retryLabel="Retry locations"
+        />
+      ) : null}
+    </>
+  );
+}

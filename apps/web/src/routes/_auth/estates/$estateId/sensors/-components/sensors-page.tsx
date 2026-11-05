@@ -1,9 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
 import { useCallback, useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { SectionCard } from "@/components/section-card";
 import {
   type MonitoredSensor,
   type SensorView,
@@ -12,8 +10,7 @@ import {
 } from "@/lib/flatlined-sensors";
 import { MetricPolicySettings } from "@/routes/_auth/estates/$estateId/sensors/-components/metric-policy-settings";
 import { PauseSensorDialog } from "@/routes/_auth/estates/$estateId/sensors/-components/pause-sensor-dialog";
-
-import { SensorReviewResults } from "./sensor-review-results";
+import { SensorsDeviceMetrics } from "./sensors-device-metrics";
 
 /** One device metric view (needs review, or all), then the metric policies. */
 export function SensorsView({
@@ -63,43 +60,15 @@ export function SensorsView({
           </AlertDescription>
         </Alert>
       )}
-      <SectionCard
-        actions={
-          <Button
-            disabled={review.isFetching}
-            onClick={refreshReview}
-            variant="outline"
-          >
-            Refresh readings
-          </Button>
-        }
-        className="min-w-0"
-        title="Device metrics"
-      >
-        <div className="grid min-w-0 gap-4">
-          {review.isPending ? (
-            <LoadingState label="Loading device metrics…" variant="table" />
-          ) : null}
-          {review.error ? (
-            <ErrorState
-              message={review.error.message}
-              onRetry={refreshReview}
-              retryLabel="Retry device metrics"
-            />
-          ) : null}
-          {review.data && !review.error ? (
-            <SensorReviewResults
-              canManage={canManage}
-              data={review.data}
-              fetching={review.isFetching}
-              onPageChange={setPage}
-              onPause={setSelected}
-              page={page}
-              view={view}
-            />
-          ) : null}
-        </div>
-      </SectionCard>
+      <SensorsDeviceMetrics
+        canManage={canManage}
+        onPageChange={setPage}
+        onPause={setSelected}
+        onRefresh={refreshReview}
+        page={page}
+        review={review}
+        view={view}
+      />
       <MetricPolicySettings
         canManage={canManage}
         estateId={estateId}

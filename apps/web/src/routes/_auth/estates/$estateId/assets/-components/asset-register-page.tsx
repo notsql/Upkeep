@@ -1,40 +1,17 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Card, CardContent } from "@proj/ui/components/card";
-import { Field, FieldLabel } from "@proj/ui/components/field";
-import { Input } from "@proj/ui/components/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@proj/ui/components/table";
-import { Link } from "@tanstack/react-router";
 import { Layers } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { ErrorState } from "@/components/error-state";
-import { FilterBar, useFilterPanel } from "@/components/filter-bar";
-import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
 import { PageLayout } from "@/components/page-layout";
-import { SortableTableHead } from "@/components/sortable-table-head";
-import {
-  type AssetSort,
-  type AssetSortColumn,
-  assetSortOptions,
-  sortAssets,
-} from "@/lib/asset-sorting";
-import { type AssetFilters, useAssets } from "@/lib/assets";
-import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
-import { useEstate } from "@/lib/estates";
-import { flattenLocations, useLocations } from "@/lib/locations";
-import { useMobile } from "@/lib/use-mobile";
-import { AssetFilterControls } from "@/routes/_auth/estates/$estateId/assets/-components/asset-filters";
+import type { AssetSort } from "@/lib/asset-sorting";
+import type { AssetFilters } from "@/lib/assets";
+import { AssetRegisterCards } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-cards";
+import { AssetRegisterFilters } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-filters";
+import { AssetRegisterTable } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-table";
+import { AssetSortControls } from "@/routes/_auth/estates/$estateId/assets/-components/asset-sort-controls";
 import { AssetsEmpty } from "@/routes/_auth/estates/$estateId/assets/-components/assets-empty";
-import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
-import { MobileAssetFilters } from "@/routes/_auth/estates/$estateId/assets/-components/mobile-asset-filters";
-import { AssetSortControls } from "./asset-sort-controls";
+import { useAssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/use-asset-register-page";
 
 export function AssetRegisterPage({
   estateId,
@@ -49,73 +26,32 @@ export function AssetRegisterPage({
   sort?: AssetSort;
   onSortChange?: (sort: AssetSort) => void;
 }) {
-  const mobile = useMobile();
-  const assets = useAssets(estateId, filters);
-  const categories = useAssetCategories();
-  const sortedAssets = useMemo(
-    () => sortAssets(assets.data ?? [], sort, categories.data),
-    [assets.data, sort, categories.data]
-  );
-  const sortColumn = sort.sortBy ?? "REFERENCE";
-  const descending = sort.direction === "DESC";
-  const changeSort = useCallback(
-    (column: AssetSortColumn) => {
-      let direction: NonNullable<AssetSort["direction"]> =
-        column === "CONDITION" ? "DESC" : "ASC";
-      if (column === sortColumn) {
-        direction = descending ? "ASC" : "DESC";
-      }
-      onSortChange?.({ sortBy: column, direction });
-    },
-    [onSortChange, sortColumn, descending]
-  );
-  const estate = useEstate(estateId);
-  const locations = useLocations(estateId, true);
-  const [search, setSearch] = useState(filters.q ?? "");
-  useEffect(() => setSearch(filters.q ?? ""), [filters.q]);
-  useEffect(() => {
-    if (search.trim() === (filters.q ?? "")) {
-      return;
-    }
-    const timer = setTimeout(
-      () => onFiltersChange({ ...filters, q: search.trim() || undefined }),
-      300
-    );
-    return () => clearTimeout(timer);
-  }, [search, filters, onFiltersChange]);
-  const activeCount = [
-    filters.q,
-    filters.category,
-    filters.locationId,
-    filters.condition,
-    filters.status && filters.status !== "ACTIVE",
-  ].filter(Boolean).length;
-  const filtered = activeCount > 0;
-  const panel = useFilterPanel(activeCount);
-  const canRegister = !estate.data?.deactivatedAt;
-  const locationOptions = useMemo(
-    () =>
-      Object.fromEntries(
-        flattenLocations(locations.data ?? []).map((location) => [
-          location.id,
-          `${location.path.join(" › ")}${location.deactivatedAt ? " (inactive)" : ""}`,
-        ])
-      ),
-    [locations.data]
-  );
-  const retryAssets = useCallback(() => assets.refetch(), [assets.refetch]);
-  const retryLocations = useCallback(
-    () => locations.refetch(),
-    [locations.refetch]
-  );
-  const clearFilters = useCallback(() => {
-    setSearch("");
-    onFiltersChange({});
-  }, [onFiltersChange]);
-  const changeSearch = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setSearch(event.target.value),
-    []
+  const {
+    activeCount,
+    assets,
+    canRegister,
+    categories,
+    changeSearch,
+    changeSort,
+    clearFilters,
+    descending,
+    estate,
+    filtered,
+    locations,
+    locationOptions,
+    mobile,
+    panel,
+    retryAssets,
+    retryLocations,
+    search,
+    sortColumn,
+    sortedAssets,
+  } = useAssetRegisterPage(
+    estateId,
+    filters,
+    onFiltersChange,
+    sort,
+    onSortChange
   );
   return (
     <PageLayout className="space-y-6">
@@ -137,37 +73,17 @@ export function AssetRegisterPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <FilterBar
+      <AssetRegisterFilters
         activeCount={activeCount}
-        label="Filter assets"
+        barProps={panel.barProps}
+        filters={filters}
+        locationOptions={locationOptions}
+        mobile={mobile}
+        onChangeSearch={changeSearch}
         onClear={clearFilters}
-        {...panel.barProps}
-        search={
-          <Field>
-            <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
-            <Input
-              id="asset-search"
-              onChange={changeSearch}
-              placeholder="Name or reference"
-              value={search}
-            />
-          </Field>
-        }
-      >
-        {mobile ? (
-          <MobileAssetFilters
-            filters={filters}
-            locations={locationOptions}
-            onChange={onFiltersChange}
-          />
-        ) : (
-          <AssetFilterControls
-            filters={filters}
-            locations={locationOptions}
-            onChange={onFiltersChange}
-          />
-        )}
-      </FilterBar>
+        onFiltersChange={onFiltersChange}
+        search={search}
+      />
       {mobile ? (
         <AssetSortControls onChange={onSortChange} sort={sort} />
       ) : null}
@@ -199,112 +115,21 @@ export function AssetRegisterPage({
         />
       ) : null}
       {assets.data && assets.data.length > 0 && mobile ? (
-        <ul aria-label="Assets" className="grid gap-3">
-          {sortedAssets.map((asset) => (
-            <li key={asset.id}>
-              <Link
-                aria-label={`${asset.name} (${asset.reference})`}
-                className="group focus-visible:ring-ring block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-                params={{ estateId, assetId: asset.id }}
-                to="/estates/$estateId/assets/$assetId"
-              >
-                <Card className="group-hover:bg-accent/40 group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 h-full transition-[background-color,box-shadow] group-hover:shadow-sm motion-reduce:transition-none">
-                  <CardContent className="grid gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h2 className="font-semibold break-words underline">
-                          {asset.name}
-                        </h2>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          {asset.reference}
-                        </p>
-                      </div>
-                      <LifecycleStatusBadge
-                        inactive={Boolean(asset.deactivatedAt)}
-                        inactiveLabel="Retired"
-                      />
-                    </div>
-                    <dl className="grid gap-2 text-sm">
-                      <div>
-                        <dt className="text-muted-foreground">Category</dt>
-                        <dd>
-                          {categoryLabel(categories.data, asset.category)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground">Location</dt>
-                        <dd className="break-words">{asset.locationPath}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-muted-foreground mb-1">
-                          Current condition
-                        </dt>
-                        <dd>
-                          <ConditionBadge condition={asset.currentCondition} />
-                        </dd>
-                      </div>
-                    </dl>
-                  </CardContent>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <AssetRegisterCards
+          assets={sortedAssets}
+          categories={categories}
+          estateId={estateId}
+        />
       ) : null}
       {assets.data && assets.data.length > 0 && !mobile ? (
-        <Table aria-label="Assets">
-          <TableHeader>
-            <TableRow>
-              {assetSortOptions.map((option) => (
-                <SortableTableHead
-                  active={sortColumn === option.value}
-                  column={option.value}
-                  descending={descending}
-                  key={option.value}
-                  label={option.label}
-                  onSort={changeSort}
-                />
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedAssets.map((asset) => (
-              <TableRow key={asset.id}>
-                <TableCell>
-                  <Link
-                    className="underline"
-                    params={{ estateId, assetId: asset.id }}
-                    to="/estates/$estateId/assets/$assetId"
-                  >
-                    {asset.reference}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <Link
-                    className="underline"
-                    params={{ estateId, assetId: asset.id }}
-                    to="/estates/$estateId/assets/$assetId"
-                  >
-                    {asset.name}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  {categoryLabel(categories.data, asset.category)}
-                </TableCell>
-                <TableCell>{asset.locationPath}</TableCell>
-                <TableCell>
-                  <ConditionBadge condition={asset.currentCondition} />
-                </TableCell>
-                <TableCell>
-                  <LifecycleStatusBadge
-                    inactive={Boolean(asset.deactivatedAt)}
-                    inactiveLabel="Retired"
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <AssetRegisterTable
+          assets={sortedAssets}
+          categories={categories}
+          descending={descending}
+          estateId={estateId}
+          onSort={changeSort}
+          sortColumn={sortColumn}
+        />
       ) : null}
     </PageLayout>
   );

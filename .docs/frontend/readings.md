@@ -22,7 +22,8 @@ All new components are in the route's `-components/` folder:
 
 | File | Responsibility |
 | --- | --- |
-| `estate-readings-page.tsx` | Access-context header, breadcrumbs, selected asset and queries |
+| `estate-readings-page.tsx` | Composes header, export, filters and results |
+| `use-estate-readings-page.ts` | Access, queries, selected asset label and Create target |
 | `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To `DateTimePicker`s, suspect Checkbox; FilterBar `activeCount`/`onClear` (header Clear filters, shown only when a filter is set) |
 | `reading-asset-picker.tsx` | Button/Dialog picker, name/reference search, retired labels, All assets and option pagination |
 | `reading-results.tsx` | Loading, validation, errors/Retry, empty states and page recovery |
@@ -195,7 +196,10 @@ Components in `readings/new/-components/`:
 
 | File | Responsibility |
 | --- | --- |
-| `manual-reading-form.tsx` | Access/header, local state, options feedback, warning and save/cancel UI |
+| `manual-reading-form.tsx` | Access/header, options feedback and the form card |
+| `use-manual-reading-form.ts` | Local state, queries, selected asset/metric and range check |
+| `manual-reading-form-alerts.tsx` | Out-of-range warning and save error |
+| `manual-reading-form-footer.tsx` | Save/Cancel buttons |
 | `manual-measurement-fields.tsx` | Existing shadcn asset picker in record mode, metric Select, numeric Value and local measurement-time Input |
 | `use-manual-reading-submission.ts` | Validation, stable retry UUID/fingerprint, pending/saved state and success callback |
 
@@ -288,7 +292,7 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
+| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). State in `use-readings-page.ts`; sections `readings-header.tsx`, `readings-table.tsx`, `readings-pagination.tsx`. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
 | `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
 
 ### Badges (`flagLabel`)

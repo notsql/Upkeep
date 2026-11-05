@@ -1,10 +1,11 @@
 import type { components } from "@proj/api/schema";
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { Textarea } from "@proj/ui/components/textarea";
 import { type SubmitEvent, useCallback, useState } from "react";
 import { FormActions } from "@/components/form-actions";
+import { EstateFormAddressFields } from "@/routes/_auth/estates/-components/estate-form-address-fields";
+import { EstateFormIdentityFields } from "@/routes/_auth/estates/-components/estate-form-identity-fields";
 
 type EstateInput = components["schemas"]["EstateRequest"];
 
@@ -59,56 +60,14 @@ export function EstateForm({
           </p>
           <fieldset className="grid gap-5" disabled={pending}>
             <legend className="sr-only">Estate details</legend>
-            <div className="grid gap-2">
-              <Label htmlFor="estate-name">Name</Label>
-              <Input
-                defaultValue={initialValues?.name}
-                id="estate-name"
-                maxLength={200}
-                name="name"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="estate-code">MCST number</Label>
-              <Input
-                aria-describedby="estate-code-help"
-                defaultValue={initialValues?.code}
-                id="estate-code"
-                inputMode="numeric"
-                maxLength={50}
-                name="code"
-                placeholder="e.g. 1234"
-                required
-              />
-              <p
-                className="text-muted-foreground text-sm"
-                id="estate-code-help"
-              >
-                The Management Corporation Strata Title number. Enter the number
-                only, without "MCST".
-              </p>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="estate-address">Address</Label>
-              <Input
-                defaultValue={initialValues?.address}
-                id="estate-address"
-                maxLength={500}
-                name="address"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="estate-postal-code">Postal code</Label>
-              <Input
-                defaultValue={initialValues?.postalCode}
-                id="estate-postal-code"
-                maxLength={20}
-                name="postalCode"
-                required
-              />
-            </div>
+            <EstateFormIdentityFields
+              code={initialValues?.code}
+              name={initialValues?.name}
+            />
+            <EstateFormAddressFields
+              address={initialValues?.address}
+              postalCode={initialValues?.postalCode}
+            />
             <div className="grid gap-2">
               <Label htmlFor="estate-description">Description (optional)</Label>
               <Textarea

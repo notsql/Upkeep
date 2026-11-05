@@ -29,7 +29,7 @@ Both throw `estateError(...)` on failure.
 ## Screen
 
 `AssetCategoriesLayout`: `ListPageHeader` (`Tags` icon, "Silent-failure flags and service intervals"; no breadcrumbs, no filters or create), then a
-`section` labelled "Asset categories" with the summary cards, a `SubNav` ("Filter by service interval": All (exact), Days, Months, Years, Not set - each its own URL) and the child view. `AssetCategoriesList` renders:
+`section` labelled "Asset categories" with the summary cards, a `SubNav` ("Filter by service interval": All (exact), Days, Months, Years, Not set - each its own URL) and the child view. `AssetCategoriesList` (`-components/asset-categories-page.tsx`; state in `use-asset-categories-list.ts`, table in `asset-categories-table.tsx`) renders:
 
 - summary cards (Fails silently, Missing service interval, Intervals set), described in
   [service-intervals.md](service-intervals.md);

@@ -150,7 +150,8 @@ invitation cards show the email, role name, delivery status, expiry and cancel
 action, without permission labels or descriptions. Inactive
 estates retain the list and roster but disable sending and member reassignment.
 
-Route-local `invitation-form.tsx`, `role-picker.tsx` and `member-permission.tsx`
+Route-local `invitation-form.tsx` (state in `use-invitation-form.ts`, result
+messages in `invitation-form-outcome.tsx`), `role-picker.tsx` and `member-permission.tsx`
 use generated DTOs. `useEstateInvitationRoles` reads
 GET `/estates/{estateId}/invitation-roles`, key
 `[userId, "estate-invitation-roles", estateId]`, gated by resolved invitation

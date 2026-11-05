@@ -119,6 +119,23 @@ Query key: `assessmentsQueryKey(userId, estateId, assetId)` =
 
 All queries: `enabled: ready`, `retry: false`, errors via `estateError`.
 
+## Page sections
+
+Each page/form below is a short composition of named sections in the same
+`-components/` folder, with its state, queries and handlers in a `use-*.ts`
+hook beside it:
+
+| Page / form | Hook | Sections |
+| --- | --- | --- |
+| `asset-register-page.tsx` | `use-asset-register-page.ts` | `asset-register-filters.tsx`, `asset-register-cards.tsx` (mobile), `asset-register-table.tsx` (desktop) |
+| `asset-form.tsx` | `use-asset-form.ts` (values, validation, payload) | `asset-form-identity-fields.tsx` (reference/name/category/location), `asset-form-detail-fields.tsx` (installed date/manufacturer/model/serial), `asset-form-required-error.tsx` |
+| `$assetId/-components/asset-details-page.tsx` | `use-asset-details-layout.ts` | `asset-details-header.tsx`, `asset-details-nav.tsx` |
+| `$assetId/-components/asset-condition-section.tsx` | `use-asset-condition-section.ts` | `asset-condition-history.tsx` |
+| `$assetId/-components/assessment-form.tsx` | `use-assessment-form.ts` | `assessment-form-fields.tsx` |
+| `$assetId/-components/asset-maintenance-section.tsx` | `use-asset-maintenance-section.ts` | `asset-maintenance-manual-entry.tsx`, `asset-maintenance-work-entry.tsx` |
+| `$assetId/-components/asset-costs-section.tsx` | `use-asset-costs-section.ts` (rows, period) | `cost-table.tsx` |
+| `$assetId/-components/inspection-history-page.tsx` | `use-inspection-history-page.ts` (cursors) | `inspection-history-records-table.tsx` |
+
 ## Register and lifecycle
 
 `assets/-components/asset-register-page.tsx` uses shadcn Table, Input, Field/FieldLabel,

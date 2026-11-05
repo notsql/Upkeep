@@ -112,9 +112,10 @@ manual acceptance checks.
 
 The recording route's `new/-components/` folder contains:
 
-- `inspection-form.tsx`: access/loading gates, page header and asset summary,
-  form values and selected files, observed/reviewed location, duplicate-save
-  guard, mutation, saved state, navigation and save/cancel actions.
+- `inspection-form.tsx`: access/loading gates and form composition;
+  `inspection-form-asset-summary.tsx` renders the page header, asset summary and
+  inactive note; `use-inspection-form.ts` holds form values and selected files, observed/reviewed location, duplicate-save
+  guard, mutation, saved state and navigation; the form keeps save/cancel actions.
 - `inspection-fields.tsx`: controlled outcome, Singapore-date constraints and
   optional notes using shadcn Field, Select, Input and Textarea.
 - `inspection-photo-field.tsx`: controlled photo selection, count/type/size

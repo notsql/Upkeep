@@ -1,50 +1,14 @@
-import { Alert, AlertDescription, AlertTitle } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Link } from "@tanstack/react-router";
-import { useCallback, useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { FormPageHeader } from "@/components/form-page-header";
 import { LoadingState } from "@/components/loading-state";
 import { PageLayout } from "@/components/page-layout";
-import { useAppAccess } from "@/lib/access";
-import {
-  currentLocalMeasurementTime,
-  type ManualReadingFields,
-} from "@/lib/manual-reading-form";
-import {
-  type ManualReading,
-  type ReadingAsset,
-  type ReadingMetricOption,
-  useReadingAssets,
-  useReadingMetrics,
-} from "@/lib/readings";
+import type { ManualReading } from "@/lib/readings";
 import { ManualMeasurementFields } from "./manual-measurement-fields";
-import { useManualReadingSubmission } from "./use-manual-reading-submission";
-
-function outsideExpectedRange(
-  value: string,
-  metric: ReadingMetricOption | undefined
-): boolean {
-  if (!(metric && value.trim())) {
-    return false;
-  }
-  const numeric = Number(value);
-  return (
-    Number.isFinite(numeric) &&
-    (numeric < metric.validMin || numeric > metric.validMax)
-  );
-}
-
-function selectedAssetLabel(
-  asset: ReadingAsset | undefined,
-  id: string | undefined
-): string {
-  if (asset) {
-    return `${asset.reference} · ${asset.name}${asset.retired ? " · Retired" : ""}`;
-  }
-  return id ? "Selected asset" : "Choose an asset";
-}
+import { ManualReadingFormAlerts } from "./manual-reading-form-alerts";
+import { ManualReadingFormFooter } from "./manual-reading-form-footer";
+import { useManualReadingForm } from "./use-manual-reading-form";
 
 export function ManualReadingForm({
   estateId,
@@ -57,55 +21,23 @@ export function ManualReadingForm({
   initialMetric?: string;
   onSaved: (reading: ManualReading) => void;
 }) {
-  const access = useAppAccess();
-  const estate = access.data?.estates.find(
-    (item) => item.estateId === estateId
-  );
-  const assets = useReadingAssets(estateId);
-  const metrics = useReadingMetrics(estateId);
-  const [fields, setFields] = useState<ManualReadingFields>(() => ({
-    assetId: initialAssetId,
-    metric: initialMetric ?? "",
-    value: "",
-    measuredAt: currentLocalMeasurementTime(),
-  }));
-  const [chosen, setChosen] = useState<ReadingAsset>();
-  const selectedMetric = metrics.data?.find(
-    (option) => option.metric === fields.metric
-  );
-  const asset =
-    chosen?.id === fields.assetId
-      ? chosen
-      : assets.data?.items.find((option) => option.id === fields.assetId);
-  const label = selectedAssetLabel(asset, fields.assetId);
-  const { mutation, error, saved, submit, clearError } =
-    useManualReadingSubmission(
-      estateId,
-      fields,
-      selectedMetric,
-      asset,
-      onSaved
-    );
-  const change = useCallback(
-    (next: Partial<ManualReadingFields>) => {
-      setFields((current) => ({ ...current, ...next }));
-      clearError();
-    },
-    [clearError]
-  );
-  const choose = useCallback(
-    (selected: ReadingAsset | undefined) => {
-      setChosen(selected);
-      change({ assetId: selected?.id });
-    },
-    [change]
-  );
-  const retry = useCallback(() => {
-    assets.refetch();
-    metrics.refetch();
-  }, [assets.refetch, metrics.refetch]);
-  const outside = outsideExpectedRange(fields.value, selectedMetric);
-  const saveError = error || mutation.error?.message;
+  const {
+    access,
+    assets,
+    change,
+    choose,
+    estate,
+    fields,
+    label,
+    metrics,
+    mutation,
+    outside,
+    retry,
+    saveError,
+    saved,
+    selectedMetric,
+    submit,
+  } = useManualReadingForm(estateId, initialAssetId, initialMetric, onSaved);
   if (access.data && !estate?.canRecordReadings) {
     return (
       <Alert>
@@ -164,40 +96,16 @@ export function ManualReadingForm({
                   selectedMetric={selectedMetric}
                 />
               </fieldset>
-              {outside ? (
-                <Alert>
-                  <AlertTitle>Check this measurement</AlertTitle>
-                  <AlertDescription>
-                    Outside the expected range. You can still save this
-                    measurement; it will be flagged for review.
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-              {saveError ? (
-                <Alert variant="destructive">
-                  <AlertDescription>{saveError}</AlertDescription>
-                </Alert>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                <Button disabled={mutation.isPending || saved} type="submit">
-                  {mutation.isPending
-                    ? "Saving reading…"
-                    : "Save manual reading"}
-                </Button>
-                <Button
-                  disabled={mutation.isPending}
-                  render={
-                    <Link
-                      params={{ estateId }}
-                      search={{ assetId: fields.assetId }}
-                      to="/estates/$estateId/readings"
-                    />
-                  }
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-              </div>
+              <ManualReadingFormAlerts
+                outside={outside}
+                saveError={saveError}
+              />
+              <ManualReadingFormFooter
+                assetId={fields.assetId}
+                estateId={estateId}
+                pending={mutation.isPending}
+                saved={saved}
+              />
             </form>
           </CardContent>
         </Card>

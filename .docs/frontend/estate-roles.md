@@ -13,6 +13,9 @@ Shared `roles/-components/`:
 - `role-access-gate.tsx` - `RoleAccessGate` render-prop: PageLayout, then
   LoadingState / `ErrorState` "Retry access" / "Estate roles unavailable",
   else the page.
+- `role-form.tsx` composes `role-form-details-fields.tsx`,
+  `role-form-permissions.tsx` and `role-form-footer.tsx`; `use-role-form.ts`
+  holds state, `AREA_OF` and validation.
 - `role-form.tsx` - `RoleForm({ catalogue, initial?, pending, error, onSave,
   cancel? })`. Card "Details" (Role name, Description) and Card "Permissions"
   with one `fieldset` per area (legend = group name: Estate, Fault reports,
