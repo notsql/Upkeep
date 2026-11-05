@@ -165,11 +165,6 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
   return (
     <PageLayout className="min-w-0">
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: "Estate", to: "/estates/$estateId", params: { estateId } },
-          { label: "Asset categories" },
-        ]}
         description="Flag the categories of equipment that can fail without anyone noticing, such as common-area lighting, so they get regular spot checks, and record how often the manufacturer says each category should be serviced."
         title="Asset categories"
       />

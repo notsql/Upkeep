@@ -3,7 +3,7 @@ import {
   ownerEstateAccess,
   unassignedAccess,
 } from "@tests/fixtures/access";
-import { renderWithProviders, screen, within } from "@tests/test-utils";
+import { renderWithProviders, screen } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAppAccess } from "@/lib/access";
@@ -41,14 +41,50 @@ describe("estate details page", () => {
     } as unknown as ReturnType<typeof useAppAccess>);
   });
 
-  it("shows Crew an Assets entry point without estate editing or administrative queries", async () => {
+  it("shows name, status, description and details without the action row or Assets card", async () => {
     vi.mocked(api.GET).mockResolvedValue({
       data: {
         ...estate,
-        owned: false,
-        canInviteMembers: false,
-        canManageInvitationPermissions: false,
+        description: "Riverside condo",
+        canInviteMembers: true,
+        canManageInvitationPermissions: true,
       },
+      response: new Response(),
+    });
+    vi.mocked(useAppAccess).mockReturnValue({
+      data: {
+        ...unassignedAccess,
+        estates: [{ ...ownerEstateAccess, estateId: estate.id }],
+      },
+    } as unknown as ReturnType<typeof useAppAccess>);
+    renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
+    await screen.findByRole("heading", { name: estate.name });
+    expect(screen.getByRole("status").textContent).toContain("Active");
+    expect(screen.getAllByText("Riverside condo").length).toBeGreaterThan(0);
+    screen.getByText("MCST MG-001");
+    screen.getByText("1 Grove Road");
+    expect(screen.queryByRole("group", { name: "Estate actions" })).toBeNull();
+    expect(screen.queryByRole("region", { name: "Estate assets" })).toBeNull();
+    for (const name of [
+      "View assets",
+      "Register asset",
+      "Back to estates",
+      "Edit estate",
+      "Estates",
+    ]) {
+      expect(screen.queryByRole("link", { name })).toBeNull();
+    }
+    expect(
+      screen.queryByRole("button", { name: "Deactivate estate" })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("navigation", { name: "Breadcrumbs" })
+    ).toBeNull();
+  });
+
+  it("does not fetch administrative data for Crew", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: { ...estate, owned: false },
       response: new Response(),
     });
     vi.mocked(useAppAccess).mockReturnValue({
@@ -59,127 +95,29 @@ describe("estate details page", () => {
     } as unknown as ReturnType<typeof useAppAccess>);
     renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
     await screen.findByRole("heading", { name: estate.name });
-    screen.getByRole("link", { name: "View assets" });
-    screen.getByText("MCST number");
-    screen.getByText("MCST MG-001");
-    expect(screen.queryByRole("link", { name: "Edit estate" })).toBeNull();
-    expect(screen.queryByRole("link", { name: "Estate members" })).toBeNull();
-    expect(
-      screen.queryByRole("button", { name: "Deactivate estate" })
-    ).toBeNull();
     expect(
       vi
         .mocked(api.GET)
         .mock.calls.some((call) =>
-          [
-            "/dashboard/summary",
-            "/estates/{estateId}/members",
-            "/estates/{estateId}/roles",
-          ].includes(call[0])
+          ["/estates/{estateId}/members", "/estates/{estateId}/roles"].includes(
+            call[0]
+          )
         )
     ).toBe(false);
   });
 
-  it.each([undefined, "2026-10-01T00:00:00Z"])(
-    "offers work-order history from the overview (inactive: %s)",
-    async (deactivatedAt) => {
-      vi.mocked(api.GET).mockResolvedValue({
-        data: { ...estate, deactivatedAt },
-        response: new Response(),
-      });
-      vi.mocked(useAppAccess).mockReturnValue({
-        data: {
-          ...unassignedAccess,
-          estates: [{ ...ownerEstateAccess, estateId: estate.id }],
-        },
-      } as unknown as ReturnType<typeof useAppAccess>);
-      renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
-      await screen.findByRole("link", { name: "View work orders" });
-    }
-  );
-
-  it("hides the work-order overview action without its capability", async () => {
-    vi.mocked(api.GET).mockResolvedValue({
-      data: estate,
-      response: new Response(),
-    });
-    renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
-    await screen.findByRole("heading", { name: estate.name });
-    expect(screen.queryByRole("link", { name: "View work orders" })).toBeNull();
-  });
-
-  it.each([undefined, "2026-09-25T00:00:00Z"])(
-    "lets an assigned Manager edit without owner-only actions (inactive: %s)",
-    async (deactivatedAt) => {
-      vi.mocked(api.GET).mockResolvedValue({
-        data: { ...estate, owned: false, deactivatedAt },
-        response: new Response(),
-      });
-      vi.mocked(useAppAccess).mockReturnValue({
-        data: {
-          ...unassignedAccess,
-          estates: [{ ...ownerEstateAccess, estateId: estate.id }],
-        },
-      } as unknown as ReturnType<typeof useAppAccess>);
-      renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
-      await screen.findByRole("link", { name: "Edit estate" });
-      expect(
-        screen.queryByRole("button", { name: "Deactivate estate" })
-      ).toBeNull();
-      expect(
-        screen.queryByText(
-          "Shared with you. Only the owner can change this estate."
-        )
-      ).toBeNull();
-    }
-  );
-
-  it("does not show editing for a Manager assigned only to another estate", async () => {
-    vi.mocked(api.GET).mockResolvedValue({
-      data: { ...estate, owned: false },
-      response: new Response(),
-    });
-    vi.mocked(useAppAccess).mockReturnValue({
-      data: { ...unassignedAccess, estates: [ownerEstateAccess] },
-    } as unknown as ReturnType<typeof useAppAccess>);
-    renderWithProviders(<EstateDetailsPage estateId={estate.id} />);
-    await screen.findByRole("heading", { name: "Maple Grove" });
-    expect(screen.queryByRole("link", { name: "Edit estate" })).toBeNull();
-  });
-
-  it("groups Estate members with the owner's estate actions", async () => {
-    vi.mocked(api.GET).mockResolvedValue({
-      data: {
-        ...estate,
-        canInviteMembers: true,
-        canManageInvitationPermissions: true,
-      },
-      response: new Response(),
-    });
-    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
-    const actions = within(
-      await screen.findByRole("group", { name: "Estate actions" })
-    );
-    actions.getByRole("link", { name: "Edit estate" });
-    actions.getByRole("link", { name: "Estate members" });
-    actions.getByRole("button", { name: "Deactivate estate" });
-  });
-
-  it("keeps inactive details and editing accessible without deactivation", async () => {
+  it("keeps inactive details visible", async () => {
     vi.mocked(api.GET).mockResolvedValue({
       data: { ...estate, deactivatedAt: "2026-09-25T00:00:00Z" },
       response: new Response(),
     });
     renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
     await screen.findByRole("heading", { name: "Maple Grove" });
-    screen.getByRole("link", { name: "Edit estate" });
-    expect(
-      screen.queryByRole("button", { name: "Deactivate estate" })
-    ).toBeNull();
     expect(screen.getByRole("status").textContent).toContain("Inactive");
+    screen.getByRole("note");
   });
 
-  it("shows a granted estate read-only", async () => {
+  it("notes a granted estate is shared read-only", async () => {
     vi.mocked(api.GET).mockResolvedValue({
       data: { ...estate, owned: false },
       response: new Response(),
@@ -189,122 +127,5 @@ describe("estate details page", () => {
     screen.getByText(
       "Shared with you. Only the owner or an assigned Manager can edit estate details."
     );
-    expect(screen.queryByRole("link", { name: "Edit estate" })).toBeNull();
-    expect(
-      screen.queryByRole("button", { name: "Deactivate estate" })
-    ).toBeNull();
   });
-  it("links delegated inviters to estate member management", async () => {
-    vi.mocked(api.GET).mockResolvedValue({
-      data: { ...estate, owned: false, canInviteMembers: true },
-      response: new Response(),
-    });
-    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
-    await screen.findByRole("link", { name: "Estate members" });
-  });
-
-  it.each([
-    ["MANAGER", false, true],
-    ["COUNCIL", false, true],
-    ["MEMBER", true, true],
-    ["MEMBER", false, false],
-    ["RESIDENT", true, false],
-  ])(
-    "shows Sensors for an estate role %s with admin=%s when permitted",
-    async (role, admin, permitted) => {
-      vi.mocked(useAppAccess).mockReturnValue({
-        data: {
-          ...unassignedAccess,
-          canAccessPlatformAdmin: admin,
-          estates: [
-            {
-              ...ownerEstateAccess,
-              estateId: "estate-id",
-              role,
-              canManageEstate: false,
-              canViewManagement: role !== "RESIDENT",
-            },
-          ],
-        },
-      } as unknown as ReturnType<typeof useAppAccess>);
-      vi.mocked(api.GET).mockResolvedValue({
-        data: {
-          ...estate,
-          owned: false,
-          canInviteMembers: false,
-          canManageInvitationPermissions: false,
-        },
-        response: new Response(),
-      });
-      renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
-      await screen.findByRole("heading", { name: "Maple Grove" });
-      if (permitted) {
-        await screen.findByRole("link", { name: "Device monitoring" });
-      } else {
-        expect(
-          screen.queryByRole("link", { name: "Device monitoring" })
-        ).toBeNull();
-      }
-    }
-  );
-
-  it.each([
-    [true, true, true],
-    [false, true, true],
-    [false, false, false],
-  ])(
-    "links to Devices for Managers only (owned: %s, manager: %s)",
-    async (owned, manager, shown) => {
-      vi.mocked(api.GET).mockResolvedValue({
-        data: { ...estate, owned, canManageInvitationPermissions: manager },
-        response: new Response(),
-      });
-      renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
-      await screen.findByRole("heading", { name: "Maple Grove" });
-      const link = screen.queryByRole("link", { name: "Devices" });
-      expect(link?.getAttribute("href") ?? null).toBe(
-        shown ? "/estates/$estateId/devices" : null
-      );
-    }
-  );
-
-  it.each([
-    [true, true, true],
-    [false, true, true],
-    [false, false, false],
-  ])(
-    "links to Asset categories for Managers only (owned: %s, manager: %s)",
-    async (owned, manager, shown) => {
-      vi.mocked(api.GET).mockResolvedValue({
-        data: { ...estate, owned, canManageInvitationPermissions: manager },
-        response: new Response(),
-      });
-      renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
-      await screen.findByRole("heading", { name: "Maple Grove" });
-      const link = screen.queryByRole("link", { name: "Asset categories" });
-      expect(link?.getAttribute("href") ?? null).toBe(
-        shown ? "/estates/$estateId/asset-categories" : null
-      );
-    }
-  );
 });
-
-it.each([
-  [true, true, true],
-  [false, true, true],
-  [false, false, false],
-])(
-  "links to Inspections for Managers only (owned: %s, manager: %s)",
-  async (owned, manager, shown) => {
-    vi.mocked(api.GET).mockResolvedValue({
-      data: { ...estate, owned, canManageInvitationPermissions: manager },
-      response: new Response(),
-    });
-    renderWithProviders(<EstateDetailsPage estateId="estate-id" />);
-    await screen.findByRole("heading", { name: "Maple Grove" });
-    const link = screen.queryByRole("link", { name: "Inspections" });
-    expect(link?.getAttribute("href") ?? null).toBe(
-      shown ? "/estates/$estateId/inspections" : null
-    );
-  }
-);

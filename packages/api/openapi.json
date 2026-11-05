@@ -1430,7 +1430,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueReportPageResponse"
+                  "$ref": "#/components/schemas/ResidentReportPageResponse"
                 }
               }
             }
@@ -9071,7 +9071,7 @@
           },
           "tolerance": {
             "type": "number",
-            "maximum": 1000000000000.0,
+            "maximum": 999999999999.999999,
             "minimum": 0
           }
         },
@@ -10018,7 +10018,7 @@
           "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
           },
           "installedOn": { "type": ["string", "null"], "format": "date" },
           "manufacturer": { "type": ["string", "null"] },
@@ -10114,7 +10114,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "\u00b0C"
+            "description": "°C"
           },
           "flowRate": {
             "type": "number",
@@ -10526,7 +10526,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "\u00b0C"
+            "example": "°C"
           },
           "measuredAt": {
             "type": "string",
@@ -10723,19 +10723,6 @@
         },
         "required": ["expectedVersion", "retiredOn", "retirementReason"]
       },
-      "IssueReportPageResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IssueReportSummaryResponse"
-            }
-          },
-          "nextCursor": { "type": ["string", "null"] }
-        },
-        "required": ["items", "nextCursor"]
-      },
       "IssueReportSummaryResponse": {
         "type": "object",
         "properties": {
@@ -10758,6 +10745,29 @@
           "title",
           "updatedAt"
         ]
+      },
+      "ReportCounts": {
+        "type": "object",
+        "properties": {
+          "open": { "type": "integer", "format": "int32" },
+          "inProgress": { "type": "integer", "format": "int32" },
+          "resolved": { "type": "integer", "format": "int32" }
+        },
+        "required": ["inProgress", "open", "resolved"]
+      },
+      "ResidentReportPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueReportSummaryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] },
+          "counts": { "$ref": "#/components/schemas/ReportCounts" }
+        },
+        "required": ["counts", "items", "nextCursor"]
       },
       "ResidentLocationResponse": {
         "type": "object",
@@ -10914,6 +10924,19 @@
           "nextCursor": { "type": "string" }
         },
         "required": ["items"]
+      },
+      "IssueReportPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueReportSummaryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
       },
       "EstateReadingPage": {
         "type": "object",

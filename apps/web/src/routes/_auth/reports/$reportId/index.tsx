@@ -1,7 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { buttonVariants } from "@proj/ui/components/button";
 
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
@@ -24,17 +24,17 @@ function ReportDetailPage() {
   const report = useReport(reportId ?? "");
   return (
     <PageLayout>
-      <a
-        className={buttonVariants({ size: "sm" })}
-        href={
-          estateId
-            ? `/reports?estateId=${encodeURIComponent(estateId)}`
-            : "/reports"
-        }
-      >
-        Return to My Reports
-      </a>
-      <h1 className="my-4 text-2xl font-semibold">Report details</h1>
+      <PageHeader
+        breadcrumbs={[
+          {
+            label: "My reports",
+            to: "/reports",
+            search: estateId ? { estateId } : undefined,
+          },
+          { label: report.data?.title ?? "Report" },
+        ]}
+        title="Report details"
+      />
       {report.isPending ? <p role="status">Loading report…</p> : null}
       {report.isError ? (
         <Alert role="alert" variant="destructive">

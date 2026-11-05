@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useResidentContext } from "@/lib/reports";
 import { NewReportForm } from "@/routes/_auth/reports/new/-components/new-report-form";
@@ -16,9 +17,7 @@ export function NewReportPage({
 
   return (
     <PageLayout>
-      {context.data ? (
-        <h1 className="mb-4 text-2xl font-semibold">Report a fault</h1>
-      ) : null}
+      {context.data ? <PageHeader title="Report a fault" /> : null}
       {context.isPending ? <p role="status">Loading your estate…</p> : null}
       {context.isError ? (
         <Alert role="alert" variant="destructive">

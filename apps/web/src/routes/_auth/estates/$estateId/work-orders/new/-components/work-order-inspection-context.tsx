@@ -1,8 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { BackLink } from "@/components/back-link";
 import { DetailCard } from "@/components/detail-card";
 import { PageLayout } from "@/components/page-layout";
 import type { InspectionResult } from "@/lib/inspections";
@@ -10,7 +9,8 @@ import type { useWorkOrderInspection } from "./use-work-order-inspection";
 
 function InspectionSourceLink({ record }: { record: InspectionResult }) {
   return (
-    <BackLink
+    <Link
+      className={buttonVariants({ variant: "outline", size: "sm" })}
       params={{
         estateId: record.estateId,
         assetId: record.assetId,
@@ -18,8 +18,8 @@ function InspectionSourceLink({ record }: { record: InspectionResult }) {
       }}
       to="/estates/$estateId/assets/$assetId/inspections/$inspectionId"
     >
-      Back to inspection
-    </BackLink>
+      View inspection
+    </Link>
   );
 }
 

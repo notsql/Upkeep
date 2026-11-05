@@ -12,7 +12,6 @@ import {
 import { Link } from "@tanstack/react-router";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
-import { useEstate } from "@/lib/estates";
 import {
   type FailureRisk,
   flagReasonLabel,
@@ -67,20 +66,10 @@ function RiskRow({ estateId, risk }: { estateId: string; risk: FailureRisk }) {
 }
 
 export function FailureRiskPage({ estateId }: { estateId: string }) {
-  const estate = useEstate(estateId);
   const risks = useEstateFailureRisk(estateId);
   return (
     <PageLayout>
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
-          { label: "Failure risk" },
-        ]}
         description="Chance of a breakdown in the next 30, 60 and 90 days. Flagged assets need a check."
         title="Failure risk"
       />

@@ -32,11 +32,6 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
   return (
     <PageLayout className="min-w-0">
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: "Estate", to: "/estates/$estateId", params: { estateId } },
-          { label: "Devices" },
-        ]}
         description="Every device in this estate and whether it is still reporting. Devices that have gone quiet are listed first."
         title="Devices"
       />

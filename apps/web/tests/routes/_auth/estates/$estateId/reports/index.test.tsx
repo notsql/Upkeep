@@ -234,60 +234,27 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-it.each([false, true])(
-  "provides report detail breadcrumbs with management access %s",
-  async (canViewManagement) => {
-    get.mockImplementation((path: string) => {
-      if (path === "/access/context") {
-        const data = access();
-        data.estates[0].canViewManagement = canViewManagement;
-        return Promise.resolve({ data });
-      }
-      return serve(path);
-    });
-    const { router } = await setup(`${basePath}/${reportId}`);
-    await screen.findByRole("heading", { name: report.title });
-    const breadcrumbs = within(
-      screen.getByRole("navigation", { name: "Breadcrumbs" })
-    );
-    expect(
-      breadcrumbs.getByRole("link", { name: "Estates" }).getAttribute("href")
-    ).toBe("/estates");
-    if (canViewManagement) {
-      expect(
-        breadcrumbs
-          .getByRole("link", { name: crewEstateAccess.estateName })
-          .getAttribute("href")
-      ).toBe(`/estates/${estateId}`);
-    } else {
-      breadcrumbs.getByText(crewEstateAccess.estateName);
-      expect(
-        breadcrumbs.queryByRole("link", { name: crewEstateAccess.estateName })
-      ).toBeNull();
-      expect(get.mock.calls.some(([path]) => path === "/estates/{id}")).toBe(
-        false
-      );
-    }
-    expect(breadcrumbs.getByText("Details").getAttribute("aria-current")).toBe(
-      "page"
-    );
-    fireEvent.click(breadcrumbs.getByRole("link", { name: "Fault reports" }));
-    await waitFor(() => expect(router.state.location.pathname).toBe(basePath));
-    await screen.findByRole("link", { name: report.title });
-  }
-);
-
-it("provides named estate breadcrumbs on the fault report list", async () => {
-  await setup();
-  await screen.findByRole("link", { name: report.title });
+it("starts report detail breadcrumbs at Fault reports and names the report", async () => {
+  const { router } = await setup(`${basePath}/${reportId}`);
+  await screen.findByRole("heading", { name: report.title });
   const breadcrumbs = within(
     screen.getByRole("navigation", { name: "Breadcrumbs" })
   );
-  breadcrumbs.getByRole("link", { name: "Estates" });
-  breadcrumbs.getByText(crewEstateAccess.estateName);
   expect(
-    breadcrumbs.getByText("Fault reports").getAttribute("aria-current")
-  ).toBe("page");
+    breadcrumbs.getAllByRole("link").map((link) => link.textContent)
+  ).toEqual(["Fault reports"]);
+  expect(breadcrumbs.getByText(report.title).getAttribute("aria-current")).toBe(
+    "page"
+  );
+  fireEvent.click(breadcrumbs.getByRole("link", { name: "Fault reports" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe(basePath));
+  await screen.findByRole("link", { name: report.title });
+});
+
+it("shows no breadcrumbs on the top-level fault report list", async () => {
+  await setup();
+  await screen.findByRole("link", { name: report.title });
+  expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
 });
 
 it("labels each estate report's metadata like the resident report cards", async () => {
@@ -878,7 +845,7 @@ it("explains when no active destination is available without hiding report histo
     (dialog.getByRole("button", { name: SAVE }) as HTMLButtonElement).disabled
   ).toBe(true);
   // A modal removes background content from the accessibility tree while open.
-  screen.getByText(report.title);
+  screen.getByText(report.title, { selector: "h2" });
   expect(patch).not.toHaveBeenCalled();
 });
 

@@ -7,8 +7,8 @@ API: [inspection-list.md](../api/inspection-list.md).
 `/estates/$estateId/inspections` — `src/routes/_auth/estates/$estateId/inspections/index.tsx`
 (title "Inspections") renders `-components/inspections-page.tsx`.
 
-Entry: the estate details page shows an outline **Inspections** link after **Asset categories**,
-under the same condition (`estate.owned || estate.canManageInvitationPermissions`).
+Entry: sidebar Operations › **Inspections**, shown by `canOpenInspections`
+(`owned || canManageInvitationPermissions`); the `_auth` guard 404s otherwise.
 
 ## Data (`src/lib/inspection-list.ts`)
 
@@ -22,7 +22,7 @@ Both throw `estateError(...)`. Recording permission comes from `useInspectionAcc
 
 ## Screen
 
-`InspectionsPage`: `PageHeader` (breadcrumbs Estates › Estate › Inspections; description the month,
+`InspectionsPage`: `PageLayout` + `PageHeader` (no breadcrumbs; description the month,
 e.g. "November 2026"), then:
 
 - **Summary cards** (`SummaryCard`, `src/components/summary-card.tsx`), each a region named by its

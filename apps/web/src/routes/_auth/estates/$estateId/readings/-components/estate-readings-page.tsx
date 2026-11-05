@@ -78,19 +78,7 @@ export function EstateReadingsPage({
   }
   return (
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate?.estateName ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
-          { label: "Readings" },
-        ]}
-        description={estate?.estateName}
-        title="Readings"
-      />
+      <PageHeader description={estate?.estateName} title="Readings" />
       {estate?.canRecordReadings ? (
         <Button
           render={

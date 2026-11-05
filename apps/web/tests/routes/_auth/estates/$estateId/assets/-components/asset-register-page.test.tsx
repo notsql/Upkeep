@@ -13,6 +13,8 @@ import { api } from "@/lib/api";
 import type { AssetFilters } from "@/lib/assets";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
 
+const BACK_LINK = /^Back to/u;
+
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
 }));
@@ -41,7 +43,7 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 describe("estate asset register", () => {
-  it("identifies the estate by name in the asset breadcrumbs", async () => {
+  it("shows no breadcrumbs or back link on the top-level register", async () => {
     vi.mocked(api.GET).mockImplementation(
       async (path) =>
         ({
@@ -59,11 +61,11 @@ describe("estate asset register", () => {
         onFiltersChange={vi.fn()}
       />
     );
-    const breadcrumbs = within(
-      screen.getByRole("navigation", { name: "Breadcrumbs" })
-    );
-    await breadcrumbs.findByRole("link", { name: "Maple Grove" });
-    expect(breadcrumbs.queryByRole("link", { name: "Estate" })).toBeNull();
+    await screen.findByRole("heading", { level: 1, name: "Assets" });
+    expect(
+      screen.queryByRole("navigation", { name: "Breadcrumbs" })
+    ).toBeNull();
+    expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
   });
   beforeEach(() => {
     vi.resetAllMocks();

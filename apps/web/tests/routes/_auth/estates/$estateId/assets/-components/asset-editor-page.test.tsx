@@ -6,6 +6,8 @@ import {
   NewAssetPage,
 } from "@/routes/_auth/estates/$estateId/assets/-components/asset-editor-page";
 
+const BACK_LINK = /^Back to/u;
+
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
     <a href={to} {...props}>
@@ -28,16 +30,22 @@ vi.mock(
 );
 
 it.each([
-  ["register", <NewAssetPage estateId="estate" key="register" />],
-  ["edit", <EditAssetPage assetId="asset" estateId="estate" key="edit" />],
+  ["register", <NewAssetPage estateId="estate" key="register" />, ["Assets"]],
+  [
+    "edit",
+    <EditAssetPage assetId="asset" estateId="estate" key="edit" />,
+    ["Assets", "Asset"],
+  ],
 ] as const)(
-  "names the estate while opening the %s asset form",
-  async (_, page) => {
+  "starts the %s asset form breadcrumbs at Assets, without back links",
+  (_, page, links) => {
     renderWithProviders(page);
     const breadcrumbs = within(
       screen.getByRole("navigation", { name: "Breadcrumbs" })
     );
-    await breadcrumbs.findByRole("link", { name: "Maple Grove" });
-    expect(breadcrumbs.queryByRole("link", { name: "Estate" })).toBeNull();
+    expect(
+      breadcrumbs.getAllByRole("link").map((link) => link.textContent)
+    ).toEqual([...links]);
+    expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
   }
 );

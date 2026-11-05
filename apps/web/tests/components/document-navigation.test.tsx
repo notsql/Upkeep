@@ -7,11 +7,15 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { fireEvent } from "@testing-library/react";
 import { residentEstateAccess, unassignedAccess } from "@tests/fixtures/access";
-import { renderWithProviders, screen, within } from "@tests/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
-import { AppNavigation, EstateNavigation } from "@/components/app-navigation";
+import { AppNavigation } from "@/components/app-navigation";
 
 const { apiGet, access } = vi.hoisted(() => ({
   apiGet: vi.fn<(path: unknown, options?: unknown) => Promise<unknown>>(),
@@ -26,7 +30,6 @@ function NavigationLayout() {
   return (
     <SidebarProvider>
       <AppNavigation />
-      <EstateNavigation />
       <Outlet />
     </SidebarProvider>
   );
@@ -107,22 +110,11 @@ it.each(["MANAGER", "COUNCIL", "CREW", "CUSTOM"])(
     await openNavigation();
 
     const desktop = within(
-      await screen.findByRole("navigation", { name: "Workspace navigation" })
+      await screen.findByRole("navigation", { name: "Sidebar" })
     );
     const link = await desktop.findByRole("link", { name: "Documents" });
     expect(link.getAttribute("href")).toBe("/estates/maple/documents");
     expect(link.getAttribute("aria-current")).toBe("page");
-    const local = within(
-      screen.getByRole("navigation", { name: "Estate navigation" })
-    );
-    fireEvent.click(
-      local.getByRole("button", { name: "Estate section: Documents" })
-    );
-    expect(
-      (await screen.findByRole("menuitem", { name: "Documents" })).getAttribute(
-        "href"
-      )
-    ).toBe("/estates/maple/documents");
     expect(apiGet.mock.calls.map(([path]) => String(path))).not.toContain(
       "/estates/{id}"
     );
@@ -133,13 +125,11 @@ it("hides document navigation without document read access", async () => {
   documentAccess("CUSTOM", false);
   await openNavigation();
 
-  // This link appears only after the denied access response has rendered.
-  // Checking absence before then passes even while access is still loading.
-  const desktop = within(
-    await screen.findByRole("navigation", { name: "Workspace navigation" })
+  await screen.findByRole("navigation", { name: "Sidebar" });
+  await waitFor(() =>
+    expect(apiGet.mock.calls.map(([path]) => String(path))).toContain(
+      "/access/context"
+    )
   );
-  await desktop.findByRole("link", { name: "Estates" });
-
   expect(screen.queryByRole("link", { name: "Documents" })).toBeNull();
-  expect(desktop.queryByRole("link", { name: "Sign out" })).toBeNull();
 });

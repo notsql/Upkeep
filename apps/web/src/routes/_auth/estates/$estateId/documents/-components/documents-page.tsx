@@ -143,14 +143,7 @@ export function DocumentsPage({
   }
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: access.permission?.estateName ?? "Estate" },
-          { label: "Documents" },
-        ]}
-        title="Documents"
-      />
+      <PageHeader title="Documents" />
       {access.permission?.canUploadDocuments ? (
         <UploadDocumentForm estateId={estateId} />
       ) : null}

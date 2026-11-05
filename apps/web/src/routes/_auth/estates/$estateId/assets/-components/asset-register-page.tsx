@@ -17,7 +17,6 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BackLink } from "@/components/back-link";
 import { ConditionBadge } from "@/components/condition-badge";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
@@ -120,9 +119,6 @@ export function AssetRegisterPage({
   );
   return (
     <PageLayout className="space-y-6">
-      <BackLink params={{ estateId }} to="/estates/$estateId">
-        Back to estate
-      </BackLink>
       <PageHeader
         actions={
           estate.data?.deactivatedAt ? undefined : (
@@ -135,15 +131,6 @@ export function AssetRegisterPage({
             </Link>
           )
         }
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
-          { label: "Assets" },
-        ]}
         description="Find equipment by location, category and latest condition."
         title="Assets"
       />

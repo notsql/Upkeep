@@ -93,18 +93,7 @@ function EstateReportsPage() {
   }
   return (
     <PageLayout className="space-y-4">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: access.canViewManagement ? "/estates/$estateId" : undefined,
-            params: { estateId },
-          },
-          { label: "Fault reports" },
-        ]}
-        title="Fault reports"
-      />
+      <PageHeader title="Fault reports" />
       {locations.data ? (
         <ReportFilters
           filters={filters}

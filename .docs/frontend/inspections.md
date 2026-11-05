@@ -65,7 +65,7 @@ detail/history and source lookup, without invalidating other users or estates.
 
 ## Inspection history table
 
-Open **Estates → select estate → Assets → select asset**. Both the full Owner
+Pick the estate in the header switcher, then sidebar **Assets → select asset**. Both the full Owner
 screen and limited Manager/Crew screen show **Inspection records** when
 `canViewInspectionResults` is granted. The shared route-local component is
 `$assetId/-components/inspection-history-table.tsx`.

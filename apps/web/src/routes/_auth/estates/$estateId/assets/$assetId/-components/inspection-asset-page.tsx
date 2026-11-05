@@ -53,12 +53,6 @@ export function InspectionAssetPage({
           ) : undefined
         }
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",

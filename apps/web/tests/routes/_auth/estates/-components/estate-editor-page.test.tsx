@@ -4,12 +4,20 @@ import {
   residentAccess,
   unassignedAccess,
 } from "@tests/fixtures/access";
-import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { beforeEach, expect, it, vi } from "vitest";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { EstateEditorPage } from "@/routes/_auth/estates/-components/estate-editor-page";
+
+const BACK_LINK = /^Back to/u;
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), PATCH: vi.fn(), POST: vi.fn() },
@@ -17,6 +25,7 @@ vi.mock("@/lib/api", () => ({
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "user" }, loading: false }),
 }));
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 const { navigate } = vi.hoisted(() => ({ navigate: vi.fn() }));
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
@@ -226,17 +235,17 @@ it.each([401, 409, 503])(
   }
 );
 
-it("keeps creation Back, breadcrumb and Cancel destinations on the estate directory", async () => {
+it("keeps creation breadcrumb and Cancel destinations on the estate directory, without a back link", async () => {
   vi.mocked(api.GET).mockResolvedValue({
     data: unassignedAccess,
     response: new Response(),
   });
   renderWithProviders(<EstateEditorPage />);
-  for (const name of ["Back to estates", "Estates"]) {
-    expect(screen.getByRole("link", { name }).getAttribute("href")).toBe(
-      "/estates"
-    );
-  }
+  expect(
+    screen.getByRole("link", { name: "Estates" }).getAttribute("href")
+  ).toBe("/estates");
+  screen.getByText("Create estate", { selector: "[aria-current=page]" });
+  expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() =>
     expect(navigate).toHaveBeenCalledWith({ to: "/estates" })
@@ -360,4 +369,81 @@ it("keeps the edit form hidden if permissions cannot load", async () => {
     "Unable to load your access"
   );
   expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
+});
+
+function mockSettings(details: typeof estate & { deactivatedAt?: string }) {
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data:
+          path === "/access/context"
+            ? {
+                ...unassignedAccess,
+                estates: [{ ...ownerEstateAccess, estateId: estate.id }],
+              }
+            : details,
+        response: new Response(),
+      }) as never
+  );
+}
+
+it("titles edit mode Estate settings without back links or breadcrumbs", async () => {
+  mockSettings({ ...estate, owned: true });
+  renderWithProviders(<EstateEditorPage estateId={estate.id} />);
+  await screen.findByRole("heading", { level: 1, name: "Estate settings" });
+  expect(screen.queryByRole("link", { name: "Back to estates" })).toBeNull();
+  expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
+});
+
+it.each([
+  ["owner, active", true, undefined, true],
+  ["owner, inactive", true, "2026-09-25T00:00:00Z", false],
+  ["Manager, active", false, undefined, false],
+])(
+  "shows the Danger zone only to owners of an active estate (%s)",
+  async (_label, owned, deactivatedAt, shown) => {
+    mockSettings({ ...estate, owned, deactivatedAt });
+    renderWithProviders(<EstateEditorPage estateId={estate.id} />);
+    await screen.findByRole("textbox", { name: "Name" });
+    const button = screen.queryByRole("button", { name: "Deactivate estate" });
+    expect(Boolean(button)).toBe(shown);
+    expect(Boolean(screen.queryByText("Danger zone"))).toBe(shown);
+  }
+);
+
+it("deactivates the estate after confirmation and toasts", async () => {
+  mockSettings({ ...estate, owned: true });
+  vi.mocked(api.POST).mockResolvedValue({
+    data: { ...estate, owned: true, deactivatedAt: "2026-10-01T00:00:00Z" },
+    response: new Response(),
+  } as never);
+  renderWithProviders(<EstateEditorPage estateId={estate.id} />);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Deactivate estate" })
+  );
+  const dialog = await screen.findByRole("dialog", {
+    name: "Deactivate Maple Grove?",
+  });
+  fireEvent.change(screen.getByRole("textbox", { name: "MCST number" }), {
+    target: { value: "MG-001" },
+  });
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Deactivate estate" })
+  );
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith("/estates/{id}/deactivate", {
+      params: { path: { id: estate.id } },
+      body: { code: "MG-001" },
+    })
+  );
+  await waitFor(() =>
+    expect(toast.success).toHaveBeenCalledWith(
+      "Estate deactivated. Existing records have been preserved."
+    )
+  );
+  await waitFor(() =>
+    expect(
+      screen.queryByRole("button", { name: "Deactivate estate" })
+    ).toBeNull()
+  );
 });

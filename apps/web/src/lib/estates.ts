@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { dashboardQueryKey } from "@/lib/dashboard";
 
 const INTERNAL_ERROR =
   /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/iu;
@@ -127,7 +126,6 @@ export function useSaveEstate(
         queryClient.invalidateQueries({
           queryKey: ["estates", userId, "list"],
         }),
-        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
       ]);
       if (estateId) {
         await onSaved(data);

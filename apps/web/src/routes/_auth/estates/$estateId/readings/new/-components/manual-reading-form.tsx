@@ -117,12 +117,6 @@ export function ManualReadingForm({
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate?.estateName ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Readings",
             to: "/estates/$estateId/readings",

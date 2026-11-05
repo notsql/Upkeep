@@ -3,7 +3,7 @@ import { EstateEditorPage } from "@/routes/_auth/estates/-components/estate-edit
 
 export const Route = createFileRoute("/_auth/estates/$estateId/edit/")({
   component: EstateEditRoute,
-  head: () => ({ meta: [{ title: "Edit estate" }] }),
+  head: () => ({ meta: [{ title: "Estate settings" }] }),
 });
 
 function EstateEditRoute() {

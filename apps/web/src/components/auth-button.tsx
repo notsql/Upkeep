@@ -10,11 +10,12 @@ import {
 } from "@proj/ui/components/dropdown-menu";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
-import { LogOut, Settings, UserRound } from "lucide-react";
-import type { ReactNode } from "react";
+import { LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
+import { useAppAccess } from "@/lib/access";
 
-export function AuthButton({ menu }: { menu?: ReactNode }) {
+export function AuthButton() {
   const { loading, user } = useAuth();
+  const access = useAppAccess();
 
   if (loading) {
     return (
@@ -56,14 +57,22 @@ export function AuthButton({ menu }: { menu?: ReactNode }) {
             {user.email}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {menu}
           <DropdownMenuItem
             className="min-h-11 text-sm"
             render={<Link to="/account" />}
           >
             <Settings aria-hidden="true" />
-            Settings
+            Account settings
           </DropdownMenuItem>
+          {access.data?.canAccessPlatformAdmin ? (
+            <DropdownMenuItem
+              className="min-h-11 text-sm"
+              render={<Link to="/admin/users" />}
+            >
+              <ShieldCheck aria-hidden="true" />
+              Admin users
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             className="min-h-11 text-sm"
             render={<a href="/logout" />}

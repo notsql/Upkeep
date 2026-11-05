@@ -3,6 +3,8 @@ import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetDetailsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
 
+const BACK_LINK = /^Back to/u;
+
 const page = vi.hoisted(() => ({
   estate: {} as Record<string, unknown>,
   asset: {} as Record<string, unknown>,
@@ -71,13 +73,15 @@ vi.mock(
   })
 );
 
-it("names the owning estate in asset detail breadcrumbs", async () => {
+it("starts asset detail breadcrumbs at Assets, without back links", () => {
   renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
   const breadcrumbs = within(
     screen.getByRole("navigation", { name: "Breadcrumbs" })
   );
-  await breadcrumbs.findByRole("link", { name: "Maple Grove" });
-  expect(breadcrumbs.queryByRole("link", { name: "Estate" })).toBeNull();
+  expect(
+    breadcrumbs.getAllByRole("link").map((link) => link.textContent)
+  ).toEqual(["Assets"]);
+  expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
 });
 
 it("shows the asset's maintenance costs", async () => {

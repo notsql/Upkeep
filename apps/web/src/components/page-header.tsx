@@ -11,12 +11,10 @@ import { Fragment, type ReactNode } from "react";
 interface Breadcrumb {
   label: string;
   params?: { estateId: string; assetId?: string };
+  search?: { estateId?: string };
   to?:
-    | "/"
     | "/estates"
-    | "/account"
-    | "/admin/users"
-    | "/estates/$estateId"
+    | "/reports"
     | "/estates/$estateId/assets"
     | "/estates/$estateId/readings"
     | "/estates/$estateId/work-orders"
@@ -48,7 +46,13 @@ export function PageHeader({
                   <BreadcrumbItem className="min-w-0 break-words">
                     {item.to ? (
                       <BreadcrumbLink
-                        render={<Link params={item.params} to={item.to} />}
+                        render={
+                          <Link
+                            params={item.params}
+                            search={item.search}
+                            to={item.to}
+                          />
+                        }
                       >
                         {item.label}
                       </BreadcrumbLink>

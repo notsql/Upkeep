@@ -7,7 +7,12 @@ Every signed-in account can open the directory and creation form, including
 `/estates/` and `/estates/new/`, without `canEnterWorkspace`. Creation still checks
 `canCreateEstate`; all estate-specific routes retain target-estate capability
 guards. Resident-only and unassigned accounts can see an empty directory; Crew see assigned estates
-with Create estate. Back, breadcrumb and Cancel on creation all lead to this directory.
+with Create estate. The breadcrumb and Cancel on creation lead to this directory.
+`/estates` is the single "All estates" landing (directory + pending
+invitations), reached from the header switcher's "All estates" and from the
+signed-in `/` redirect: exactly one membership goes to that estate's
+destination, zero or several to `/estates` (resident-only accounts get the
+resident dashboard; see [shell.md](shell.md)).
 
 ## Routes
 
@@ -16,16 +21,16 @@ with Create estate. Back, breadcrumb and Cancel on creation all lead to this dir
 | `routes/_auth/estates/index.tsx` | `/estates` | - | "Estates" | `EstateListPage` |
 | `routes/_auth/estates/new/index.tsx` | `/estates/new` | - | "Create estate" | `EstateEditorPage` (no `estateId`) |
 | `routes/_auth/estates/$estateId/index.tsx` | `/estates/$estateId` | `estateId` | "Estate details" | `EstateDetailsPage`; management readers also mount `LocationsSection` (see [locations.md](locations.md)); Crew receive the read-only summary |
-| `routes/_auth/estates/$estateId/edit/index.tsx` | `/estates/$estateId/edit` | `estateId` | "Edit estate" | `EstateEditorPage estateId` |
+| `routes/_auth/estates/$estateId/edit/index.tsx` | `/estates/$estateId/edit` | `estateId` | "Estate settings" | `EstateEditorPage estateId` (edit form, then owner-only Danger zone); guarded by `canOpenEstateSettings` (`owned \|\| canManageEstate`) |
 
 ## Screens and components
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
 | `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/MCST number/address (placeholder "Search by name, MCST number or address"), Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you), Create estate (Plus icon), result count, Skeleton loading and a grid of whole-card details links with name, MCST number (`MCST <code>`), address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty` (+`EmptyHeader`/`EmptyMedia`/`EmptyTitle`/`EmptyDescription`/`EmptyContent`), `Button`, `InputGroup`, `InputGroupAddon`, `InputGroupInput`, `Skeleton`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
-| `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create or edit. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an alert and Retry access. | `Alert`, `AlertDescription`, `Button` |
+| `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create ("Create estate", breadcrumbs `Estates › Create estate`) or edit ("Estate settings", no breadcrumbs). In edit mode, after the form, an `EstateDangerZone` `Card` titled "Danger zone" with a destructive "Deactivate estate" button opening `DeactivateEstateDialog`, shown only when `estate.owned` and the estate is active. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an alert and Retry access. | `Alert`, `AlertDescription`, `Button`, `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` |
 | `EstateForm` (`estates/-components/estate-form.tsx`) | Fields: `name` (req, max 200), `code` labelled "MCST number" (req, max 50, placeholder "e.g. 1234", `inputMode="numeric"`, hint asks for the number only without "MCST"), `address` (req, max 500), `postalCode` (req, max 20), `description` (optional, max 2000). Submit "Create estate" / "Save changes". | `Button`, `Input`, `Label`, `Textarea` |
-| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | Shows name, Active/Inactive status, "MCST number" (`MCST <code>`), address, postal code, description. Owners, target-estate Managers and custom EDIT_ESTATE get "Edit estate", including inactive estates. Only the current owner gets "Deactivate estate" while active. Other roles see "Shared with you. You do not have permission to edit estate details." Renders Locations via `children`, followed by an owner-only Assets section with View assets and, while active, Register asset. Owners also get a "Failure risk" link. Load errors and the inactive notice (`role="note"`) are `Alert`s. | `Button`, `buttonVariants`, `Alert`, `AlertDescription` |
+| `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | The estate overview: `PageHeader` (estate name, `LifecycleStatusBadge` status, `description` = estate description or omitted; no breadcrumbs, no actions), the inactive `Alert` (`role="note"`), a `DetailCard` with MCST number (`MCST <code>`), address, postal code and description, then — for users who cannot edit — "Shared with you. Only the owner or an assigned Manager can edit estate details.", then `children` (Locations). No action row, no Assets card, no back link, no deactivation; every section is reached from the sidebar. Load errors are `Alert`s. | `Alert`, `AlertDescription` |
 | `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the stored estate `code` exactly (field labelled "MCST number") to enable "Deactivate estate". Closing is blocked while pending. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label` |
 
 ## Data (`lib/estates.ts`)
@@ -37,17 +42,17 @@ operation's `status` query param). Request body `EstateRequest`, response
 | Hook / call | Endpoint | Query key | Used by |
 | --- | --- | --- | --- |
 | `useEstateList(status)` | `GET /estates?status=` | `["estates", userId, "list", status]` | `EstateListPage` |
-| `useEstate(estateId?)` | `GET /estates/{id}` | `["estates", userId, "details", estateId]` (disabled without `estateId`) | editor, details, `LocationsSection`, contextual app navigation |
+| `useEstate(estateId?)` | `GET /estates/{id}` | `["estates", userId, "details", estateId]` (disabled without `estateId`) | editor, details, `LocationsSection`, sidebar (`owned`), and the `_auth` owner-gated route guards via `ensureQueryData` |
 | `useAppAccess()` (`lib/access.ts`) | `GET /access/context` | `[userId, "app-access"]` | editor and details resolve `canManageEstate` for the exact estate ID; ownership still uses `EstateResponse.owned` |
 
 Create/edit mutations use `useSaveEstate` in `lib/estates.ts`. Deactivation
-remains inline in the details screen:
+is inline in `EstateDangerZone` on Estate settings:
 
 | Where | Endpoint | On success |
 | --- | --- | --- |
-| `useSaveEstate` from `EstateEditorPage` (create) | `POST /estates`, then `GET /access/context` | Retain `createdEstate`; `setQueryData(["estates", userId, "details", data.id])`; invalidate `["estates", userId, "list"]` (all statuses) and `["estates", userId, "dashboard"]`; cancel any older access lookup and refetch `[userId, "app-access"]` with errors propagated; screen callback toasts "Estate created." and navigates to details through the route access guard |
+| `useSaveEstate` from `EstateEditorPage` (create) | `POST /estates`, then `GET /access/context` | Retain `createdEstate`; `setQueryData(["estates", userId, "details", data.id])`; invalidate `["estates", userId, "list"]` (all statuses); cancel any older access lookup and refetch `[userId, "app-access"]` with errors propagated; screen callback toasts "Estate created." and navigates to details through the route access guard |
 | `useSaveEstate` from `EstateEditorPage` (edit) | `PATCH /estates/{id}` | same; toast "Estate details updated." |
-| `EstateDetailsPage` deactivate | `POST /estates/{id}/deactivate` body `{ code }` | `setQueryData(["estates", userId, "details", estateId])`; close dialog; toast; invalidate `["estates", userId, "list"]` and `["estates", userId, "dashboard"]` |
+| `EstateDangerZone` deactivate (`/edit`) | `POST /estates/{id}/deactivate` body `{ code }` | `setQueryData(["estates", userId, "details", estateId])`; close dialog; toast "Estate deactivated. Existing records have been preserved."; invalidate `["estates", userId, "list"]` |
 
 All queries: `enabled` only when `useEstateSession().ready`, `retry: false`,
 errors via `estateError`.
@@ -60,21 +65,19 @@ existing save flow and does not require the creation refresh step.
 
 Editing and deactivation are separate permissions. Ownership transfer invalidates
 estate and app-access queries through `lib/council-invitations.ts`; the former
-owner keeps the edit link/form through their retained MANAGER membership and
+owner keeps Estate settings through their retained MANAGER membership and
 loses deactivation and transfer controls. Council/Member/Crew/Resident/unassigned
 users and Managers of other estates have no editing controls. The API rechecks
 authority on save, including after membership removal/demotion.
 
 ## Council invitations
 
-Estate details also offers **Device monitoring** to owners and current MANAGER or
-COUNCIL assignments, using GET /access/context. A non-owner Manager needs neither
-platform-admin authority nor asset visibility. The target is
-`/estates/$estateId/sensors`; sensor-specific authorization is enforced by the API.
-See [flatlined-sensors.md](flatlined-sensors.md) for screen components and data hooks.
+Device monitoring (`/estates/$estateId/sensors`) is a sidebar item under Assets,
+shown by `canOpenSensors` (owners, and MANAGER/COUNCIL with management access).
+See [flatlined-sensors.md](flatlined-sensors.md).
 
-Estate details offers **Council members** when `EstateResponse.canInviteMembers`
-or `canManageInvitationPermissions` is true. The route is
+The sidebar's Administration › **Members** item opens the council page when
+`canOpenMembers` is true. The route is
 `estates/$estateId/council/index.tsx`. Estates mounts `InvitationAcceptance`
 for WorkOS email reconciliation and `PendingInvitations` for explicit in-app
 acceptance, both at the very top of the page above the "Estates" PageHeader
@@ -87,20 +90,16 @@ All estate screens use `PageLayout` and shared `PageHeader`; editors use a narro
 form `Card` and `FormActions`. Cancel returns to Estates on creation and to the
 estate on editing; Save/Cancel disable while saving. Optional fields are labelled
 and a form note explains required fields. Details use a responsive `DetailCard`,
-LifecycleStatusBadge (Badge `default` Active / `destructive` Inactive) and separate Locations/Assets
-surfaces. The same status component is used on estate cards. Council members shares
-the wrapping shadcn FieldSet named Estate actions in PageHeader with Edit estate and Deactivate estate when
-the caller is permitted; delegates retain Council access without owner actions. Estate-list errors have
+LifecycleStatusBadge (Badge `default` Active / `destructive` Inactive) and the
+Locations surface. The same status component is used on estate cards. Estate-list errors have
 Retry; its empty state uses shadcn Empty. Invitations remain independent of the
 estate-list request, so their failures do not hide estate cards. See the shared
 [design guide](design-system.md); query keys and mutations above are unchanged.
 
-The header has no estate selector. On estate routes, switch directly through
-the estate menu in the desktop sidebar or above mobile estate links (see
-[shell.md](shell.md)); that menu also links back to All estates and, if allowed,
-Create estate. Estates remains the searchable directory, and it and
-`/estates/new` render full width with no sidebar; global links move to the
-header account menu there.
+Estates are switched with the header estate switcher (see
+[shell.md](shell.md)); its menu also links to All estates and, if allowed,
+Create estate. On `/estates` and `/estates/new` it reads "Select estate", and
+both render full width with no sidebar.
 
 ## Directory filters and navigation
 
@@ -130,32 +129,24 @@ chevron. Transitions respect reduced-motion preferences. The empty state is shad
 `Empty` (`role="status"`) with a Building2 `EmptyMedia`: with default filters it
 says "No active estates." (or the ALL/INACTIVE variant) and offers New estate;
 with filters active it says "No matching estates" and offers Clear filters, which
-resets search/access/status. Home portfolio analytics are documented in [dashboard.md](dashboard.md).
-
-## Work-order overview entry
-
-EstateDetailsPage includes View work orders in the shadcn Estate actions group
-when GET /access/context grants canViewWorkOrders for that estate. It routes to
-/estates/$estateId/work-orders and remains visible for inactive history. Access
-errors hide the action. Existing overview permissions are unchanged.
+resets search/access/status.
 
 ## Custom estate permissions
 
 Custom VIEW_ESTATE adds estate list/detail visibility. The exact estate's
 canManageEstate (custom EDIT_ESTATE) controls detail editing, including inactive
-estates; it never grants ownership. EstateActions exposes Roles when
-canViewEstateRoles, and Estate members/invitations when canViewEstateInvitations
-or existing invite/admin flags permit. No VIEW_ESTATE means no overview query;
+estates; it never grants ownership. The sidebar shows Roles when
+canViewEstateRoles, and Members when canViewEstateInvitations or existing
+invite/admin flags permit. No VIEW_ESTATE means no overview query;
 role/invite/report-only users use their own scoped routes. See [estate-roles.md](estate-roles.md).
 
 ## Crew inspection entry
 
 Assigned Crew may open a read-only estate overview using canViewEstateDetails.
-It exposes Assets/inspection entry and work orders without estate edit, member
-administration or the management locations section. Work-order breadcrumbs and
-context switching retain the current estate/feature. Existing Owners/Managers
-also retain their Devices action on the estate overview, with Asset categories and
-Inspections actions beside it under the same condition ([asset-categories.md](asset-categories.md),
+Their sidebar exposes Assets (inspection entry) and Work orders, without Estate
+settings, member administration or the management locations section. Devices,
+Asset categories and Inspections are sidebar items for owners and
+`canManageInvitationPermissions` delegates ([asset-categories.md](asset-categories.md),
 [inspection-list.md](inspection-list.md)).
 See [inspections](inspections.md) for limited asset screens and recording.
 

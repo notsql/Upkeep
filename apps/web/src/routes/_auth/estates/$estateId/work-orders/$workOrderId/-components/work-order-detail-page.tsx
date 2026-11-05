@@ -47,12 +47,6 @@ export function WorkOrderDetailPage({
     <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: access.canViewEstateDetails ? "/estates/$estateId" : undefined,
-            params: { estateId },
-          },
           {
             label: "Work orders",
             to: "/estates/$estateId/work-orders",

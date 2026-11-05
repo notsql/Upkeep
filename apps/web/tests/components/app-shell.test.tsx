@@ -1,5 +1,9 @@
 import { fireEvent } from "@testing-library/react";
-import { ownerEstateAccess, workspaceAccess } from "@tests/fixtures/access";
+import {
+  ownerEstateAccess,
+  residentAccess,
+  workspaceAccess,
+} from "@tests/fixtures/access";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,6 +14,7 @@ const { state } = vi.hoisted(() => ({
     pathname: "/estates/e/assets",
     hash: "",
     role: "user",
+    resident: false,
     user: { id: "owner", email: "owner@example.com" } as {
       id: string;
       email: string;
@@ -62,35 +67,33 @@ vi.mock("@/lib/estates", () => ({
 vi.mock("@/lib/api", () => ({
   api: {
     GET: async () => ({
-      data: {
-        ...workspaceAccess,
-        canAccessPlatformAdmin: state.role === "admin",
-        estates: [
-          {
-            ...ownerEstateAccess,
-            estateId: "e",
-            role: state.estate.owned ? "OWNER" : "COUNCIL",
-            canManageEstate: state.estate.owned,
-            canViewAssets: state.estate.owned,
-            canViewInspectionResults: state.estate.owned,
-            canCreateInspectionResults: state.estate.owned,
-            canInviteMembers: state.estate.canInviteMembers,
-            canManageInvitationPermissions:
-              state.estate.canManageInvitationPermissions,
+      data: state.resident
+        ? residentAccess
+        : {
+            ...workspaceAccess,
+            canAccessPlatformAdmin: state.role === "admin",
+            estates: [
+              {
+                ...ownerEstateAccess,
+                estateId: "e",
+                role: state.estate.owned ? "OWNER" : "COUNCIL",
+                canManageEstate: state.estate.owned,
+                canViewAssets: state.estate.owned,
+                canViewInspectionResults: state.estate.owned,
+                canCreateInspectionResults: state.estate.owned,
+                canInviteMembers: state.estate.canInviteMembers,
+                canManageInvitationPermissions:
+                  state.estate.canManageInvitationPermissions,
+              },
+            ],
           },
-        ],
-      },
       response: new Response(),
     }),
   },
 }));
 
-async function desktopNavigation() {
-  const nav = within(
-    await screen.findByRole("navigation", { name: "Workspace navigation" })
-  );
-  await nav.findByRole("link", { name: "Home" });
-  return nav;
+async function sidebar() {
+  return within(await screen.findByRole("navigation", { name: "Sidebar" }));
 }
 
 const SWITCH_ESTATE = /Switch estate/u;
@@ -104,6 +107,7 @@ beforeEach(() => {
   state.hash = "";
   state.user = { id: "owner", email: "owner@example.com" };
   state.role = "user";
+  state.resident = false;
   state.estate = {
     name: "Maple Estate",
     owned: true,
@@ -112,73 +116,86 @@ beforeEach(() => {
   };
 });
 
-describe("dashboard navigation", () => {
-  it("opens the sidebar as a sheet on mobile with Home, Estates and Settings", async () => {
+function renderShell() {
+  renderWithProviders(
+    <AppShell>
+      <main>Content</main>
+    </AppShell>
+  );
+}
+
+describe("app shell", () => {
+  it("opens the estate sidebar as a sheet on mobile without a duplicate estate menu", async () => {
     window.innerWidth = 375;
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
+    renderShell();
+    expect(screen.queryByRole("navigation", { name: "Sidebar" })).toBeNull();
     expect(
-      screen.queryByRole("navigation", { name: "Workspace navigation" })
+      screen.queryByRole("navigation", { name: "Estate navigation" })
     ).toBeNull();
-    screen.getByRole("button", { name: "Open account menu" });
     fireEvent.click(screen.getByRole("button", { name: "Toggle Sidebar" }));
-    const mobile = await desktopNavigation();
-    expect(mobile.queryByRole("link", { name: "Account" })).toBeNull();
-    mobile.getByRole("link", { name: "Home" });
-    mobile.getByRole("link", { name: "Estates" });
-    mobile.getByRole("link", { name: "Settings" });
-  });
-  it("renders the estate directory full width with global links in the account menu", async () => {
-    state.pathname = "/estates";
-    state.role = "admin";
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    screen.getByRole("main");
-    expect(screen.queryByRole("button", { name: "Toggle Sidebar" })).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
-    const estates = await screen.findByRole<HTMLAnchorElement>("menuitem", {
-      name: "Estates",
-    });
-    expect(estates.getAttribute("aria-current")).toBe("page");
-    screen.getByRole("menuitem", { name: "Home" });
-    expect(screen.queryByRole("menuitem", { name: "Invitations" })).toBeNull();
-    screen.getByRole("menuitem", { name: "Admin users" });
-    screen.getByRole("menuitem", { name: "Sign out" });
+    const nav = await sidebar();
+    await nav.findByRole("link", { name: "Assets" });
+    expect(nav.queryByRole("link", { name: "Home" })).toBeNull();
     expect(
-      screen.queryByRole("navigation", { name: "Workspace navigation" })
+      screen.queryByRole("navigation", { name: "Estate navigation" })
     ).toBeNull();
   });
-  it("offers All estates and Create estate from the estate switcher", async () => {
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    const nav = await desktopNavigation();
-    fireEvent.click(await nav.findByRole("button", { name: SWITCH_ESTATE }));
-    const menu = within(
-      await screen.findByRole("menu", { name: "Switch estate" })
-    );
+  it("shows the estate sidebar and header switcher inside an estate", async () => {
+    renderShell();
+    const nav = await sidebar();
     expect(
-      menu.getByRole("menuitem", { name: "All estates" }).getAttribute("href")
-    ).toBe("/estates");
-    expect(
-      menu.getByRole("menuitem", { name: "Create estate" }).getAttribute("href")
-    ).toBe("/estates/new");
+      (await nav.findByRole("link", { name: "Assets" })).getAttribute(
+        "aria-current"
+      )
+    ).toBe("page");
+    await screen.findByRole("button", { name: SWITCH_ESTATE });
+    screen.getByRole("button", { name: "Toggle Sidebar" });
   });
+  it("shows the resident sidebar on /reports", async () => {
+    state.pathname = "/reports";
+    state.resident = true;
+    renderShell();
+    const nav = await sidebar();
+    await nav.findByRole("link", { name: "My reports" });
+  });
+  it("shows the resident sidebar on / for a resident-only account", async () => {
+    state.pathname = "/";
+    state.resident = true;
+    renderShell();
+    const nav = await sidebar();
+    await nav.findByRole("link", { name: "Dashboard" });
+  });
+  it.each([
+    "/",
+    "/estates",
+    "/estates/new",
+    "/account",
+    "/admin/users",
+    "/invitations",
+  ])(
+    "renders %s full width with only account links in the account menu",
+    async (pathname) => {
+      state.pathname = pathname;
+      state.role = "admin";
+      renderShell();
+      screen.getByRole("main");
+      expect(
+        screen.queryByRole("button", { name: "Toggle Sidebar" })
+      ).toBeNull();
+      expect(screen.queryByRole("navigation", { name: "Sidebar" })).toBeNull();
+      await screen.findByRole("button", { name: SWITCH_ESTATE });
+      fireEvent.click(
+        screen.getByRole("button", { name: "Open account menu" })
+      );
+      await screen.findByRole("menuitem", { name: "Admin users" });
+      screen.getByRole("menuitem", { name: "Account settings" });
+      screen.getByRole("menuitem", { name: "Sign out" });
+      expect(screen.getAllByRole("menuitem")).toHaveLength(3);
+    }
+  );
   it("puts the skip link first in the tab order, pointing at the main content", async () => {
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    await desktopNavigation();
+    renderShell();
+    await sidebar();
     const first = document.body.querySelector(
       "a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex='-1'])"
     );
@@ -191,160 +208,10 @@ describe("dashboard navigation", () => {
       "Content"
     );
   });
-  it("marks the asset destination current and supplies estate-specific links", async () => {
-    const originalMedia = window.matchMedia;
-    vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
-      ...originalMedia(query),
-      matches: query === "(max-width: 767px)",
-    }));
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    const nav = await desktopNavigation();
-    expect(
-      nav.getByRole("link", { name: "Assets" }).getAttribute("aria-current")
-    ).toBe("page");
-    expect(
-      nav.getByRole<HTMLAnchorElement>("link", { name: "Estate members" }).href
-    ).toContain("/estates/e/council");
-    screen.getByRole("link", { name: "Skip to content" });
-    nav.getByRole("link", { name: "Estates" });
-    nav.getByRole("link", { name: "Home" });
-    expect(
-      screen.queryByRole("navigation", { name: "Mobile navigation" })
-    ).toBeNull();
-    const context = within(
-      screen.getByRole("navigation", { name: "Estate navigation" })
-    );
-    fireEvent.click(
-      context.getByRole("button", { name: "Estate section: Assets" })
-    );
-    const sections = within(
-      await screen.findByRole("menu", { name: "Estate sections" })
-    );
-    expect(
-      sections.getByRole("menuitem", { name: "Overview" }).getAttribute("href")
-    ).toBe("/estates/e");
-    sections.getByRole("menuitem", { name: "Assets", current: "page" });
-  });
-  it.each([
-    "/",
-    "/account",
-    "/invitations",
-    "/admin/users",
-    "/reports",
-    "/reports/new",
-    "/estates/new",
-  ])(
-    "renders %s full width with global links in the account menu",
-    async (pathname) => {
-      state.pathname = pathname;
-      renderWithProviders(
-        <AppShell>
-          <main>Content</main>
-        </AppShell>
-      );
-      screen.getByRole("main");
-      expect(
-        screen.queryByRole("button", { name: "Toggle Sidebar" })
-      ).toBeNull();
-      expect(
-        screen.queryByRole("navigation", { name: "Workspace navigation" })
-      ).toBeNull();
-      fireEvent.click(
-        screen.getByRole("button", { name: "Open account menu" })
-      );
-      await screen.findByRole("menuitem", { name: "Home" });
-      screen.getByRole("menuitem", { name: "Estates" });
-      expect(
-        screen.getAllByRole("menuitem", { name: "Settings" })
-      ).toHaveLength(1);
-      expect(screen.queryByRole("menuitem", { name: "Assets" })).toBeNull();
-      expect(
-        screen.queryByRole("menuitem", { name: "Admin users" })
-      ).toBeNull();
-    }
-  );
-  it.each([
-    [
-      "Work orders",
-      "Choose an estate for work orders",
-      "/estates/e/work-orders",
-    ],
-    [
-      "Respond to faults",
-      "Choose an estate for fault reports",
-      "/estates/e/reports",
-    ],
-  ])(
-    "opens the estate chooser from the account menu's %s item",
-    async (label, title, href) => {
-      state.pathname = "/account";
-      renderWithProviders(
-        <AppShell>
-          <main>Content</main>
-        </AppShell>
-      );
-      fireEvent.click(
-        screen.getByRole("button", { name: "Open account menu" })
-      );
-      fireEvent.click(await screen.findByRole("menuitem", { name: label }));
-      const dialog = within(await screen.findByRole("dialog", { name: title }));
-      expect(
-        dialog.getByRole("link", { name: "Pine Estate" }).getAttribute("href")
-      ).toBe(href);
-    }
-  );
-  it("keeps the account menu free of sidebar links inside an estate", async () => {
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    await desktopNavigation();
-    fireEvent.click(screen.getByRole("button", { name: "Open account menu" }));
-    await screen.findByRole("menuitem", { name: "Sign out" });
-    expect(screen.queryByRole("menuitem", { name: "Home" })).toBeNull();
-    expect(screen.queryByRole("menuitem", { name: "Estates" })).toBeNull();
-  });
-  it("preserves member and delegate permission boundaries", async () => {
-    state.estate = {
-      ...state.estate,
-      owned: false,
-      canInviteMembers: true,
-      canManageInvitationPermissions: false,
-    };
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    const nav = await desktopNavigation();
-    expect(nav.queryByRole("link", { name: "Assets" })).toBeNull();
-    nav.getByRole("link", { name: "Estate members" });
-  });
-  it("keeps Settings in the sidebar without duplicating the Locations section", async () => {
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    const nav = await desktopNavigation();
-    nav.getByRole("link", { name: "Settings" });
-    expect(nav.queryByRole("link", { name: "Locations" })).toBeNull();
-  });
   it("keeps the public header for signed-out visitors", () => {
     state.user = null;
-    renderWithProviders(
-      <AppShell>
-        <main>Content</main>
-      </AppShell>
-    );
-    expect(
-      screen.queryByRole("navigation", { name: "Workspace navigation" })
-    ).toBeNull();
+    renderShell();
+    expect(screen.queryByRole("navigation", { name: "Sidebar" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Toggle Sidebar" })).toBeNull();
     screen.getByRole("link", { name: "Sign in" });
   });

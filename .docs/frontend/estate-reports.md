@@ -13,12 +13,10 @@ delegates blob presentation and URL cleanup to `ReportImage`, supplying the
 existing "Loading image…" status.
 
 Routes are folder-based under `apps/web/src/routes/_auth/estates/$estateId/reports/`.
-List and detail use the shared PageHeader with Estates / estate name / Fault
-reports breadcrumbs; detail adds Details and places Create work order in the
-header actions. The estate name comes from access context and links to the
-overview only with `canViewManagement`; Crew see plain text and do not fetch
-management estate details. The Fault reports breadcrumb replaces the old return
-button on detail.
+List and detail use the shared PageHeader. The list has no breadcrumbs; detail
+("Fault report details") shows `Fault reports › <report title>` ("Fault report"
+while loading) and places Create work order in the header actions. No back
+link.
 `_auth` authenticates and checks the requested estate's `canViewFaultReports`
 before any child query can mount. Crew and custom report readers can enter report routes without general
 management rights. Council/Resident membership and provider-admin claims cannot
@@ -103,25 +101,21 @@ data, identity or component lifetime changes; image requests use responder URLs.
 Fault reports appears in desktop/contextual estate navigation for Manager/Crew/custom report readers,
 including inactive-estate reads. Crew-only accounts land on assigned reports.
 The estate dropdown uses names/capabilities from access context to switch
-assigned report estates, including mixed Manager/Crew memberships. It appears
-on report pages and on Crew estate navigation, without management estate queries
-for Crew or overview access. Outside a report-capable estate, Respond to faults
-provides an entry to an assigned report estate on desktop and mobile overflow.
+assigned report estates, including mixed Manager/Crew memberships. It is the
+header switcher, without management estate queries for Crew. There is no
+global Respond to faults entry.
 
 The detail screen offers Create work order only with both report-read and
 work-order creation capabilities. It links to the creation route with a validated
 sourceReportId. Reports remain selectable after conversion; creating work does
 not alter or invalidate report data. See [work-orders.md](work-orders.md).
 
-ReportEstateSwitcher uses the shared EstateFeatureSwitcher: building icon,
-estate name, chevrons and an accessible Switch estate button, matching work-order
-and management estate navigation without a separate field title. The context dropdown includes all accessible membership estates and labels their
+The header uses the shared EstateFeatureSwitcher (feature `reports`) on these
+pages. The context dropdown includes all accessible membership estates and labels their
 estate-local roles; feature access remains capability-gated. An eligible choice
 keeps the report list; other choices open a permitted management, Crew or resident
 destination. Inactive Resident choices explain reporting unavailability.
-Respond to faults opens the same EstateFeatureChooser Dialog used by Work orders,
-on desktop and mobile, then routes to the chosen estate report list. It does not
-automatically choose the first estate. Report access requires Manager/Crew membership
+Report access requires Manager/Crew membership
 or custom VIEW_FAULT_REPORTS; ownership alone does not grant report authority.
 
 ## Custom estate permissions

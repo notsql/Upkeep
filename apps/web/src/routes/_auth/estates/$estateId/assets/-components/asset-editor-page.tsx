@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -10,11 +9,9 @@ import {
   useCreateAsset,
   useUpdateAsset,
 } from "@/lib/assets";
-import { useEstate } from "@/lib/estates";
 import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 
 export function NewAssetPage({ estateId }: { estateId: string }) {
-  const estate = useEstate(estateId);
   const create = useCreateAsset(estateId);
   const navigate = useNavigate();
   const save = useCallback(
@@ -33,17 +30,8 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
   }, [navigate, estateId]);
   return (
     <PageLayout className="max-w-3xl">
-      <BackLink params={{ estateId }} to="/estates/$estateId/assets">
-        Back to assets
-      </BackLink>
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",
@@ -66,7 +54,6 @@ export function EditAssetPage({
   estateId: string;
   assetId: string;
 }) {
-  const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
   const update = useUpdateAsset(estateId, assetId);
   const navigate = useNavigate();
@@ -89,26 +76,19 @@ export function EditAssetPage({
   }, [navigate, estateId, assetId]);
   return (
     <PageLayout className="max-w-3xl">
-      <BackLink
-        params={{ estateId, assetId }}
-        to="/estates/$estateId/assets/$assetId"
-      >
-        Back to asset
-      </BackLink>
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",
             params: { estateId },
           },
-          { label: "Edit asset" },
+          {
+            label: asset.data?.name ?? "Asset",
+            to: "/estates/$estateId/assets/$assetId",
+            params: { estateId, assetId },
+          },
+          { label: "Edit" },
         ]}
         description="Update equipment details without changing its reference."
         title="Edit asset"

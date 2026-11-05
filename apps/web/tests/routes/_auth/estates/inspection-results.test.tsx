@@ -20,6 +20,8 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 
+const BACK_LINK = /^Back to/u;
+
 // These are server-response examples from the plan, not frontend API type declarations.
 const estateId = "00000000-0000-0000-0000-000000000001";
 const assetId = "00000000-0000-0000-0000-000000000002";
@@ -829,7 +831,8 @@ it.each([
   async (record) => {
     state.result = record;
     await setup(`${orderPath}?sourceInspectionId=${inspectionId}`);
-    await screen.findByRole("link", { name: "Back to inspection" });
+    await screen.findByRole("link", { name: "View inspection" });
+    expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
     expect(
       screen.queryByRole("button", { name: "Create work order" })
     ).toBeNull();

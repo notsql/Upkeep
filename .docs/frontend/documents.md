@@ -81,9 +81,8 @@ disables duplicate submission. Denial/failure stays in the dialog for explicit
 retry. Confirmed deletion announces/toasts `"{filename}" removed` and closes the
 dialog, without claiming immediate physical erasure from R2.
 
-Desktop and estate navigation show Documents based on `canViewDocuments`.
-Outside a document estate, the Documents chooser offers authorized estates.
-The existing feature switcher preserves document context when possible and
+The sidebar shows Records › Documents based on `canViewDocuments`. There is
+no global Documents chooser; the header feature switcher preserves document context when possible and
 supports document-only accounts without management endpoint calls.
 
 Work-order row actions, association dialogs and history are described in

@@ -49,18 +49,12 @@ function EstateReportDetailPage() {
           ) : null
         }
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: access.canViewManagement ? "/estates/$estateId" : undefined,
-            params: { estateId },
-          },
           {
             label: "Fault reports",
             to: "/estates/$estateId/reports",
             params: { estateId },
           },
-          { label: "Details" },
+          { label: report.data?.title ?? "Fault report" },
         ]}
         title="Fault report details"
       />

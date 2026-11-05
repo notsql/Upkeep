@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 
 import { useCallback, useState } from "react";
+import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { useAuthenticatedSession } from "@/lib/access";
@@ -33,27 +34,27 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
 
   return (
     <PageLayout>
-      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-semibold">My reports</h1>
-          <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed wrap-anywhere">
-            {estateName ??
-              (estateId
-                ? "Your reports for the selected estate."
-                : "Your reports across all estates.")}
-          </p>
-        </div>
-        <a
-          className={buttonVariants({ size: "sm" })}
-          href={
-            estateId
-              ? `/reports/new?estateId=${encodeURIComponent(estateId)}`
-              : "/reports/new"
-          }
-        >
-          Report a fault
-        </a>
-      </div>
+      <PageHeader
+        actions={
+          <a
+            className={buttonVariants({ size: "sm" })}
+            href={
+              estateId
+                ? `/reports/new?estateId=${encodeURIComponent(estateId)}`
+                : "/reports/new"
+            }
+          >
+            Report a fault
+          </a>
+        }
+        description={
+          estateName ??
+          (estateId
+            ? "Your reports for the selected estate."
+            : "Your reports across all estates.")
+        }
+        title="My reports"
+      />
       {reports.isPending ? <p role="status">Loading reports…</p> : null}
       {reports.isError ? (
         <Alert role="alert" variant="destructive">

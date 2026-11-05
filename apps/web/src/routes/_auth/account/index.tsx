@@ -16,7 +16,6 @@ function AccountPage() {
   return (
     <PageLayout>
       <PageHeader
-        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Account" }]}
         description="Your profile and sign-in identity."
         title="Your account"
       />

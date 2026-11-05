@@ -7,8 +7,8 @@ API: [asset-categories.md](../api/asset-categories.md).
 `/estates/$estateId/asset-categories` — `src/routes/_auth/estates/$estateId/asset-categories/index.tsx`
 (title "Asset categories") renders `-components/asset-categories-page.tsx`.
 
-Entry: the estate details page shows an outline **Asset categories** link next to **Devices**, under
-the same condition (`estate.owned || estate.canManageInvitationPermissions`).
+Entry: sidebar Administration › **Asset categories**, shown by `canOpenAssetCategories`
+(`owned || canManageInvitationPermissions`); the `_auth` guard 404s otherwise.
 
 ## Data (`src/lib/asset-categories.ts`)
 
@@ -21,7 +21,7 @@ Both throw `estateError(...)` on failure.
 
 ## Screen
 
-`AssetCategoriesPage`: `PageHeader` (breadcrumbs Estates › Estate › Asset categories), then a
+`AssetCategoriesPage`: `PageHeader` (no breadcrumbs; top-level section), then a
 `section` labelled "Asset categories" with:
 
 - summary cards (Fails silently, Missing service interval, Intervals set), described in

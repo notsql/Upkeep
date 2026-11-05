@@ -41,15 +41,6 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
   return (
     <PageLayout className="space-y-6">
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
-          { label: "Assets" },
-        ]}
         description="Browse asset context and record inspections."
         title="Assets"
       />

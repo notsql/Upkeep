@@ -22,9 +22,11 @@ field. Selected assets survive searches and can be removed. The detail footer
 shows the creator display name and creation time; unavailable names use Name
 unavailable instead of exposing the account ID.
 
-List/create/detail breadcrumbs include Estates → estate name → Work orders.
-The estate name links to `/estates/$estateId` only with `canViewManagement`;
-Crew also link to their read-only estate overview via canViewEstateDetails.
+The list has no breadcrumbs (top-level section). Create shows
+`Work orders › Create`; detail shows `Work orders › <reference>`. The two
+dead-end create-from-inspection screens (the inspection already has a work
+order; the inspection did not fail) show an outline "View inspection" link to
+the source inspection. No back links.
 
 The list's shadcn Select offers All priorities, Low, Medium, High and Urgent.
 Search reference accepts a partial visible reference, such as MG-W0001 (max 200
@@ -53,17 +55,15 @@ queries. Its Cancel button returns to the asset history without creating work.
 
 The auth route checks work-order capabilities before the generic management
 guard. Crew can enter list/detail, but `/new` is denied and creation actions are
-hidden because `canCreateWorkOrders` is false. AppNavigation exposes
-Work orders locally or as an entry to an authorized estate. WorkOrderEstateSwitcher
-uses labels, estate-local roles and capabilities from access context. It includes
+hidden because `canCreateWorkOrders` is false. The sidebar shows Operations › Work orders
+with `canOpenWorkOrders`. The header `EstateFeatureSwitcher` (feature
+`work-orders`) uses labels, estate-local roles and capabilities from access context. It includes
 all membership estates and retains the work-order list when permitted in the
 chosen estate; otherwise it opens that estate's allowed management, Crew or
 resident destination. Crew do not request management estate lists. The trigger
 uses the normal building icon, estate name and chevrons, without an additional
-Work-order estate label. Outside an authorized estate, the global Work orders
-button opens the shared EstateFeatureChooser, a shadcn Dialog that asks the user to choose
-an estate. It never silently opens the first permitted estate. The same chooser
-is available from mobile overflow, and filters choices using canViewWorkOrders.
+Work-order estate label. There is no global Work orders entry or estate chooser
+dialog; users pick an estate in the header switcher.
 Crew details render returned asset reference/location, linking assets only with
 canViewAssets and source reports only with canViewFaultReports.
 
@@ -136,8 +136,8 @@ belong to follow-up stories.
 4. Use a Crew account to read and switch authorized estate work-order lists.
    Create actions must be absent and direct /new access must be denied. Non-owner Managers
    can link an active asset without gaining access to the asset register.
-5. As an owner/Manager, use the estate-name breadcrumb from list, create and
-   detail to return to the overview. Crew can use the same breadcrumb for their read-only overview.
+5. From create and detail, use the Work orders breadcrumb to return to the
+   list; the sidebar Overview returns to the estate overview.
 6. Apply a priority and partial reference search together. Check Next/First page,
    refresh and browser back retain criteria; Clear filters restores all results.
    A nonexistent reference should say No matching work orders.
@@ -154,13 +154,10 @@ first be submitted by a resident assigned to that estate through Report a fault.
 Existing owners receive their MANAGER membership through the owner backfill
 migration documented in [access.md](../api/access.md).
 
-Work orders uses the Wrench navigation icon; fault reports/Respond to faults use
-ClipboardList. Global chooser buttons explicitly match sidebar-link alignment,
-height, padding and spacing so shadcn Button defaults cannot center them.
-EstateFeatureSwitcher is shared by WorkOrderEstateSwitcher and
-ReportEstateSwitcher. EstateFeatureChooser handles both global destinations,
-filtering by their existing independent capabilities and routing to the chosen
-feature list. Neither entry picks the first estate automatically.
+Work orders uses the Wrench navigation icon; Fault reports uses ClipboardList.
+The header's single `EstateFeatureSwitcher` serves every feature (the
+WorkOrderEstateSwitcher/ReportEstateSwitcher wrappers and EstateFeatureChooser
+were removed).
 
 ## Column sorting
 

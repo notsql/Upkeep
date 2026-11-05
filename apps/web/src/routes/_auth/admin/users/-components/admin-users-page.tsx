@@ -389,7 +389,6 @@ export function AdminUsersPage() {
               </p>
             </Card>
           }
-          breadcrumbs={[{ label: "Home", to: "/" }, { label: "Admin users" }]}
           description="Manage each member's role and estate access. Changes save automatically."
           title="User roles"
         />

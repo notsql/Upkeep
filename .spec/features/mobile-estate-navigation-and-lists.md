@@ -14,6 +14,11 @@ scrolling to connect an entry with its details or actions.
 
 ### Estate navigation
 
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md). The mobile
+> estate section menu (`estate-section-menu.tsx`) and `EstateNavigation` were
+> deleted; mobile uses the same sidebar as a Sheet. The responsive lists below
+> are still current.
+
 - Use one permission-filtered destination order on desktop and mobile:
   Overview, Assets, Work orders, Fault reports, Readings, Documents,
   Estate members, Roles.
@@ -122,6 +127,10 @@ Existing feature hooks and generated contract remain authoritative.
   identity was injected.
 
 ## Resident reporting follow-up — built and verified 2026-10-28
+
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md) for
+> navigation: global resident links and the chooser dialog were removed; residents
+> use the resident sidebar and header switcher.
 
 The user reported that global Report a fault/My reports links silently leave a
 Manager estate for an unrelated Resident estate. Before this follow-up, navigation showed these

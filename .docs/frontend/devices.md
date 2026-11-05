@@ -18,7 +18,7 @@ Linked as "Devices" from the estate page's actions for Managers
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `EstateDevicesPage` (`devices/-components/estate-devices-page.tsx`) | PageHeader (Estates › Estate › Devices), "Refreshes every 60 seconds while this page is open." A table labelled "Devices" in the server's order (Offline, Awaiting first reading, Online): Device (`identifier`, `model`), Asset (link "`assetName`" to the asset page, `assetReference`, "Retired" badge when `assetRetired`), Location (path from `useLocations`, or "Location unavailable"), Last seen (`toLocaleString` in a `<time>`, or "Never"), Status (`DeviceStatusBadge`). Loading: "Loading devices…"; empty: "No devices are registered in this estate yet."; errors as a destructive Alert. | `Table`, `Badge`, `Alert` |
+| `EstateDevicesPage` (`devices/-components/estate-devices-page.tsx`) | PageHeader (no breadcrumbs; sidebar Assets › Devices, `canOpenDevices`), "Refreshes every 60 seconds while this page is open." A table labelled "Devices" in the server's order (Offline, Awaiting first reading, Online): Device (`identifier`, `model`), Asset (link "`assetName`" to the asset page, `assetReference`, "Retired" badge when `assetRetired`), Location (path from `useLocations`, or "Location unavailable"), Last seen (`toLocaleString` in a `<time>`, or "Never"), Status (`DeviceStatusBadge`). Loading: "Loading devices…"; empty: "No devices are registered in this estate yet."; errors as a destructive Alert. | `Table`, `Badge`, `Alert` |
 | `DeviceStatusBadge` (`components/device-status-badge.tsx`, shared) | "Online" (secondary), "Offline" (destructive), "Awaiting first reading" (outline), "Deactivated" (secondary, ID-45). | `Badge` |
 
 All four files are in `routes/_auth/estates/$estateId/assets/$assetId/-components/`.
@@ -45,7 +45,7 @@ credential and returns to the asset. Cancel sends nothing.
 
 Registration route: `/estates/$estateId/assets/$assetId/devices/new`, implemented
 by `devices/new/index.tsx` and its adjacent `-components/new-device-page.tsx`.
-`NewDevicePage` uses PageHeader, named estate/asset breadcrumbs and a form surface.
+`NewDevicePage` uses PageHeader, breadcrumbs `Assets › <asset name> › Register device` and a form surface.
 It loads `useEstate` and `useAsset`, permits registration only for the owner on an
 active estate/asset, and shows loading/errors or a denial for direct links.
 `useRegisterDevice` saves through the existing endpoint; success shows the

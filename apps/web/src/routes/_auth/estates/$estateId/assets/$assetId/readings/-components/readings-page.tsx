@@ -11,14 +11,12 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { useCallback } from "react";
-import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReadingCards } from "@/components/readings/reading-cards";
 import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { useAsset } from "@/lib/assets";
 import { deviceMetrics } from "@/lib/devices";
-import { useEstate } from "@/lib/estates";
 import {
   type AssetReading,
   flagLabel,
@@ -80,7 +78,6 @@ export function ReadingsPage({
   onFiltersChange: (filters: ReadingFilters) => void;
 }) {
   const mobile = useMobile();
-  const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
   const readings = useReadings(estateId, assetId, filters);
   const page = filters.page ?? 0;
@@ -96,20 +93,8 @@ export function ReadingsPage({
   );
   return (
     <PageLayout className="space-y-6">
-      <BackLink
-        params={{ estateId, assetId }}
-        to="/estates/$estateId/assets/$assetId"
-      >
-        Back to asset
-      </BackLink>
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",

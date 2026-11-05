@@ -1,5 +1,10 @@
 import { act, fireEvent } from "@testing-library/react";
-import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { MyReportsPage as Page } from "@/routes/_auth/reports/-components/my-reports-page";
@@ -243,4 +248,16 @@ it("preserves the selected estate when opening a report", async () => {
   expect(link.getAttribute("href")).toBe(
     `/reports/${report.id}?estateId=maple`
   );
+});
+
+it("puts Report a fault in the page header beside the level-1 heading", async () => {
+  get.mockResolvedValue({ data: { items: [] } });
+  renderWithProviders(<Page />);
+  const heading = screen.getByRole("heading", { level: 1, name: "My reports" });
+  const header = heading.closest("header");
+  if (!header) {
+    throw new Error("My reports heading is not inside a page header");
+  }
+  within(header).getByRole("link", { name: REPORT_A_FAULT });
+  await screen.findByText(NO_REPORTS);
 });

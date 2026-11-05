@@ -2,7 +2,6 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
@@ -69,20 +68,8 @@ export function ReplaceDevicePage({
   const title = device ? `Replace ${device.identifier}` : "Replace device";
   return (
     <PageLayout className="max-w-3xl">
-      <BackLink
-        params={{ estateId, assetId }}
-        to="/estates/$estateId/assets/$assetId"
-      >
-        Back to asset
-      </BackLink>
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",

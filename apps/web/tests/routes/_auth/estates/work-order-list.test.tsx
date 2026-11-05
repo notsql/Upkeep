@@ -20,6 +20,8 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 
+const BACK_LINK = /^Back to/u;
+
 vi.mock("@/routes/__root", async () => {
   const { createRootRouteWithContext, Outlet } = await import(
     "@tanstack/react-router"
@@ -207,8 +209,15 @@ it("keeps the work-order table mounted while a new sort is loading", async () =>
   expect(screen.queryByRole("link", { name: "TEST-W0001" })).toBeNull();
 });
 
-it.each(["", "/new", `/${order.id}`])(
-  "links the estate overview from work-order breadcrumbs on %s",
+it("shows no breadcrumbs or back link on the top-level work order list", async () => {
+  await setup();
+  await screen.findByRole("heading", { level: 1, name: "Work orders" });
+  expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
+  expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
+});
+
+it.each(["/new", `/${order.id}`])(
+  "starts work-order breadcrumbs at the section on %s",
   async (suffix) => {
     await setup(basePath + suffix);
     const breadcrumbs = await screen.findByRole("navigation", {
@@ -216,25 +225,12 @@ it.each(["", "/new", `/${order.id}`])(
     });
     expect(
       within(breadcrumbs)
-        .getByRole("link", { name: "Testing" })
-        .getAttribute("href")
-    ).toBe(`/estates/${estateId}`);
+        .getAllByRole("link")
+        .map((link) => [link.textContent, link.getAttribute("href")])
+    ).toEqual([["Work orders", basePath]]);
+    expect(within(breadcrumbs).queryByText("Testing")).toBeNull();
   }
 );
-
-it("links the estate breadcrumb for Crew with read-only estate access", async () => {
-  state.crew = true;
-  await setup();
-  const breadcrumbs = await screen.findByRole("navigation", {
-    name: "Breadcrumbs",
-  });
-  within(breadcrumbs).getByText("Testing");
-  expect(
-    within(breadcrumbs)
-      .getByRole("link", { name: "Testing" })
-      .getAttribute("href")
-  ).toBe(`/estates/${estateId}`);
-});
 
 it("applies priority and reference to the server query and URL and resets pagination", async () => {
   const { router } = await setup(`${basePath}?cursor=old-page`);

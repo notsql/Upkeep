@@ -20,7 +20,7 @@ are relative to `apps/web/src/`; route folders below are under
 | `$assetId/index.tsx` | `/estates/$estateId/assets/$assetId` | `estateId`, `assetId` | "Asset details" | `AssetDetailsPage` |
 | `$assetId/edit/index.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
 
-Entry point: Assets section beneath Locations on estate details. Owners have View assets and, for active estates, Register asset. Owners also get a "Failure risk" link to `/estates/$estateId/failure-risk` (see [failure-risk.md](failure-risk.md)). Details, and asset creation, have one `BackLink` "Back to assets" to the register (estate is reached via breadcrumbs); asset edit has "Back to asset". See `BackLink` in [design-system.md](design-system.md).
+Entry point: sidebar Assets › Assets (`canOpenAssets`: `canViewAssets || canViewInspectionResults`); Register asset is the register's `PageHeader` action. The register has no breadcrumbs; deeper pages use section-first breadcrumbs (`Assets › <asset name>`, `Assets › Register asset`, `Assets › <asset name> › Edit`). No back links; see the page header convention in [design-system.md](design-system.md).
 
 ## Screens and components
 
@@ -155,8 +155,8 @@ final authority for date validation.
 
 ## Dashboard presentation
 
-Register/detail/editor screens share `PageLayout` and `PageHeader` breadcrumbs
-through Estates / the actual estate name / Assets. The register shows a compact desktop filter grid and a named Assets table with
+Register/detail/editor screens share `PageLayout` and `PageHeader`; deep
+pages' breadcrumbs start at Assets. The register shows a compact desktop filter grid and a named Assets table with
 a focusable overflow region. Below 768px it renders cards retaining all six
 fields. Each mobile card is one routed link labelled with its asset name and
 reference; tapping any part, including location/condition/status, opens details.
@@ -187,9 +187,7 @@ Register, detail and create/edit screens read `useEstate(estateId)` using
 This existing query is cached and session-gated; Estate is a loading fallback. For an inactive estate, Register asset is hidden and the screen explains
 that existing assets remain available. Backend write restrictions are unchanged.
 
-Creating, retiring or restoring an asset and recording a condition assessment also
-invalidate `["estates", userId, "dashboard"]` so Home reflects operational changes.
-See [dashboard.md](dashboard.md).
+There is no dashboard query to invalidate (the portfolio Home was removed).
 
 ## Register sorting
 

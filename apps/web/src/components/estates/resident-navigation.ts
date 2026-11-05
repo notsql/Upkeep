@@ -1,29 +1,46 @@
 import type { components } from "@proj/api/schema";
-import { ClipboardList, ClipboardPenLine } from "lucide-react";
+import { ClipboardList, ClipboardPenLine, LayoutDashboard } from "lucide-react";
 import type { NavigationItem } from "@/components/app-navigation";
 
 const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/u;
 
+/** The resident sidebar for the selected resident estate. */
 export function residentNavigation(
   access: components["schemas"]["AppAccessResponse"],
   estateId: string | undefined,
   pathname: string
-): { local: NavigationItem[]; global: NavigationItem[] } {
-  const residents = access.estates.filter(
-    (estate) => estate.role === "RESIDENT"
-  );
-  const active = residents.filter((estate) =>
-    access.residentEstates.some(
-      (assignment) => assignment.id === estate.estateId
+): NavigationItem[] {
+  if (
+    !(
+      estateId &&
+      access.estates.some(
+        (estate) => estate.estateId === estateId && estate.role === "RESIDENT"
+      )
     )
-  );
-  const reporting: NavigationItem = {
-    label: "Report a fault",
-    to: "/reports/new",
-    icon: ClipboardPenLine,
-    active: pathname.startsWith("/reports/new"),
-  };
-  const history: NavigationItem = {
+  ) {
+    return [];
+  }
+  const items: NavigationItem[] = [];
+  // Mixed resident + staff accounts follow the staff redirect at `/`.
+  if (!access.canEnterWorkspace) {
+    items.push({
+      label: "Dashboard",
+      to: "/",
+      icon: LayoutDashboard,
+      active: pathname === "/",
+      search: { estateId },
+    });
+  }
+  if (access.residentEstates.some((estate) => estate.id === estateId)) {
+    items.push({
+      label: "Report a fault",
+      to: "/reports/new",
+      icon: ClipboardPenLine,
+      active: pathname.startsWith("/reports/new"),
+      search: { estateId },
+    });
+  }
+  items.push({
     label: "My reports",
     to: "/reports",
     icon: ClipboardList,
@@ -31,35 +48,7 @@ export function residentNavigation(
       pathname === "/reports" ||
       (REPORT_DETAIL_PATH.test(pathname) &&
         !pathname.startsWith("/reports/new")),
-  };
-  if (estateId) {
-    if (!residents.some((estate) => estate.estateId === estateId)) {
-      return { local: [], global: [] };
-    }
-    const local: NavigationItem[] = [{ ...history, search: { estateId } }];
-    if (active.some((estate) => estate.estateId === estateId)) {
-      local.push({ ...reporting, search: { estateId } });
-    }
-    return { local, global: [] };
-  }
-  const global: NavigationItem[] = [];
-  if (active.length) {
-    global.push({
-      ...reporting,
-      search:
-        active.length === 1 ? { estateId: active[0].estateId } : undefined,
-      chooseEstate: active.length > 1 ? "report-creation" : undefined,
-    });
-  }
-  if (residents.length) {
-    global.push({
-      ...history,
-      search:
-        residents.length === 1
-          ? { estateId: residents[0].estateId }
-          : undefined,
-      chooseEstate: residents.length > 1 ? "resident-reports" : undefined,
-    });
-  }
-  return { local: [], global };
+    search: { estateId },
+  });
+  return items;
 }

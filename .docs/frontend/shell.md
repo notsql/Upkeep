@@ -16,154 +16,186 @@ below relies on. Paths are relative to `apps/web/src/`.
 
 ID-60 adds `/estates/$estateId/readings`, checked before general management
 fallbacks using `canViewReadings`. Owner/Manager/Crew may browse; unavailable
-estate/role URLs render Page not found. Estate navigation uses the same
-capability and switching preserves Readings when permitted. See
-[readings.md](readings.md). The `/estates/$estateId/readings/new` route also
-requires `canRecordReadings`; bookmarked read-only/inactive entry URLs return
-Page not found before loading the form.
+estate/role URLs render Page not found. Switching estates preserves Readings
+when permitted. See [readings.md](readings.md). The
+`/estates/$estateId/readings/new` route also requires `canRecordReadings`;
+bookmarked read-only/inactive entry URLs return Page not found before loading
+the form.
 
 | File | URL | Guard | Screen |
 | --- | --- | --- | --- |
-| `routes/index.tsx` | `/` | none | Home: `routes/-components/home-page.tsx`, public introduction/authentication and secondary System status; signed-in `workspace-home.tsx` shows portfolio summaries and attention actions (see [dashboard.md](dashboard.md)). |
+| `routes/index.tsx` | `/` | none | Signed out: public `HomePage` (`routes/-components/home-page.tsx`). Signed in: redirects (below), except resident-only accounts, who get `ResidentDashboard` (see [resident-dashboard.md](resident-dashboard.md)). |
 
-The public home content has one Create account action. The header omits Register
-and uses the same Sign in wording as the home action.
+The public home content has one Create account action and a secondary System
+status card (`useHealth()` from `lib/health.ts`: key `["health"]`,
+`GET /health`). The header omits Register and uses the same Sign in wording.
 
-Public Home uses `useHealth()` from `lib/health.ts`: key `["health"]`,
-`GET /health`, real `ok`/`database` availability with loading/error feedback.
-Signed-in Home mounts the portfolio dashboard described in [dashboard.md](dashboard.md).
-Home awaits Spring access in `beforeLoad`. Resident-only accounts redirect to `/reports/new`; unassigned accounts can create their first estate or accept an invitation. Their Home state offers Create estate and Report a fault without mounting dashboard queries. Mixed accounts retain their management dashboard. Direct `HomePage` rendering waits for access before mounting management queries. Navigation uses target-estate capabilities and shows My reports only with a current Resident membership.
-It uses the authenticated summary endpoint and a separate compact invitation
-query. Estate browsing, creation and invitation acceptance remain on Estates.
-Public auth remains Sign in/Create account.
+Signed-in `/` awaits Spring access in `beforeLoad` (`getSessionAccess`, seeding
+`[userId, "app-access"]`) and decides, in order:
+
+1. resident-only (`hasResidentMembership && !canEnterWorkspace`): no redirect;
+   `HomePage` renders `ResidentDashboard`;
+2. report-only (a `canViewFaultReports` estate, no `canViewManagement` estate):
+   `/estates/<id>/reports`;
+3. roles/invitations-only: `/estates/<id>/roles` or `/estates/<id>/council`;
+4. exactly one membership (`access.estates.length === 1`): that estate's
+   `estateDestination(estate, "management")`;
+5. otherwise (0 or 2+): `/estates`.
+
+`HomePage` still has an unassigned-account branch (no workspace, not resident
+only): "Report a fault" and, with `canCreateEstate`, "Create estate". There is
+no portfolio dashboard; `/estates` is the single "All estates" landing
+(directory + pending invitations, see [estates.md](estates.md)).
 
 ## Shell and navigation
 
 `components/app-shell.tsx` renders a skip-to-content link (an `<a>` styled with
 `buttonVariants`, `sr-only focus:not-sr-only`) as the first focusable element,
 targeting the focusable `#main-content` wrapper. Route screens own their main
-landmark (they render `PageLayout`, a `<main>`), so the shell does not use
-`SidebarInset` (also a `<main>`); a plain flex `div` takes its place. While AuthKit
-is loading or signed out, the shell is skip link + `Header` + content with no
-`SidebarProvider` and no sidebar. Signed in, the sidebar appears **only inside an
-estate** (`/estates/$estateId/...`; `isEstateScoped` in `app-navigation.tsx`, which
-matches `/estates/<id>` with `<id>` other than `new`). There it is `SidebarProvider` >
-`AppNavigation` (the `Sidebar`) + content column (`Header` with a `SidebarTrigger`
-passed as `start`, then `#main-content` holding `EstateNavigation` and the page), and
-the account menu carries no navigation links (no duplication of the sidebar).
-Every other signed-in page (`/`, `/estates`, `/estates/new`, `/account`, `/admin/...`,
-`/reports/...`) renders full width with no `SidebarProvider`, sidebar or
-`SidebarTrigger` - skip link + `WorkspaceHeader` (in `app-shell.tsx`) + content.
-`WorkspaceHeader` passes `menu={<WorkspaceMenuItems onChooseEstate={...} />}` to
-`Header`, which puts the sidebar's global links (same `useNavigation` data and
-permission rules: Home, Estates, Admin users, scoped Roles/invitations, Work orders,
-Documents, Respond to faults, resident Report a fault / My reports) as
-`DropdownMenuItem`s at the top of the account menu, with `aria-current="page"` on the
-active link. Settings is left out (the menu already has it). Entries that need an
-estate first (Work orders, Documents, Respond to faults, multi-estate resident
-entries) are `aria-haspopup="dialog"` items: selecting one closes the menu and
-`WorkspaceHeader` opens the same `EstateFeatureChooser` dialog the sidebar uses.
-`Header` is the shared sticky top bar with optional leading slot, brand (Building2 mark in a primary-tinted square plus the UpKeep wordmark, linking to `/`), theme
-toggle and auth controls.
+landmark (`PageLayout`, a `<main>`), so the shell uses a plain flex `div`
+instead of `SidebarInset`. Without a sidebar the shell is skip link + `Header` +
+content. With one it is `SidebarProvider` > `AppNavigation` + a column holding
+`Header` (with `SidebarTrigger` as `start`) and `#main-content`.
 
-`components/app-navigation.tsx` subscribes to the router pathname and selected resident estate search field rather than
-the whole location and uses the session-gated, cached `useEstate(estateId)` query.
-Estates is available to every authenticated account, including Residents, Crew and unassigned users, so all can reach Create estate. `canEnterWorkspace` still controls the workspace Home. Resident-only accounts see Estates (pending invitations show on /estates), with reporting actions scoped to their selected Resident estate. Unassigned accounts retain estate creation/invitation entry without resident-only navigation. Mixed accounts use each selected estate's database role; global Home/Estates retains explicit resident reporting entry. My reports is hidden without a current Resident membership, including in the sidebar; existing owned history remains readable by direct URL after membership deletion. Platform admin capability remains false. Account is reached through Settings in the profile menu.
+The sidebar is shown, signed in, when `hasSidebar(pathname, residentOnly)` (in
+`components/app-navigation.tsx`) is true: `/estates/$estateId/**` (id not
+`new`), `/reports` and `/reports/**`, and `/` for resident-only accounts. It is
+not shown on `/estates`, `/estates/new`, `/account`, `/admin/**`,
+`/invitations` or the staff `/`.
 
-Target-estate capabilities control Overview, Assets and Council. The estate detail query mounts only after the projection grants management access; the context switcher uses access context for all roles. Assets requires `canViewAssets`; Council requires `canInviteMembers || canManageInvitationPermissions`. `/estates/new` has no estate context.
+### Header
 
-`AppNavigation` renders the stock shadcn `Sidebar` (`SidebarHeader` brand link,
-`SidebarContent` holding `<nav aria-label="Workspace navigation">` with a
-"Workspace" `SidebarGroup` of global links and, inside an estate, a second group
-with the estate switcher and local links; `SidebarFooter` tagline). At >=768px it
-is an off-canvas collapsible rail toggled by the top-bar `SidebarTrigger`
-("Toggle Sidebar") or Cmd/Ctrl+B. Below 768px (`@proj/ui/hooks/use-mobile`, which
-reads `window.innerWidth`) the same content opens as a `Sheet`; following a link or
-an estate-chooser button closes it. There is no bottom tab bar. Management-capable
-accounts see Home, Estates, Settings, then admin/scoped/chooser and
-resident entries; resident-only/unassigned accounts get Estates and resident entries. Sign out is not in the sidebar; it lives only in the header profile menu. Each entry is a `SidebarMenuButton` (rendering the router
-`Link`) with `isActive` and `aria-current="page"`. Reporting is shown in the selected Resident estate's section menu, or in global navigation when no estate is selected. EstateNavigation shows the authorized estate switcher and a compact section menu on mobile. These are routed links, not ARIA tabs. Desktop sidebar mappings remain estate-aware. The header
-has no estate selector. Context comes from the route, named breadcrumbs, headings
-and sidebar. The obsolete header `EstateSwitcher` and its remembered-estate
-storage logic remain removed. Navigation links use exact router matching
-with search excluded, so parent links do not acquire the router's automatic
-active state on child screens. The explicit destination state keeps Assets
-selected on asset details. Links carry `aria-current="page"`; decorative icons
-are hidden. Overview remains selected when visiting section anchors such as
-`#locations`; there is no separate Locations navigation item.
+`components/header.tsx` is sticky and identical on mobile and desktop. Left:
+optional `start` slot (the `SidebarTrigger`), the "UpKeep" brand link to `/`
+(inside `<nav aria-label="Header navigation">`), and, when signed in, a "/"
+separator then the **estate switcher**. Right: `ThemeToggle` and `AuthButton`.
 
-EstateContextSwitcher, WorkOrderEstateSwitcher and ReportEstateSwitcher share
-EstateFeatureSwitcher (shadcn Button/DropdownMenu). Choices come from
-GET /access/context, key [userId, "app-access"], with no management estate-list
-request. After the estate choices, a separator, then "All estates" (`/estates`)
-and, when `canCreateEstate`, "Create estate" (`/estates/new`). The trigger and choices show estate name plus estate-local Manager,
-Crew, Council, Member or Resident role, or the assigned custom-role name.
-Even a single estate retains the dropdown, including role-only and
-invitation-only custom contexts.
-Resident-facing navigation also has context, using URL estateId or the sole
-active assignment; multiple unselected assignments show Choose estate.
-The estate menu caps height at the smaller of 20rem and the positioning
-primitive's available height. Internal scrolling keeps every choice reachable
-when the sidebar switcher is near an edge in a short landscape viewport.
+The switcher is `components/estates/estate-feature-switcher.tsx` (shadcn
+ghost `Button` + `DropdownMenu`), used directly; the old
+`EstateContextSwitcher`, `WorkOrderEstateSwitcher`, `ReportEstateSwitcher` and
+`EstateFeatureChooser` wrappers are deleted. The header derives `feature` from
+the pathname: `/reports/new` -> `report-creation`, other `/reports*` ->
+`resident`, `/estates/<id>/<reports|work-orders|documents|readings>` -> that
+section, else `management`. It lists every `access.estates` entry for
+`canEnterWorkspace` accounts and only `RESIDENT` memberships otherwise.
 
-All accessible membership estates appear. Selecting one preserves report/work-order
-context when allowed, otherwise opens an authorized overview, work-order, fault-report,
-role or invitation screen; Residents open /reports/new?estateId=<id>.
-An estate with no feature capability returns to Estates.
-Other destinations clear search/hash. Inactive Resident
-choices are disabled with Reporting unavailable, using residentEstates from access
-context to determine active reporting assignments. Each selected item has a check;
-account changes and access failures hide previous choices. Feature links remain
-controlled by the selected estate's own capabilities. Estates remains the full
-searchable directory. There is no remembered-selection storage or new API.
+- Trigger: current estate name + role label (Manager, Crew, Council, Member,
+  Resident or custom-role name). Outside an estate (`/estates`,
+  `/estates/new`, `/account`, `/admin/users`, `/invitations`), or when the URL
+  estate is not accessible, it reads **"Select estate"**; disabled until
+  access context loads.
+- Menu: each estate with role and a check on the current one; inactive
+  Resident choices disabled with "Reporting unavailable" (from
+  `residentEstates`); separator; "All estates" -> `/estates`; "Create estate"
+  -> `/estates/new` only when `canCreateEstate`. Height caps at
+  min(20rem, available height) with internal scrolling.
+- Current estate comes from the URL only (`useCurrentEstate()` in
+  `app-navigation.tsx`): the `/estates/<id>` segment, or on resident pages the
+  `estateId` search param, else the sole resident estate. No storage.
+- Choosing an estate goes to `estateDestination(estate, feature)` from
+  `lib/estate-destinations.ts`: stay on the same feature when permitted, else
+  overview, else work orders / fault reports / documents / roles / council,
+  else `/estates`; Residents go to `/reports` or `/reports/new` with
+  `estateId`. Choices come from `GET /access/context` (`[userId, "app-access"]`).
 
-`components/theme-toggle.tsx` is a shadcn Button using next-themes: light default,
-saved light/dark preferences, and a label naming the next mode. It is disabled
-before client mount to avoid a server/client theme mismatch. `AuthButton` shows a circular profile button at the top right for signed-in
-users. Its shadcn DropdownMenu displays their email, Settings (`/account`) and
-Sign out (`/logout`); this menu is the only place to sign out, on every viewport. Settings is also a sidebar link. Outside an estate the menu also carries the global workspace links (above).
+`AuthButton` (`components/auth-button.tsx`) is a circular profile button with a
+shadcn `DropdownMenu`: email label, "Account settings" -> `/account`,
+"Admin users" -> `/admin/users` only when `canAccessPlatformAdmin`, "Sign out"
+-> `/logout`. Nothing else; it is the only place to sign out.
+
+`components/theme-toggle.tsx` is a shadcn Button using next-themes (light
+default, label names the next mode, disabled before mount).
+
+### Sidebar (estate scope)
+
+`AppNavigation` renders the shadcn `Sidebar`: `SidebarContent` with
+`<nav aria-label="Sidebar">`, then a `SidebarFooter` tagline ("Your estates,
+organised."). No brand, no switcher, no "Workspace" group, no cross-estate
+entries. Labelled groups are `SidebarGroup role="group"` with an `aria-label`;
+a group with no visible items is not rendered.
+
+| Group | Item | Route under `/estates/$estateId` | Predicate (`lib/estate-destinations.ts`) |
+| --- | --- | --- | --- |
+| (unlabelled) | Overview | `` (exact match) | `canOpenOverview`: `canViewEstateDetails ?? canViewManagement` |
+| Operations | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
+| Operations | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
+| Operations | Inspections | `/inspections` | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
+| Assets | Assets | `/assets` | `canOpenAssets`: `canViewAssets \|\| canViewInspectionResults` |
+| Assets | Devices | `/devices` | `canOpenDevices`: `owned \|\| canManageInvitationPermissions` |
+| Assets | Readings | `/readings` | `canOpenReadings`: `canViewReadings` |
+| Assets | Device monitoring | `/sensors` | `canOpenSensors`: `owned`, or `canViewManagement` with role MANAGER/COUNCIL, or MEMBER and platform admin |
+| Assets | Failure risk | `/failure-risk` | `canOpenFailureRisk`: `owned` |
+| Records | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
+| Administration | Members | `/council` | `canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions` |
+| Administration | Roles | `/roles` | `canOpenRoles`: `canViewEstateRoles` |
+| Administration | Asset categories | `/asset-categories` | `canOpenAssetCategories`: `owned \|\| canManageInvitationPermissions` |
+| Administration | Estate settings | `/edit` | `canOpenEstateSettings`: `owned \|\| canManageEstate` |
+
+`owned` comes from `useEstate(estateId)` (`EstateResponse.owned`, key
+`["estates", userId, "details", estateId]`), mounted only when
+`canViewManagement`; owner-only items stay hidden until it resolves. Access
+loading or errored: no items. Role- or invitation-only estates show only
+Administration > Roles/Members.
+
+Active state: an item is active when its route equals or prefixes the pathname
+(nested pages keep their section), Overview by exact match; active links get
+`isActive` and `aria-current="page"`. Links use
+`activeOptions={{ exact: true, includeSearch: false }}`; icons are
+`aria-hidden`.
+
+At >=768px the sidebar is an off-canvas collapsible rail toggled by the header
+`SidebarTrigger` ("Toggle Sidebar") or Cmd/Ctrl+B. Below 768px
+(`@proj/ui/hooks/use-mobile`) the same sidebar opens as a `Sheet` from the same
+trigger and closes when a link is followed. There is **no separate mobile
+navigation**: `EstateNavigation` and `components/estate-section-menu.tsx` are
+deleted, and there is no bottom bar.
+
+### Shared destination predicates and guards
+
+`lib/estate-destinations.ts` exports one pure `canOpen*` function per sidebar
+row (inputs: the `EstateAccessResponse`, optional `owned`, optional
+`canAccessPlatformAdmin`), plus `estateDestination` and the `EstateFeature`
+type. The sidebar and `routes/_auth/route.tsx` both import them; neither
+restates a rule (see `.spec/decisions/0043-*`).
+
+In `_auth/route.tsx`, `guardDestination` handles the section-level URLs
+(exactly `/estates/<id>/<section>`):
+
+- `/assets` (list) 404s unless `canOpenAssets`. Asset children
+  (`/assets/$assetId/**`) keep `guardInspectionContext`.
+- `/devices`, `/asset-categories`, `/inspections`, `/sensors`,
+  `/failure-risk`, `/edit` use `OWNER_GATED` predicates. If access flags alone
+  do not open the page, the guard loads ownership with
+  `queryClient.ensureQueryData` on `["estates", userId, "details", estateId]`
+  (server function `getSessionEstate`, i.e. `GET /estates/{id}`); a failed
+  fetch counts as not owned. Otherwise `notFound()`. There is no fallback to
+  `canViewManagement`.
 
 `components/not-found-page.tsx` is the router's default not-found screen, with
-PageHeader and Go to home recovery navigation. The pending screen remains Loader.
+PageHeader and Go to home recovery navigation.
 
-See [design-system.md](design-system.md) for exact tokens, layouts, shared header
-and form patterns, mobile safe-area spacing and manual verification checklist.
-
-## Estate section navigation on mobile
-
-Desktop estate destinations and the mobile section menu share this order,
-filtered by existing per-estate capabilities: Overview, Assets, Work orders,
-Fault reports, Readings, Documents, Estate members, Roles. Overview is first
-when the account may view it; no role gains new access from this order.
-
-`components/estate-section-menu.tsx` replaces the wrapping mobile link rows with
-an existing shadcn Button/DropdownMenu. The full-width trigger announces
-`Estate section: <current section>` and shows its icon, name and chevron.
-`Estate sections` is a scrollable menu with real routed links, a selected check
-and `aria-current="page"`. Nested pages retain the parent section; selecting a
-link closes the menu. With no authorized section, the section control is absent.
-The separate estate switcher above it still shows name/role and preserves its
-existing permission-aware estate-switching fallbacks. The sidebar keeps the full list;
-the mobile estate navigation (`EstateNavigation`, Tailwind utilities, `md:hidden`)
-mounts only below 768px. Resizing to desktop
-unmounts the mobile navigation and closes any open section popup.
+See [design-system.md](design-system.md) for tokens, layouts and the page
+header convention.
 
 ## Resident reporting context
 
-`components/estates/resident-navigation.ts` derives reporting destinations from
-current access context, independently of WorkOS role claims. Selecting a staff
-estate hides Report a fault/My reports in the sidebar. Selecting a Resident estate adds My reports then Report a fault to its
-local sidebar/section menu; every link includes `estateId`. Creation is shown
-only when the selected estate is in active `residentEstates`; inactive resident
-memberships retain history.
+`components/estates/resident-navigation.ts` builds the resident sidebar (one
+unlabelled group) when the current estate is a `RESIDENT` membership, from
+access context only:
 
-Outside a selected estate, a sole eligible Resident estate is linked explicitly
-by ID. Multiple eligible estates make the reporting action open the existing
-EstateFeatureChooser dialog, now also supporting report-creation/resident-reports.
-Only resident choices appear; creation choices must be active. Choosing one
-opens the requested screen with its estate ID and closes the dialog. Manager and
-Crew estates do not become resident choices. Historical own-report direct URLs
-and API authorization remain unchanged.
+- "Dashboard" -> `/` with `estateId`, only when `!canEnterWorkspace` (mixed
+  resident + staff accounts follow the staff `/` redirect, so it is hidden);
+- "Report a fault" -> `/reports/new?estateId=`, only when the estate is in
+  active `residentEstates`;
+- "My reports" -> `/reports?estateId=`, active on `/reports` and
+  `/reports/$reportId`.
+
+The resident sidebar shows on `/` (resident-only), `/reports`, `/reports/new`
+and `/reports/$reportId`. Residents never get the estate sidebar; estate
+routes still redirect a `RESIDENT` membership to the resident area. Mixed
+accounts on `/reports` see the resident sidebar for the selected resident estate
+while the switcher lists all estates. Historical own-report URLs and API
+authorization are unchanged.
 
 ## Conventions used by every feature
 
@@ -171,10 +203,7 @@ Manager/Crew report navigation is documented in [estate-reports.md](estate-repor
 Estate report routes use `canViewFaultReports` independently of management
 capabilities. Crew-only accounts land on assigned reports and switch report
 estates by name through access context; management estate queries are not mounted
-for their report navigation. Report pages offer the report estate selector to
-Managers as well; management pages use the same role-aware context switcher.
-Respond to faults opens the shared authorized-estate chooser from outside a
-report-capable estate; choosing an entry opens that estate's report list.
+for their report navigation. Report estates are switched from the header switcher.
 
 - **API client:** `lib/api.ts` exports `api` (`createApiClient` from
   `@proj/api`, base URL `VITE_API_URL`). The bearer token is resolved per
@@ -211,14 +240,6 @@ The web tsconfig maps `@/*` to `src/*` and `@tests/*` to `tests/*`. Vite and
 Vitest use the same native tsconfig path resolution. Tests import application
 code through `@/` and can import shared helpers through `@tests/test-utils`.
 
-Work orders and Respond to faults are left-aligned sidebar buttons when an estate
-choice is needed, matching adjacent navigation link spacing and dimensions.
-Work orders uses Wrench; fault reports uses ClipboardList. Both open the shared
-EstateFeatureChooser instead of choosing the first eligible estate. That chooser
-remains feature-filtered. Their context switchers include all membership estates
-with roles and capability-appropriate destinations, without management-only
-requests for Crew or Residents.
-
 Work-order capability guards run before general resident/workspace redirects.
 Signed-in unauthorized list/detail/create deep links show Page not found without
 mounting protected child queries. Normal resident entry and signed-out sign-in
@@ -230,11 +251,9 @@ Estate-scoped navigation and `_auth` guard check Roles and council capabilities
 before requiring management access. Roles requires canViewEstateRoles; council
 requires canViewEstateInvitations/canInviteMembers/member-admin authority. Access
 lookup failures mount no controls. Role-only and invitation-only users therefore
-need no VIEW_ESTATE. AppNavigation avoids useEstate for these contexts, labels
-them from access estateName, and exposes Roles/Invitations as local destinations.
-Outside that estate, named global entries provide a route into scoped-only
-estates. Report contexts retain their report switcher; management contexts retain
-the management estate switcher. Home sends a scoped-only user to Roles or estate
+need no VIEW_ESTATE. AppNavigation avoids useEstate for these contexts and
+shows only Administration > Roles/Members; the header switcher labels them from
+access estateName. Home sends a scoped-only user to Roles or estate
 invitations after checking management/report entry. Access/cache remains per user.
 See [estate-roles.md](estate-roles.md) and [council-invitations.md](council-invitations.md).
 

@@ -10,6 +10,7 @@ import {
 import { useCallback, useId, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { PageLayout } from "@/components/page-layout";
 import { SummaryCard } from "@/components/summary-card";
 import {
   type InspectionCheck,
@@ -210,13 +211,8 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
   const { data } = list;
 
   return (
-    <main className="page-layout min-w-0">
+    <PageLayout>
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: "Estate", to: "/estates/$estateId", params: { estateId } },
-          { label: "Inspections" },
-        ]}
         description={data ? monthLabel(data.month) : undefined}
         title="Inspections"
       />
@@ -300,6 +296,6 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
           <Unscheduled data={data} />
         </div>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

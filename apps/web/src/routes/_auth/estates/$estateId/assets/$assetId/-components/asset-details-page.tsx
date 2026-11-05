@@ -4,7 +4,6 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { BackLink } from "@/components/back-link";
 import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
@@ -87,9 +86,6 @@ export function AssetDetailsPage({
   );
   return (
     <PageLayout>
-      <BackLink params={{ estateId }} to="/estates/$estateId/assets">
-        Back to assets
-      </BackLink>
       {asset.isPending ? (
         <p aria-live="polite" className="mt-6">
           Loading asset…
@@ -125,12 +121,6 @@ export function AssetDetailsPage({
               )
             }
             breadcrumbs={[
-              { label: "Estates", to: "/estates" },
-              {
-                label: estate.data?.name ?? "Estate",
-                to: "/estates/$estateId",
-                params: { estateId },
-              },
               {
                 label: "Assets",
                 to: "/estates/$estateId/assets",

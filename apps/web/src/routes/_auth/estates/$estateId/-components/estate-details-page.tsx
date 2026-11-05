@@ -1,168 +1,11 @@
-import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button, buttonVariants } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
-import { FieldSet } from "@proj/ui/components/field";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
-import { type ReactNode, useCallback, useState } from "react";
-import { toast } from "sonner";
-import { BackLink } from "@/components/back-link";
+import type { ReactNode } from "react";
 import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
-import { api } from "@/lib/api";
-import { dashboardQueryKey } from "@/lib/dashboard";
-import {
-  estateError,
-  formatMcst,
-  useEstate,
-  useEstateSession,
-} from "@/lib/estates";
-import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
-
-function EstateActions({
-  estate,
-  canEditDetails,
-  onDeactivate,
-  canViewSensors,
-  canViewWorkOrders,
-  canViewRoles,
-  canViewInvitations,
-}: {
-  estate: components["schemas"]["EstateResponse"];
-  canEditDetails: boolean;
-  onDeactivate: () => void;
-  canViewSensors: boolean;
-  canViewWorkOrders: boolean;
-  canViewRoles: boolean;
-  canViewInvitations: boolean;
-}) {
-  const canManageCouncil =
-    canViewInvitations ||
-    estate.canInviteMembers ||
-    estate.canManageInvitationPermissions;
-  if (
-    !(
-      estate.owned ||
-      canEditDetails ||
-      canManageCouncil ||
-      canViewSensors ||
-      canViewRoles ||
-      canViewWorkOrders
-    )
-  ) {
-    return null;
-  }
-  return (
-    <FieldSet
-      aria-label="Estate actions"
-      className="flex min-w-0 flex-row flex-wrap items-center gap-3"
-    >
-      {canViewWorkOrders ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/work-orders"
-        >
-          View work orders
-        </Link>
-      ) : null}
-      {canViewRoles ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/roles"
-        >
-          Roles
-        </Link>
-      ) : null}
-      {estate.owned || estate.canManageInvitationPermissions ? (
-        <>
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ estateId: estate.id }}
-            to="/estates/$estateId/devices"
-          >
-            Devices
-          </Link>
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ estateId: estate.id }}
-            to="/estates/$estateId/asset-categories"
-          >
-            Asset categories
-          </Link>
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ estateId: estate.id }}
-            to="/estates/$estateId/inspections"
-          >
-            Inspections
-          </Link>
-        </>
-      ) : null}
-      {canViewSensors ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/sensors"
-        >
-          Device monitoring
-        </Link>
-      ) : null}
-      {canEditDetails ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/edit"
-        >
-          Edit estate
-        </Link>
-      ) : null}
-      {estate.owned ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/failure-risk"
-        >
-          Failure risk
-        </Link>
-      ) : null}
-      {canManageCouncil ? (
-        <Link
-          className={buttonVariants({ variant: "outline" })}
-          params={{ estateId: estate.id }}
-          to="/estates/$estateId/council"
-        >
-          Estate members
-        </Link>
-      ) : null}
-      {estate.owned && !estate.deactivatedAt ? (
-        <Button onClick={onDeactivate} variant="destructive">
-          Deactivate estate
-        </Button>
-      ) : null}
-    </FieldSet>
-  );
-}
-
-function canViewEstateSensors(
-  owned: boolean | undefined,
-  permission: components["schemas"]["EstateAccessResponse"] | undefined,
-  platformAdmin: boolean | undefined
-): boolean {
-  return Boolean(
-    owned ||
-      (permission?.canViewManagement &&
-        (permission.role === "MANAGER" ||
-          permission.role === "COUNCIL" ||
-          (permission.role === "MEMBER" && platformAdmin)))
-  );
-}
-
+import { formatMcst, useEstate } from "@/lib/estates";
 export function EstateDetailsPage({
   estateId,
   children,
@@ -173,14 +16,6 @@ export function EstateDetailsPage({
 }) {
   const estate = useEstate(estateId);
   const access = useAppAccess();
-  const permission = access.data?.estates?.find(
-    (item) => item.estateId === estateId
-  );
-  const canViewSensors = canViewEstateSensors(
-    estate.data?.owned,
-    permission,
-    access.data?.canAccessPlatformAdmin
-  );
   const canEditDetails = Boolean(
     estate.data?.owned ||
       access.data?.estates.some(
@@ -188,39 +23,8 @@ export function EstateDetailsPage({
           assignment.estateId === estateId && assignment.canManageEstate
       )
   );
-  const { userId } = useEstateSession();
-  const queryClient = useQueryClient();
-  const [confirming, setConfirming] = useState(false);
-  const deactivate = useMutation({
-    mutationFn: async (code: string) => {
-      const { data, error, response } = await api.POST(
-        "/estates/{id}/deactivate",
-        { params: { path: { id: estateId } }, body: { code } }
-      );
-      if (error || !data) {
-        throw estateError(error, response.status);
-      }
-      return data;
-    },
-    onSuccess: async (data) => {
-      queryClient.setQueryData(["estates", userId, "details", estateId], data);
-      setConfirming(false);
-      toast.success(
-        "Estate deactivated. Existing records have been preserved."
-      );
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["estates", userId, "list"],
-        }),
-        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
-      ]);
-    },
-  });
-  const openConfirmation = useCallback(() => setConfirming(true), []);
-  const closeConfirmation = useCallback(() => setConfirming(false), []);
   return (
     <PageLayout>
-      <BackLink to="/estates">Back to estates</BackLink>
       {estate.isPending ? (
         <p aria-live="polite" className="mt-6">
           Loading estate…
@@ -234,26 +38,7 @@ export function EstateDetailsPage({
       {estate.data ? (
         <>
           <PageHeader
-            actions={
-              <EstateActions
-                canEditDetails={canEditDetails}
-                canViewInvitations={
-                  permission?.canViewEstateInvitations === true
-                }
-                canViewRoles={permission?.canViewEstateRoles === true}
-                canViewSensors={canViewSensors}
-                canViewWorkOrders={
-                  !access.isError && !!permission?.canViewWorkOrders
-                }
-                estate={estate.data}
-                onDeactivate={openConfirmation}
-              />
-            }
-            breadcrumbs={[
-              { label: "Estates", to: "/estates" },
-              { label: estate.data.name },
-            ]}
-            description="Estate overview and management"
+            description={estate.data.description || undefined}
             status={
               <LifecycleStatusBadge
                 inactive={Boolean(estate.data.deactivatedAt)}
@@ -296,42 +81,7 @@ export function EstateDetailsPage({
               estate details.
             </p>
           )}
-          {confirming ? (
-            <DeactivateEstateDialog
-              code={estate.data.code}
-              name={estate.data.name}
-              onCancel={closeConfirmation}
-              onConfirm={deactivate.mutateAsync}
-            />
-          ) : null}
           {children}
-          {estate.data.owned || permission?.canViewInspectionResults ? (
-            <Card className="mt-6">
-              <CardContent>
-                <section aria-label="Estate assets" className="space-y-3">
-                  <h2 className="text-xl font-semibold">Assets</h2>
-                  <div className="flex flex-wrap gap-4">
-                    <Link
-                      className={buttonVariants({ variant: "outline" })}
-                      params={{ estateId }}
-                      to="/estates/$estateId/assets"
-                    >
-                      View assets
-                    </Link>
-                    {!estate.data.owned || estate.data.deactivatedAt ? null : (
-                      <Link
-                        className={buttonVariants({ variant: "outline" })}
-                        params={{ estateId }}
-                        to="/estates/$estateId/assets/new"
-                      >
-                        Register asset
-                      </Link>
-                    )}
-                  </div>
-                </section>
-              </CardContent>
-            </Card>
-          ) : null}
         </>
       ) : null}
     </PageLayout>

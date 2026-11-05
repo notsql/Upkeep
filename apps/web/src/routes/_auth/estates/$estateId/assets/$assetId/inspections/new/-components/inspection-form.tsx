@@ -197,12 +197,6 @@ export function InspectionForm({
     <PageLayout className="space-y-6">
       <PageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: observed.name,
             to: "/estates/$estateId/assets/$assetId",

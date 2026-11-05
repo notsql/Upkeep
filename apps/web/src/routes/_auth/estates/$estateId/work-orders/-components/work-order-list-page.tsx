@@ -123,15 +123,6 @@ export function WorkOrderListPage({
             </Link>
           ) : null
         }
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: access.canViewEstateDetails ? "/estates/$estateId" : undefined,
-            params: { estateId },
-          },
-          { label: "Work orders" },
-        ]}
         description={access.estateName}
         title="Work orders"
       />

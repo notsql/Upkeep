@@ -245,11 +245,6 @@ export function EstateRolesPage({ estateId }: { estateId: string }) {
   return (
     <PageLayout className="space-y-5">
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: estate.estateName },
-          { label: "Roles" },
-        ]}
         description={`Custom roles for ${estate.estateName}.`}
         title="Estate roles"
       />

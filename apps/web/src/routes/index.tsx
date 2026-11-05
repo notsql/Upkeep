@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getSessionAccess } from "@/lib/access-server";
+import { estateDestination } from "@/lib/estate-destinations";
 import { HomePage } from "@/routes/-components/home-page";
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -8,8 +9,11 @@ export const Route = createFileRoute("/")({
     if (user && access) {
       context.queryClient.setQueryData([user.id, "app-access"], access);
     }
-    if (user && access?.hasResidentMembership && !access.canEnterWorkspace) {
-      throw redirect({ href: "/reports/new" });
+    if (!(user && access)) {
+      return;
+    }
+    if (access.hasResidentMembership && !access.canEnterWorkspace) {
+      return;
     }
     const reportEstate = access?.estates.find(
       (estate) => estate.canViewFaultReports
@@ -36,6 +40,16 @@ export const Route = createFileRoute("/")({
         });
       }
     }
+    const [only] = access.estates;
+    if (access.estates.length === 1 && only) {
+      throw redirect({
+        href: estateDestination(only, "management").replace(
+          "$estateId",
+          only.estateId
+        ),
+      });
+    }
+    throw redirect({ href: "/estates" });
   },
   head: () => ({ meta: [{ title: "UpKeep — Estate workspace" }] }),
 });

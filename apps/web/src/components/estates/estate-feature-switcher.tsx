@@ -16,18 +16,11 @@ import {
   Plus,
 } from "lucide-react";
 import { useAppAccess } from "@/lib/access";
+import {
+  type EstateFeature,
+  estateDestination,
+} from "@/lib/estate-destinations";
 
-export type EstateFeature =
-  | "work-orders"
-  | "reports"
-  | "documents"
-  | "resident-reports"
-  | "report-creation";
-type EstateContextFeature =
-  | EstateFeature
-  | "readings"
-  | "management"
-  | "resident";
 const roleLabels: Record<string, string> = {
   MANAGER: "Manager",
   CREW: "Crew",
@@ -45,59 +38,19 @@ function estateRoleLabel(
   return roleLabels[estate.role ?? ""] ?? "Role unavailable";
 }
 
-function estateDestination(
-  estate: components["schemas"]["EstateAccessResponse"],
-  feature: EstateContextFeature
-) {
-  if (estate.role === "RESIDENT") {
-    return feature === "report-creation" ? "/reports/new" : "/reports";
-  }
-  if (feature === "documents" && estate.canViewDocuments) {
-    return "/estates/$estateId/documents";
-  }
-  if (feature === "readings" && estate.canViewReadings) {
-    return "/estates/$estateId/readings";
-  }
-  if (feature === "reports" && estate.canViewFaultReports) {
-    return "/estates/$estateId/reports";
-  }
-  if (feature === "work-orders" && estate.canViewWorkOrders) {
-    return "/estates/$estateId/work-orders";
-  }
-  if (estate.canViewEstateDetails ?? estate.canViewManagement) {
-    return "/estates/$estateId";
-  }
-  if (estate.canViewWorkOrders) {
-    return "/estates/$estateId/work-orders";
-  }
-  if (estate.canViewFaultReports) {
-    return "/estates/$estateId/reports";
-  }
-  if (estate.canViewDocuments) {
-    return "/estates/$estateId/documents";
-  }
-  if (estate.canViewEstateRoles) {
-    return "/estates/$estateId/roles";
-  }
-  if (estate.canViewEstateInvitations) {
-    return "/estates/$estateId/council";
-  }
-  return "/estates";
-}
-
 export function EstateFeatureSwitcher({
   estateId,
   estates,
   feature,
 }: {
-  feature: EstateContextFeature;
-  estateId: string;
+  feature: EstateFeature;
+  estateId: string | undefined;
   estates: components["schemas"]["EstateAccessResponse"][];
 }) {
   const access = useAppAccess();
   const choices = estates;
   const current = choices.find((estate) => estate.estateId === estateId);
-  const name = current?.estateName ?? "Choose estate";
+  const name = current?.estateName ?? "Select estate";
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -105,14 +58,15 @@ export function EstateFeatureSwitcher({
           <Button
             aria-description={current ? estateRoleLabel(current) : undefined}
             aria-label={`Switch estate: ${name}`}
-            className="h-auto min-h-11 w-full max-w-full min-w-0 justify-start gap-2 rounded-xl px-3 py-3"
+            className="h-auto min-h-9 max-w-full min-w-0 justify-start gap-2 px-2 py-1"
+            disabled={!access.data}
             title={current ? `${name} (${estateRoleLabel(current)})` : name}
-            variant="outline"
+            variant="ghost"
           />
         }
       >
         <Building2 aria-hidden="true" className="size-4 shrink-0" />
-        <span className="min-w-0 flex-1 text-left">
+        <span className="min-w-0 text-left">
           <span className="block truncate">{name}</span>
           {current ? (
             <span className="text-muted-foreground block truncate text-xs">

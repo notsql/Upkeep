@@ -29,7 +29,13 @@ vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 // A route's server-side access lookup must use a client scoped to that request.
 vi.mock("@proj/api", () => ({ createApiClient: () => ({ GET: get }) }));
 vi.mock("@tanstack/react-start", () => ({
-  createServerFn: () => ({ handler: (handler: () => unknown) => handler }),
+  createServerFn: () => {
+    const builder = {
+      validator: () => builder,
+      handler: (handler: () => unknown) => handler,
+    };
+    return builder;
+  },
 }));
 
 function ManagementPage() {
@@ -82,6 +88,11 @@ function routerFor(path: string) {
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
     "/estates/$estateId/edit",
+    "/estates/$estateId/devices",
+    "/estates/$estateId/asset-categories",
+    "/estates/$estateId/inspections",
+    "/estates/$estateId/sensors",
+    "/estates/$estateId/failure-risk",
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
@@ -591,3 +602,107 @@ it("does not let a WorkOS admin claim bypass a missing report capability", async
   await router.load();
   expect(managementLoader).not.toHaveBeenCalled();
 });
+
+const OWNER_GATED = [
+  "/estates/oak/devices",
+  "/estates/oak/asset-categories",
+  "/estates/oak/inspections",
+  "/estates/oak/sensors",
+  "/estates/oak/failure-risk",
+  "/estates/oak/edit",
+  "/estates/oak/assets",
+];
+const managementOnly = {
+  ...councilEstateAccess,
+  role: "MEMBER",
+  canViewManagement: true,
+  canViewAssets: false,
+  canViewInspectionResults: false,
+  canManageEstate: false,
+  canManageInvitationPermissions: false,
+};
+function estateAccess(
+  estate: typeof managementOnly,
+  owned: boolean | "error" = false
+) {
+  get.mockImplementation((path: string) => {
+    if (path === "/estates/{id}") {
+      return Promise.resolve(
+        owned === "error"
+          ? {
+              error: { message: "Forbidden" },
+              response: new Response(null, { status: 403 }),
+            }
+          : {
+              data: { id: estate.estateId, name: estate.estateName, owned },
+              response: new Response(),
+            }
+      );
+    }
+    return Promise.resolve({
+      data: { ...unassignedAccess, canEnterWorkspace: true, estates: [estate] },
+      response: new Response(),
+    });
+  });
+}
+
+it.each(OWNER_GATED)(
+  "404s %s for a management-only non-owner",
+  async (path) => {
+    estateAccess(managementOnly);
+    const router = routerFor(path);
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it.each(OWNER_GATED)("404s %s when the owner lookup fails", async (path) => {
+  estateAccess(managementOnly, "error");
+  const router = routerFor(path);
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
+});
+
+it.each([
+  ...OWNER_GATED.filter((path) => !path.endsWith("/assets")).map((path) => ({
+    path,
+    estate: managementOnly,
+    owned: true,
+  })),
+  ...[
+    "/estates/oak/devices",
+    "/estates/oak/asset-categories",
+    "/estates/oak/inspections",
+  ].map((path) => ({
+    path,
+    estate: { ...managementOnly, canManageInvitationPermissions: true },
+    owned: false,
+  })),
+  {
+    path: "/estates/oak/sensors",
+    estate: { ...managementOnly, role: "COUNCIL" },
+    owned: false,
+  },
+  {
+    path: "/estates/oak/edit",
+    estate: { ...managementOnly, canManageEstate: true },
+    owned: false,
+  },
+  {
+    path: "/estates/oak/assets",
+    estate: { ...managementOnly, canViewAssets: true },
+    owned: false,
+  },
+])(
+  "opens $path when its destination predicate holds",
+  async ({ path, estate, owned }) => {
+    estateAccess(estate, owned);
+    const router = routerFor(path);
+    await router.load();
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+  }
+);

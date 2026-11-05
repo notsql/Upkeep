@@ -1,15 +1,10 @@
 import type { components } from "@proj/api/schema";
 import {
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@proj/ui/components/dropdown-menu";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -18,94 +13,96 @@ import {
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
-  Building2,
+  AlertTriangle,
+  ClipboardCheck,
   ClipboardList,
+  Cpu,
   Files,
-  Home,
+  Gauge,
   Layers,
   LayoutDashboard,
   type LucideIcon,
+  Settings,
   ShieldCheck,
-  UserRound,
+  Tags,
   Users,
   Wrench,
 } from "lucide-react";
-import { useCallback, useState } from "react";
-import { EstateSectionMenu } from "@/components/estate-section-menu";
-import { EstateContextSwitcher } from "@/components/estates/estate-context-switcher";
-import { EstateFeatureChooser } from "@/components/estates/estate-feature-chooser";
-import type { EstateFeature } from "@/components/estates/estate-feature-switcher";
-import { EstateFeatureSwitcher } from "@/components/estates/estate-feature-switcher";
+import { useCallback } from "react";
 import { residentNavigation } from "@/components/estates/resident-navigation";
-import { WorkOrderEstateSwitcher } from "@/components/estates/work-order-estate-switcher";
-import { ReportEstateSwitcher } from "@/components/reports/report-estate-switcher";
 import { useAppAccess } from "@/lib/access";
+import {
+  canOpenAssetCategories,
+  canOpenAssets,
+  canOpenDevices,
+  canOpenDocuments,
+  canOpenEstateSettings,
+  canOpenFailureRisk,
+  canOpenFaultReports,
+  canOpenInspections,
+  canOpenMembers,
+  canOpenOverview,
+  canOpenReadings,
+  canOpenRoles,
+  canOpenSensors,
+  canOpenWorkOrders,
+} from "@/lib/estate-destinations";
 import { useEstate } from "@/lib/estates";
-import { useMobile } from "@/lib/use-mobile";
 
 const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
 type Destination =
   | "/"
-  | "/estates"
-  | "/account"
   | "/reports"
   | "/reports/new"
-  | "/admin/users"
   | "/estates/$estateId"
-  | "/estates/$estateId/assets"
-  | "/estates/$estateId/reports"
   | "/estates/$estateId/work-orders"
+  | "/estates/$estateId/reports"
+  | "/estates/$estateId/inspections"
+  | "/estates/$estateId/assets"
+  | "/estates/$estateId/devices"
+  | "/estates/$estateId/readings"
+  | "/estates/$estateId/sensors"
+  | "/estates/$estateId/failure-risk"
+  | "/estates/$estateId/documents"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles"
-  | "/estates/$estateId/readings"
-  | "/estates/$estateId/documents";
+  | "/estates/$estateId/asset-categories"
+  | "/estates/$estateId/edit";
 export interface NavigationItem {
   active: boolean;
-  chooseEstate?: EstateFeature;
   estateId?: string;
   icon: LucideIcon;
   label: string;
   search?: { estateId: string };
   to: Destination;
 }
-
-function scopedDestinations(
-  estates: components["schemas"]["EstateAccessResponse"][],
-  estateId: string | undefined
-): NavigationItem[] {
-  const entries: NavigationItem[] = [];
-  for (const assignment of estates) {
-    if (
-      assignment.canViewManagement ||
-      assignment.canViewFaultReports ||
-      assignment.estateId === estateId
-    ) {
-      continue;
-    }
-    if (assignment.canViewEstateRoles) {
-      const entry: NavigationItem = {
-        label: `${assignment.estateName} roles`,
-        to: "/estates/$estateId/roles",
-        estateId: assignment.estateId,
-        icon: ShieldCheck,
-        active: false,
-      };
-      entries.push(entry);
-    } else if (assignment.canViewEstateInvitations) {
-      const entry: NavigationItem = {
-        label: `${assignment.estateName} invitations`,
-        to: "/estates/$estateId/council",
-        estateId: assignment.estateId,
-        icon: Users,
-        active: false,
-      };
-      entries.push(entry);
-    }
-  }
-  return entries;
+interface NavigationGroup {
+  items: NavigationItem[];
+  label?: string;
 }
 
-function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
+/** Resident-only accounts get their dashboard, and so the resident area, at `/`. */
+function isResidentPage(pathname: string, residentOnly = false): boolean {
+  return (
+    (residentOnly && pathname === "/") ||
+    pathname === "/reports" ||
+    pathname.startsWith("/reports/")
+  );
+}
+
+export function isResidentOnly(
+  access: components["schemas"]["AppAccessResponse"] | undefined
+): boolean {
+  return Boolean(access?.hasResidentMembership && !access.canEnterWorkspace);
+}
+
+/**
+ * The estate the page is about, from the URL only: the estate path segment,
+ * or on resident pages the `estateId` search param, else the sole resident
+ * estate.
+ */
+export function useCurrentEstate() {
+  const access = useAppAccess();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
@@ -113,10 +110,8 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
     select: (state) =>
       (state.location.search as { estateId?: string }).estateId,
   });
-  const residentPage =
-    pathname === "/reports" || pathname.startsWith("/reports/");
   let candidate = pathname.match(ESTATE_PATH)?.groups?.estateId;
-  if (!candidate && residentPage) {
+  if (!candidate && isResidentPage(pathname, isResidentOnly(access.data))) {
     candidate = searchEstate;
     if (!candidate && access.data?.residentEstates.length === 1) {
       candidate = access.data.residentEstates[0]?.id;
@@ -125,272 +120,181 @@ function useNavigationEstate(access: ReturnType<typeof useAppAccess>) {
   const permission = access.data?.estates.find(
     (item) => item.estateId === candidate
   );
-  const allowed =
-    permission?.canViewReadings ||
-    permission?.canViewDocuments ||
-    permission?.canViewManagement ||
-    permission?.canViewFaultReports ||
-    permission?.canViewWorkOrders ||
-    permission?.canViewEstateRoles ||
-    permission?.canViewEstateInvitations ||
-    permission?.role === "RESIDENT";
-  let estateId =
-    candidate && candidate !== "new" && allowed ? candidate : undefined;
+  const estateId =
+    candidate && candidate !== "new" && permission ? candidate : undefined;
+  return { access, pathname, estateId, permission };
+}
+
+type Permission = components["schemas"]["EstateAccessResponse"];
+
+function estateGroups(
+  estateId: string,
+  permission: Permission,
+  owned: boolean | undefined,
+  platformAdmin: boolean | undefined,
+  pathname: string
+): NavigationGroup[] {
+  const base = `/estates/${estateId}`;
+  const item = (
+    label: string,
+    to: Destination,
+    icon: LucideIcon,
+    shown: boolean
+  ): NavigationItem[] => {
+    if (!shown) {
+      return [];
+    }
+    const section = to.replace("/estates/$estateId", base);
+    return [
+      {
+        label,
+        to,
+        icon,
+        estateId,
+        active:
+          section === base
+            ? pathname === base || pathname === `${base}/`
+            : pathname === section || pathname.startsWith(`${section}/`),
+      },
+    ];
+  };
+  return [
+    {
+      items: item(
+        "Overview",
+        "/estates/$estateId",
+        LayoutDashboard,
+        canOpenOverview(permission)
+      ),
+    },
+    {
+      label: "Operations",
+      items: [
+        ...item(
+          "Work orders",
+          "/estates/$estateId/work-orders",
+          Wrench,
+          canOpenWorkOrders(permission)
+        ),
+        ...item(
+          "Fault reports",
+          "/estates/$estateId/reports",
+          ClipboardList,
+          canOpenFaultReports(permission)
+        ),
+        ...item(
+          "Inspections",
+          "/estates/$estateId/inspections",
+          ClipboardCheck,
+          canOpenInspections(permission, owned)
+        ),
+      ],
+    },
+    {
+      label: "Assets",
+      items: [
+        ...item(
+          "Assets",
+          "/estates/$estateId/assets",
+          Layers,
+          canOpenAssets(permission)
+        ),
+        ...item(
+          "Devices",
+          "/estates/$estateId/devices",
+          Cpu,
+          canOpenDevices(permission, owned)
+        ),
+        ...item(
+          "Readings",
+          "/estates/$estateId/readings",
+          Activity,
+          canOpenReadings(permission)
+        ),
+        ...item(
+          "Device monitoring",
+          "/estates/$estateId/sensors",
+          Gauge,
+          canOpenSensors(permission, owned, platformAdmin)
+        ),
+        ...item(
+          "Failure risk",
+          "/estates/$estateId/failure-risk",
+          AlertTriangle,
+          canOpenFailureRisk(permission, owned)
+        ),
+      ],
+    },
+    {
+      label: "Records",
+      items: item(
+        "Documents",
+        "/estates/$estateId/documents",
+        Files,
+        canOpenDocuments(permission)
+      ),
+    },
+    {
+      label: "Administration",
+      items: [
+        ...item(
+          "Members",
+          "/estates/$estateId/council",
+          Users,
+          canOpenMembers(permission)
+        ),
+        ...item(
+          "Roles",
+          "/estates/$estateId/roles",
+          ShieldCheck,
+          canOpenRoles(permission)
+        ),
+        ...item(
+          "Asset categories",
+          "/estates/$estateId/asset-categories",
+          Tags,
+          canOpenAssetCategories(permission, owned)
+        ),
+        ...item(
+          "Estate settings",
+          "/estates/$estateId/edit",
+          Settings,
+          canOpenEstateSettings(permission, owned)
+        ),
+      ],
+    },
+  ];
+}
+
+function useNavigationGroups(): NavigationGroup[] {
+  const { access, pathname, estateId, permission } = useCurrentEstate();
+  // Ownership comes from the estate itself; only management roles may read it.
   const estate = useEstate(
     permission?.canViewManagement ? estateId : undefined
   );
-  if (residentPage && access.data?.estates.length && !estateId) {
-    estateId = "";
+  if (!(access.data && estateId && permission) || access.isError) {
+    return [];
   }
-  return {
-    pathname,
+  if (permission.role === "RESIDENT") {
+    return [{ items: residentNavigation(access.data, estateId, pathname) }];
+  }
+  return estateGroups(
     estateId,
     permission,
-    estateName: estate.data?.name ?? permission?.estateName,
-  };
-}
-function useNavigation() {
-  const access = useAppAccess();
-  const { pathname, estateId, permission, estateName } =
-    useNavigationEstate(access);
-  const estates: NavigationItem = {
-    label: "Estates",
-    to: "/estates",
-    icon: Building2,
-    active:
-      pathname === "/estates" ||
-      pathname === "/estates/" ||
-      pathname === "/estates/new" ||
-      pathname === "/estates/new/",
-  };
-  if (!access.data || access.isError) {
-    return {
-      items: [],
-      local: [],
-      estateId: undefined,
-      estateName: undefined,
-    };
-  }
-  const resident = residentNavigation(access.data, estateId, pathname);
-  const local = [
-    ...estateDestinations(estateId, permission, pathname),
-    ...resident.local,
-  ];
-  if (!access.data.canEnterWorkspace) {
-    const destinations = [estates, ...resident.global];
-    return {
-      items: destinations,
-      local,
-      estateId,
-      estateName,
-    };
-  }
-  const home: NavigationItem = {
-    label: "Home",
-    to: "/",
-    icon: Home,
-    active: pathname === "/",
-  };
-  const items: NavigationItem[] = [
-    home,
-    estates,
-    {
-      label: "Settings",
-      to: "/account",
-      icon: UserRound,
-      active: pathname.startsWith("/account"),
-    },
-  ];
-  if (access.data.canAccessPlatformAdmin) {
-    const admin: NavigationItem = {
-      label: "Admin users",
-      to: "/admin/users",
-      icon: ShieldCheck,
-      active: pathname.startsWith("/admin"),
-    };
-    items.push(admin);
-  }
-  const scoped = scopedDestinations(access.data.estates, estateId);
-  items.push(...scoped);
-  if (
-    !permission?.canViewWorkOrders &&
-    access.data.estates.some((item) => item.canViewWorkOrders)
-  ) {
-    const entry: NavigationItem = {
-      label: "Work orders",
-      to: "/estates/$estateId/work-orders",
-      chooseEstate: "work-orders",
-      icon: Wrench,
-      active: false,
-    };
-    items.push(entry);
-  }
-  if (
-    !permission?.canViewDocuments &&
-    access.data.estates.some((item) => item.canViewDocuments)
-  ) {
-    const entry: NavigationItem = {
-      label: "Documents",
-      to: "/estates/$estateId/documents",
-      chooseEstate: "documents",
-      icon: Files,
-      active: false,
-    };
-    items.push(entry);
-  }
-  const responderEntry = reportDestination(access.data.estates, permission);
-  if (responderEntry) {
-    items.push(responderEntry);
-  }
-  items.push(...resident.global);
-  return {
-    items,
-    local,
-    estateId,
-    estateName,
-  };
-}
-function reportDestination(
-  estates: components["schemas"]["EstateAccessResponse"][],
-  permission: components["schemas"]["EstateAccessResponse"] | undefined
-): NavigationItem | undefined {
-  if (permission?.canViewFaultReports) {
-    return;
-  }
-  if (!estates.some((item) => item.canViewFaultReports)) {
-    return;
-  }
-  return {
-    label: "Respond to faults",
-    to: "/estates/$estateId/reports",
-    chooseEstate: "reports",
-    icon: ClipboardList,
-    active: false,
-  };
+    estate.data?.owned,
+    access.data.canAccessPlatformAdmin,
+    pathname
+  ).filter((group) => group.items.length > 0);
 }
 
-function estateDestinations(
-  estateId: string | undefined,
-  permission: components["schemas"]["EstateAccessResponse"] | undefined,
-  pathname: string
-): NavigationItem[] {
-  const local: NavigationItem[] = [];
-  if (!(estateId && permission)) {
-    return local;
-  }
-  const base = `/estates/${estateId}`;
-  if (permission?.canViewEstateDetails ?? permission?.canViewManagement) {
-    local.push({
-      label: "Overview",
-      to: "/estates/$estateId",
-      estateId,
-      icon: LayoutDashboard,
-      active: pathname === base || pathname === `${base}/`,
-    });
-  }
-  if (permission?.canViewAssets || permission?.canViewInspectionResults) {
-    local.push({
-      label: "Assets",
-      to: "/estates/$estateId/assets",
-      estateId,
-      icon: Layers,
-      active: pathname.startsWith(`${base}/assets`),
-    });
-  }
-  if (permission.canViewWorkOrders) {
-    local.push({
-      label: "Work orders",
-      to: "/estates/$estateId/work-orders",
-      estateId,
-      icon: Wrench,
-      active: pathname.startsWith(`${base}/work-orders`),
-    });
-  }
-  if (permission?.canViewFaultReports) {
-    local.push({
-      label: "Fault reports",
-      to: "/estates/$estateId/reports",
-      estateId,
-      icon: ClipboardList,
-      active: pathname.startsWith(`${base}/reports`),
-    });
-  }
-  if (permission.canViewReadings) {
-    local.push({
-      label: "Readings",
-      to: "/estates/$estateId/readings",
-      estateId,
-      icon: Activity,
-      active: pathname.startsWith(`${base}/readings`),
-    });
-  }
-  if (permission.canViewDocuments) {
-    local.push({
-      label: "Documents",
-      to: "/estates/$estateId/documents",
-      estateId,
-      icon: Files,
-      active: pathname.startsWith(`${base}/documents`),
-    });
-  }
-  if (
-    permission?.canViewEstateInvitations ||
-    permission?.canInviteMembers ||
-    permission?.canManageInvitationPermissions
-  ) {
-    local.push({
-      label: "Estate members",
-      to: "/estates/$estateId/council",
-      estateId,
-      icon: Users,
-      active: pathname.startsWith(`${base}/council`),
-    });
-  }
-  if (permission.canViewEstateRoles) {
-    local.push({
-      label: "Roles",
-      to: "/estates/$estateId/roles",
-      estateId,
-      icon: ShieldCheck,
-      active: pathname.startsWith(`${base}/roles`),
-    });
-  }
-  return local;
-}
-function DestinationLink({
-  item,
-  onChooseEstate,
-}: {
-  item: NavigationItem;
-  onChooseEstate?: (feature: EstateFeature) => void;
-}) {
+function DestinationLink({ item }: { item: NavigationItem }) {
   const { isMobile, setOpenMobile } = useSidebar();
   const closeMobile = useCallback(() => {
     if (isMobile) {
       setOpenMobile(false);
     }
   }, [isMobile, setOpenMobile]);
-  const selectEstate = useCallback(() => {
-    closeMobile();
-    if (item.chooseEstate) {
-      onChooseEstate?.(item.chooseEstate);
-    }
-  }, [closeMobile, item.chooseEstate, onChooseEstate]);
   const Icon = item.icon;
-  if (item.chooseEstate) {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          aria-haspopup="dialog"
-          onClick={selectEstate}
-          type="button"
-        >
-          <Icon aria-hidden="true" />
-          <span>{item.label}</span>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
-  }
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -413,253 +317,44 @@ function DestinationLink({
   );
 }
 
-function NavigationEstateSwitcher({
-  estateId,
-  estateName,
-}: {
-  estateId: string;
-  estateName?: string;
-}) {
-  const access = useAppAccess();
-  const reporting = useRouterState({
-    select: (state) => state.location.pathname.split("/")[3] === "reports",
-  });
-  const workOrders = useRouterState({
-    select: (state) => state.location.pathname.split("/")[3] === "work-orders",
-  });
-  const permission = access.data?.estates.find(
-    (estate) => estate.estateId === estateId
-  );
-  const documents = useRouterState({
-    select: (state) => state.location.pathname.split("/")[3] === "documents",
-  });
-  const readings = useRouterState({
-    select: (state) => state.location.pathname.split("/")[3] === "readings",
-  });
-  const creatingReport = useRouterState({
-    select: (state) => state.location.pathname.startsWith("/reports/new"),
-  });
-  if (documents || readings) {
-    return (
-      <EstateFeatureSwitcher
-        estateId={estateId}
-        estates={access.data?.estates ?? []}
-        feature={readings ? "readings" : "documents"}
-      />
-    );
-  }
-  if (permission?.role === "RESIDENT" || !estateId) {
-    return (
-      <EstateFeatureSwitcher
-        estateId={estateId}
-        estates={access.data?.estates ?? []}
-        feature={creatingReport ? "report-creation" : "resident"}
-      />
-    );
-  }
-  if (workOrders) {
-    return (
-      <WorkOrderEstateSwitcher
-        estateId={estateId}
-        estates={access.data?.estates ?? []}
-      />
-    );
-  }
-  if (
-    (permission?.canViewEstateDetails ?? permission?.canViewManagement) &&
-    !reporting
-  ) {
-    return (
-      <EstateContextSwitcher estateId={estateId} estateName={estateName} />
-    );
-  }
-  if (!permission?.canViewFaultReports) {
-    return (
-      <EstateFeatureSwitcher
-        estateId={estateId}
-        estates={access.data?.estates ?? []}
-        feature="management"
-      />
-    );
-  }
-  return (
-    <ReportEstateSwitcher
-      estateId={estateId}
-      estates={access.data?.estates ?? []}
-    />
-  );
-}
 export function AppNavigation() {
-  const [chooserFeature, setChooserFeature] = useState<
-    EstateFeature | undefined
-  >(undefined);
-  const chooseEstate = useCallback(
-    (feature: EstateFeature) => setChooserFeature(feature),
-    []
-  );
-  const changeChooser = useCallback((open: boolean) => {
-    if (!open) {
-      setChooserFeature(undefined);
-    }
-  }, []);
-  const { items, local, estateId, estateName } = useNavigation();
+  const groups = useNavigationGroups();
   return (
-    <>
-      <Sidebar>
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton render={<Link to="/" />} size="lg">
-                <Building2 aria-hidden="true" />
-                <span className="text-base font-semibold">UpKeep</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent>
-          <nav aria-label="Workspace navigation">
-            <SidebarGroup>
-              <SidebarGroupLabel>Workspace</SidebarGroupLabel>
+    <Sidebar>
+      <SidebarContent>
+        <nav aria-label="Sidebar">
+          {groups.map((group) => (
+            <SidebarGroup
+              aria-label={group.label}
+              key={group.label ?? "overview"}
+              role={group.label ? "group" : undefined}
+            >
+              {group.label ? (
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              ) : null}
               <SidebarMenu>
-                {items.map((item) => (
-                  <DestinationLink
-                    item={item}
-                    key={item.label}
-                    onChooseEstate={chooseEstate}
-                  />
+                {group.items.map((item) => (
+                  <DestinationLink item={item} key={item.label} />
                 ))}
               </SidebarMenu>
             </SidebarGroup>
-            {estateId === undefined ? null : (
-              <SidebarGroup>
-                <div className="min-w-0 pb-2">
-                  <NavigationEstateSwitcher
-                    estateId={estateId}
-                    estateName={estateName}
-                  />
-                </div>
-                <SidebarMenu>
-                  {local.map((item) => (
-                    <DestinationLink item={item} key={item.label} />
-                  ))}
-                </SidebarMenu>
-              </SidebarGroup>
-            )}
-          </nav>
-        </SidebarContent>
-        <SidebarFooter>
-          <p className="text-muted-foreground px-2 text-xs">
-            Your estates, organised.
-          </p>
-        </SidebarFooter>
-      </Sidebar>
-      <EstateFeatureChooser
-        feature={chooserFeature ?? "work-orders"}
-        onOpenChange={changeChooser}
-        open={!!chooserFeature}
-      />
-    </>
+          ))}
+        </nav>
+      </SidebarContent>
+      <SidebarFooter>
+        <p className="text-muted-foreground px-2 text-xs">
+          Your estates, organised.
+        </p>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
 
-export function EstateNavigation() {
-  const { local, estateId, estateName } = useNavigation();
-  const mobile = useMobile();
-  if (!mobile || estateId === undefined) {
-    return null;
-  }
-  return (
-    <nav
-      aria-label="Estate navigation"
-      className="mx-auto grid max-w-6xl gap-2 border-b px-4 py-2 sm:px-6 md:hidden"
-    >
-      <NavigationEstateSwitcher estateId={estateId} estateName={estateName} />
-      <EstateSectionMenu items={local} key={estateId} />
-    </nav>
-  );
-}
-
-/** Only pages inside one estate show the sidebar; every other page is full width. */
-export function isEstateScoped(pathname: string): boolean {
+/** Estate pages and resident report pages show the sidebar; others are full width. */
+export function hasSidebar(pathname: string, residentOnly = false): boolean {
   const estateId = pathname.match(ESTATE_PATH)?.groups?.estateId;
-  return estateId !== undefined && estateId !== "new";
-}
-
-function ChooserMenuItem({
-  feature,
-  item,
-  onChooseEstate,
-}: {
-  feature: EstateFeature;
-  item: NavigationItem;
-  onChooseEstate: (feature: EstateFeature) => void;
-}) {
-  const choose = useCallback(
-    () => onChooseEstate(feature),
-    [feature, onChooseEstate]
-  );
-  const Icon = item.icon;
   return (
-    <DropdownMenuItem
-      aria-haspopup="dialog"
-      className="min-h-11 text-sm"
-      onClick={choose}
-    >
-      <Icon aria-hidden="true" />
-      {item.label}
-    </DropdownMenuItem>
-  );
-}
-
-/**
- * The sidebar's global links as account-menu items, for pages without a
- * sidebar. Settings is already in the account menu, so it is left out. Items
- * that need an estate first call `onChooseEstate`, so the caller can open the
- * estate chooser outside the menu (which closes on selection).
- */
-export function WorkspaceMenuItems({
-  onChooseEstate,
-}: {
-  onChooseEstate: (feature: EstateFeature) => void;
-}) {
-  const { items } = useNavigation();
-  const links = items.filter((item) => item.to !== "/account");
-  if (links.length === 0) {
-    return null;
-  }
-  return (
-    <>
-      {links.map((item) => {
-        const Icon = item.icon;
-        if (item.chooseEstate) {
-          return (
-            <ChooserMenuItem
-              feature={item.chooseEstate}
-              item={item}
-              key={item.label}
-              onChooseEstate={onChooseEstate}
-            />
-          );
-        }
-        return (
-          <DropdownMenuItem
-            className="min-h-11 text-sm"
-            key={item.label}
-            render={
-              <Link
-                aria-current={item.active ? "page" : undefined}
-                params={item.estateId ? { estateId: item.estateId } : undefined}
-                search={item.search}
-                to={item.to}
-              />
-            }
-          >
-            <Icon aria-hidden="true" />
-            {item.label}
-          </DropdownMenuItem>
-        );
-      })}
-      <DropdownMenuSeparator />
-    </>
+    (estateId !== undefined && estateId !== "new") ||
+    isResidentPage(pathname, residentOnly)
   );
 }

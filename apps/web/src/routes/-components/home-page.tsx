@@ -9,11 +9,12 @@ import {
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { Building2, Layers, Users } from "lucide-react";
+import { isResidentOnly, useCurrentEstate } from "@/components/app-navigation";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { useHealth } from "@/lib/health";
-import { WorkspaceHome } from "@/routes/-components/workspace-home";
+import { ResidentDashboard } from "@/routes/-components/resident-dashboard";
 
 function SystemStatus() {
   const health = useHealth();
@@ -41,6 +42,11 @@ function SystemStatus() {
     </Card>
   );
 }
+function ResidentHome() {
+  const { estateId } = useCurrentEstate();
+  return <ResidentDashboard estateId={estateId} />;
+}
+
 export function HomePage() {
   const { user, loading } = useAuth();
   const access = useAppAccess();
@@ -60,15 +66,14 @@ export function HomePage() {
       </PageLayout>
     );
   }
+  if (user && !loading && isResidentOnly(access.data)) {
+    return <ResidentHome />;
+  }
   if (user && !loading && access.data && !access.data.canEnterWorkspace) {
     return (
       <PageLayout>
         <PageHeader
-          description={
-            access.data.canSubmitReport
-              ? "Report an issue in your assigned estate."
-              : "Create your first estate or accept an invitation to join one."
-          }
+          description="Create your first estate or accept an invitation to join one."
           title="Report a fault"
         />
         <div className="flex flex-wrap items-center gap-3">
@@ -86,9 +91,6 @@ export function HomePage() {
         </div>
       </PageLayout>
     );
-  }
-  if (user && !loading && access.data?.canEnterWorkspace) {
-    return <WorkspaceHome />;
   }
   return (
     <PageLayout>

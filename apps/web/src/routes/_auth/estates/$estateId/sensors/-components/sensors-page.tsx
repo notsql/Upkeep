@@ -52,11 +52,6 @@ export function SensorsPage({ estateId }: { estateId: string }) {
   return (
     <PageLayout className="min-w-0">
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: "Estate", to: "/estates/$estateId", params: { estateId } },
-          { label: "Device monitoring" },
-        ]}
         description="Review device readings and manage metric policies and maintenance pauses."
         title="Device monitoring"
       />

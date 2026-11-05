@@ -1,14 +1,29 @@
+import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@proj/ui/components/card";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
-import { useEstate, useSaveEstate } from "@/lib/estates";
+import { api } from "@/lib/api";
+import {
+  estateError,
+  useEstate,
+  useEstateSession,
+  useSaveEstate,
+} from "@/lib/estates";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-form";
+import { DeactivateEstateDialog } from "@/routes/_auth/estates/$estateId/-components/deactivate-estate-dialog";
 
 function EstateCreationStatus({
   createdEstate,
@@ -40,6 +55,91 @@ function EstateCreationStatus({
     <p aria-live="polite" className="mt-6" role="status">
       Estate created. Refreshing your access…
     </p>
+  );
+}
+
+function EstateEditorHeader({ editing }: { editing: boolean }) {
+  if (editing) {
+    return (
+      <PageHeader
+        description="Keep estate identity and address details organised."
+        title="Estate settings"
+      />
+    );
+  }
+  return (
+    <PageHeader
+      breadcrumbs={[
+        { label: "Estates", to: "/estates" },
+        { label: "Create estate" },
+      ]}
+      description="Keep estate identity and address details organised."
+      title="Create estate"
+    />
+  );
+}
+
+/** Owner-only, and only while the estate is active. */
+function EstateDangerZone({
+  estate,
+}: {
+  estate?: components["schemas"]["EstateResponse"];
+}) {
+  const estateId = estate?.id ?? "";
+  const { userId } = useEstateSession();
+  const queryClient = useQueryClient();
+  const [confirming, setConfirming] = useState(false);
+  const deactivate = useMutation({
+    mutationFn: async (confirmedCode: string) => {
+      const { data, error, response } = await api.POST(
+        "/estates/{id}/deactivate",
+        { params: { path: { id: estateId } }, body: { code: confirmedCode } }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    onSuccess: async (data) => {
+      queryClient.setQueryData(["estates", userId, "details", estateId], data);
+      setConfirming(false);
+      toast.success(
+        "Estate deactivated. Existing records have been preserved."
+      );
+      await queryClient.invalidateQueries({
+        queryKey: ["estates", userId, "list"],
+      });
+    },
+  });
+  const openConfirmation = useCallback(() => setConfirming(true), []);
+  const closeConfirmation = useCallback(() => setConfirming(false), []);
+  if (!estate?.owned || estate.deactivatedAt) {
+    return null;
+  }
+  return (
+    <Card className="border-destructive/50 mt-6">
+      <CardHeader>
+        <CardTitle>
+          <h2>Danger zone</h2>
+        </CardTitle>
+        <CardDescription>
+          Deactivating keeps existing records but stops new assets and reports.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={openConfirmation} variant="destructive">
+          Deactivate estate
+        </Button>
+      </CardContent>
+      {confirming ? (
+        <DeactivateEstateDialog
+          code={estate.code}
+          name={estate.name}
+          onCancel={closeConfirmation}
+          onConfirm={deactivate.mutateAsync}
+        />
+      ) : null}
+    </Card>
   );
 }
 
@@ -75,15 +175,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
   }, [navigate, estateId]);
   return (
     <PageLayout className="max-w-3xl">
-      <BackLink to="/estates">Back to estates</BackLink>
-      <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: estateId ? "Edit estate" : "Create estate" },
-        ]}
-        description="Keep estate identity and address details organised."
-        title={estateId ? "Edit estate" : "Create estate"}
-      />
+      <EstateEditorHeader editing={Boolean(estateId)} />
       {estateId && (estate.isPending || waitingForPermissions) ? (
         <p aria-live="polite" className="mt-6">
           Loading estate…
@@ -119,6 +211,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
           onSave={save.mutateAsync}
         />
       ) : null}
+      {save.createdEstate ? null : <EstateDangerZone estate={estate.data} />}
     </PageLayout>
   );
 }

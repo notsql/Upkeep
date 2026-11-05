@@ -7,7 +7,6 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { useCallback } from "react";
-import { BackLink } from "@/components/back-link";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
@@ -130,17 +129,7 @@ export function CouncilPage({ estateId }: { estateId: string }) {
   }
   return (
     <PageLayout className="space-y-6">
-      {permission.canViewManagement ? (
-        <BackLink params={{ estateId }} to="/estates/$estateId">
-          Back to estate
-        </BackLink>
-      ) : null}
       <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          { label: permission.estateName },
-          { label: manager ? "Estate members" : "Estate invitations" },
-        ]}
         description={`Invitations and estate access for ${permission.estateName}.`}
         title={manager ? "Estate members" : "Estate invitations"}
       />
