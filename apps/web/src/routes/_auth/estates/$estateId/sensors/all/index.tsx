@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { SensorsView } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page";
+import { SensorsView } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page/sensors-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/sensors/all/")({
   component: SensorsAllRoute,

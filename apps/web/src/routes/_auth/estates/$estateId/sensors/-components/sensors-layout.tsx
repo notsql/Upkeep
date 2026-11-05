@@ -1,8 +1,8 @@
 import { Gauge } from "lucide-react";
 import type { ReactNode } from "react";
-import { ListPageHeader } from "@/components/list-page-header";
-import { PageLayout } from "@/components/page-layout";
-import { SubNav } from "@/components/sub-nav";
+import { ListPageHeader } from "@/components/page/list-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { SubNav } from "@/components/page/sub-nav";
 
 /** The frame shared by both device metric views: header, note and SubNav. */
 export function SensorsLayout({

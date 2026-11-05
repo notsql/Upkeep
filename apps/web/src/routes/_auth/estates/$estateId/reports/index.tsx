@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { pageHead } from "@/lib/page-title";
-import { EstateReportsPage } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page";
+import { EstateReportsPage } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/estate-reports-page";
 import type { EstateReportsSearch } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-search";
 
 const INTEGER_POSITION = /^-?\d+$/u;

@@ -6,7 +6,7 @@ import {
   parseReadingSearch,
   type ReadingSearch,
 } from "@/lib/reading-filters";
-import { EstateReadingsPage } from "./-components/estate-readings-page";
+import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/estate-readings-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/readings/")({
   validateSearch: parseReadingSearch,

@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getAuth } from "@workos/authkit-tanstack-react-start";
-import { AdminUsersPage } from "@/routes/_auth/admin/users/-components/admin-users-page";
+import { AdminUsersPage } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-page";
 
 export const Route = createFileRoute("/_auth/admin/users/")({
   component: AdminUsersPage,

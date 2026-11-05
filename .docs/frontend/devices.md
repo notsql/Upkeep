@@ -18,8 +18,8 @@ Linked as "Devices" from the estate page's actions for Managers
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `EstateDevicesPage` (`devices/-components/estate-devices-page.tsx`) | `ListPageHeader` (`Cpu` icon, "Reporting status, quiet devices first"; no breadcrumbs, no filters, no Create - devices are registered from an asset; sidebar Assets › Devices, `canOpenDevices`), "Refreshes every 60 seconds while this page is open." A table labelled "Devices" in the server's order (Offline, Awaiting first reading, Online): Device (`identifier`, `model`), Asset (link "`assetName`" to the asset page, `assetReference`, "Retired" badge when `assetRetired`), Location (path from `useLocations`, or "Location unavailable"), Last seen (`toLocaleString` in a `<time>`, or "Never"), Status (`DeviceStatusBadge`). Loading: "Loading devices…" (`LoadingState`, `table`); empty: `EmptyState` "No devices yet" ("Register devices from an asset's Devices page", no action); errors as `ErrorState` (outline Retry refetches). | `Table`, `Badge`; `ListPageHeader`, `ErrorState`, `EmptyState` |
-| `DeviceStatusBadge` (`components/device-status-badge.tsx`, shared) | "Online" (secondary), "Offline" (destructive), "Awaiting first reading" (outline), "Deactivated" (secondary, ID-45). | `Badge` |
+| `EstateDevicesPage` (`devices/-components/estate-devices-page/estate-devices-page.tsx`) | `ListPageHeader` (`Cpu` icon, "Reporting status, quiet devices first"; no breadcrumbs, no filters, no Create - devices are registered from an asset; sidebar Assets › Devices, `canOpenDevices`), "Refreshes every 60 seconds while this page is open." A table labelled "Devices" in the server's order (Offline, Awaiting first reading, Online): Device (`identifier`, `model`), Asset (link "`assetName`" to the asset page, `assetReference`, "Retired" badge when `assetRetired`), Location (path from `useLocations`, or "Location unavailable"), Last seen (`toLocaleString` in a `<time>`, or "Never"), Status (`DeviceStatusBadge`). Loading: "Loading devices…" (`LoadingState`, `table`); empty: `EmptyState` "No devices yet" ("Register devices from an asset's Devices page", no action); errors as `ErrorState` (outline Retry refetches). | `Table`, `Badge`; `ListPageHeader`, `ErrorState`, `EmptyState` |
+| `DeviceStatusBadge` (`components/badges/device-status-badge.tsx`, shared) | "Online" (secondary), "Offline" (destructive), "Awaiting first reading" (outline), "Deactivated" (secondary, ID-45). | `Badge` |
 
 All four files are in `routes/_auth/estates/$estateId/assets/$assetId/-components/`.
 
@@ -35,7 +35,7 @@ All four files are in `routes/_auth/estates/$estateId/assets/$assetId/-component
 
 Replace route (ID-45): `/estates/$estateId/assets/$assetId/devices/$deviceId/replace`,
 implemented by `devices/$deviceId/replace/index.tsx` and its adjacent
-`-components/replace-device-page.tsx` (state in `use-replace-device-page.ts`, form card in `replace-device-form-card.tsx`). `ReplaceDevicePage` finds the device in
+`-components/replace-device-page/replace-device-page.tsx` (state in `use-replace-device-page.ts`, form card in `replace-device-form-card.tsx`). `ReplaceDevicePage` finds the device in
 `useDevices`, titles itself "Replace {identifier}", says the old device will be
 deactivated and its key stop working, and renders `DeviceForm` prefilled from it
 with "Replace device" / "Replacing…". Only the owner, on an active estate and

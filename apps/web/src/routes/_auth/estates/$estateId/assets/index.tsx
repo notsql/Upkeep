@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
-import { LoadingState } from "@/components/loading-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { type AssetSort, assetSortOptions } from "@/lib/asset-sorting";
 import type { AssetFilters } from "@/lib/assets";
 import { useInspectionAccess } from "@/lib/inspections";
 import { pageHead } from "@/lib/page-title";
-import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page";
+import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-register-page";
 import { InspectionAssetList } from "./-components/inspection-asset-list";
 
 const UUID_PATTERN =

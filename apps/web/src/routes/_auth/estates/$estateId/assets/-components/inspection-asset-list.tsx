@@ -5,13 +5,13 @@ import { Input } from "@proj/ui/components/input";
 import { Link } from "@tanstack/react-router";
 import { Layers, Search } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
-import { EmptyState } from "@/components/empty-state";
-import { ErrorState } from "@/components/error-state";
-import { FilterBar, useFilterPanel } from "@/components/filter-bar";
-import { ListPageHeader } from "@/components/list-page-header";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
-import { Pagination } from "@/components/pagination";
+import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
+import { ListPageHeader } from "@/components/page/list-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { EmptyState } from "@/components/states/empty-state";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
+import { Pagination } from "@/components/table/pagination";
 import { useInspectionAccess, useInspectionAssets } from "@/lib/inspections";
 
 export function InspectionAssetList({ estateId }: { estateId: string }) {

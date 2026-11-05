@@ -1,5 +1,5 @@
-import { LoadingState } from "@/components/loading-state";
 import { ReportImage } from "@/components/reports/report-image";
+import { LoadingState } from "@/components/states/loading-state";
 import { useEstateReportImage } from "@/lib/estate-reports";
 
 export function PrivateReportImage({

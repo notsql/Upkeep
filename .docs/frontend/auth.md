@@ -25,9 +25,9 @@ sign-in/sign-up link is an `<a>` styled with `buttonVariants({ size: "lg" })`.
 
 | File | Role | shadcn |
 | --- | --- | --- |
-| `components/auth-provider.tsx` | `AuthProvider` = `AuthKitProvider` > `AuthTokenBridge` > `AuthIdleGuard`. `AuthTokenBridge` installs `useAccessToken().getAccessToken` as the API client's token resolver (`setAccessTokenResolver`); failures resolve to `undefined`. | - |
+| `components/auth/auth-provider.tsx` | `AuthProvider` = `AuthKitProvider` > `AuthTokenBridge` > `AuthIdleGuard`. `AuthTokenBridge` installs `useAccessToken().getAccessToken` as the API client's token resolver (`setAccessTokenResolver`); failures resolve to `undefined`. | - |
 | `routes/-components/auth-idle-guard.tsx` | `AuthIdleGuard({ timeoutMinutes })`. When a user is signed in, resets a timer on `keydown`, `pointerdown`, `scroll`, `touchstart`; on expiry calls `startServerSignOut("/login")`. Timeout from `VITE_AUTH_IDLE_TIMEOUT_MINUTES` (default 30). | - |
-| `components/auth-button.tsx` | Header button. Loading: disabled ghost `Button` "Loading...". Signed out: "Sign in" link to `/api/auth/sign-in` styled with `buttonVariants({ size: "sm" })`. Signed in: circular profile Button opens a DropdownMenu with user email, "Account settings" linking to `/account`, "Admin users" (`/admin/users`, only when `canAccessPlatformAdmin`) and "Sign out" linking to `/logout`. | `Button`, `buttonVariants`, `DropdownMenu` |
+| `components/auth/auth-button.tsx` | Header button. Loading: disabled ghost `Button` "Loading...". Signed out: "Sign in" link to `/api/auth/sign-in` styled with `buttonVariants({ size: "sm" })`. Signed in: circular profile Button opens a DropdownMenu with user email, "Account settings" linking to `/account`, "Admin users" (`/admin/users`, only when `canAccessPlatformAdmin`) and "Sign out" linking to `/logout`. | `Button`, `buttonVariants`, `DropdownMenu` |
 
 ## Helpers (`lib/auth-redirect.ts`)
 

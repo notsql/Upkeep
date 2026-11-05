@@ -4,9 +4,9 @@ Routes (folder-based, under `apps/web/src/routes/_auth/estates/$estateId/roles/`
 
 | Route | File | Tab title |
 | --- | --- | --- |
-| `/estates/$estateId/roles` | `index.tsx` -> `-components/estate-roles-page.tsx` | `pageHead("Estate roles")` |
-| `/estates/$estateId/roles/new` | `new/index.tsx` -> `new/-components/new-role-page.tsx` | `pageHead("New role")` |
-| `/estates/$estateId/roles/$roleId/edit` | `$roleId/edit/index.tsx` -> `$roleId/edit/-components/edit-role-page.tsx` | `pageHead("Edit role")` |
+| `/estates/$estateId/roles` | `index.tsx` -> `-components/estate-roles-page/estate-roles-page.tsx` | `pageHead("Estate roles")` |
+| `/estates/$estateId/roles/new` | `new/index.tsx` -> `new/-components/new-role-page/new-role-page.tsx` | `pageHead("New role")` |
+| `/estates/$estateId/roles/$roleId/edit` | `$roleId/edit/index.tsx` -> `$roleId/edit/-components/edit-role-page/edit-role-page.tsx` | `pageHead("Edit role")` |
 
 Shared `roles/-components/`:
 

@@ -1,11 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { FormPageHeader } from "@/components/form-page-header";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
+import { FormPageHeader } from "@/components/page/form-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { LoadingState } from "@/components/states/loading-state";
 import { type AssetInput, useAsset, useUpdateAsset } from "@/lib/assets";
-import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
+import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form/asset-form";
 
 export function EditAssetPage({
   estateId,

@@ -2,16 +2,16 @@ import { buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useCallback } from "react";
-import { DetailPageHeader } from "@/components/detail-page-header";
-import { ErrorState } from "@/components/error-state";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
+import { DetailPageHeader } from "@/components/page/detail-page-header";
+import { PageLayout } from "@/components/page/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
 import { pageHead } from "@/lib/page-title";
 import { useWorkOrderAccess } from "@/lib/work-orders";
-import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog";
+import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog/change-location-dialog";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
 
 export const Route = createFileRoute(

@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import { NotFoundPage } from "@/components/not-found-page";
-import { RoutePending } from "@/components/route-pending";
+import { NotFoundPage } from "@/components/states/not-found-page";
+import { RoutePending } from "@/components/states/route-pending";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {

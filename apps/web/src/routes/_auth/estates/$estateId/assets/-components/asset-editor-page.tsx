@@ -1,10 +1,10 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { FormPageHeader } from "@/components/form-page-header";
-import { PageLayout } from "@/components/page-layout";
+import { FormPageHeader } from "@/components/page/form-page-header";
+import { PageLayout } from "@/components/page/page-layout";
 import { type AssetInput, useCreateAsset } from "@/lib/assets";
-import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
+import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form/asset-form";
 
 export function NewAssetPage({ estateId }: { estateId: string }) {
   const create = useCreateAsset(estateId);

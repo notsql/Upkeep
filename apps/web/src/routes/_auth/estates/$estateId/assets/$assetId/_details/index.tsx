@@ -3,8 +3,8 @@ import { pageHead } from "@/lib/page-title";
 import {
   ASSET_SECTIONS,
   type AssetSection,
-} from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
-import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview";
+} from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-details-page";
+import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-overview";
 
 /** Old `?tab=` links (before each section had its own page) still land. */
 function validateSearch(search: Record<string, unknown>): {

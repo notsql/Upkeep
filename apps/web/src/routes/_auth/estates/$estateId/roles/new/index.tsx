@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { NewRolePage } from "@/routes/_auth/estates/$estateId/roles/new/-components/new-role-page";
+import { NewRolePage } from "@/routes/_auth/estates/$estateId/roles/new/-components/new-role-page/new-role-page";
 
 /** `returnTo=council` comes from the invite dialog's "Create new role…". */
 export interface NewRoleSearch {

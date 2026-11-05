@@ -13,7 +13,7 @@ import {
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/reports/new";
-import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page";
+import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page/new-report-page";
 
 const { get, post, navigate, auth } = vi.hoisted(() => ({
   get: vi.fn(),

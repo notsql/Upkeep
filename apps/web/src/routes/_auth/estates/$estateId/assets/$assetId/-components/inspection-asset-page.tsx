@@ -3,13 +3,13 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useCallback } from "react";
-import { DetailCard } from "@/components/detail-card";
-import { DetailPageHeader } from "@/components/detail-page-header";
-import { ErrorState } from "@/components/error-state";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
+import { DetailCard } from "@/components/page/detail-card";
+import { DetailPageHeader } from "@/components/page/detail-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { useInspectionAccess, useInspectionAsset } from "@/lib/inspections";
-import { InspectionHistoryTable } from "./inspection-history-table";
+import { InspectionHistoryTable } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-table";
 
 export function InspectionAssetPage({
   estateId,

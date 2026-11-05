@@ -21,12 +21,18 @@ vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
-vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
-  PendingInvitations: () => null,
-}));
-vi.mock("@/routes/_auth/estates/-components/invitation-acceptance", () => ({
-  InvitationAcceptance: () => null,
-}));
+vi.mock(
+  "@/routes/_auth/estates/-components/estate-list-page/pending-invitations",
+  () => ({
+    PendingInvitations: () => null,
+  })
+);
+vi.mock(
+  "@/routes/_auth/estates/-components/estate-list-page/invitation-acceptance",
+  () => ({
+    InvitationAcceptance: () => null,
+  })
+);
 function EstateDestination() {
   return <h1>Estate destination</h1>;
 }

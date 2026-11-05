@@ -3,7 +3,7 @@ import { pageHead } from "@/lib/page-title";
 import {
   AssetCategoriesList,
   intervalFilterFor,
-} from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
+} from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/asset-categories-page";
 
 /** One service-interval view: days, months, years or not-set. */
 export const Route = createFileRoute(

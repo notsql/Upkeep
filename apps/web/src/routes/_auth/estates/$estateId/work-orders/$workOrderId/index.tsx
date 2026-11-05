@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { WorkOrderDetailPage } from "./-components/work-order-detail-page";
+import { WorkOrderDetailPage } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/work-order-detail-page";
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/work-orders/$workOrderId/"
 )({

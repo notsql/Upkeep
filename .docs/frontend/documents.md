@@ -103,7 +103,7 @@ document and work-order read capabilities; writes remain Owner/Manager-only.
 
 ## Responsive document list
 
-`-components/document-list.tsx` uses the existing `useMobile` media query:
+`-components/documents-page/document-list.tsx` uses the existing `useMobile` media query:
 under 768px it renders a labelled `Documents` list of shadcn Cards; desktop keeps
 a semantic table labelled Documents. Both use the existing page query result.
 Cards show the full wrapping filename, type, uploaded time and asset association;

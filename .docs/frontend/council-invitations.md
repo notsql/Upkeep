@@ -3,7 +3,7 @@
 ## Routes and components
 
 The Members section is two folder routes sharing one page component
-(`CouncilPage({ estateId, view })` in `council/-components/council-page.tsx`):
+(`CouncilPage({ estateId, view })` in `council/-components/council-page/council-page.tsx`):
 
 | Route | File | `view` | Tab title |
 | --- | --- | --- | --- |

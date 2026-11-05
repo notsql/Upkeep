@@ -113,9 +113,9 @@ Example:
 
 ```tsx
 import { Card, CardContent } from "@proj/ui/components/card";
-import { FormActions } from "@/components/form-actions";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { FormActions } from "@/components/forms/form-actions";
+import { PageHeader } from "@/components/page/page-header";
+import { PageLayout } from "@/components/page/page-layout";
 
 <PageLayout className="max-w-3xl">
   <PageHeader title="Create estate" breadcrumbs={[
@@ -189,7 +189,7 @@ bar's estate switcher already shows it) or any other context the shell shows.
 Use it only for a short fragment describing the page ("Equipment in this
 estate"), or omit it. Record pages may use the record's own name as the title.
 
-### Header variants (`components/page-header.tsx`, `list-page-header.tsx`, `detail-page-header.tsx`, `form-page-header.tsx`)
+### Header variants (`components/page/page-header.tsx`, `list-page-header.tsx`, `detail-page-header.tsx`, `form-page-header.tsx`)
 
 Screens use one of three variants; do not assemble `PageHeader` + actions by
 hand. `PageHeader` itself stays the primitive underneath (and for the odd page
@@ -231,7 +231,7 @@ convention).
 Breadcrumb `to` is a closed union; add a route to `Breadcrumb` in
 `page-header.tsx` when a new parent needs linking.
 
-### List-page header actions: `CreateButton`, `FilterToggle` (`components/page-actions.tsx`, `components/filter-toggle.tsx`)
+### List-page header actions: `CreateButton`, `FilterToggle` (`components/page/page-actions.tsx`, `components/filters/filter-toggle.tsx`)
 
 Every list page puts the same actions, in the same order, in `PageHeader
 actions`: `FilterToggle` (if the page has filters) then `CreateButton` (if the
@@ -251,9 +251,9 @@ order", "Record manual reading"): the label is always "Create".
   "Filters" or "Filters, N active". Spread `useFilterPanel(...).toggleProps`.
 
 ```tsx
-import { FilterToggle } from "@/components/filter-toggle";
-import { CreateButton } from "@/components/page-actions";
-import { FilterBar, useFilterPanel } from "@/components/filter-bar";
+import { FilterToggle } from "@/components/filters/filter-toggle";
+import { CreateButton } from "@/components/page/page-actions";
+import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
 
 const panel = useFilterPanel(activeCount);
 
@@ -277,7 +277,7 @@ const panel = useFilterPanel(activeCount);
 <CreateButton onClick={() => setDialogOpen(true)} />
 ```
 
-### Section titles: `SectionHeading` (`components/section-heading.tsx`)
+### Section titles: `SectionHeading` (`components/page/section-heading.tsx`)
 
 Props: `children: ReactNode`, `icon?: LucideIcon`, `level?: 2 | 3 | 4`
 (default 2), `id?: string` (for `aria-labelledby`), `className?: string`.
@@ -285,7 +285,7 @@ Renders `h{level}` (`text-lg font-semibold`) with the icon decorative
 (`aria-hidden`) and muted. Use it for card and section titles, or put the same
 icon + text inside `CardTitle`.
 
-### Empty: `EmptyState` (`components/empty-state.tsx`)
+### Empty: `EmptyState` (`components/states/empty-state.tsx`)
 
 Props: `title: string`, `description?: ReactNode`, `action?: ReactNode`.
 Renders shadcn `Empty` (`EmptyHeader` > `EmptyTitle` + muted
@@ -319,7 +319,7 @@ card-in-a-card. There is no option for this; it is automatic.
 />
 ```
 
-### Loading: `LoadingState` (`components/loading-state.tsx`)
+### Loading: `LoadingState` (`components/states/loading-state.tsx`)
 
 Props: `label: string` (e.g. "Loading work orders…"), `variant?: "list" |
 "table" | "cards"` (default `list`), `rows?: number` (default 3). Renders
@@ -341,7 +341,7 @@ if (workOrders.isPending) {
 }
 ```
 
-### Filters: `FilterBar` (`components/filter-bar.tsx`)
+### Filters: `FilterBar` (`components/filters/filter-bar.tsx`)
 
 The filter area is its own section: a muted, bordered panel
 (`bg-muted/40 rounded-lg border p-3 sm:p-4`) headed by a lucide `ListFilter`
@@ -405,7 +405,7 @@ fields, built on shadcn `Popover` + `Calendar` (`@proj/ui/components/popover`,
 `@proj/ui/components/calendar`, react-day-picker). Values are the same strings
 the native inputs used, so they drop into existing state and API mapping.
 
-- `DatePicker` (`components/date-picker.tsx`): `value: string`
+- `DatePicker` (`components/forms/date-picker.tsx`): `value: string`
   (`YYYY-MM-DD`, `""` when empty), `onChange(value: string)`,
   `placeholder?` ("Pick a date"), `clearable?` (default true; shows a "Clear
   date" button in the popover), `min?`/`max?` (`YYYY-MM-DD`, days outside are
@@ -414,13 +414,13 @@ the native inputs used, so they drop into existing state and API mapping.
   outline Button with a `CalendarIcon` showing e.g. "14 Mar 2026". Label it with
   `<FieldLabel htmlFor={id}>` - the trigger is a button, so the label names it.
   Also exports `parseDateValue`, `toDateValue`, `formatDateValue`.
-- `DateTimePicker` (`components/date-time-picker.tsx`): `value: string`
+- `DateTimePicker` (`components/forms/date-time-picker.tsx`): `value: string`
   (`YYYY-MM-DDTHH:mm`, as `datetime-local`), `onChange`, `placeholder?`, same
   trigger props. A DatePicker plus a `TimePicker` (group named
   "<aria-label> time", Selects "<aria-label> hour"/"<aria-label> minute"; id
   `<id>-time`). Picking a day keeps the time (00:00 if none); changing the
   time keeps the date (today if none).
-- `TimePicker` (`components/time-picker.tsx`): `value: string` (`HH:mm`, `""`
+- `TimePicker` (`components/forms/time-picker.tsx`): `value: string` (`HH:mm`, `""`
   empty), `onChange(value: string)`, `minuteStep?` (default 5; an off-step
   current minute stays listed), `partLabel?` (prefix for the hour/minute
   names, defaults to `aria-label`), plus `id` (on the hour Select; minute gets
@@ -432,7 +432,7 @@ the native inputs used, so they drop into existing state and API mapping.
   the browser widget - so this is built from `Select`. **Never use
   `<input type="time">`**; every time field uses `TimePicker` or
   `DateTimePicker`.
-- `DateRangePicker` (`routes/_auth/estates/$estateId/assets/$assetId/-components/date-range-picker.tsx`): `value: { from:
+- `DateRangePicker` (`routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section/date-range-picker.tsx`): `value: { from:
   string; to: string }` (`YYYY-MM-DD` each, `""` unset), `onChange`,
   `placeholder?` ("Any date"), same trigger props. One outline trigger
   ("1 Mar 2026 – 31 Mar 2026", `CalendarRange` icon) opening a two-month range
@@ -502,7 +502,7 @@ only in the sidebar and the `PageHeader`; empty states use the neutral
 icon or none; the filter `ListFilter` lives only on the `FilterToggle`.
 
 - **Nav items and page headers**: the same icon for a section in the sidebar
-  and in `PageHeader icon`, taken from `components/app-navigation.tsx`:
+  and in `PageHeader icon`, taken from `components/shell/app-navigation.tsx`:
   `LayoutDashboard` overview, `Wrench` work orders, `ClipboardList` fault
   reports, `ClipboardCheck` inspections, `MapPin` locations, `Layers` assets,
   `Cpu` devices, `Activity` readings, `Gauge` device monitoring,
@@ -510,7 +510,7 @@ icon or none; the filter `ListFilter` lives only on the `FilterToggle`.
   `ShieldCheck` roles, `Tags` asset categories, `Settings` estate settings,
   `Building2` estates. Pages outside that list: `UserRound` account,
   `ShieldCheck` admin users, `ClipboardPenLine` resident "Report a fault". Check
-  `components/app-navigation.tsx` and reuse what it uses.
+  `components/shell/app-navigation.tsx` and reuse what it uses.
 - **Primary actions**: leading icon - `Plus` create, `Save`/none for submit,
   `Upload`, `Download`, `Send`, `UserPlus`.
 - **Empty states**: no `icon` prop (neutral `Inbox` default); `SearchX` for
@@ -531,7 +531,7 @@ Results below the FilterBar: shadcn `Table` at >=768px, Card records below
 
 Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
 
-- **`ErrorState`** (`components/error-state.tsx`): `message: string`,
+- **`ErrorState`** (`components/states/error-state.tsx`): `message: string`,
   `onRetry: () => void`, `retryLabel?` (default "Retry"), `retryAriaLabel?`
   (accessible name when several Retry buttons share a screen, e.g. "Retry
   asset link for <file>" per document row). Destructive `Alert`
@@ -539,17 +539,17 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
   failed query renders this - not `<p role="alert">… <Button>Retry</Button></p>`.
   Mutation errors inside dialogs stay a `text-destructive` `role="alert"` line
   (ConfirmDialog/FormDialog do this via `error`).
-- **`Pagination`** (`components/pagination.tsx`): `label` (nav name, e.g.
+- **`Pagination`** (`components/table/pagination.tsx`): `label` (nav name, e.g.
   "Work order pages"), `summary?` ("1–20 of 45"), `canPrevious`, `canNext`,
   `onPrevious`, `onNext`, `disabled?`. Outline "Previous page"/"Next page".
   The caller owns offset or cursor state. Readings keep their numbered
   `ReadingPagination`.
-- **`SectionCard`** (`components/section-card.tsx`): `title`, `icon?`,
+- **`SectionCard`** (`components/page/section-card.tsx`): `title`, `icon?`,
   `level?` (2), `description?`, `actions?` (header top right), `className?`,
   `children`. A `Card` holding a `section` labelled by its `SectionHeading`.
   Use for every titled card section on detail pages instead of `Card` +
   `CardHeader` + `SectionHeading` by hand. `icon` must not repeat the page icon.
-- **`ConfirmDialog`** (`components/confirm-dialog.tsx`): `open`, `title`,
+- **`ConfirmDialog`** (`components/dialogs/confirm-dialog.tsx`): `open`, `title`,
   `description?` (the effect), `children?` (identify the target),
   `confirmLabel`, `pendingLabel?`, `cancelLabel?` ("Cancel"; e.g. "Keep
   role"), `confirmIcon?`, `destructive?` (true), `pending?`,
@@ -560,7 +560,7 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
   including the type-to-confirm ones (deactivate estate, retire asset,
   deactivate device). It is not a `<form>`: Enter in its inputs does not
   confirm.
-- **`FormDialog`** (`components/form-dialog.tsx`): `open`, `title`,
+- **`FormDialog`** (`components/dialogs/form-dialog.tsx`): `open`, `title`,
   `description?`, `children` (fields), `submitLabel`, `pendingLabel?`
   ("Saving…"), `pending?`, `submitDisabled?`, `secondaryActions?` (extra
   footer buttons before Cancel, e.g. report "Reload" after a conflict),
@@ -598,7 +598,7 @@ Not built (too varied to share yet): a list wrapper - keep the state order
 `LoadingState` -> `ErrorState` -> `EmptyState` -> results by hand; a form page
 layout - use `PageLayout className="max-w-3xl"` + `Card` + `FormActions`.
 
-### Sub-views: separate routes + `SubNav` (`components/sub-nav.tsx`)
+### Sub-views: separate routes + `SubNav` (`components/page/sub-nav.tsx`)
 
 Distinct sub-views of one subject are **separate routes**, not in-page
 `Tabs`: folder-based child routes (`estates/$estateId/locations/index.tsx`

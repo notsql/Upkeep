@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { EditRolePage } from "@/routes/_auth/estates/$estateId/roles/$roleId/edit/-components/edit-role-page";
+import { EditRolePage } from "@/routes/_auth/estates/$estateId/roles/$roleId/edit/-components/edit-role-page/edit-role-page";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/roles/$roleId/edit/"

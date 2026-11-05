@@ -2,13 +2,13 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { FormPageHeader } from "@/components/form-page-header";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
+import { FormPageHeader } from "@/components/page/form-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { LoadingState } from "@/components/states/loading-state";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useRegisterDevice } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
-import { DeviceForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form";
+import { DeviceForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form";
 
 export function NewDevicePage({
   estateId,

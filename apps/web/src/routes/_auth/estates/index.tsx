@@ -5,7 +5,7 @@ import {
   type EstateDirectoryFilters,
   validateEstateDirectorySearch,
 } from "@/routes/_auth/estates/-components/estate-directory-filters";
-import { EstateListPage } from "@/routes/_auth/estates/-components/estate-list-page";
+import { EstateListPage } from "@/routes/_auth/estates/-components/estate-list-page/estate-list-page";
 
 export const Route = createFileRoute("/_auth/estates/")({
   validateSearch: validateEstateDirectorySearch,

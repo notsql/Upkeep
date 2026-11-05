@@ -1,9 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { HomePending } from "@/components/home-pending";
+import { HomePending } from "@/components/states/home-pending";
 import { getSessionAccess } from "@/lib/access-server";
 import { estateDestination } from "@/lib/estate-destinations";
 import { pageHead } from "@/lib/page-title";
-import { HomePage } from "@/routes/-components/home-page";
+import { HomePage } from "@/routes/-components/home-page/home-page";
 export const Route = createFileRoute("/")({
   component: HomePage,
   pendingComponent: HomePending,

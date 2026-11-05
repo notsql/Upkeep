@@ -74,13 +74,16 @@ const state = vi.hoisted(() => ({
   context: {} as Record<string, unknown>,
   revoked: false,
 }));
-vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock(
-  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/date-range-picker",
+  "@/components/forms/date-picker",
   () => import("@tests/date-picker-stubs")
 );
 vi.mock(
-  "@/components/date-time-picker",
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
+vi.mock(
+  "@/components/forms/date-time-picker",
   () => import("@tests/date-picker-stubs")
 );
 vi.mock("@/routes/__root", async () => {

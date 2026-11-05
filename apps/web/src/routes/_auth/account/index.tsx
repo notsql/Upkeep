@@ -1,8 +1,8 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { UserRound } from "lucide-react";
-import { DetailCard } from "@/components/detail-card";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { DetailCard } from "@/components/page/detail-card";
+import { PageHeader } from "@/components/page/page-header";
+import { PageLayout } from "@/components/page/page-layout";
 import { pageHead } from "@/lib/page-title";
 
 export const Route = createFileRoute("/_auth/account/")({

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { MyReportsPage } from "./-components/my-reports-page";
+import { MyReportsPage } from "@/routes/_auth/reports/-components/my-reports-page/my-reports-page";
 
 export const Route = createFileRoute("/_auth/reports/")({
   validateSearch: (search: Record<string, unknown>): { estateId?: string } => ({

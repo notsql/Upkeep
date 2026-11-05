@@ -23,7 +23,7 @@ API: [service-intervals.md](../api/service-intervals.md).
 Types `ServiceInterval` (`{ value, unit }`) and `IntervalUnit` come from the generated contract. All
 hooks throw `estateError(...)` on failure.
 
-## `ServiceIntervalDialog` (`src/components/service-interval-dialog.tsx`)
+## `ServiceIntervalDialog` (`src/components/service-intervals/service-interval-dialog.tsx`)
 
 Shared by both screens. Always-open `Dialog` with a `title`, a `description`, an "Every" number
 `Input` (role spinbutton) and a "Unit" `Select` (Days, Months, Years), starting from `interval`, or
@@ -38,7 +38,7 @@ shadcn: `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescrip
 `DialogFooter`, `Field`, `FieldLabel`, `FieldError`, `Input`, `Select`, `SelectTrigger`,
 `SelectValue`, `SelectContent`, `SelectItem`, `Button`, `Alert`, `AlertDescription`.
 
-## `IntervalBadge` (`src/routes/_auth/estates/$estateId/asset-categories/-components/interval-badge.tsx`)
+## `IntervalBadge` (`src/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/interval-badge.tsx`)
 
 An outline `Badge` with `formatInterval(interval)` as its text, coloured by unit: `DAY` blue,
 `MONTH` emerald (green), `YEAR` violet (purple), each with dark-mode shades. A null interval is a
@@ -47,8 +47,8 @@ never the only signal.
 
 ## Asset categories page additions
 
-- `CategorySummaryCards` (`asset-categories/-components/category-summary-cards.tsx`): three shared
-  `SummaryCard`s (`src/components/summary-card.tsx`, a `Card`)
+- `CategorySummaryCards` (`asset-categories/-components/asset-categories-layout/category-summary-cards.tsx`): three shared
+  `SummaryCard`s (`src/components/page/summary-card.tsx`, a `Card`)
   in a `sm:grid-cols-3` grid, each a `region` named by its `h2` title, with a large count and a
   lucide icon:
   - **Fails silently** (`EyeOff`): flagged count, "Categories flagged for spot checks".
@@ -70,7 +70,7 @@ never the only signal.
 - The button opens `ServiceIntervalDialog` titled "Service interval for <Label>"; a successful save
   or clear closes it and toasts "Service interval updated."
 
-## `AssetServiceIntervalCard` (`assets/$assetId/-components/asset-service-interval-card.tsx`)
+## `AssetServiceIntervalCard` (`assets/$assetId/-components/asset-maintenance/asset-service-interval-card.tsx`)
 
 A `section` labelled by its "Service interval" heading, in a `Card`:
 

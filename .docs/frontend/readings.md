@@ -268,7 +268,7 @@ Manual review additions:
 (`routes/_auth/estates/$estateId/assets/$assetId/readings/index.tsx`, page
 title "Readings"). Requires sign-in. Linked from the asset details page by an
 outline "Readings" link in `AssetDevicesSection`'s action row
-(`$assetId/-components/asset-devices-section.tsx`, see [devices.md](devices.md)),
+(`$assetId/-components/asset-devices/asset-devices-section.tsx`, see [devices.md](devices.md)),
 shown to everyone who can see the section, before "Register device".
 
 ### Search params
@@ -352,7 +352,7 @@ state while existing data remains visible.
 ## Export CSV (ID-61 / ID-64)
 
 The estate Readings screen has a shadcn Export CSV Button with help: Exports all
-matching readings, across every page. `-components/reading-export.tsx` supplies
+matching readings, across every page. `-components/estate-readings-page/reading-export.tsx` supplies
 pending Spinner, Cancel export Button, destructive error Alert and cancellation
 status. Visibility follows current `canViewReadings` plus a ready authenticated
 session; no new permission is introduced. The action is disabled for invalid
@@ -471,7 +471,7 @@ worker and connection. These are local measurements, not a deployed Cloud Run SL
 ### Resolved QA finding: manual-entry decimal precision (ID-63)
 
 Original QA finding, corrected by the follow-up below. The form accepted up to
-12 integer digits, but `new/-components/use-manual-reading-submission.ts` converted
+12 integer digits, but `new/-components/manual-reading-form/use-manual-reading-submission.ts` converted
 the user's string with `Number(fields.value)` before JSON serialization.
 Entering `999999999999.123456` produced the actual outbound numeric payload
 `999999999999.1234`. This changes the requested six-decimal measurement before

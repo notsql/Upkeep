@@ -29,7 +29,7 @@ Both throw `estateError(...)` on failure.
 ## Screen
 
 `AssetCategoriesLayout`: `ListPageHeader` (`Tags` icon, "Silent-failure flags and service intervals"; no breadcrumbs, no filters or create), then a
-`section` labelled "Asset categories" with the summary cards, a `SubNav` ("Filter by service interval": All (exact), Days, Months, Years, Not set - each its own URL) and the child view. `AssetCategoriesList` (`-components/asset-categories-page.tsx`; state in `use-asset-categories-list.ts`, table in `asset-categories-table.tsx`) renders:
+`section` labelled "Asset categories" with the summary cards, a `SubNav` ("Filter by service interval": All (exact), Days, Months, Years, Not set - each its own URL) and the child view. `AssetCategoriesList` (`-components/asset-categories-page/asset-categories-page.tsx`; state in `use-asset-categories-list.ts`, table in `asset-categories-table.tsx`) renders:
 
 - summary cards (Fails silently, Missing service interval, Intervals set), described in
   [service-intervals.md](service-intervals.md);
@@ -45,7 +45,7 @@ Both throw `estateError(...)` on failure.
 - the service-interval summary, unit labels, filter by interval and dialog (ID-81), described in
   [service-intervals.md](service-intervals.md).
 
-Flag / Stop flagging opens `-components/silent-failure-dialog.tsx`, the shared `ConfirmDialog`
+Flag / Stop flagging opens `-components/asset-categories-page/silent-failure-dialog.tsx`, the shared `ConfirmDialog`
 ("Flag <Label> as failing silently?" / "Stop flagging <Label>?", description states the effect) with Cancel and a confirm button
 ("Flag category" (default variant), or destructive "Stop flagging"; "Saving…" while pending). Confirming calls the mutation; the dialog
 locks while pending. Success closes the dialog and toasts "Asset category updated."; a failure

@@ -23,7 +23,7 @@ vi.mock("@/lib/assets", () => ({
   useUpdateAsset: () => ({ mutateAsync: vi.fn() }),
 }));
 vi.mock(
-  "@/routes/_auth/estates/$estateId/assets/-components/asset-form",
+  "@/routes/_auth/estates/$estateId/assets/-components/asset-form/asset-form",
   () => ({ AssetForm: () => null })
 );
 

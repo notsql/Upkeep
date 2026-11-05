@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { ReadingSearch } from "@/lib/reading-filters";
-import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page";
+import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/estate-readings-page";
 
 const { get, permission } = vi.hoisted(() => ({
   get: vi.fn(),

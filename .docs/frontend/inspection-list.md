@@ -5,7 +5,7 @@ API: [inspection-list.md](../api/inspection-list.md).
 ## Route
 
 `/estates/$estateId/inspections` — `src/routes/_auth/estates/$estateId/inspections/index.tsx`
-(title "Inspections") renders `-components/inspections-page.tsx`, which composes
+(title "Inspections") renders `-components/inspections-page/inspections-page.tsx`, which composes
 `inspections-generation-status.tsx`, `inspections-no-flagged-categories.tsx` and
 `inspections-checks.tsx`; `use-inspections-page.ts` holds queries and generation.
 
@@ -27,7 +27,7 @@ Both throw `estateError(...)`. Recording permission comes from `useInspectionAcc
 `InspectionsPage`: `PageLayout` + `ListPageHeader` (no breadcrumbs or filters; description the month,
 e.g. "November 2026"), then:
 
-- **Summary cards** (`SummaryCard`, `src/components/summary-card.tsx`), each a region named by its
+- **Summary cards** (`SummaryCard`, `src/components/page/summary-card.tsx`), each a region named by its
   title: **Overdue** (amber when above 0, "Missed in an earlier month"), **Due this month**,
   **Done this month**, and, only when there are unscheduled assets, **Not scheduled** (amber, with a
   **Set service intervals** link to `/estates/$estateId/asset-categories`).
@@ -39,7 +39,7 @@ e.g. "November 2026"), then:
   shows a `role="note"` explanation.
 - Checks grouped in the server's order: a `section` per block (an `h2` of the block name), and in
   it a `section` per level named "<Block>, <Level>" ("Block-wide" when `level` is null) with an
-  `h3` and a `CheckTable` (`-components/check-table.tsx`). Columns: Asset ("<reference> · <name>"
+  `h3` and a `CheckTable` (`-components/inspections-page/check-table.tsx`). Columns: Asset ("<reference> · <name>"
   linked to the asset), Category, Due ("1 Oct 2026"), Basis ("Every 6 months (asset)", "Every 1
   year (category)", "Predicted", "Never inspected"), Status (`Badge`: destructive **Overdue**, blue
   **Due**, green **Done · Pass/Fail**), and an unlabelled action column: **Record inspection**

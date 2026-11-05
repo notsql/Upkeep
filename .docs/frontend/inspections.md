@@ -7,13 +7,13 @@ Routes use folder-based files under
 | --- | --- |
 | `index.tsx` | Existing owner asset register, or `-components/inspection-asset-list.tsx` for permitted Managers/Crew |
 | `$assetId/_details/route.tsx` | Layout: owner asset frame (`AssetDetailsLayout`) or, for inspection-only viewers, `$assetId/-components/inspection-asset-page.tsx` (`DetailPageHeader`, limited context, `ErrorState` on failure) |
-| `$assetId/_details/inspections/index.tsx` | The asset's Inspections sub-page: `-components/inspection-history-table.tsx` (the inspection-only page also mounts it) |
-| `$assetId/inspections/new/index.tsx` | `-components/inspection-form.tsx`: required explicit outcome/date, optional notes and private photos |
-| `$assetId/inspections/$inspectionId/index.tsx` | `-components/inspection-detail.tsx`: immutable result, evidence and follow-up |
+| `$assetId/_details/inspections/index.tsx` | The asset's Inspections sub-page: `-components/inspection-history-table/inspection-history-table.tsx` (the inspection-only page also mounts it) |
+| `$assetId/inspections/new/index.tsx` | `-components/inspection-form/inspection-form.tsx`: required explicit outcome/date, optional notes and private photos |
+| `$assetId/inspections/$inspectionId/index.tsx` | `-components/inspection-detail/inspection-detail.tsx`: immutable result, evidence and follow-up |
 
 The work-order `new/index.tsx` validates `sourceInspectionId` as a UUID,
 rejecting mixed report/inspection source IDs before reading either source.
-It renders the existing `-components/work-order-form.tsx` for all sources,
+It renders the existing `-components/work-order-form/work-order-form.tsx` for all sources,
 including failed inspections. There is no separate inspection work-order form.
 
 ## Access and screen composition
@@ -69,7 +69,7 @@ detail/history and source lookup, without invalidating other users or estates.
 Pick the estate in the header switcher, then sidebar **Assets → select asset**. Both the full Owner
 screen and limited Manager/Crew screen show **Inspection records** when
 `canViewInspectionResults` is granted. The shared route-local component is
-`$assetId/-components/inspection-history-table.tsx`.
+`$assetId/-components/inspection-history-table/inspection-history-table.tsx`.
 
 The five columns are Inspection date, Outcome, Follow-up / work order,
 Inspector and View record. The table preserves the API order (inspection date,

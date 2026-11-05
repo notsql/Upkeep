@@ -3,7 +3,7 @@ import { type ChangeEvent, useCallback } from "react";
 /**
  * Text-box stand-ins for the shared date pickers, for screen tests that only
  * care what value a screen sends. Swap them in with
- * `vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"))`
+ * `vi.mock("@/components/forms/date-picker", () => import("@tests/date-picker-stubs"))`
  * (and the same for `date-time-picker` / `date-range-picker`). They take the
  * pickers' string values, so a `fireEvent.change` with a `YYYY-MM-DD` (or
  * `YYYY-MM-DDTHH:mm`) string stands in for picking from the calendar. The

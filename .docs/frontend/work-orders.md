@@ -9,7 +9,7 @@ All route paths are beneath `src/routes/_auth/estates/$estateId/work-orders/`:
 
 | Folder | URL | Screen |
 | --- | --- | --- |
-| index.tsx; -components/work-order-list-page.tsx; -components/work-order-filters.tsx | /estates/$estateId/work-orders | Status/category/priority/reference filters, paginated list and conditional Create |
+| index.tsx; -components/work-order-list-page/work-order-list-page.tsx; -components/work-order-list-page/work-order-filters.tsx | /estates/$estateId/work-orders | Status/category/priority/reference filters, paginated list and conditional Create |
 | new/index.tsx; new/-components/ | /estates/$estateId/work-orders/new | Creation form; optional validated sourceReportId UUID search |
 | $workOrderId/index.tsx; $workOrderId/-components/ | /estates/$estateId/work-orders/$workOrderId | Saved detail, progress, audit and completion |
 
@@ -41,7 +41,7 @@ No work orders yet. Status/category filters share the same URL/pagination rules.
 Route-local components split source selection, optional asset search, location
 feedback and save errors. The existing ReportFilters is reused outside the
 creation form, so its filter form is never nested inside another form.
-`new/-components/work-order-form.tsx` composes the creation screen from
+`new/-components/work-order-form/work-order-form.tsx` composes the creation screen from
 `work-order-form-source-status.tsx`, `work-order-form-details-fields.tsx`,
 `work-order-form-asset-fields.tsx` and `work-order-form-footer.tsx`;
 `use-work-order-form.ts` owns its state, prefill, source-conflict choices and
@@ -163,9 +163,9 @@ were removed).
 
 ## Column sorting
 
-The list's `-components/work-order-table.tsx` renders sortable Reference,
+The list's `-components/work-order-list-page/work-order-table.tsx` renders sortable Reference,
 Category, Priority and Created headers using shared
-`components/sortable-table-head.tsx` (shadcn Button/TableHead with direction
+`components/table/sortable-table-head.tsx` (shadcn Button/TableHead with direction
 icons, keyboard interaction and aria-sort). First selecting Priority/Created
 uses descending order; Reference/Category use ascending. Clicking again reverses.
 Default is Created descending. Description and Status stay static.
@@ -217,7 +217,7 @@ Failed saves retain entered values. The version the user reviewed is retained;
 background refetch cannot silently authorize a new version. Conflicts offer
 Refresh work order and explicit review before retrying. Refresh after an ambiguous
 response lets the user check whether the first request saved. No mutation retries
-automatically. `components/work-order-completion.tsx` renders read-only outcomes
+automatically. `components/work-orders/work-order-completion.tsx` renders read-only outcomes
 on both work-order detail and asset maintenance; unknown values stay Unknown.
 
 Status history shows chronological transitions, actor display name (or Name
@@ -376,7 +376,7 @@ See [inspection screens](inspections.md) for routes, query keys and failure stat
 
 ## Responsive work-order list
 
-Below 768px, `-components/work-order-table.tsx` uses the existing `useMobile`
+Below 768px, `-components/work-order-list-page/work-order-table.tsx` uses the existing `useMobile`
 hook to render `work-order-cards.tsx` and `work-order-sort-controls.tsx` instead
 of the table. The single `Work orders` list shows reference/detail link,
 description, priority, readable status/category and created time using shadcn

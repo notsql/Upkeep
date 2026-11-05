@@ -3,13 +3,13 @@
 The signed-in `/` for resident-only accounts
 (`hasResidentMembership && !canEnterWorkspace`). Paths are relative to
 `apps/web/src/`. No new route: `routes/index.tsx` skips its redirects for these
-accounts and `routes/-components/home-page.tsx` renders `ResidentHome`, which
+accounts and `routes/-components/home-page/home-page.tsx` renders `ResidentHome`, which
 passes `useCurrentEstate().estateId` (the `estateId` search param, else the sole
 resident estate) to `ResidentDashboard`.
 
 ## Screen
 
-`routes/-components/resident-dashboard.tsx` — `ResidentDashboard({ estateId? })`:
+`routes/-components/home-page/resident-home/resident-dashboard.tsx` — `ResidentDashboard({ estateId? })`:
 
 - `PageLayout` + `PageHeader` titled "Dashboard", action "Report a fault"
   (`buttonVariants()` link to `/reports/new`, with `estateId` when known).
@@ -29,7 +29,7 @@ resident estate) to `ResidentDashboard`.
 shadcn: `Card`, `CardHeader`, `CardTitle`, `CardContent`, `buttonVariants`
 (plus the shared `ErrorState`).
 
-The resident sidebar (`components/estates/resident-navigation.ts`) shows
+The resident sidebar (`components/shell/resident-navigation.ts`) shows
 "Dashboard" -> `/` only for resident-only accounts; mixed resident + staff
 accounts follow the staff `/` redirect. See [shell.md](shell.md).
 

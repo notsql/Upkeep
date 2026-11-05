@@ -1,7 +1,7 @@
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { type ChangeEvent, useCallback, useState } from "react";
-import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 
 export function DeactivateEstateDialog({
   name,

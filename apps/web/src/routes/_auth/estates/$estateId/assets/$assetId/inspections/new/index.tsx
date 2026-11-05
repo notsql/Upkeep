@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { InspectionForm } from "./-components/inspection-form";
+import { InspectionForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/new/-components/inspection-form/inspection-form";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/inspections/new/"

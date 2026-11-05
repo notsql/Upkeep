@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { EstateRolesPage } from "@/routes/_auth/estates/$estateId/roles/-components/estate-roles-page";
+import { EstateRolesPage } from "@/routes/_auth/estates/$estateId/roles/-components/estate-roles-page/estate-roles-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/roles/")({
   component: RolesRoute,

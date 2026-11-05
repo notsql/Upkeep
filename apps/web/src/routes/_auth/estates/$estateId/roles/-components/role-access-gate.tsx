@@ -1,9 +1,9 @@
 import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { type ReactNode, useCallback } from "react";
-import { ErrorState } from "@/components/error-state";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
+import { PageLayout } from "@/components/page/page-layout";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { useEstateRoleAccess } from "@/lib/estate-roles";
 
 type EstateAccess = components["schemas"]["EstateAccessResponse"];

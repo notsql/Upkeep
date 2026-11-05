@@ -7,7 +7,7 @@ The Documents list and asset detail page share the generated
 
 Under `apps/web/src/routes/_auth/estates/$estateId/`:
 
-- `documents/index.tsx` renders `documents/-components/documents-page.tsx`.
+- `documents/index.tsx` renders `documents/-components/documents-page/documents-page.tsx`.
   Each `document-row.tsx` has an Asset column rendered by `document-assets.tsx`.
   An unlinked document offers asset editors an “Associate Asset” button, whose
   accessible name is “Associate Asset for <filename>”. A linked document instead
@@ -19,24 +19,24 @@ Under `apps/web/src/routes/_auth/estates/$estateId/`:
   Association reads run for visible rows with asset-read authority; loading and
   Retry states never imply an absent link. Successful writes update the column
   through the existing association cache and estate-document invalidation.
-- `documents/-components/document-asset-dialog.tsx` uses the title “Associate Asset”
+- `documents/-components/document-asset-dialog/document-asset-dialog.tsx` uses the title “Associate Asset”
   and displays the current link,
   explicit Save, or Unlink confirmation. Unlink identifies document and asset
   and explains that the file and work-order link are retained. Cancel sends no
   mutation. Moving an existing link requires unlinking first; no reason is needed.
-- `documents/-components/document-asset-picker.tsx` shows the complete estate
+- `documents/-components/document-asset-dialog/document-asset-picker.tsx` shows the complete estate
   register, including selectable retired assets. It reuses `AssetFilterControls`
-  from `assets/-components/asset-filters.tsx` for category, location, condition and
+  from `assets/-components/asset-filters/asset-filters.tsx` for category, location, condition and
   status. Search and filters combine, clearing restores `status=ALL`, and the
   selected UUID/reference/name remain visible across filter changes. A labelled
   checkbox occupies the leftmost column, followed by reference, name, category
   label, location path and lifecycle status. Only one asset is checked at a time;
   unchecking it clears the selection and disables Save. The assessment/condition
   display column is omitted; the condition filter remains available.
-- `documents/-components/use-document-asset-dialog.ts` owns the reviewed draft,
+- `documents/-components/document-asset-dialog/use-document-asset-dialog.ts` owns the reviewed draft,
   in-flight guard and explicit conflict/network recovery.
 - `assets/$assetId/index.tsx` renders `asset-details-page.tsx` and its route-local
-  `-components/asset-documents-section.tsx`. The Documents card lists filename,
+  `-components/asset-documents-section/asset-documents-section.tsx`. The Documents card lists filename,
   type, size, upload date and Download, with Unlink for current asset editors.
   It loads the current association before showing unlink confirmation and pins
   that reviewed version. Attachment pagination uses opaque cursors.

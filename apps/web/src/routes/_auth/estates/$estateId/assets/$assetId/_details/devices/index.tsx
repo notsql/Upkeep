@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { AssetDevices } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices";
+import { AssetDevices } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices/asset-devices";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/_details/devices/"

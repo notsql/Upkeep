@@ -1,11 +1,11 @@
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
-import { DetailPageHeader } from "@/components/detail-page-header";
-import { ErrorState } from "@/components/error-state";
-import { LoadingState } from "@/components/loading-state";
-import { PageLayout } from "@/components/page-layout";
+import { DetailPageHeader } from "@/components/page/detail-page-header";
+import { PageLayout } from "@/components/page/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { pageHead } from "@/lib/page-title";
 import { useReport } from "@/lib/reports";
 import { PrivateReportImage } from "./-components/private-report-image";
