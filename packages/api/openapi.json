@@ -321,6 +321,168 @@
         }
       }
     },
+    "/estates/{estateId}/reports/{reportId}/duplicate": {
+      "put": {
+        "tags": ["estate-report-controller"],
+        "summary": "Link a report to an original by hand (managers only)",
+        "operationId": "linkEstateReportDuplicate",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LinkDuplicateRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The report with its CONFIRMED manual link",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateIssueReportDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The report already has a SUSPECTED or CONFIRMED link, or the estate is inactive",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid UUID, request or pagination",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Responder membership required (manager membership to review or link duplicates)",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report, location or image",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["estate-report-controller"],
+        "summary": "Confirm or reject a report's duplicate link (managers only)",
+        "operationId": "reviewEstateReportDuplicate",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDuplicateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The report with its updated link",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateIssueReportDetailResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale expected state or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid UUID, request or pagination",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Responder membership required (manager membership to review or link duplicates)",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report, location or image",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}/role": {
       "put": {
         "tags": ["council-controller"],
@@ -4887,7 +5049,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueReportDetailResponse"
+                  "$ref": "#/components/schemas/EstateIssueReportDetailResponse"
                 }
               }
             }
@@ -4917,7 +5079,7 @@
             }
           },
           "403": {
-            "description": "Responder membership required",
+            "description": "Responder membership required (manager membership to review or link duplicates)",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -6072,7 +6234,7 @@
             }
           },
           "403": {
-            "description": "Responder membership required",
+            "description": "Responder membership required (manager membership to review or link duplicates)",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -6092,7 +6254,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueReportPageResponse"
+                  "$ref": "#/components/schemas/EstateIssueReportPageResponse"
                 }
               }
             }
@@ -6136,7 +6298,7 @@
             }
           },
           "403": {
-            "description": "Responder membership required",
+            "description": "Responder membership required (manager membership to review or link duplicates)",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -6156,7 +6318,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueReportDetailResponse"
+                  "$ref": "#/components/schemas/EstateIssueReportDetailResponse"
                 }
               }
             }
@@ -6234,7 +6396,7 @@
             }
           },
           "403": {
-            "description": "Responder membership required",
+            "description": "Responder membership required (manager membership to review or link duplicates)",
             "content": {
               "image/jpeg": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -8901,7 +9063,12 @@
             "description": "Current creator display name on creation/detail responses; null when unavailable."
           },
           "createdAt": { "type": "string", "format": "date-time" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "sourceReportConfirmedDuplicateCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "CONFIRMED duplicates of the source report; 0 without a source report."
+          }
         },
         "required": [
           "category",
@@ -8915,6 +9082,7 @@
           "priority",
           "reference",
           "source",
+          "sourceReportConfirmedDuplicateCount",
           "status",
           "updatedAt",
           "version"
@@ -9007,6 +9175,98 @@
           "version"
         ]
       },
+      "LinkDuplicateRequest": {
+        "type": "object",
+        "properties": {
+          "originalReportId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["originalReportId"]
+      },
+      "DuplicateOf": {
+        "type": "object",
+        "properties": {
+          "reportId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "state": {
+            "type": "string",
+            "enum": ["SUSPECTED", "CONFIRMED", "REJECTED"]
+          }
+        },
+        "required": ["reportId", "state", "title"]
+      },
+      "EstateIssueReportDetailResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "maxLength": 150, "minLength": 1 },
+          "description": { "type": "string" },
+          "estateName": { "type": "string" },
+          "location": { "$ref": "#/components/schemas/ReportLocation" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "confirmedDuplicateCount": { "type": "integer", "format": "int32" },
+          "suspectedDuplicateCount": { "type": "integer", "format": "int32" },
+          "duplicateOf": {
+            "type": "null",
+            "$ref": "#/components/schemas/DuplicateOf"
+          },
+          "images": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ReportImage" }
+          },
+          "duplicates": {
+            "type": "array",
+            "description": "SUSPECTED and CONFIRMED duplicates of this report, newest first",
+            "items": { "$ref": "#/components/schemas/LinkedDuplicate" }
+          }
+        },
+        "required": [
+          "confirmedDuplicateCount",
+          "createdAt",
+          "description",
+          "duplicateOf",
+          "duplicates",
+          "estateName",
+          "id",
+          "images",
+          "location",
+          "status",
+          "suspectedDuplicateCount",
+          "title",
+          "updatedAt"
+        ]
+      },
+      "LinkedDuplicate": {
+        "type": "object",
+        "properties": {
+          "reportId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "location": { "$ref": "#/components/schemas/ReportLocation" },
+          "state": {
+            "type": "string",
+            "enum": ["SUSPECTED", "CONFIRMED", "REJECTED"]
+          },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["createdAt", "location", "reportId", "state", "title"]
+      },
+      "ReportImage": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "contentType": { "type": "string" }
+        },
+        "required": ["contentType", "id"]
+      },
+      "ReportLocation": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "label": { "type": "string" }
+        },
+        "required": ["id", "label"]
+      },
       "UpdateEstateRoleRequest": {
         "type": "object",
         "properties": {
@@ -9071,7 +9331,7 @@
           },
           "tolerance": {
             "type": "number",
-            "maximum": 1000000000000.0,
+            "maximum": 999999999999.999999,
             "minimum": 0
           }
         },
@@ -9366,22 +9626,6 @@
           "title",
           "updatedAt"
         ]
-      },
-      "ReportImage": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "contentType": { "type": "string" }
-        },
-        "required": ["contentType", "id"]
-      },
-      "ReportLocation": {
-        "type": "object",
-        "properties": {
-          "id": { "type": "string", "format": "uuid" },
-          "label": { "type": "string" }
-        },
-        "required": ["id", "label"]
       },
       "EstateRequest": {
         "type": "object",
@@ -10018,7 +10262,7 @@
           "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
           },
           "installedOn": { "type": ["string", "null"], "format": "date" },
           "manufacturer": { "type": ["string", "null"] },
@@ -10114,7 +10358,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "\u00b0C"
+            "description": "°C"
           },
           "flowRate": {
             "type": "number",
@@ -10526,7 +10770,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "\u00b0C"
+            "example": "°C"
           },
           "measuredAt": {
             "type": "string",
@@ -10679,6 +10923,18 @@
           "expectedLocationId": { "type": "string", "format": "uuid" }
         },
         "required": ["expectedLocationId", "locationId"]
+      },
+      "ReviewDuplicateRequest": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string", "enum": ["CONFIRMED", "REJECTED"] },
+          "expectedState": {
+            "type": "string",
+            "description": "The link state the caller saw",
+            "enum": ["SUSPECTED", "CONFIRMED"]
+          }
+        },
+        "required": ["expectedState", "state"]
       },
       "UpdateLocationRequest": {
         "type": "object",
@@ -10914,6 +11170,51 @@
           "nextCursor": { "type": "string" }
         },
         "required": ["items"]
+      },
+      "EstateIssueReportPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstateIssueReportSummaryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
+      },
+      "EstateIssueReportSummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "title": { "type": "string", "maxLength": 150, "minLength": 1 },
+          "description": { "type": "string" },
+          "estateName": { "type": "string" },
+          "location": { "$ref": "#/components/schemas/ReportLocation" },
+          "status": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "confirmedDuplicateCount": { "type": "integer", "format": "int32" },
+          "suspectedDuplicateCount": { "type": "integer", "format": "int32" },
+          "duplicateOf": {
+            "type": "null",
+            "$ref": "#/components/schemas/DuplicateOf"
+          }
+        },
+        "required": [
+          "confirmedDuplicateCount",
+          "createdAt",
+          "description",
+          "duplicateOf",
+          "estateName",
+          "id",
+          "location",
+          "status",
+          "suspectedDuplicateCount",
+          "title",
+          "updatedAt"
+        ]
       },
       "EstateReadingPage": {
         "type": "object",
@@ -11771,7 +12072,8 @@
           "canReassignRoles": { "type": "boolean" },
           "canViewEstateInvitations": { "type": "boolean" },
           "canViewDocuments": { "type": "boolean" },
-          "canUploadDocuments": { "type": "boolean" }
+          "canUploadDocuments": { "type": "boolean" },
+          "canReviewFaultReportDuplicates": { "type": "boolean" }
         },
         "required": [
           "canCreateFloors",
@@ -11788,6 +12090,7 @@
           "canReassignRoles",
           "canRecordReadings",
           "canRelocateFaultReports",
+          "canReviewFaultReportDuplicates",
           "canUpdateWorkOrders",
           "canUploadDocuments",
           "canViewAssets",

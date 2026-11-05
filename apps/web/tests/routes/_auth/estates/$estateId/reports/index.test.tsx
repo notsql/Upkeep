@@ -81,6 +81,7 @@ const RELOAD = /Reload/iu;
 const LOCATION_CHANGED = /location.*changed|placement.*changed/iu;
 const NO_MATCHES = /no.*reports.*location|no.*matching.*reports/iu;
 const EMPTY_REPORTS = /no.*reports/iu;
+const DUPLICATE_BADGE = /duplicate|to review/iu;
 
 const LEVEL_TWO = /Level 2/u;
 const NONE = /none|no common area|level only/iu;
@@ -98,6 +99,10 @@ const report = {
   createdAt: timestamp,
   updatedAt: timestamp,
   images: [{ id: imageId, contentType: "image/png" }],
+  confirmedDuplicateCount: 0,
+  suspectedDuplicateCount: 0,
+  duplicateOf: null,
+  duplicates: [],
 };
 const locations = [
   { id: blockA, type: "BLOCK", name: "Block A", parentId: null },
@@ -947,4 +952,64 @@ it("does not mount responder queries when access capability lookup fails", async
       path.startsWith("/estates/{estateId}/reports")
     )
   ).toBe(false);
+});
+
+it("badges originals with duplicate counts and linked reports with their state", async () => {
+  const original = {
+    ...report,
+    id: "00000000-0000-0000-0000-000000000040",
+    title: "Original leak",
+    confirmedDuplicateCount: 2,
+    suspectedDuplicateCount: 1,
+    duplicateOf: null,
+  };
+  const suspected = {
+    ...report,
+    id: "00000000-0000-0000-0000-000000000041",
+    title: "Leak again",
+    confirmedDuplicateCount: 0,
+    suspectedDuplicateCount: 0,
+    duplicateOf: {
+      reportId: original.id,
+      title: original.title,
+      state: "SUSPECTED",
+    },
+  };
+  const confirmed = {
+    ...suspected,
+    id: "00000000-0000-0000-0000-000000000042",
+    title: "Same leak",
+    duplicateOf: { ...suspected.duplicateOf, state: "CONFIRMED" },
+  };
+  const plain = {
+    ...report,
+    id: "00000000-0000-0000-0000-000000000043",
+    title: "Broken light",
+    confirmedDuplicateCount: 0,
+    suspectedDuplicateCount: 0,
+    duplicateOf: null,
+  };
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({
+          data: {
+            items: [original, suspected, confirmed, plain],
+            nextCursor: null,
+          },
+        })
+      : serve(path)
+  );
+  await setup();
+  const card = async (title: string) => {
+    const link = await screen.findByRole("link", { name: title });
+    const found = link.closest("[data-slot='card']");
+    expect(found).not.toBeNull();
+    return within(found as HTMLElement);
+  };
+  const originalCard = await card("Original leak");
+  originalCard.getByText("2 duplicates");
+  originalCard.getByText("1 to review");
+  (await card("Leak again")).getByText("Possible duplicate");
+  (await card("Same leak")).getByText("Duplicate");
+  expect((await card("Broken light")).queryByText(DUPLICATE_BADGE)).toBeNull();
 });

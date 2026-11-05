@@ -1,8 +1,6 @@
 package com.proj.server.report;
 
 import com.proj.server.estate.EstatePermissionCode;
-import com.proj.server.resident.IssueReportDetailResponse;
-import com.proj.server.resident.IssueReportPageResponse;
 import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.resident.ResidentReportRepository;
@@ -10,6 +8,7 @@ import com.proj.server.resident.ResidentReportService.ImageBytes;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.jooq.Record;
@@ -22,12 +21,17 @@ public class EstateReportService {
     private final EstateReportRepository repository;
     private final ResidentReportRepository reports;
     private final ResidentImageStore images;
+    private final DuplicateRepository duplicates;
 
     public EstateReportService(
-            EstateReportRepository repository, ResidentReportRepository reports, ResidentImageStore images) {
+            EstateReportRepository repository,
+            ResidentReportRepository reports,
+            ResidentImageStore images,
+            DuplicateRepository duplicates) {
         this.repository = repository;
         this.reports = reports;
         this.images = images;
+        this.duplicates = duplicates;
     }
 
     public Record authorize(UUID estateId, String user, EstatePermissionCode permission, boolean lock) {
@@ -46,7 +50,7 @@ public class EstateReportService {
         return estate;
     }
 
-    public IssueReportPageResponse list(
+    public EstateIssueReportPageResponse list(
             UUID estateId,
             String user,
             UUID locationId,
@@ -90,10 +94,16 @@ public class EstateReportService {
                     .withoutPadding()
                     .encodeToString((last.createdAt() + "|" + last.id()).getBytes(StandardCharsets.UTF_8));
         }
-        return new IssueReportPageResponse(page, next);
+        var info = duplicates.summaries(
+                estateId, page.stream().map(report -> report.id()).toList());
+        var items = page.stream()
+                .map(report -> EstateIssueReportSummaryResponse.of(
+                        report, info.getOrDefault(report.id(), DuplicateRepository.NONE)))
+                .toList();
+        return new EstateIssueReportPageResponse(items, next);
     }
 
-    public IssueReportDetailResponse detail(UUID estateId, String user, UUID reportId) {
+    public EstateIssueReportDetailResponse detail(UUID estateId, String user, UUID reportId) {
         authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         return find(estateId, reportId);
     }
@@ -106,7 +116,7 @@ public class EstateReportService {
     }
 
     @Transactional
-    public IssueReportDetailResponse relocate(
+    public EstateIssueReportDetailResponse relocate(
             UUID estateId, String user, UUID reportId, RelocateReportRequest request) {
         var estate = authorize(estateId, user, EstatePermissionCode.RELOCATE_FAULT_REPORTS, true);
         if (estate.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
@@ -124,9 +134,64 @@ public class EstateReportService {
         return find(estateId, reportId);
     }
 
-    private IssueReportDetailResponse find(UUID estateId, UUID reportId) {
-        return reports.estateDetail(estateId, reportId)
+    @Transactional
+    public EstateIssueReportDetailResponse review(
+            UUID estateId, String user, UUID reportId, ReviewDuplicateRequest request) {
+        authorizeActiveManager(estateId, user);
+        if (!duplicates.reportExists(estateId, reportId)) throw error(HttpStatus.NOT_FOUND, "Report not found.");
+        var current = duplicates.lockedState(estateId, reportId);
+        if (current == null) throw error(HttpStatus.NOT_FOUND, "This report is not linked to another report.");
+        boolean allowed = (request.expectedState() == DuplicateState.SUSPECTED
+                        && request.state() != DuplicateState.SUSPECTED)
+                || (request.expectedState() == DuplicateState.CONFIRMED && request.state() == DuplicateState.REJECTED);
+        if (!allowed) throw error(HttpStatus.BAD_REQUEST, "That duplicate decision is not allowed.");
+        if (current != request.expectedState())
+            throw error(HttpStatus.CONFLICT, "The duplicate link changed. Reload before deciding.");
+        duplicates.decide(estateId, reportId, request.state(), user);
+        return find(estateId, reportId);
+    }
+
+    @Transactional
+    public EstateIssueReportDetailResponse link(
+            UUID estateId, String user, UUID reportId, LinkDuplicateRequest request) {
+        authorizeActiveManager(estateId, user);
+        var originalId = request.originalReportId();
+        if (!duplicates.reportExists(estateId, reportId)) throw error(HttpStatus.NOT_FOUND, "Report not found.");
+        if (!duplicates.reportExists(estateId, originalId))
+            throw error(HttpStatus.NOT_FOUND, "Original report not found.");
+        if (reportId.equals(originalId)) throw error(HttpStatus.BAD_REQUEST, "A report cannot duplicate itself.");
+        var current = duplicates.lockedState(estateId, reportId);
+        if (current == DuplicateState.SUSPECTED || current == DuplicateState.CONFIRMED)
+            throw error(HttpStatus.CONFLICT, "This report is already linked. Reload before linking.");
+        if (duplicates.hasActiveLink(estateId, originalId))
+            throw error(HttpStatus.BAD_REQUEST, "That report is itself a duplicate. Link to its original instead.");
+        if (duplicates.hasActiveDuplicates(estateId, reportId))
+            throw error(
+                    HttpStatus.BAD_REQUEST,
+                    "This report has duplicates of its own. Reject them before linking it to another report.");
+        duplicates.linkManually(estateId, reportId, originalId, user);
+        return find(estateId, reportId);
+    }
+
+    /** Reviewing and linking duplicates needs current MANAGER membership in an active estate. */
+    private void authorizeActiveManager(UUID estateId, String user) {
+        var estate = repository.estate(estateId, true);
+        if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
+        var role = repository.role(estateId, user, true);
+        if (!"MANAGER".equals(role)) {
+            boolean known = user.equals(estate.get("ownerUserId", String.class)) || role != null;
+            throw error(
+                    known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
+                    known ? "Manager membership required." : "Estate not found.");
+        }
+        if (estate.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
+    }
+
+    EstateIssueReportDetailResponse find(UUID estateId, UUID reportId) {
+        var report = reports.estateDetail(estateId, reportId)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Report not found."));
+        var info = duplicates.summaries(estateId, List.of(reportId)).getOrDefault(reportId, DuplicateRepository.NONE);
+        return EstateIssueReportDetailResponse.of(report, info, duplicates.linked(estateId, reportId));
     }
 
     private static ResidentReportException error(HttpStatus status, String message) {

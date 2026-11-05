@@ -1,8 +1,8 @@
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Textarea } from "@proj/ui/components/textarea";
 import type { ChangeEvent } from "react";
+import { ReportSourcePicker } from "@/components/reports/report-source-picker";
 import type { WorkOrderInput } from "@/lib/work-orders";
-import { ReportSourcePicker } from "./report-source-picker";
 import type { useWorkOrderForm } from "./use-work-order-form";
 import { WorkOrderSelect } from "./work-order-select";
 

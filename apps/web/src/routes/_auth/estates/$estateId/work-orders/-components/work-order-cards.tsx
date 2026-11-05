@@ -2,6 +2,7 @@ import { Badge } from "@proj/ui/components/badge";
 import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import type { WorkOrder } from "@/lib/work-orders";
+import { DuplicateCountBadge } from "@/routes/_auth/estates/$estateId/work-orders/-components/duplicate-count-badge";
 
 export function WorkOrderCards({
   estateId,
@@ -40,7 +41,7 @@ export function WorkOrderCards({
               <dl className="grid grid-cols-2 gap-3">
                 <div>
                   <dt className="text-muted-foreground mb-1">Priority</dt>
-                  <dd>
+                  <dd className="flex flex-wrap gap-1">
                     <Badge
                       variant={
                         order.priority === "URGENT" ? "destructive" : "outline"
@@ -48,6 +49,9 @@ export function WorkOrderCards({
                     >
                       {order.priority}
                     </Badge>
+                    <DuplicateCountBadge
+                      count={order.sourceReportConfirmedDuplicateCount}
+                    />
                   </dd>
                 </div>
                 <div>

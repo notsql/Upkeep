@@ -4,6 +4,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportCard } from "@/components/reports/report-card";
 import {
   type EstateReportFilters,
@@ -142,6 +143,7 @@ function EstateReportsPage() {
         ? null
         : reports.data?.items.map((report) => (
             <ReportCard
+              badges={<DuplicateBadges report={report} />}
               key={report.id}
               report={report}
               title={

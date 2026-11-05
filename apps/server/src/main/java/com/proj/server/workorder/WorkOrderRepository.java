@@ -4,6 +4,7 @@ import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Estate.ESTATE;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Issuereport.ISSUEREPORT;
+import static com.proj.server.db.tables.Issuereportduplicate.ISSUEREPORTDUPLICATE;
 import static com.proj.server.db.tables.Location.LOCATION;
 import static com.proj.server.db.tables.Workorder.WORKORDER;
 import static com.proj.server.db.tables.Workordercompletion.WORKORDERCOMPLETION;
@@ -189,6 +190,14 @@ public class WorkOrderRepository {
                 .select(ASSET.REFERENCE.as("assetReference"))
                 .select(DSL.concatWs(" / ", grandparent.NAME, parent.NAME, LOCATION.NAME)
                         .as("locationPath"))
+                .select(DSL.field(DSL.selectCount()
+                                .from(ISSUEREPORTDUPLICATE)
+                                .where(ISSUEREPORTDUPLICATE
+                                        .ORIGINALREPORTID
+                                        .eq(WORKORDER.SOURCEREPORTID)
+                                        .and(ISSUEREPORTDUPLICATE.ESTATEID.eq(WORKORDER.ESTATEID))
+                                        .and(ISSUEREPORTDUPLICATE.STATE.eq("CONFIRMED"))))
+                        .as("sourceReportConfirmedDuplicateCount"))
                 .from(WORKORDER)
                 .join(LOCATION)
                 .on(LOCATION.ID.eq(WORKORDER.LOCATIONID).and(LOCATION.ESTATEID.eq(WORKORDER.ESTATEID)))
@@ -231,7 +240,18 @@ public class WorkOrderRepository {
                 row.get(WORKORDER.CREATEDBYUSERID),
                 null,
                 row.get(WORKORDER.CREATEDAT),
-                row.get(WORKORDER.UPDATEDAT));
+                row.get(WORKORDER.UPDATEDAT),
+                row.get("sourceReportConfirmedDuplicateCount", Integer.class));
+    }
+
+    public boolean hasActiveDuplicateLink(UUID estateId, UUID reportId) {
+        return db.fetchExists(
+                ISSUEREPORTDUPLICATE,
+                ISSUEREPORTDUPLICATE
+                        .REPORTID
+                        .eq(reportId)
+                        .and(ISSUEREPORTDUPLICATE.ESTATEID.eq(estateId))
+                        .and(ISSUEREPORTDUPLICATE.STATE.in("SUSPECTED", "CONFIRMED")));
     }
 
     public com.proj.server.db.tables.records.WorkorderRecord lockOrder(UUID estateId, UUID id) {

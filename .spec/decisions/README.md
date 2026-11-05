@@ -33,3 +33,5 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0041 — Manual readings and source provenance](0041-manual-readings-and-source-provenance.md)
 
 - [0042 - Filtered reading CSV streams and completion metadata](0042-filtered-reading-csv-streams.md)
+
+- [0043 - Duplicate fault reports are rule-based suggestions a manager confirms](0043-duplicate-reports-are-rule-based-suggestions.md)
