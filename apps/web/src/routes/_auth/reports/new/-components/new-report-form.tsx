@@ -19,12 +19,10 @@ import {
 import { LoadingState } from "@/components/loading-state";
 import { useCreateReport, useResidentLocations } from "@/lib/reports";
 import { ReportDetailsFields } from "@/routes/_auth/reports/new/-components/report-details-fields";
-import {
-  ReportImagesField,
-  type SelectedReportImage,
-} from "@/routes/_auth/reports/new/-components/report-images-field";
+import { ReportImagesField } from "@/routes/_auth/reports/new/-components/report-images-field";
 import { ReportLocationFields } from "@/routes/_auth/reports/new/-components/report-location-fields";
 import { ResidentEstateSelector } from "@/routes/_auth/reports/new/-components/resident-estate-selector";
+import type { SelectedReportImage } from "@/routes/_auth/reports/new/-components/selected-image";
 
 export function NewReportForm({
   estates,

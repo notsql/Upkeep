@@ -2,29 +2,18 @@ import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
-import { DetailCard } from "@/components/detail-card";
+import { DetailPageHeader } from "@/components/detail-page-header";
 import { ErrorState } from "@/components/error-state";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { LoadingState } from "@/components/loading-state";
-import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { SubNav } from "@/components/sub-nav";
 import { useAsset, useDeactivateAsset } from "@/lib/assets";
-import { useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
-import { useInspectionAccess } from "@/lib/inspections";
-import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
-import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices-section";
-import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-forecast-card";
-import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance-section";
-import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
-import { AssetServiceIntervalCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-service-interval-card";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
-
-const NOT_RECORDED = "Not recorded";
+import { InspectionRecordAction } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-record-action";
 
 /** The asset's sub-pages; the old `?tab=` values map onto these paths. */
 export const ASSET_SECTIONS = [
@@ -36,44 +25,6 @@ export const ASSET_SECTIONS = [
 ] as const;
 
 export type AssetSection = (typeof ASSET_SECTIONS)[number];
-
-/** Why the service-interval override is read-only, if it is. */
-function intervalLock(
-  estateInactive: boolean,
-  assetRetired: boolean
-): string | undefined {
-  if (estateInactive) {
-    return "This estate is inactive, so its service intervals cannot be changed.";
-  }
-  if (assetRetired) {
-    return "This asset is retired, so its service interval cannot be changed.";
-  }
-}
-
-function InspectionRecordAction({
-  estateId,
-  assetId,
-  estateActive,
-}: {
-  estateId: string;
-  assetId: string;
-  estateActive: boolean;
-}) {
-  const access = useInspectionAccess(estateId);
-  if (!(access.canCreate && estateActive)) {
-    return null;
-  }
-  return (
-    <Link
-      className={buttonVariants()}
-      params={{ estateId, assetId }}
-      to="/estates/$estateId/assets/$assetId/inspections/new"
-    >
-      <Plus aria-hidden="true" />
-      Create inspection record
-    </Link>
-  );
-}
 
 /**
  * The shared frame of every asset sub-page: header, retired note and the
@@ -212,119 +163,5 @@ export function AssetDetailsLayout({
         </>
       ) : null}
     </PageLayout>
-  );
-}
-
-export function AssetOverview({
-  estateId,
-  assetId,
-}: {
-  estateId: string;
-  assetId: string;
-}) {
-  const asset = useAsset(estateId, assetId);
-  const categories = useAssetCategories();
-  if (!asset.data) {
-    return null;
-  }
-  return (
-    <>
-      <DetailCard>
-        <div>
-          <dt className="font-medium">Reference</dt>
-          <dd>{asset.data.reference}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Category</dt>
-          <dd>
-            {categories.data?.find(
-              (category) => category.code === asset.data.category
-            )?.label ?? asset.data.category}
-          </dd>
-        </div>
-        <div>
-          <dt className="font-medium">Location</dt>
-          <dd>{asset.data.locationPath}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Installation date</dt>
-          <dd>{asset.data.installedOn ?? NOT_RECORDED}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Manufacturer</dt>
-          <dd>{asset.data.manufacturer ?? NOT_RECORDED}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Model</dt>
-          <dd>{asset.data.model ?? NOT_RECORDED}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Serial number</dt>
-          <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
-        </div>
-      </DetailCard>
-      <AssetConditionSection
-        assetId={assetId}
-        canRecord={!asset.data.deactivatedAt}
-        estateId={estateId}
-      />
-      {asset.data.category === "PUMP" ? (
-        <AssetForecastCard assetId={assetId} estateId={estateId} />
-      ) : null}
-    </>
-  );
-}
-
-export function AssetMaintenance({
-  estateId,
-  assetId,
-}: {
-  estateId: string;
-  assetId: string;
-}) {
-  const estate = useEstate(estateId);
-  const asset = useAsset(estateId, assetId);
-  if (!asset.data) {
-    return null;
-  }
-  return (
-    <>
-      <AssetMaintenanceSection
-        assetId={assetId}
-        canRecord={!asset.data.deactivatedAt}
-        estateId={estateId}
-      />
-      {estate.data?.owned || estate.data?.canManageInvitationPermissions ? (
-        <AssetServiceIntervalCard
-          assetId={assetId}
-          estateId={estateId}
-          locked={intervalLock(
-            Boolean(estate.data.deactivatedAt),
-            Boolean(asset.data.deactivatedAt)
-          )}
-        />
-      ) : null}
-      <AssetRetirementPanel asset={asset.data} />
-    </>
-  );
-}
-
-export function AssetDevices({
-  estateId,
-  assetId,
-}: {
-  estateId: string;
-  assetId: string;
-}) {
-  const asset = useAsset(estateId, assetId);
-  if (!asset.data) {
-    return null;
-  }
-  return (
-    <AssetDevicesSection
-      assetId={assetId}
-      canRegister={!asset.data.deactivatedAt}
-      estateId={estateId}
-    />
   );
 }

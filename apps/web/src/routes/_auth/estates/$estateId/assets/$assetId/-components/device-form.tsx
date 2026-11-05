@@ -1,5 +1,4 @@
 import { Button } from "@proj/ui/components/button";
-import { Checkbox } from "@proj/ui/components/checkbox";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
@@ -24,6 +23,7 @@ import {
   MAX_REPORTING_INTERVAL_SECONDS,
 } from "@/lib/devices";
 import { flattenLocations, useLocations } from "@/lib/locations";
+import { MetricOption } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/metric-option";
 
 interface FormValues {
   identifier: string;
@@ -33,6 +33,7 @@ interface FormValues {
 }
 
 type Field = "identifier" | "model" | "locationId" | "interval" | "metrics";
+
 type FieldErrors = Partial<Record<Field, string>>;
 
 const catalogue = Object.entries(deviceMetrics) as [
@@ -69,42 +70,6 @@ function validate(values: FormValues, metrics: Set<DeviceMetric>): FieldErrors {
     errors.metrics = "Choose at least one metric.";
   }
   return errors;
-}
-
-function MetricOption({
-  checked,
-  disabled,
-  id,
-  label,
-  metric,
-  onChange,
-}: {
-  checked: boolean;
-  disabled: boolean;
-  id: string;
-  label: string;
-  metric: DeviceMetric;
-  onChange: (metric: DeviceMetric, checked: boolean) => void;
-}) {
-  const handleCheckedChange = useCallback(
-    (next: boolean) => onChange(metric, next),
-    [metric, onChange]
-  );
-  return (
-    <div className="flex min-h-11 items-center gap-3 rounded-lg border px-3 py-2">
-      <Checkbox
-        checked={checked}
-        disabled={disabled}
-        id={id}
-        name="metrics"
-        onCheckedChange={handleCheckedChange}
-        value={metric}
-      />
-      <Label className="text-sm" htmlFor={id}>
-        {label}
-      </Label>
-    </div>
-  );
 }
 
 /** Details a replacement starts from: everything but the identifier (ID-45). */

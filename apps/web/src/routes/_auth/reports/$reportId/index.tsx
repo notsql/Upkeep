@@ -1,8 +1,8 @@
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { DetailPageHeader } from "@/components/detail-page-header";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";

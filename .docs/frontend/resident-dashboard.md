@@ -20,9 +20,9 @@ resident estate) to `ResidentDashboard`.
 - "Recent reports" section (`SectionHeading` h2 with ClipboardList icon): the first 5 `items` as shared `ReportCard`s,
   each title linking to `/reports/$reportId` (keeping `estateId`), plus an
   outline "View all" link to `/reports` when there are items.
-- Empty state: `EmptyState` "No reports yet" ("Reported faults appear
-  here", default Inbox icon - ClipboardList is the section heading's) with a
-  "Report a fault" link action.
+- Empty state: `EmptyState` "No reports yet" ("Use Report a fault to
+  send the first one"; no icon, no action - the header's "Report a fault" is
+  the entry point).
 - PageHeader "Dashboard" uses `icon={LayoutDashboard}`; "Report a fault" links
   lead with ClipboardPenLine (the sidebar's icon).
 

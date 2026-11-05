@@ -12,16 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/empty-state";
 import type { DocumentFilters, EstateDocument } from "@/lib/documents";
 import { useMobile } from "@/lib/use-mobile";
-import {
-  DocumentActions,
-  DocumentRow,
-  type DocumentRowProps,
-} from "./document-row";
+import { DocumentActions, type DocumentRowProps } from "./document-actions";
+import { DocumentRow } from "./document-row";
 
 export function DocumentList({
   items,
@@ -30,7 +26,6 @@ export function DocumentList({
   documentType,
   renderAssets,
   onClearFilters,
-  createAction,
   ...actions
 }: Omit<DocumentRowProps, "document" | "assets" | "showSize"> & {
   items?: EstateDocument[];
@@ -39,7 +34,6 @@ export function DocumentList({
   documentType?: DocumentFilters["documentType"];
   renderAssets?: (document: EstateDocument) => ReactNode;
   onClearFilters?: () => void;
-  createAction?: ReactNode;
 }) {
   const mobile = useMobile();
   if (failed || !items) {
@@ -58,17 +52,12 @@ export function DocumentList({
             ) : undefined
           }
           description="Try other filters"
-          icon={SearchX}
           title="No matching documents"
         />
       );
     }
     return (
-      <EmptyState
-        action={createAction}
-        description="Uploads appear here"
-        title="No documents yet"
-      />
+      <EmptyState description="Uploads appear here" title="No documents yet" />
     );
   }
   if (mobile) {

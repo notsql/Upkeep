@@ -1,10 +1,11 @@
 import { Button } from "@proj/ui/components/button";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Textarea } from "@proj/ui/components/textarea";
+import { FormPageHeader } from "@/components/form-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import type { WorkOrderInput } from "@/lib/work-orders";
+import { SourceReferenceField } from "./source-reference-field";
 import { useWorkOrderForm } from "./use-work-order-form";
 import { WorkOrderAssetPicker } from "./work-order-asset-picker";
 import {
@@ -14,10 +15,7 @@ import {
 import { WorkOrderLocationFeedback } from "./work-order-location-feedback";
 import { WorkOrderSaveError } from "./work-order-save-error";
 import { WorkOrderSelect } from "./work-order-select";
-import {
-  SourceReferenceField,
-  WorkOrderSourceFields,
-} from "./work-order-source-fields";
+import { WorkOrderSourceFields } from "./work-order-source-fields";
 import { WorkOrderSourceLocationChoice } from "./work-order-source-location-choice";
 
 const categories: { value: WorkOrderInput["category"]; label: string }[] = [

@@ -52,7 +52,7 @@ locks while pending. Success closes the dialog and toasts "Asset category update
 keeps the dialog open with the error as its `role="alert"` line. Nothing is
 optimistic. Loading is `LoadingState` "Loading asset categories…" (`table`); a load error is an `ErrorState` (Retry).
 The Missing service interval card's "Show these categories" is a link to `/asset-categories/not-set`. When a view matches nothing the table is
-replaced by `EmptyState` "No matching categories" ("No category uses this interval", `SearchX`) with an outline "Clear filters" link back to All.
+replaced by `EmptyState` "No matching categories" ("No category uses this interval") with an outline "Clear filters" link back to All.
 
 shadcn components: `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`,
 `Badge`, `Button`, `buttonVariants`; from `src/components`: `ListPageHeader`, `SubNav`, `ErrorState`, `EmptyState`, `ConfirmDialog`, `ServiceIntervalDialog`.

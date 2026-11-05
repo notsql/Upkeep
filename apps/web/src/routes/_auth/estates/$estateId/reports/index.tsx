@@ -1,12 +1,10 @@
-import { Button } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardList, SearchX } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 import { useCallback } from "react";
-import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { Pagination } from "@/components/pagination";
 import { ReportCard } from "@/components/reports/report-card";
@@ -21,6 +19,8 @@ import {
   countReportFilters,
   ReportFilters,
 } from "./-components/report-filters";
+
+import { ReportsEmpty } from "./-components/reports-empty";
 
 const INTEGER_POSITION = /^-?\d+$/u;
 
@@ -159,35 +159,6 @@ function EstateReportsPage() {
         />
       ) : null}
     </PageLayout>
-  );
-}
-
-function ReportsEmpty({
-  filtered,
-  onClear,
-}: {
-  filtered: boolean;
-  onClear: () => void;
-}) {
-  if (filtered) {
-    return (
-      <EmptyState
-        action={
-          <Button onClick={onClear} variant="outline">
-            Clear filters
-          </Button>
-        }
-        description="Try other filters"
-        icon={SearchX}
-        title="No matching reports"
-      />
-    );
-  }
-  return (
-    <EmptyState
-      description="Resident reports appear here"
-      title="No reports yet"
-    />
   );
 }
 

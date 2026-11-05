@@ -38,7 +38,7 @@ shadcn: `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescrip
 `DialogFooter`, `Field`, `FieldLabel`, `FieldError`, `Input`, `Select`, `SelectTrigger`,
 `SelectValue`, `SelectContent`, `SelectItem`, `Button`, `Alert`, `AlertDescription`.
 
-## `IntervalBadge` (`src/components/interval-badge.tsx`)
+## `IntervalBadge` (`src/routes/_auth/estates/$estateId/asset-categories/-components/interval-badge.tsx`)
 
 An outline `Badge` with `formatInterval(interval)` as its text, coloured by unit: `DAY` blue,
 `MONTH` emerald (green), `YEAR` violet (purple), each with dark-mode shades. A null interval is a

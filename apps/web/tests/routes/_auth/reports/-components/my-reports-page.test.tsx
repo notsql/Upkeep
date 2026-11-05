@@ -106,15 +106,16 @@ it("shows own report history with an ordinary WorkOS role even after assignment 
   expect(get).toHaveBeenCalledWith("/resident/reports", expect.anything());
 });
 
-it("shows an empty history and offers a new report", async () => {
+it("shows an empty history and points to the header's create", async () => {
   get.mockResolvedValue({ data: { items: [], nextCursor: null } });
   renderWithProviders(<Page />);
 
   await screen.findByText(NO_REPORTS);
+  const status = screen.getByRole("status");
+  within(status).getByText("Use Create to report the first fault");
+  expect(within(status).queryByRole("link")).toBeNull();
   expect(
-    within(screen.getByRole("status"))
-      .getByRole("link", { name: REPORT_A_FAULT })
-      .getAttribute("href")
+    screen.getByRole("link", { name: REPORT_A_FAULT }).getAttribute("href")
   ).toBe("/reports/new");
 });
 
@@ -213,7 +214,7 @@ it("loads an estate-scoped history and preselects that estate for a new report",
   get.mockResolvedValue({ data: { items: [], nextCursor: null } });
   renderWithProviders(<Page estateId="maple" />);
   await screen.findByText(NO_REPORTS);
-  expect(screen.getAllByRole("link", { name: REPORT_A_FAULT })).toHaveLength(2);
+  expect(screen.getAllByRole("link", { name: REPORT_A_FAULT })).toHaveLength(1);
   expect(get).toHaveBeenCalledWith(
     "/resident/reports",
     expect.objectContaining({ params: { query: { estateId: "maple" } } })
@@ -286,7 +287,9 @@ it("uses the shared loading and empty states", async () => {
   renderWithProviders(<Page />);
   screen.getByRole("status", { name: "Loading reports…" });
   await screen.findByText("No reports yet");
-  within(screen.getByRole("status")).getByRole("link", {
-    name: REPORT_A_FAULT,
-  });
+  expect(
+    within(screen.getByRole("status")).queryByRole("link", {
+      name: REPORT_A_FAULT,
+    })
+  ).toBeNull();
 });

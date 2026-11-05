@@ -74,8 +74,10 @@ describe("estate list page", () => {
         "No active estates"
       )
     );
-    within(screen.getByRole("status")).getByRole("link", { name: "Create" });
-    expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(2);
+    within(screen.getByRole("status")).getByText(
+      "Use Create to add the first estate"
+    );
+    expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(1);
   });
 
   it("loads the requested inactive filter and isolates its cache by user", async () => {
@@ -265,5 +267,5 @@ it("uses the shared loading, filter and empty states", async () => {
     )
   );
   const empty = screen.getByRole("status");
-  within(empty).getByRole("link", { name: "Create" });
+  expect(within(empty).queryByRole("link", { name: "Create" })).toBeNull();
 });

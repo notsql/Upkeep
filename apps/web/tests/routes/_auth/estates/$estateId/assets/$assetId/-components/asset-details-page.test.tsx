@@ -1,11 +1,9 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
-import {
-  AssetDetailsLayout,
-  AssetMaintenance,
-  AssetOverview,
-} from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
+import { AssetDetailsLayout } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
+import { AssetMaintenance } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance";
+import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview";
 
 const BACK_LINK = /^Back to/u;
 
@@ -28,7 +26,7 @@ beforeEach(() => {
 // Sections that fetch their own data stay pending: this test is about breadcrumbs.
 vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock(
-  "@/components/date-range-picker",
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/date-range-picker",
   () => import("@tests/date-picker-stubs")
 );
 vi.mock("@/lib/api", () => ({

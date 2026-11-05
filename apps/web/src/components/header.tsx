@@ -1,45 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import type { ReactNode } from "react";
-import { useCurrentEstate } from "@/components/app-navigation";
 import { AuthButton } from "@/components/auth-button";
-import { EstateFeatureSwitcher } from "@/components/estates/estate-feature-switcher";
+import { HeaderEstateSwitcher } from "@/components/header-estate-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
-import type { EstateFeature } from "@/lib/estate-destinations";
-
-const ESTATE_FEATURES = new Set<EstateFeature>([
-  "reports",
-  "work-orders",
-  "documents",
-  "readings",
-]);
-
-function pathFeature(pathname: string): EstateFeature {
-  if (pathname.startsWith("/reports/new")) {
-    return "report-creation";
-  }
-  if (pathname === "/reports" || pathname.startsWith("/reports/")) {
-    return "resident";
-  }
-  const section = pathname.split("/")[3] as EstateFeature;
-  return ESTATE_FEATURES.has(section) ? section : "management";
-}
-
-function HeaderEstateSwitcher() {
-  const { access, pathname, estateId } = useCurrentEstate();
-  const estates = access.data?.estates ?? [];
-  return (
-    <EstateFeatureSwitcher
-      estateId={estateId}
-      estates={
-        access.data?.canEnterWorkspace
-          ? estates
-          : estates.filter((estate) => estate.role === "RESIDENT")
-      }
-      feature={pathFeature(pathname)}
-    />
-  );
-}
 
 export default function Header({
   start,

@@ -11,7 +11,6 @@ import {
 import { HeartPulse } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { ConditionBadge } from "@/components/condition-badge";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { SectionCard } from "@/components/section-card";
@@ -20,6 +19,7 @@ import {
   useAssessments,
   useRecordAssessment,
 } from "@/lib/assessments";
+import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
 
 /** The identity the server records anomaly-detection assessments under. */

@@ -14,28 +14,7 @@ import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { type ReadingAsset, useReadingAssets } from "@/lib/readings";
 
-function ReadingAssetChoice({
-  asset,
-  onChoose,
-  activeOnly,
-}: {
-  activeOnly: boolean;
-  asset: ReadingAsset;
-  onChoose: (asset: ReadingAsset) => void;
-}) {
-  const choose = useCallback(() => onChoose(asset), [asset, onChoose]);
-  return (
-    <Button
-      className="h-auto min-h-11 justify-start text-left [overflow-wrap:anywhere] whitespace-normal"
-      disabled={activeOnly && asset.retired}
-      onClick={choose}
-      variant="outline"
-    >
-      {asset.reference} · {asset.name}
-      {asset.retired ? " · Retired" : ""}
-    </Button>
-  );
-}
+import { ReadingAssetChoice } from "./reading-asset-choice";
 
 export function ReadingAssetPicker({
   estateId,

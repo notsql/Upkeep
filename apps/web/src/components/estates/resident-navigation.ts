@@ -1,6 +1,6 @@
 import type { components } from "@proj/api/schema";
 import { ClipboardList, ClipboardPenLine, LayoutDashboard } from "lucide-react";
-import type { NavigationItem } from "@/components/app-navigation";
+import type { NavigationItem } from "@/components/navigation-item";
 
 const REPORT_DETAIL_PATH = /^\/reports\/[^/]+/u;
 

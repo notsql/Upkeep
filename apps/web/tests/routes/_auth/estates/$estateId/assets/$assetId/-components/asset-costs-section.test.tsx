@@ -4,7 +4,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { AssetCostsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section";
 
 vi.mock(
-  "@/components/date-range-picker",
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/date-range-picker",
   () => import("@tests/date-picker-stubs")
 );
 

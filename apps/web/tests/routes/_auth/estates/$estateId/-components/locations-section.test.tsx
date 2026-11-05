@@ -276,7 +276,8 @@ describe("locations section", () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     screen.getByRole("status", { name: "Loading locations…" });
     await screen.findByText("No locations yet");
-    expect(screen.getAllByRole("button", { name: "Create" })).toHaveLength(2);
+    screen.getByText("Use Create to add the first block");
+    expect(screen.getAllByRole("button", { name: "Create" })).toHaveLength(1);
   });
 
   it("searches by name and shows where each match sits", async () => {

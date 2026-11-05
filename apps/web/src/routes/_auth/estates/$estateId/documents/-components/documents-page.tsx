@@ -4,9 +4,8 @@ import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { ErrorState } from "@/components/error-state";
 import { useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { CreateButton } from "@/components/page-actions";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { Pagination } from "@/components/pagination";
 import {
@@ -22,17 +21,15 @@ import {
   useDownloadDocument,
 } from "@/lib/documents";
 import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
-import { DocumentAssetDialog } from "./document-asset-dialog";
+import {
+  AssetAssociationSelection,
+  type AssetDocumentSelection,
+} from "./asset-association-selection";
 import { DocumentAssets } from "./document-assets";
 import { countDocumentFilters, DocumentFiltersForm } from "./document-filters";
 import { DocumentList } from "./document-list";
 import { DocumentWorkOrderDialog } from "./document-work-order-dialog";
 import { UploadDocumentForm } from "./upload-document-form";
-
-interface AssetDocumentSelection {
-  association: DocumentAsset;
-  document: EstateDocument;
-}
 
 export function DocumentsPage({
   estateId,
@@ -169,9 +166,6 @@ export function DocumentsPage({
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
       <DocumentList
-        createAction={
-          canUpload ? <CreateButton onClick={openUpload} /> : undefined
-        }
         documentType={filters.documentType}
         downloading={download.isPending}
         failed={documents.isError}
@@ -220,31 +214,5 @@ export function DocumentsPage({
         title="Delete file"
       />
     </PageLayout>
-  );
-}
-
-function AssetAssociationSelection({
-  selection,
-  estateId,
-  userId,
-  onClose,
-}: {
-  selection?: AssetDocumentSelection;
-  estateId: string;
-  userId?: string;
-  onClose: () => void;
-}) {
-  if (!selection) {
-    return null;
-  }
-  return (
-    <DocumentAssetDialog
-      document={selection.document}
-      estateId={estateId}
-      initialAssociation={selection.association}
-      initialUnlink={!!selection.association.assetId}
-      key={`${userId}:${estateId}:${selection.document.id}`}
-      onClose={onClose}
-    />
   );
 }

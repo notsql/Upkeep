@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { HomePending, RoutePending } from "@/components/route-pending";
+import { HomePending } from "@/components/home-pending";
+import { RoutePending } from "@/components/route-pending";
 
 describe("route pending states", () => {
   it("shows a content skeleton instead of a spinner while a route loads", () => {

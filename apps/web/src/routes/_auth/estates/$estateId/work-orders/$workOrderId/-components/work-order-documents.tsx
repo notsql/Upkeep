@@ -3,7 +3,6 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -20,41 +19,8 @@ import {
   useWorkOrderDocuments,
 } from "@/lib/work-order-documents";
 
-function AttachmentRow({
-  document,
-  pending,
-  onDownload,
-}: {
-  document: EstateDocument;
-  pending: boolean;
-  onDownload: (document: EstateDocument) => void;
-}) {
-  const download = useCallback(
-    () => onDownload(document),
-    [document, onDownload]
-  );
-  return (
-    <TableRow>
-      <TableCell className="max-w-xs break-words whitespace-normal">
-        {document.originalFilename}
-      </TableCell>
-      <TableCell>
-        {document.documentType === "INVOICE" ? "Invoice" : "Service report"}
-      </TableCell>
-      <TableCell>{new Date(document.createdAt).toLocaleString()}</TableCell>
-      <TableCell>
-        <Button
-          aria-label={`Download ${document.originalFilename}`}
-          disabled={pending}
-          onClick={download}
-          variant="outline"
-        >
-          Download
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
+import { AttachmentRow } from "./attachment-row";
+
 export function WorkOrderDocuments({
   estateId,
   workOrderId,

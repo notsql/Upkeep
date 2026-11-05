@@ -3,13 +3,13 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Link } from "@tanstack/react-router";
-import { Layers, Search, SearchX } from "lucide-react";
+import { Layers, Search } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { FilterBar, useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { Pagination } from "@/components/pagination";
 import { useInspectionAccess, useInspectionAssets } from "@/lib/inspections";
@@ -121,7 +121,6 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
       {assets.data?.items.length === 0 ? (
         <EmptyState
           description={query ? "Try a different name or reference" : undefined}
-          icon={query ? SearchX : undefined}
           title={query ? "No matching assets" : "No assets yet"}
         />
       ) : null}

@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { buttonVariants } from "@proj/ui/components/button";
 import {
   Card,
@@ -11,7 +10,6 @@ import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import {
   Building2,
   ClipboardPenLine,
-  HeartPulse,
   Layers,
   LayoutDashboard,
   LogIn,
@@ -19,51 +17,14 @@ import {
   Users,
 } from "lucide-react";
 import { useCallback } from "react";
-import { isResidentOnly, useCurrentEstate } from "@/components/app-navigation";
+import { isResidentOnly } from "@/components/app-navigation";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
-import { useHealth } from "@/lib/health";
-import { ResidentDashboard } from "@/routes/-components/resident-dashboard";
-
-function SystemStatus() {
-  const health = useHealth();
-  let content = <p role="status">Checking availability…</p>;
-  if (health.error) {
-    content = (
-      <Alert variant="destructive">
-        <AlertDescription>System status is unavailable.</AlertDescription>
-      </Alert>
-    );
-  } else if (!health.isPending) {
-    content = (
-      <p className="text-muted-foreground text-sm">
-        Service: {health.data?.ok ? "Available" : "Unavailable"} · Data
-        connection: {health.data?.database ? "Available" : "Unavailable"}
-      </p>
-    );
-  }
-  return (
-    <Card className="mt-8">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <HeartPulse
-            aria-hidden="true"
-            className="text-muted-foreground size-4"
-          />
-          System status
-        </CardTitle>
-      </CardHeader>
-      <CardContent>{content}</CardContent>
-    </Card>
-  );
-}
-function ResidentHome() {
-  const { estateId } = useCurrentEstate();
-  return <ResidentDashboard estateId={estateId} />;
-}
+import { ResidentHome } from "@/routes/-components/resident-home";
+import { SystemStatus } from "@/routes/-components/system-status";
 
 export function HomePage() {
   const { user, loading } = useAuth();

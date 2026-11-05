@@ -1,5 +1,4 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
-import { Wrench } from "lucide-react";
 import { expect, it } from "vitest";
 import { EmptyState } from "@/components/empty-state";
 
@@ -7,7 +6,6 @@ it("announces the title and description as a status", () => {
   renderWithProviders(
     <EmptyState
       description="Saved work orders will appear here."
-      icon={Wrench}
       title="No work orders yet"
     />
   );
@@ -17,21 +15,19 @@ it("announces the title and description as a status", () => {
   expect(within(status).queryByRole("button")).toBeNull();
 });
 
-it("renders the create action when one is given", () => {
+it("renders a recovery action when one is given", () => {
   renderWithProviders(
     <EmptyState
-      action={<button type="button">New work order</button>}
-      title="No work orders yet"
+      action={<button type="button">Clear filters</button>}
+      title="No matching work orders"
     />
   );
   within(screen.getByRole("status")).getByRole("button", {
-    name: "New work order",
+    name: "Clear filters",
   });
 });
 
-it("shows a neutral icon by default", () => {
+it("draws no icon", () => {
   renderWithProviders(<EmptyState title="Nothing" />);
-  expect(
-    screen.getByRole("status").querySelector("svg.lucide-inbox")
-  ).not.toBeNull();
+  expect(screen.getByRole("status").querySelector("svg")).toBeNull();
 });

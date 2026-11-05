@@ -1,5 +1,4 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
@@ -11,16 +10,13 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { Layers, SearchX } from "lucide-react";
+import { Layers } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ConditionBadge } from "@/components/condition-badge";
-import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { CreateButton } from "@/components/page-actions";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import {
@@ -34,10 +30,10 @@ import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { useEstate } from "@/lib/estates";
 import { flattenLocations, useLocations } from "@/lib/locations";
 import { useMobile } from "@/lib/use-mobile";
-import {
-  AssetFilterControls,
-  MobileAssetFilters,
-} from "@/routes/_auth/estates/$estateId/assets/-components/asset-filters";
+import { AssetFilterControls } from "@/routes/_auth/estates/$estateId/assets/-components/asset-filters";
+import { AssetsEmpty } from "@/routes/_auth/estates/$estateId/assets/-components/assets-empty";
+import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
+import { MobileAssetFilters } from "@/routes/_auth/estates/$estateId/assets/-components/mobile-asset-filters";
 import { AssetSortControls } from "./asset-sort-controls";
 
 export function AssetRegisterPage({
@@ -198,7 +194,6 @@ export function AssetRegisterPage({
       {assets.data?.length === 0 ? (
         <AssetsEmpty
           canRegister={canRegister}
-          estateId={estateId}
           filtered={filtered}
           onClear={clearFilters}
         />
@@ -312,46 +307,5 @@ export function AssetRegisterPage({
         </Table>
       ) : null}
     </PageLayout>
-  );
-}
-
-function AssetsEmpty({
-  estateId,
-  filtered,
-  canRegister,
-  onClear,
-}: {
-  estateId: string;
-  filtered: boolean;
-  canRegister: boolean;
-  onClear: () => void;
-}) {
-  if (filtered) {
-    return (
-      <EmptyState
-        action={
-          <Button onClick={onClear} variant="outline">
-            Clear filters
-          </Button>
-        }
-        description="Try fewer filters"
-        icon={SearchX}
-        title="No matching assets"
-      />
-    );
-  }
-  return (
-    <EmptyState
-      action={
-        canRegister ? (
-          <CreateButton
-            params={{ estateId }}
-            to="/estates/$estateId/assets/new"
-          />
-        ) : undefined
-      }
-      description="Set Status to All to include retired assets"
-      title="No assets yet"
-    />
   );
 }

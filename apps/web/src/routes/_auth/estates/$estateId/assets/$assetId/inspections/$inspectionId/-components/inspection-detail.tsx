@@ -1,121 +1,18 @@
 import { Badge } from "@proj/ui/components/badge";
-import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { DetailPageHeader } from "@/components/detail-page-header";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
-  type InspectionResult,
   useInspectionAccess,
   useInspectionAsset,
-  useInspectionPhoto,
   useInspectionResult,
 } from "@/lib/inspections";
-
-function InspectionPhoto({
-  estateId,
-  assetId,
-  inspectionId,
-  photoId,
-  number,
-}: {
-  estateId: string;
-  assetId: string;
-  inspectionId: string;
-  photoId: string;
-  number: number;
-}) {
-  const image = useInspectionPhoto(estateId, assetId, inspectionId, photoId);
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    if (!image.data) {
-      setUrl(undefined);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(image.data);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [image.data]);
-  const retry = useCallback(() => image.refetch(), [image.refetch]);
-  if (image.isError) {
-    return (
-      <div>
-        <p>Photo unavailable.</p>
-        <Button onClick={retry} variant="outline">
-          Retry photo {number}
-        </Button>
-      </div>
-    );
-  }
-  if (!(url && image.data)) {
-    return <p role="status">Loading photo {number}…</p>;
-  }
-  return (
-    <a href={url} rel="noopener" target="_blank">
-      <img
-        alt={`Inspection evidence ${number}`}
-        className="max-h-96 w-full rounded-lg object-contain"
-        height={384}
-        src={url}
-        width={640}
-      />
-    </a>
-  );
-}
-
-function InspectionFollowUp({
-  record,
-  estateId,
-  canCreate,
-  active,
-  pending,
-}: {
-  record: InspectionResult;
-  estateId: string;
-  canCreate: boolean;
-  active: boolean;
-  pending: boolean;
-}) {
-  if (record.outcome === "PASS") {
-    return <p>Closed</p>;
-  }
-  if (record.workOrder) {
-    return (
-      <Link
-        className="underline"
-        params={{ estateId, workOrderId: record.workOrder.id }}
-        to="/estates/$estateId/work-orders/$workOrderId"
-      >
-        {record.workOrder.reference}
-      </Link>
-    );
-  }
-  return (
-    <>
-      <p>Awaiting work order</p>
-      {canCreate && active ? (
-        <Link
-          className={buttonVariants()}
-          params={{ estateId }}
-          search={{ sourceInspectionId: record.id }}
-          to="/estates/$estateId/work-orders/new"
-        >
-          Create work order
-        </Link>
-      ) : (
-        <p>
-          {pending
-            ? "Loading work-order eligibility…"
-            : "Work-order creation is unavailable while the estate, asset or location is inactive, or your creation permission is unavailable."}
-        </p>
-      )}
-    </>
-  );
-}
+import { InspectionFollowUp } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/-components/inspection-follow-up";
+import { InspectionPhoto } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/-components/inspection-photo";
 
 export function InspectionDetail({
   estateId,

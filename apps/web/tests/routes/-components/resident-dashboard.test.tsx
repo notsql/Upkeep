@@ -86,7 +86,7 @@ it("shows the server's status counts and at most five recent reports", async () 
 it("invites a resident with no reports to report their first fault", async () => {
   respond([]);
   renderWithProviders(<ResidentDashboard estateId="maple" />);
-  await screen.findByText("Reported faults appear here");
+  await screen.findByText("Use Report a fault to send the first one");
   expect(
     screen.getAllByRole("link", { name: "Report a fault" }).length
   ).toBeGreaterThan(0);
@@ -98,9 +98,11 @@ it("uses the shared loading and empty states", async () => {
   renderWithProviders(<ResidentDashboard estateId="maple" />);
   screen.getByRole("status", { name: "Loading reports…" });
   await screen.findByText("No reports yet");
-  within(screen.getByRole("status")).getByRole("link", {
-    name: "Report a fault",
-  });
+  expect(
+    within(screen.getByRole("status")).queryByRole("link", {
+      name: "Report a fault",
+    })
+  ).toBeNull();
 });
 
 it("offers Retry when the reports fail to load", async () => {

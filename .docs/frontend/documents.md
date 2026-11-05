@@ -117,10 +117,10 @@ Filename/type filters and cursor paging remain URL-backed; pagination buttons wr
 documents"): filename search grows, "Filter by type" is `w-full sm:w-48` with a
 full-width trigger, Search (outline) is the only action; `activeCount`/`onClear`
 give the header badge and ghost Clear filters. `DocumentList` takes
-`onClearFilters` and `createAction`: no matches shows the "No matching
-documents" `EmptyState` (`SearchX`) with Clear filters; an empty estate shows
-"No documents yet" (default `Inbox`) with a `CreateButton` that opens the upload dialog when the user can
-upload. Access, list, picker, link and history loads use `LoadingState`.
+`onClearFilters`: no matches shows the "No matching
+documents" `EmptyState` with Clear filters; an empty estate shows
+"No documents yet" ("Uploads appear here", no action - the header Create opens
+the upload dialog). Access, list, picker, link and history loads use `LoadingState`.
 
 ## Design-system pass
 

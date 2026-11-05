@@ -393,13 +393,12 @@ Priority fields `w-full sm:w-48`, outline Apply filters in actions; `activeCount
 counts applied priority/status/category/reference and `onClear` gives the ghost
 header Clear filters) inside the
 submitting form. Loading uses `LoadingState` (table variant; access checks use
-`rows={2}`). An empty estate shows the `EmptyState` "No work orders yet" with the
-shared `CreateButton` ("Create", also in the header) when the user
-can create; "No matching work orders" offers Clear filters, which keeps the sort.
+`rows={2}`). An empty estate shows the `EmptyState` "No work orders yet" ("Use Create to add the
+first work order" when the user can create, else "Saved work orders appear
+here"; no action - the header Create is the entry point); "No matching work orders" offers Clear filters, which keeps the sort.
 Detail: status history/corrections/documents load with `LoadingState`; "No
 corrections yet" and "No documents yet" (under a `SectionHeading` "Documents")
-are `EmptyState`s with the default `Inbox` icon. "No matching work orders" uses
-`SearchX`. Only the list header shows `icon={Wrench}`; Retry
+are `EmptyState`s (no icon). Only the list header shows `icon={Wrench}`; Retry
 locations / Retry source are `outline`. New: access/source/location loads use `LoadingState`; the
 "Work order already raised" screen uses `PageHeader`.
 

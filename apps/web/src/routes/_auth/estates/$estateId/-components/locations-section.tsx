@@ -14,8 +14,8 @@ import { Building, MapPin } from "lucide-react";
 import { type ChangeEvent, useCallback, useId, useMemo, useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { FilterBar, useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { ListPageHeader } from "@/components/page-header";
 import { SectionHeading } from "@/components/section-heading";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
@@ -319,7 +319,6 @@ export function LocationsSection({ estateId }: { estateId: string }) {
                   canEdit={canEdit}
                   expandedIds={expandedIds ?? EMPTY_EXPANSION}
                   onClear={clearSearch}
-                  onCreate={addBlock}
                   onPanel={setPanel}
                   onToggle={toggleLocation}
                   query={query}

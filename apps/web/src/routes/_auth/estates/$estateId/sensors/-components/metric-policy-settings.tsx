@@ -13,11 +13,12 @@ import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { SensorPolicy } from "@/lib/flatlined-sensors";
 import { useMobile } from "@/lib/use-mobile";
-import {
-  MetricPolicyDialog,
-  useMetricPolicyEditor,
-} from "@/routes/_auth/estates/$estateId/sensors/-components/metric-policy-form";
-import { metricLabel } from "@/routes/_auth/estates/$estateId/sensors/-components/sensor-format";
+import { MetricPolicyDialog } from "@/routes/_auth/estates/$estateId/sensors/-components/metric-policy-form";
+import { useMetricPolicyEditor } from "@/routes/_auth/estates/$estateId/sensors/-components/use-metric-policy-editor";
+import { PolicyAction } from "./policy-action";
+import { PolicyName } from "./policy-name";
+import { PolicyStatus } from "./policy-status";
+import { PolicySummary } from "./policy-summary";
 
 export function MetricPolicySettings({
   estateId,
@@ -201,60 +202,5 @@ export function MetricPolicySettings({
         />
       </CardContent>
     </Card>
-  );
-}
-
-function PolicyName({ policy }: { policy: SensorPolicy }) {
-  return (
-    <>
-      <p className="font-medium wrap-anywhere">{metricLabel(policy.metric)}</p>
-      <p className="text-muted-foreground text-sm">{policy.unit}</p>
-    </>
-  );
-}
-
-function PolicySummary({ policy }: { policy: SensorPolicy }) {
-  if (policy.durationMinutes === null) {
-    return "No policy";
-  }
-  return `${policy.durationMinutes} ${policy.durationMinutes === 1 ? "minute" : "minutes"} · tolerance ${policy.tolerance} ${policy.unit}`;
-}
-
-function PolicyStatus({ policy }: { policy: SensorPolicy }) {
-  const configured = policy.durationMinutes !== null;
-  return (
-    <Badge variant={configured ? "default" : "secondary"}>
-      {configured ? "Configured" : "Not set"}
-    </Badge>
-  );
-}
-
-function PolicyAction({
-  policy,
-  saving,
-  id,
-  onOpen,
-}: {
-  policy: SensorPolicy;
-  saving: boolean;
-  id: string;
-  onOpen: (metric: SensorPolicy["metric"]) => void;
-}) {
-  const open = useCallback(
-    () => onOpen(policy.metric),
-    [onOpen, policy.metric]
-  );
-  const label = policy.durationMinutes === null ? "Set up" : "Edit";
-  return (
-    <Button
-      aria-haspopup="dialog"
-      aria-label={`${label} ${metricLabel(policy.metric).toLowerCase()} policy`}
-      disabled={saving}
-      id={id}
-      onClick={open}
-      variant="ghost"
-    >
-      {label}
-    </Button>
   );
 }

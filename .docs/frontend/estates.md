@@ -128,10 +128,11 @@ and no nested buttons/links. It shows a monogram tile (initials, colour derived
 from the estate id), name, monospace `MCST <code>`, address with a MapPin icon, and the
 Owner/Shared with you and lifecycle badges; hover adds a ring, shadow and a
 chevron. Transitions respect reduced-motion preferences. The empty state is the shared
-`EmptyState` (default Inbox icon): with default filters it says "No active
-estates" (or the ALL/INACTIVE variant) and offers the same `CreateButton`
-"Create" as the header; with filters active it says "No matching estates"
-(SearchX, "Try another search or access filter" / "No inactive estates") with
+`EmptyState` (no icon): with default filters it says "No active
+estates" (or the ALL/INACTIVE variant) with "Use Create to add the first
+estate" and no action (the header Create is the entry point); with filters
+active it says "No matching estates"
+("Try another search or access filter" / "No inactive estates") with
 an outline "Clear filters" (the FilterBar keeps its own ghost one). A failed
 list is `ErrorState` "Retry estates". `ListPageHeader` "Estates" uses
 `icon={Building2}`, description "Estates you own or can access".

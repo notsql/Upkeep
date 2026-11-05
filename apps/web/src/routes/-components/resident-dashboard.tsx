@@ -1,12 +1,6 @@
 import { buttonVariants } from "@proj/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { ClipboardList, ClipboardPenLine, LayoutDashboard } from "lucide-react";
+import { ClipboardList, LayoutDashboard } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
@@ -16,34 +10,10 @@ import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { SectionHeading } from "@/components/section-heading";
 import { useReportList } from "@/lib/reports";
+import { CountCard } from "@/routes/-components/count-card";
+import { ReportFaultLink } from "@/routes/-components/report-fault-link";
 
 const RECENT_LIMIT = 5;
-
-function CountCard({ label, value }: { label: string; value: number }) {
-  return (
-    <Card aria-label={label} role="region">
-      <CardHeader>
-        <CardTitle className="text-muted-foreground text-sm font-medium">
-          {label}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="text-3xl font-semibold">{value}</CardContent>
-    </Card>
-  );
-}
-
-function ReportFaultLink({ estateId }: { estateId?: string }) {
-  return (
-    <Link
-      className={buttonVariants()}
-      search={estateId ? { estateId } : {}}
-      to="/reports/new"
-    >
-      <ClipboardPenLine aria-hidden="true" />
-      Report a fault
-    </Link>
-  );
-}
 
 /** The resident-only account's `/`: report counts and the latest reports. */
 export function ResidentDashboard({ estateId }: { estateId?: string }) {
@@ -90,8 +60,7 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
             </div>
             {items.length === 0 ? (
               <EmptyState
-                action={<ReportFaultLink estateId={estateId} />}
-                description="Reported faults appear here"
+                description="Use Report a fault to send the first one"
                 title="No reports yet"
               />
             ) : (

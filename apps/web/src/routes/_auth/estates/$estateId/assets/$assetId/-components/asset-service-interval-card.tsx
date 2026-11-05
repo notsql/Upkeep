@@ -1,5 +1,4 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import {
   Card,
@@ -21,28 +20,7 @@ import {
   useAssetServiceInterval,
   useSetAssetServiceInterval,
 } from "@/lib/service-intervals";
-
-const OVERRIDE_BADGE =
-  "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200";
-
-/** The source badge and the sentence explaining where the interval comes from. */
-function SourceBadge({ interval }: { interval: AssetServiceInterval }) {
-  if (interval.source === "ASSET") {
-    return (
-      <Badge className={OVERRIDE_BADGE} variant="outline">
-        Override
-      </Badge>
-    );
-  }
-  if (interval.source === "CATEGORY") {
-    return <Badge variant="secondary">From category</Badge>;
-  }
-  return (
-    <Badge className="text-muted-foreground" variant="outline">
-      No interval
-    </Badge>
-  );
-}
+import { SourceBadge } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/source-badge";
 
 function explanation(interval: AssetServiceInterval): string {
   const label = interval.categoryLabel;

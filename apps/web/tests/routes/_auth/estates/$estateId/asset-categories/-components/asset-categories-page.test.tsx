@@ -7,11 +7,9 @@ import {
   within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
-import {
-  AssetCategoriesLayout,
-  AssetCategoriesList,
-  type IntervalFilter,
-} from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
+import { AssetCategoriesLayout } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-layout";
+import { AssetCategoriesList } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
+import type { IntervalFilter } from "@/routes/_auth/estates/$estateId/asset-categories/-components/interval-filter";
 
 const EDIT_INTERVAL = /^Edit service interval/u;
 

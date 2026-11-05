@@ -189,7 +189,7 @@ bar's estate switcher already shows it) or any other context the shell shows.
 Use it only for a short fragment describing the page ("Equipment in this
 estate"), or omit it. Record pages may use the record's own name as the title.
 
-### Header variants (`components/page-header.tsx`)
+### Header variants (`components/page-header.tsx`, `list-page-header.tsx`, `detail-page-header.tsx`, `form-page-header.tsx`)
 
 Screens use one of three variants; do not assemble `PageHeader` + actions by
 hand. `PageHeader` itself stays the primitive underneath (and for the odd page
@@ -231,7 +231,7 @@ convention).
 Breadcrumb `to` is a closed union; add a route to `Breadcrumb` in
 `page-header.tsx` when a new parent needs linking.
 
-### List-page header actions: `CreateButton`, `FilterToggle` (`components/page-actions.tsx`)
+### List-page header actions: `CreateButton`, `FilterToggle` (`components/page-actions.tsx`, `components/filter-toggle.tsx`)
 
 Every list page puts the same actions, in the same order, in `PageHeader
 actions`: `FilterToggle` (if the page has filters) then `CreateButton` (if the
@@ -251,7 +251,8 @@ order", "Record manual reading"): the label is always "Create".
   "Filters" or "Filters, N active". Spread `useFilterPanel(...).toggleProps`.
 
 ```tsx
-import { CreateButton, FilterToggle } from "@/components/page-actions";
+import { FilterToggle } from "@/components/filter-toggle";
+import { CreateButton } from "@/components/page-actions";
 import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 
 const panel = useFilterPanel(activeCount);
@@ -286,27 +287,34 @@ icon + text inside `CardTitle`.
 
 ### Empty: `EmptyState` (`components/empty-state.tsx`)
 
-Props: `title: string`, `description?: ReactNode`, `icon?: LucideIcon`,
-`action?: ReactNode`. Renders shadcn `Empty` as a dashed card
-(`bg-card border border-dashed`) with `role="status"`.
+Props: `title: string`, `description?: ReactNode`, `action?: ReactNode`.
+Renders shadcn `Empty` (`EmptyHeader` > `EmptyTitle` + muted
+`EmptyDescription`, then `EmptyContent` for the action) with `role="status"`
+as a quiet panel: solid `rounded-lg border`, `px-6 py-10`, no background
+change. Inside a Card's content (`data-slot="card-content"`, e.g. every
+`SectionCard`) it drops the border and uses `py-6`, so it never reads as a
+card-in-a-card. There is no option for this; it is automatic.
 
-- **Icon:** defaults to the neutral lucide `Inbox`. Do not pass the page's
-  icon (it would repeat the header's). Pass `SearchX` only for "No matching …".
-- No data: when the user can create, `action` is a `CreateButton` (the same
-  component as the header's), so an empty list is a card with its add button.
-  Omit it when the user cannot create.
-- Filters produced no results: title "No matching …", `action` is an outline
-  "Clear filters" Button.
-- Inside a Card section (asset documents, work-order corrections) use it as-is;
-  the dashed card nests fine. Picker/combobox "no matches" lines inside dialogs
-  and `ComboboxEmpty` stay plain text - they are not page states.
+- **No icon.** EmptyState draws none and takes no `icon` prop.
+- **No create button.** The page header's `CreateButton` (or the section's
+  header action) is the single create entry point. When the user can create,
+  the description may point at it, worded "Use Create to add the first …"
+  (or the header action's label, e.g. "Use Record repair to add the first
+  entry"); otherwise a neutral line ("Saved work orders appear here").
+- `action` is only for recovery: an outline "Clear filters" Button when
+  filters produced no results (title "No matching …"), or "Go to first page".
+- Picker/combobox "no matches" lines inside dialogs and `ComboboxEmpty` stay
+  plain text - they are not page states.
 
 ```tsx
-<EmptyState description="Saved work orders appear here" title="No work orders yet" />
+<EmptyState
+  description="Use Create to add the first work order"
+  title="No work orders yet"
+/>
 
 <EmptyState
   action={<Button onClick={clear} variant="outline">Clear filters</Button>}
-  icon={SearchX}
+  description="Try other filters"
   title="No matching work orders"
 />
 ```
@@ -321,7 +329,7 @@ Props: `label: string` (e.g. "Loading work orders…"), `variant?: "list" |
 
 Why skeletons: they hold the layout so content does not jump when data
 arrives, the estates list already used them, and one component keeps the
-announcement consistent. `Loader` (spinner) is kept only for the router's
+announcement consistent. `RoutePending` (spinner) is kept only for the router's
 `defaultPendingComponent` and whole-screen auth/session waits; `Spinner`
 inside a Button is fine for pending mutations. Use `LoadingState` for every
 query-driven region, including access/permission checks before a page renders
@@ -424,7 +432,7 @@ the native inputs used, so they drop into existing state and API mapping.
   the browser widget - so this is built from `Select`. **Never use
   `<input type="time">`**; every time field uses `TimePicker` or
   `DateTimePicker`.
-- `DateRangePicker` (`components/date-range-picker.tsx`): `value: { from:
+- `DateRangePicker` (`routes/_auth/estates/$estateId/assets/$assetId/-components/date-range-picker.tsx`): `value: { from:
   string; to: string }` (`YYYY-MM-DD` each, `""` unset), `onChange`,
   `placeholder?` ("Any date"), same trigger props. One outline trigger
   ("1 Mar 2026 – 31 Mar 2026", `CalendarRange` icon) opening a two-month range
@@ -602,9 +610,14 @@ destinations. Filters that narrow one list stay in the FilterBar.
 Props: `label: string` (the `nav`'s accessible name), `items: { label;
 to; params?; search?; exact? }[]` (`to` typed against the route tree; set
 `exact: true` on the section's index route so it is not active on children).
-Renders `<nav aria-label>` > `<ul>` styled with shadcn `tabsListVariants`;
-each item is a router `Link`, and the router sets `aria-current="page"` on the
-active one, which drives the active (Tabs-trigger-like) styling.
+Renders `<nav aria-label>` > `<ul>` styled as the shadcn Tabs `line`
+variant (`tabsListVariants({ variant: "line" })` plus `h-10 w-full
+justify-start border-b`): a full-width row with a bottom border, not the
+compact muted pill. Each item is a router `Link` styled like a line
+TabsTrigger; the router sets `aria-current="page"` on the active one, which
+darkens its text and shows a 2px underline over the row's border. The height
+and underline are set on SubNav's own elements because there is no
+`Tabs` (`group/tabs`) parent.
 
 ```tsx
 <SubNav
@@ -619,6 +632,9 @@ active one, which drives the active (Tabs-trigger-like) styling.
 ## Adding a screen and reviewing this change
 
 Place routes in directories with adjacent `-components/` for route-local UI.
+One component per `.tsx` file, named for it in kebab-case (`WorkOrderStat` ->
+`work-order-stat.tsx`); a route file holds only its route component. Shared
+non-component code (hooks, helpers, types) goes in a `.ts` file beside it.
 Use the shared shell/header/tokens, existing shadcn components and generated API
 hooks. Fetch no private data before session readiness. Preserve current permission
 checks, query keys and invalidations; visual work does not extend authorization.

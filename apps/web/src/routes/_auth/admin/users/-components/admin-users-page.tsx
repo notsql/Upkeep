@@ -1,4 +1,3 @@
-import type { components } from "@proj/api/schema";
 import { Button } from "@proj/ui/components/button";
 import { Card } from "@proj/ui/components/card";
 import {
@@ -27,7 +26,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { SearchX, ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users } from "lucide-react";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -39,13 +38,15 @@ import {
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { FilterBar, useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { SectionHeading } from "@/components/section-heading";
 import { api } from "@/lib/api";
 import { useMobile } from "@/lib/use-mobile";
 import { MemberEstates } from "@/routes/_auth/admin/-components/member-estates";
+import { ManageEstateButton } from "@/routes/_auth/admin/users/-components/manage-estate-button";
+import { RoleEditor } from "@/routes/_auth/admin/users/-components/role-editor";
 
 const memberQueryKey = (organizationId: string) =>
   ["admin", "members", organizationId] as const;
@@ -61,8 +62,6 @@ interface SelectedMember {
   name: string;
   userId: string;
 }
-
-type Role = components["schemas"]["Role"];
 
 const ROLE_UPDATE_REASONS = new Set([
   "Estate must have at least 1 admin.",
@@ -81,138 +80,6 @@ function roleUpdateError(error: unknown, status: number | undefined): Error {
     return new Error(`Unable to update role: ${message}`);
   }
   return new Error("Unable to update role");
-}
-
-interface MemberRoleSelectProps {
-  currentRole: string;
-  disabled: boolean;
-  membershipId?: string;
-  name: string;
-  onRoleChange: (membershipId: string, role: string) => void;
-  roles: Role[];
-}
-
-function MemberRoleSelect({
-  currentRole,
-  disabled,
-  membershipId,
-  name,
-  onRoleChange,
-  roles,
-}: MemberRoleSelectProps) {
-  const currentRoleMissing =
-    Boolean(currentRole) && !roles.some((role) => role.slug === currentRole);
-  const items = [
-    { value: "", label: "Select a role" },
-    ...(currentRoleMissing ? [{ value: currentRole, label: currentRole }] : []),
-    ...roles.map((role) => ({
-      value: role.slug ?? "",
-      label: role.name ?? role.slug ?? "",
-    })),
-  ];
-
-  const changeRole = useCallback(
-    (role: string | null) => {
-      if (!(membershipId && role) || role === currentRole) {
-        return;
-      }
-      onRoleChange(membershipId, role);
-    },
-    [currentRole, membershipId, onRoleChange]
-  );
-
-  return (
-    <Select
-      disabled={disabled}
-      items={items}
-      onValueChange={changeRole}
-      value={currentRole}
-    >
-      <SelectTrigger aria-label={`Role for ${name}`} className="w-full">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem disabled value="">
-          Select a role
-        </SelectItem>
-        {currentRoleMissing ? (
-          <SelectItem disabled value={currentRole}>
-            {currentRole}
-          </SelectItem>
-        ) : null}
-        {roles.map((role) => (
-          <SelectItem key={role.slug} value={role.slug}>
-            {role.name}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
-  );
-}
-
-type Member = components["schemas"]["AdminUserResponse"];
-function RoleEditor({
-  user,
-  name,
-  pending,
-  rolesUnavailable,
-  roles,
-  onRoleChange,
-}: {
-  user: Member;
-  name: string;
-  pending: boolean;
-  rolesUnavailable: boolean;
-  roles: Role[];
-  onRoleChange: (membershipId: string, role: string) => void;
-}) {
-  return (
-    <div className="grid gap-1">
-      {" "}
-      <MemberRoleSelect
-        currentRole={user.roleSlugs?.[0] ?? ""}
-        disabled={
-          pending ||
-          rolesUnavailable ||
-          (user.roleSlugs?.length ?? 0) > 1 ||
-          !user.membershipId
-        }
-        membershipId={user.membershipId}
-        name={name}
-        onRoleChange={onRoleChange}
-        roles={roles}
-      />
-      {(user.roleSlugs?.length ?? 0) > 1 && (
-        <p className="text-muted-foreground mt-1 text-xs">
-          Manage multiple roles in WorkOS.
-        </p>
-      )}
-    </div>
-  );
-}
-function ManageEstateButton({
-  user,
-  name,
-  onManage,
-}: {
-  user: Member;
-  name: string;
-  onManage: (event: MouseEvent<HTMLButtonElement>) => void;
-}) {
-  return (
-    <Button
-      aria-label={`Manage estates for ${name}`}
-      data-member-name={name}
-      data-user-id={user.userId}
-      disabled={!user.userId}
-      onClick={onManage}
-      size="sm"
-      type="button"
-      variant="outline"
-    >
-      Manage estates
-    </Button>
-  );
 }
 
 export function AdminUsersPage() {
@@ -641,7 +508,6 @@ export function AdminUsersPage() {
                     </Button>
                   }
                   description="Try another name or email"
-                  icon={SearchX}
                   title="No matching users"
                 />
               ) : (

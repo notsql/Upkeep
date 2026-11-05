@@ -1,80 +1,20 @@
-import { Badge } from "@proj/ui/components/badge";
-import { Button } from "@proj/ui/components/button";
-import { Card } from "@proj/ui/components/card";
-import { Field } from "@proj/ui/components/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@proj/ui/components/input-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@proj/ui/components/select";
-import { Link } from "@tanstack/react-router";
-import { Building2, ChevronRight, MapPin, Search, SearchX } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { type ChangeEvent, useCallback } from "react";
-import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
-import { FilterBar, useFilterPanel } from "@/components/filter-bar";
-import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { CreateButton } from "@/components/page-actions";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
-import { type EstateStatus, formatMcst, useEstateList } from "@/lib/estates";
+import { type EstateStatus, useEstateList } from "@/lib/estates";
+import { EstateCard } from "@/routes/_auth/estates/-components/estate-card";
 import type {
   EstateAccess,
   EstateDirectoryFilters,
 } from "@/routes/_auth/estates/-components/estate-directory-filters";
+import { EstateEmptyState } from "@/routes/_auth/estates/-components/estate-empty-state";
+import { EstateFilterToolbar } from "@/routes/_auth/estates/-components/estate-filter-toolbar";
 import { InvitationAcceptance } from "@/routes/_auth/estates/-components/invitation-acceptance";
 import { PendingInvitations } from "@/routes/_auth/estates/-components/pending-invitations";
-
-const statusItems: { value: EstateStatus; label: string }[] = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-  { value: "ALL", label: "All" },
-];
-
-const accessItems: { value: EstateAccess; label: string }[] = [
-  { value: "ALL", label: "All access" },
-  { value: "OWNED", label: "Owner" },
-  { value: "SHARED", label: "Shared with you" },
-];
-
-const monogramColours = [
-  "bg-sky-500/15 text-sky-700 dark:text-sky-300",
-  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-  "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  "bg-violet-500/15 text-violet-700 dark:text-violet-300",
-  "bg-rose-500/15 text-rose-700 dark:text-rose-300",
-  "bg-teal-500/15 text-teal-700 dark:text-teal-300",
-];
-
-function monogramColour(id: string): string {
-  let hash = 0;
-  for (const char of id) {
-    hash = (hash * 31 + (char.codePointAt(0) ?? 0)) % 2_147_483_647;
-  }
-  return monogramColours[hash % monogramColours.length] ?? "";
-}
-
-const whitespace = /\s+/u;
-
-type EstateSummary = NonNullable<
-  ReturnType<typeof useEstateList>["data"]
->[number];
-
-function initials(name: string): string {
-  const words = name.trim().split(whitespace).filter(Boolean);
-  return words
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? "")
-    .join("");
-}
 
 function emptyMessageFor(
   status: EstateStatus,
@@ -89,181 +29,6 @@ function emptyMessageFor(
   return `No ${status.toLowerCase()} estates`;
 }
 
-function EstateFilterToolbar({
-  access,
-  changeAccess,
-  changeSearch,
-  changeStatus,
-  activeCount,
-  clearFilters,
-  count,
-  filters,
-  showCount,
-  status,
-  id,
-  open,
-}: {
-  id: string;
-  open: boolean;
-  activeCount: number;
-  access: EstateAccess;
-  changeAccess: (value: EstateAccess | null) => void;
-  changeSearch: (event: ChangeEvent<HTMLInputElement>) => void;
-  changeStatus: (value: EstateStatus | null) => void;
-  clearFilters: () => void;
-  count: number;
-  filters: EstateDirectoryFilters;
-  showCount: boolean;
-  status: EstateStatus;
-}) {
-  return (
-    <div className="has-[search]:mb-6">
-      <FilterBar
-        actions={
-          showCount ? (
-            <p className="text-muted-foreground text-sm tabular-nums">
-              {count} {count === 1 ? "estate" : "estates"}
-            </p>
-          ) : null
-        }
-        activeCount={activeCount}
-        id={id}
-        label="Filter estates"
-        onClear={clearFilters}
-        open={open}
-        search={
-          <InputGroup>
-            <InputGroupAddon>
-              <Search aria-hidden="true" />
-            </InputGroupAddon>
-            <InputGroupInput
-              aria-label="Search estates"
-              onChange={changeSearch}
-              placeholder="Search by name, MCST number or address"
-              type="search"
-              value={filters.q ?? ""}
-            />
-          </InputGroup>
-        }
-      >
-        <Field className="w-full sm:w-48">
-          <Select
-            items={statusItems}
-            onValueChange={changeStatus}
-            value={status}
-          >
-            <SelectTrigger aria-label="Status" className="w-full">
-              <SelectValue className="min-w-0 truncate" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field className="w-full sm:w-48">
-          <Select
-            items={accessItems}
-            onValueChange={changeAccess}
-            value={access}
-          >
-            <SelectTrigger aria-label="Access" className="w-full">
-              <SelectValue className="min-w-0 truncate" />
-            </SelectTrigger>
-            <SelectContent>
-              {accessItems.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-      </FilterBar>
-    </div>
-  );
-}
-
-function EstateEmptyState({
-  emptyMessage,
-  filtersActive,
-  onClear,
-}: {
-  emptyMessage: string;
-  filtersActive: boolean;
-  onClear: () => void;
-}) {
-  return (
-    <EmptyState
-      action={
-        filtersActive ? (
-          <Button onClick={onClear} variant="outline">
-            Clear filters
-          </Button>
-        ) : (
-          <CreateButton to="/estates/new" />
-        )
-      }
-      description={
-        filtersActive ? emptyMessage : "Assets, readings and work orders"
-      }
-      icon={filtersActive ? SearchX : undefined}
-      title={filtersActive ? "No matching estates" : emptyMessage}
-    />
-  );
-}
-
-function EstateCard({ estate }: { estate: EstateSummary }) {
-  return (
-    <Link
-      aria-label={`${estate.name} (${formatMcst(estate.code)})`}
-      className="group focus-visible:ring-ring block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-      params={{ estateId: estate.id }}
-      to="/estates/$estateId"
-    >
-      <Card className="group-hover:ring-primary/40 group-focus-visible:ring-primary/40 h-full gap-4 px-5 text-sm transition-[box-shadow] group-hover:shadow-md motion-reduce:transition-none">
-        <div className="flex items-start gap-3">
-          <span
-            aria-hidden="true"
-            className={`flex size-10 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${monogramColour(estate.id)}`}
-          >
-            {initials(estate.name)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate font-semibold tracking-tight">
-              {estate.name}
-            </h2>
-            <p className="text-muted-foreground font-mono text-xs">
-              {formatMcst(estate.code)}
-            </p>
-          </div>
-          <ChevronRight
-            aria-hidden="true"
-            className="text-muted-foreground size-4 shrink-0 opacity-0 transition-[opacity,transform] group-hover:translate-x-0.5 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none"
-          />
-        </div>
-        <p className="text-muted-foreground flex min-w-0 items-start gap-1.5">
-          <MapPin aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-          <span className="line-clamp-2">
-            {estate.address}, {estate.postalCode}
-          </span>
-        </p>
-        <div className="mt-auto flex flex-wrap gap-2">
-          <Badge variant={estate.owned ? "secondary" : "outline"}>
-            {estate.owned ? "Owner" : "Shared with you"}
-          </Badge>
-          <LifecycleStatusBadge
-            inactive={Boolean(estate.deactivatedAt)}
-            inactiveLabel="Inactive"
-          />
-        </div>
-      </Card>
-    </Link>
-  );
-}
 export function EstateListPage({
   filters,
   onFiltersChange,

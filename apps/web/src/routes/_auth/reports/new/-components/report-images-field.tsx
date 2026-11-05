@@ -1,35 +1,10 @@
-import { Button } from "@proj/ui/components/button";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
-import { type ChangeEvent, useCallback } from "react";
-
-export interface SelectedReportImage {
-  file: File;
-  id: number;
-}
-
-function SelectedImage({
-  image,
-  onRemove,
-}: {
-  image: SelectedReportImage;
-  onRemove: (id: number) => void;
-}) {
-  const remove = useCallback(() => onRemove(image.id), [image.id, onRemove]);
-  return (
-    <div className="flex items-center justify-between">
-      <span>{image.file.name}</span>
-      <Button
-        aria-label={`Remove ${image.file.name}`}
-        onClick={remove}
-        type="button"
-        variant="outline"
-      >
-        Remove
-      </Button>
-    </div>
-  );
-}
+import type { ChangeEvent } from "react";
+import {
+  SelectedImage,
+  type SelectedReportImage,
+} from "@/routes/_auth/reports/new/-components/selected-image";
 
 export function ReportImagesField({
   id,

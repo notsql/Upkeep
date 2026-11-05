@@ -1,14 +1,12 @@
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Checkbox } from "@proj/ui/components/checkbox";
-import { Label } from "@proj/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type ReactNode, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-
 import { api } from "@/lib/api";
 import { formatMcst } from "@/lib/estates";
+import { EstateOption } from "@/routes/_auth/admin/-components/estate-option";
 
 // Local mutation arguments; API request/response types remain inferred.
 interface AccessChange {
@@ -18,39 +16,6 @@ interface AccessChange {
 
 const accessQueryKey = (userId: string) =>
   ["admin", "estate-users", userId] as const;
-
-function EstateOption({
-  checked,
-  children,
-  disabled,
-  estateId,
-  onChange,
-}: {
-  checked: boolean;
-  children: ReactNode;
-  disabled: boolean;
-  estateId: string;
-  onChange: (estateId: string, granted: boolean) => void;
-}) {
-  const id = `member-estate-${estateId}`;
-  const handleCheckedChange = useCallback(
-    (granted: boolean) => onChange(estateId, granted),
-    [estateId, onChange]
-  );
-  return (
-    <div className="flex items-center gap-2">
-      <Checkbox
-        checked={checked}
-        disabled={disabled}
-        id={id}
-        onCheckedChange={handleCheckedChange}
-      />
-      <Label className="text-sm" htmlFor={id}>
-        {children}
-      </Label>
-    </div>
-  );
-}
 
 export function MemberEstates({
   name,

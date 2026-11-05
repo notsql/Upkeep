@@ -1,16 +1,7 @@
 import { Button } from "@proj/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@proj/ui/components/dialog";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Send, UserPlus } from "lucide-react";
+import { Send } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
@@ -18,13 +9,13 @@ import {
   useCouncilInvitation,
   useEstateInvitationRoles,
 } from "@/lib/council-invitations";
-import { useEstateRoleAccess } from "@/lib/estate-roles";
 import {
   type RoleOption,
-  RolePicker,
   roleSelection,
   roleValue,
 } from "@/routes/_auth/estates/$estateId/council/-components/role-picker";
+
+import { InvitationRolePicker } from "./invitation-role-picker";
 
 function getSelectedRole(
   options: RoleOption[],
@@ -34,48 +25,6 @@ function getSelectedRole(
     return options.find((option) => roleValue(option) === selection);
   }
   return options.find((option) => option.role === "COUNCIL") ?? options[0];
-}
-
-function canCreateRoles(
-  estate: ReturnType<typeof useEstateRoleAccess>["estate"]
-): boolean {
-  return Boolean(estate?.canViewEstateRoles && estate.canCreateRoles);
-}
-
-/** The invitation role picker, plus "Create new role…" for role creators. */
-function InvitationRolePicker({
-  estateId,
-  options,
-  value,
-  disabled,
-  onChange,
-}: {
-  estateId: string;
-  options: RoleOption[];
-  value: string;
-  disabled: boolean;
-  onChange: (option: RoleOption) => void;
-}) {
-  const navigate = useNavigate();
-  const { estate } = useEstateRoleAccess(estateId);
-  // Leaves the council page; the new-role page returns with ?inviteRole=<id>.
-  const create = useCallback(() => {
-    navigate({
-      to: "/estates/$estateId/roles/new",
-      params: { estateId },
-      search: { returnTo: "council" },
-    });
-  }, [navigate, estateId]);
-  return (
-    <RolePicker
-      disabled={disabled}
-      label="Invitation role"
-      onChange={onChange}
-      onCreateRole={canCreateRoles(estate) ? create : undefined}
-      options={options}
-      value={value}
-    />
-  );
 }
 
 export function CouncilInvitationForm({
@@ -180,28 +129,5 @@ export function CouncilInvitationForm({
         </form>
       ) : null}
     </div>
-  );
-}
-
-export function InviteMemberDialog({ estateId }: { estateId: string }) {
-  // Back from the new-role page: reopen with the created role selected.
-  const search: { inviteRole?: unknown } = useSearch({ strict: false });
-  const inviteRole =
-    typeof search.inviteRole === "string" ? search.inviteRole : undefined;
-  return (
-    <Dialog defaultOpen={Boolean(inviteRole)}>
-      <DialogTrigger render={<Button />}>
-        <UserPlus aria-hidden="true" /> Invite member
-      </DialogTrigger>
-      <DialogContent className="p-6 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Invite member</DialogTitle>
-          <DialogDescription>
-            New users get an email · existing users accept on Invitations
-          </DialogDescription>
-        </DialogHeader>
-        <CouncilInvitationForm estateId={estateId} initialRole={inviteRole} />
-      </DialogContent>
-    </Dialog>
   );
 }

@@ -129,10 +129,8 @@ describe("estate asset register", () => {
     expect(screen.queryByRole("search", { name: "Filter assets" })).toBeNull();
     await screen.findByText("No assets yet");
     const creates = screen.getAllByRole("link", { name: "Create" });
-    expect(creates).toHaveLength(2);
-    for (const link of creates) {
-      expect(link.getAttribute("href")).toBe("/estates/estate/assets/new");
-    }
+    expect(creates).toHaveLength(1);
+    expect(creates[0]?.getAttribute("href")).toBe("/estates/estate/assets/new");
     fireEvent.click(toggle);
     screen.getByRole("search", { name: "Filter assets" });
   });

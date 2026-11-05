@@ -2,7 +2,7 @@ import { fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { expect, it, vi } from "vitest";
 import { FilterBar, useFilterPanel } from "@/components/filter-bar";
-import { FilterToggle } from "@/components/page-actions";
+import { FilterToggle } from "@/components/filter-toggle";
 
 const ACTIVE_COUNT = /active$/u;
 

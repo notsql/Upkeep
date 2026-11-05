@@ -6,10 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import { Spinner } from "@proj/ui/components/spinner";
 import { Textarea } from "@proj/ui/components/textarea";
 import { Check } from "lucide-react";
@@ -26,6 +24,8 @@ import type {
   EstatePermissionCode,
   EstateRoleDefinition,
 } from "@/lib/estate-roles";
+
+import { labelOf, PermissionChoice } from "./permission-choice";
 
 type Area =
   | "Estate"
@@ -56,60 +56,6 @@ const AREA_OF: Record<EstatePermissionCode, Area> = {
   VIEW_DOCUMENTS: "Documents",
   EDIT_DOCUMENTS: "Documents",
 };
-
-function labelOf(catalogue: EstatePermission[], code: string): string {
-  return catalogue.find((entry) => entry.code === code)?.label ?? code;
-}
-
-function PermissionChoice({
-  permission,
-  catalogue,
-  id,
-  checked,
-  onChange,
-}: {
-  permission: EstatePermission;
-  catalogue: EstatePermission[];
-  id: string;
-  checked: boolean;
-  onChange: (code: EstatePermissionCode, checked: boolean) => void;
-}) {
-  const change = useCallback(
-    (value: boolean) => onChange(permission.code, value),
-    [permission.code, onChange]
-  );
-  const fieldId = `${id}-${permission.code}`;
-  return (
-    <div className="flex items-start gap-3 rounded-lg border p-3">
-      <Checkbox
-        aria-describedby={`${fieldId}-description`}
-        checked={checked}
-        className="mt-0.5"
-        id={fieldId}
-        onCheckedChange={change}
-      />
-      <div className="grid gap-1">
-        <Label className="leading-normal" htmlFor={fieldId}>
-          {permission.label}
-        </Label>
-        <p
-          className="text-muted-foreground text-sm"
-          id={`${fieldId}-description`}
-        >
-          {permission.description}
-        </p>
-        {permission.requires.length ? (
-          <p className="text-muted-foreground text-xs">
-            Prerequisite:{" "}
-            {permission.requires
-              .map((code) => labelOf(catalogue, code))
-              .join(", ")}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
 
 function validate(
   catalogue: EstatePermission[],

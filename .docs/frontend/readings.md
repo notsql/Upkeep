@@ -288,8 +288,8 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first"; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
-| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). Filtered empty state uses `SearchX`. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
+| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
+| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
 
 ### Badges (`flagLabel`)
 
@@ -569,9 +569,8 @@ validation.
 `ReadingFilterControls` takes `id`/`open` from
 `useFilterPanel(countReadingFilters(filters)).barProps`, so the "Reading
 filters" bar is collapsed until toggled (open on load when filters are set).
-`ReadingResults` takes `createAction`: "No readings yet" shows the same
-`CreateButton` (not "No assets yet"); empty states use the default `Inbox`
-(`SearchX` for no matches). Reading, asset and asset-picker load failures use
+`ReadingResults` empty states carry no create button (the header Create is
+the entry point) and no icon; "No matching" states offer Clear filters. Reading, asset and asset-picker load failures use
 `ErrorState`. Paging keeps `ReadingPagination`. `ReadingExport` still renders
 below the header. The manual-reading form uses `FormPageHeader` (breadcrumbs
 Readings / Record manual reading, no icon or estate name) and `ErrorState`

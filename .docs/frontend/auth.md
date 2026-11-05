@@ -8,8 +8,8 @@ are relative to `apps/web/src/`.
 
 | File | URL | Kind | Behaviour |
 | --- | --- | --- | --- |
-| `routes/login/index.tsx` | `/login` | page | Search: `error?: string`, `returnTo` (sanitised, default `/`). Shows an alert for `error=auth_unavailable` or any other error, and a "Continue to secure sign in" link to `buildSignInPath(returnTo)`. Title "Sign in". Exports `LoginPage` for tests. |
-| `routes/register/index.tsx` | `/register` | page | Search: `error?: string`. "Create account" link to `/api/auth/sign-up`; alert when `error` is set. Title "Create an account". Exports `RegistrationPage`. |
+| `routes/login/index.tsx` | `/login` | page | Search: `error?: string`, `returnTo` (sanitised, default `/`). Shows an alert for `error=auth_unavailable` or any other error, and a "Continue to secure sign in" link to `buildSignInPath(returnTo)`. Title "Sign in". The page is `LoginPage` in `login/-components/login-page.tsx`. |
+| `routes/register/index.tsx` | `/register` | page | Search: `error?: string`. "Create account" link to `/api/auth/sign-up`; alert when `error` is set. Title "Create an account". The page is `RegistrationPage` in `register/-components/registration-page.tsx`. |
 | `routes/logout/index.tsx` | `/logout` | page + loader | Search: `returnTo` (sanitised). Loader calls AuthKit `signOut({ data: { returnTo } })`. Renders "Signing out..." (`role="status"`) with a decorative `Spinner`. |
 | `routes/api/auth/sign-in/index.tsx` | `GET /api/auth/sign-in` | server handler | Sanitises `returnPathname`; when `invitation_token` is present, forwards it on the AuthKit authorization URL and returns to `/estates`. Preserves PKCE/state. Responds 307. On failure 303 to `/login?error=auth_unavailable`. |
 | `routes/api/auth/sign-up/index.tsx` | `GET /api/auth/sign-up` | server handler | 307 to `getSignUpUrl` with `returnPathname: "/account"`. On failure 303 to `/register?error=auth_unavailable`. |

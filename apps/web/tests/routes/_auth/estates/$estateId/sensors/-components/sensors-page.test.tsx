@@ -14,10 +14,8 @@ import type {
   SensorPolicy,
   SensorView,
 } from "@/lib/flatlined-sensors";
-import {
-  SensorsLayout,
-  SensorsView,
-} from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page";
+import { SensorsLayout } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-layout";
+import { SensorsView } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), PUT: vi.fn(), POST: vi.fn() },

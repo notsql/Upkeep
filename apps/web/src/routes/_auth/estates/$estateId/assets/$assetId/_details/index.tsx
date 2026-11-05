@@ -2,9 +2,9 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
 import {
   ASSET_SECTIONS,
-  AssetOverview,
   type AssetSection,
 } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
+import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview";
 
 /** Old `?tab=` links (before each section had its own page) still land. */
 function validateSearch(search: Record<string, unknown>): {

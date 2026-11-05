@@ -1,10 +1,8 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
-import {
-  EditAssetPage,
-  NewAssetPage,
-} from "@/routes/_auth/estates/$estateId/assets/-components/asset-editor-page";
+import { NewAssetPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-editor-page";
+import { EditAssetPage } from "@/routes/_auth/estates/$estateId/assets/-components/edit-asset-page";
 
 const BACK_LINK = /^Back to/u;
 

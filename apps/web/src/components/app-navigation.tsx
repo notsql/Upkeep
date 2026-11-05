@@ -7,9 +7,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  useSidebar,
 } from "@proj/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
@@ -31,8 +28,9 @@ import {
   Users,
   Wrench,
 } from "lucide-react";
-import { useCallback } from "react";
+import { DestinationLink } from "@/components/destination-link";
 import { residentNavigation } from "@/components/estates/resident-navigation";
+import type { Destination, NavigationItem } from "@/components/navigation-item";
 import { useAppAccess } from "@/lib/access";
 import {
   canOpenAssetCategories,
@@ -53,33 +51,7 @@ import {
 import { useEstate } from "@/lib/estates";
 
 const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
-type Destination =
-  | "/"
-  | "/reports"
-  | "/reports/new"
-  | "/estates/$estateId"
-  | "/estates/$estateId/work-orders"
-  | "/estates/$estateId/reports"
-  | "/estates/$estateId/inspections"
-  | "/estates/$estateId/locations"
-  | "/estates/$estateId/assets"
-  | "/estates/$estateId/devices"
-  | "/estates/$estateId/readings"
-  | "/estates/$estateId/sensors"
-  | "/estates/$estateId/failure-risk"
-  | "/estates/$estateId/documents"
-  | "/estates/$estateId/council"
-  | "/estates/$estateId/roles"
-  | "/estates/$estateId/asset-categories"
-  | "/estates/$estateId/edit";
-export interface NavigationItem {
-  active: boolean;
-  estateId?: string;
-  icon: LucideIcon;
-  label: string;
-  search?: { estateId: string };
-  to: Destination;
-}
+
 interface NavigationGroup {
   items: NavigationItem[];
   label?: string;
@@ -295,36 +267,6 @@ function useNavigationGroups(): NavigationGroup[] {
     access.data.canAccessPlatformAdmin,
     pathname
   ).filter((group) => group.items.length > 0);
-}
-
-function DestinationLink({ item }: { item: NavigationItem }) {
-  const { isMobile, setOpenMobile } = useSidebar();
-  const closeMobile = useCallback(() => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  }, [isMobile, setOpenMobile]);
-  const Icon = item.icon;
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={item.active}
-        render={
-          <Link
-            activeOptions={{ exact: true, includeSearch: false }}
-            aria-current={item.active ? "page" : undefined}
-            onClick={closeMobile}
-            params={item.estateId ? { estateId: item.estateId } : undefined}
-            search={item.search}
-            to={item.to}
-          />
-        }
-      >
-        <Icon aria-hidden="true" />
-        <span>{item.label}</span>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
 }
 
 export function AppNavigation() {

@@ -1,23 +1,22 @@
 import { Button } from "@proj/ui/components/button";
-import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { ErrorState } from "@/components/error-state";
-import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { LoadingState } from "@/components/loading-state";
 import { type Asset, type AssetFilters, useAssets } from "@/lib/assets";
 import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { flattenLocations, useLocations } from "@/lib/locations";
 import { AssetFilterControls } from "@/routes/_auth/estates/$estateId/assets/-components/asset-filters";
+
+import { AssetChoice } from "./asset-choice";
 
 export function DocumentAssetPicker({
   estateId,
@@ -142,46 +141,5 @@ export function DocumentAssetPicker({
         </Table>
       ) : null}
     </section>
-  );
-}
-
-function AssetChoice({
-  asset,
-  category,
-  disabled,
-  onSelect,
-  selected,
-}: {
-  asset: Asset;
-  category: string;
-  disabled: boolean;
-  onSelect: (asset?: Asset) => void;
-  selected: boolean;
-}) {
-  const select = useCallback(
-    (checked: boolean) => onSelect(checked ? asset : undefined),
-    [asset, onSelect]
-  );
-  return (
-    <TableRow>
-      <TableCell>
-        <Checkbox
-          aria-label={`Select ${asset.reference} ${asset.name}`}
-          checked={selected}
-          disabled={disabled}
-          onCheckedChange={select}
-        />
-      </TableCell>
-      <TableCell>{asset.reference}</TableCell>
-      <TableCell>{asset.name}</TableCell>
-      <TableCell>{category}</TableCell>
-      <TableCell>{asset.locationPath}</TableCell>
-      <TableCell>
-        <LifecycleStatusBadge
-          inactive={!!asset.deactivatedAt}
-          inactiveLabel="Retired"
-        />
-      </TableCell>
-    </TableRow>
   );
 }

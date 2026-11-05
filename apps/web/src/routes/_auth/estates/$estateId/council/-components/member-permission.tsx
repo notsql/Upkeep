@@ -9,7 +9,7 @@ import {
 } from "@/lib/council-invitations";
 import { useEstateSession } from "@/lib/estates";
 import { AccessConfirmation } from "@/routes/_auth/estates/$estateId/council/-components/access-confirmation";
-import { RemoveMemberButton } from "@/routes/_auth/estates/$estateId/council/-components/access-controls";
+import { RemoveMemberButton } from "@/routes/_auth/estates/$estateId/council/-components/remove-member-button";
 import {
   presetOptions,
   type RoleOption,

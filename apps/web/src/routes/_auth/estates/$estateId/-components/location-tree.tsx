@@ -1,20 +1,7 @@
 import { Button } from "@proj/ui/components/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@proj/ui/components/dropdown-menu";
-import {
-  ChevronDown,
-  ChevronRight,
-  MoreHorizontal,
-  SearchX,
-} from "lucide-react";
-import { useCallback, useId } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { CreateButton } from "@/components/page-actions";
 import type { LocationNode } from "@/lib/locations";
+import { LocationItem } from "@/routes/_auth/estates/$estateId/-components/location-item";
 import type { Panel } from "@/routes/_auth/estates/$estateId/-components/location-panel";
 
 /** "2 levels · 3 common areas" per node, counted across each block. */
@@ -57,10 +44,8 @@ export function LocationTree({
   onToggle,
   searching,
   query,
-  onCreate,
   onClear,
 }: {
-  onCreate: () => void;
   onClear: () => void;
   tree: LocationNode[];
   canCreate: boolean;
@@ -85,15 +70,13 @@ export function LocationTree({
               </Button>
             }
             description={`Nothing matches “${query.trim()}”`}
-            icon={SearchX}
             title="No matching locations"
           />
         ) : (
           <EmptyState
-            action={canCreate ? <CreateButton onClick={onCreate} /> : undefined}
             description={
               canCreate
-                ? "Add a block to start"
+                ? "Use Create to add the first block"
                 : "Added blocks and levels appear here"
             }
             title="No locations yet"
@@ -123,198 +106,5 @@ export function LocationTree({
         />
       ))}
     </ul>
-  );
-}
-
-function LocationItem({
-  node,
-  canCreate,
-  canCreateFloors,
-  canDeactivate,
-  canEdit,
-  onPanel,
-  summaries,
-  expandedIds,
-  onToggle,
-  searching,
-}: {
-  node: LocationNode;
-  canCreate: boolean;
-  canCreateFloors: boolean;
-  canDeactivate: boolean;
-  canEdit: boolean;
-  onPanel: (panel: Panel) => void;
-  summaries: Map<string, string>;
-  expandedIds: string[];
-  onToggle: (id: string) => void;
-  searching: boolean;
-}) {
-  const labelId = useId();
-  const childrenId = useId();
-  const expanded = searching || expandedIds.includes(node.id);
-  const toggle = useCallback(() => onToggle(node.id), [onToggle, node.id]);
-  const title = (
-    <span className="flex min-w-0 flex-col gap-1">
-      <span className="font-medium break-words" id={labelId}>
-        {node.name}
-      </span>
-      <span className="text-muted-foreground text-xs">
-        {summaries.get(node.id)}
-      </span>
-    </span>
-  );
-  return (
-    <li
-      aria-labelledby={labelId}
-      className={
-        node.type === "BLOCK"
-          ? "bg-muted/20 rounded-lg border p-2"
-          : "border-l pl-3"
-      }
-    >
-      <div className="flex items-center gap-2">
-        {node.children.length && !searching ? (
-          <Button
-            aria-controls={childrenId}
-            aria-expanded={expanded}
-            aria-label={`${expanded ? "Collapse" : "Expand"} ${node.name}`}
-            className="h-auto min-w-0 flex-1 justify-start gap-3 p-2 text-left whitespace-normal"
-            onClick={toggle}
-            variant="ghost"
-          >
-            {expanded ? (
-              <ChevronDown aria-hidden="true" className="shrink-0" />
-            ) : (
-              <ChevronRight aria-hidden="true" className="shrink-0" />
-            )}
-            {title}
-          </Button>
-        ) : (
-          <div className="flex min-w-0 flex-1 items-center gap-3 p-2">
-            {node.children.length ? (
-              <ChevronDown aria-hidden="true" className="size-4 shrink-0" />
-            ) : null}
-            {title}
-          </div>
-        )}
-        {canEdit || (canCreate && node.type !== "COMMON_AREA") ? (
-          <LocationActions
-            canCreate={canCreate}
-            canCreateFloors={canCreateFloors}
-            canDeactivate={canDeactivate}
-            canEdit={canEdit}
-            node={node}
-            onPanel={onPanel}
-          />
-        ) : null}
-      </div>
-      {node.children.length ? (
-        <ul className="mt-2 grid gap-2" hidden={!expanded} id={childrenId}>
-          {expanded
-            ? node.children.map((child) => (
-                <LocationItem
-                  canCreate={canCreate}
-                  canCreateFloors={canCreateFloors}
-                  canDeactivate={canDeactivate}
-                  canEdit={canEdit}
-                  expandedIds={expandedIds}
-                  key={child.id}
-                  node={child}
-                  onPanel={onPanel}
-                  onToggle={onToggle}
-                  searching={searching}
-                  summaries={summaries}
-                />
-              ))
-            : null}
-        </ul>
-      ) : null}
-    </li>
-  );
-}
-
-function LocationActions({
-  node,
-  canCreate,
-  canCreateFloors,
-  canDeactivate,
-  canEdit,
-  onPanel,
-}: {
-  node: LocationNode;
-  canCreate: boolean;
-  canCreateFloors: boolean;
-  canDeactivate: boolean;
-  canEdit: boolean;
-  onPanel: (panel: Panel) => void;
-}) {
-  const addLevels = useCallback(
-    () => onPanel({ kind: "levels", node }),
-    [node, onPanel]
-  );
-  const addLevel = useCallback(
-    () => onPanel({ kind: "create", type: "LEVEL", parent: node }),
-    [node, onPanel]
-  );
-  const addCommonArea = useCallback(
-    () => onPanel({ kind: "create", type: "COMMON_AREA", parent: node }),
-    [node, onPanel]
-  );
-  const edit = useCallback(
-    () => onPanel({ kind: "edit", node }),
-    [node, onPanel]
-  );
-  const deactivate = useCallback(
-    () => onPanel({ kind: "deactivate", node }),
-    [node, onPanel]
-  );
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            aria-label={`Actions for ${node.name}`}
-            className="ml-auto shrink-0"
-            id={`location-actions-${node.id}`}
-            size="icon"
-            variant="ghost"
-          />
-        }
-      >
-        <MoreHorizontal aria-hidden="true" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {node.type === "BLOCK" && canCreate ? (
-          <DropdownMenuItem
-            aria-label={`Add ${canCreateFloors ? "levels" : "level"} to ${node.name}`}
-            onClick={canCreateFloors ? addLevels : addLevel}
-          >
-            {canCreateFloors ? "Add levels" : "Add level"}
-          </DropdownMenuItem>
-        ) : null}
-        {canCreate && node.type !== "COMMON_AREA" ? (
-          <DropdownMenuItem
-            aria-label={`Add common area to ${node.name}`}
-            onClick={addCommonArea}
-          >
-            Add common area
-          </DropdownMenuItem>
-        ) : null}
-        {canEdit ? (
-          <DropdownMenuItem aria-label={`Edit ${node.name}`} onClick={edit}>
-            Edit
-          </DropdownMenuItem>
-        ) : null}
-        {canDeactivate ? (
-          <DropdownMenuItem
-            aria-label={`Deactivate ${node.name}`}
-            className="text-destructive"
-            onClick={deactivate}
-          >
-            Deactivate
-          </DropdownMenuItem>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

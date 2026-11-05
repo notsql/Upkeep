@@ -436,10 +436,8 @@ describe("estate reading browser", () => {
       expect(
         screen.queryAllByRole("button", { name: "Clear filters" })
       ).toHaveLength(filtered ? 2 : 0);
-      // The header's Create, plus the empty card's when readings can be added.
-      expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(
-        message === "No readings yet" ? 2 : 1
-      );
+      // Only the header's Create; empty states carry no create action.
+      expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(1);
     }
   );
 

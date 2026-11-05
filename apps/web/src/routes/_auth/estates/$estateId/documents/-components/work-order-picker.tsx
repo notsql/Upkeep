@@ -11,7 +11,6 @@ import {
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -31,6 +30,8 @@ import {
   type WorkOrderFilters,
 } from "@/lib/work-orders";
 
+import { WorkOrderChoice } from "./work-order-choice";
+
 const statusItems = [
   { value: "ALL", label: "All statuses" },
   { value: "OPEN", label: "Open" },
@@ -38,36 +39,6 @@ const statusItems = [
   { value: "IN_PROGRESS", label: "In progress" },
   { value: "CLOSED", label: "Closed" },
 ];
-
-function WorkOrderChoice({
-  order,
-  onSelect,
-}: {
-  order: WorkOrder;
-  onSelect: (order: WorkOrder) => void;
-}) {
-  const select = useCallback(() => onSelect(order), [onSelect, order]);
-  return (
-    <TableRow>
-      <TableCell>
-        <p>{order.reference}</p>
-        <p className="whitespace-pre-wrap">{order.description}</p>
-      </TableCell>
-      <TableCell>{order.status.replaceAll("_", " ")}</TableCell>
-      <TableCell>{order.locationPath}</TableCell>
-      <TableCell>
-        <Button
-          aria-label={`Select ${order.reference}`}
-          onClick={select}
-          type="button"
-          variant="outline"
-        >
-          Select
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-}
 
 export function WorkOrderPicker({
   estateId,

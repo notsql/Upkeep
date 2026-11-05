@@ -3,38 +3,34 @@ import {
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@proj/ui/components/empty";
-import { Inbox, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 /**
- * The one "nothing here" view: a dashed card with a message and, when the
- * user can create, the primary create action (or "Clear filters" when
- * filters caused the empty result).
+ * The one "nothing here" view: a quiet bordered panel with a title, an
+ * optional muted description and an optional recovery `action` ("Clear
+ * filters", "Go to first page"). No icon, and no create button - the page
+ * header's Create is the single create entry point.
  *
- * The icon defaults to the neutral `Inbox`. Do not pass the page's own icon
- * (it is already in the sidebar and header); pass `SearchX` only for a
- * "no matching results" state.
+ * Inside a Card's content it drops its border so it never reads as a
+ * card-in-a-card.
  */
 export function EmptyState({
-  icon: Icon = Inbox,
   title,
   description,
   action,
 }: {
-  icon?: LucideIcon;
   title: string;
   description?: ReactNode;
   action?: ReactNode;
 }) {
   return (
-    <Empty className="bg-card border border-dashed" role="status">
+    <Empty
+      className="gap-3 rounded-lg border border-solid px-6 py-10 in-data-[slot=card-content]:border-0 in-data-[slot=card-content]:py-6"
+      role="status"
+    >
       <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Icon aria-hidden="true" />
-        </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
         {description ? (
           <EmptyDescription>{description}</EmptyDescription>

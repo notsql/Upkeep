@@ -9,7 +9,8 @@ import { fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
-import { CreateButton, FilterToggle } from "@/components/page-actions";
+import { FilterToggle } from "@/components/filter-toggle";
+import { CreateButton } from "@/components/page-actions";
 
 async function renderInRouter(ui: ReactNode) {
   const root = createRootRoute({ component: () => ui });

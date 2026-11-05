@@ -3,11 +3,8 @@ import { Activity } from "lucide-react";
 import { useCallback, useState } from "react";
 import { ErrorState } from "@/components/error-state";
 import { useFilterPanel } from "@/components/filter-bar";
-import {
-  CreateButton,
-  type CreateButtonProps,
-} from "@/components/page-actions";
-import { ListPageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/list-page-header";
+import type { CreateButtonProps } from "@/components/page-actions";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
@@ -130,7 +127,6 @@ export function EstateReadingsPage({
       <ReadingResults
         assetsPending={assets.isPending}
         assetTotal={assets.data?.totalItems}
-        createAction={create ? <CreateButton {...create} /> : undefined}
         filters={filters}
         onFiltersChange={onFiltersChange}
         readings={readings}

@@ -240,15 +240,13 @@ beforeEach(() => {
 
 // Roles list
 
-it("links the header and empty-state create actions to the new-role page", async () => {
+it("links the header create action to the new-role page", async () => {
   await openRoles();
   await screen.findByText("No custom roles yet");
   expect(screen.queryByText("Maple Estate")).toBeNull();
   const links = screen.getAllByRole("link", { name: CREATE });
-  expect(links).toHaveLength(2);
-  for (const link of links) {
-    expect(link.getAttribute("href")).toBe(`${rolesPath}/new`);
-  }
+  expect(links).toHaveLength(1);
+  expect(links[0]?.getAttribute("href")).toBe(`${rolesPath}/new`);
   expect(screen.queryByRole("textbox", { name: "Role name" })).toBeNull();
 });
 

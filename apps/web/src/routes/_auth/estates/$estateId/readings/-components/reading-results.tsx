@@ -1,7 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { SearchX } from "lucide-react";
-import { type ReactNode, useCallback } from "react";
+import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
@@ -37,7 +36,6 @@ export function ReadingResults({
   assetTotal,
   filters,
   onFiltersChange,
-  createAction,
 }: {
   readings: ReturnType<typeof useEstateReadings>;
   validationError?: string;
@@ -45,8 +43,6 @@ export function ReadingResults({
   assetTotal?: number;
   filters: ReadingSearch;
   onFiltersChange: (filters: ReadingSearch) => void;
-  /** Shown in the empty card when the estate has no readings yet. */
-  createAction?: ReactNode;
 }) {
   const retry = useCallback(() => readings.refetch(), [readings.refetch]);
   const clear = useCallback(() => onFiltersChange({}), [onFiltersChange]);
@@ -88,17 +84,11 @@ export function ReadingResults({
               Clear filters
             </Button>
           }
-          icon={SearchX}
           title={emptyMessage(filters, assetTotal)}
         />
       );
     }
-    return (
-      <EmptyState
-        action={assetTotal === 0 ? undefined : createAction}
-        title={emptyMessage(filters, assetTotal)}
-      />
-    );
+    return <EmptyState title={emptyMessage(filters, assetTotal)} />;
   }
   if (data.items.length === 0) {
     return (

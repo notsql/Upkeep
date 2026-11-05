@@ -1,29 +1,13 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { DetailCard } from "@/components/detail-card";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
-import type { InspectionResult } from "@/lib/inspections";
+import { InspectionSourceLink } from "./inspection-source-link";
 import type { useWorkOrderInspection } from "./use-work-order-inspection";
-
-function InspectionSourceLink({ record }: { record: InspectionResult }) {
-  return (
-    <Link
-      className={buttonVariants({ variant: "outline", size: "sm" })}
-      params={{
-        estateId: record.estateId,
-        assetId: record.assetId,
-        inspectionId: record.id,
-      }}
-      to="/estates/$estateId/assets/$assetId/inspections/$inspectionId"
-    >
-      View inspection
-    </Link>
-  );
-}
 
 export function renderInspectionWorkOrderStatus(
   inspection: ReturnType<typeof useWorkOrderInspection>,

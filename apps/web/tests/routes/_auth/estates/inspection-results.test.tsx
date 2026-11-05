@@ -76,7 +76,7 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock(
-  "@/components/date-range-picker",
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/date-range-picker",
   () => import("@tests/date-picker-stubs")
 );
 vi.mock(

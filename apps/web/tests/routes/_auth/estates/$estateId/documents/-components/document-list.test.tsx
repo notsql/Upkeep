@@ -68,16 +68,16 @@ it("offers Clear filters when filters produced no documents", () => {
   expect(clear).toHaveBeenCalled();
 });
 
-it("offers the create action when nothing has been uploaded", () => {
+it("shows an empty state without a create action when nothing has been uploaded", () => {
   renderWithProviders(
     <DocumentList
-      createAction={<button type="button">Upload document</button>}
       downloading={false}
       failed={false}
       items={[]}
       onDownload={vi.fn()}
     />
   );
-  screen.getByText("No documents yet");
-  screen.getByRole("button", { name: "Upload document" });
+  const status = screen.getByRole("status");
+  within(status).getByText("No documents yet");
+  expect(within(status).queryByRole("button")).toBeNull();
 });

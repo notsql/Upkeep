@@ -3,11 +3,9 @@ import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
-import {
-  DetailPageHeader,
-  FormPageHeader,
-  ListPageHeader,
-} from "@/components/page-header";
+import { DetailPageHeader } from "@/components/detail-page-header";
+import { FormPageHeader } from "@/components/form-page-header";
+import { ListPageHeader } from "@/components/list-page-header";
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (

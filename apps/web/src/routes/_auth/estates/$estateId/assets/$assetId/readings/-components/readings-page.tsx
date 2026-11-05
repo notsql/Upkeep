@@ -1,33 +1,30 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { Activity, SearchX } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
+import { CreateButton } from "@/components/page-actions";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReadingCards } from "@/components/readings/reading-cards";
-import { ReadingProvenance } from "@/components/readings/reading-provenance";
+import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
-import { deviceMetrics } from "@/lib/devices";
 import {
-  type AssetReading,
-  flagLabel,
   READINGS_PAGE_SIZE,
   type ReadingFilters,
   useReadings,
 } from "@/lib/readings";
 import { useMobile } from "@/lib/use-mobile";
 import { ReadingFilterControls } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/reading-filters";
+import { ReadingRow } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/reading-row";
 
 function emptyMessage(filters: ReadingFilters): string {
   if (filters.suspect) {
@@ -37,35 +34,6 @@ function emptyMessage(filters: ReadingFilters): string {
     return "No readings match these filters";
   }
   return "No readings yet";
-}
-
-function ReadingRow({ reading }: { reading: AssetReading }) {
-  return (
-    <TableRow>
-      <TableCell>{new Date(reading.measuredAt).toLocaleString()}</TableCell>
-      <TableCell>{deviceMetrics[reading.metric].name}</TableCell>
-      <TableCell>{`${reading.valueText ?? reading.value} ${reading.unit}`}</TableCell>
-      <TableCell>
-        <ReadingProvenance reading={reading} />
-      </TableCell>
-      <TableCell className="max-w-48 min-w-36 [overflow-wrap:anywhere] whitespace-normal">
-        {reading.deviceIdentifier ?? "—"}
-      </TableCell>
-      <TableCell>
-        <div className="flex min-w-32 flex-wrap items-start gap-1">
-          {reading.flags.map((flag) => (
-            <Badge
-              className="h-auto max-w-full py-0.5 text-left leading-snug [overflow-wrap:anywhere] whitespace-normal"
-              key={flag.type}
-              variant="outline"
-            >
-              {flagLabel(flag, reading.unit)}
-            </Badge>
-          ))}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
 }
 
 export function ReadingsPage({
@@ -81,6 +49,9 @@ export function ReadingsPage({
 }) {
   const mobile = useMobile();
   const asset = useAsset(estateId, assetId);
+  const canRecord = useAppAccess().data?.estates.find(
+    (entry) => entry.estateId === estateId
+  )?.canRecordReadings;
   const readings = useReadings(estateId, assetId, filters);
   const page = filters.page ?? 0;
   const total = readings.data?.totalItems ?? 0;
@@ -103,6 +74,15 @@ export function ReadingsPage({
   return (
     <PageLayout className="space-y-6">
       <PageHeader
+        actions={
+          canRecord ? (
+            <CreateButton
+              params={{ estateId }}
+              search={{ assetId, metric: filters.metric }}
+              to="/estates/$estateId/readings/new"
+            />
+          ) : undefined
+        }
         breadcrumbs={[
           {
             label: "Assets",
@@ -138,7 +118,6 @@ export function ReadingsPage({
               </Button>
             ) : undefined
           }
-          icon={filtered ? SearchX : Activity}
           title={emptyMessage(filters)}
         />
       ) : null}

@@ -1,12 +1,9 @@
-import { Button } from "@proj/ui/components/button";
-import { SearchX, Wrench } from "lucide-react";
+import { Wrench } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { EmptyState } from "@/components/empty-state";
 import { ErrorState } from "@/components/error-state";
 import { useFilterPanel } from "@/components/filter-bar";
+import { ListPageHeader } from "@/components/list-page-header";
 import { LoadingState } from "@/components/loading-state";
-import { CreateButton } from "@/components/page-actions";
-import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { Pagination } from "@/components/pagination";
 import {
@@ -15,8 +12,10 @@ import {
   useWorkOrderList,
   type WorkOrderListSearch,
 } from "@/lib/work-orders";
+import { WorkOrderEmptyState } from "./work-order-empty-state";
 import { countWorkOrderFilters, WorkOrderFilters } from "./work-order-filters";
 import { WorkOrderTable } from "./work-order-table";
+
 export function WorkOrderListPage({
   estateId,
   search,
@@ -143,7 +142,6 @@ export function WorkOrderListPage({
           {orders.data.items.length === 0 ? (
             <WorkOrderEmptyState
               canCreate={access.canCreate}
-              estateId={estateId}
               filtered={filtered}
               onClear={clearFilters}
             />
@@ -171,46 +169,5 @@ export function WorkOrderListPage({
         </>
       ) : null}
     </PageLayout>
-  );
-}
-
-function WorkOrderEmptyState({
-  filtered,
-  canCreate,
-  estateId,
-  onClear,
-}: {
-  filtered: boolean;
-  canCreate: boolean;
-  estateId: string;
-  onClear: () => void;
-}) {
-  if (filtered) {
-    return (
-      <EmptyState
-        action={
-          <Button onClick={onClear} variant="outline">
-            Clear filters
-          </Button>
-        }
-        description="Try other filters"
-        icon={SearchX}
-        title="No matching work orders"
-      />
-    );
-  }
-  return (
-    <EmptyState
-      action={
-        canCreate ? (
-          <CreateButton
-            params={{ estateId }}
-            to="/estates/$estateId/work-orders/new"
-          />
-        ) : undefined
-      }
-      description="Saved work orders appear here"
-      title="No work orders yet"
-    />
   );
 }

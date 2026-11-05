@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { HomePending } from "@/components/route-pending";
+import { HomePending } from "@/components/home-pending";
 import { getSessionAccess } from "@/lib/access-server";
 import { estateDestination } from "@/lib/estate-destinations";
 import { pageHead } from "@/lib/page-title";

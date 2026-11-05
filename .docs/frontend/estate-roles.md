@@ -35,8 +35,8 @@ with the Filters toggle (only once roles exist) and `CreateButton` "Create"
 retractable `FilterBar` "Filter roles" (collapsed by default; search by name
 or description; "1 active" and the bar's ghost Clear filters). Then
 LoadingState (`table`) -> `ErrorState` "Retry roles" -> EmptyState "No custom
-roles yet" (default Inbox, with the same Create action) -> "No matching
-roles" EmptyState (SearchX, outline Clear filters) or Table "Custom roles"
+roles yet" ("Use Create to add the first custom role" when the user can
+create; no action) -> "No matching roles" EmptyState (outline Clear filters) or Table "Custom roles"
 (Role, Permissions, Actions). Inactive estate: Alert "Estate inactive · roles
 read-only".
 

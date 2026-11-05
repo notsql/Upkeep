@@ -1,9 +1,4 @@
-import { buttonVariants } from "@proj/ui/components/button";
-import {
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from "@proj/ui/components/sidebar";
+import { SidebarProvider } from "@proj/ui/components/sidebar";
 import { useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import type { ReactNode } from "react";
@@ -13,29 +8,9 @@ import {
   isResidentOnly,
 } from "@/components/app-navigation";
 import Header from "@/components/header";
+import { SidebarHeaderBar } from "@/components/sidebar-header-bar";
+import { SkipLink } from "@/components/skip-link";
 import { useAppAccess } from "@/lib/access";
-
-function SkipLink() {
-  return (
-    <a
-      className={buttonVariants({
-        className:
-          "sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50",
-      })}
-      href="#main-content"
-    >
-      Skip to content
-    </a>
-  );
-}
-
-/** The sidebar stays open on desktop; only the mobile sheet needs a trigger and the brand. */
-function SidebarHeaderBar() {
-  const { isMobile } = useSidebar();
-  return (
-    <Header brand={isMobile} start={isMobile ? <SidebarTrigger /> : null} />
-  );
-}
 
 function noop() {
   // The desktop sidebar cannot be collapsed.

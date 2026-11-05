@@ -21,8 +21,28 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children: ReactNode;
+    to: string;
+    search?: Record<string, string | undefined>;
+  }) => (
+    <a
+      href={
+        search
+          ? `${to}?${new URLSearchParams(
+              Object.entries(search).filter(
+                (entry): entry is [string, string] => entry[1] !== undefined
+              )
+            )}`
+          : to
+      }
+    >
+      {children}
+    </a>
   ),
 }));
 vi.mock("@/lib/estates", async (importOriginal) => ({
@@ -32,6 +52,20 @@ vi.mock("@/lib/estates", async (importOriginal) => ({
 vi.mock("@/lib/assets", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/assets")>()),
   useAsset: () => ({ data: { id: "asset-id", name: "Water pump" } }),
+}));
+
+const access = vi.hoisted(() => ({ canRecord: false }));
+vi.mock("@/lib/access", () => ({
+  useAppAccess: () => ({
+    data: {
+      estates: [
+        {
+          estateId: "estate-id",
+          canRecordReadings: access.canRecord,
+        },
+      ],
+    },
+  }),
 }));
 
 const DEVICE_ROW = /PUMP-01/u;
@@ -84,6 +118,23 @@ describe("ReadingsPage", () => {
     vi.resetAllMocks();
     readingPage = { items: [reading], page: 0, size: 50, totalItems: 1 };
     serve();
+  });
+
+  it("links Create to a new reading for this asset when the user can record", async () => {
+    access.canRecord = true;
+    renderPage();
+    await screen.findByText(DEVICE_ROW);
+    const create = screen.getByRole("link", { name: "Create" });
+    expect(create.getAttribute("href")).toBe(
+      "/estates/$estateId/readings/new?assetId=asset-id"
+    );
+  });
+
+  it("hides Create when the user cannot record readings", async () => {
+    access.canRecord = false;
+    renderPage();
+    await screen.findByText(DEVICE_ROW);
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   });
 
   it("preserves exact decimal text in legacy asset history", async () => {

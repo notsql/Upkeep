@@ -8,12 +8,6 @@ import {
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
-import {
-  CreateButton,
-  type CreateButtonProps,
-  FilterToggle,
-  type FilterToggleProps,
-} from "@/components/page-actions";
 
 export interface Breadcrumb {
   label: string;
@@ -37,6 +31,7 @@ export interface Breadcrumb {
     | "/estates/$estateId/asset-categories"
     | "/estates/$estateId/assets/$assetId";
 }
+
 export function PageHeader({
   icon: Icon,
   title,
@@ -111,95 +106,5 @@ export function PageHeader({
         <div className="flex flex-wrap items-center gap-3">{actions}</div>
       ) : null}
     </header>
-  );
-}
-
-/**
- * Header for a list page: icon, title, short description, then the shared
- * actions in fixed order - FilterToggle (given `filters`), extra `actions`,
- * CreateButton (given `create`). No breadcrumbs: list pages are top-level.
- */
-export function ListPageHeader({
-  icon,
-  title,
-  description,
-  filters,
-  create,
-  actions,
-}: {
-  icon?: LucideIcon;
-  title: string;
-  description?: string;
-  filters?: FilterToggleProps;
-  create?: CreateButtonProps;
-  actions?: ReactNode;
-}) {
-  const hasActions = Boolean(filters || create || actions);
-  return (
-    <PageHeader
-      actions={
-        hasActions ? (
-          <>
-            {filters ? <FilterToggle {...filters} /> : null}
-            {actions}
-            {create ? <CreateButton {...create} /> : null}
-          </>
-        ) : undefined
-      }
-      description={description}
-      icon={icon}
-      title={title}
-    />
-  );
-}
-
-/**
- * Header for a record page: breadcrumbs (the way back), title, `status`
- * badge, a muted `meta` line, and `actions` (outline Edit, then a
- * destructive action last).
- */
-export function DetailPageHeader({
-  breadcrumbs,
-  title,
-  status,
-  meta,
-  actions,
-}: {
-  breadcrumbs: Breadcrumb[];
-  title: string;
-  status?: ReactNode;
-  meta?: ReactNode;
-  actions?: ReactNode;
-}) {
-  return (
-    <PageHeader
-      actions={actions}
-      breadcrumbs={breadcrumbs}
-      meta={meta}
-      status={status}
-      title={title}
-    />
-  );
-}
-
-/**
- * Header for a create/edit page: breadcrumbs (the way back), title and an
- * optional description. No actions - the form's own footer submits.
- */
-export function FormPageHeader({
-  breadcrumbs,
-  title,
-  description,
-}: {
-  breadcrumbs: Breadcrumb[];
-  title: string;
-  description?: string;
-}) {
-  return (
-    <PageHeader
-      breadcrumbs={breadcrumbs}
-      description={description}
-      title={title}
-    />
   );
 }

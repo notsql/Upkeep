@@ -305,7 +305,7 @@ it("restores applied filters from URL navigation and distinguishes no matches fr
   expect(clearButtons).toHaveLength(2);
   fireEvent.click(clearButtons[1] as HTMLElement);
   await screen.findByText("No work orders yet");
-  expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(2);
+  expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(1);
   await act(async () => router.history.back());
   await waitFor(() =>
     expect(
