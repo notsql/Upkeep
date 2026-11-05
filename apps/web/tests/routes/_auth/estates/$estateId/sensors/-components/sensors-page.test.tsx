@@ -642,9 +642,9 @@ describe("SensorsPage", () => {
     total = 26;
     renderWithProviders(<SensorsPage estateId="estate-id" />);
     await expandPolicies();
-    await chooseOption(
-      await screen.findByRole("combobox", { name: "Device metric view" }),
-      "All device metrics"
+    screen.getByRole("tab", { name: "Needs review", selected: true });
+    fireEvent.click(
+      await screen.findByRole("tab", { name: "All device metrics" })
     );
     fireEvent.click(await screen.findByRole("button", { name: "Next page" }));
     await waitFor(() =>

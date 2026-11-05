@@ -1,5 +1,6 @@
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { LoadingState } from "@/components/loading-state";
 export function WorkOrderLocationFeedback({
   estateId,
   pending,
@@ -16,7 +17,7 @@ export function WorkOrderLocationFeedback({
   onRetry: () => unknown;
 }) {
   if (pending) {
-    return <p role="status">Loading locations…</p>;
+    return <LoadingState label="Loading locations…" rows={2} />;
   }
   if (failed) {
     return (

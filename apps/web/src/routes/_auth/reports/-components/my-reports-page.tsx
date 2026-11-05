@@ -1,7 +1,10 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import { ClipboardList, Plus } from "lucide-react";
 
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
@@ -55,7 +58,7 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
         }
         title="My reports"
       />
-      {reports.isPending ? <p role="status">Loading reports…</p> : null}
+      {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>
@@ -67,9 +70,24 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
         </Alert>
       ) : null}
       {reports.data && (reports.data.items?.length ?? 0) === 0 ? (
-        <p>
-          {estateId ? "No reports for this estate yet." : "No reports yet."}
-        </p>
+        <EmptyState
+          action={
+            <a
+              className={buttonVariants()}
+              href={
+                estateId
+                  ? `/reports/new?estateId=${encodeURIComponent(estateId)}`
+                  : "/reports/new"
+              }
+            >
+              <Plus aria-hidden="true" />
+              Report a fault
+            </a>
+          }
+          description="Faults you report appear here with their progress."
+          icon={ClipboardList}
+          title={estateId ? "No reports for this estate yet" : "No reports yet"}
+        />
       ) : null}
       <div className="grid gap-4">
         {reports.data?.items?.map((report) => (

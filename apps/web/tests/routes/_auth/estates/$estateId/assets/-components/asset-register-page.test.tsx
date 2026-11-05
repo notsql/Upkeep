@@ -115,8 +115,14 @@ describe("estate asset register", () => {
         onFiltersChange={change}
       />
     );
-    await screen.findByText("No matching assets.");
-    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    await screen.findByText("No matching assets");
+    within(screen.getByRole("search", { name: "Filter assets" })).getByRole(
+      "button",
+      { name: "Clear filters" }
+    );
+    const clear = screen.getAllByRole("button", { name: "Clear filters" });
+    expect(clear).toHaveLength(2);
+    fireEvent.click(clear[1] as HTMLElement);
     expect(change).toHaveBeenCalledWith({});
     await waitFor(() =>
       expect(api.GET).toHaveBeenCalledWith("/estates/{estateId}/assets", {

@@ -93,10 +93,19 @@ export function MemberPermission({
         {member.email}
       </TableCell>
       <TableCell className="whitespace-normal">
-        <div className="space-y-2">
-          {member.owner ? <Badge>Owner</Badge> : null}
-          <p>{roleName}</p>
-        </div>
+        {member.owner ? (
+          <div className="grid gap-1">
+            <Badge>Owner</Badge>
+            <span className="text-muted-foreground text-xs">
+              Full Manager access plus ownership
+            </span>
+          </div>
+        ) : (
+          <Badge variant="secondary">{roleName}</Badge>
+        )}
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline">Active</Badge>
       </TableCell>
       <TableCell className="min-w-60 whitespace-normal">
         <div className="grid gap-3">

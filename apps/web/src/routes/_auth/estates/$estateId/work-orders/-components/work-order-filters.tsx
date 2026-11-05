@@ -15,6 +15,7 @@ import {
   useId,
   useState,
 } from "react";
+import { FilterBar } from "@/components/filter-bar";
 import type { WorkOrderFilters as Filters } from "@/lib/work-orders";
 
 const options: {
@@ -113,78 +114,90 @@ export function WorkOrderFilters({
     onChange({});
   }, [onChange]);
   return (
-    <form
-      aria-label="Filter work orders"
-      className="flex flex-wrap items-end gap-4"
-      onSubmit={apply}
-    >
-      <Field className="w-full sm:w-48">
-        <FieldLabel htmlFor={`${id}-status`}>Status</FieldLabel>
-        <Select
-          items={statusOptions}
-          onValueChange={changeStatus}
-          value={status}
-        >
-          <SelectTrigger className="w-full" id={`${id}-status`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field className="w-full sm:w-48">
-        <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
-        <Select
-          items={categoryOptions}
-          onValueChange={changeCategory}
-          value={category}
-        >
-          <SelectTrigger className="w-full" id={`${id}-category`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {categoryOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field className="w-full sm:w-48">
-        <FieldLabel htmlFor={`${id}-priority`}>Priority</FieldLabel>
-        <Select items={options} onValueChange={changePriority} value={priority}>
-          <SelectTrigger className="w-full" id={`${id}-priority`}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field className="w-full sm:w-72">
-        <FieldLabel htmlFor={`${id}-reference`}>Search reference</FieldLabel>
-        <Input
-          id={`${id}-reference`}
-          maxLength={200}
-          onChange={changeQuery}
-          placeholder="e.g. MG-W0001"
-          value={q}
-        />
-      </Field>
-      <Button type="submit">Apply filters</Button>
-      <Button onClick={clear} type="button" variant="outline">
-        Clear filters
-      </Button>
+    <form onSubmit={apply}>
+      <FilterBar
+        actions={
+          <>
+            <Button type="submit">Apply filters</Button>
+            <Button onClick={clear} type="button" variant="outline">
+              Clear filters
+            </Button>
+          </>
+        }
+        label="Filter work orders"
+        search={
+          <Field>
+            <FieldLabel htmlFor={`${id}-reference`}>
+              Search reference
+            </FieldLabel>
+            <Input
+              id={`${id}-reference`}
+              maxLength={200}
+              onChange={changeQuery}
+              placeholder="e.g. MG-W0001"
+              value={q}
+            />
+          </Field>
+        }
+      >
+        <Field className="w-full sm:w-48">
+          <FieldLabel htmlFor={`${id}-status`}>Status</FieldLabel>
+          <Select
+            items={statusOptions}
+            onValueChange={changeStatus}
+            value={status}
+          >
+            <SelectTrigger className="w-full" id={`${id}-status`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {statusOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field className="w-full sm:w-48">
+          <FieldLabel htmlFor={`${id}-category`}>Category</FieldLabel>
+          <Select
+            items={categoryOptions}
+            onValueChange={changeCategory}
+            value={category}
+          >
+            <SelectTrigger className="w-full" id={`${id}-category`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field className="w-full sm:w-48">
+          <FieldLabel htmlFor={`${id}-priority`}>Priority</FieldLabel>
+          <Select
+            items={options}
+            onValueChange={changePriority}
+            value={priority}
+          >
+            <SelectTrigger className="w-full" id={`${id}-priority`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </FilterBar>
     </form>
   );
 }

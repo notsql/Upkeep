@@ -105,42 +105,70 @@ function cells(label: string) {
 
 it("lists each category with its asset count, flag and last change", () => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  screen.getByRole("heading", { name: "Asset categories" });
+  screen.getByRole("heading", { level: 1, name: "Asset categories" });
   expect(cells("Lighting")).toEqual([
     "12",
-    "",
+    "Fails silently",
     "Every 1 year",
     expect.stringContaining("Casey Doe"),
-    "Edit interval",
+    "Edit intervalStop flagging",
   ]);
   expect(cells("Lift")).toEqual([
     "0",
-    "",
+    "No",
     "Not set",
     "Default",
-    "Edit interval",
+    "Edit intervalFlag",
   ]);
   expect(cells("Pump")[2]).toBe("Every 6 months");
-  const flags = within(screen.getByRole("table")).getAllByRole("checkbox");
-  expect(flags.map((flag) => flag.getAttribute("aria-checked"))).toEqual([
-    "true",
-    "true",
-    "false",
-  ]);
-  screen.getByRole("checkbox", { name: "Lighting fails silently" });
 });
 
-it("saves a ticked or unticked flag", () => {
+it("keeps rows in label order so they do not jump when a flag changes", () => {
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
+  expect(shownCategories()).toEqual(["Lift", "Lighting", "Pump"]);
+});
+
+it("has no inline form controls in the table", () => {
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
+  expect(within(screen.getByRole("table")).queryAllByRole("checkbox")).toEqual(
+    []
+  );
+});
+
+it("confirms before flagging a category", () => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
   fireEvent.click(
-    screen.getByRole("checkbox", { name: "Lift fails silently" })
+    screen.getByRole("button", { name: "Flag Lift as failing silently" })
   );
+  expect(state.mutate).not.toHaveBeenCalled();
+  const dialog = within(
+    screen.getByRole("dialog", { name: "Flag Lift as failing silently?" })
+  );
+  fireEvent.click(dialog.getByRole("button", { name: "Flag category" }));
   expect(state.mutate).toHaveBeenCalledWith(
     { category: "LIFT", failsSilently: true },
     expect.anything()
   );
+});
+
+it("confirms before unflagging, and cancel changes nothing", async () => {
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
   fireEvent.click(
-    screen.getByRole("checkbox", { name: "Lighting fails silently" })
+    screen.getByRole("button", { name: "Stop flagging Lighting" })
+  );
+  const dialog = within(
+    screen.getByRole("dialog", { name: "Stop flagging Lighting?" })
+  );
+  fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  expect(state.mutate).not.toHaveBeenCalled();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Stop flagging Lighting" })
+  );
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Stop flagging",
+    })
   );
   expect(state.mutate).toHaveBeenLastCalledWith(
     { category: "LIGHTING", failsSilently: false },
@@ -148,17 +176,34 @@ it("saves a ticked or unticked flag", () => {
   );
 });
 
-it("explains a failed save and keeps the saved flag", () => {
+it("explains a failed flag change inside the dialog", () => {
   state.mutate = vi.fn((_input, options) =>
     options.onError(new Error("This estate is inactive."))
   );
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  const flag = screen.getByRole("checkbox", { name: "Lift fails silently" });
-  fireEvent.click(flag);
-  expect(screen.getByRole("alert").textContent).toContain(
+  fireEvent.click(
+    screen.getByRole("button", { name: "Flag Lift as failing silently" })
+  );
+  const dialog = within(screen.getByRole("dialog"));
+  fireEvent.click(dialog.getByRole("button", { name: "Flag category" }));
+  expect(dialog.getByRole("alert").textContent).toContain(
     "This estate is inactive."
   );
-  expect(flag.getAttribute("aria-checked")).toBe("false");
+  screen.getByRole("dialog", { name: "Flag Lift as failing silently?" });
+});
+
+it("closes the dialog once the flag is saved", async () => {
+  state.mutate = vi.fn((_input, options) => options.onSuccess());
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Flag Lift as failing silently" })
+  );
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Flag category",
+    })
+  );
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 });
 
 it("locks the flags of an inactive estate", () => {
@@ -167,10 +212,13 @@ it("locks the flags of an inactive estate", () => {
   screen.getByText(
     "This estate is inactive, so its asset categories cannot be changed."
   );
-  for (const flag of within(screen.getByRole("table")).getAllByRole(
-    "checkbox"
-  )) {
-    expect(flag.getAttribute("aria-disabled")).toBe("true");
+  for (const name of [
+    "Stop flagging Lighting",
+    "Flag Lift as failing silently",
+  ]) {
+    expect(screen.getByRole("button", { name }).hasAttribute("disabled")).toBe(
+      true
+    );
   }
 });
 
@@ -188,7 +236,7 @@ it("shows the latest change to either the flag or the interval", () => {
 
 function filters() {
   return within(
-    screen.getByRole("group", { name: "Filter by service interval" })
+    screen.getByRole("tablist", { name: "Filter by service interval" })
   );
 }
 
@@ -223,8 +271,8 @@ it("shows the categories missing an interval from their card", () => {
   );
   expect(
     filters()
-      .getByRole("button", { name: "Not set" })
-      .getAttribute("aria-pressed")
+      .getByRole("tab", { name: "Not set" })
+      .getAttribute("aria-selected")
   ).toBe("true");
   expect(shownCategories()).toEqual(["Lift"]);
 });
@@ -251,10 +299,10 @@ it("says when no interval is set yet", () => {
 it("shows every category until a filter is chosen", () => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
   const pressed = ["All", "Days", "Months", "Years", "Not set"].map((name) =>
-    filters().getByRole("button", { name }).getAttribute("aria-pressed")
+    filters().getByRole("tab", { name }).getAttribute("aria-selected")
   );
   expect(pressed).toEqual(["true", "false", "false", "false", "false"]);
-  expect(shownCategories()).toEqual(["Lighting", "Pump", "Lift"]);
+  expect(shownCategories()).toEqual(["Lift", "Lighting", "Pump"]);
 });
 
 it.each([
@@ -263,23 +311,24 @@ it.each([
   ["Not set", ["Lift"]],
 ])("filters to %s", (name, shown) => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  fireEvent.click(filters().getByRole("button", { name }));
+  fireEvent.click(filters().getByRole("tab", { name }));
   expect(
-    filters().getByRole("button", { name }).getAttribute("aria-pressed")
+    filters().getByRole("tab", { name }).getAttribute("aria-selected")
   ).toBe("true");
   expect(
-    filters().getByRole("button", { name: "All" }).getAttribute("aria-pressed")
+    filters().getByRole("tab", { name: "All" }).getAttribute("aria-selected")
   ).toBe("false");
   expect(shownCategories()).toEqual(shown);
 });
 
 it("says when a filter matches nothing, and All shows everything again", () => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  fireEvent.click(filters().getByRole("button", { name: "Days" }));
-  screen.getByText("No categories match this filter.");
+  fireEvent.click(filters().getByRole("tab", { name: "Days" }));
+  screen.getByText("No matching categories");
+  screen.getByRole("button", { name: "Clear filters" });
   expect(screen.queryByRole("table")).toBeNull();
-  fireEvent.click(filters().getByRole("button", { name: "All" }));
-  expect(shownCategories()).toEqual(["Lighting", "Pump", "Lift"]);
+  fireEvent.click(filters().getByRole("tab", { name: "All" }));
+  expect(shownCategories()).toEqual(["Lift", "Lighting", "Pump"]);
 });
 
 it("saves a category's interval from the dialog", async () => {

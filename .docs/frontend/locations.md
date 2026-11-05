@@ -5,9 +5,11 @@ relative to `apps/web/src/`.
 
 ## Routes
 
-No route of its own. `LocationsSection` renders inside the estate details page
-at `/estates/$estateId` (`routes/_auth/estates/$estateId/index.tsx`,
-see [estates.md](estates.md)). Location pickers also appear in the asset and
+`/estates/$estateId/locations` (`routes/_auth/estates/$estateId/locations/index.tsx`,
+title "Locations") renders `LocationsPage`
+(`locations/-components/locations-page.tsx`): `PageLayout` + `PageHeader`
+("Locations") + `LocationsSection`. Sidebar: Assets > Locations, shown when
+`canViewManagement`. Location pickers also appear in the asset and
 device forms (see [assets.md](assets.md), [devices.md](devices.md)).
 
 ## Hierarchy rules the UI enforces
@@ -22,7 +24,7 @@ device forms (see [assets.md](assets.md), [devices.md](devices.md)).
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `LocationsSection` (`estates/$estateId/-components/locations-section.tsx`) | "Locations" section. Search box (filters by name and reveals a matching hierarchy with parent context). Otherwise a nested tree (`ul aria-label="Location hierarchy"`). Owners and shared members can browse/search. Creation controls require a loaded active estate and canCreateLocations; bulk levels use canCreateFloors; editing uses canEditLocations; deactivation requires ownership. Owners get "Add levels" (blocks: opens `AddLevelsTabs`); assigned Managers get "Add level" (blocks: opens `LocationForm`). Both get "Add common area" (blocks and levels) and a top "Add block" button. Owners and custom EDIT_LOCATIONS get "Edit"; only owners get "Deactivate". One Dialog at a time for create/edit/deactivate; pending submissions prevent dismissal. Blocks are distinct surfaces; branches start collapsed and whole name/count buttons expand/collapse children. Each node has an Actions DropdownMenu; search results reveal parents and retain allowed actions. State, queries and writes only; the pieces below live beside it in the same `-components/` folder. | `Alert`, `Button`, `Input`, `Label`, `DropdownMenu`, `Dialog` |
+| `LocationsSection` (`estates/$estateId/-components/locations-section.tsx`) | "Blocks and levels" card on the Locations page. Search box in a `FilterBar` "Filter locations" (filters by name and reveals a matching hierarchy with parent context). Loading is `LoadingState` "Loading locations…"; no locations is `EmptyState` "No locations yet"; no search match is `EmptyState` "No matching locations" with Clear filters (clears the search). Otherwise a nested tree (`ul aria-label="Location hierarchy"`). Owners and shared members can browse/search. Creation controls require a loaded active estate and canCreateLocations; bulk levels use canCreateFloors; editing uses canEditLocations; deactivation requires ownership. Owners get "Add levels" (blocks: opens `AddLevelsTabs`); assigned Managers get "Add level" (blocks: opens `LocationForm`). Both get "Add common area" (blocks and levels) and a top "Add block" button. Owners and custom EDIT_LOCATIONS get "Edit"; only owners get "Deactivate". One Dialog at a time for create/edit/deactivate; pending submissions prevent dismissal. Blocks are distinct surfaces; branches start collapsed and whole name/count buttons expand/collapse children. Each node has an Actions DropdownMenu; search results reveal parents and retain allowed actions. State, queries and writes only; the pieces below live beside it in the same `-components/` folder. | `Alert`, `Button`, `Input`, `Label`, `DropdownMenu`, `Dialog` |
 | `LocationTree`, `LocationItem`, `LocationActions`, `locationSummaries` (`estates/$estateId/-components/location-tree.tsx`) | The nested tree or search results, each node's disclosure button and count summary ("2 levels · 3 common areas"), and its Actions DropdownMenu, which opens a dialog by passing a `Panel`. | `Button`, `DropdownMenu` |
 | `Panel`, `panelTitle`, `dialogDescription` (`estates/$estateId/-components/location-panel.ts`) | Which dialog is open (`create` block/level/common area, `edit`, `levels` gated by canCreateFloors, `deactivate`) and its title and description. | - |
 | `PanelView` (`estates/$estateId/-components/location-panel-view.tsx`) | Picks the dialog body for the open `Panel`: `LocationForm`, `AddLevelsTabs` or `DeactivateLocation`; `parentOptions` lists where an edited location may move. | - |
@@ -78,10 +80,10 @@ The owner-only asset register opts into `useLocations(estateId, true)` for inact
 
 ## Dashboard presentation
 
-Locations is a section inside a shadcn `Card` within estate overview, with `id="locations"`
-and scroll margin for the sticky header. It has no separate sidebar
-navigation destination; users reach it within Overview. Direct #locations links
-remain valid and keep Overview selected. Block groups, labelled expandable branches and compact Actions menus keep the
+Locations has its own page; `LocationsSection` is a shadcn `Card` (heading
+"Blocks and levels", `id="locations"`) with the search box and tree. Every
+create/edit/deactivate form opens in a `Dialog` from a button ("Add block", the
+node Actions menu); nothing is edited inline. Block groups, labelled expandable branches and compact Actions menus keep the
 hierarchy readable on narrow screens. Dialogs return focus to the node menu,
 falling back to Add block after removal. Server ordering and authorization stay the same; search now reveals hierarchy context.
 Shared form/dialog colors and control sizes follow

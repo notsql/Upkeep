@@ -55,7 +55,11 @@ targeting the focusable `#main-content` wrapper. Route screens own their main
 landmark (`PageLayout`, a `<main>`), so the shell uses a plain flex `div`
 instead of `SidebarInset`. Without a sidebar the shell is skip link + `Header` +
 content. With one it is `SidebarProvider` > `AppNavigation` + a column holding
-`Header` (with `SidebarTrigger` as `start`) and `#main-content`.
+`Header` and `#main-content`. The provider is held open (`open` with a no-op
+`onOpenChange`), so the desktop sidebar cannot be collapsed (no trigger, and
+Cmd/Ctrl+B does nothing). On mobile the header gets `SidebarTrigger` as `start`
+and keeps the brand; on desktop the header omits the brand (`brand={false}`)
+because the sidebar shows it.
 
 The sidebar is shown, signed in, when `hasSidebar(pathname, residentOnly)` (in
 `components/app-navigation.tsx`) is true: `/estates/$estateId/**` (id not
@@ -66,9 +70,9 @@ not shown on `/estates`, `/estates/new`, `/account`, `/admin/**`,
 ### Header
 
 `components/header.tsx` is sticky and identical on mobile and desktop. Left:
-optional `start` slot (the `SidebarTrigger`), the "UpKeep" brand link to `/`
-(inside `<nav aria-label="Header navigation">`), and, when signed in, a "/"
-separator then the **estate switcher**. Right: `ThemeToggle` and `AuthButton`.
+optional `start` slot (the mobile `SidebarTrigger`), the "UpKeep" brand link to `/`
+(inside `<nav aria-label="Header navigation">`; omitted when `brand` is false),
+and, when signed in, a "/" separator (only with the brand) then the **estate switcher**. Right: `ThemeToggle` and `AuthButton`.
 
 The switcher is `components/estates/estate-feature-switcher.tsx` (shadcn
 ghost `Button` + `DropdownMenu`), used directly; the old
@@ -110,7 +114,8 @@ default, label names the next mode, disabled before mount).
 
 `AppNavigation` renders the shadcn `Sidebar`: `SidebarContent` with
 `<nav aria-label="Sidebar">`, then a `SidebarFooter` tagline ("Your estates,
-organised."). No brand, no switcher, no "Workspace" group, no cross-estate
+organised."). A `SidebarHeader` at the top holds the brand: an icon tile plus
+"UpKeep", linking to `/` (outside the Sidebar nav). No switcher, no "Workspace" group, no cross-estate
 entries. Labelled groups are `SidebarGroup role="group"` with an `aria-label`;
 a group with no visible items is not rendered.
 
@@ -120,6 +125,7 @@ a group with no visible items is not rendered.
 | Operations | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
 | Operations | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
 | Operations | Inspections | `/inspections` | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
+| Assets | Locations | `/locations` | `canViewManagement` |
 | Assets | Assets | `/assets` | `canOpenAssets`: `canViewAssets \|\| canViewInspectionResults` |
 | Assets | Devices | `/devices` | `canOpenDevices`: `owned \|\| canManageInvitationPermissions` |
 | Assets | Readings | `/readings` | `canOpenReadings`: `canViewReadings` |
@@ -143,10 +149,9 @@ Active state: an item is active when its route equals or prefixes the pathname
 `activeOptions={{ exact: true, includeSearch: false }}`; icons are
 `aria-hidden`.
 
-At >=768px the sidebar is an off-canvas collapsible rail toggled by the header
-`SidebarTrigger` ("Toggle Sidebar") or Cmd/Ctrl+B. Below 768px
-(`@proj/ui/hooks/use-mobile`) the same sidebar opens as a `Sheet` from the same
-trigger and closes when a link is followed. There is **no separate mobile
+At >=768px the sidebar is always open, with no toggle. Below 768px
+(`@proj/ui/hooks/use-mobile`) the same sidebar opens as a `Sheet` from the header
+`SidebarTrigger` ("Toggle Sidebar") and closes when a link is followed. There is **no separate mobile
 navigation**: `EstateNavigation` and `components/estate-section-menu.tsx` are
 deleted, and there is no bottom bar.
 
@@ -233,6 +238,10 @@ for their report navigation. Report estates are switched from the header switche
   errors are linked using aria-invalid/aria-describedby. Estate/asset editors
   share FormActions for Save/Cancel. Location/assessment forms use dialogs and
   device registration has its own page; email invitations remain inline. Server validation and payloads are unchanged.
+
+### Browser tab title
+
+Every tab title is `UpKeep`, or `UpKeep · <Page>` when a route names a page (app name first, middle dot separator). `src/lib/page-title.ts` owns the format: `__root.tsx` sets the default with `pageTitle()`, and each route sets `head: () => pageHead("<Page>")` (e.g. `pageHead("Work orders")` -> `UpKeep · Work orders`). Never write a `title` meta by hand. Tested in `tests/lib/page-title.test.ts`.
 
 ## Test imports
 

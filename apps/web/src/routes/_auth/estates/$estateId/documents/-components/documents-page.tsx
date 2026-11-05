@@ -9,6 +9,7 @@ import {
 } from "@proj/ui/components/dialog";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -83,7 +84,7 @@ export function DocumentsPage({
   const deletion = useDeleteDocument(estateId);
   const download = useDownloadDocument(estateId);
   const [selected, setSelected] = useState<EstateDocument>();
-  const [removed, setRemoved] = useState<string>();
+  const [notice, setNotice] = useState<string>();
   const chooseDeletion = useCallback(
     (document: EstateDocument) => {
       deletion.reset();
@@ -96,6 +97,7 @@ export function DocumentsPage({
     [download.mutate]
   );
   const retry = useCallback(() => documents.refetch(), [documents.refetch]);
+  const clearFilters = useCallback(() => onSearch({}), [onSearch]);
   const first = useCallback(
     () =>
       onSearch({
@@ -129,31 +131,37 @@ export function DocumentsPage({
     deletion.mutate(selected.id, {
       onSuccess: () => {
         const message = `"${selected.originalFilename}" removed`;
-        setRemoved(message);
+        setNotice(message);
         toast.success(message);
         setSelected(undefined);
       },
     });
   }, [selected, deletion.isPending, deletion.mutate]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Documents are unavailable.</p>;
   }
   return (
     <PageLayout className="space-y-6">
-      <PageHeader title="Documents" />
-      {access.permission?.canUploadDocuments ? (
-        <UploadDocumentForm estateId={estateId} />
-      ) : null}
+      <PageHeader
+        actions={
+          access.permission?.canUploadDocuments ? (
+            <UploadDocumentForm estateId={estateId} onUploaded={setNotice} />
+          ) : null
+        }
+        title="Documents"
+      />
       <DocumentFiltersForm
         filters={filters}
         key={filters.filename ?? ""}
         onSearch={onSearch}
       />
-      {removed ? <p role="status">{removed}</p> : null}
-      {documents.isPending ? <p role="status">Loading documents…</p> : null}
+      {notice ? <p role="status">{notice}</p> : null}
+      {documents.isPending ? (
+        <LoadingState label="Loading documents…" variant="table" />
+      ) : null}
       {documents.isError ? (
         <div role="alert">
           {documents.error.message}{" "}
@@ -164,6 +172,11 @@ export function DocumentsPage({
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
       <DocumentList
+        createAction={
+          access.permission?.canUploadDocuments ? (
+            <UploadDocumentForm estateId={estateId} onUploaded={setNotice} />
+          ) : undefined
+        }
         documentType={filters.documentType}
         downloading={download.isPending}
         failed={documents.isError}
@@ -172,6 +185,7 @@ export function DocumentsPage({
         onAssociation={
           associations.canRead ? setAssociationDocument : undefined
         }
+        onClearFilters={clearFilters}
         onDelete={chooseDeletion}
         onDownload={downloadDocument}
         renderAssets={renderAssets}

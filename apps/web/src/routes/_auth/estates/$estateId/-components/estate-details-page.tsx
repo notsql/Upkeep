@@ -1,34 +1,29 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import type { ReactNode } from "react";
-import { DetailCard } from "@/components/detail-card";
+import { buttonVariants } from "@proj/ui/components/button";
+import { Link } from "@tanstack/react-router";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { formatMcst, useEstate } from "@/lib/estates";
-export function EstateDetailsPage({
-  estateId,
-  children,
-}: {
-  estateId: string;
-  /** Sections rendered below the estate's details once it has loaded. */
-  children?: ReactNode;
-}) {
+import {
+  dashboardAccess,
+  EstateDashboard,
+} from "@/routes/_auth/estates/$estateId/-components/estate-dashboard";
+export function EstateDetailsPage({ estateId }: { estateId: string }) {
   const estate = useEstate(estateId);
   const access = useAppAccess();
+  const permission = access.data?.estates.find(
+    (assignment) => assignment.estateId === estateId
+  );
   const canEditDetails = Boolean(
-    estate.data?.owned ||
-      access.data?.estates.some(
-        (assignment) =>
-          assignment.estateId === estateId && assignment.canManageEstate
-      )
+    estate.data?.owned || permission?.canManageEstate
   );
   return (
     <PageLayout>
       {estate.isPending ? (
-        <p aria-live="polite" className="mt-6">
-          Loading estate…
-        </p>
+        <LoadingState label="Loading estate…" rows={2} />
       ) : null}
       {estate.error ? (
         <Alert className="mt-6" variant="destructive">
@@ -38,6 +33,17 @@ export function EstateDetailsPage({
       {estate.data ? (
         <>
           <PageHeader
+            actions={
+              canEditDetails ? (
+                <Link
+                  className={buttonVariants({ variant: "outline" })}
+                  params={{ estateId }}
+                  to="/estates/$estateId/edit"
+                >
+                  Estate settings
+                </Link>
+              ) : undefined
+            }
             description={estate.data.description || undefined}
             status={
               <LifecycleStatusBadge
@@ -55,33 +61,30 @@ export function EstateDetailsPage({
               </AlertDescription>
             </Alert>
           ) : null}
-          <DetailCard className="my-4">
-            <div>
-              <dt className="font-medium">MCST number</dt>
+          <dl className="text-muted-foreground -mt-2 mb-6 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+            <div className="flex gap-1.5">
+              <dt className="sr-only">MCST number</dt>
               <dd>{formatMcst(estate.data.code)}</dd>
             </div>
-            <div>
-              <dt className="font-medium">Address</dt>
+            <div className="flex gap-1.5">
+              <dt className="sr-only">Address</dt>
               <dd>{estate.data.address}</dd>
             </div>
-            <div>
-              <dt className="font-medium">Postal code</dt>
+            <div className="flex gap-1.5">
+              <dt>Postal code</dt>
               <dd>{estate.data.postalCode}</dd>
             </div>
-            <div>
-              <dt className="font-medium">Description</dt>
-              <dd className="whitespace-pre-wrap">
-                {estate.data.description || "No description provided."}
-              </dd>
-            </div>
-          </DetailCard>
+          </dl>
           {canEditDetails ? null : (
-            <p className="text-muted-foreground mb-3 text-sm">
+            <p className="text-muted-foreground mb-4 text-sm">
               Shared with you. Only the owner or an assigned Manager can edit
               estate details.
             </p>
           )}
-          {children}
+          <EstateDashboard
+            access={dashboardAccess(permission, estate.data.owned)}
+            estateId={estateId}
+          />
         </>
       ) : null}
     </PageLayout>

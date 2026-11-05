@@ -2,6 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { useAuthenticatedSession } from "@/lib/access";
 import type { DocumentFilters } from "@/lib/documents";
+import { pageHead } from "@/lib/page-title";
 import { DocumentsPage } from "./-components/documents-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/documents/")({
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/_auth/estates/$estateId/documents/")({
     });
   },
   component: DocumentsRoute,
-  head: () => ({ meta: [{ title: "Documents" }] }),
+  head: () => pageHead("Documents"),
 });
 
 function DocumentsRoute() {

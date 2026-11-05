@@ -42,7 +42,7 @@ export function EstateMembersTable({
   );
   const start = page * 20;
   return (
-    <div className="mt-4 min-w-0 space-y-4">
+    <div className="min-w-0 space-y-4">
       <Table>
         <TableCaption className="sr-only">Estate members</TableCaption>
         <TableHeader>
@@ -50,6 +50,7 @@ export function EstateMembersTable({
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>

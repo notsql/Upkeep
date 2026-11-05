@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useResidentContext } from "@/lib/reports";
@@ -18,7 +19,9 @@ export function NewReportPage({
   return (
     <PageLayout>
       {context.data ? <PageHeader title="Report a fault" /> : null}
-      {context.isPending ? <p role="status">Loading your estate…</p> : null}
+      {context.isPending ? (
+        <LoadingState label="Loading your estate…" rows={1} />
+      ) : null}
       {context.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>

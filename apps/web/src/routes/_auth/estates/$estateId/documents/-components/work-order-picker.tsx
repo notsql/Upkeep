@@ -23,6 +23,7 @@ import {
   useId,
   useState,
 } from "react";
+import { LoadingState } from "@/components/loading-state";
 import {
   useWorkOrderList,
   type WorkOrder,
@@ -126,7 +127,7 @@ export function WorkOrderPicker({
             onValueChange={changeStatus}
             value={status ?? "ALL"}
           >
-            <SelectTrigger id={`${id}-status`}>
+            <SelectTrigger className="w-full" id={`${id}-status`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -140,7 +141,9 @@ export function WorkOrderPicker({
         </div>
         <Button type="submit">Search work orders</Button>
       </form>
-      {orders.isPending ? <p role="status">Loading work orders…</p> : null}
+      {orders.isPending ? (
+        <LoadingState label="Loading work orders…" rows={2} />
+      ) : null}
       {orders.isError ? (
         <div role="alert">
           Unable to load work orders.{" "}

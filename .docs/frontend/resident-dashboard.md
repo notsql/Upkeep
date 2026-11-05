@@ -13,15 +13,15 @@ resident estate) to `ResidentDashboard`.
 
 - `PageLayout` + `PageHeader` titled "Dashboard", action "Report a fault"
   (`buttonVariants()` link to `/reports/new`, with `estateId` when known).
-- Loading: `role="status"` "Loading reports…". Error: destructive `Alert`
+- Loading: `LoadingState` "Loading reports…". Error: destructive `Alert`
   "Unable to load reports.".
 - Three count `Card`s (each `role="region"` named by its label): **Open**,
   **In progress**, **Resolved**, read from `counts` on the response.
 - "Recent reports" section (`h2`): the first 5 `items` as shared `ReportCard`s,
   each title linking to `/reports/$reportId` (keeping `estateId`), plus an
   outline "View all" link to `/reports` when there are items.
-- Empty state: "You haven't reported any faults yet." and a "Report a fault"
-  link.
+- Empty state: `EmptyState` "No reports yet" ("You haven't reported any
+  faults yet.") with a "Report a fault" link action.
 
 shadcn: `Card`, `CardHeader`, `CardTitle`, `CardContent`, `Alert`,
 `AlertDescription`, `buttonVariants`.

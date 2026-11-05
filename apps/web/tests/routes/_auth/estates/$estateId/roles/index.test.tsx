@@ -217,6 +217,14 @@ async function openRoles() {
   return renderWithProviders(<RouterProvider router={router} />);
 }
 
+async function openCreateRole() {
+  await openRoles();
+  fireEvent.click(
+    (await screen.findAllByRole("button", { name: CREATE_ROLE }))[0]
+  );
+  await screen.findByRole("dialog", { name: "Create role" });
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
@@ -224,7 +232,7 @@ beforeEach(() => {
 });
 
 it("opens the permissions dropdown to reveal the unchecked permissions table", async () => {
-  await openRoles();
+  await openCreateRole();
   await screen.findByRole("textbox", { name: "Role name" });
   screen.getByRole("textbox", { name: "Description" });
   expect(screen.queryByRole("table", { name: "Permissions" })).toBeNull();
@@ -250,7 +258,7 @@ it("opens the permissions dropdown to reveal the unchecked permissions table", a
 });
 
 it("creates the exact selected permission set and shows the saved role", async () => {
-  await openRoles();
+  await openCreateRole();
   fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
     target: { value: "Fault reviewer" },
   });
@@ -268,7 +276,11 @@ it("creates the exact selected permission set and shows the saved role", async (
       .getByRole("checkbox", { name: "View fault reports" })
       .getAttribute("aria-checked")
   ).toBe("true");
-  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: CREATE_ROLE,
+    })
+  );
   await waitFor(() =>
     expect(api.POST).toHaveBeenCalledWith(
       "/estates/{estateId}/roles",
@@ -281,17 +293,62 @@ it("creates the exact selected permission set and shows the saved role", async (
       })
     )
   );
-  await screen.findByText("Fault reviewer");
+  await waitFor(() =>
+    expect(screen.queryByRole("dialog", { name: "Create role" })).toBeNull()
+  );
+  within(await screen.findByRole("table", { name: "Custom roles" })).getByRole(
+    "cell",
+    { name: REVIEWER_NAME }
+  );
+});
+
+it("shows an empty state with a create action when there are no custom roles", async () => {
+  await openRoles();
+  await screen.findByText("No custom roles yet");
+  expect(screen.getAllByRole("button", { name: CREATE_ROLE })).toHaveLength(2);
+  expect(screen.queryByRole("textbox", { name: "Role name" })).toBeNull();
+});
+
+it("lists custom roles in a table with a permissions summary and filters by search", async () => {
+  serve({ existing: true });
+  await openRoles();
+  const table = within(
+    await screen.findByRole("table", { name: "Custom roles" })
+  );
+  table.getByRole("cell", { name: REVIEWER_NAME });
+  table.getByText("View fault reports");
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search roles" }), {
+    target: { value: "zzz" },
+  });
+  await screen.findByText("No matching roles");
+  expect(screen.queryByRole("table", { name: "Custom roles" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await screen.findByRole("table", { name: "Custom roles" });
+});
+
+it("edits a role in a dialog", async () => {
+  serve({ existing: true });
+  await openRoles();
+  fireEvent.click(await screen.findByRole("button", { name: EDIT_REVIEWER }));
+  const dialog = within(
+    await screen.findByRole("dialog", { name: "Edit Fault reviewer" })
+  );
+  fireEvent.click(dialog.getByRole("button", { name: "Save role" }));
+  await waitFor(() => expect(api.PUT).toHaveBeenCalled());
 });
 
 it("explains a missing prerequisite without silently selecting it", async () => {
-  await openRoles();
+  await openCreateRole();
   fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
     target: { value: "Editor" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
   fireEvent.click(screen.getByRole("checkbox", { name: "Edit estate" }));
-  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: CREATE_ROLE,
+    })
+  );
   await screen.findByText(PREREQUISITE);
   expect(
     screen
@@ -306,13 +363,17 @@ it("retains the entered role and permissions after a save error", async () => {
     error: { message: "A role with this name already exists." },
     response: new Response(null, { status: 409 }),
   } as never);
-  await openRoles();
+  await openCreateRole();
   fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
     target: { value: "Fault reviewer" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
   fireEvent.click(screen.getByRole("checkbox", { name: "View fault reports" }));
-  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: CREATE_ROLE,
+    })
+  );
   await screen.findByRole("alert");
   expect(
     screen.getByRole<HTMLInputElement>("textbox", { name: "Role name" }).value
@@ -327,13 +388,17 @@ it("retains the entered role and permissions after a save error", async () => {
 
 it("prevents duplicate saves while a role request is pending", async () => {
   vi.mocked(api.POST).mockImplementation(() => new Promise(() => undefined));
-  await openRoles();
+  await openCreateRole();
   fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
     target: { value: "Fault reviewer" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
   fireEvent.click(screen.getByRole("checkbox", { name: "View fault reports" }));
-  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: CREATE_ROLE,
+    })
+  );
   const saving = await screen.findByRole<HTMLButtonElement>("button", {
     name: SAVING,
   });
@@ -368,7 +433,7 @@ it("opens the permissions dropdown while editing with saved selections intact", 
 
 it("opens role authoring for a delegated member without fetching estate details or the roster", async () => {
   serve({ delegated: true });
-  await openRoles();
+  await openCreateRole();
   await screen.findByRole("textbox", { name: "Role name" });
   expect(apiGet.mock.calls.map(([path]) => String(path))).not.toContain(
     "/estates/{id}"

@@ -273,9 +273,8 @@ describe("locations section", () => {
   it("invites the manager to add a block when the estate has none", async () => {
     serve({ items: [] });
     renderWithProviders(<LocationsSection estateId="estate-id" />);
-    expect((await screen.findByRole("status")).textContent).toContain(
-      "No locations yet"
-    );
+    screen.getByRole("status", { name: "Loading locations…" });
+    await screen.findByText("No locations yet");
   });
 
   it("searches by name and shows where each match sits", async () => {
@@ -296,9 +295,10 @@ describe("locations section", () => {
       screen.getByRole("searchbox", { name: "Search locations" }),
       { target: { value: "carpark" } }
     );
-    expect(screen.getByRole("status").textContent).toContain(
-      "No locations match"
-    );
+    screen.getByRole("search", { name: "Filter locations" });
+    await screen.findByText("No matching locations");
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    await screen.findByRole("listitem", { name: "Blk 101" });
   });
 
   it("adds a block under the estate", async () => {

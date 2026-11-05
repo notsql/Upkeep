@@ -102,7 +102,9 @@ it("shows an empty history and offers a new report", async () => {
 
   await screen.findByText(NO_REPORTS);
   expect(
-    screen.getByRole("link", { name: REPORT_A_FAULT }).getAttribute("href")
+    within(screen.getByRole("status"))
+      .getByRole("link", { name: REPORT_A_FAULT })
+      .getAttribute("href")
   ).toBe("/reports/new");
 });
 
@@ -202,9 +204,9 @@ it("loads an estate-scoped history and preselects that estate for a new report",
     "/resident/reports",
     expect.objectContaining({ params: { query: { estateId: "maple" } } })
   );
-  expect(
-    screen.getByRole("link", { name: REPORT_A_FAULT }).getAttribute("href")
-  ).toBe("/reports/new?estateId=maple");
+  for (const link of screen.getAllByRole("link", { name: REPORT_A_FAULT })) {
+    expect(link.getAttribute("href")).toBe("/reports/new?estateId=maple");
+  }
 });
 
 it("starts from the first page when the selected estate changes", async () => {
@@ -260,4 +262,14 @@ it("puts Report a fault in the page header beside the level-1 heading", async ()
   }
   within(header).getByRole("link", { name: REPORT_A_FAULT });
   await screen.findByText(NO_REPORTS);
+});
+
+it("uses the shared loading and empty states", async () => {
+  get.mockResolvedValue({ data: { items: [], nextCursor: null } });
+  renderWithProviders(<Page />);
+  screen.getByRole("status", { name: "Loading reports…" });
+  await screen.findByText("No reports yet");
+  within(screen.getByRole("status")).getByRole("link", {
+    name: REPORT_A_FAULT,
+  });
 });

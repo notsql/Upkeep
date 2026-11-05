@@ -10,7 +10,10 @@ import {
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { Textarea } from "@proj/ui/components/textarea";
+import { History } from "lucide-react";
 import { type SubmitEvent, useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import {
   type Asset,
   retirementDateError,
@@ -256,7 +259,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
           ) : null}
           <h2 className="text-xl font-semibold">Lifecycle history</h2>
           {history.isPending ? (
-            <p role="status">Loading lifecycle history…</p>
+            <LoadingState label="Loading lifecycle history…" rows={2} />
           ) : null}
           {history.error ? (
             <div role="alert">
@@ -265,7 +268,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
             </div>
           ) : null}
           {history.data?.length === 0 ? (
-            <p>No lifecycle events recorded.</p>
+            <EmptyState icon={History} title="No lifecycle events recorded." />
           ) : null}
           <ol aria-label="Lifecycle events" className="grid gap-3">
             {history.data?.map((event) => (

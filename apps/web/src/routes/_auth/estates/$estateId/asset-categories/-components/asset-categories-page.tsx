@@ -1,6 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
-import { Checkbox } from "@proj/ui/components/checkbox";
 import {
   Table,
   TableBody,
@@ -9,9 +9,12 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { Tabs, TabsList, TabsTrigger } from "@proj/ui/components/tabs";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/empty-state";
 import { IntervalBadge } from "@/components/interval-badge";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ServiceIntervalDialog } from "@/components/service-interval-dialog";
@@ -27,6 +30,7 @@ import {
   useSetCategoryServiceInterval,
 } from "@/lib/service-intervals";
 import { CategorySummaryCards } from "@/routes/_auth/estates/$estateId/asset-categories/-components/category-summary-cards";
+import { SilentFailureDialog } from "@/routes/_auth/estates/$estateId/asset-categories/-components/silent-failure-dialog";
 
 type IntervalFilter = "ALL" | IntervalUnit | "NONE";
 
@@ -71,17 +75,17 @@ function missing(category: EstateAssetCategory): boolean {
 function CategoryRow({
   category,
   disabled,
-  onChange,
+  onToggleFlag,
   onEditInterval,
 }: {
   category: EstateAssetCategory;
   disabled: boolean;
-  onChange: (category: string, failsSilently: boolean) => void;
+  onToggleFlag: (category: EstateAssetCategory) => void;
   onEditInterval: (category: EstateAssetCategory) => void;
 }) {
-  const change = useCallback(
-    (checked: boolean) => onChange(category.code, checked),
-    [category.code, onChange]
+  const toggleFlag = useCallback(
+    () => onToggleFlag(category),
+    [category, onToggleFlag]
   );
   const editInterval = useCallback(
     () => onEditInterval(category),
@@ -89,33 +93,57 @@ function CategoryRow({
   );
   return (
     <TableRow>
-      <TableHead scope="row">{category.label}</TableHead>
-      <TableCell>{category.activeAssetCount}</TableCell>
+      <TableHead className="font-medium" scope="row">
+        {category.label}
+      </TableHead>
+      <TableCell className="tabular-nums">
+        {category.activeAssetCount}
+      </TableCell>
       <TableCell>
-        <Checkbox
-          aria-label={`${category.label} fails silently`}
-          checked={category.failsSilently}
-          disabled={disabled}
-          onCheckedChange={change}
-        />
+        {category.failsSilently ? (
+          <Badge variant="secondary">Fails silently</Badge>
+        ) : (
+          <span className="text-muted-foreground">No</span>
+        )}
       </TableCell>
       <TableCell>
         <IntervalBadge interval={category.serviceInterval} />
       </TableCell>
-      <TableCell>{lastChanged(category)}</TableCell>
+      <TableCell className="text-muted-foreground text-sm">
+        {lastChanged(category)}
+      </TableCell>
       <TableCell>
-        <Button
-          aria-label={`Edit service interval for ${category.label}`}
-          disabled={disabled}
-          onClick={editInterval}
-          size="sm"
-          variant="outline"
-        >
-          Edit interval
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            aria-label={`Edit service interval for ${category.label}`}
+            disabled={disabled}
+            onClick={editInterval}
+            size="sm"
+            variant="outline"
+          >
+            Edit interval
+          </Button>
+          <Button
+            aria-label={
+              category.failsSilently
+                ? `Stop flagging ${category.label}`
+                : `Flag ${category.label} as failing silently`
+            }
+            disabled={disabled}
+            onClick={toggleFlag}
+            size="sm"
+            variant="ghost"
+          >
+            {category.failsSilently ? "Stop flagging" : "Flag"}
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );
+}
+
+function byLabel(a: EstateAssetCategory, b: EstateAssetCategory): number {
+  return a.label.localeCompare(b.label);
 }
 
 export function AssetCategoriesPage({ estateId }: { estateId: string }) {
@@ -123,6 +151,7 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
   const setSilentFailure = useSetSilentFailure(estateId);
   const setServiceInterval = useSetCategoryServiceInterval(estateId);
   const [error, setError] = useState<string>();
+  const [flagging, setFlagging] = useState<EstateAssetCategory>();
   const [editing, setEditing] = useState<EstateAssetCategory>();
   const [filter, setFilter] = useState<IntervalFilter>("ALL");
   const { mutateAsync: saveInterval } = setServiceInterval;
@@ -140,27 +169,40 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
   );
   const showMissing = useCallback(() => setFilter("NONE"), []);
   const chooseFilter = useCallback(
-    (event: { currentTarget: HTMLButtonElement }) =>
-      setFilter(event.currentTarget.value as IntervalFilter),
+    (value: unknown) => setFilter(value as IntervalFilter),
     []
   );
+  const clearFilter = useCallback(() => setFilter("ALL"), []);
   const { mutate } = setSilentFailure;
-  const change = useCallback(
-    (category: string, failsSilently: boolean) => {
-      setError(undefined);
-      mutate(
-        { category, failsSilently },
-        {
-          onSuccess: () => toast.success("Asset category updated."),
-          onError: (cause) => setError(cause.message),
-        }
-      );
-    },
-    [mutate]
-  );
+  const openFlag = useCallback((category: EstateAssetCategory) => {
+    setError(undefined);
+    setFlagging(category);
+  }, []);
+  const closeFlag = useCallback(() => {
+    setError(undefined);
+    setFlagging(undefined);
+  }, []);
+  const confirmFlag = useCallback(() => {
+    if (!flagging) {
+      return;
+    }
+    setError(undefined);
+    mutate(
+      { category: flagging.code, failsSilently: !flagging.failsSilently },
+      {
+        onSuccess: () => {
+          setFlagging(undefined);
+          toast.success("Asset category updated.");
+        },
+        onError: (cause) => setError(cause.message),
+      }
+    );
+  }, [flagging, mutate]);
   const { data } = categories;
   const shown =
-    data?.categories.filter((category) => matches(category, filter)) ?? [];
+    data?.categories
+      .filter((category) => matches(category, filter))
+      .sort(byLabel) ?? [];
 
   return (
     <PageLayout className="min-w-0">
@@ -169,16 +211,11 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
         title="Asset categories"
       />
       {categories.isPending ? (
-        <p aria-live="polite">Loading asset categories…</p>
+        <LoadingState label="Loading asset categories…" variant="table" />
       ) : null}
       {categories.error ? (
         <Alert variant="destructive">
           <AlertDescription>{categories.error.message}</AlertDescription>
-        </Alert>
-      ) : null}
-      {error ? (
-        <Alert className="mb-4" variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
       {data ? (
@@ -187,22 +224,18 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
             categories={data.categories}
             onShowMissing={showMissing}
           />
-          <fieldset className="flex flex-wrap gap-2">
-            <legend className="sr-only">Filter by service interval</legend>
-            {FILTERS.map((option) => (
-              <Button
-                aria-pressed={filter === option.value}
-                key={option.value}
-                onClick={chooseFilter}
-                size="sm"
-                type="button"
-                value={option.value}
-                variant={filter === option.value ? "default" : "outline"}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </fieldset>
+          <Tabs onValueChange={chooseFilter} value={filter}>
+            <TabsList
+              aria-label="Filter by service interval"
+              className="max-w-full flex-wrap"
+            >
+              {FILTERS.map((option) => (
+                <TabsTrigger key={option.value} value={option.value}>
+                  {option.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           {data.estateActive ? null : (
             <p className="text-muted-foreground" role="note">
               This estate is inactive, so its asset categories cannot be
@@ -210,9 +243,15 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
             </p>
           )}
           {shown.length === 0 ? (
-            <p className="text-muted-foreground">
-              No categories match this filter.
-            </p>
+            <EmptyState
+              action={
+                <Button onClick={clearFilter} type="button" variant="outline">
+                  Clear filters
+                </Button>
+              }
+              description="No category has a service interval of this kind."
+              title="No matching categories"
+            />
           ) : (
             <Table>
               <TableHeader>
@@ -222,7 +261,7 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
                   <TableHead>Fails silently</TableHead>
                   <TableHead>Service interval</TableHead>
                   <TableHead>Last changed</TableHead>
-                  <TableHead>
+                  <TableHead className="text-right">
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
@@ -233,14 +272,23 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
                     category={category}
                     disabled={!data.estateActive || setSilentFailure.isPending}
                     key={category.code}
-                    onChange={change}
                     onEditInterval={setEditing}
+                    onToggleFlag={openFlag}
                   />
                 ))}
               </TableBody>
             </Table>
           )}
         </section>
+      ) : null}
+      {flagging ? (
+        <SilentFailureDialog
+          category={flagging}
+          error={error}
+          onCancel={closeFlag}
+          onConfirm={confirmFlag}
+          pending={setSilentFailure.isPending}
+        />
       ) : null}
       {editing ? (
         <ServiceIntervalDialog

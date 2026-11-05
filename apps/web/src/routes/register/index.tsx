@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-title";
 
 interface RegisterSearch {
   error?: string;
@@ -15,7 +16,7 @@ interface RegisterSearch {
 
 export const Route = createFileRoute("/register/")({
   component: RegisterRoute,
-  head: () => ({ meta: [{ title: "Create an account" }] }),
+  head: () => pageHead("Create an account"),
   validateSearch: (search: Record<string, unknown>): RegisterSearch => ({
     error: typeof search.error === "string" ? search.error : undefined,
   }),

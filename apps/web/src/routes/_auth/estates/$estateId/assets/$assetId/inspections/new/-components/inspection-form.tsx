@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -165,7 +166,7 @@ export function InspectionForm({
     []
   );
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canCreate) {
     return <p role="alert">Inspection recording is unavailable.</p>;
@@ -189,7 +190,7 @@ export function InspectionForm({
     );
   }
   if (!observed) {
-    return <p role="status">Loading asset…</p>;
+    return <LoadingState label="Loading asset…" rows={2} />;
   }
   const active =
     observed.estateActive && observed.assetActive && observed.locationActive;

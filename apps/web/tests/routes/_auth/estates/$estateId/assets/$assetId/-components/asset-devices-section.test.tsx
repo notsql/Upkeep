@@ -149,7 +149,7 @@ describe("AssetDevicesSection", () => {
   it("says when an asset has no devices, and hides registration on a deactivated asset", async () => {
     devices = [];
     renderSection(false);
-    await screen.findByText("No devices are registered to this asset yet.");
+    await screen.findByText("No devices yet");
     expect(screen.queryByRole("link", { name: "Register device" })).toBeNull();
   });
 });

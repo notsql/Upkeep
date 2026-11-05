@@ -3,9 +3,11 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
+import { Plus } from "lucide-react";
 import { useCallback } from "react";
 
 export type RoleOption =
@@ -42,6 +44,9 @@ export const presetOptions: RoleOption[] = [
   },
 ];
 
+const CREATE_ROLE_VALUE = "__create-role__";
+const CREATE_ROLE_LABEL = "Create new role…";
+
 export function roleValue(option: RoleOption): string {
   return option.customRoleId ?? option.role;
 }
@@ -68,33 +73,45 @@ export function RolePicker({
   label,
   options,
   disabled = false,
+  onCreateRole,
 }: {
   value: string;
   onChange: (role: RoleOption) => void;
   label: string;
   options: RoleOption[];
   disabled?: boolean;
+  /** When given, the list ends with "Create new role…", which calls this instead of selecting. */
+  onCreateRole?: () => void;
 }) {
   const change = useCallback(
     (selected: string | null) => {
+      if (selected === CREATE_ROLE_VALUE) {
+        onCreateRole?.();
+        return;
+      }
       const option = options.find((item) => roleValue(item) === selected);
       if (option) {
         onChange(option);
       }
     },
-    [onChange, options]
+    [onChange, onCreateRole, options]
   );
   return (
     <Select
       disabled={disabled}
-      items={options.map((option) => ({
-        value: roleValue(option),
-        label: option.label,
-      }))}
+      items={[
+        ...options.map((option) => ({
+          value: roleValue(option),
+          label: option.label,
+        })),
+        ...(onCreateRole
+          ? [{ value: CREATE_ROLE_VALUE, label: CREATE_ROLE_LABEL }]
+          : []),
+      ]}
       onValueChange={change}
       value={value}
     >
-      <SelectTrigger aria-label={label}>
+      <SelectTrigger aria-label={label} className="w-full">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -103,6 +120,15 @@ export function RolePicker({
             {option.label}
           </SelectItem>
         ))}
+        {onCreateRole ? (
+          <>
+            <SelectSeparator />
+            <SelectItem value={CREATE_ROLE_VALUE}>
+              <Plus aria-hidden="true" />
+              {CREATE_ROLE_LABEL}
+            </SelectItem>
+          </>
+        ) : null}
       </SelectContent>
     </Select>
   );

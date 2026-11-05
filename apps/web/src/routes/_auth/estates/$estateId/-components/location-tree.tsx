@@ -5,8 +5,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@proj/ui/components/dropdown-menu";
-import { ChevronDown, ChevronRight, MoreHorizontal } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  MapPin,
+  MoreHorizontal,
+} from "lucide-react";
 import { useCallback, useId } from "react";
+import { EmptyState } from "@/components/empty-state";
 import type { LocationNode } from "@/lib/locations";
 import type { Panel } from "@/routes/_auth/estates/$estateId/-components/location-panel";
 
@@ -50,7 +56,9 @@ export function LocationTree({
   onToggle,
   searching,
   query,
+  onClearSearch,
 }: {
+  onClearSearch: () => void;
   tree: LocationNode[];
   canCreate: boolean;
   canCreateFloors: boolean;
@@ -65,12 +73,30 @@ export function LocationTree({
 }) {
   if (!tree.length) {
     return (
-      <p className="mt-4 text-sm" role="status">
-        {searching
-          ? `No locations match “${query.trim()}”.`
-          : "No locations yet."}
-        {!searching && canCreate ? " Add a block to start." : ""}
-      </p>
+      <div className="mt-4">
+        {searching ? (
+          <EmptyState
+            action={
+              <Button onClick={onClearSearch} variant="outline">
+                Clear filters
+              </Button>
+            }
+            description={`No locations match “${query.trim()}”.`}
+            icon={MapPin}
+            title="No matching locations"
+          />
+        ) : (
+          <EmptyState
+            description={
+              canCreate
+                ? "Add a block to start."
+                : "Blocks, levels and common areas appear here once added."
+            }
+            icon={MapPin}
+            title="No locations yet"
+          />
+        )}
+      </div>
     );
   }
   return (

@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { pageHead } from "@/lib/page-title";
 import {
   type EstateDirectoryFilters,
   validateEstateDirectorySearch,
@@ -9,7 +10,7 @@ import { EstateListPage } from "@/routes/_auth/estates/-components/estate-list-p
 export const Route = createFileRoute("/_auth/estates/")({
   validateSearch: validateEstateDirectorySearch,
   component: EstateDirectoryRoute,
-  head: () => ({ meta: [{ title: "Estates" }] }),
+  head: () => pageHead("Estates"),
 });
 
 function EstateDirectoryRoute() {

@@ -34,11 +34,15 @@ The page uses the projection's estate label and shows an access alert after
 live revocation. Protected list queries are enabled only with document access.
 
 UI uses shared shadcn Button, Card, Input, Label, Select, Table and Dialog.
+The upload form is not inline: an "Upload document" button in the page header
+(upload-capable users only) opens a Dialog holding the form. A confirmed upload
+closes the dialog and the page announces the success; errors keep it open with
+the selection. Escape/close is ignored while an upload is pending.
 Upload accepts Invoice/Service report and a single file; help identifies
 PDF/JPEG/PNG and 5 MB before submission. Client checks empty/type/size errors;
 server validation remains authoritative. Pending submission disables repeat
 actions and announces “Uploading…”. Confirmed 201 announces/toasts
-`"{filename}" uploaded successfully.`, clears the file/type, and refreshes lists.
+`"{filename}" uploaded successfully.`, clears the file/type, closes the dialog and refreshes lists.
 Errors retain selection. A transport failure explains unconfirmed completion and
 asks the user to refresh the list before retrying. No upload auto-retries.
 
@@ -49,7 +53,7 @@ asks the user to refresh the list before retrying. No upload auto-retries.
 | `useDocumentAccess` | GET `/access/context` via `useAppAccess` | `[userId, "app-access"]`; derives estate label/read/upload capability |
 | `useDocuments` | GET `/estates/{estateId}/documents` | `[userId, "documents", estateId, filters]`, filename/documentType/cursor query, abort signal, no retry |
 | `useUploadDocument` | POST `/estates/{estateId}/documents` | FormData `documentType` + one `file`; accepts only confirmed 201; no retry |
-| `useDownloadDocument` | GET `/estates/{estateId}/documents/{documentId}/content` | `parseAs: "blob"`, authenticated client, temporary object URL downloaded then revoked; no retry |
+| `useDownloadDocument` | GET `/estates/{estateId}/documents/{documentId}/content` | `parseAs: "blob"`, authenticated client, temporary object URL clicked then revoked 1 s later (Safari cancels the save if revoked in the same task); no retry |
 | `useDeleteDocument` | DELETE `/estates/{estateId}/documents/{documentId}` | Requires confirmed 204, no retry |
 
 Upload and deletion invalidate `[userId, "documents", estateId]`, covering every
@@ -102,3 +106,13 @@ document/work-order read access, and Delete still depends on per-row `canDelete`
 The same page-level dialogs, errors, mutations and invalidations handle all
 mobile actions; no second list request or hidden duplicate controls are added.
 Filename/type filters and cursor paging remain URL-backed; pagination buttons wrap.
+
+## Screen states
+
+`document-filters.tsx` renders a `FilterBar` (`search` landmark "Filter
+documents"): filename search grows, "Filter by type" is `w-full sm:w-48` with a
+full-width trigger, Search/Clear search are actions. `DocumentList` takes
+`onClearFilters` and `createAction`: no matches shows the "No files match your
+search" `EmptyState` with Clear filters; an empty estate shows "No documents
+uploaded" with the Upload document dialog trigger (Upload icon) when the user can
+upload. Access, list, picker, link and history loads use `LoadingState`.

@@ -1,6 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
-import { Empty } from "@proj/ui/components/empty";
 import {
   Table,
   TableBody,
@@ -10,6 +9,9 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { Gauge } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -74,9 +76,9 @@ export function FailureRiskPage({ estateId }: { estateId: string }) {
         title="Failure risk"
       />
       {risks.isPending ? (
-        <p aria-live="polite" className="mt-6">
-          Loading forecasts…
-        </p>
+        <div className="mt-6">
+          <LoadingState label="Loading forecasts…" variant="table" />
+        </div>
       ) : null}
       {risks.error ? (
         <Alert className="mt-6" variant="destructive">
@@ -84,9 +86,13 @@ export function FailureRiskPage({ estateId }: { estateId: string }) {
         </Alert>
       ) : null}
       {risks.data && risks.data.length === 0 ? (
-        <Empty className="bg-card mt-6 border border-dashed" role="status">
-          There are no assets to forecast in this estate yet.
-        </Empty>
+        <div className="mt-6">
+          <EmptyState
+            description="Forecasts appear once assets are added to this estate."
+            icon={Gauge}
+            title="There are no assets to forecast in this estate yet."
+          />
+        </div>
       ) : null}
       {risks.data?.length ? (
         <Table className="mt-6">

@@ -1,3 +1,4 @@
+import { Button } from "@proj/ui/components/button";
 import {
   Card,
   CardContent,
@@ -11,7 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { FileText } from "lucide-react";
 import type { ReactNode } from "react";
+import { EmptyState } from "@/components/empty-state";
 import type { DocumentFilters, EstateDocument } from "@/lib/documents";
 import { useMobile } from "@/lib/use-mobile";
 import {
@@ -26,6 +29,8 @@ export function DocumentList({
   filename,
   documentType,
   renderAssets,
+  onClearFilters,
+  createAction,
   ...actions
 }: Omit<DocumentRowProps, "document" | "assets" | "showSize"> & {
   items?: EstateDocument[];
@@ -33,18 +38,38 @@ export function DocumentList({
   filename?: string;
   documentType?: DocumentFilters["documentType"];
   renderAssets?: (document: EstateDocument) => ReactNode;
+  onClearFilters?: () => void;
+  createAction?: ReactNode;
 }) {
   const mobile = useMobile();
   if (failed || !items) {
     return null;
   }
   if (!items.length) {
+    const filtered = !!(filename || documentType);
+    if (filtered) {
+      return (
+        <EmptyState
+          action={
+            onClearFilters ? (
+              <Button onClick={onClearFilters} variant="outline">
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+          description="Try a different filename or type, or clear the filters."
+          icon={FileText}
+          title="No files match your search"
+        />
+      );
+    }
     return (
-      <p>
-        {filename || documentType
-          ? "No files match your search"
-          : "No documents uploaded"}
-      </p>
+      <EmptyState
+        action={createAction}
+        description="Uploaded invoices and service reports will appear here."
+        icon={FileText}
+        title="No documents uploaded"
+      />
     );
   }
   if (mobile) {

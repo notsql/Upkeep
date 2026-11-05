@@ -22,6 +22,11 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+async function openInviteDialog(): Promise<void> {
+  fireEvent.click(await screen.findByRole("button", { name: "Invite member" }));
+  await screen.findByRole("dialog", { name: "Invite member" });
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   vi.mocked(api.GET).mockImplementation((path) => {
@@ -93,6 +98,7 @@ it("defaults to Council even when another eligible role is listed first", async 
     response: new Response(null, { status: 201 }),
   } as never);
   renderWithProviders(<CouncilPage estateId="estate" />);
+  await openInviteDialog();
   expect(
     (await screen.findByRole("combobox", { name: "Invitation role" }))
       .textContent
@@ -118,6 +124,7 @@ it("lets a non-owner Manager invite Crew with the selected stored role", async (
     response: new Response(null, { status: 201 }),
   } as never);
   renderWithProviders(<CouncilPage estateId="estate" />);
+  await openInviteDialog();
   fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
     target: { value: "crew@example.com" },
   });

@@ -10,6 +10,7 @@ import {
 } from "@proj/ui/components/combobox";
 import { Label } from "@proj/ui/components/label";
 import { type FormEvent, useCallback, useId, useMemo, useState } from "react";
+import { FilterBar } from "@/components/filter-bar";
 import type { EstateReportFilters } from "@/lib/estate-reports";
 import type { Location } from "@/lib/locations";
 
@@ -122,8 +123,20 @@ export function ReportFilters({
 
   return (
     <form className="space-y-3" noValidate onSubmit={apply}>
-      <div className="grid items-end gap-4 sm:grid-cols-3">
-        <div className="space-y-2">
+      <FilterBar
+        actions={
+          <>
+            <Button type="submit">Apply filters</Button>
+            {filtered ? (
+              <Button onClick={clear} type="button" variant="outline">
+                Clear filters
+              </Button>
+            ) : null}
+          </>
+        }
+        label="Filter reports"
+      >
+        <div className="w-full space-y-2 sm:w-48">
           <Label htmlFor={`${id}-block`}>Block</Label>
           <Combobox
             items={choices}
@@ -143,11 +156,11 @@ export function ReportFilters({
             </ComboboxContent>
           </Combobox>
         </div>
-        <fieldset className="space-y-2 sm:col-span-2">
+        <fieldset className="w-full space-y-2 sm:w-auto">
           <legend className="text-sm font-medium">
             <b>Level position</b>
           </legend>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:flex">
             <LevelPositionFilter
               errorId={error ? `${id}-error` : undefined}
               id={`${id}-minimum`}
@@ -168,7 +181,7 @@ export function ReportFilters({
             />
           </div>
         </fieldset>
-      </div>
+      </FilterBar>
       {error ? (
         <Alert id={`${id}-error`} role="alert" variant="destructive">
           <AlertDescription>
@@ -177,14 +190,6 @@ export function ReportFilters({
           </AlertDescription>
         </Alert>
       ) : null}
-      <div className="flex gap-2">
-        <Button type="submit">Apply filters</Button>
-        {filtered ? (
-          <Button onClick={clear} type="button" variant="outline">
-            Clear filters
-          </Button>
-        ) : null}
-      </div>
     </form>
   );
 }
@@ -216,7 +221,7 @@ function LevelPositionFilter({
   );
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 sm:w-48">
       <Label htmlFor={id}>{label}</Label>
       <Combobox
         defaultValue={value}

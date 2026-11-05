@@ -9,7 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { FileText } from "lucide-react";
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { type EstateDocument, useDownloadDocument } from "@/lib/documents";
 import {
   useWorkOrderDocumentAccess,
@@ -79,7 +82,9 @@ export function WorkOrderDocuments({
     <Card>
       <CardContent className="min-w-0 space-y-4">
         <h2 className="text-lg font-medium">Documents</h2>
-        {documents.isPending ? <p role="status">Loading documents…</p> : null}
+        {documents.isPending ? (
+          <LoadingState label="Loading documents…" variant="table" />
+        ) : null}
         {documents.isError ? (
           <Alert variant="destructive">
             <AlertDescription>
@@ -92,7 +97,10 @@ export function WorkOrderDocuments({
         ) : null}
         {download.isError ? <p role="alert">{download.error.message}</p> : null}
         {!documents.isError && documents.data?.items.length === 0 ? (
-          <p>No documents linked to this work order.</p>
+          <EmptyState
+            icon={FileText}
+            title="No documents linked to this work order"
+          />
         ) : null}
         {!documents.isError && documents.data?.items.length ? (
           <Table>

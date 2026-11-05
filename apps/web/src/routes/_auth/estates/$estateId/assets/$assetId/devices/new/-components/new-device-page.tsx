@@ -2,6 +2,7 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
@@ -62,7 +63,7 @@ export function NewDevicePage({
         description="Add a device, choose its measurements and set its reporting interval."
         title="Register device"
       />
-      {loading ? <p role="status">Loading asset…</p> : null}
+      {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}
       {loading || error || allowed ? null : (
         <p role="alert">

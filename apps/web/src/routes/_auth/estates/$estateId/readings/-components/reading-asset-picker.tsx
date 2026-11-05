@@ -10,6 +10,7 @@ import {
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { type ChangeEvent, useCallback, useState } from "react";
+import { LoadingState } from "@/components/loading-state";
 import { type ReadingAsset, useReadingAssets } from "@/lib/readings";
 
 function ReadingAssetChoice({
@@ -101,7 +102,9 @@ export function ReadingAssetPicker({
             All assets
           </Button>
         ) : null}
-        {assets.isPending ? <p role="status">Loading assets…</p> : null}
+        {assets.isPending ? (
+          <LoadingState label="Loading assets…" rows={2} />
+        ) : null}
         {assets.error ? (
           <p role="alert">
             {assets.error.message}{" "}

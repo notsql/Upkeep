@@ -2,9 +2,12 @@ import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { Cpu, Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DeviceStatusBadge } from "@/components/device-status-badge";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import {
   type Device,
   deviceMetrics,
@@ -77,9 +80,7 @@ export function AssetDevicesSection({
             </div>
           </div>
           {devices.isPending ? (
-            <p aria-live="polite" className="mt-4">
-              Loading devices…
-            </p>
+            <LoadingState label="Loading devices…" rows={2} />
           ) : null}
           {devices.error ? (
             <p className="text-destructive mt-4" role="alert">
@@ -87,9 +88,25 @@ export function AssetDevicesSection({
             </p>
           ) : null}
           {devices.data?.length === 0 ? (
-            <p className="text-muted-foreground mt-4">
-              No devices are registered to this asset yet.
-            </p>
+            <div className="mt-4">
+              <EmptyState
+                action={
+                  canRegister ? (
+                    <Link
+                      className={buttonVariants()}
+                      params={{ estateId, assetId }}
+                      to="/estates/$estateId/assets/$assetId/devices/new"
+                    >
+                      <Plus aria-hidden="true" />
+                      Register device
+                    </Link>
+                  ) : undefined
+                }
+                description="Sensors registered to this asset will appear here."
+                icon={Cpu}
+                title="No devices yet"
+              />
+            </div>
           ) : null}
           <ul aria-label="Devices" className="mt-4 grid gap-3">
             {devices.data?.map((device) => (

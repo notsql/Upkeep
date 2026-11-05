@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@proj/ui/components/dialog";
 import { Link } from "@tanstack/react-router";
+import { LoadingState } from "@/components/loading-state";
 import type { DocumentAsset } from "@/lib/asset-documents";
 import type { EstateDocument } from "@/lib/documents";
 import { DocumentAssetPicker } from "./document-asset-picker";
@@ -105,7 +106,7 @@ function AssetLinkBody({
   return (
     <>
       {state.association.isPending ? (
-        <p role="status">Loading asset link…</p>
+        <LoadingState label="Loading asset link…" rows={1} />
       ) : null}
       {state.association.isError ? (
         <Alert variant="destructive">

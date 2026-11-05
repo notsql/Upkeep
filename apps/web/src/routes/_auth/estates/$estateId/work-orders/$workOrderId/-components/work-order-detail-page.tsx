@@ -4,6 +4,7 @@ import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
@@ -24,7 +25,7 @@ export function WorkOrderDetailPage({
   );
   const retry = useCallback(() => order.refetch(), [order.refetch]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Work order unavailable.</p>;
@@ -40,7 +41,7 @@ export function WorkOrderDetailPage({
     );
   }
   if (!order.data) {
-    return <p role="status">Loading work order…</p>;
+    return <LoadingState label="Loading work order…" rows={2} />;
   }
   const { data } = order;
   return (

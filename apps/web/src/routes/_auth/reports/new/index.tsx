@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-title";
 import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page";
 
 export const Route = createFileRoute("/_auth/reports/new/")({
@@ -8,7 +9,7 @@ export const Route = createFileRoute("/_auth/reports/new/")({
       : {}),
   }),
   component: NewReportRoute,
-  head: () => ({ meta: [{ title: "Report a fault" }] }),
+  head: () => pageHead("Report a fault"),
 });
 
 function NewReportRoute() {

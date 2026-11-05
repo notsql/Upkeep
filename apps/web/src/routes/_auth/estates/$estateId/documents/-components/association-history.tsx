@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { LoadingState } from "@/components/loading-state";
 import type { AssociationDialogState } from "./use-document-work-order-dialog";
 
 export function AssociationHistory({
@@ -12,7 +13,7 @@ export function AssociationHistory({
     <section aria-label="Association history" className="space-y-3">
       <h3 className="font-medium">Association history</h3>
       {history.isPending ? (
-        <p role="status">Loading association history…</p>
+        <LoadingState label="Loading association history…" rows={2} />
       ) : null}
       {history.isError ? (
         <p role="alert">

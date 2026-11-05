@@ -72,6 +72,7 @@ const DOCUMENTS_HEADING = /documents/iu;
 const SUPPORTED_FORMATS = /PDF.*JPEG.*PNG/iu;
 const MAX_FILE_SIZE = /5 MB/u;
 const UPLOAD_FILE = /^upload$|^upload file$/iu;
+const UPLOAD_DOCUMENT = /^upload document$/iu;
 const UPLOAD_SUCCESS = /invoice\.pdf.*uploaded successfully/iu;
 const UPLOADING = /uploading/iu;
 const EMPTY_FILE = /empty|at least one byte/iu;
@@ -190,7 +191,18 @@ function fileInput() {
   return screen.getByLabelText<HTMLInputElement>(FILE_INPUT);
 }
 
+async function openUpload() {
+  const [trigger] = await screen.findAllByRole("button", {
+    name: UPLOAD_DOCUMENT,
+  });
+  fireEvent.click(trigger as HTMLElement);
+  await screen.findByRole("dialog");
+}
+
 async function chooseFile(file = selectedFile()) {
+  if (!screen.queryByRole("dialog")) {
+    await openUpload();
+  }
   await chooseOption(
     screen.getByRole("combobox", { name: DOCUMENT_TYPE }),
     "Invoice"
@@ -271,9 +283,30 @@ it.each(["MANAGER", "COUNCIL", "CREW", "CUSTOM"])(
   }
 );
 
+it("groups the filename search and type filter in a search toolbar", async () => {
+  await openDocuments();
+  await screen.findByRole("search", { name: "Filter documents" });
+});
+
+it("keeps the upload form behind an Upload document dialog", async () => {
+  await openDocuments();
+  await screen.findByText(filename);
+  expect(screen.queryByLabelText(FILE_INPUT)).toBeNull();
+
+  await openUpload();
+  const dialog = within(screen.getByRole("dialog"));
+  dialog.getByLabelText(FILE_INPUT);
+  await chooseFile();
+  fireEvent.click(dialog.getByRole("button", { name: UPLOAD_FILE }));
+
+  await screen.findByText(UPLOAD_SUCCESS);
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
 it("shows accepted formats, the 5 MB cap and a single-file chooser", async () => {
   await openDocuments();
   await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
+  await openUpload();
 
   screen.getByText(SUPPORTED_FORMATS);
   screen.getByText(MAX_FILE_SIZE);
@@ -419,8 +452,11 @@ it("announces a confirmed upload without waiting for the list refresh", async ()
   try {
     await screen.findByText(UPLOAD_SUCCESS);
     expect(
-      (screen.getByRole("button", { name: UPLOAD_FILE }) as HTMLButtonElement)
-        .disabled
+      (
+        screen.getByRole("button", {
+          name: UPLOAD_DOCUMENT,
+        }) as HTMLButtonElement
+      ).disabled
     ).toBe(false);
   } finally {
     await act(async () => refresh.resolve(success({ items, nextCursor })));
@@ -444,7 +480,7 @@ it("does not infer deletion rights merely from edit access", async () => {
   await openDocuments();
 
   await screen.findByText(filename);
-  screen.getByRole("button", { name: UPLOAD_FILE });
+  screen.getByRole("button", { name: UPLOAD_DOCUMENT });
   expect(screen.queryByRole("button", { name: DELETE_INVOICE })).toBeNull();
 });
 
@@ -601,9 +637,35 @@ it("downloads through the authenticated client and releases the temporary object
     )
   );
   expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
-  await waitFor(() =>
-    expect(revokeObjectURL).toHaveBeenCalledWith("blob:document-download")
+  await waitFor(
+    () =>
+      expect(revokeObjectURL).toHaveBeenCalledWith("blob:document-download"),
+    { timeout: 3000 }
   );
+});
+
+it("keeps the object URL alive after the download click so Safari can save it", async () => {
+  const revokeObjectURL = vi.fn();
+  vi.stubGlobal(
+    "URL",
+    class extends URL {
+      static createObjectURL = vi.fn(() => "blob:document-download");
+      static revokeObjectURL = revokeObjectURL;
+    }
+  );
+  const click = vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(() => undefined);
+  await openDocuments();
+  fireEvent.click(
+    await screen.findByRole("button", { name: DOWNLOAD_INVOICE })
+  );
+
+  await waitFor(() => expect(click).toHaveBeenCalled());
+  await act(async () => {
+    await Promise.resolve();
+  });
+  expect(revokeObjectURL).not.toHaveBeenCalled();
 });
 
 it("removes write controls after edit permission is revoked", async () => {

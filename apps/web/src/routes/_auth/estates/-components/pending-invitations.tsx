@@ -6,13 +6,9 @@ import {
   AlertTitle,
 } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@proj/ui/components/empty";
+import { MailOpen } from "lucide-react";
 import { useCallback } from "react";
+import { EmptyState } from "@/components/empty-state";
 import {
   useAcceptInAppInvitation,
   usePendingCouncilInvitations,
@@ -107,16 +103,13 @@ export function PendingInvitations({
   if (!invitations.data?.length) {
     if (showEmpty && invitations.isSuccess) {
       return (
-        <Empty className="bg-card my-4 rounded-xl border">
-          <EmptyHeader>
-            <EmptyTitle>
-              <h2>No pending invitations</h2>
-            </EmptyTitle>
-            <EmptyDescription>
-              You have no estate invitations to review right now.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
+        <div className="my-4">
+          <EmptyState
+            description="You have no estate invitations to review right now."
+            icon={MailOpen}
+            title="No pending invitations"
+          />
+        </div>
       );
     }
     return null;

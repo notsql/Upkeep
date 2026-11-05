@@ -17,6 +17,8 @@ import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Textarea } from "@proj/ui/components/textarea";
 import { type FormEvent, useCallback, useId, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { CompletionOutcome } from "@/components/work-order-completion";
 import {
   useChangeWorkOrderStatus,
@@ -173,7 +175,7 @@ function StatusHistory({
       </CardHeader>
       <CardContent>
         {history.isPending ? (
-          <p role="status">Loading status history…</p>
+          <LoadingState label="Loading status history…" rows={2} />
         ) : null}
         {history.isError ? (
           <Alert variant="destructive">
@@ -225,7 +227,7 @@ function OutcomeCorrections({
       </CardHeader>
       <CardContent className="space-y-4">
         {revisions.isPending ? (
-          <p role="status">Loading outcome corrections…</p>
+          <LoadingState label="Loading outcome corrections…" rows={2} />
         ) : null}
         {revisions.isError ? (
           <Alert variant="destructive">
@@ -238,7 +240,7 @@ function OutcomeCorrections({
           </Alert>
         ) : null}
         {!revisions.isError && revisions.data?.length === 0 ? (
-          <p className="text-muted-foreground">No corrections recorded.</p>
+          <EmptyState title="No corrections recorded" />
         ) : null}
         {revisions.isError
           ? null

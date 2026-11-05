@@ -1,11 +1,19 @@
 import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@proj/ui/components/tabs";
 import { Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DetailCard } from "@/components/detail-card";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset, useDeactivateAsset } from "@/lib/assets";
@@ -24,6 +32,17 @@ import { AssetDocumentsSection } from "./asset-documents-section";
 import { InspectionHistoryTable } from "./inspection-history-table";
 
 const NOT_RECORDED = "Not recorded";
+
+export const ASSET_TABS = [
+  { value: "overview", label: "Overview" },
+  { value: "maintenance", label: "Maintenance" },
+  { value: "inspections", label: "Inspections" },
+  { value: "documents", label: "Documents" },
+  { value: "costs", label: "Costs" },
+  { value: "devices", label: "Devices" },
+] as const;
+
+export type AssetTab = (typeof ASSET_TABS)[number]["value"];
 
 /** Why the service-interval override is read-only, if it is. */
 function intervalLock(
@@ -57,6 +76,7 @@ function InspectionRecordAction({
       params={{ estateId, assetId }}
       to="/estates/$estateId/assets/$assetId/inspections/new"
     >
+      <Plus aria-hidden="true" />
       Create inspection record
     </Link>
   );
@@ -65,10 +85,18 @@ function InspectionRecordAction({
 export function AssetDetailsPage({
   estateId,
   assetId,
+  tab = "overview",
+  onTabChange,
 }: {
   estateId: string;
   assetId: string;
+  tab?: AssetTab;
+  onTabChange?: (tab: AssetTab) => void;
 }) {
+  const changeTab = useCallback(
+    (value: unknown) => onTabChange?.(value as AssetTab),
+    [onTabChange]
+  );
   const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
   const categories = useAssetCategories();
@@ -87,9 +115,7 @@ export function AssetDetailsPage({
   return (
     <PageLayout>
       {asset.isPending ? (
-        <p aria-live="polite" className="mt-6">
-          Loading asset…
-        </p>
+        <LoadingState label="Loading asset…" rows={2} />
       ) : null}
       {asset.error ? (
         <Alert className="mt-6" variant="destructive">
@@ -145,72 +171,97 @@ export function AssetDetailsPage({
               </AlertDescription>
             </Alert>
           ) : null}
-          <DetailCard className="my-4">
-            <div>
-              <dt className="font-medium">Reference</dt>
-              <dd>{asset.data.reference}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Category</dt>
-              <dd>
-                {categories.data?.find(
-                  (category) => category.code === asset.data.category
-                )?.label ?? asset.data.category}
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium">Location</dt>
-              <dd>{asset.data.locationPath}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Installation date</dt>
-              <dd>{asset.data.installedOn ?? NOT_RECORDED}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Manufacturer</dt>
-              <dd>{asset.data.manufacturer ?? NOT_RECORDED}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Model</dt>
-              <dd>{asset.data.model ?? NOT_RECORDED}</dd>
-            </div>
-            <div>
-              <dt className="font-medium">Serial number</dt>
-              <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
-            </div>
-          </DetailCard>
-          <AssetDocumentsSection assetId={assetId} estateId={estateId} />
-          <InspectionHistoryTable assetId={assetId} estateId={estateId} />
-          <AssetRetirementPanel asset={asset.data} />
-          <AssetConditionSection
-            assetId={assetId}
-            canRecord={!asset.data.deactivatedAt}
-            estateId={estateId}
-          />
-          {asset.data.category === "PUMP" ? (
-            <AssetForecastCard assetId={assetId} estateId={estateId} />
-          ) : null}
-          <AssetMaintenanceSection
-            assetId={assetId}
-            canRecord={!asset.data.deactivatedAt}
-            estateId={estateId}
-          />
-          <AssetCostsSection assetId={assetId} estateId={estateId} />
-          {estate.data?.owned || estate.data?.canManageInvitationPermissions ? (
-            <AssetServiceIntervalCard
-              assetId={assetId}
-              estateId={estateId}
-              locked={intervalLock(
-                Boolean(estate.data.deactivatedAt),
-                Boolean(asset.data.deactivatedAt)
-              )}
-            />
-          ) : null}
-          <AssetDevicesSection
-            assetId={assetId}
-            canRegister={!asset.data.deactivatedAt}
-            estateId={estateId}
-          />
+          <Tabs className="mt-4" onValueChange={changeTab} value={tab}>
+            <TabsList
+              aria-label="Asset sections"
+              className="max-w-full flex-wrap"
+            >
+              {ASSET_TABS.map((option) => (
+                <TabsTrigger key={option.value} value={option.value}>
+                  {option.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            <TabsContent value="overview">
+              <DetailCard>
+                <div>
+                  <dt className="font-medium">Reference</dt>
+                  <dd>{asset.data.reference}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Category</dt>
+                  <dd>
+                    {categories.data?.find(
+                      (category) => category.code === asset.data.category
+                    )?.label ?? asset.data.category}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Location</dt>
+                  <dd>{asset.data.locationPath}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Installation date</dt>
+                  <dd>{asset.data.installedOn ?? NOT_RECORDED}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Manufacturer</dt>
+                  <dd>{asset.data.manufacturer ?? NOT_RECORDED}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Model</dt>
+                  <dd>{asset.data.model ?? NOT_RECORDED}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium">Serial number</dt>
+                  <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
+                </div>
+              </DetailCard>
+              <AssetConditionSection
+                assetId={assetId}
+                canRecord={!asset.data.deactivatedAt}
+                estateId={estateId}
+              />
+              {asset.data.category === "PUMP" ? (
+                <AssetForecastCard assetId={assetId} estateId={estateId} />
+              ) : null}
+            </TabsContent>
+            <TabsContent value="maintenance">
+              <AssetMaintenanceSection
+                assetId={assetId}
+                canRecord={!asset.data.deactivatedAt}
+                estateId={estateId}
+              />
+              {estate.data?.owned ||
+              estate.data?.canManageInvitationPermissions ? (
+                <AssetServiceIntervalCard
+                  assetId={assetId}
+                  estateId={estateId}
+                  locked={intervalLock(
+                    Boolean(estate.data.deactivatedAt),
+                    Boolean(asset.data.deactivatedAt)
+                  )}
+                />
+              ) : null}
+              <AssetRetirementPanel asset={asset.data} />
+            </TabsContent>
+            <TabsContent value="inspections">
+              <InspectionHistoryTable assetId={assetId} estateId={estateId} />
+            </TabsContent>
+            <TabsContent value="documents">
+              <AssetDocumentsSection assetId={assetId} estateId={estateId} />
+            </TabsContent>
+            <TabsContent value="costs">
+              <AssetCostsSection assetId={assetId} estateId={estateId} />
+            </TabsContent>
+            <TabsContent value="devices">
+              <AssetDevicesSection
+                assetId={assetId}
+                canRegister={!asset.data.deactivatedAt}
+                estateId={estateId}
+              />
+            </TabsContent>
+          </Tabs>
           {confirming ? (
             <DeactivateAssetDialog
               installedOn={asset.data.installedOn}

@@ -383,3 +383,17 @@ a repeated desktop header click. Filters, cursor trail, scroll preservation and
 the server's stable priority tie order are unchanged. Cards expose refreshing
 busy state and retain previous data while the request is pending. Desktop at
 >=768px keeps the sortable table; only one presentation is mounted.
+
+## Screen states
+
+Follows design-system "Screen states". The list's filters sit in a `FilterBar`
+(`search` landmark "Filter work orders"; reference search grows, Status/Category/
+Priority fields `w-full sm:w-48`, Apply/Clear filters in actions) inside the
+submitting form. Loading uses `LoadingState` (table variant; access checks use
+`rows={2}`). An empty estate shows the `EmptyState` "No work orders yet" with the
+Create work order link (Plus icon, also in the PageHeader actions) when the user
+can create; "No matching work orders" offers Clear filters, which keeps the sort.
+Detail: status history/corrections/documents load with `LoadingState`; "No
+corrections recorded" and "No documents linked to this work order" are
+`EmptyState`s. New: access/source/location loads use `LoadingState`; the
+"Work order already raised" screen uses `PageHeader`.

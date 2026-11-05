@@ -8,7 +8,10 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { FileText } from "lucide-react";
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import {
   useAssetDocumentAccess,
   useAssetDocuments,
@@ -74,7 +77,9 @@ function AssetDocumentsContent({
         <h2 className="text-lg font-semibold">Documents</h2>
       </CardHeader>
       <CardContent className="min-w-0 space-y-4">
-        {documents.isPending ? <p role="status">Loading documents…</p> : null}
+        {documents.isPending ? (
+          <LoadingState label="Loading documents…" rows={2} />
+        ) : null}
         {documents.isError ? (
           <Alert variant="destructive">
             <AlertDescription>
@@ -87,7 +92,11 @@ function AssetDocumentsContent({
         ) : null}
         {download.isError ? <p role="alert">{download.error.message}</p> : null}
         {documents.data?.items.length === 0 ? (
-          <p>No documents linked to this asset.</p>
+          <EmptyState
+            description="Documents linked to this asset will appear here."
+            icon={FileText}
+            title="No documents linked to this asset."
+          />
         ) : null}
         {documents.data?.items.length ? (
           <Table>
@@ -126,7 +135,7 @@ function AssetDocumentsContent({
           ) : null}
         </div>
         {selected && association.isPending ? (
-          <p role="status">Loading document link…</p>
+          <LoadingState label="Loading document link…" rows={2} />
         ) : null}
         {selected && association.isError ? (
           <Alert variant="destructive">

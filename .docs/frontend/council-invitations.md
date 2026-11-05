@@ -2,9 +2,49 @@
 
 ## Routes and components
 
-`/estates/$estateId/council` retains its URL and now presents Estate members.
-Its index.tsx and route-local -components folder contain CouncilPage,
-access-controls and access-confirmation. Managers see the four preset invitation roles and eligible custom roles,
+`/estates/$estateId/council` retains its URL and presents Estate members (the
+"Members" sidebar item). Its index.tsx and route-local -components folder contain
+CouncilPage, access-controls, access-confirmation, invitation-form,
+member-filters, estate-members-table, member-permission and role-picker.
+
+Layout, top to bottom:
+
+- PageHeader: title ("Estate members" for Managers, "Estate invitations" for
+  delegated inviters), one-line description, and a primary **Invite member**
+  button (only when `canInviteMembers`). The button opens a shadcn Dialog
+  titled "Invite member" that holds the email/role form; there is no inline
+  form on the page.
+- MemberFilters (Managers only): a shared `FilterBar` (search landmark
+  "Filter members") with a `type="search"` Input "Search members"
+  (name/email, also matches invitation email) and Select "Filter by role"
+  (All roles, Owner, the presets and custom roles; `Field w-full sm:w-48`,
+  trigger `w-full`). Filtering is client-side over the loaded roster and
+  invitations and applies to both tabs; the API has no server-side filters.
+- shadcn Tabs (Managers only), default **Members**: tab triggers "Members"
+  and "Pending invitations", each with a count Badge (total loaded rows).
+  Only the active panel is mounted.
+- Members tab: card with heading "Members" and an "N active" Badge, then the
+  paged Table (Name, Email, Role, Status, Actions). Role shows exactly one Badge:
+  "Owner" (with the hint "Full Manager access plus ownership") for the estate
+  owner, otherwise the preset label or custom role name. Status is always
+  "Active" for members. Loading is `LoadingState` "Loading members…" (table);
+  no roster is `EmptyState` "No members yet"; filters with no result show
+  `EmptyState` "No matching members" with a "Clear filters" button.
+- Pending invitations tab (and the whole page body for delegated inviters,
+  without tabs or filters): card with heading plus "N pending" Badge; each row
+  shows email, role Badge, delivery and expiry, and a **Revoke** button
+  (accessible name "Cancel invitation for <email>") that confirms in a Dialog.
+  Empty is `EmptyState` "No pending invitations"; filtered-out is "No matching
+  invitations" with "Clear filters". There is no resend action because the API
+  has no resend endpoint.
+- The access check before render shows `LoadingState` "Loading estate access…".
+
+Owner vs Manager: the API returns `role` (the estate membership role) and a
+separate `owner` boolean (`Estate.ownerUserId`). The owner always holds a
+MANAGER membership (creation and transfer both guarantee it), so the UI shows
+"Owner" in place of the Manager label rather than both.
+
+Managers see the four preset invitation roles and eligible custom roles,
 member roles, cancellation and removal. Shadcn Button, Card, Label, Input, Select,
 Badge, Table and Dialog supply the controls. Delegation checkboxes are removed.
 
@@ -101,6 +141,17 @@ sending. A manual selection is preserved across refreshes; if it becomes unavail
 sending is disabled until another eligible role is selected. Failed sends preserve email/selection and refresh
 choices. Preset choices remain for Managers; custom delegates receive only
 eligible custom definitions, with no client preset fallback.
+
+`RolePicker` always renders `SelectTrigger className="w-full"` (form, dialog
+and member-table uses alike). It takes an optional `onCreateRole`; when given,
+the list ends with a separator and a "Create new role…" item that calls it
+instead of selecting. The invite form passes it only when the caller's access
+has `canViewEstateRoles` and `canCreateRoles`: the item opens the shared
+`CreateRoleDialog` (`roles/-components/create-role-dialog.tsx`, see
+[estate-roles.md](estate-roles.md)) stacked over the Invite member dialog. On
+success `useCreateEstateRole` invalidates the user's queries (including
+`[userId, "estate-invitation-roles", estateId]`) and the form selects the new
+role's ID, which resolves once the refreshed choices include it.
 
 Manager member controls combine the four presets with GET roles and catalogue
 through `lib/estate-roles.ts`. Custom assignment/conversion opens confirmation

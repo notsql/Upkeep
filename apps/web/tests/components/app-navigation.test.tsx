@@ -120,6 +120,7 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
     "Work orders",
     "Fault reports",
     "Inspections",
+    "Locations",
     "Assets",
     "Devices",
     "Readings",
@@ -146,6 +147,9 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   expect(
     nav.getByRole("link", { name: "Device monitoring" }).getAttribute("href")
   ).toBe("/estates/pine/sensors");
+  expect(
+    nav.getByRole("link", { name: "Locations" }).getAttribute("href")
+  ).toBe("/estates/pine/locations");
 });
 
 it("keeps the section active on nested pages and matches Overview exactly", async () => {

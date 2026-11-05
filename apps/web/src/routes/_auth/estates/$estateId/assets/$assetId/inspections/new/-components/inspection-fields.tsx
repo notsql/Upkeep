@@ -43,7 +43,7 @@ export function InspectionFields({
           required
           value={outcome || null}
         >
-          <SelectTrigger id="inspection-outcome">
+          <SelectTrigger className="w-full" id="inspection-outcome">
             <SelectValue placeholder="Choose Pass or Fail" />
           </SelectTrigger>
           <SelectContent>

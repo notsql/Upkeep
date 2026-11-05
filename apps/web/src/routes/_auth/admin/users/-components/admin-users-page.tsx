@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@proj/ui/components/dialog";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import {
   Select,
   SelectContent,
@@ -27,6 +27,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2, Users } from "lucide-react";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -35,6 +36,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { FilterBar } from "@/components/filter-bar";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { api } from "@/lib/api";
@@ -122,7 +126,7 @@ function MemberRoleSelect({
       onValueChange={changeRole}
       value={currentRole}
     >
-      <SelectTrigger aria-label={`Role for ${name}`}>
+      <SelectTrigger aria-label={`Role for ${name}`} className="w-full">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -312,6 +316,7 @@ export function AdminUsersPage() {
     [roleUpdate]
   );
 
+  const clearSearch = useCallback(() => setSearch(""), []);
   const handleSearchChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       setSearch(event.target.value);
@@ -402,40 +407,62 @@ export function AdminUsersPage() {
           </p>
         ) : null}
 
-        {organizations.isPending ? <p role="status">Loading estates…</p> : null}
+        {organizations.isPending ? (
+          <LoadingState label="Loading estates…" rows={2} />
+        ) : null}
 
         {organizations.data?.length === 0 && (
-          <p className="text-muted-foreground">No estates found.</p>
+          <EmptyState
+            description="Estates appear here once they are created."
+            icon={Building2}
+            title="No estates found"
+          />
         )}
 
         {Boolean(organizations.data?.length) && (
-          <div className="flex flex-wrap items-center gap-3">
-            <Label className="text-sm font-medium" htmlFor="admin-estate">
-              Estate
-            </Label>
-            <Select
-              disabled={roleUpdate.isPending}
-              items={organizationItems}
-              onValueChange={handleOrganizationChange}
-              value={organizationId}
-            >
-              <SelectTrigger id="admin-estate">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Select an estate</SelectItem>
-                {organizations.data?.map((organization) => (
-                  <SelectItem key={organization.id} value={organization.id}>
-                    {organization.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <FilterBar
+            label="Filter users"
+            search={
+              <Field>
+                <FieldLabel className="sr-only" htmlFor="user-search">
+                  Search users
+                </FieldLabel>
+                <Input
+                  id="user-search"
+                  onChange={handleSearchChange}
+                  placeholder="Search by name or email"
+                  type="search"
+                  value={search}
+                />
+              </Field>
+            }
+          >
+            <Field className="w-full sm:w-48">
+              <FieldLabel htmlFor="admin-estate">Estate</FieldLabel>
+              <Select
+                disabled={roleUpdate.isPending}
+                items={organizationItems}
+                onValueChange={handleOrganizationChange}
+                value={organizationId}
+              >
+                <SelectTrigger className="w-full" id="admin-estate">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Select an estate</SelectItem>
+                  {organizations.data?.map((organization) => (
+                    <SelectItem key={organization.id} value={organization.id}>
+                      {organization.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          </FilterBar>
         )}
 
         {isLoadingOrganization ? (
-          <p role="status">Loading members and roles…</p>
+          <LoadingState label="Loading members and roles…" variant="table" />
         ) : null}
 
         {roleUpdate.isPending ? (
@@ -457,18 +484,6 @@ export function AdminUsersPage() {
                 Choose a role for each member.
               </p>
             </div>
-
-            <Label className="block sm:w-72" htmlFor="user-search">
-              <span className="sr-only">Search users</span>
-              <Input
-                className="h-9 rounded-md"
-                id="user-search"
-                onChange={handleSearchChange}
-                placeholder="Search by name or email"
-                type="search"
-                value={search}
-              />
-            </Label>
           </div>
 
           {mobile ? (
@@ -586,17 +601,35 @@ export function AdminUsersPage() {
           )}
 
           {!organizationId && (
-            <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-              Select an estate to view its members.
-            </p>
+            <div className="p-4">
+              <EmptyState
+                description="Select an estate to view its members."
+                icon={Building2}
+                title="No estate selected"
+              />
+            </div>
           )}
 
           {members.isSuccess && filteredUsers.length === 0 && (
-            <p className="text-muted-foreground px-4 py-6 text-center text-sm">
-              {search.trim()
-                ? "No users match this search. Try another name or email."
-                : "No members belong to this estate yet."}
-            </p>
+            <div className="p-4">
+              {search.trim() ? (
+                <EmptyState
+                  action={
+                    <Button onClick={clearSearch} variant="outline">
+                      Clear filters
+                    </Button>
+                  }
+                  description="Try another name or email."
+                  icon={Users}
+                  title="No matching users"
+                />
+              ) : (
+                <EmptyState
+                  icon={Users}
+                  title="No members in this estate yet"
+                />
+              )}
+            </div>
           )}
         </section>
 

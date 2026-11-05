@@ -166,4 +166,14 @@ describe("MemberEstates", () => {
       })
     );
   });
+
+  it("uses the shared loading and empty states", async () => {
+    vi.mocked(api.GET).mockResolvedValue({
+      data: [],
+      response: new Response(),
+    } as never);
+    renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
+    screen.getByRole("status", { name: "Loading estates…" });
+    await screen.findByText("No estates yet");
+  });
 });

@@ -7,8 +7,8 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { createFileRoute } from "@tanstack/react-router";
-
 import { buildSignInPath, sanitizeReturnTo } from "@/lib/auth-redirect";
+import { pageHead } from "@/lib/page-title";
 
 interface LoginSearch {
   error?: string;
@@ -17,7 +17,7 @@ interface LoginSearch {
 
 export const Route = createFileRoute("/login/")({
   component: LoginRoute,
-  head: () => ({ meta: [{ title: "Sign in" }] }),
+  head: () => pageHead("Sign in"),
   validateSearch: (search: Record<string, unknown>): LoginSearch => ({
     error: typeof search.error === "string" ? search.error : undefined,
     returnTo: sanitizeReturnTo(search.returnTo),

@@ -1,7 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
-import { Empty, EmptyHeader, EmptyTitle } from "@proj/ui/components/empty";
 import {
   Table,
   TableBody,
@@ -10,7 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { Activity } from "lucide-react";
 import { useCallback } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReadingCards } from "@/components/readings/reading-cards";
@@ -91,6 +93,13 @@ export function ReadingsPage({
     () => onFiltersChange({ ...filters, page: page + 1 }),
     [filters, onFiltersChange, page]
   );
+  const filtered = Boolean(
+    filters.suspect || filters.metric || filters.from || filters.to
+  );
+  const clearFilters = useCallback(
+    () => onFiltersChange({}),
+    [onFiltersChange]
+  );
   return (
     <PageLayout className="space-y-6">
       <PageHeader
@@ -111,18 +120,26 @@ export function ReadingsPage({
         title="Readings"
       />
       <ReadingFilterControls filters={filters} onChange={onFiltersChange} />
-      {readings.isPending ? <p role="status">Loading readings…</p> : null}
+      {readings.isPending ? (
+        <LoadingState label="Loading readings…" rows={2} />
+      ) : null}
       {readings.error ? (
         <Alert variant="destructive">
           <AlertDescription>{readings.error.message}</AlertDescription>
         </Alert>
       ) : null}
       {readings.data && total === 0 ? (
-        <Empty className="border border-dashed" role="status">
-          <EmptyHeader>
-            <EmptyTitle>{emptyMessage(filters)}</EmptyTitle>
-          </EmptyHeader>
-        </Empty>
+        <EmptyState
+          action={
+            filtered ? (
+              <Button onClick={clearFilters} variant="outline">
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+          icon={Activity}
+          title={emptyMessage(filters)}
+        />
       ) : null}
       {readings.data && total > 0 ? (
         <>

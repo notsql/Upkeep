@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { pageHead } from "@/lib/page-title";
 import { parseReadingSearch } from "@/lib/reading-filters";
 import type { ManualReading } from "@/lib/readings";
 import { ManualReadingForm } from "./-components/manual-reading-form";
@@ -7,7 +8,7 @@ import { ManualReadingForm } from "./-components/manual-reading-form";
 export const Route = createFileRoute("/_auth/estates/$estateId/readings/new/")({
   validateSearch: parseReadingSearch,
   component: ManualReadingRoute,
-  head: () => ({ meta: [{ title: "Record manual reading" }] }),
+  head: () => pageHead("Record manual reading"),
 });
 function ManualReadingRoute() {
   const { estateId } = Route.useParams();

@@ -5,7 +5,6 @@ import {
 } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Empty } from "@proj/ui/components/empty";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import {
@@ -16,9 +15,13 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { Boxes, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConditionBadge } from "@/components/condition-badge";
+import { EmptyState } from "@/components/empty-state";
+import { FilterBar } from "@/components/filter-bar";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { SortableTableHead } from "@/components/sortable-table-head";
@@ -127,6 +130,7 @@ export function AssetRegisterPage({
               params={{ estateId }}
               to="/estates/$estateId/assets/new"
             >
+              <Plus aria-hidden="true" />
               Register asset
             </Link>
           )
@@ -141,41 +145,43 @@ export function AssetRegisterPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <Card>
-        <CardContent>
-          <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 md:grid-cols-3 xl:grid-cols-5">
-            <Field>
-              <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
-              <Input
-                id="asset-search"
-                onChange={changeSearch}
-                placeholder="Name or reference"
-                value={search}
-              />
-            </Field>
-            {mobile ? (
-              <MobileAssetFilters
-                filters={filters}
-                locations={locationOptions}
-                onChange={onFiltersChange}
-              />
-            ) : (
-              <AssetFilterControls
-                filters={filters}
-                locations={locationOptions}
-                onChange={onFiltersChange}
-              />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <FilterBar
+        actions={
+          filtered ? (
+            <Button onClick={clearFilters} variant="outline">
+              Clear filters
+            </Button>
+          ) : null
+        }
+        label="Filter assets"
+        search={
+          <Field>
+            <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
+            <Input
+              id="asset-search"
+              onChange={changeSearch}
+              placeholder="Name or reference"
+              value={search}
+            />
+          </Field>
+        }
+      >
+        {mobile ? (
+          <MobileAssetFilters
+            filters={filters}
+            locations={locationOptions}
+            onChange={onFiltersChange}
+          />
+        ) : (
+          <AssetFilterControls
+            filters={filters}
+            locations={locationOptions}
+            onChange={onFiltersChange}
+          />
+        )}
+      </FilterBar>
       {mobile ? (
         <AssetSortControls onChange={onSortChange} sort={sort} />
-      ) : null}
-      {filtered ? (
-        <Button onClick={clearFilters} variant="outline">
-          Clear filters
-        </Button>
       ) : null}
       {locations.error ? (
         <Alert variant="destructive">
@@ -187,7 +193,12 @@ export function AssetRegisterPage({
           </AlertAction>
         </Alert>
       ) : null}
-      {assets.isPending ? <p role="status">Loading assets…</p> : null}
+      {assets.isPending ? (
+        <LoadingState
+          label="Loading assets…"
+          variant={mobile ? "list" : "table"}
+        />
+      ) : null}
       {assets.error ? (
         <Alert variant="destructive">
           <AlertDescription>{assets.error.message}</AlertDescription>
@@ -199,11 +210,12 @@ export function AssetRegisterPage({
         </Alert>
       ) : null}
       {assets.data?.length === 0 ? (
-        <Empty className="border border-dashed" role="status">
-          {filtered
-            ? "No matching assets."
-            : "No active assets yet. Choose All to include retired assets."}
-        </Empty>
+        <AssetsEmpty
+          canRegister={!estate.data?.deactivatedAt}
+          estateId={estateId}
+          filtered={filtered}
+          onClear={clearFilters}
+        />
       ) : null}
       {assets.data && assets.data.length > 0 && mobile ? (
         <ul aria-label="Assets" className="grid gap-3">
@@ -314,5 +326,51 @@ export function AssetRegisterPage({
         </Table>
       ) : null}
     </PageLayout>
+  );
+}
+
+function AssetsEmpty({
+  estateId,
+  filtered,
+  canRegister,
+  onClear,
+}: {
+  estateId: string;
+  filtered: boolean;
+  canRegister: boolean;
+  onClear: () => void;
+}) {
+  if (filtered) {
+    return (
+      <EmptyState
+        action={
+          <Button onClick={onClear} variant="outline">
+            Clear filters
+          </Button>
+        }
+        description="Try a different search or fewer filters."
+        icon={Boxes}
+        title="No matching assets"
+      />
+    );
+  }
+  return (
+    <EmptyState
+      action={
+        canRegister ? (
+          <Link
+            className={buttonVariants()}
+            params={{ estateId }}
+            to="/estates/$estateId/assets/new"
+          >
+            <Plus aria-hidden="true" />
+            Register asset
+          </Link>
+        ) : undefined
+      }
+      description="Registered equipment will appear here. Set Status to All to include retired assets."
+      icon={Boxes}
+      title="No assets yet"
+    />
   );
 }

@@ -1,11 +1,31 @@
 # Custom estate roles UI
 
 `/estates/$estateId/roles` lives at
-`apps/web/src/routes/_auth/estates/$estateId/roles/index.tsx`. Route-local
-`-components/estate-roles-page.tsx`, `role-card.tsx` and `role-form.tsx` implement
-the workspace. They use existing shadcn Alert, Badge, Button, Card, Checkbox,
-Dialog, Input, Label, Table and Textarea components. DTOs come from generated
-`@proj/api/schema`; API calls live in `lib/estate-roles.ts`.
+`apps/web/src/routes/_auth/estates/$estateId/roles/index.tsx` (tab title
+`pageHead("Estate roles")`). Route-local `-components/`:
+
+- `estate-roles-page.tsx` - access gate, PageHeader with a primary "Create role"
+  Button (lucide `Plus`, shown when `canCreateRoles` and the catalogue loaded),
+  then LoadingState (`table`) -> Alert + "Retry roles" -> EmptyState ("No custom
+  roles yet", same Create role action) -> FilterBar ("Search roles", matches name
+  or description; "No matching roles" EmptyState with Clear filters) + Table
+  "Custom roles" (Role, Permissions, Actions).
+- `role-row.tsx` - one table row: name, description, own-role and reassignment
+  notes; Permissions shows the first three permission Badges plus "+N more";
+  Edit / Delete buttons (size sm).
+- `create-role-dialog.tsx` - `CreateRoleDialog({ estateId, open, onOpenChange,
+  onCreated? })`, the single create-role flow. Loads the catalogue, renders
+  `RoleForm`, calls `useCreateEstateRole`, closes and calls `onCreated(role)` on
+  success. Reused by the invitation role picker (council-invitations.md).
+- `role-dialogs.tsx` - `EditRoleDialog` (title "Edit <name>", RoleForm with
+  `initial`, Reload role on conflict) and `DeleteRoleDialog` (confirmation).
+- `role-form.tsx` - the name/description/permissions form used by both dialogs.
+
+There are no Tabs: the roles endpoint returns only custom roles (presets have no
+editable definitions), and no member count is shown because
+`EstateRoleDefinitionResponse` carries none. shadcn components: Alert, Badge,
+Button, Checkbox, Dialog, Field, Input, Label, Table, Textarea. DTOs come from
+generated `@proj/api/schema`; API calls live in `lib/estate-roles.ts`.
 
 The server route guard and mounted page independently require the target estate's
 `canViewEstateRoles`. Access loading displays status text; failure displays Retry
@@ -23,9 +43,9 @@ include prerequisite hints. Each checkbox remains labelled by the permission
 name and associated with its description. Selection remains exact; submitting empty/missing-prerequisite choices
 shows validation without silently adding permissions. Inputs enforce 40/500
 character limits. Errors preserve the draft; pending writes disable controls.
-The sorted saved list shows names, descriptions and permission badges.
+The sorted saved list is the Custom roles table described above.
 
-Editing opens a separate draft with the observed version. Save replaces fields
+Editing opens the Edit dialog with a separate draft with the observed version. Save replaces fields
 and sends expectedVersion. A conflict refreshes current queries, retains the
 draft and offers Reload role; reload deliberately adopts the current version.
 Permission-change guidance explains effects on current members and pending

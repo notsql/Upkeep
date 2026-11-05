@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@proj/ui/components/dialog";
 import { Link } from "@tanstack/react-router";
+import { LoadingState } from "@/components/loading-state";
 import type { EstateDocument } from "@/lib/documents";
 import { AssociationEditor } from "./association-editor";
 import { AssociationHistory } from "./association-history";
@@ -51,7 +52,7 @@ function AssociationBody({
         </Button>
       </p>
     ) : (
-      <p role="status">Loading document link…</p>
+      <LoadingState label="Loading document link…" rows={1} />
     );
   }
   return (

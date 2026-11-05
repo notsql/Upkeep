@@ -2,6 +2,7 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
@@ -85,7 +86,7 @@ export function ReplaceDevicePage({
         description="Register new hardware in place of this device. Its readings stay with it."
         title={title}
       />
-      {loading ? <p role="status">Loading device…</p> : null}
+      {loading ? <LoadingState label="Loading device…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}
       {blocked ? <p role="alert">{blocked}</p> : null}
       {device && !blocked && !loading && !error ? (

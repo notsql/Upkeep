@@ -1,13 +1,15 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@proj/ui/components/select";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@proj/ui/components/tabs";
+import { Activity } from "lucide-react";
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -43,7 +45,7 @@ export function SensorsPage({ estateId }: { estateId: string }) {
   );
   const refreshReview = useCallback(() => refetchReview(), [refetchReview]);
   const closePause = useCallback(() => setSelected(undefined), []);
-  const changeView = useCallback((value: string | null) => {
+  const changeView = useCallback((value: unknown) => {
     if (value === "REVIEW" || value === "ALL") {
       setView(value);
       setPage(0);
@@ -62,7 +64,7 @@ export function SensorsPage({ estateId }: { estateId: string }) {
         unchanged readings.
       </p>
       {policies.isPending ? (
-        <p role="status">Loading metric policies…</p>
+        <LoadingState label="Loading metric policies…" rows={2} />
       ) : null}
       {policies.error ? (
         <Alert variant="destructive">
@@ -89,51 +91,56 @@ export function SensorsPage({ estateId }: { estateId: string }) {
             <h2 className="text-lg font-semibold" id="monitoring-title">
               Device metrics
             </h2>
-            <div className="flex flex-wrap items-center gap-3">
-              <Select onValueChange={changeView} value={view}>
-                <SelectTrigger
-                  aria-label="Device metric view"
-                  className="w-full sm:w-44"
+            <Tabs onValueChange={changeView} value={view}>
+              <div className="flex flex-wrap items-center gap-3">
+                <TabsList aria-label="Device metric view">
+                  <TabsTrigger value="REVIEW">Needs review</TabsTrigger>
+                  <TabsTrigger value="ALL">All device metrics</TabsTrigger>
+                </TabsList>
+                <Button
+                  disabled={review.isFetching}
+                  onClick={refreshReview}
+                  variant="outline"
                 >
-                  <SelectValue>
-                    {view === "REVIEW" ? "Needs review" : "All device metrics"}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="REVIEW">Needs review</SelectItem>
-                  <SelectItem value="ALL">All device metrics</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                disabled={review.isFetching}
-                onClick={refreshReview}
-                variant="outline"
-              >
-                Refresh readings
-              </Button>
-            </div>
-            {review.isPending ? (
-              <p role="status">Loading device metrics…</p>
-            ) : null}
-            {review.error ? (
-              <Alert variant="destructive">
-                <AlertDescription>{review.error.message}</AlertDescription>
-                <Button onClick={refreshReview} variant="outline">
-                  Retry device metrics
+                  Refresh readings
                 </Button>
-              </Alert>
-            ) : null}
-            {review.data && !review.error ? (
-              <SensorReviewResults
-                canManage={canManage}
-                data={review.data}
-                fetching={review.isFetching}
-                onPageChange={setPage}
-                onPause={setSelected}
-                page={page}
-                view={view}
-              />
-            ) : null}
+              </div>
+              {(["REVIEW", "ALL"] as const).map((value) => (
+                <TabsContent
+                  className="grid min-w-0 gap-4"
+                  key={value}
+                  value={value}
+                >
+                  {review.isPending ? (
+                    <LoadingState
+                      label="Loading device metrics…"
+                      variant="table"
+                    />
+                  ) : null}
+                  {review.error ? (
+                    <Alert variant="destructive">
+                      <AlertDescription>
+                        {review.error.message}
+                      </AlertDescription>
+                      <Button onClick={refreshReview} variant="outline">
+                        Retry device metrics
+                      </Button>
+                    </Alert>
+                  ) : null}
+                  {review.data && !review.error ? (
+                    <SensorReviewResults
+                      canManage={canManage}
+                      data={review.data}
+                      fetching={review.isFetching}
+                      onPageChange={setPage}
+                      onPause={setSelected}
+                      page={page}
+                      view={view}
+                    />
+                  ) : null}
+                </TabsContent>
+              ))}
+            </Tabs>
           </section>
           <MetricPolicySettings
             canManage={canManage}
@@ -158,20 +165,35 @@ function emptyMessage(
   hasReadings: boolean,
   view: SensorView,
   page: number
-): string {
+): { title: string; description?: string } {
   if (!active) {
-    return "Monitoring is unavailable while this estate is inactive.";
+    return {
+      title: "Monitoring is unavailable while this estate is inactive.",
+    };
   }
   if (page > 0) {
-    return "No device metrics on this page. Return to the previous page.";
+    return {
+      title: "No device metrics on this page",
+      description: "Return to the previous page.",
+    };
   }
   if (view === "ALL") {
-    return "No devices are registered on active assets in this estate.";
+    return {
+      title: "No devices are registered on active assets in this estate.",
+    };
   }
   if (!hasReadings) {
-    return "No device readings yet. Use All device metrics to review devices and configure their metrics.";
+    return {
+      title: "No device readings yet",
+      description:
+        "Use All device metrics to review devices and configure their metrics.",
+    };
   }
-  return "No device metrics currently need review. Unconfigured metrics and metrics without enough evidence are listed under All device metrics.";
+  return {
+    title: "No device metrics currently need review",
+    description:
+      "Unconfigured metrics and metrics without enough evidence are listed under All device metrics.",
+  };
 }
 
 function SensorReviewResults({
@@ -213,9 +235,15 @@ function SensorReviewResults({
           sensors={data.sensors}
         />
       ) : (
-        <p className="text-muted-foreground py-6 text-sm">
-          {emptyMessage(data.estateActive, data.hasSensorReadings, view, page)}
-        </p>
+        <EmptyState
+          icon={Activity}
+          {...emptyMessage(
+            data.estateActive,
+            data.hasSensorReadings,
+            view,
+            page
+          )}
+        />
       )}
       <nav
         aria-label="Device metric pages"

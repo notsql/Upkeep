@@ -508,6 +508,10 @@ it("distinguishes an empty estate from a filter with no matching reports", async
     await router.navigate({ href: `${basePath}?blockId=${blockA}` });
   });
   await screen.findByText(NO_MATCHES);
+  const clearButtons = screen.getAllByRole("button", { name: "Clear filters" });
+  expect(clearButtons).toHaveLength(2);
+  fireEvent.click(clearButtons[1] as HTMLElement);
+  await screen.findByText(EMPTY_REPORTS);
 });
 
 it("preserves the selected filter while retrying a failed list request", async () => {

@@ -149,3 +149,18 @@ it("shows all member information and role controls on mobile cards", async () =>
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
   expect(screen.queryByRole("dialog")).toBeNull();
 });
+
+it("uses the shared filter, loading and empty states", async () => {
+  renderWithProviders(<Page />);
+  screen.getByRole("status", { name: "Loading estates…" });
+  await screen.findByText("Select an estate");
+  screen.getByRole("search", { name: "Filter users" });
+  await chooseOption(screen.getByRole("combobox", { name: "Estate" }), "Acme");
+  await screen.findByRole("combobox", { name: "Role for Casey Doe" });
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), {
+    target: { value: "nobody" },
+  });
+  await screen.findByText("No matching users");
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await screen.findByRole("combobox", { name: "Role for Casey Doe" });
+});

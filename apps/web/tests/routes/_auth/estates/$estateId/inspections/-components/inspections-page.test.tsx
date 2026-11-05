@@ -297,7 +297,10 @@ it("cannot generate in an inactive estate", () => {
 it("says when there are no checks this month", () => {
   state.data = { ...(state.data as object), checks: [] };
   renderWithProviders(<InspectionsPage estateId="oak" />);
-  screen.getByText("No checks this month.");
+  const empty = screen
+    .getAllByRole("status")
+    .find((element) => element.textContent?.includes("No checks this month"));
+  expect(empty).toBeDefined();
 });
 
 it("shows a load error", () => {

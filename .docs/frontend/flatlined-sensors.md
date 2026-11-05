@@ -17,7 +17,7 @@ responses determine whether edit and pause controls appear.
 
 | File / component | Behaviour / shadcn components |
 | --- | --- |
-| sensors-page.tsx / SensorsPage, SensorReviewResults | PageHeader, view selection, checked time, refresh, paging, errors/retry and distinct empty states; Select, Button, Alert |
+| sensors-page.tsx / SensorsPage, SensorReviewResults | PageHeader, shadcn Tabs (Needs review / All device metrics, list labelled "Device metric view") with Refresh readings beside the tab list, checked time, refresh, paging, errors/retry and distinct empty states as `EmptyState` (title plus description); `LoadingState` for policies and device metrics; Tabs, Button, Alert |
 | sensor-monitoring-table.tsx / SensorMonitoringTable, SensorRow | Desktop table or a divided mobile list below 768px; shared device/asset identity, metric/unit, textual state, observed duration/range, last measurement and maintenance cutoff/actions; Table, Badge, Button |
 | metric-policy-settings.tsx / MetricPolicySettings | Collapsible Metric policies section with configured count, metric/unit, saved threshold/tolerance, Configured/Not set badge, and Edit/Set up/Close buttons; table on desktop, stacked rows on mobile; one inline editor, read-only for Council/inactive estates; Table, Badge, Button |
 | metric-policy-form.tsx / MetricPolicyForm, useMetricPolicyEditor | Expanded per-metric editor, whole minutes/hours and nonnegative tolerance shared estate-wide; Cancel and Save policy; draft/validation/mutation state is owned by the summary component through the hook; Field, Input, Select, Alert, Button |

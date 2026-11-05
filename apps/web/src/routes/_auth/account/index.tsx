@@ -2,10 +2,11 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { DetailCard } from "@/components/detail-card";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { pageHead } from "@/lib/page-title";
 
 export const Route = createFileRoute("/_auth/account/")({
   component: AccountPage,
-  head: () => ({ meta: [{ title: "Your account" }] }),
+  head: () => pageHead("Your account"),
 });
 
 const authenticatedRoute = getRouteApi("/_auth");

@@ -92,3 +92,13 @@ it("invites a resident with no reports to report their first fault", async () =>
   ).toBeGreaterThan(0);
   expect(screen.queryByRole("link", { name: "View all" })).toBeNull();
 });
+
+it("uses the shared loading and empty states", async () => {
+  respond([]);
+  renderWithProviders(<ResidentDashboard estateId="maple" />);
+  screen.getByRole("status", { name: "Loading reports…" });
+  await screen.findByText("No reports yet");
+  within(screen.getByRole("status")).getByRole("link", {
+    name: "Report a fault",
+  });
+});

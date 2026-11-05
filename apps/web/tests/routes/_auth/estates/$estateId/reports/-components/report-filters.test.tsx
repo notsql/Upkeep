@@ -52,6 +52,7 @@ it("offers searchable block and level range dropdowns and applies selected bound
       onChange={onChange}
     />
   );
+  screen.getByRole("search", { name: "Filter reports" });
   screen.getByRole("combobox", { name: "Block" });
   await selectPosition("Minimum position", "-1");
   await selectPosition("Maximum position", "4");

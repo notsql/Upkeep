@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useCallback, useState } from "react";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
@@ -78,20 +79,26 @@ export function EstateReadingsPage({
   }
   return (
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
-      <PageHeader description={estate?.estateName} title="Readings" />
-      {estate?.canRecordReadings ? (
-        <Button
-          render={
-            <Link
-              params={{ estateId }}
-              search={{ assetId: filters.assetId, metric: filters.metric }}
-              to="/estates/$estateId/readings/new"
-            />
-          }
-        >
-          Record manual reading
-        </Button>
-      ) : null}
+      <PageHeader
+        actions={
+          estate?.canRecordReadings ? (
+            <Button
+              render={
+                <Link
+                  params={{ estateId }}
+                  search={{ assetId: filters.assetId, metric: filters.metric }}
+                  to="/estates/$estateId/readings/new"
+                />
+              }
+            >
+              <Plus aria-hidden="true" />
+              Record manual reading
+            </Button>
+          ) : null
+        }
+        description={estate?.estateName}
+        title="Readings"
+      />
       <ReadingExport
         disabled={
           !!error ||

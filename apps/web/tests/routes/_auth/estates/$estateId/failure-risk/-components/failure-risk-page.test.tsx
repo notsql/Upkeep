@@ -85,6 +85,14 @@ async function rowFor(name: string) {
 describe("FailureRiskPage", () => {
   beforeEach(() => vi.resetAllMocks());
 
+  it("announces loading forecasts with the shared loading state", () => {
+    vi.mocked(api.GET).mockImplementation(
+      (() => new Promise(() => undefined)) as never
+    );
+    renderWithProviders(<FailureRiskPage estateId="estate-id" />);
+    screen.getByRole("status", { name: "Loading forecasts…" });
+  });
+
   it("loads the estate's failure-risk list", async () => {
     serve([flagged]);
     renderWithProviders(<FailureRiskPage estateId="estate-id" />);

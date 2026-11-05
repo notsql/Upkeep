@@ -2,7 +2,10 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Label } from "@proj/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 
 import { api } from "@/lib/api";
 import { formatMcst } from "@/lib/estates";
@@ -133,13 +136,15 @@ export function MemberEstates({
       ) : null}
 
       {access.isPending ? (
-        <p className="mt-4" role="status">
-          Loading estates…
-        </p>
+        <div className="mt-4">
+          <LoadingState label="Loading estates…" rows={2} />
+        </div>
       ) : null}
 
       {access.data?.length === 0 ? (
-        <p className="text-muted-foreground mt-4 text-sm">No estates yet.</p>
+        <div className="mt-4">
+          <EmptyState icon={Building2} title="No estates yet" />
+        </div>
       ) : null}
 
       <ul className="mt-4 grid gap-2 sm:grid-cols-2">

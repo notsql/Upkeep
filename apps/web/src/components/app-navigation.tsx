@@ -5,6 +5,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -14,6 +15,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
+  Building2,
   ClipboardCheck,
   ClipboardList,
   Cpu,
@@ -22,6 +24,7 @@ import {
   Layers,
   LayoutDashboard,
   type LucideIcon,
+  MapPin,
   Settings,
   ShieldCheck,
   Tags,
@@ -58,6 +61,7 @@ type Destination =
   | "/estates/$estateId/work-orders"
   | "/estates/$estateId/reports"
   | "/estates/$estateId/inspections"
+  | "/estates/$estateId/locations"
   | "/estates/$estateId/assets"
   | "/estates/$estateId/devices"
   | "/estates/$estateId/readings"
@@ -194,6 +198,12 @@ function estateGroups(
       label: "Assets",
       items: [
         ...item(
+          "Locations",
+          "/estates/$estateId/locations",
+          MapPin,
+          Boolean(permission.canViewManagement)
+        ),
+        ...item(
           "Assets",
           "/estates/$estateId/assets",
           Layers,
@@ -321,6 +331,17 @@ export function AppNavigation() {
   const groups = useNavigationGroups();
   return (
     <Sidebar>
+      <SidebarHeader className="h-14 justify-center border-b px-4">
+        <Link
+          className="flex items-center gap-2 text-lg font-semibold tracking-tight"
+          to="/"
+        >
+          <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-md">
+            <Building2 aria-hidden="true" className="size-4" />
+          </span>
+          UpKeep
+        </Link>
+      </SidebarHeader>
       <SidebarContent>
         <nav aria-label="Sidebar">
           {groups.map((group) => (

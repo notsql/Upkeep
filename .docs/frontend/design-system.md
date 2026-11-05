@@ -32,15 +32,16 @@ custom CSS. Do not rely on colour alone for status or selected navigation.
 landmark. Public visitors and loading sessions get no sidebar. Home has one Create
 account action in its content; header/home authentication actions use Sign in.
 
-The sticky header is the same at every width: `SidebarTrigger` (sidebar routes
-only), "UpKeep" brand -> `/`, "/", the estate switcher (current estate name +
+The sticky header: `SidebarTrigger` (sidebar routes, mobile only), "UpKeep"
+brand -> `/` and "/" (omitted on desktop sidebar routes, where the brand tops the
+sidebar), the estate switcher (current estate name +
 role, or "Select estate" outside an estate), then `ThemeToggle` and the circular
 account menu (Account settings, Admin users for platform admins, Sign out).
 
 The sidebar appears only in estate scope (`/estates/$estateId/**`) and on the
 resident pages; it holds no switcher and no global links. Estate groups: Overview
 (unlabelled); Operations (Work orders, Fault reports, Inspections); Assets
-(Assets, Devices, Readings, Device monitoring, Failure risk); Records
+(Locations, Assets, Devices, Readings, Device monitoring, Failure risk); Records
 (Documents); Administration (Members, Roles, Asset categories, Estate settings).
 Each item is filtered by its `lib/estate-destinations.ts` predicate and empty
 groups are omitted. Residents get one group: Dashboard (resident-only accounts),
@@ -48,7 +49,7 @@ Report a fault, My reports. Details in [shell.md](shell.md).
 
 | Width | Sidebar | Trigger |
 | --- | --- | --- |
-| >=768px | Off-canvas collapsible rail (`Sidebar`, default `collapsible="offcanvas"`) | `SidebarTrigger` in the header, or Cmd/Ctrl+B |
+| >=768px | Always open (provider held open; no collapse) | None |
 | <768px | Same content in a `Sheet`; closes when a link is followed | `SidebarTrigger` ("Toggle Sidebar") in the header |
 
 There is no bottom tab bar and no separate mobile section menu. Selected links
@@ -162,14 +163,117 @@ apply immediately. Existing URL/back navigation and order by reference remain.
 the state in visible text: Active `default`, Inactive/Retired `destructive`;
 Good `default`, Needs attention `secondary`, Faulty `destructive`, Not assessed yet
 `outline`. `DeviceStatusBadge` already used stock variants.
-Details sections retain meaningful headings and history dates. Loading is visible
-status/aria-live text; spinners are decorative when text already announces it.
-Estates uses shadcn Empty for no results and Alert + Retry for failures. Other
+Details sections retain meaningful headings and history dates. Loading and empty
+results follow [Screen states](#screen-states-empty-loading-filters-tabs) below.
+Failures use Alert + Retry. Other
 features retain their labelled alerts and existing retry actions. In-app and email
 invitation feedback remain distinct. Success uses the existing Sonner toasts and
 query invalidation. Known internal SQL/exception messages in 5xx estate-family errors receive a
 generic retry message. Existing actionable messages such as invitation-verification
 failures are preserved; 401 explains sign-in verification.
+
+## Screen states: empty, loading, filters, tabs
+
+Every list, table or section renders one of four states with the same shared
+pieces. Do not hand-roll "Loading…" paragraphs, `<p>No … yet.</p>`, raw `Empty`
+markup or bespoke filter rows.
+
+### Page header
+
+`PageHeader` is the only page header. Each screen renders exactly one, first
+inside `PageLayout`; the primary create action goes in `actions` (primary
+Button/Link with a lucide `Plus`). Sections inside a page use `Card` +
+`CardHeader`/`CardTitle` with an `h2`, never a second `h1`.
+
+### Empty: `EmptyState` (`components/empty-state.tsx`)
+
+Props: `title: string`, `description?: ReactNode`, `icon?: LucideIcon`,
+`action?: ReactNode`. Renders shadcn `Empty` as a dashed card
+(`bg-card border border-dashed`) with `role="status"`.
+
+- No data and the user can create: `action` is the primary create action
+  (same label as the header action, e.g. "New work order"). Without create
+  permission: omit `action`.
+- Filters produced no results: title "No matching …", `action` is an outline
+  "Clear filters" Button.
+- Inside a Card section (asset documents, work-order corrections) use it as-is;
+  the dashed card nests fine. Picker/combobox "no matches" lines inside dialogs
+  and `ComboboxEmpty` stay plain text - they are not page states.
+
+```tsx
+<EmptyState
+  action={canCreate ? (
+    <Link className={buttonVariants()} params={{ estateId }} to="/estates/$estateId/work-orders/new">
+      <Plus aria-hidden="true" /> New work order
+    </Link>
+  ) : undefined}
+  description="Saved work orders will appear here."
+  icon={Wrench}
+  title="No work orders yet"
+/>
+```
+
+### Loading: `LoadingState` (`components/loading-state.tsx`)
+
+Props: `label: string` (e.g. "Loading work orders…"), `variant?: "list" |
+"table" | "cards"` (default `list`), `rows?: number` (default 3). Renders
+`role="status" aria-busy="true"` named by `label`, with decorative shadcn
+`Skeleton` rows shaped like the content: `cards` = the estates-style card grid,
+`table` = bordered row lines, `list` = stacked compact cards.
+
+Why skeletons: they hold the layout so content does not jump when data
+arrives, the estates list already used them, and one component keeps the
+announcement consistent. `Loader` (spinner) is kept only for the router's
+`defaultPendingComponent` and whole-screen auth/session waits; `Spinner`
+inside a Button is fine for pending mutations. Use `LoadingState` for every
+query-driven region, including access/permission checks before a page renders
+(`variant="list" rows={2}`).
+
+```tsx
+if (workOrders.isPending) {
+  return <LoadingState label="Loading work orders…" variant="table" />;
+}
+```
+
+### Filters: `FilterBar` (`components/filter-bar.tsx`)
+
+Props: `label: string` (accessible name of the `search` landmark),
+`search?: ReactNode`, `children?: ReactNode` (filter fields), `actions?:
+ReactNode` (Clear filters, result count). Stacks below 640px; above it the
+search grows (`min-w-64 flex-1`), filters wrap, actions sit at the end.
+
+Sizing rules (the stock `SelectTrigger` is `w-fit`, so set widths):
+
+- Each filter field: `Field className="w-full sm:w-48"` and
+  `SelectTrigger className="w-full"`. Date inputs the same width.
+- Selects in forms and dialogs (role pickers, type, unit): always
+  `SelectTrigger className="w-full"`.
+- Mobile "Filters" dialogs (assets) keep their dialog; its trigger button goes
+  in `children`.
+
+```tsx
+<FilterBar
+  actions={filtered ? <Button onClick={clear} variant="ghost">Clear filters</Button> : null}
+  label="Filter work orders"
+  search={<Field><FieldLabel htmlFor={id}>Search</FieldLabel><Input id={id} type="search" /></Field>}
+>
+  <Field className="w-full sm:w-48">{/* label + Select with w-full trigger */}</Field>
+</FilterBar>
+```
+
+### Lists and tables
+
+Results below the FilterBar: shadcn `Table` at >=768px, Card records below
+(see Tables and feedback). Order of states: `LoadingState` -> Alert + Retry ->
+`EmptyState` -> results. Pagination sits after the results.
+
+### Tabs
+
+Use shadcn `Tabs` (`@proj/ui/components/tabs`) when a page has distinct
+sub-views of the same subject that are not needed at once, and in place of
+`aria-pressed` toggle-button groups that switch between whole views. Keep
+filters that narrow one list in the FilterBar. Put the active tab in the URL
+search params when the screen already uses search params.
 
 ## Adding a screen and reviewing this change
 

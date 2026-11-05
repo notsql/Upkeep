@@ -300,8 +300,13 @@ it("restores applied filters from URL navigation and distinguishes no matches fr
     screen.getByRole("combobox", { name: "Priority" }).textContent
   ).toContain("Urgent");
   await screen.findByText("No matching work orders");
-  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  const clearButtons = screen.getAllByRole("button", { name: "Clear filters" });
+  expect(clearButtons).toHaveLength(2);
+  fireEvent.click(clearButtons[1] as HTMLElement);
   await screen.findByText("No work orders yet");
+  expect(
+    screen.getAllByRole("link", { name: "Create work order" })
+  ).toHaveLength(2);
   await act(async () => router.history.back());
   await waitFor(() =>
     expect(

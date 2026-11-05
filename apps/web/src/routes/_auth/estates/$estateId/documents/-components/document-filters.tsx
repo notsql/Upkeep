@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@proj/ui/components/select";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
+import { FilterBar } from "@/components/filter-bar";
 import type { DocumentFilters } from "@/lib/documents";
 
 const TYPE_LABELS = {
@@ -57,41 +58,55 @@ export function DocumentFiltersForm({
     [filters.filename, onSearch]
   );
   return (
-    <form className="flex flex-wrap items-end gap-2" onSubmit={submit}>
-      <div className="grid flex-1 gap-2">
-        <Label htmlFor="document-search">Search by filename</Label>
-        <Input
-          id="document-search"
-          maxLength={255}
-          onChange={changeValue}
-          type="search"
-          value={value}
-        />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="document-type-filter">Filter by type</Label>
-        <Select
-          onValueChange={changeType}
-          value={filters.documentType ?? "ALL"}
-        >
-          <SelectTrigger aria-label="Filter by type" id="document-type-filter">
-            <SelectValue>
-              {TYPE_LABELS[filters.documentType ?? "ALL"]}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">All types</SelectItem>
-            <SelectItem value="INVOICE">Invoice</SelectItem>
-            <SelectItem value="SERVICE_REPORT">Service report</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <Button type="submit">Search</Button>
-      {filters.filename || value ? (
-        <Button onClick={clear} type="button" variant="outline">
-          Clear search
-        </Button>
-      ) : null}
+    <form onSubmit={submit}>
+      <FilterBar
+        actions={
+          <>
+            <Button type="submit">Search</Button>
+            {filters.filename || value ? (
+              <Button onClick={clear} type="button" variant="outline">
+                Clear search
+              </Button>
+            ) : null}
+          </>
+        }
+        label="Filter documents"
+        search={
+          <div className="grid gap-2">
+            <Label htmlFor="document-search">Search by filename</Label>
+            <Input
+              id="document-search"
+              maxLength={255}
+              onChange={changeValue}
+              type="search"
+              value={value}
+            />
+          </div>
+        }
+      >
+        <div className="grid w-full gap-2 sm:w-48">
+          <Label htmlFor="document-type-filter">Filter by type</Label>
+          <Select
+            onValueChange={changeType}
+            value={filters.documentType ?? "ALL"}
+          >
+            <SelectTrigger
+              aria-label="Filter by type"
+              className="w-full"
+              id="document-type-filter"
+            >
+              <SelectValue>
+                {TYPE_LABELS[filters.documentType ?? "ALL"]}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All types</SelectItem>
+              <SelectItem value="INVOICE">Invoice</SelectItem>
+              <SelectItem value="SERVICE_REPORT">Service report</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </FilterBar>
     </form>
   );
 }

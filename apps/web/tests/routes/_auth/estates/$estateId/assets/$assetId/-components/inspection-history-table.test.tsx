@@ -128,7 +128,7 @@ function access() {
   };
 }
 
-async function setup(path = assetPath) {
+async function setup(path = `${assetPath}?tab=inspections`) {
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({ initialEntries: [path] }),
@@ -442,13 +442,14 @@ it("shows loading separately from a successful empty history", async () => {
     })
   );
   await setup();
-  const loading = await screen.findByText("Loading inspection records…");
-  expect(loading.getAttribute("role")).toBe("status");
+  await screen.findByRole("status", { name: "Loading inspection records…" });
   expect(screen.queryByText("No inspection records yet")).toBeNull();
   expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
   resolveHistory(page([]));
   await screen.findByText("No inspection records yet");
-  expect(screen.queryByText("Loading inspection records…")).toBeNull();
+  expect(
+    screen.queryByRole("status", { name: "Loading inspection records…" })
+  ).toBeNull();
   expect(screen.queryByRole("link", { name: "View record" })).toBeNull();
 });
 

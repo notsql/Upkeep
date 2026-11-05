@@ -2,11 +2,13 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
+import { pageHead } from "@/lib/page-title";
 import { useWorkOrderAccess } from "@/lib/work-orders";
 import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
@@ -15,7 +17,7 @@ export const Route = createFileRoute(
   "/_auth/estates/$estateId/reports/$reportId/"
 )({
   component: EstateReportDetailPage,
-  head: () => ({ meta: [{ title: "Fault Report Details" }] }),
+  head: () => pageHead("Fault Report Details"),
 });
 
 function EstateReportDetailPage() {
@@ -28,7 +30,7 @@ function EstateReportDetailPage() {
     return result.isError ? undefined : result.data;
   }, [report.refetch]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Fault report unavailable.</p>;
@@ -58,7 +60,9 @@ function EstateReportDetailPage() {
         ]}
         title="Fault report details"
       />
-      {report.isPending ? <p role="status">Loading report…</p> : null}
+      {report.isPending ? (
+        <LoadingState label="Loading report…" rows={2} />
+      ) : null}
       {report.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>

@@ -115,8 +115,10 @@ describe("ReadingsPage", () => {
 
   it("says when filters match nothing", async () => {
     readingPage = { items: [], page: 0, size: 50, totalItems: 0 };
-    renderPage({ metric: "HUMIDITY" });
+    const change = renderPage({ metric: "HUMIDITY" });
     await screen.findByText("No readings match these filters");
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(change).toHaveBeenCalledWith({});
   });
 
   it("says when no suspect readings match", async () => {

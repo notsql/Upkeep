@@ -1,10 +1,11 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
+import { pageHead } from "@/lib/page-title";
 import { useReport } from "@/lib/reports";
 import { PrivateReportImage } from "./-components/private-report-image";
 
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_auth/reports/$reportId/")({
       : {}),
   }),
   component: ReportDetailPage,
-  head: () => ({ meta: [{ title: "Report details" }] }),
+  head: () => pageHead("Report details"),
 });
 
 function ReportDetailPage() {
@@ -35,7 +36,9 @@ function ReportDetailPage() {
         ]}
         title="Report details"
       />
-      {report.isPending ? <p role="status">Loading report…</p> : null}
+      {report.isPending ? (
+        <LoadingState label="Loading report…" rows={1} />
+      ) : null}
       {report.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>Report not found or unavailable.</AlertDescription>

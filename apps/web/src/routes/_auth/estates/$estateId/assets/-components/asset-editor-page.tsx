@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -94,9 +95,7 @@ export function EditAssetPage({
         title="Edit asset"
       />
       {asset.isPending ? (
-        <p aria-live="polite" className="mt-6">
-          Loading asset…
-        </p>
+        <LoadingState label="Loading asset…" rows={2} />
       ) : null}
       {asset.error ? (
         <p className="text-destructive mt-6" role="alert">

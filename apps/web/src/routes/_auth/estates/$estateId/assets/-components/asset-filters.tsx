@@ -26,7 +26,9 @@ function FilterSelect({
   value,
   options,
   onChange,
+  className,
 }: {
+  className: string;
   label: string;
   value: string;
   options: Record<string, string>;
@@ -37,7 +39,7 @@ function FilterSelect({
     [onChange]
   );
   return (
-    <Field className="min-w-0">
+    <Field className={className}>
       <FieldLabel>{label}</FieldLabel>
       <Select onValueChange={change} value={value}>
         <SelectTrigger aria-label={label} className="w-full">
@@ -58,7 +60,9 @@ export function AssetFilterControls({
   filters,
   onChange,
   locations,
+  fieldClassName = "w-full sm:w-48",
 }: {
+  fieldClassName?: string;
   filters: AssetFilters;
   onChange: (filters: AssetFilters) => void;
   locations: Record<string, string>;
@@ -95,18 +99,21 @@ export function AssetFilterControls({
   return (
     <>
       <FilterSelect
+        className={fieldClassName}
         label="Category"
         onChange={category}
         options={{ "": "All categories", ...categoryOptions }}
         value={filters.category ?? ""}
       />
       <FilterSelect
+        className={fieldClassName}
         label="Location"
         onChange={location}
         options={{ "": "All locations", ...locations }}
         value={filters.locationId ?? ""}
       />
       <FilterSelect
+        className={fieldClassName}
         label="Condition"
         onChange={condition}
         options={{
@@ -117,6 +124,7 @@ export function AssetFilterControls({
         value={filters.condition ?? ""}
       />
       <FilterSelect
+        className={fieldClassName}
         label="Status"
         onChange={status}
         options={{ ACTIVE: "Active", INACTIVE: "Retired", ALL: "All" }}
@@ -159,7 +167,9 @@ export function MobileAssetFilters({
   ].filter(Boolean).length;
   return (
     <Dialog onOpenChange={changeOpen} open={open}>
-      <DialogTrigger render={<Button className="self-end" variant="outline" />}>
+      <DialogTrigger
+        render={<Button className="sm:self-end" variant="outline" />}
+      >
         Filters{count ? ` (${count})` : ""}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
@@ -171,6 +181,7 @@ export function MobileAssetFilters({
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <AssetFilterControls
+            fieldClassName="min-w-0"
             filters={draft}
             locations={locations}
             onChange={setDraft}

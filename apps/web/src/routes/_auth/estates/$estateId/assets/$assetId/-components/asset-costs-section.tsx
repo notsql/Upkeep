@@ -1,6 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Empty } from "@proj/ui/components/empty";
 import { Field, FieldError, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import {
@@ -13,7 +12,10 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { Receipt } from "lucide-react";
 import { type ChangeEvent, useCallback, useId, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { assetEventTypeLabel, useAssetEvents } from "@/lib/asset-events";
 import {
   useAssetWorkOrderCompletions,
@@ -225,9 +227,7 @@ export function AssetCostsSection({
             </FieldError>
           ) : null}
           {events.isPending || completions.isPending ? (
-            <p aria-live="polite" className="mt-4">
-              Loading costs…
-            </p>
+            <LoadingState label="Loading costs…" rows={2} />
           ) : null}
           {events.error || completions.error ? (
             <Alert className="mt-4" variant="destructive">
@@ -237,9 +237,13 @@ export function AssetCostsSection({
             </Alert>
           ) : null}
           {loaded && !reversed && rows.length === 0 ? (
-            <Empty className="mt-4 border border-dashed" role="status">
-              No maintenance costs in this period.
-            </Empty>
+            <div className="mt-4">
+              <EmptyState
+                description="Try a longer period."
+                icon={Receipt}
+                title="No maintenance costs in this period."
+              />
+            </div>
           ) : null}
           {loaded && !reversed && rows.length > 0 ? (
             <CostTable

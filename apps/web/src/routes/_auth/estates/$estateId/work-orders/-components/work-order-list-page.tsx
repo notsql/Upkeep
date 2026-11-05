@@ -1,12 +1,9 @@
 import { Button, buttonVariants } from "@proj/ui/components/button";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@proj/ui/components/empty";
 import { Link } from "@tanstack/react-router";
+import { Plus, Wrench } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
@@ -81,6 +78,7 @@ export function WorkOrderListPage({
   );
   const retry = useCallback(() => orders.refetch(), [orders.refetch]);
   const first = useCallback(() => onChange(options), [onChange, options]);
+  const clearFilters = useCallback(() => changeFilters({}), [changeFilters]);
   const next = useCallback(() => {
     const nextCursor = orders.data?.nextCursor;
     if (!nextCursor) {
@@ -104,7 +102,7 @@ export function WorkOrderListPage({
     cursor,
   ]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Work orders are unavailable.</p>;
@@ -119,6 +117,7 @@ export function WorkOrderListPage({
               params={{ estateId }}
               to="/estates/$estateId/work-orders/new"
             >
+              <Plus aria-hidden="true" />
               Create work order
             </Link>
           ) : null
@@ -131,7 +130,9 @@ export function WorkOrderListPage({
         key={JSON.stringify(filters)}
         onChange={changeFilters}
       />
-      {orders.isPending ? <p role="status">Loading work orders…</p> : null}
+      {orders.isPending ? (
+        <LoadingState label="Loading work orders…" variant="table" />
+      ) : null}
       {orders.isError ? (
         <p role="alert">
           Unable to load work orders.{" "}
@@ -143,7 +144,12 @@ export function WorkOrderListPage({
       {orders.data && !orders.isError ? (
         <>
           {orders.data.items.length === 0 ? (
-            <WorkOrderEmptyState filtered={filtered} />
+            <WorkOrderEmptyState
+              canCreate={access.canCreate}
+              estateId={estateId}
+              filtered={filtered}
+              onClear={clearFilters}
+            />
           ) : (
             <WorkOrderTable
               descending={descending}
@@ -170,20 +176,49 @@ export function WorkOrderListPage({
   );
 }
 
-function WorkOrderEmptyState({ filtered }: { filtered: boolean }) {
+function WorkOrderEmptyState({
+  filtered,
+  canCreate,
+  estateId,
+  onClear,
+}: {
+  filtered: boolean;
+  canCreate: boolean;
+  estateId: string;
+  onClear: () => void;
+}) {
+  if (filtered) {
+    return (
+      <EmptyState
+        action={
+          <Button onClick={onClear} variant="outline">
+            Clear filters
+          </Button>
+        }
+        description="Try different filters, or clear them."
+        icon={Wrench}
+        title="No matching work orders"
+      />
+    );
+  }
   return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyTitle>
-          {filtered ? "No matching work orders" : "No work orders yet"}
-        </EmptyTitle>
-        <EmptyDescription>
-          {filtered
-            ? "Try different filters, or clear them."
-            : "Saved work orders will appear here."}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
+    <EmptyState
+      action={
+        canCreate ? (
+          <Link
+            className={buttonVariants()}
+            params={{ estateId }}
+            to="/estates/$estateId/work-orders/new"
+          >
+            <Plus aria-hidden="true" />
+            Create work order
+          </Link>
+        ) : undefined
+      }
+      description="Saved work orders will appear here."
+      icon={Wrench}
+      title="No work orders yet"
+    />
   );
 }
 

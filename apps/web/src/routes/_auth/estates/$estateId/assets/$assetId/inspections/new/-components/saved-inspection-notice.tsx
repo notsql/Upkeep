@@ -1,5 +1,6 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import type { InspectionResult } from "@/lib/inspections";
 
@@ -16,7 +17,7 @@ export function SavedInspectionNotice({
 }) {
   return (
     <PageLayout className="space-y-4">
-      <h1 className="text-2xl font-semibold">Inspection saved</h1>
+      <PageHeader title="Inspection saved" />
       {error ? <p role="alert">{error.message}</p> : null}
       <Link
         className={buttonVariants()}

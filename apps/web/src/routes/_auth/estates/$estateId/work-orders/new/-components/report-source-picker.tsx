@@ -9,6 +9,7 @@ import {
 } from "@proj/ui/components/dialog";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { type MouseEvent, useCallback, useId, useState } from "react";
+import { LoadingState } from "@/components/loading-state";
 import {
   type EstateReportFilters,
   useEstateReportList,
@@ -91,7 +92,7 @@ export function ReportSourcePicker({
             />
           ) : null}
           {reports.isPending ? (
-            <p role="status">Loading resident reports…</p>
+            <LoadingState label="Loading resident reports…" rows={2} />
           ) : null}
           {reports.isError ? (
             <p role="alert">

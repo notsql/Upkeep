@@ -16,6 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { LoadingState } from "@/components/loading-state";
 import { useCreateReport, useResidentLocations } from "@/lib/reports";
 import { ReportDetailsFields } from "@/routes/_auth/reports/new/-components/report-details-fields";
 import {
@@ -173,7 +174,9 @@ export function NewReportForm({
         <CardTitle>{estateName}</CardTitle>
       </CardHeader>
       <CardContent>
-        {locations.isLoading ? <p role="status">Loading locations…</p> : null}
+        {locations.isLoading ? (
+          <LoadingState label="Loading locations…" rows={1} />
+        ) : null}
         {locations.isError ? (
           <Alert role="alert" variant="destructive">
             <AlertDescription>

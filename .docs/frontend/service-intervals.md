@@ -58,11 +58,11 @@ never the only signal.
     has an interval.", no button.
   - **Intervals set** (`CalendarClock`): count with an interval and a per-unit breakdown for units
     in use ("1 in months · 1 in years"), or "None yet".
-- A `fieldset` (hidden legend "Filter by service interval") of `Button`s: All, Days, Months, Years,
-  Not set. Exactly one has `aria-pressed="true"` and the `default` variant (the rest `outline`);
-  All is the default. Days/Months/Years keep categories whose `serviceInterval.unit` matches; Not
+- shadcn `Tabs` (tablist "Filter by service interval"): All, Days, Months, Years, Not set.
+  Exactly one tab is `aria-selected="true"`; All is the default. Days/Months/Years keep categories whose `serviceInterval.unit` matches; Not
   set keeps those with no interval. Local state only, not remembered. When nothing matches, the
-  table is replaced by "No categories match this filter."
+  table is replaced by `EmptyState` "No matching categories" with an outline "Clear filters"
+  that returns to All.
 - Table columns: Category, Assets, Fails silently, **Service interval** (`IntervalBadge`), Last
   changed (the more recent of `lastChange` and `lastIntervalChange`; "Default" when neither), and an
   unlabelled actions column with an outline **Edit interval** `Button` (accessible name "Edit

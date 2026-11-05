@@ -34,6 +34,7 @@ import { Route as AuthEstatesEstateIdDocumentsIndexRouteImport } from './routes/
 import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/edit/index'
 import { Route as AuthEstatesEstateIdFailureRiskIndexRouteImport } from './routes/_auth/estates/$estateId/failure-risk/index'
 import { Route as AuthEstatesEstateIdInspectionsIndexRouteImport } from './routes/_auth/estates/$estateId/inspections/index'
+import { Route as AuthEstatesEstateIdLocationsIndexRouteImport } from './routes/_auth/estates/$estateId/locations/index'
 import { Route as AuthEstatesEstateIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/readings/index'
 import { Route as AuthEstatesEstateIdReportsIndexRouteImport } from './routes/_auth/estates/$estateId/reports/index'
 import { Route as AuthEstatesEstateIdRolesIndexRouteImport } from './routes/_auth/estates/$estateId/roles/index'
@@ -186,6 +187,12 @@ const AuthEstatesEstateIdInspectionsIndexRoute =
     path: '/estates/$estateId/inspections/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdLocationsIndexRoute =
+  AuthEstatesEstateIdLocationsIndexRouteImport.update({
+    id: '/estates/$estateId/locations/',
+    path: '/estates/$estateId/locations/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdReadingsIndexRoute =
   AuthEstatesEstateIdReadingsIndexRouteImport.update({
     id: '/estates/$estateId/readings/',
@@ -318,6 +325,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/inspections/': typeof AuthEstatesEstateIdInspectionsIndexRoute
+  '/estates/$estateId/locations/': typeof AuthEstatesEstateIdLocationsIndexRoute
   '/estates/$estateId/readings/': typeof AuthEstatesEstateIdReadingsIndexRoute
   '/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
   '/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
@@ -361,6 +369,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/edit': typeof AuthEstatesEstateIdEditIndexRoute
   '/estates/$estateId/failure-risk': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/inspections': typeof AuthEstatesEstateIdInspectionsIndexRoute
+  '/estates/$estateId/locations': typeof AuthEstatesEstateIdLocationsIndexRoute
   '/estates/$estateId/readings': typeof AuthEstatesEstateIdReadingsIndexRoute
   '/estates/$estateId/reports': typeof AuthEstatesEstateIdReportsIndexRoute
   '/estates/$estateId/roles': typeof AuthEstatesEstateIdRolesIndexRoute
@@ -406,6 +415,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/edit/': typeof AuthEstatesEstateIdEditIndexRoute
   '/_auth/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/_auth/estates/$estateId/inspections/': typeof AuthEstatesEstateIdInspectionsIndexRoute
+  '/_auth/estates/$estateId/locations/': typeof AuthEstatesEstateIdLocationsIndexRoute
   '/_auth/estates/$estateId/readings/': typeof AuthEstatesEstateIdReadingsIndexRoute
   '/_auth/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
   '/_auth/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
@@ -451,6 +461,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/edit/'
     | '/estates/$estateId/failure-risk/'
     | '/estates/$estateId/inspections/'
+    | '/estates/$estateId/locations/'
     | '/estates/$estateId/readings/'
     | '/estates/$estateId/reports/'
     | '/estates/$estateId/roles/'
@@ -494,6 +505,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/edit'
     | '/estates/$estateId/failure-risk'
     | '/estates/$estateId/inspections'
+    | '/estates/$estateId/locations'
     | '/estates/$estateId/readings'
     | '/estates/$estateId/reports'
     | '/estates/$estateId/roles'
@@ -538,6 +550,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/edit/'
     | '/_auth/estates/$estateId/failure-risk/'
     | '/_auth/estates/$estateId/inspections/'
+    | '/_auth/estates/$estateId/locations/'
     | '/_auth/estates/$estateId/readings/'
     | '/_auth/estates/$estateId/reports/'
     | '/_auth/estates/$estateId/roles/'
@@ -745,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdInspectionsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/locations/': {
+      id: '/_auth/estates/$estateId/locations/'
+      path: '/estates/$estateId/locations'
+      fullPath: '/estates/$estateId/locations/'
+      preLoaderRoute: typeof AuthEstatesEstateIdLocationsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/readings/': {
       id: '/_auth/estates/$estateId/readings/'
       path: '/estates/$estateId/readings'
@@ -885,6 +905,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdEditIndexRoute: typeof AuthEstatesEstateIdEditIndexRoute
   AuthEstatesEstateIdFailureRiskIndexRoute: typeof AuthEstatesEstateIdFailureRiskIndexRoute
   AuthEstatesEstateIdInspectionsIndexRoute: typeof AuthEstatesEstateIdInspectionsIndexRoute
+  AuthEstatesEstateIdLocationsIndexRoute: typeof AuthEstatesEstateIdLocationsIndexRoute
   AuthEstatesEstateIdReadingsIndexRoute: typeof AuthEstatesEstateIdReadingsIndexRoute
   AuthEstatesEstateIdReportsIndexRoute: typeof AuthEstatesEstateIdReportsIndexRoute
   AuthEstatesEstateIdRolesIndexRoute: typeof AuthEstatesEstateIdRolesIndexRoute
@@ -926,6 +947,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdFailureRiskIndexRoute,
   AuthEstatesEstateIdInspectionsIndexRoute:
     AuthEstatesEstateIdInspectionsIndexRoute,
+  AuthEstatesEstateIdLocationsIndexRoute:
+    AuthEstatesEstateIdLocationsIndexRoute,
   AuthEstatesEstateIdReadingsIndexRoute: AuthEstatesEstateIdReadingsIndexRoute,
   AuthEstatesEstateIdReportsIndexRoute: AuthEstatesEstateIdReportsIndexRoute,
   AuthEstatesEstateIdRolesIndexRoute: AuthEstatesEstateIdRolesIndexRoute,

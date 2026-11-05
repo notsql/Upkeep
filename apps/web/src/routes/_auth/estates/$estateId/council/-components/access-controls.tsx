@@ -1,12 +1,17 @@
 import type { components } from "@proj/api/schema";
+import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { MailX } from "lucide-react";
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import {
   useCancelCouncilInvitation,
   useOutstandingInvitations,
@@ -14,6 +19,11 @@ import {
 } from "@/lib/council-invitations";
 import { useEstateSession } from "@/lib/estates";
 import { AccessConfirmation } from "@/routes/_auth/estates/$estateId/council/-components/access-confirmation";
+import {
+  type MemberFilter,
+  matchesFilter,
+} from "@/routes/_auth/estates/$estateId/council/-components/member-filters";
+import { presetOptions } from "@/routes/_auth/estates/$estateId/council/-components/role-picker";
 
 export function RemoveMemberButton({
   estateId,
@@ -83,20 +93,31 @@ function OutstandingInvitation({
     delivery = "Sending or awaiting retry";
   }
   return (
-    <li className="grid gap-2 rounded-lg border p-3">
-      <p className="font-medium break-all">{invitation.email}</p>
-      <p className="text-muted-foreground text-sm">
-        {invitation.customRoleName ?? invitation.role} · {delivery}
-        {invitation.expiresAt
-          ? ` · Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`
-          : ""}
-      </p>
+    <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+      <div className="grid min-w-0 gap-1">
+        <p className="font-medium break-all">{invitation.email}</p>
+        <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+          <Badge variant="secondary">
+            {invitation.customRoleName ??
+              presetOptions.find((option) => option.role === invitation.role)
+                ?.label ??
+              invitation.role}
+          </Badge>
+          <span>
+            {delivery}
+            {invitation.expiresAt
+              ? ` · Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`
+              : ""}
+          </span>
+        </p>
+      </div>
       <Button
         aria-label={`Cancel invitation for ${invitation.email}`}
         onClick={show}
+        size="sm"
         variant="outline"
       >
-        Cancel invitation
+        Revoke
       </Button>
       {open ? (
         <AccessConfirmation
@@ -113,30 +134,75 @@ function OutstandingInvitation({
   );
 }
 
-export function OwnerInvitations({ estateId }: { estateId: string }) {
+export function OwnerInvitations({
+  estateId,
+  filter,
+  onClearFilters,
+}: {
+  estateId: string;
+  filter?: MemberFilter;
+  onClearFilters?: () => void;
+}) {
   const invitations = useOutstandingInvitations(estateId);
+  const visible = (invitations.data ?? []).filter((invitation) =>
+    filter
+      ? matchesFilter(filter, {
+          text: [invitation.email],
+          role: invitation.customRoleId ?? invitation.role,
+        })
+      : true
+  );
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
+        <CardTitle className="flex items-center gap-2">
           <h2>Pending invitations</h2>
+          {invitations.data ? (
+            <Badge variant="outline">{invitations.data.length} pending</Badge>
+          ) : null}
         </CardTitle>
+        <CardDescription>
+          Invitations not yet accepted. Revoking stops them granting access.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        {invitations.isPending ? <p>Loading invitations…</p> : null}
+        {invitations.isPending ? (
+          <LoadingState label="Loading invitations…" />
+        ) : null}
         {invitations.error ? (
           <p role="alert">{invitations.error.message}</p>
         ) : null}
-        {invitations.data?.length === 0 ? <p>No pending invitations.</p> : null}
-        <ul aria-label="Outstanding invitations" className="grid gap-3">
-          {invitations.data?.map((invitation) => (
-            <OutstandingInvitation
-              estateId={estateId}
-              invitation={invitation}
-              key={invitation.id}
-            />
-          ))}
-        </ul>
+        {invitations.data?.length === 0 ? (
+          <EmptyState
+            description="Invitations you send appear here until they are accepted."
+            icon={MailX}
+            title="No pending invitations"
+          />
+        ) : null}
+        {invitations.data?.length && !visible.length ? (
+          <EmptyState
+            action={
+              onClearFilters ? (
+                <Button onClick={onClearFilters} variant="outline">
+                  Clear filters
+                </Button>
+              ) : undefined
+            }
+            icon={MailX}
+            title="No matching invitations"
+          />
+        ) : null}
+        {visible.length ? (
+          <ul aria-label="Outstanding invitations" className="divide-y">
+            {visible.map((invitation) => (
+              <OutstandingInvitation
+                estateId={estateId}
+                invitation={invitation}
+                key={invitation.id}
+              />
+            ))}
+          </ul>
+        ) : null}
       </CardContent>
     </Card>
   );

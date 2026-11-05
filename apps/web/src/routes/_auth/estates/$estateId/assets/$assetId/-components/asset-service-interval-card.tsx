@@ -11,6 +11,7 @@ import {
 import { History } from "lucide-react";
 import { useCallback, useId, useState } from "react";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/loading-state";
 import { ServiceIntervalDialog } from "@/components/service-interval-dialog";
 import {
   type AssetServiceInterval,
@@ -110,7 +111,7 @@ export function AssetServiceIntervalCard({
         </CardHeader>
         <CardContent className="grid gap-3">
           {interval.isPending ? (
-            <p aria-live="polite">Loading service interval…</p>
+            <LoadingState label="Loading service interval…" rows={2} />
           ) : null}
           {interval.error ? (
             <Alert variant="destructive">

@@ -1,6 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { getSessionAccess } from "@/lib/access-server";
 import { estateDestination } from "@/lib/estate-destinations";
+import { pageHead } from "@/lib/page-title";
 import { HomePage } from "@/routes/-components/home-page";
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -51,5 +52,5 @@ export const Route = createFileRoute("/")({
     }
     throw redirect({ href: "/estates" });
   },
-  head: () => ({ meta: [{ title: "UpKeep — Estate workspace" }] }),
+  head: () => pageHead("Estate workspace"),
 });

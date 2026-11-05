@@ -233,13 +233,12 @@ export function RoleForm({
           </Table>
         </div>
       </fieldset>
-      {initial ? (
-        <p>
-          Permission changes affect current members and pending invitations.
+      {message ? (
+        <p className="text-destructive text-sm" role="alert">
+          {message}
         </p>
       ) : null}
-      {message ? <p role="alert">{message}</p> : null}
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2">
         <Button disabled={pending || !catalogue.length} type="submit">
           {buttonLabel}
         </Button>

@@ -2,10 +2,12 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Empty } from "@proj/ui/components/empty";
 import { Link } from "@tanstack/react-router";
+import { Wrench } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { CompletionOutcome } from "@/components/work-order-completion";
 import {
   type AssetEvent,
@@ -103,9 +105,7 @@ export function AssetMaintenanceSection({
             ) : null}
           </div>
           {events.isPending || completions.isPending ? (
-            <p aria-live="polite" className="mt-4">
-              Loading maintenance…
-            </p>
+            <LoadingState label="Loading maintenance…" rows={2} />
           ) : null}
           {events.error ? (
             <Alert className="mt-4" variant="destructive">
@@ -123,9 +123,13 @@ export function AssetMaintenanceSection({
             </Alert>
           ) : null}
           {events.data && completions.data && entries.length === 0 ? (
-            <Empty className="mt-4 border border-dashed" role="status">
-              No maintenance recorded yet.
-            </Empty>
+            <div className="mt-4">
+              <EmptyState
+                description="Recorded maintenance and completed work orders will appear here."
+                icon={Wrench}
+                title="No maintenance recorded yet"
+              />
+            </div>
           ) : null}
           {entries.length ? (
             <ul className="mt-4 grid gap-3">

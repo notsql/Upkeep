@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { pageHead } from "@/lib/page-title";
 import type { WorkOrderListSearch } from "@/lib/work-orders";
 import { WorkOrderListPage } from "./-components/work-order-list-page";
 export const Route = createFileRoute("/_auth/estates/$estateId/work-orders/")({
@@ -47,7 +48,7 @@ export const Route = createFileRoute("/_auth/estates/$estateId/work-orders/")({
     };
   },
   component: WorkOrderListRoute,
-  head: () => ({ meta: [{ title: "Work orders" }] }),
+  head: () => pageHead("Work orders"),
 });
 function WorkOrderListRoute() {
   const { estateId } = Route.useParams();

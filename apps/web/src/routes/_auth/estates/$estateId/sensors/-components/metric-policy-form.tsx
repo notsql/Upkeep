@@ -196,7 +196,7 @@ export function MetricPolicyForm({
               onValueChange={changeUnit}
               value={unit}
             >
-              <SelectTrigger id={`${id}-unit`}>
+              <SelectTrigger className="w-full" id={`${id}-unit`}>
                 <SelectValue>
                   {unit === "minutes" ? "Minutes" : "Hours"}
                 </SelectValue>

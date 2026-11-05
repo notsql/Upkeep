@@ -69,10 +69,14 @@ describe("estate list page", () => {
       response: new Response(),
     });
     renderWithProviders(<Directory />);
-    expect((await screen.findByRole("status")).textContent).toContain(
-      "No active estates"
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toContain(
+        "No active estates"
+      )
     );
-    screen.getByRole("link", { name: "Create estate" });
+    within(screen.getByRole("status")).getByRole("link", {
+      name: "Create estate",
+    });
   });
 
   it("loads the requested inactive filter and isolates its cache by user", async () => {
@@ -138,8 +142,10 @@ describe("estate list page", () => {
     renderWithProviders(<Directory />);
     await screen.findByRole("alert");
     fireEvent.click(screen.getByRole("button", { name: "Retry estates" }));
-    expect((await screen.findByRole("status")).textContent).toContain(
-      "No active estates"
+    await waitFor(() =>
+      expect(screen.getByRole("status").textContent).toContain(
+        "No active estates"
+      )
     );
   });
 });
@@ -229,4 +235,21 @@ it("offers clearing filters from the empty state instead of creation", async () 
   expect(
     within(empty).queryByRole("link", { name: "Create estate" })
   ).toBeNull();
+});
+
+it("uses the shared loading, filter and empty states", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [],
+    response: new Response(),
+  } as never);
+  renderWithProviders(<Directory />);
+  screen.getByRole("status", { name: "Loading estates…" });
+  screen.getByRole("search", { name: "Filter estates" });
+  await waitFor(() =>
+    expect(screen.getByRole("status").textContent).toContain(
+      "No active estates"
+    )
+  );
+  const empty = screen.getByRole("status");
+  within(empty).getByRole("link", { name: "Create estate" });
 });

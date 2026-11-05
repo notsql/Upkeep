@@ -287,8 +287,8 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and description "Sensor readings for this asset, newest first. Suspect readings are flagged."; the filters; "Loading readings…" (`role="status"`) while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`, `Empty`, `EmptyHeader`, `EmptyTitle` |
-| `ReadingFilterControls` (`reading-filters.tsx`) | "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `datetime-local` inputs, and a "Suspect only" checkbox. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Input`, `Checkbox`, `Label` |
+| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and description "Sensor readings for this asset, newest first. Suspect readings are flagged."; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
+| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `datetime-local` inputs (each `Field` `w-full sm:w-48`), and a "Suspect only" checkbox. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Input`, `Checkbox`, `Label` |
 
 ### Badges (`flagLabel`)
 
@@ -300,8 +300,8 @@ Both in `readings/-components/`.
 
 ### Empty states
 
-Shown (as an `Empty`, `role="status"`) when the response has `totalItems` 0.
-First match wins:
+Shown (as an `EmptyState`) when the response has `totalItems` 0. When any filter is
+set it carries an outline "Clear filters" that resets every filter. First match wins:
 
 1. `suspect` on: "No suspect readings match"
 2. `metric`, `from` or `to` set: "No readings match these filters"
@@ -538,3 +538,14 @@ When checking very large CSV values in Excel, import the value column as Text
 before numeric conversion. The CSV retains all stored digits, but Excel numeric
 cells support only 15 significant digits; formatting a previously rounded cell
 cannot restore its original digits. See [Microsoft's import guidance](https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers).
+
+## Screen states
+
+`reading-filter-controls.tsx` no longer wraps its fields in a Card: it renders a
+`FilterBar` (`search` landmark "Reading filters", fields `w-full sm:w-48`, Clear
+filters in actions). Record manual reading (Plus icon) is the PageHeader action;
+Export CSV stays below the header. `reading-results.tsx` uses `LoadingState`
+(table) and `EmptyState` for the four empty messages; the filtered ones add a
+Clear filters action, and the beyond-last-page recovery is an `EmptyState` with
+Go to first page. The asset picker and manual-entry metric load use
+`LoadingState`.

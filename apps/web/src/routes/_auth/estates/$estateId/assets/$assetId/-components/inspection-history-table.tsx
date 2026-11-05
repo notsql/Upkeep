@@ -11,7 +11,10 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { ClipboardCheck } from "lucide-react";
 import { useCallback, useId, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import {
   type InspectionResult,
   useInspectionAccess,
@@ -138,7 +141,7 @@ function InspectionHistoryPage({
             Inspection records
           </h2>
           {history.isPending ? (
-            <p role="status">Loading inspection records…</p>
+            <LoadingState label="Loading inspection records…" rows={2} />
           ) : null}
           {history.isError ? (
             <Alert role="alert" variant="destructive">
@@ -178,7 +181,11 @@ function InspectionHistoryPage({
             </Table>
           ) : null}
           {history.data?.items.length === 0 ? (
-            <p role="status">No inspection records yet</p>
+            <EmptyState
+              description="Saved inspections for this asset will appear here."
+              icon={ClipboardCheck}
+              title="No inspection records yet"
+            />
           ) : null}
           {asset.data && !active ? (
             <p role="note">

@@ -3,6 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
@@ -137,7 +138,9 @@ export function ManualReadingForm({
           </AlertDescription>
         </Alert>
       ) : null}
-      {metrics.isPending ? <p role="status">Loading metrics…</p> : null}
+      {metrics.isPending ? (
+        <LoadingState label="Loading metrics…" rows={2} />
+      ) : null}
       {metrics.data ? (
         <Card className="max-w-3xl">
           <CardContent>

@@ -1,5 +1,9 @@
 import { buttonVariants } from "@proj/ui/components/button";
-import { SidebarProvider, SidebarTrigger } from "@proj/ui/components/sidebar";
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "@proj/ui/components/sidebar";
 import { useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import type { ReactNode } from "react";
@@ -25,6 +29,18 @@ function SkipLink() {
   );
 }
 
+/** The sidebar stays open on desktop; only the mobile sheet needs a trigger and the brand. */
+function SidebarHeaderBar() {
+  const { isMobile } = useSidebar();
+  return (
+    <Header brand={isMobile} start={isMobile ? <SidebarTrigger /> : null} />
+  );
+}
+
+function noop() {
+  // The desktop sidebar cannot be collapsed.
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const signedIn = Boolean(user) && !loading;
@@ -46,11 +62,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <SkipLink />
-      <SidebarProvider>
+      <SidebarProvider onOpenChange={noop} open>
         <AppNavigation />
         {/* Pages render their own <main>, so the inset is a plain div rather than SidebarInset's <main>. */}
         <div className="bg-background relative flex min-w-0 flex-1 flex-col">
-          <Header start={<SidebarTrigger />} />
+          <SidebarHeaderBar />
           <div id="main-content" tabIndex={-1}>
             {children}
           </div>

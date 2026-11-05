@@ -1,17 +1,29 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
+import { Activity } from "lucide-react";
 import { useCallback } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import type { ReadingSearch } from "@/lib/reading-filters";
 import type { useEstateReadings } from "@/lib/readings";
 import { ReadingPagination } from "./reading-pagination";
 import { ReadingTable } from "./reading-table";
 
+function isFiltered(filters: ReadingSearch): boolean {
+  return !!(
+    filters.assetId ||
+    filters.metric ||
+    filters.from ||
+    filters.to ||
+    filters.suspect
+  );
+}
+
 function emptyMessage(filters: ReadingSearch, assetTotal?: number): string {
   if (filters.suspect) {
     return "No suspect readings match";
   }
-  if (filters.assetId || filters.metric || filters.from || filters.to) {
+  if (isFiltered(filters)) {
     return "No readings match these filters";
   }
   return assetTotal === 0 ? "No assets yet" : "No readings yet";
@@ -33,6 +45,7 @@ export function ReadingResults({
   onFiltersChange: (filters: ReadingSearch) => void;
 }) {
   const retry = useCallback(() => readings.refetch(), [readings.refetch]);
+  const clear = useCallback(() => onFiltersChange({}), [onFiltersChange]);
   const first = useCallback(
     () => onFiltersChange({ ...filters, page: undefined }),
     [filters, onFiltersChange]
@@ -57,32 +70,39 @@ export function ReadingResults({
     );
   }
   if (!readings.data) {
-    return readings.isPending ? <p role="status">Loading readings…</p> : null;
+    return readings.isPending ? (
+      <LoadingState label="Loading readings…" variant="table" />
+    ) : null;
   }
   const { data } = readings;
   if (data.totalItems === 0) {
-    return assetsPending ? (
-      <p role="status">Loading assets…</p>
-    ) : (
-      <Card>
-        <CardContent>
-          <div role="status">{emptyMessage(filters, assetTotal)}</div>
-        </CardContent>
-      </Card>
+    if (assetsPending) {
+      return <LoadingState label="Loading assets…" variant="table" />;
+    }
+    return (
+      <EmptyState
+        action={
+          isFiltered(filters) ? (
+            <Button onClick={clear} variant="outline">
+              Clear filters
+            </Button>
+          ) : undefined
+        }
+        icon={Activity}
+        title={emptyMessage(filters, assetTotal)}
+      />
     );
   }
   if (data.items.length === 0) {
     return (
-      <Card>
-        <CardContent>
-          <div className="space-y-3" role="status">
-            <p>This page is beyond the available readings.</p>
-            <Button onClick={first} variant="outline">
-              Go to first page
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <EmptyState
+        action={
+          <Button onClick={first} variant="outline">
+            Go to first page
+          </Button>
+        }
+        title="This page is beyond the available readings."
+      />
     );
   }
   return (

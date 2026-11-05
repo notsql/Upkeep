@@ -3,6 +3,8 @@ import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { LoadingState } from "@/components/loading-state";
+import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import type { InspectionResult } from "@/lib/inspections";
 import type { useWorkOrderInspection } from "./use-work-order-inspection";
@@ -38,13 +40,13 @@ export function renderInspectionWorkOrderStatus(
     );
   }
   if (inspection.pending) {
-    return <p role="status">Loading source inspection…</p>;
+    return <LoadingState label="Loading source inspection…" rows={2} />;
   }
   const { record } = inspection;
   if (record?.workOrder) {
     return (
       <PageLayout className="space-y-4">
-        <h1 className="text-2xl font-semibold">Work order already raised</h1>
+        <PageHeader title="Work order already raised" />
         <Link
           className="underline"
           params={{

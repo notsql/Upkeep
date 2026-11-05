@@ -312,6 +312,7 @@ it.each([undefined, "2026-09-25T00:00:00Z"])(
       response: new Response(),
     });
     renderWithProviders(<EstateEditorPage estateId={estate.id} />);
+    screen.getByRole("status", { name: "Loading estate…" });
     fireEvent.change(await screen.findByRole("textbox", { name: "Name" }), {
       target: { value: "Maple Gardens" },
     });

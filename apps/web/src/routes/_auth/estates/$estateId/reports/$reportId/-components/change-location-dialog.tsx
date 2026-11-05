@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@proj/ui/components/select";
 import { useCallback, useId, useState } from "react";
+import { LoadingState } from "@/components/loading-state";
 import {
   type EstateReport,
   ReportRequestError,
@@ -284,7 +285,7 @@ export function ChangeLocationDialog({
   const close = useCallback(() => setOpen(false), []);
   const retry = useCallback(() => locations.refetch(), [locations.refetch]);
   if (locations.isPending) {
-    return <p role="status">Loading correction locations…</p>;
+    return <LoadingState label="Loading correction locations…" rows={1} />;
   }
   if (locations.isError) {
     return (
@@ -310,7 +311,9 @@ export function ChangeLocationDialog({
             Choose the corrected location within this estate.
           </DialogDescription>
         </DialogHeader>
-        {locations.isPending ? <p role="status">Loading locations…</p> : null}
+        {locations.isPending ? (
+          <LoadingState label="Loading locations…" rows={1} />
+        ) : null}
         {locations.isError ? (
           <Alert role="alert">
             <AlertDescription>

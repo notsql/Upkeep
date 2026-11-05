@@ -287,7 +287,7 @@ it("does not carry private attachments into another estate", async () => {
   await screen.findByRole("row", { name: INVOICE_FILENAME });
   await act(async () => {
     await router.navigate({
-      href: `/estates/${otherEstate}/assets/${assetId}`,
+      href: `/estates/${otherEstate}/assets/${assetId}?tab=documents`,
     });
   });
   await waitFor(() =>

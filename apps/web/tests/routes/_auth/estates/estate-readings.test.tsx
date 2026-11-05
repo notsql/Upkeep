@@ -433,8 +433,17 @@ describe("estate reading browser", () => {
       };
       show(filters);
       await screen.findByText(message);
+      const filtered = Object.keys(filters).length > 0;
+      expect(
+        screen.getAllByRole("button", { name: "Clear filters" })
+      ).toHaveLength(filtered ? 2 : 1);
     }
   );
+
+  it("groups the reading filters in a search toolbar", async () => {
+    show({});
+    await screen.findByRole("search", { name: "Reading filters" });
+  });
 
   it("offers page-one recovery when a bookmarked page is beyond the results", async () => {
     page = { ...page, items: [], totalItems: 1 };

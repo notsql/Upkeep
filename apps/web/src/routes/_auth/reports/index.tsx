@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useAppAccess } from "@/lib/access";
+import { pageHead } from "@/lib/page-title";
 import { MyReportsPage } from "./-components/my-reports-page";
 
 export const Route = createFileRoute("/_auth/reports/")({
@@ -9,7 +10,7 @@ export const Route = createFileRoute("/_auth/reports/")({
       : {}),
   }),
   component: MyReportsRoute,
-  head: () => ({ meta: [{ title: "My reports" }] }),
+  head: () => pageHead("My reports"),
 });
 function MyReportsRoute() {
   const { estateId } = Route.useSearch();

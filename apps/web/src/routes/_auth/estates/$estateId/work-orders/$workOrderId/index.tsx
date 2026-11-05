@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-title";
 import { WorkOrderDetailPage } from "./-components/work-order-detail-page";
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/work-orders/$workOrderId/"
 )({
   component: WorkOrderDetailRoute,
-  head: () => ({ meta: [{ title: "Work order details" }] }),
+  head: () => pageHead("Work order details"),
 });
 function WorkOrderDetailRoute() {
   const { estateId, workOrderId } = Route.useParams();

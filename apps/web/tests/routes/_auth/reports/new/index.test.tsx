@@ -359,3 +359,9 @@ it("lets a multi-estate resident choose an estate and clears the old location se
   });
   expect(post).not.toHaveBeenCalled();
 });
+
+it("announces loading the estate with the shared loading state", async () => {
+  renderWithProviders(<NewReportPage />);
+  screen.getByRole("status", { name: "Loading your estate…" });
+  await screen.findByRole("heading", { name: "Report a fault" });
+});

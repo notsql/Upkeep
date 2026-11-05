@@ -9,10 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@proj/ui/components/dialog";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type ChangeEvent, useCallback, useId, useMemo, useState } from "react";
+import { FilterBar } from "@/components/filter-bar";
+import { LoadingState } from "@/components/loading-state";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
@@ -126,6 +128,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     () => setPanel({ kind: "create", type: "BLOCK" }),
     []
   );
+  const clearSearch = useCallback(() => setQuery(""), []);
   const search = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setQuery(event.target.value),
     []
@@ -250,7 +253,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
 
   return (
     <Dialog onOpenChange={changeOpen} open={Boolean(panel && canOpenPanel)}>
-      <Card className="mt-8">
+      <Card>
         <CardContent>
           <section
             aria-labelledby={`${id}-heading`}
@@ -258,8 +261,8 @@ export function LocationsSection({ estateId }: { estateId: string }) {
             id="locations"
           >
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold" id={`${id}-heading`}>
-                Locations
+              <h2 className="text-lg font-semibold" id={`${id}-heading`}>
+                Blocks and levels
               </h2>
               {canCreate ? (
                 <Button id={`${id}-add`} onClick={addBlock} variant="outline">
@@ -267,20 +270,29 @@ export function LocationsSection({ estateId }: { estateId: string }) {
                 </Button>
               ) : null}
             </div>
-            <div className="mt-4 grid gap-1">
-              <Label htmlFor={`${id}-search`}>Search locations</Label>
-              <Input
-                id={`${id}-search`}
-                onChange={search}
-                placeholder="Block, level or common area name"
-                type="search"
-                value={query}
+            <div className="mt-4">
+              <FilterBar
+                label="Filter locations"
+                search={
+                  <Field>
+                    <FieldLabel htmlFor={`${id}-search`}>
+                      Search locations
+                    </FieldLabel>
+                    <Input
+                      id={`${id}-search`}
+                      onChange={search}
+                      placeholder="Block, level or common area name"
+                      type="search"
+                      value={query}
+                    />
+                  </Field>
+                }
               />
             </div>
             {locations.isPending ? (
-              <p aria-live="polite" className="mt-4">
-                Loading locations…
-              </p>
+              <div className="mt-4">
+                <LoadingState label="Loading locations…" />
+              </div>
             ) : null}
             {locations.error ? (
               <Alert className="mt-4" variant="destructive">
@@ -294,6 +306,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
                 canDeactivate={canDeactivate}
                 canEdit={canEdit}
                 expandedIds={expandedIds ?? EMPTY_EXPANSION}
+                onClearSearch={clearSearch}
                 onPanel={setPanel}
                 onToggle={toggleLocation}
                 query={query}

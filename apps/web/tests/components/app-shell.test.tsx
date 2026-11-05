@@ -149,7 +149,14 @@ describe("app shell", () => {
       )
     ).toBe("page");
     await screen.findByRole("button", { name: SWITCH_ESTATE });
-    screen.getByRole("button", { name: "Toggle Sidebar" });
+    expect(screen.queryByRole("button", { name: "Toggle Sidebar" })).toBeNull();
+  });
+  it("shows the UpKeep brand once, at the top of the sidebar", async () => {
+    renderShell();
+    await sidebar();
+    const brands = screen.getAllByRole("link", { name: "UpKeep" });
+    expect(brands).toHaveLength(1);
+    expect(brands[0]?.closest('[data-slot="sidebar-header"]')).not.toBeNull();
   });
   it("shows the resident sidebar on /reports", async () => {
     state.pathname = "/reports";

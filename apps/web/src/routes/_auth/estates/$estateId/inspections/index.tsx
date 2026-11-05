@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-title";
 import { InspectionsPage } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/inspections/")({
   component: InspectionsRoute,
-  head: () => ({ meta: [{ title: "Inspections" }] }),
+  head: () => pageHead("Inspections"),
 });
 
 function InspectionsRoute() {

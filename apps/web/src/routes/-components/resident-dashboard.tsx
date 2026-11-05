@@ -7,6 +7,9 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { ClipboardList } from "lucide-react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
@@ -49,7 +52,7 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
         actions={<ReportFaultLink estateId={estateId} />}
         title="Dashboard"
       />
-      {reports.isPending ? <p role="status">Loading reports…</p> : null}
+      {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>Unable to load reports.</AlertDescription>
@@ -81,10 +84,12 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
               ) : null}
             </div>
             {items.length === 0 ? (
-              <div className="grid justify-items-start gap-3">
-                <p>You haven't reported any faults yet.</p>
-                <ReportFaultLink estateId={estateId} />
-              </div>
+              <EmptyState
+                action={<ReportFaultLink estateId={estateId} />}
+                description="You haven't reported any faults yet."
+                icon={ClipboardList}
+                title="No reports yet"
+              />
             ) : (
               items.slice(0, RECENT_LIMIT).map((report) => (
                 <ReportCard

@@ -58,7 +58,7 @@ Invalid URL bounds fail route validation before report queries mount. Changing
 or clearing a filter removes the cursor in the same navigation; refresh and back
 restore controls. First page clears only the cursor; Next retains both filters.
 Controls wait for location labels rather than briefly showing UUIDs. A valid
-empty filtered result shows "No matching reports." Position filtering uses the
+empty filtered result shows the "No matching reports" `EmptyState` with a Clear filters action; an empty estate shows "No reports yet". Position filtering uses the
 backend's level `sortOrder` and includes common areas beneath matching levels.
 Direct block common areas appear only when neither position bound is supplied.
 The range applies across the estate when All blocks is selected; inactive
@@ -127,3 +127,10 @@ filters; Change location additionally requires canRelocateFaultReports from
 RELOCATE_FAULT_REPORTS and an active estate. The existing query keys, correction
 DTO and invalidations remain. Live definition edits/reassignment update access
 and the API independently rejects stale UI authority with the same token.
+
+## Screen states
+
+`report-filters.tsx` renders a `FilterBar` (`search` landmark "Filter reports")
+with the Block combobox and the Level position fieldset as fields and Apply/Clear
+filters as actions; the same toolbar appears inside the work-order report picker
+dialog. List, detail, image and correction-location loads use `LoadingState`.

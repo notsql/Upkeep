@@ -1,3 +1,4 @@
+import { fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { expect, it, vi } from "vitest";
 import type { EstateDocument } from "@/lib/documents";
@@ -49,4 +50,34 @@ it("explains an empty result when only a document type filter is active", () => 
   );
   screen.getByText("No files match your search");
   expect(screen.queryByText("No documents uploaded")).toBeNull();
+});
+
+it("offers Clear filters when filters produced no documents", () => {
+  const clear = vi.fn();
+  renderWithProviders(
+    <DocumentList
+      downloading={false}
+      failed={false}
+      filename="pump"
+      items={[]}
+      onClearFilters={clear}
+      onDownload={vi.fn()}
+    />
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(clear).toHaveBeenCalled();
+});
+
+it("offers the create action when nothing has been uploaded", () => {
+  renderWithProviders(
+    <DocumentList
+      createAction={<button type="button">Upload document</button>}
+      downloading={false}
+      failed={false}
+      items={[]}
+      onDownload={vi.fn()}
+    />
+  );
+  screen.getByText("No documents uploaded");
+  screen.getByRole("button", { name: "Upload document" });
 });

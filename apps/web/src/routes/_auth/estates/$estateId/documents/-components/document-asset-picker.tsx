@@ -13,6 +13,7 @@ import {
 } from "@proj/ui/components/table";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { LoadingState } from "@/components/loading-state";
 import { type Asset, type AssetFilters, useAssets } from "@/lib/assets";
 import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { flattenLocations, useLocations } from "@/lib/locations";
@@ -97,7 +98,9 @@ export function DocumentAssetPicker({
           Selected: {selected.reference} — {selected.name}
         </p>
       ) : null}
-      {assets.isPending ? <p role="status">Loading assets…</p> : null}
+      {assets.isPending ? (
+        <LoadingState label="Loading assets…" rows={2} />
+      ) : null}
       {assets.isError ? (
         <Alert variant="destructive">
           <AlertDescription>

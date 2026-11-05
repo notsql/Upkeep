@@ -2,14 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
 import { Card } from "@proj/ui/components/card";
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@proj/ui/components/empty";
+import { Field } from "@proj/ui/components/field";
 import {
   InputGroup,
   InputGroupAddon,
@@ -22,11 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
-import { Skeleton } from "@proj/ui/components/skeleton";
 import { Link } from "@tanstack/react-router";
 import { Building2, ChevronRight, MapPin, Plus, Search } from "lucide-react";
 import { type ChangeEvent, useCallback } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { FilterBar } from "@/components/filter-bar";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { type EstateStatus, formatMcst, useEstateList } from "@/lib/estates";
@@ -48,8 +43,6 @@ const accessItems: { value: EstateAccess; label: string }[] = [
   { value: "OWNED", label: "Owner" },
   { value: "SHARED", label: "Shared with you" },
 ];
-
-const skeletonKeys = ["first", "second", "third"];
 
 const monogramColours = [
   "bg-sky-500/15 text-sky-700 dark:text-sky-300",
@@ -119,81 +112,75 @@ function EstateFilterToolbar({
   status: EstateStatus;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-center gap-2">
-      <InputGroup className="min-w-0 flex-1 basis-64">
-        <InputGroupAddon>
-          <Search aria-hidden="true" />
-        </InputGroupAddon>
-        <InputGroupInput
-          aria-label="Search estates"
-          onChange={changeSearch}
-          placeholder="Search by name, MCST number or address"
-          type="search"
-          value={filters.q ?? ""}
-        />
-      </InputGroup>
-      <Select items={statusItems} onValueChange={changeStatus} value={status}>
-        <SelectTrigger aria-label="Status" className="w-32">
-          <SelectValue className="min-w-0 truncate" />
-        </SelectTrigger>
-        <SelectContent>
-          {statusItems.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select items={accessItems} onValueChange={changeAccess} value={access}>
-        <SelectTrigger aria-label="Access" className="w-40">
-          <SelectValue className="min-w-0 truncate" />
-        </SelectTrigger>
-        <SelectContent>
-          {accessItems.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {showClear ? (
-        <Button onClick={clearFilters} variant="ghost">
-          Clear filters
-        </Button>
-      ) : null}
-      {showCount ? (
-        <p className="text-muted-foreground ml-auto text-sm tabular-nums">
-          {count} {count === 1 ? "estate" : "estates"}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
-function EstateSkeletonList() {
-  return (
-    <div aria-busy="true" aria-live="polite">
-      <span className="sr-only">Loading estates…</span>
-      <ul
-        aria-hidden="true"
-        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+    <div className="mb-6">
+      <FilterBar
+        actions={
+          <>
+            {showClear ? (
+              <Button onClick={clearFilters} variant="ghost">
+                Clear filters
+              </Button>
+            ) : null}
+            {showCount ? (
+              <p className="text-muted-foreground text-sm tabular-nums">
+                {count} {count === 1 ? "estate" : "estates"}
+              </p>
+            ) : null}
+          </>
+        }
+        label="Filter estates"
+        search={
+          <InputGroup>
+            <InputGroupAddon>
+              <Search aria-hidden="true" />
+            </InputGroupAddon>
+            <InputGroupInput
+              aria-label="Search estates"
+              onChange={changeSearch}
+              placeholder="Search by name, MCST number or address"
+              type="search"
+              value={filters.q ?? ""}
+            />
+          </InputGroup>
+        }
       >
-        {skeletonKeys.map((key) => (
-          <li key={key}>
-            <Card className="h-full gap-4 px-5">
-              <div className="flex items-center gap-3">
-                <Skeleton className="size-10 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-3 w-1/3" />
-                </div>
-              </div>
-              <Skeleton className="h-3 w-4/5" />
-              <Skeleton className="h-5 w-1/2" />
-            </Card>
-          </li>
-        ))}
-      </ul>
+        <Field className="w-full sm:w-48">
+          <Select
+            items={statusItems}
+            onValueChange={changeStatus}
+            value={status}
+          >
+            <SelectTrigger aria-label="Status" className="w-full">
+              <SelectValue className="min-w-0 truncate" />
+            </SelectTrigger>
+            <SelectContent>
+              {statusItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field className="w-full sm:w-48">
+          <Select
+            items={accessItems}
+            onValueChange={changeAccess}
+            value={access}
+          >
+            <SelectTrigger aria-label="Access" className="w-full">
+              <SelectValue className="min-w-0 truncate" />
+            </SelectTrigger>
+            <SelectContent>
+              {accessItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+      </FilterBar>
     </div>
   );
 }
@@ -207,36 +194,28 @@ function EstateEmptyState({
   emptyMessage: string;
   filtersActive: boolean;
 }) {
-  const title = filtersActive ? "No matching estates" : emptyMessage;
   return (
-    <Empty className="bg-card border border-dashed" role="status">
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Building2 aria-hidden="true" />
-        </EmptyMedia>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDescription>
-          {filtersActive
-            ? emptyMessage
-            : "Create an estate to start tracking its assets, readings and work orders."}
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        {filtersActive ? (
+    <EmptyState
+      action={
+        filtersActive ? (
           <Button onClick={clearFilters} variant="outline">
             Clear filters
           </Button>
         ) : (
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            to="/estates/new"
-          >
+          <Link className={buttonVariants()} to="/estates/new">
             <Plus aria-hidden="true" />
-            New estate
+            Create estate
           </Link>
-        )}
-      </EmptyContent>
-    </Empty>
+        )
+      }
+      description={
+        filtersActive
+          ? emptyMessage
+          : "Create an estate to start tracking its assets, readings and work orders."
+      }
+      icon={Building2}
+      title={filtersActive ? "No matching estates" : emptyMessage}
+    />
   );
 }
 
@@ -364,7 +343,9 @@ export function EstateListPage({
         showCount={Boolean(visible)}
         status={status}
       />
-      {estates.isPending ? <EstateSkeletonList /> : null}
+      {estates.isPending ? (
+        <LoadingState label="Loading estates…" variant="cards" />
+      ) : null}
       {estates.error ? (
         <Alert variant="destructive">
           <AlertDescription>

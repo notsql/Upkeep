@@ -1,6 +1,7 @@
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
+import { EmptyState } from "@/components/empty-state";
 import { useInspectionResults } from "@/lib/inspections";
 
 /** Only opened after a save error to check canonical records before another POST. */
@@ -51,7 +52,7 @@ export function InspectionSaveRecovery({
             ))}
           </ul>
           {history.data.items.length === 0 ? (
-            <p>No inspection records yet.</p>
+            <EmptyState title="No inspection records yet" />
           ) : null}
           {history.data.nextCursor ? (
             <Button onClick={next} type="button" variant="outline">

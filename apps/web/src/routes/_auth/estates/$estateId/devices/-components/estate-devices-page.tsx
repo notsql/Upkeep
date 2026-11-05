@@ -9,8 +9,11 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { Cpu } from "lucide-react";
 import { useMemo } from "react";
 import { DeviceStatusBadge } from "@/components/device-status-badge";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { type EstateDevice, useEstateDevices } from "@/lib/devices";
@@ -38,16 +41,20 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
       <p className="text-muted-foreground my-4 text-sm">
         Refreshes every 60 seconds while this page is open.
       </p>
-      {devices.isPending ? <p role="status">Loading devices…</p> : null}
+      {devices.isPending ? (
+        <LoadingState label="Loading devices…" variant="table" />
+      ) : null}
       {devices.error ? (
         <Alert variant="destructive">
           <AlertDescription>{devices.error.message}</AlertDescription>
         </Alert>
       ) : null}
       {devices.data?.length === 0 ? (
-        <p className="text-muted-foreground py-6">
-          No devices are registered in this estate yet.
-        </p>
+        <EmptyState
+          description="Devices registered to this estate's assets will appear here."
+          icon={Cpu}
+          title="No devices yet"
+        />
       ) : null}
       {devices.data?.length ? (
         <Table

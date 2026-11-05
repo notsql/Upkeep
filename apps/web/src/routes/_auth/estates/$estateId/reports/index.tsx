@@ -1,7 +1,10 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MessageSquareWarning } from "lucide-react";
 import { useCallback } from "react";
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
@@ -11,6 +14,7 @@ import {
   useEstateReportList,
   useEstateReportLocations,
 } from "@/lib/estate-reports";
+import { pageHead } from "@/lib/page-title";
 import { ReportFilters } from "./-components/report-filters";
 
 const INTEGER_POSITION = /^-?\d+$/u;
@@ -40,7 +44,7 @@ export const Route = createFileRoute("/_auth/estates/$estateId/reports/")({
     };
   },
   component: EstateReportsPage,
-  head: () => ({ meta: [{ title: "Fault reports" }] }),
+  head: () => pageHead("Fault reports"),
 });
 
 function EstateReportsPage() {
@@ -60,6 +64,7 @@ function EstateReportsPage() {
     (values: EstateReportFilters) => navigate({ search: values }),
     [navigate]
   );
+  const clearFilters = useCallback(() => navigate({ search: {} }), [navigate]);
   const retry = useCallback(() => reports.refetch(), [reports.refetch]);
   const retryLocations = useCallback(
     () => locations.refetch(),
@@ -86,7 +91,7 @@ function EstateReportsPage() {
     [blockId, minLevelPosition, maxLevelPosition, navigate]
   );
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Fault reports are unavailable.</p>;
@@ -102,7 +107,9 @@ function EstateReportsPage() {
           onChange={filter}
         />
       ) : null}
-      {locations.isPending ? <p role="status">Loading locations…</p> : null}
+      {locations.isPending ? (
+        <LoadingState label="Loading locations…" rows={1} />
+      ) : null}
       {locations.isError ? (
         <Alert role="alert">
           <AlertDescription>
@@ -113,7 +120,7 @@ function EstateReportsPage() {
           </AlertDescription>
         </Alert>
       ) : null}
-      {reports.isPending ? <p role="status">Loading reports…</p> : null}
+      {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>
@@ -125,7 +132,7 @@ function EstateReportsPage() {
         </Alert>
       ) : null}
       {reports.data?.items.length === 0 ? (
-        <p>{filtered ? "No matching reports." : "No reports yet."}</p>
+        <ReportsEmpty filtered={filtered} onClear={clearFilters} />
       ) : null}
       {reports.isError
         ? null
@@ -143,7 +150,7 @@ function EstateReportsPage() {
               }
             />
           ))}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {cursor ? (
           <Button onClick={first} variant="outline">
             First page
@@ -156,6 +163,36 @@ function EstateReportsPage() {
         ) : null}
       </div>
     </PageLayout>
+  );
+}
+
+function ReportsEmpty({
+  filtered,
+  onClear,
+}: {
+  filtered: boolean;
+  onClear: () => void;
+}) {
+  if (filtered) {
+    return (
+      <EmptyState
+        action={
+          <Button onClick={onClear} variant="outline">
+            Clear filters
+          </Button>
+        }
+        description="Try different filters, or clear them."
+        icon={MessageSquareWarning}
+        title="No matching reports"
+      />
+    );
+  }
+  return (
+    <EmptyState
+      description="Resident fault reports will appear here."
+      icon={MessageSquareWarning}
+      title="No reports yet"
+    />
   );
 }
 

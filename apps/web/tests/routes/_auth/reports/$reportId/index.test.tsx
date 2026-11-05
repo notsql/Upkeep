@@ -251,3 +251,9 @@ it("returns to the selected estate's report history through My reports breadcrum
     screen.queryByRole("link", { name: "Return to My Reports" })
   ).toBeNull();
 });
+
+it("announces loading with the shared loading state", async () => {
+  renderWithProviders(<Page />);
+  screen.getByRole("status", { name: "Loading report…" });
+  await screen.findByRole("heading", { level: 2, name: detail.title });
+});

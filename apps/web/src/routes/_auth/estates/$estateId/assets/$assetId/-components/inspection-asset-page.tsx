@@ -3,6 +3,7 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useInspectionAccess, useInspectionAsset } from "@/lib/inspections";
@@ -19,7 +20,7 @@ export function InspectionAssetPage({
   const asset = useInspectionAsset(estateId, assetId);
   const retry = useCallback(() => asset.refetch(), [asset.refetch]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Inspection access is unavailable.</p>;
@@ -33,7 +34,7 @@ export function InspectionAssetPage({
     );
   }
   if (!asset.data) {
-    return <p role="status">Loading asset…</p>;
+    return <LoadingState label="Loading asset…" rows={2} />;
   }
   const context = asset.data;
   const active =

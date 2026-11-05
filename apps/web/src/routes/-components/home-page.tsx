@@ -10,6 +10,7 @@ import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { Building2, Layers, Users } from "lucide-react";
 import { isResidentOnly, useCurrentEstate } from "@/components/app-navigation";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
@@ -53,7 +54,7 @@ export function HomePage() {
   if (user && !loading && access.isPending) {
     return (
       <PageLayout>
-        <p role="status">Loading your access…</p>
+        <LoadingState label="Loading your access…" rows={2} />
       </PageLayout>
     );
   }

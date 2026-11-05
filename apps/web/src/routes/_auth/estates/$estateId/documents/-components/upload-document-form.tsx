@@ -1,10 +1,13 @@
 import { Button } from "@proj/ui/components/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@proj/ui/components/dialog";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
@@ -14,13 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useCallback,
-  useRef,
-  useState,
-} from "react";
+import { Upload } from "lucide-react";
+import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { type DocumentType, useUploadDocument } from "@/lib/documents";
 
@@ -46,13 +44,32 @@ function validateFile(file: File | undefined): string | undefined {
   return undefined;
 }
 
-export function UploadDocumentForm({ estateId }: { estateId: string }) {
+export function UploadDocumentForm({
+  estateId,
+  onUploaded,
+}: {
+  estateId: string;
+  onUploaded: (message: string) => void;
+}) {
   const upload = useUploadDocument(estateId);
+  const [open, setOpen] = useState(false);
   const [documentType, setDocumentType] = useState<DocumentType | "">("");
   const [file, setFile] = useState<File>();
   const [error, setError] = useState<string>();
-  const [success, setSuccess] = useState<string>();
-  const input = useRef<HTMLInputElement>(null);
+  const changeOpen = useCallback(
+    (next: boolean) => {
+      if (upload.isPending) {
+        return;
+      }
+      setOpen(next);
+      if (!next) {
+        setError(undefined);
+        setFile(undefined);
+        setDocumentType("");
+      }
+    },
+    [upload.isPending]
+  );
   const changeType = useCallback(
     (value: string | null) =>
       setDocumentType(
@@ -70,7 +87,6 @@ export function UploadDocumentForm({ estateId }: { estateId: string }) {
       if (upload.isPending) {
         return;
       }
-      setSuccess(undefined);
       const invalid =
         validateFile(file) ??
         (documentType ? undefined : "Choose Invoice or Service report.");
@@ -81,13 +97,11 @@ export function UploadDocumentForm({ estateId }: { estateId: string }) {
       try {
         await upload.mutateAsync({ file, documentType });
         const message = `"${file.name}" uploaded successfully.`;
-        setSuccess(message);
+        onUploaded(message);
         toast.success(message);
         setFile(undefined);
         setDocumentType("");
-        if (input.current) {
-          input.current.value = "";
-        }
+        setOpen(false);
       } catch (failure) {
         setError(
           failure instanceof Error
@@ -96,18 +110,22 @@ export function UploadDocumentForm({ estateId }: { estateId: string }) {
         );
       }
     },
-    [documentType, file, upload.isPending, upload.mutateAsync]
+    [documentType, file, onUploaded, upload.isPending, upload.mutateAsync]
   );
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Upload a document</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Dialog onOpenChange={changeOpen} open={open}>
+      <DialogTrigger render={<Button className="w-fit" />}>
+        <Upload aria-hidden="true" />
+        Upload document
+      </DialogTrigger>
+      <DialogContent>
         <form className="grid gap-4" onSubmit={submit}>
-          <p id="document-formats">
-            PDF, JPEG or PNG. One file per upload, up to 5 MB.
-          </p>
+          <DialogHeader>
+            <DialogTitle>Upload a document</DialogTitle>
+            <DialogDescription id="document-formats">
+              PDF, JPEG or PNG. One file per upload, up to 5 MB.
+            </DialogDescription>
+          </DialogHeader>
           <div className="grid gap-2">
             <Label htmlFor="document-type">Document type</Label>
             <Select
@@ -115,7 +133,7 @@ export function UploadDocumentForm({ estateId }: { estateId: string }) {
               onValueChange={changeType}
               value={documentType}
             >
-              <SelectTrigger id="document-type">
+              <SelectTrigger className="w-full" id="document-type">
                 <SelectValue placeholder="Choose document type" />
               </SelectTrigger>
               <SelectContent>
@@ -132,18 +150,18 @@ export function UploadDocumentForm({ estateId }: { estateId: string }) {
               disabled={upload.isPending}
               id="document-file"
               onChange={changeFile}
-              ref={input}
               type="file"
             />
           </div>
           {error ? <p role="alert">{error}</p> : null}
-          {success ? <p role="status">{success}</p> : null}
           {upload.isPending ? <p role="status">Uploading…</p> : null}
-          <Button className="w-fit" disabled={upload.isPending} type="submit">
-            {upload.isPending ? "Uploading…" : "Upload"}
-          </Button>
+          <DialogFooter>
+            <Button disabled={upload.isPending} type="submit">
+              {upload.isPending ? "Uploading…" : "Upload"}
+            </Button>
+          </DialogFooter>
         </form>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
@@ -177,9 +178,9 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
     <PageLayout className="max-w-3xl">
       <EstateEditorHeader editing={Boolean(estateId)} />
       {estateId && (estate.isPending || waitingForPermissions) ? (
-        <p aria-live="polite" className="mt-6">
-          Loading estate…
-        </p>
+        <div className="mt-6">
+          <LoadingState label="Loading estate…" rows={2} />
+        </div>
       ) : null}
       {estateId && estate.error ? (
         <Alert className="mt-6" variant="destructive">

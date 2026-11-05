@@ -33,7 +33,13 @@ const estate = {
 let currentEstate = estate;
 let allowed = false;
 let removed = false;
+const PENDING_TAB = /^Pending invitations/u;
 let cancelled = false;
+async function openInviteDialog(): Promise<void> {
+  fireEvent.click(await screen.findByRole("button", { name: "Invite member" }));
+  await screen.findByRole("dialog", { name: "Invite member" });
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
   currentEstate = { ...estate };
@@ -132,6 +138,7 @@ it("lets a Manager invite a council member and promote another member", async ()
   const { queryClient } = renderWithProviders(
     <CouncilPage estateId="estate-id" />
   );
+  await openInviteDialog();
   fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
     target: { value: "council@example.com" },
   });
@@ -147,6 +154,10 @@ it("lets a Manager invite a council member and promote another member", async ()
       body: { email: "council@example.com", role: "COUNCIL" },
     }
   );
+  fireEvent.click(
+    within(screen.getByRole("dialog")).getByRole("button", { name: "Close" })
+  );
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   await chooseOption(
     await screen.findByRole("combobox", { name: "Role for Alice" }),
     "Manager (Admin)"
@@ -179,7 +190,7 @@ it("shows delegates the form without permission controls", async () => {
     canManageInvitationPermissions: false,
   };
   renderWithProviders(<CouncilPage estateId="estate-id" />);
-  await screen.findByRole("button", { name: "Send invitation" });
+  await screen.findByRole("button", { name: "Invite member" });
   expect(screen.queryByRole("checkbox")).toBeNull();
   expect(api.GET).not.toHaveBeenCalledWith(
     "/estates/{estateId}/members",
@@ -207,6 +218,7 @@ it("retains input and reports a failed invitation", async () => {
     response: new Response(null, { status: 409 }),
   } as never);
   renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await openInviteDialog();
   fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
     target: { value: "council@example.com" },
   });
@@ -247,6 +259,7 @@ it("blocks repeated submissions while sending", async () => {
       }) as never
   );
   renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await openInviteDialog();
   fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
     target: { value: "council@example.com" },
   });
@@ -271,6 +284,7 @@ it("tells the inviter that an existing account accepts on Invitations", async ()
     response: new Response(null, { status: 201 }),
   } as never);
   renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await openInviteDialog();
   fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
     target: { value: "existing@example.com" },
   });
@@ -290,6 +304,7 @@ it("confirms cancellation with the email before invalidating the pending list", 
     });
   });
   renderWithProviders(<CouncilPage estateId="estate-id" />);
+  fireEvent.click(await screen.findByRole("tab", { name: PENDING_TAB }));
   fireEvent.click(
     await screen.findByRole("button", {
       name: "Cancel invitation for bob@example.com",
@@ -394,7 +409,7 @@ it("does not expose owner removal controls to delegates", async () => {
     canManageInvitationPermissions: false,
   };
   renderWithProviders(<CouncilPage estateId="estate-id" />);
-  await screen.findByRole("button", { name: "Send invitation" });
+  await screen.findByRole("button", { name: "Invite member" });
   expect(screen.queryByRole("button", { name: removalLabel })).toBeNull();
   screen.getByRole("heading", { name: "Pending invitations" });
 });
@@ -402,6 +417,7 @@ it("does not expose owner removal controls to delegates", async () => {
 const ESTATES_GUIDANCE = /Existing users accept on Invitations\./u;
 it("uses Invitations consistently in invitation guidance", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
+  await openInviteDialog();
   await screen.findByText(ESTATES_GUIDANCE);
 });
 it("announces when a member role is saving", async () => {

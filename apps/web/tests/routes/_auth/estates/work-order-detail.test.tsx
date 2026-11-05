@@ -602,3 +602,17 @@ it("does not carry a correction draft into another work order", async () => {
   );
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
 });
+
+it("shows an empty state when a closed order has no outcome corrections", () => {
+  state.status = "CLOSED";
+  state.completion = savedOutcome;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  const empty = screen
+    .getAllByRole("status")
+    .find((element) =>
+      element.textContent?.includes("No corrections recorded")
+    );
+  expect(empty).toBeDefined();
+});

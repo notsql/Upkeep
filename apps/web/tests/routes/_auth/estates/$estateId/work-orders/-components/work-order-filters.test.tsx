@@ -11,6 +11,7 @@ it("combines status and category with the existing priority and reference filter
       onChange={change}
     />
   );
+  screen.getByRole("search", { name: "Filter work orders" });
   await chooseOption(
     screen.getByRole("combobox", { name: "Status" }),
     "Closed"

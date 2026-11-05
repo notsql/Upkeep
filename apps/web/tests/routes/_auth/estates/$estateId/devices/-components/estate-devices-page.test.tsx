@@ -150,7 +150,7 @@ describe("EstateDevicesPage", () => {
   it("shows an empty state for an estate with no devices", async () => {
     devices = [];
     renderWithProviders(<EstateDevicesPage estateId="estate-id" />);
-    await screen.findByText("No devices are registered in this estate yet.");
+    await screen.findByText("No devices yet");
     expect(screen.queryByRole("table")).toBeNull();
   });
 

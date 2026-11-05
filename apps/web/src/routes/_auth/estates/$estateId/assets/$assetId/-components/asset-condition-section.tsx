@@ -12,6 +12,7 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { ConditionBadge } from "@/components/condition-badge";
+import { LoadingState } from "@/components/loading-state";
 import {
   type AssessmentInput,
   useAssessments,
@@ -70,9 +71,7 @@ export function AssetConditionSection({
               ) : null}
             </div>
             {assessments.isPending ? (
-              <p aria-live="polite" className="mt-4">
-                Loading condition…
-              </p>
+              <LoadingState label="Loading condition…" rows={2} />
             ) : null}
             {assessments.error ? (
               <Alert className="mt-4" variant="destructive">

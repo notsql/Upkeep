@@ -1,6 +1,7 @@
 import { Button } from "@proj/ui/components/button";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Textarea } from "@proj/ui/components/textarea";
+import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import type { WorkOrderInput } from "@/lib/work-orders";
@@ -41,7 +42,7 @@ export function WorkOrderForm({
 }) {
   const form = useWorkOrderForm(estateId, sourceReportId, sourceInspectionId);
   if (form.access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!form.access.canCreate) {
     return <p role="alert">Work-order creation is unavailable.</p>;
@@ -72,7 +73,7 @@ export function WorkOrderForm({
       ) : null}
       <form className="form-layout grid max-w-3xl gap-5" onSubmit={form.submit}>
         {form.reportSource && form.report.isPending && form.reportId ? (
-          <p role="status">Loading source report…</p>
+          <LoadingState label="Loading source report…" rows={2} />
         ) : null}
         {form.reportSource && form.report.isError ? (
           <p role="alert">

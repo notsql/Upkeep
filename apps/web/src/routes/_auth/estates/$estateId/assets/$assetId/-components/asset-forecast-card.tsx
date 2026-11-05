@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { DetailCard } from "@/components/detail-card";
+import { LoadingState } from "@/components/loading-state";
 import {
   flagReasonLabel,
   formatProbability,
@@ -36,7 +37,9 @@ export function AssetForecastCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="text-sm">
-        {risk.isPending ? <p aria-live="polite">Loading forecast…</p> : null}
+        {risk.isPending ? (
+          <LoadingState label="Loading forecast…" rows={2} />
+        ) : null}
         {risk.error ? (
           <Alert variant="destructive">
             <AlertDescription>{risk.error.message}</AlertDescription>
