@@ -159,5 +159,6 @@ describe("EstateDevicesPage", () => {
     renderWithProviders(<EstateDevicesPage estateId="estate-id" />);
     const alert = await screen.findByRole("alert");
     within(alert).getByText("Estate not found.");
+    within(alert).getByRole("button", { name: "Retry" });
   });
 });

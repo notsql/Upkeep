@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { localToday } from "@/lib/assessments";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/assessment-form";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+
 const REQUIRED = /required/iu;
 
 function conditionField() {
@@ -11,7 +13,9 @@ function conditionField() {
 }
 function dateField() {
   // Date inputs have no ARIA role, so fall back to the label.
-  return screen.getByLabelText<HTMLInputElement>("Assessment date");
+  return screen.getByRole<HTMLInputElement>("textbox", {
+    name: "Assessment date",
+  });
 }
 function notesField() {
   return screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Notes" });

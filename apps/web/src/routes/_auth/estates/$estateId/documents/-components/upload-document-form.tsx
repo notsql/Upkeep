@@ -1,13 +1,3 @@
-import { Button } from "@proj/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@proj/ui/components/dialog";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
@@ -17,9 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
-import { Upload } from "lucide-react";
-import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
+import { type ChangeEvent, useCallback, useState } from "react";
 import { toast } from "sonner";
+import { FormDialog } from "@/components/form-dialog";
 import { type DocumentType, useUploadDocument } from "@/lib/documents";
 
 function validateFile(file: File | undefined): string | undefined {
@@ -44,32 +34,31 @@ function validateFile(file: File | undefined): string | undefined {
   return undefined;
 }
 
+/** The upload task, opened by the page's Create button. */
 export function UploadDocumentForm({
   estateId,
+  open,
+  onClose,
   onUploaded,
 }: {
   estateId: string;
+  open: boolean;
+  onClose: () => void;
   onUploaded: (message: string) => void;
 }) {
   const upload = useUploadDocument(estateId);
-  const [open, setOpen] = useState(false);
   const [documentType, setDocumentType] = useState<DocumentType | "">("");
   const [file, setFile] = useState<File>();
   const [error, setError] = useState<string>();
-  const changeOpen = useCallback(
-    (next: boolean) => {
-      if (upload.isPending) {
-        return;
-      }
-      setOpen(next);
-      if (!next) {
-        setError(undefined);
-        setFile(undefined);
-        setDocumentType("");
-      }
-    },
-    [upload.isPending]
-  );
+  const close = useCallback(() => {
+    if (upload.isPending) {
+      return;
+    }
+    setError(undefined);
+    setFile(undefined);
+    setDocumentType("");
+    onClose();
+  }, [upload.isPending, onClose]);
   const changeType = useCallback(
     (value: string | null) =>
       setDocumentType(
@@ -81,87 +70,88 @@ export function UploadDocumentForm({
     (event: ChangeEvent<HTMLInputElement>) => setFile(event.target.files?.[0]),
     []
   );
-  const submit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (upload.isPending) {
-        return;
-      }
-      const invalid =
-        validateFile(file) ??
-        (documentType ? undefined : "Choose Invoice or Service report.");
-      setError(invalid);
-      if (invalid || !file || !documentType) {
-        return;
-      }
-      try {
-        await upload.mutateAsync({ file, documentType });
-        const message = `"${file.name}" uploaded successfully.`;
-        onUploaded(message);
-        toast.success(message);
-        setFile(undefined);
-        setDocumentType("");
-        setOpen(false);
-      } catch (failure) {
-        setError(
-          failure instanceof Error
-            ? failure.message
-            : "Unable to upload. Check the document list before retrying."
-        );
-      }
-    },
-    [documentType, file, onUploaded, upload.isPending, upload.mutateAsync]
-  );
+  const submit = useCallback(async () => {
+    if (upload.isPending) {
+      return;
+    }
+    const invalid =
+      validateFile(file) ??
+      (documentType ? undefined : "Choose Invoice or Service report.");
+    setError(invalid);
+    if (invalid || !file || !documentType) {
+      return;
+    }
+    try {
+      await upload.mutateAsync({ file, documentType });
+      const message = `"${file.name}" uploaded successfully.`;
+      onUploaded(message);
+      toast.success(message);
+      setFile(undefined);
+      setDocumentType("");
+      onClose();
+    } catch (failure) {
+      setError(
+        failure instanceof Error
+          ? failure.message
+          : "Unable to upload. Check the document list before retrying."
+      );
+    }
+  }, [
+    documentType,
+    file,
+    onClose,
+    onUploaded,
+    upload.isPending,
+    upload.mutateAsync,
+  ]);
   return (
-    <Dialog onOpenChange={changeOpen} open={open}>
-      <DialogTrigger render={<Button className="w-fit" />}>
-        <Upload aria-hidden="true" />
-        Upload document
-      </DialogTrigger>
-      <DialogContent>
-        <form className="grid gap-4" onSubmit={submit}>
-          <DialogHeader>
-            <DialogTitle>Upload a document</DialogTitle>
-            <DialogDescription id="document-formats">
-              PDF, JPEG or PNG. One file per upload, up to 5 MB.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-2">
-            <Label htmlFor="document-type">Document type</Label>
-            <Select
-              disabled={upload.isPending}
-              onValueChange={changeType}
-              value={documentType}
-            >
-              <SelectTrigger className="w-full" id="document-type">
-                <SelectValue placeholder="Choose document type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="INVOICE">Invoice</SelectItem>
-                <SelectItem value="SERVICE_REPORT">Service report</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="document-file">File to upload</Label>
-            <Input
-              accept=".pdf,.jpg,.jpeg,.png"
-              aria-describedby="document-formats"
-              disabled={upload.isPending}
-              id="document-file"
-              onChange={changeFile}
-              type="file"
-            />
-          </div>
-          {error ? <p role="alert">{error}</p> : null}
-          {upload.isPending ? <p role="status">Uploading…</p> : null}
-          <DialogFooter>
-            <Button disabled={upload.isPending} type="submit">
-              {upload.isPending ? "Uploading…" : "Upload"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      description={
+        <span id="document-formats">
+          PDF, JPEG or PNG. One file per upload, up to 5 MB.
+        </span>
+      }
+      error={error}
+      onClose={close}
+      onSubmit={submit}
+      open={open}
+      pending={upload.isPending}
+      pendingLabel="Uploading…"
+      submitLabel="Upload"
+      title="Upload a document"
+    >
+      <div className="grid gap-2">
+        <Label htmlFor="document-type">Document type</Label>
+        <Select
+          disabled={upload.isPending}
+          onValueChange={changeType}
+          value={documentType}
+        >
+          <SelectTrigger className="w-full" id="document-type">
+            <SelectValue placeholder="Choose document type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="INVOICE">Invoice</SelectItem>
+            <SelectItem value="SERVICE_REPORT">Service report</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="document-file">File to upload</Label>
+        <Input
+          accept=".pdf,.jpg,.jpeg,.png"
+          aria-describedby="document-formats"
+          disabled={upload.isPending}
+          id="document-file"
+          onChange={changeFile}
+          type="file"
+        />
+      </div>
+      {upload.isPending ? (
+        <p className="sr-only" role="status">
+          Uploading…
+        </p>
+      ) : null}
+    </FormDialog>
   );
 }

@@ -34,9 +34,6 @@ export function panelTitle(panel?: Panel): string {
 }
 
 export function dialogDescription(panel?: Panel): string {
-  if (panel?.kind === "deactivate") {
-    return "Review the effect before confirming.";
-  }
   if (panel?.kind === "levels") {
     return "Add a range of floors in one go, or one level with its own name.";
   }

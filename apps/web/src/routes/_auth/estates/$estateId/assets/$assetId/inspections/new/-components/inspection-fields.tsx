@@ -1,5 +1,4 @@
 import { Field, FieldLabel } from "@proj/ui/components/field";
-import { Input } from "@proj/ui/components/input";
 import {
   Select,
   SelectContent,
@@ -9,6 +8,7 @@ import {
 } from "@proj/ui/components/select";
 import { Textarea } from "@proj/ui/components/textarea";
 import type { ChangeEvent } from "react";
+import { DatePicker } from "@/components/date-picker";
 import type { InspectionAsset, InspectionInput } from "@/lib/inspections";
 
 const OUTCOMES = [
@@ -30,7 +30,7 @@ export function InspectionFields({
   notes: string;
   installedOn: InspectionAsset["installedOn"];
   onOutcomeChange: (value: string | null) => void;
-  onDateChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onDateChange: (value: string) => void;
   onNotesChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
 }) {
   return (
@@ -54,15 +54,14 @@ export function InspectionFields({
       </Field>
       <Field>
         <FieldLabel htmlFor="inspection-date">Inspection date</FieldLabel>
-        <Input
+        <DatePicker
+          clearable={false}
           id="inspection-date"
           max={new Intl.DateTimeFormat("en-CA", {
             timeZone: "Asia/Singapore",
           }).format(new Date())}
           min={installedOn ?? undefined}
           onChange={onDateChange}
-          required
-          type="date"
           value={date}
         />
       </Field>

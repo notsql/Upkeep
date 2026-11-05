@@ -1,13 +1,5 @@
-import { Button } from "@proj/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@proj/ui/components/dialog";
 import { useCallback, useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function AccessConfirmation({
   title,
@@ -47,37 +39,18 @@ export function AccessConfirmation({
       setPending(false);
     }
   }, [onClose, onConfirm, pending]);
-  const changeOpen = useCallback(
-    (open: boolean) => {
-      if (!(open || pending)) {
-        onClose();
-      }
-    },
-    [onClose, pending]
-  );
   return (
-    <Dialog onOpenChange={changeOpen} open>
-      <DialogContent className="p-6 sm:max-w-md" showCloseButton={false}>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {email}. {description}
-          </DialogDescription>
-        </DialogHeader>
-        {error ? (
-          <p className="text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <DialogFooter>
-          <Button disabled={pending} onClick={onClose} variant="outline">
-            {keepLabel}
-          </Button>
-          <Button disabled={pending} onClick={confirm} variant="destructive">
-            {pending ? "Saving…" : <span>{confirmLabel}</span>}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDialog
+      cancelLabel={keepLabel}
+      confirmLabel={confirmLabel}
+      description={`${email}. ${description}`}
+      error={error}
+      onCancel={onClose}
+      onConfirm={confirm}
+      open
+      pending={pending}
+      pendingLabel="Saving…"
+      title={title}
+    />
   );
 }

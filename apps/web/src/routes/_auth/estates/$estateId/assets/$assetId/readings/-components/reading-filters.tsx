@@ -1,6 +1,5 @@
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
-import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
   Select,
@@ -10,6 +9,7 @@ import {
   SelectValue,
 } from "@proj/ui/components/select";
 import { useCallback } from "react";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { FilterBar } from "@/components/filter-bar";
 import { type DeviceMetric, deviceMetrics } from "@/lib/devices";
 import type { ReadingFilters } from "@/lib/readings";
@@ -40,22 +40,31 @@ export function ReadingFilterControls({
     [change]
   );
   const from = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      change({ from: event.target.value || undefined }),
+    (chosen: string) => change({ from: chosen || undefined }),
     [change]
   );
   const to = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) =>
-      change({ to: event.target.value || undefined }),
+    (chosen: string) => change({ to: chosen || undefined }),
     [change]
   );
+  const clear = useCallback(() => onChange({}), [onChange]);
+  const activeCount = [
+    filters.metric,
+    filters.from,
+    filters.to,
+    filters.suspect,
+  ].filter(Boolean).length;
   const suspect = useCallback(
     (checked: boolean) => change({ suspect: checked || undefined }),
     [change]
   );
   const value = filters.metric ?? "";
   return (
-    <FilterBar label="Filter readings">
+    <FilterBar
+      activeCount={activeCount}
+      label="Filter readings"
+      onClear={clear}
+    >
       <Field className="w-full sm:w-48">
         <FieldLabel>Metric</FieldLabel>
         <Select onValueChange={metric} value={value}>
@@ -71,21 +80,21 @@ export function ReadingFilterControls({
           </SelectContent>
         </Select>
       </Field>
-      <Field className="w-full sm:w-48">
+      <Field className="w-full sm:w-72">
         <FieldLabel htmlFor="readings-from">From</FieldLabel>
-        <Input
+        <DateTimePicker
+          aria-label="From"
           id="readings-from"
           onChange={from}
-          type="datetime-local"
           value={filters.from ?? ""}
         />
       </Field>
-      <Field className="w-full sm:w-48">
+      <Field className="w-full sm:w-72">
         <FieldLabel htmlFor="readings-to">To</FieldLabel>
-        <Input
+        <DateTimePicker
+          aria-label="To"
           id="readings-to"
           onChange={to}
-          type="datetime-local"
           value={filters.to ?? ""}
         />
       </Field>

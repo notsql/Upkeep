@@ -9,6 +9,7 @@ import {
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/reports/new";
@@ -34,6 +35,19 @@ const ESTATE = /estate/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get, POST: post } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    search?: { estateId?: string };
+  }) => (
+    <a href={search?.estateId ? `${to}?estateId=${search.estateId}` : to}>
+      {children}
+    </a>
+  ),
   useNavigate: () => navigate,
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
@@ -122,6 +136,17 @@ it("uses the estate selected through context navigation instead of silently choo
     "/resident/locations",
     expect.objectContaining({ params: { query: { estateId: "other" } } })
   );
+});
+
+it("links back to the selected estate's reports through breadcrumbs", async () => {
+  renderWithProviders(<NewReportPage requestedEstateId={estateId} />);
+  await screen.findByRole("heading", { level: 1, name: REPORT_A_FAULT });
+  const crumbs = within(
+    screen.getByRole("navigation", { name: "Breadcrumbs" })
+  );
+  expect(
+    crumbs.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe(`/reports?estateId=${estateId}`);
 });
 
 it("explains an unavailable selected estate without falling back to another assignment", async () => {

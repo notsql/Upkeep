@@ -1,0 +1,122 @@
+import type { components } from "@proj/api/schema";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { buttonVariants } from "@proj/ui/components/button";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
+import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
+import { FormPageHeader } from "@/components/page-header";
+import {
+  useCreateEstateRole,
+  useEstateRolePermissions,
+} from "@/lib/estate-roles";
+import { RoleAccessGate } from "@/routes/_auth/estates/$estateId/roles/-components/role-access-gate";
+import { RoleForm } from "@/routes/_auth/estates/$estateId/roles/-components/role-form";
+
+function NewRoleWorkspace({
+  estateId,
+  returnTo,
+}: {
+  estateId: string;
+  returnTo?: "council";
+}) {
+  const navigate = useNavigate();
+  const catalogue = useEstateRolePermissions(estateId);
+  const create = useCreateEstateRole(estateId);
+  const back = returnTo ?? "roles";
+  const save = useCallback(
+    (body: components["schemas"]["CreateEstateRoleRequest"]) =>
+      create.mutate(body, {
+        onSuccess: (role) => {
+          if (returnTo === "council") {
+            // The invite dialog reopens with this role selected (invitation-form.tsx).
+            navigate({
+              to: "/estates/$estateId/council",
+              params: { estateId },
+              search: { inviteRole: role.id } as never,
+            });
+            return;
+          }
+          navigate({ to: "/estates/$estateId/roles", params: { estateId } });
+        },
+      }),
+    [create, navigate, estateId, returnTo]
+  );
+  const retry = useCallback(() => {
+    catalogue.refetch();
+  }, [catalogue]);
+  return (
+    <>
+      <FormPageHeader
+        breadcrumbs={[
+          back === "council"
+            ? {
+                label: "Members",
+                params: { estateId },
+                to: "/estates/$estateId/council",
+              }
+            : {
+                label: "Roles",
+                params: { estateId },
+                to: "/estates/$estateId/roles",
+              },
+          { label: "Create role" },
+        ]}
+        title="Create role"
+      />
+      {catalogue.isPending ? (
+        <LoadingState label="Loading permissions…" rows={2} />
+      ) : null}
+      {catalogue.error ? (
+        <ErrorState
+          message={catalogue.error.message}
+          onRetry={retry}
+          retryLabel="Retry permissions"
+        />
+      ) : null}
+      {catalogue.data ? (
+        <RoleForm
+          cancel={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ estateId }}
+              to={
+                back === "council"
+                  ? "/estates/$estateId/council"
+                  : "/estates/$estateId/roles"
+              }
+            >
+              Cancel
+            </Link>
+          }
+          catalogue={catalogue.data}
+          error={create.error}
+          onSave={save}
+          pending={create.isPending}
+        />
+      ) : null}
+    </>
+  );
+}
+
+export function NewRolePage({
+  estateId,
+  returnTo,
+}: {
+  estateId: string;
+  returnTo?: "council";
+}) {
+  return (
+    <RoleAccessGate estateId={estateId}>
+      {(estate) =>
+        estate.canCreateRoles ? (
+          <NewRoleWorkspace estateId={estateId} returnTo={returnTo} />
+        ) : (
+          <Alert role="alert">
+            <AlertDescription>Role creation unavailable</AlertDescription>
+          </Alert>
+        )
+      }
+    </RoleAccessGate>
+  );
+}

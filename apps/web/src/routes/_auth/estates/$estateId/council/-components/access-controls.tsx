@@ -8,9 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import { MailX } from "lucide-react";
+import { Mail, SearchX } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import {
   useCancelCouncilInvitation,
@@ -115,7 +116,7 @@ function OutstandingInvitation({
         aria-label={`Cancel invitation for ${invitation.email}`}
         onClick={show}
         size="sm"
-        variant="outline"
+        variant="ghost"
       >
         Revoke
       </Button>
@@ -137,13 +138,16 @@ function OutstandingInvitation({
 export function OwnerInvitations({
   estateId,
   filter,
-  onClearFilters,
+  onClear,
 }: {
   estateId: string;
   filter?: MemberFilter;
-  onClearFilters?: () => void;
+  onClear?: () => void;
 }) {
   const invitations = useOutstandingInvitations(estateId);
+  const retry = useCallback(() => {
+    invitations.refetch();
+  }, [invitations]);
   const visible = (invitations.data ?? []).filter((invitation) =>
     filter
       ? matchesFilter(filter, {
@@ -156,39 +160,38 @@ export function OwnerInvitations({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
+          <Mail aria-hidden="true" className="text-muted-foreground size-4" />
           <h2>Pending invitations</h2>
           {invitations.data ? (
             <Badge variant="outline">{invitations.data.length} pending</Badge>
           ) : null}
         </CardTitle>
-        <CardDescription>
-          Invitations not yet accepted. Revoking stops them granting access.
-        </CardDescription>
+        <CardDescription>Not yet accepted</CardDescription>
       </CardHeader>
       <CardContent>
         {invitations.isPending ? (
           <LoadingState label="Loading invitations…" />
         ) : null}
         {invitations.error ? (
-          <p role="alert">{invitations.error.message}</p>
+          <ErrorState message={invitations.error.message} onRetry={retry} />
         ) : null}
         {invitations.data?.length === 0 ? (
           <EmptyState
-            description="Invitations you send appear here until they are accepted."
-            icon={MailX}
+            description="Sent invitations appear here"
             title="No pending invitations"
           />
         ) : null}
         {invitations.data?.length && !visible.length ? (
           <EmptyState
             action={
-              onClearFilters ? (
-                <Button onClick={onClearFilters} variant="outline">
+              onClear ? (
+                <Button onClick={onClear} variant="outline">
                   Clear filters
                 </Button>
               ) : undefined
             }
-            icon={MailX}
+            description="Try another search or role"
+            icon={SearchX}
             title="No matching invitations"
           />
         ) : null}

@@ -1,7 +1,9 @@
 import type { components } from "@proj/api/schema";
 import { Badge } from "@proj/ui/components/badge";
-import { Button } from "@proj/ui/components/button";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import { TableCell, TableRow } from "@proj/ui/components/table";
+import { Link } from "@tanstack/react-router";
+import { Pencil } from "lucide-react";
 import { useCallback } from "react";
 import type {
   EstatePermission,
@@ -14,16 +16,13 @@ export function RoleRow({
   role,
   estate,
   catalogue,
-  onEdit,
   onDelete,
 }: {
   role: EstateRoleDefinition;
   estate: components["schemas"]["EstateAccessResponse"];
   catalogue: EstatePermission[];
-  onEdit: (role: EstateRoleDefinition) => void;
   onDelete: (role: EstateRoleDefinition) => void;
 }) {
-  const edit = useCallback(() => onEdit(role), [onEdit, role]);
   const remove = useCallback(() => onDelete(role), [onDelete, role]);
   const labels = role.permissions.map(
     (code) => catalogue.find((entry) => entry.code === code)?.label ?? code
@@ -38,8 +37,7 @@ export function RoleRow({
         ) : null}
         {estate.customRoleId === role.id ? (
           <p className="text-muted-foreground mt-1 text-xs">
-            You cannot edit your own assigned role. Another authorized editor
-            must change it.
+            Own role · read-only
           </p>
         ) : null}
         {estate.canDeleteRoles && !role.canDelete ? (
@@ -70,16 +68,15 @@ export function RoleRow({
       </TableCell>
       <TableCell className="text-right align-top">
         <div className="flex justify-end gap-2">
-          {estate.canEditRoles ? (
-            <Button
+          {estate.canEditRoles && role.canEdit ? (
+            <Link
               aria-label={`Edit ${role.name}`}
-              disabled={!role.canEdit}
-              onClick={edit}
-              size="sm"
-              variant="outline"
+              className={buttonVariants({ size: "sm", variant: "ghost" })}
+              params={{ estateId: role.estateId, roleId: role.id }}
+              to="/estates/$estateId/roles/$roleId/edit"
             >
-              Edit
-            </Button>
+              <Pencil aria-hidden="true" /> Edit
+            </Link>
           ) : null}
           {estate.role === "MANAGER" ? (
             <Button
@@ -87,7 +84,7 @@ export function RoleRow({
               disabled={!(estate.canDeleteRoles && role.canDelete)}
               onClick={remove}
               size="sm"
-              variant="destructive"
+              variant="ghost"
             >
               Delete
             </Button>

@@ -417,7 +417,7 @@ it("applies numeric range bounds, resets pagination and keeps filters on next an
       cursor: "next-page",
     })
   );
-  fireEvent.click(screen.getByRole("button", { name: "First page" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
   await waitFor(() =>
     expect(router.state.location.search).toEqual({
       blockId: blockA,
@@ -463,8 +463,18 @@ it("clears block and range filters together and restores the controls on browser
   });
 });
 
+it("keeps report filters collapsed until the Filters toggle opens them", async () => {
+  await setup();
+  const toggle = await screen.findByRole("button", { name: "Filters" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  expect(screen.queryByRole("search", { name: "Filter reports" })).toBeNull();
+  fireEvent.click(toggle);
+  await screen.findByRole("search", { name: "Filter reports" });
+});
+
 it("shows a range validation error without sending reversed bounds", async () => {
   await setup();
+  fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
   fireEvent.change(
     await screen.findByRole("combobox", { name: "Minimum position" }),
     { target: { value: "4" } }
@@ -508,9 +518,8 @@ it("distinguishes an empty estate from a filter with no matching reports", async
     await router.navigate({ href: `${basePath}?blockId=${blockA}` });
   });
   await screen.findByText(NO_MATCHES);
-  const clearButtons = screen.getAllByRole("button", { name: "Clear filters" });
-  expect(clearButtons).toHaveLength(2);
-  fireEvent.click(clearButtons[1] as HTMLElement);
+  screen.getByRole("button", { name: "Filters, 1 active" });
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
   await screen.findByText(EMPTY_REPORTS);
 });
 

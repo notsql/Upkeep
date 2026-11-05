@@ -10,6 +10,8 @@ import { describe, expect, it, vi } from "vitest";
 import { localToday } from "@/lib/assessments";
 import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/record-event-dialog";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+
 const REQUIRED = /required/iu;
 
 function typeField() {
@@ -17,7 +19,7 @@ function typeField() {
 }
 function dateField() {
   // Date inputs have no ARIA role, so fall back to the label.
-  return screen.getByLabelText<HTMLInputElement>("Event date");
+  return screen.getByRole<HTMLInputElement>("textbox", { name: "Event date" });
 }
 function notesField() {
   return screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Notes" });
@@ -38,7 +40,6 @@ describe("RecordEventDialog", () => {
     expect(
       (await screen.findAllByRole("option")).map((option) => option.textContent)
     ).toEqual(["Breakdown repair", "Preventive maintenance"]);
-    expect(dateField().type).toBe("date");
     expect(dateField().value).toBe(localToday());
     expect(dateField().max).toBe(localToday());
     notesField();

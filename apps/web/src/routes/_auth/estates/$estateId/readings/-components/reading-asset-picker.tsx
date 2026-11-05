@@ -10,6 +10,7 @@ import {
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { type ChangeEvent, useCallback, useState } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { type ReadingAsset, useReadingAssets } from "@/lib/readings";
 
@@ -106,12 +107,11 @@ export function ReadingAssetPicker({
           <LoadingState label="Loading assets…" rows={2} />
         ) : null}
         {assets.error ? (
-          <p role="alert">
-            {assets.error.message}{" "}
-            <Button onClick={retry} variant="outline">
-              Retry assets
-            </Button>
-          </p>
+          <ErrorState
+            message={assets.error.message}
+            onRetry={retry}
+            retryLabel="Retry assets"
+          />
         ) : null}
         {assets.data?.totalItems === 0 ? (
           <p role="status">No assets match this search.</p>

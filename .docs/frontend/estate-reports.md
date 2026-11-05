@@ -56,7 +56,8 @@ typed integer bounds and application behavior remain unchanged.
 URL search fields are `blockId`, `minLevelPosition`, `maxLevelPosition`, `cursor`.
 Invalid URL bounds fail route validation before report queries mount. Changing
 or clearing a filter removes the cursor in the same navigation; refresh and back
-restore controls. First page clears only the cursor; Next retains both filters.
+restore controls. The shared `Pagination` ("Report pages"): "Previous page"
+(enabled on a cursor page) clears only the cursor; "Next page" retains both filters.
 Controls wait for location labels rather than briefly showing UUIDs. A valid
 empty filtered result shows the "No matching reports" `EmptyState` with a Clear filters action; an empty estate shows "No reports yet". Position filtering uses the
 backend's level `sortOrder` and includes common areas beneath matching levels.
@@ -66,7 +67,9 @@ history remains readable. The old locationId subtree filter remains an API
 capability, while this screen uses the replacement block/range controls.
 
 Change location appears only with `canRelocateFaultReports` and opens once the
-location choices load. The modal shows current placement and editable Block,
+location choices load. The modal (the shared `FormDialog`: Cancel + "Save
+location", `submitDisabled` while invalid/reloading/conflicted, and a
+"Reload" `secondaryActions` button after a 409) shows current placement and editable Block,
 Level and Common area controls. Parent changes clear dependent selections.
 None means level-only placement; a common area can also sit directly under a
 block. Selecting No level requires a block common area: the common-area control
@@ -131,6 +134,21 @@ and the API independently rejects stale UI authority with the same token.
 ## Screen states
 
 `report-filters.tsx` renders a `FilterBar` (`search` landmark "Filter reports")
-with the Block combobox and the Level position fieldset as fields and Apply/Clear
-filters as actions; the same toolbar appears inside the work-order report picker
+with the Block combobox and the Level position fieldset as fields, an outline
+Apply filters action, and `activeCount` (block, minimum, maximum) / `onClear` for
+the header badge and ghost Clear filters; the same toolbar appears inside the work-order report picker
 dialog. List, detail, image and correction-location loads use `LoadingState`.
+
+## Design-system pass
+
+The list uses `ListPageHeader` (`icon={ClipboardList}`, `filters` =
+`FilterToggle`; no create action). `ReportFilters` takes `id`/`open` from
+`useFilterPanel(countReportFilters(filters)).barProps`, so the bar is collapsed
+until toggled (open on load when the URL has filters). The detail uses
+`DetailPageHeader` (breadcrumbs, no icon) whose Create work order link has a
+leading `Plus`. Load errors (reports, locations, detail, correction locations)
+use `ErrorState`. The change-location dialog stays a hand-built Dialog because
+its Save is disabled until a valid destination is chosen and it adds a Reload
+action on 409, which `FormDialog` does not support. Empty states: "No reports
+yet" (default `Inbox`, "Resident reports appear here") and "No matching reports" (`SearchX`, "Try other
+filters", outline Clear filters).

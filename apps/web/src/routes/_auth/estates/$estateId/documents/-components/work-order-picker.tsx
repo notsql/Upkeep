@@ -23,6 +23,7 @@ import {
   useId,
   useState,
 } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import {
   useWorkOrderList,
@@ -139,18 +140,19 @@ export function WorkOrderPicker({
             </SelectContent>
           </Select>
         </div>
-        <Button type="submit">Search work orders</Button>
+        <Button type="submit" variant="outline">
+          Search work orders
+        </Button>
       </form>
       {orders.isPending ? (
         <LoadingState label="Loading work orders…" rows={2} />
       ) : null}
       {orders.isError ? (
-        <div role="alert">
-          Unable to load work orders.{" "}
-          <Button onClick={retry} type="button" variant="outline">
-            Retry work orders
-          </Button>
-        </div>
+        <ErrorState
+          message="Unable to load work orders"
+          onRetry={retry}
+          retryLabel="Retry work orders"
+        />
       ) : null}
       {!orders.isError && orders.data?.items.length === 0 ? (
         <p>No matching work orders.</p>

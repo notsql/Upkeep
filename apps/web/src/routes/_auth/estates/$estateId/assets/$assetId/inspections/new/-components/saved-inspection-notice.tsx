@@ -1,5 +1,6 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { ClipboardCheck } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import type { InspectionResult } from "@/lib/inspections";
@@ -17,7 +18,7 @@ export function SavedInspectionNotice({
 }) {
   return (
     <PageLayout className="space-y-4">
-      <PageHeader title="Inspection saved" />
+      <PageHeader icon={ClipboardCheck} title="Inspection saved" />
       {error ? <p role="alert">{error.message}</p> : null}
       <Link
         className={buttonVariants()}

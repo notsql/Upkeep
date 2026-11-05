@@ -1,14 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@proj/ui/components/dialog";
 import { Label } from "@proj/ui/components/label";
 import {
   Select,
@@ -18,6 +9,8 @@ import {
   SelectValue,
 } from "@proj/ui/components/select";
 import { useCallback, useId, useState } from "react";
+import { ErrorState } from "@/components/error-state";
+import { FormDialog } from "@/components/form-dialog";
 import { LoadingState } from "@/components/loading-state";
 import {
   type EstateReport,
@@ -203,7 +196,28 @@ function LocationEditor({
     }
   }, [locations, mutation, reload]);
   return (
-    <>
+    <FormDialog
+      description="Choose the corrected location within this estate."
+      onClose={close}
+      onSubmit={save}
+      open
+      pending={mutation.isPending}
+      secondaryActions={
+        conflict ? (
+          <Button
+            disabled={pending}
+            onClick={reloadCurrent}
+            type="button"
+            variant="outline"
+          >
+            Reload
+          </Button>
+        ) : null
+      }
+      submitDisabled={!valid || reloading || conflict}
+      submitLabel="Save location"
+      title="Change location"
+    >
       <p className="wrap-anywhere">
         Current placement: <span>{observed.location.label}</span>
       </p>
@@ -257,17 +271,7 @@ function LocationEditor({
         </Alert>
       ) : null}
       {reloadError ? <p role="alert">{reloadError}</p> : null}
-      <DialogFooter>
-        {conflict ? (
-          <Button disabled={pending} onClick={reloadCurrent} variant="outline">
-            Reload
-          </Button>
-        ) : null}
-        <Button disabled={!valid || pending || conflict} onClick={save}>
-          Save location
-        </Button>
-      </DialogFooter>
-    </>
+    </FormDialog>
   );
 }
 
@@ -283,57 +287,34 @@ export function ChangeLocationDialog({
   const [open, setOpen] = useState(false);
   const locations = useEstateReportLocations(estateId);
   const close = useCallback(() => setOpen(false), []);
+  const openEditor = useCallback(() => setOpen(true), []);
   const retry = useCallback(() => locations.refetch(), [locations.refetch]);
   if (locations.isPending) {
     return <LoadingState label="Loading correction locations…" rows={1} />;
   }
   if (locations.isError) {
     return (
-      <Alert role="alert">
-        <AlertDescription>
-          Unable to load locations.{" "}
-          <Button onClick={retry} variant="outline">
-            Retry locations
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <ErrorState
+        message="Unable to load locations"
+        onRetry={retry}
+        retryLabel="Retry locations"
+      />
     );
   }
   return (
-    <Dialog onOpenChange={setOpen} open={open}>
-      <DialogTrigger render={<Button variant="outline" />}>
+    <>
+      <Button onClick={openEditor} type="button" variant="outline">
         Change location
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Change location</DialogTitle>
-          <DialogDescription>
-            Choose the corrected location within this estate.
-          </DialogDescription>
-        </DialogHeader>
-        {locations.isPending ? (
-          <LoadingState label="Loading locations…" rows={1} />
-        ) : null}
-        {locations.isError ? (
-          <Alert role="alert">
-            <AlertDescription>
-              Unable to load locations.{" "}
-              <Button onClick={retry} variant="outline">
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : null}
-        {open && locations.data ? (
-          <LocationEditor
-            close={close}
-            estateId={estateId}
-            locations={locations.data}
-            reload={reload}
-            report={report}
-          />
-        ) : null}
-      </DialogContent>
-    </Dialog>
+      </Button>
+      {open && locations.data ? (
+        <LocationEditor
+          close={close}
+          estateId={estateId}
+          locations={locations.data}
+          reload={reload}
+          report={report}
+        />
+      ) : null}
+    </>
   );
 }

@@ -145,7 +145,7 @@ describe("locations section", () => {
       if (parent) {
         await selectAction(parent, action);
       } else {
-        fireEvent.click(await screen.findByRole("button", { name: action }));
+        fireEvent.click(await screen.findByRole("button", { name: "Create" }));
       }
       const form = await screen.findByRole("form", { name: action });
       fireEvent.change(within(form).getByRole("textbox", { name: "Name" }), {
@@ -199,7 +199,7 @@ describe("locations section", () => {
     });
     renderWithProviders(<LocationsSection estateId={estate.id} />);
     await screen.findByRole("listitem", { name: "Blk 101" });
-    expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
     expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
   });
 
@@ -208,11 +208,11 @@ describe("locations section", () => {
     const { queryClient } = renderWithProviders(
       <LocationsSection estateId={estate.id} />
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Add block" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create" }));
     await screen.findByRole("dialog", { name: "Add block" });
     queryClient.setQueryData(["owner", "app-access"], unassignedAccess);
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
     expect(api.POST).not.toHaveBeenCalled();
   });
 
@@ -222,7 +222,7 @@ describe("locations section", () => {
       serve({ owned: false, role: "MANAGER", accessState });
       renderWithProviders(<LocationsSection estateId={estate.id} />);
       await screen.findByRole("listitem", { name: "Blk 101" });
-      expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
       expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
     }
   );
@@ -231,7 +231,7 @@ describe("locations section", () => {
     serve({ owned: false });
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     await screen.findByRole("listitem", { name: "Blk 101" });
-    expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Edit Blk 101" })).toBeNull();
     expect(
       screen.queryByRole("button", { name: "Deactivate Blk 101" })
@@ -239,6 +239,7 @@ describe("locations section", () => {
     expect(
       screen.queryByRole("button", { name: "Add levels to Blk 101" })
     ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Search locations" }),
       {
@@ -275,11 +276,13 @@ describe("locations section", () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     screen.getByRole("status", { name: "Loading locations…" });
     await screen.findByText("No locations yet");
+    expect(screen.getAllByRole("button", { name: "Create" })).toHaveLength(2);
   });
 
   it("searches by name and shows where each match sits", async () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     await screen.findByRole("listitem", { name: "Blk 101" });
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     fireEvent.change(
       screen.getByRole("searchbox", { name: "Search locations" }),
       { target: { value: "lobby" } }
@@ -295,16 +298,19 @@ describe("locations section", () => {
       screen.getByRole("searchbox", { name: "Search locations" }),
       { target: { value: "carpark" } }
     );
-    screen.getByRole("search", { name: "Filter locations" });
+    const filters = screen.getByRole("search", { name: "Filter locations" });
+    within(filters).getByText("1 active");
     await screen.findByText("No matching locations");
-    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    fireEvent.click(
+      within(filters).getByRole("button", { name: "Clear filters" })
+    );
     await screen.findByRole("listitem", { name: "Blk 101" });
   });
 
   it("adds a block under the estate", async () => {
     succeed("POST");
     renderWithProviders(<LocationsSection estateId="estate-id" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Add block" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create" }));
     const form = screen.getByRole("form", { name: "Add block" });
     fireEvent.change(within(form).getByRole("textbox", { name: "Name" }), {
       target: { value: "Blk 103" },
@@ -456,7 +462,7 @@ describe("locations section", () => {
   it("keeps what was typed and explains a rejected save", async () => {
     fail("POST", 'Another location here is already called "Blk 101".');
     renderWithProviders(<LocationsSection estateId="estate-id" />);
-    fireEvent.click(await screen.findByRole("button", { name: "Add block" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Create" }));
     const form = screen.getByRole("form", { name: "Add block" });
     const name = within(form).getByRole("textbox", { name: "Name" });
     fireEvent.change(name, { target: { value: "Blk 101" } });
@@ -502,7 +508,7 @@ describe("locations section", () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     await selectAction("Blk 101", "Deactivate Blk 101");
     expect(api.POST).not.toHaveBeenCalled();
-    const confirm = screen.getByRole("group", {
+    const confirm = screen.getByRole("dialog", {
       name: "Deactivate Blk 101?",
     });
     fireEvent.click(
@@ -524,9 +530,10 @@ describe("locations section", () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     await screen.findByRole("listitem", { name: "Blk 101" });
     await waitFor(() =>
-      expect(screen.queryByRole("button", { name: "Add block" })).toBeNull()
+      expect(screen.queryByRole("button", { name: "Create" })).toBeNull()
     );
     expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     screen.getByRole("searchbox", { name: "Search locations" });
   });
 });
@@ -577,7 +584,7 @@ it("keeps a location dialog open while saving and closes after success", async (
       }) as never
   );
   renderWithProviders(<LocationsSection estateId="estate-id" />);
-  fireEvent.click(await screen.findByRole("button", { name: "Add block" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Create" }));
   const dialog = await screen.findByRole("dialog", { name: "Add block" });
   fireEvent.change(within(dialog).getByRole("textbox", { name: "Name" }), {
     target: { value: "Blk 103" },
@@ -625,6 +632,7 @@ it("reveals matches with parent context and restores the manual view after clear
   serve();
   renderWithProviders(<LocationsSection estateId="estate-id" />);
   await screen.findByRole("listitem", { name: "Blk 101" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   const search = screen.getByRole("searchbox", { name: "Search locations" });
   fireEvent.change(search, { target: { value: "  LOBBY  " } });
   const result = screen.getByRole("list", { name: "Search results" });
@@ -676,4 +684,14 @@ it("restores manual expansion after leaving the screen and isolates other estate
   rendered.rerender(<LocationsSection estateId="estate-id" />);
   await screen.findByRole("button", { name: "Expand Blk 101" });
   expect(screen.queryByRole("listitem", { name: "Level 1" })).toBeNull();
+});
+
+it("returns focus to Create after cancelling Add block", async () => {
+  serve();
+  renderWithProviders(<LocationsSection estateId="estate-id" />);
+  const create = await screen.findByRole("button", { name: "Create" });
+  fireEvent.click(create);
+  const dialog = await screen.findByRole("dialog", { name: "Add block" });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(document.activeElement).toBe(create));
 });

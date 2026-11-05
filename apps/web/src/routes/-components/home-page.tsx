@@ -8,8 +8,19 @@ import {
 } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
-import { Building2, Layers, Users } from "lucide-react";
+import {
+  Building2,
+  ClipboardPenLine,
+  HeartPulse,
+  Layers,
+  LayoutDashboard,
+  LogIn,
+  Plus,
+  Users,
+} from "lucide-react";
+import { useCallback } from "react";
 import { isResidentOnly, useCurrentEstate } from "@/components/app-navigation";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
@@ -37,7 +48,13 @@ function SystemStatus() {
   return (
     <Card className="mt-8">
       <CardHeader>
-        <CardTitle>System status</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <HeartPulse
+            aria-hidden="true"
+            className="text-muted-foreground size-4"
+          />
+          System status
+        </CardTitle>
       </CardHeader>
       <CardContent>{content}</CardContent>
     </Card>
@@ -51,6 +68,9 @@ function ResidentHome() {
 export function HomePage() {
   const { user, loading } = useAuth();
   const access = useAppAccess();
+  const retryAccess = useCallback(() => {
+    access.refetch();
+  }, [access]);
   if (user && !loading && access.isPending) {
     return (
       <PageLayout>
@@ -61,9 +81,7 @@ export function HomePage() {
   if (user && !loading && access.isError) {
     return (
       <PageLayout>
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>{access.error.message}</AlertDescription>
-        </Alert>
+        <ErrorState message={access.error.message} onRetry={retryAccess} />
       </PageLayout>
     );
   }
@@ -74,11 +92,13 @@ export function HomePage() {
     return (
       <PageLayout>
         <PageHeader
-          description="Create your first estate or accept an invitation to join one."
+          description="Create an estate or accept an invitation"
+          icon={LayoutDashboard}
           title="Report a fault"
         />
         <div className="flex flex-wrap items-center gap-3">
           <Link className={buttonVariants()} to="/reports/new">
+            <ClipboardPenLine aria-hidden="true" />
             Report a fault
           </Link>
           {access.data.canCreateEstate ? (
@@ -86,6 +106,7 @@ export function HomePage() {
               className={buttonVariants({ variant: "outline" })}
               to="/estates/new"
             >
+              <Plus aria-hidden="true" />
               Create estate
             </Link>
           ) : null}
@@ -96,21 +117,22 @@ export function HomePage() {
   return (
     <PageLayout>
       <PageHeader
-        description="Keep estates, equipment and council access organised in one place."
+        description="Estates, equipment and council access"
+        icon={LayoutDashboard}
         title="Your estate workspace"
       />
       <Card className="mb-8">
         <CardContent>
           <section>
             <p className="text-muted-foreground mb-5 max-w-xl leading-relaxed">
-              A clear view of your estates, the assets within them, and the
-              people who help manage them.
+              Estates, assets and the people who manage them
             </p>
             <div className="flex flex-wrap items-center gap-3">
               {loading ? <p role="status">Checking your sign-in…</p> : null}
               {loading || user ? null : (
                 <>
                   <a className={buttonVariants()} href="/api/auth/sign-in">
+                    <LogIn aria-hidden="true" />
                     Sign in
                   </a>
                   <Link
@@ -135,7 +157,7 @@ export function HomePage() {
             <CardTitle>Estates</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
-            Locations and estate details, together in one workspace.
+            Locations and estate details
           </CardContent>
         </Card>
         <Card>
@@ -144,7 +166,7 @@ export function HomePage() {
             <CardTitle>Assets</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
-            Equipment, condition assessments and lifecycle history.
+            Equipment, condition and lifecycle
           </CardContent>
         </Card>
         <Card>
@@ -153,7 +175,7 @@ export function HomePage() {
             <CardTitle>Council access</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
-            Invitations and estate access, with clear permissions.
+            Invitations and permissions
           </CardContent>
         </Card>
       </div>

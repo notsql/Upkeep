@@ -8,10 +8,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import { History } from "lucide-react";
+import { CalendarClock, History } from "lucide-react";
 import { useCallback, useId, useState } from "react";
 import { toast } from "sonner";
 import { LoadingState } from "@/components/loading-state";
+import { SectionHeading } from "@/components/section-heading";
 import { ServiceIntervalDialog } from "@/components/service-interval-dialog";
 import {
   type AssetServiceInterval,
@@ -103,11 +104,11 @@ export function AssetServiceIntervalCard({
       <Card>
         <CardHeader>
           <CardTitle>
-            <h2 id={headingId}>Service interval</h2>
+            <SectionHeading icon={CalendarClock} id={headingId}>
+              Service interval
+            </SectionHeading>
           </CardTitle>
-          <CardDescription>
-            How often the manufacturer says this asset should be serviced.
-          </CardDescription>
+          <CardDescription>Manufacturer's recommended interval</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
           {interval.isPending ? (

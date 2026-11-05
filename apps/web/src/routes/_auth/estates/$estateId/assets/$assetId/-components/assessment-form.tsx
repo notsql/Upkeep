@@ -1,5 +1,4 @@
 import { Button } from "@proj/ui/components/button";
-import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
   Select,
@@ -16,6 +15,7 @@ import {
   useId,
   useState,
 } from "react";
+import { DatePicker } from "@/components/date-picker";
 import {
   type AssessmentInput,
   type AssetCondition,
@@ -86,6 +86,10 @@ export function AssessmentForm({
     },
     []
   );
+
+  const handleAssessedOnChange = useCallback((value: string) => {
+    setValues((current) => ({ ...current, assessedOn: value }));
+  }, []);
 
   const handleConditionChange = useCallback((value: string | null) => {
     setValues((current) => ({ ...current, condition: value ?? "" }));
@@ -165,14 +169,12 @@ export function AssessmentForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor={`${id}-assessed-on`}>Assessment date</Label>
-          <Input
+          <DatePicker
             {...errorProps("assessedOn")}
+            clearable={false}
             id={`${id}-assessed-on`}
             max={today}
-            name="assessedOn"
-            onChange={handleChange}
-            required
-            type="date"
+            onChange={handleAssessedOnChange}
             value={values.assessedOn}
           />
           {errorText("assessedOn")}

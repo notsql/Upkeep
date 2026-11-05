@@ -8,7 +8,16 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { AlertTriangle, ClipboardCheck, Cpu, Wrench } from "lucide-react";
+import {
+  AlertTriangle,
+  ClipboardCheck,
+  ClipboardList,
+  Cpu,
+  Flag,
+  History,
+  type LucideIcon,
+  Wrench,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { SummaryCard } from "@/components/summary-card";
@@ -134,8 +143,10 @@ function ListCard({
   description,
   footer,
   empty,
+  icon: Icon,
   children,
 }: {
+  icon: LucideIcon;
   title: string;
   description: string;
   footer: ReactNode;
@@ -146,7 +157,10 @@ function ListCard({
     <Card aria-label={title} role="region">
       <CardHeader>
         <CardTitle>
-          <h2>{title}</h2>
+          <h2 className="flex items-center gap-2">
+            <Icon aria-hidden="true" className="text-muted-foreground size-4" />
+            {title}
+          </h2>
         </CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
@@ -170,7 +184,7 @@ function RecentWorkOrders({ estateId }: { estateId: string }) {
   const open = (list.data?.items ?? []).filter(isOpen).slice(0, RECENT);
   return (
     <ListCard
-      description="The newest work orders still in progress"
+      description="Newest work still in progress"
       empty={open.length === 0}
       footer={
         <Link
@@ -181,6 +195,7 @@ function RecentWorkOrders({ estateId }: { estateId: string }) {
           All work orders
         </Link>
       }
+      icon={History}
       title="Open work"
     >
       {open.map((order) => (
@@ -213,7 +228,7 @@ function RecentReports({ estateId }: { estateId: string }) {
   const items = (list.data?.items ?? []).slice(0, RECENT);
   return (
     <ListCard
-      description="Latest issues raised by residents"
+      description="Latest resident issues"
       empty={items.length === 0}
       footer={
         <Link
@@ -224,6 +239,7 @@ function RecentReports({ estateId }: { estateId: string }) {
           All fault reports
         </Link>
       }
+      icon={ClipboardList}
       title="Recent fault reports"
     >
       {items.map((report) => (
@@ -256,7 +272,7 @@ function FlaggedAssets({ estateId }: { estateId: string }) {
     .slice(0, RECENT);
   return (
     <ListCard
-      description="Assets that need attention soon"
+      description="Assets needing attention"
       empty={flagged.length === 0}
       footer={
         <Link
@@ -267,6 +283,7 @@ function FlaggedAssets({ estateId }: { estateId: string }) {
           Failure risk
         </Link>
       }
+      icon={Flag}
       title="At-risk assets"
     >
       {flagged.map((item) => (

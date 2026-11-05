@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import {
   Table,
@@ -10,11 +9,12 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { Cpu } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { DeviceStatusBadge } from "@/components/device-status-badge";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { type EstateDevice, useEstateDevices } from "@/lib/devices";
 import { flattenLocations, useLocations } from "@/lib/locations";
@@ -32,10 +32,12 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
       ),
     [locations.data]
   );
+  const retry = useCallback(() => devices.refetch(), [devices.refetch]);
   return (
     <PageLayout className="min-w-0">
-      <PageHeader
-        description="Every device in this estate and whether it is still reporting. Devices that have gone quiet are listed first."
+      <ListPageHeader
+        description="Reporting status, quiet devices first"
+        icon={Cpu}
         title="Devices"
       />
       <p className="text-muted-foreground my-4 text-sm">
@@ -45,14 +47,11 @@ export function EstateDevicesPage({ estateId }: { estateId: string }) {
         <LoadingState label="Loading devices…" variant="table" />
       ) : null}
       {devices.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{devices.error.message}</AlertDescription>
-        </Alert>
+        <ErrorState message={devices.error.message} onRetry={retry} />
       ) : null}
       {devices.data?.length === 0 ? (
         <EmptyState
-          description="Devices registered to this estate's assets will appear here."
-          icon={Cpu}
+          description="Register devices from an asset's Devices page"
           title="No devices yet"
         />
       ) : null}

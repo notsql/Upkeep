@@ -1,31 +1,70 @@
 # Custom estate roles UI
 
-`/estates/$estateId/roles` lives at
-`apps/web/src/routes/_auth/estates/$estateId/roles/index.tsx` (tab title
-`pageHead("Estate roles")`). Route-local `-components/`:
+Routes (folder-based, under `apps/web/src/routes/_auth/estates/$estateId/roles/`):
 
-- `estate-roles-page.tsx` - access gate, PageHeader with a primary "Create role"
-  Button (lucide `Plus`, shown when `canCreateRoles` and the catalogue loaded),
-  then LoadingState (`table`) -> Alert + "Retry roles" -> EmptyState ("No custom
-  roles yet", same Create role action) -> FilterBar ("Search roles", matches name
-  or description; "No matching roles" EmptyState with Clear filters) + Table
-  "Custom roles" (Role, Permissions, Actions).
-- `role-row.tsx` - one table row: name, description, own-role and reassignment
-  notes; Permissions shows the first three permission Badges plus "+N more";
-  Edit / Delete buttons (size sm).
-- `create-role-dialog.tsx` - `CreateRoleDialog({ estateId, open, onOpenChange,
-  onCreated? })`, the single create-role flow. Loads the catalogue, renders
-  `RoleForm`, calls `useCreateEstateRole`, closes and calls `onCreated(role)` on
-  success. Reused by the invitation role picker (council-invitations.md).
-- `role-dialogs.tsx` - `EditRoleDialog` (title "Edit <name>", RoleForm with
-  `initial`, Reload role on conflict) and `DeleteRoleDialog` (confirmation).
-- `role-form.tsx` - the name/description/permissions form used by both dialogs.
+| Route | File | Tab title |
+| --- | --- | --- |
+| `/estates/$estateId/roles` | `index.tsx` -> `-components/estate-roles-page.tsx` | `pageHead("Estate roles")` |
+| `/estates/$estateId/roles/new` | `new/index.tsx` -> `new/-components/new-role-page.tsx` | `pageHead("New role")` |
+| `/estates/$estateId/roles/$roleId/edit` | `$roleId/edit/index.tsx` -> `$roleId/edit/-components/edit-role-page.tsx` | `pageHead("Edit role")` |
 
-There are no Tabs: the roles endpoint returns only custom roles (presets have no
-editable definitions), and no member count is shown because
-`EstateRoleDefinitionResponse` carries none. shadcn components: Alert, Badge,
-Button, Checkbox, Dialog, Field, Input, Label, Table, Textarea. DTOs come from
-generated `@proj/api/schema`; API calls live in `lib/estate-roles.ts`.
+Shared `roles/-components/`:
+
+- `role-access-gate.tsx` - `RoleAccessGate` render-prop: PageLayout, then
+  LoadingState / `ErrorState` "Retry access" / "Estate roles unavailable",
+  else the page.
+- `role-form.tsx` - `RoleForm({ catalogue, initial?, pending, error, onSave,
+  cancel? })`. Card "Details" (Role name, Description) and Card "Permissions"
+  with one `fieldset` per area (legend = group name: Estate, Fault reports,
+  Members and roles, Locations, Documents). The area map is client-side
+  (`AREA_OF`) because `EstatePermissionResponse` carries no area. Each permission
+  is a bordered Checkbox + label + server description + "Prerequisite: ...".
+  Submit is primary with `Check` icon ("Create role" / "Save role", "Saving
+  role…" with Spinner); `cancel` is the page's outline Cancel link.
+- `role-row.tsx` - table row: name, description, "Own role · read-only",
+  "In use · reassign members to delete"; first three permission Badges + "+N
+  more"; outline Edit link (`Pencil`, to the edit route, only when
+  `canEditRoles` and `role.canEdit`) and outline Delete button (Managers).
+- `delete-role-dialog.tsx` - the delete confirmation, a `ConfirmDialog`
+  ("Delete role", `Trash2` destructive "Delete role" / "Deleting role…",
+  outline "Keep role"; locked while pending; errors as an alert line).
+
+List page: `ListPageHeader` "Roles" (`icon={ShieldCheck}`, no description)
+with the Filters toggle (only once roles exist) and `CreateButton` "Create"
+(to `roles/new`) when `canCreateRoles` and the catalogue loaded. Below it the
+retractable `FilterBar` "Filter roles" (collapsed by default; search by name
+or description; "1 active" and the bar's ghost Clear filters). Then
+LoadingState (`table`) -> `ErrorState` "Retry roles" -> EmptyState "No custom
+roles yet" (default Inbox, with the same Create action) -> "No matching
+roles" EmptyState (SearchX, outline Clear filters) or Table "Custom roles"
+(Role, Permissions, Actions). Inactive estate: Alert "Estate inactive · roles
+read-only".
+
+New-role page: `FormPageHeader` "Create role" with breadcrumbs `Roles ›
+Create role` (`Members › Create role` when opened from the invite dialog), then
+RoleForm; its outline Cancel link returns to the roles list or the council.
+The parent crumb is a link to `/estates/$estateId/roles` (or
+`/estates/$estateId/council` for Members). Search param `returnTo`
+(validated; only `"council"` is kept). On success it navigates to the roles
+list, or with `returnTo=council` to
+`/estates/$estateId/council?inviteRole=<new id>` (see council-invitations.md).
+Without `canCreateRoles`: "Role creation unavailable". A failed catalogue is
+`ErrorState` "Retry permissions".
+
+Edit-role page: `FormPageHeader` "Edit <name>" with breadcrumbs `Roles › Edit
+role` (Roles links to `/estates/$estateId/roles`), RoleForm with `initial`. A failed load is `ErrorState` "Retry role".
+There is no single-role GET, so it reads the role from `useEstateRoleDefinitions`.
+Own role -> "Own role · not editable"; missing -> "Role not found". Save sends
+the observed `expectedVersion` and returns to the list; a conflict keeps the
+draft and offers outline "Reload role", which adopts the refreshed version.
+Edit is a page, not a dialog, for consistency with create: same sectioned form,
+the permission list is long, and the URL is linkable.
+
+There are no Tabs (the endpoint returns only custom roles) and no member count
+(the DTO has none). UI copy is short labels, not sentences. shadcn components:
+Alert, Badge, Button/buttonVariants, Card, Checkbox, Dialog, Field, Input, Label,
+Spinner, Table, Textarea. DTOs come from generated `@proj/api/schema`; API calls
+live in `lib/estate-roles.ts`.
 
 The server route guard and mounted page independently require the target estate's
 `canViewEstateRoles`. Access loading displays status text; failure displays Retry
@@ -34,27 +73,16 @@ role-only authors can enter without VIEW_ESTATE. The header uses access-context
 estateName. Navigation exposes Roles in estate links and a named global entry for
 a scoped-only estate. Home sends an author-only user here. See [shell.md](shell.md).
 
-Creation and editing display the grantable catalogue inside a Permissions dropdown,
-initially closed. Its shadcn Button exposes expanded state and toggles the table
-below it. Selections persist when closing/reopening, including saved selections
-while editing; the toggle is disabled during saves. The table has Select
-(checkbox), Permission name and Description columns. Descriptions wrap and
-include prerequisite hints. Each checkbox remains labelled by the permission
-name and associated with its description. Selection remains exact; submitting empty/missing-prerequisite choices
-shows validation without silently adding permissions. Inputs enforce 40/500
-character limits. Errors preserve the draft; pending writes disable controls.
-The sorted saved list is the Custom roles table described above.
-
-Editing opens the Edit dialog with a separate draft with the observed version. Save replaces fields
-and sends expectedVersion. A conflict refreshes current queries, retains the
-draft and offers Reload role; reload deliberately adopts the current version.
-Permission-change guidance explains effects on current members and pending
-offers. The server's per-definition canEdit flag disables bounded/own-role edits.
+Selection is exact; empty or missing-prerequisite choices show validation
+("<Permission> requires <prerequisite>") without silently adding permissions.
+Inputs enforce 40/500 character limits. Errors preserve the draft; pending writes
+disable controls and prevent duplicate submits. The server's per-definition
+canEdit flag hides Edit for bounded/own-role edits.
 
 Only Managers see Delete. Estate and definition flags disable deletion when
 inactive or assigned; explanatory text asks for reassignment/removal. The dialog
-names the role and warns that all invitation history is permanently lost and
-pending links stop working. Pending deletion prevents dismissal. Failures retain
+names the role and states "Permanent · invitations and invitation history
+deleted · pending links stop working". Pending deletion prevents dismissal. Failures retain
 the dialog and refreshed list; success closes it. The server rechecks each guard.
 Inactive estates retain readable definitions/catalogue with writes disabled.
 
@@ -88,3 +116,6 @@ Edit requires explicitly selecting View. These permissions cover both document
 types independently of general management or fault-report access. Existing
 bounded delegation and explicit prerequisite validation apply. See
 [documents.md](documents.md) for the document screen and deletion authority.
+
+The Roles list header uses `icon={ShieldCheck}` (sidebar Roles); the form
+headers carry no icon. No header repeats the estate name. Row Edit and Delete are `ghost` (Delete opens the destructive confirm).

@@ -1,6 +1,5 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
-import { Button } from "@proj/ui/components/button";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import {
   Table,
   TableBody,
@@ -9,15 +8,18 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { Tabs, TabsList, TabsTrigger } from "@proj/ui/components/tabs";
-import { useCallback, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { SearchX, Tags } from "lucide-react";
+import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { IntervalBadge } from "@/components/interval-badge";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ServiceIntervalDialog } from "@/components/service-interval-dialog";
+import { SubNav } from "@/components/sub-nav";
 import {
   type EstateAssetCategory,
   useEstateAssetCategories,
@@ -32,16 +34,22 @@ import {
 import { CategorySummaryCards } from "@/routes/_auth/estates/$estateId/asset-categories/-components/category-summary-cards";
 import { SilentFailureDialog } from "@/routes/_auth/estates/$estateId/asset-categories/-components/silent-failure-dialog";
 
-type IntervalFilter = "ALL" | IntervalUnit | "NONE";
+export type IntervalFilter = "ALL" | IntervalUnit | "NONE";
 
-const FILTERS: { value: IntervalFilter; label: string }[] = [
-  { value: "ALL", label: "All" },
-  ...Object.entries(INTERVAL_UNITS).map(([value, unit]) => ({
-    value: value as IntervalUnit,
-    label: unit.label,
-  })),
-  { value: "NONE", label: "Not set" },
-];
+/** Each interval view's URL segment under /asset-categories/ (All is the index). */
+export const INTERVAL_SLUGS: Record<Exclude<IntervalFilter, "ALL">, string> = {
+  DAY: "days",
+  MONTH: "months",
+  YEAR: "years",
+  NONE: "not-set",
+};
+
+/** The filter a `/asset-categories/$interval` segment names, if any. */
+export function intervalFilterFor(slug: string): IntervalFilter | undefined {
+  return (Object.keys(INTERVAL_SLUGS) as Exclude<IntervalFilter, "ALL">[]).find(
+    (filter) => INTERVAL_SLUGS[filter] === slug
+  );
+}
 
 function matches(category: EstateAssetCategory, filter: IntervalFilter) {
   if (filter === "ALL") {
@@ -146,14 +154,80 @@ function byLabel(a: EstateAssetCategory, b: EstateAssetCategory): number {
   return a.label.localeCompare(b.label);
 }
 
-export function AssetCategoriesPage({ estateId }: { estateId: string }) {
+/**
+ * The frame shared by every interval view: header, summary cards and the
+ * service-interval SubNav. `children` (the current view) renders once the
+ * categories have loaded.
+ */
+export function AssetCategoriesLayout({
+  estateId,
+  children,
+}: {
+  estateId: string;
+  children: ReactNode;
+}) {
+  const categories = useEstateAssetCategories(estateId);
+  const retry = useCallback(() => categories.refetch(), [categories.refetch]);
+  const { data } = categories;
+  return (
+    <PageLayout className="min-w-0">
+      <ListPageHeader
+        description="Silent-failure flags and service intervals"
+        icon={Tags}
+        title="Asset categories"
+      />
+      {categories.isPending ? (
+        <LoadingState label="Loading asset categories…" variant="table" />
+      ) : null}
+      {categories.error ? (
+        <ErrorState message={categories.error.message} onRetry={retry} />
+      ) : null}
+      {data ? (
+        <section aria-label="Asset categories" className="grid gap-4">
+          <CategorySummaryCards
+            categories={data.categories}
+            estateId={estateId}
+          />
+          <SubNav
+            items={[
+              {
+                exact: true,
+                label: "All",
+                params: { estateId },
+                to: "/estates/$estateId/asset-categories",
+              },
+              ...(
+                Object.keys(INTERVAL_SLUGS) as Exclude<IntervalFilter, "ALL">[]
+              ).map((filter) => ({
+                label:
+                  filter === "NONE" ? "Not set" : INTERVAL_UNITS[filter].label,
+                params: { estateId, interval: INTERVAL_SLUGS[filter] },
+                to: "/estates/$estateId/asset-categories/$interval" as const,
+              })),
+            ]}
+            label="Filter by service interval"
+          />
+          {children}
+        </section>
+      ) : null}
+    </PageLayout>
+  );
+}
+
+/** The categories table for one interval view, with its dialogs. */
+export function AssetCategoriesList({
+  estateId,
+  filter,
+}: {
+  estateId: string;
+  filter: IntervalFilter;
+}) {
   const categories = useEstateAssetCategories(estateId);
   const setSilentFailure = useSetSilentFailure(estateId);
   const setServiceInterval = useSetCategoryServiceInterval(estateId);
   const [error, setError] = useState<string>();
   const [flagging, setFlagging] = useState<EstateAssetCategory>();
   const [editing, setEditing] = useState<EstateAssetCategory>();
-  const [filter, setFilter] = useState<IntervalFilter>("ALL");
   const { mutateAsync: saveInterval } = setServiceInterval;
   const closeInterval = useCallback(() => setEditing(undefined), []);
   const saveEditing = useCallback(
@@ -167,12 +241,6 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
     },
     [editing, saveInterval]
   );
-  const showMissing = useCallback(() => setFilter("NONE"), []);
-  const chooseFilter = useCallback(
-    (value: unknown) => setFilter(value as IntervalFilter),
-    []
-  );
-  const clearFilter = useCallback(() => setFilter("ALL"), []);
   const { mutate } = setSilentFailure;
   const openFlag = useCallback((category: EstateAssetCategory) => {
     setError(undefined);
@@ -199,88 +267,61 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
     );
   }, [flagging, mutate]);
   const { data } = categories;
-  const shown =
-    data?.categories
-      .filter((category) => matches(category, filter))
-      .sort(byLabel) ?? [];
-
+  if (!data) {
+    return null;
+  }
+  const shown = data.categories
+    .filter((category) => matches(category, filter))
+    .sort(byLabel);
   return (
-    <PageLayout className="min-w-0">
-      <PageHeader
-        description="Flag the categories of equipment that can fail without anyone noticing, such as common-area lighting, so they get regular spot checks, and record how often the manufacturer says each category should be serviced."
-        title="Asset categories"
-      />
-      {categories.isPending ? (
-        <LoadingState label="Loading asset categories…" variant="table" />
-      ) : null}
-      {categories.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{categories.error.message}</AlertDescription>
-        </Alert>
-      ) : null}
-      {data ? (
-        <section aria-label="Asset categories" className="grid gap-4">
-          <CategorySummaryCards
-            categories={data.categories}
-            onShowMissing={showMissing}
-          />
-          <Tabs onValueChange={chooseFilter} value={filter}>
-            <TabsList
-              aria-label="Filter by service interval"
-              className="max-w-full flex-wrap"
+    <>
+      {data.estateActive ? null : (
+        <p className="text-muted-foreground" role="note">
+          This estate is inactive, so its asset categories cannot be changed.
+        </p>
+      )}
+      {shown.length === 0 ? (
+        <EmptyState
+          action={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ estateId }}
+              to="/estates/$estateId/asset-categories"
             >
-              {FILTERS.map((option) => (
-                <TabsTrigger key={option.value} value={option.value}>
-                  {option.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-          {data.estateActive ? null : (
-            <p className="text-muted-foreground" role="note">
-              This estate is inactive, so its asset categories cannot be
-              changed.
-            </p>
-          )}
-          {shown.length === 0 ? (
-            <EmptyState
-              action={
-                <Button onClick={clearFilter} type="button" variant="outline">
-                  Clear filters
-                </Button>
-              }
-              description="No category has a service interval of this kind."
-              title="No matching categories"
-            />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Assets</TableHead>
-                  <TableHead>Fails silently</TableHead>
-                  <TableHead>Service interval</TableHead>
-                  <TableHead>Last changed</TableHead>
-                  <TableHead className="text-right">
-                    <span className="sr-only">Actions</span>
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shown.map((category) => (
-                  <CategoryRow
-                    category={category}
-                    disabled={!data.estateActive || setSilentFailure.isPending}
-                    key={category.code}
-                    onEditInterval={setEditing}
-                    onToggleFlag={openFlag}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </section>
-      ) : null}
+              Clear filters
+            </Link>
+          }
+          description="No category uses this interval"
+          icon={SearchX}
+          title="No matching categories"
+        />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Category</TableHead>
+              <TableHead>Assets</TableHead>
+              <TableHead>Fails silently</TableHead>
+              <TableHead>Service interval</TableHead>
+              <TableHead>Last changed</TableHead>
+              <TableHead className="text-right">
+                <span className="sr-only">Actions</span>
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shown.map((category) => (
+              <CategoryRow
+                category={category}
+                disabled={!data.estateActive || setSilentFailure.isPending}
+                key={category.code}
+                onEditInterval={setEditing}
+                onToggleFlag={openFlag}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      )}
       {flagging ? (
         <SilentFailureDialog
           category={flagging}
@@ -299,6 +340,6 @@ export function AssetCategoriesPage({ estateId }: { estateId: string }) {
           title={`Service interval for ${editing.label}`}
         />
       ) : null}
-    </PageLayout>
+    </>
   );
 }

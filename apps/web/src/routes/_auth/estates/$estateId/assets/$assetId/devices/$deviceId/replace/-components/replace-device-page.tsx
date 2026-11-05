@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useDevices, useReplaceDevice } from "@/lib/devices";
@@ -32,7 +32,7 @@ export function ReplaceDevicePage({
   const cancel = useCallback(
     () =>
       navigate({
-        to: "/estates/$estateId/assets/$assetId",
+        to: "/estates/$estateId/assets/$assetId/devices",
         params: { estateId, assetId },
       }),
     [navigate, estateId, assetId]
@@ -69,7 +69,7 @@ export function ReplaceDevicePage({
   const title = device ? `Replace ${device.identifier}` : "Replace device";
   return (
     <PageLayout className="max-w-3xl">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: "Assets",
@@ -83,7 +83,7 @@ export function ReplaceDevicePage({
           },
           { label: "Replace device" },
         ]}
-        description="Register new hardware in place of this device. Its readings stay with it."
+        description="New hardware; readings stay with the old device"
         title={title}
       />
       {loading ? <LoadingState label="Loading device…" rows={2} /> : null}

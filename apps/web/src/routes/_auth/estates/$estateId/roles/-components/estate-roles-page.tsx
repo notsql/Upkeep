@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { Plus, ShieldCheck } from "lucide-react";
+import { SearchX, ShieldCheck } from "lucide-react";
 import {
   type ChangeEvent,
   type ReactNode,
@@ -19,121 +19,74 @@ import {
   useState,
 } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { FilterBar } from "@/components/filter-bar";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { CreateButton } from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import {
   type EstatePermission,
   type EstateRoleDefinition,
-  useEstateRoleAccess,
   useEstateRoleDefinitions,
   useEstateRolePermissions,
 } from "@/lib/estate-roles";
-import { CreateRoleDialog } from "@/routes/_auth/estates/$estateId/roles/-components/create-role-dialog";
-import {
-  DeleteRoleDialog,
-  EditRoleDialog,
-} from "@/routes/_auth/estates/$estateId/roles/-components/role-dialogs";
+import { DeleteRoleDialog } from "@/routes/_auth/estates/$estateId/roles/-components/delete-role-dialog";
+import { RoleAccessGate } from "@/routes/_auth/estates/$estateId/roles/-components/role-access-gate";
 import { RoleRow } from "@/routes/_auth/estates/$estateId/roles/-components/role-row";
 
 type EstateAccess = components["schemas"]["EstateAccessResponse"];
 
-function CreateRoleButton({ onClick }: { onClick: () => void }) {
-  return (
-    <Button onClick={onClick}>
-      <Plus aria-hidden="true" /> Create role
-    </Button>
-  );
-}
-
-function RoleList({
-  roles: all,
+function RoleTable({
+  roles,
   catalogue,
   estate,
-  onEdit,
   onDelete,
+  onClear,
 }: {
   roles: EstateRoleDefinition[];
   catalogue: EstatePermission[];
   estate: EstateAccess;
-  onEdit: (role: EstateRoleDefinition) => void;
   onDelete: (role: EstateRoleDefinition) => void;
+  onClear: () => void;
 }) {
-  const searchId = useId();
-  const [search, setSearch] = useState("");
-  const changeSearch = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value),
-    []
-  );
-  const clearSearch = useCallback(() => setSearch(""), []);
-  const query = search.trim().toLowerCase();
-  const roles = all.filter(
-    (role) =>
-      !query ||
-      role.name.toLowerCase().includes(query) ||
-      (role.description ?? "").toLowerCase().includes(query)
-  );
-  return (
-    <div className="grid gap-4">
-      <FilterBar
-        actions={
-          query && roles.length ? (
-            <Button onClick={clearSearch} variant="ghost">
-              Clear filters
-            </Button>
-          ) : null
+  if (!roles.length) {
+    return (
+      <EmptyState
+        action={
+          <Button onClick={onClear} variant="outline">
+            Clear filters
+          </Button>
         }
-        label="Filter roles"
-        search={
-          <Field>
-            <FieldLabel htmlFor={searchId}>Search roles</FieldLabel>
-            <Input
-              id={searchId}
-              onChange={changeSearch}
-              placeholder="Search by name or description"
-              type="search"
-              value={search}
-            />
-          </Field>
-        }
+        description="Try another name or description"
+        icon={SearchX}
+        title="No matching roles"
       />
-      {roles.length ? (
-        <div className="overflow-x-auto rounded-lg border">
-          <Table aria-label="Custom roles">
-            <TableHeader>
-              <TableRow>
-                <TableHead scope="col">Role</TableHead>
-                <TableHead scope="col">Permissions</TableHead>
-                <TableHead className="text-right" scope="col">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roles.map((role) => (
-                <RoleRow
-                  catalogue={catalogue}
-                  estate={estate}
-                  key={role.id}
-                  onDelete={onDelete}
-                  onEdit={onEdit}
-                  role={role}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      ) : (
-        <EmptyState
-          action={
-            <Button onClick={clearSearch} variant="outline">
-              Clear filters
-            </Button>
-          }
-          title="No matching roles"
-        />
-      )}
+    );
+  }
+  return (
+    <div className="overflow-x-auto rounded-lg border">
+      <Table aria-label="Custom roles">
+        <TableHeader>
+          <TableRow>
+            <TableHead scope="col">Role</TableHead>
+            <TableHead scope="col">Permissions</TableHead>
+            <TableHead className="text-right" scope="col">
+              Actions
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {roles.map((role) => (
+            <RoleRow
+              catalogue={catalogue}
+              estate={estate}
+              key={role.id}
+              onDelete={onDelete}
+              role={role}
+            />
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }
@@ -147,11 +100,7 @@ function RoleWorkspace({
 }) {
   const catalogue = useEstateRolePermissions(estateId);
   const definitions = useEstateRoleDefinitions(estateId);
-  const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<EstateRoleDefinition>();
   const [deleting, setDeleting] = useState<EstateRoleDefinition>();
-  const openCreate = useCallback(() => setCreating(true), []);
-  const closeEditor = useCallback(() => setEditing(undefined), []);
   const closeDeletion = useCallback(() => setDeleting(undefined), []);
   const refresh = useCallback(() => {
     catalogue.refetch();
@@ -164,35 +113,53 @@ function RoleWorkspace({
   ].some(Boolean);
   const canCreate = estate.canCreateRoles && Boolean(catalogue.data);
   const error = catalogue.error ?? definitions.error;
+  const searchId = useId();
+  const [search, setSearch] = useState("");
+  const changeSearch = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value),
+    []
+  );
+  const clearSearch = useCallback(() => setSearch(""), []);
+  const query = search.trim().toLowerCase();
+  const activeCount = query ? 1 : 0;
+  const panel = useFilterPanel(activeCount);
+  const all = definitions.data ?? [];
+  const roles = all.filter(
+    (role) =>
+      !query ||
+      role.name.toLowerCase().includes(query) ||
+      (role.description ?? "").toLowerCase().includes(query)
+  );
+  const create = canCreate
+    ? { params: { estateId }, to: "/estates/$estateId/roles/new" as const }
+    : undefined;
 
   let content: ReactNode;
   if (catalogue.isPending || definitions.isPending) {
     content = <LoadingState label="Loading roles…" variant="table" />;
   } else if (error) {
     content = (
-      <Alert role="alert">
-        <AlertDescription>{error.message}</AlertDescription>
-        <Button onClick={refresh}>Retry roles</Button>
-      </Alert>
+      <ErrorState
+        message={error.message}
+        onRetry={refresh}
+        retryLabel="Retry roles"
+      />
     );
-  } else if (definitions.data?.length) {
+  } else if (all.length) {
     content = (
-      <RoleList
+      <RoleTable
         catalogue={catalogue.data ?? []}
         estate={estate}
+        onClear={clearSearch}
         onDelete={setDeleting}
-        onEdit={setEditing}
-        roles={definitions.data}
+        roles={roles}
       />
     );
   } else {
     content = (
       <EmptyState
-        action={
-          canCreate ? <CreateRoleButton onClick={openCreate} /> : undefined
-        }
-        description="Custom roles grant a chosen set of permissions to members and invitations."
-        icon={ShieldCheck}
+        action={create ? <CreateButton {...create} /> : undefined}
+        description="Custom permission sets for members"
         title="No custom roles yet"
       />
     );
@@ -200,34 +167,42 @@ function RoleWorkspace({
 
   return (
     <>
-      <PageHeader
-        actions={canCreate ? <CreateRoleButton onClick={openCreate} /> : null}
-        description={`Custom roles for ${estate.estateName}.`}
-        title="Estate roles"
+      <ListPageHeader
+        create={create}
+        filters={all.length ? { activeCount, ...panel.toggleProps } : undefined}
+        icon={ShieldCheck}
+        title="Roles"
       />
       <div className="grid gap-5">
+        {all.length ? (
+          <FilterBar
+            activeCount={activeCount}
+            label="Filter roles"
+            onClear={clearSearch}
+            search={
+              <Field>
+                <FieldLabel htmlFor={searchId}>Search roles</FieldLabel>
+                <Input
+                  id={searchId}
+                  onChange={changeSearch}
+                  placeholder="Search by name or description"
+                  type="search"
+                  value={search}
+                />
+              </Field>
+            }
+            {...panel.barProps}
+          />
+        ) : null}
         {inactive ? (
           <Alert>
             <AlertDescription>
-              This estate is inactive. An active estate is required to create,
-              edit or delete roles.
+              Estate inactive · roles read-only
             </AlertDescription>
           </Alert>
         ) : null}
         {content}
       </div>
-      <CreateRoleDialog
-        estateId={estateId}
-        onOpenChange={setCreating}
-        open={creating}
-      />
-      <EditRoleDialog
-        catalogue={catalogue.data ?? []}
-        estateId={estateId}
-        onClose={closeEditor}
-        role={estate.canEditRoles ? editing : undefined}
-        roles={definitions.data ?? []}
-      />
       <DeleteRoleDialog
         estateId={estateId}
         onClose={closeDeletion}
@@ -238,39 +213,9 @@ function RoleWorkspace({
 }
 
 export function EstateRolesPage({ estateId }: { estateId: string }) {
-  const { access, estate, ready, allowed } = useEstateRoleAccess(estateId);
-  const retry = useCallback(() => {
-    access.refetch();
-  }, [access]);
-  if (!ready || access.isPending) {
-    return (
-      <PageLayout>
-        <LoadingState label="Loading estate access…" rows={2} />
-      </PageLayout>
-    );
-  }
-  if (access.error) {
-    return (
-      <PageLayout>
-        <Alert role="alert">
-          <AlertDescription>{access.error.message}</AlertDescription>
-          <Button onClick={retry}>Retry access</Button>
-        </Alert>
-      </PageLayout>
-    );
-  }
-  if (!(allowed && estate)) {
-    return (
-      <PageLayout>
-        <Alert role="alert">
-          <AlertDescription>Estate roles are unavailable.</AlertDescription>
-        </Alert>
-      </PageLayout>
-    );
-  }
   return (
-    <PageLayout>
-      <RoleWorkspace estate={estate} estateId={estateId} />
-    </PageLayout>
+    <RoleAccessGate estateId={estateId}>
+      {(estate) => <RoleWorkspace estate={estate} estateId={estateId} />}
+    </RoleAccessGate>
   );
 }

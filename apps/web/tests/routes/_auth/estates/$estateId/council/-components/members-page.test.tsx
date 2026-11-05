@@ -13,6 +13,8 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
+  useNavigate: () => () => Promise.resolve(),
+  useSearch: () => ({}),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
@@ -119,6 +121,10 @@ it("filters members by search text and role", async () => {
   const table = within(
     await screen.findByRole("table", { name: "Estate members" })
   );
+  expect(
+    screen.queryByRole("searchbox", { name: "Search members" })
+  ).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByRole("searchbox", { name: "Search members" }), {
     target: { value: "crew.test" },
   });
@@ -135,35 +141,53 @@ it("filters members by search text and role", async () => {
   expect(table.queryByText("Carl")).toBeNull();
 });
 
-it("splits members and pending invitations into counted tabs", async () => {
+it("links members and pending invitations as separate views", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
-  await screen.findByRole("tab", { name: "Members 3" });
-  const pending = await screen.findByRole("tab", {
-    name: "Pending invitations 1",
-  });
+  const views = within(
+    await screen.findByRole("navigation", { name: "Member views" })
+  );
   expect(
-    screen.queryByRole("combobox", { name: "Filter by status" })
-  ).toBeNull();
+    views.getByRole("link", { name: "Members" }).getAttribute("href")
+  ).toBe("/estates/$estateId/council");
+  expect(
+    views
+      .getByRole("link", { name: "Pending invitations" })
+      .getAttribute("href")
+  ).toBe("/estates/$estateId/council/invitations");
+  await screen.findByRole("table", { name: "Estate members" });
   expect(
     screen.queryByRole("button", {
       name: "Cancel invitation for bob@example.com",
     })
   ).toBeNull();
-  fireEvent.click(pending);
+  expect(screen.queryByText("Maple Grove")).toBeNull();
+});
+
+it("shows pending invitations on their own view with the shared filters", async () => {
+  renderWithProviders(<CouncilPage estateId="estate-id" view="invitations" />);
   await screen.findByRole("button", {
     name: "Cancel invitation for bob@example.com",
   });
-  screen.getByRole("search", { name: "Filter members" });
+  expect(
+    screen.queryByRole("combobox", { name: "Filter by status" })
+  ).toBeNull();
+  screen.getByRole("button", { name: "Filters" });
+  screen.getByRole("navigation", { name: "Member views" });
   expect(screen.queryByRole("table", { name: "Estate members" })).toBeNull();
 });
 
-it("shows an empty state with Clear filters when no members match", async () => {
+it("clears filters from the filter bar when no members match", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   await screen.findByRole("table", { name: "Estate members" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByRole("searchbox", { name: "Search members" }), {
     target: { value: "nobody-matches" },
   });
   screen.getByText("No matching members");
-  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  const filters = screen.getByRole("search", { name: "Filter members" });
+  within(filters).getByText("1 active");
+  fireEvent.click(
+    within(filters).getByRole("button", { name: "Clear filters" })
+  );
   await screen.findByText("Carl");
 });

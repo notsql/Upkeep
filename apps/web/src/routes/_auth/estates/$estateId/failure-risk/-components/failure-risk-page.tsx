@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import {
   Table,
@@ -9,10 +8,12 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { Gauge } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
   type FailureRisk,
@@ -69,33 +70,28 @@ function RiskRow({ estateId, risk }: { estateId: string; risk: FailureRisk }) {
 
 export function FailureRiskPage({ estateId }: { estateId: string }) {
   const risks = useEstateFailureRisk(estateId);
+  const retry = useCallback(() => risks.refetch(), [risks.refetch]);
   return (
-    <PageLayout>
-      <PageHeader
-        description="Chance of a breakdown in the next 30, 60 and 90 days. Flagged assets need a check."
+    <PageLayout className="space-y-6">
+      <ListPageHeader
+        description="Breakdown odds over 30, 60 and 90 days"
+        icon={AlertTriangle}
         title="Failure risk"
       />
       {risks.isPending ? (
-        <div className="mt-6">
-          <LoadingState label="Loading forecasts…" variant="table" />
-        </div>
+        <LoadingState label="Loading forecasts…" variant="table" />
       ) : null}
       {risks.error ? (
-        <Alert className="mt-6" variant="destructive">
-          <AlertDescription>{risks.error.message}</AlertDescription>
-        </Alert>
+        <ErrorState message={risks.error.message} onRetry={retry} />
       ) : null}
       {risks.data && risks.data.length === 0 ? (
-        <div className="mt-6">
-          <EmptyState
-            description="Forecasts appear once assets are added to this estate."
-            icon={Gauge}
-            title="There are no assets to forecast in this estate yet."
-          />
-        </div>
+        <EmptyState
+          description="Forecasts appear once assets are added"
+          title="No assets to forecast yet"
+        />
       ) : null}
       {risks.data?.length ? (
-        <Table className="mt-6">
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Asset</TableHead>

@@ -8,11 +8,12 @@ import {
 import {
   ChevronDown,
   ChevronRight,
-  MapPin,
   MoreHorizontal,
+  SearchX,
 } from "lucide-react";
 import { useCallback, useId } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { CreateButton } from "@/components/page-actions";
 import type { LocationNode } from "@/lib/locations";
 import type { Panel } from "@/routes/_auth/estates/$estateId/-components/location-panel";
 
@@ -56,9 +57,11 @@ export function LocationTree({
   onToggle,
   searching,
   query,
-  onClearSearch,
+  onCreate,
+  onClear,
 }: {
-  onClearSearch: () => void;
+  onCreate: () => void;
+  onClear: () => void;
   tree: LocationNode[];
   canCreate: boolean;
   canCreateFloors: boolean;
@@ -77,22 +80,22 @@ export function LocationTree({
         {searching ? (
           <EmptyState
             action={
-              <Button onClick={onClearSearch} variant="outline">
+              <Button onClick={onClear} variant="outline">
                 Clear filters
               </Button>
             }
-            description={`No locations match “${query.trim()}”.`}
-            icon={MapPin}
+            description={`Nothing matches “${query.trim()}”`}
+            icon={SearchX}
             title="No matching locations"
           />
         ) : (
           <EmptyState
+            action={canCreate ? <CreateButton onClick={onCreate} /> : undefined}
             description={
               canCreate
-                ? "Add a block to start."
-                : "Blocks, levels and common areas appear here once added."
+                ? "Add a block to start"
+                : "Added blocks and levels appear here"
             }
-            icon={MapPin}
             title="No locations yet"
           />
         )}

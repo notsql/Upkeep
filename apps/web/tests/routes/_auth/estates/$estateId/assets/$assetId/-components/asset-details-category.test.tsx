@@ -1,9 +1,14 @@
 import { renderWithProviders, screen } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
-import { AssetDetailsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
+import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
 
 // Sections that fetch their own data stay pending: this test is about the label.
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
 vi.mock("@/lib/api", () => ({
   api: {
     GET: vi.fn(() => new Promise(() => undefined)),
@@ -60,7 +65,7 @@ vi.mock(
 );
 
 it("shows the asset's category by its label, not its code", async () => {
-  renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
+  renderWithProviders(<AssetOverview assetId="asset" estateId="estate" />);
   await screen.findByText("Air-con & ventilation");
   expect(screen.queryByText("HVAC")).toBeNull();
 });

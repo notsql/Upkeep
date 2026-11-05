@@ -66,7 +66,7 @@ function Action({
   if (check.result) {
     return (
       <Link
-        className={buttonVariants({ size: "sm", variant: "outline" })}
+        className={buttonVariants({ size: "sm", variant: "ghost" })}
         params={{
           estateId,
           assetId: check.assetId,
@@ -83,7 +83,7 @@ function Action({
   }
   return (
     <Link
-      className={buttonVariants({ size: "sm" })}
+      className={buttonVariants({ size: "sm", variant: "ghost" })}
       params={{ estateId, assetId: check.assetId }}
       to="/estates/$estateId/assets/$assetId/inspections/new"
     >

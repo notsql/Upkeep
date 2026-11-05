@@ -1,8 +1,9 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Activity } from "lucide-react";
-import { useCallback } from "react";
+import { SearchX } from "lucide-react";
+import { type ReactNode, useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import type { ReadingSearch } from "@/lib/reading-filters";
 import type { useEstateReadings } from "@/lib/readings";
@@ -21,10 +22,10 @@ function isFiltered(filters: ReadingSearch): boolean {
 
 function emptyMessage(filters: ReadingSearch, assetTotal?: number): string {
   if (filters.suspect) {
-    return "No suspect readings match";
+    return "No matching suspect readings";
   }
   if (isFiltered(filters)) {
-    return "No readings match these filters";
+    return "No matching readings";
   }
   return assetTotal === 0 ? "No assets yet" : "No readings yet";
 }
@@ -36,6 +37,7 @@ export function ReadingResults({
   assetTotal,
   filters,
   onFiltersChange,
+  createAction,
 }: {
   readings: ReturnType<typeof useEstateReadings>;
   validationError?: string;
@@ -43,6 +45,8 @@ export function ReadingResults({
   assetTotal?: number;
   filters: ReadingSearch;
   onFiltersChange: (filters: ReadingSearch) => void;
+  /** Shown in the empty card when the estate has no readings yet. */
+  createAction?: ReactNode;
 }) {
   const retry = useCallback(() => readings.refetch(), [readings.refetch]);
   const clear = useCallback(() => onFiltersChange({}), [onFiltersChange]);
@@ -59,14 +63,11 @@ export function ReadingResults({
   }
   if (readings.error) {
     return (
-      <Alert variant="destructive">
-        <AlertDescription>
-          {readings.error.message}
-          <Button onClick={retry} variant="outline">
-            Retry readings
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <ErrorState
+        message={readings.error.message}
+        onRetry={retry}
+        retryLabel="Retry readings"
+      />
     );
   }
   if (!readings.data) {
@@ -79,16 +80,22 @@ export function ReadingResults({
     if (assetsPending) {
       return <LoadingState label="Loading assets…" variant="table" />;
     }
-    return (
-      <EmptyState
-        action={
-          isFiltered(filters) ? (
+    if (isFiltered(filters)) {
+      return (
+        <EmptyState
+          action={
             <Button onClick={clear} variant="outline">
               Clear filters
             </Button>
-          ) : undefined
-        }
-        icon={Activity}
+          }
+          icon={SearchX}
+          title={emptyMessage(filters, assetTotal)}
+        />
+      );
+    }
+    return (
+      <EmptyState
+        action={assetTotal === 0 ? undefined : createAction}
         title={emptyMessage(filters, assetTotal)}
       />
     );
@@ -101,7 +108,7 @@ export function ReadingResults({
             Go to first page
           </Button>
         }
-        title="This page is beyond the available readings."
+        title="No readings on this page"
       />
     );
   }

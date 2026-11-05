@@ -3,8 +3,9 @@ import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import {
@@ -116,7 +117,7 @@ export function ManualReadingForm({
   }
   return (
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: "Readings",
@@ -125,18 +126,18 @@ export function ManualReadingForm({
           },
           { label: "Record manual reading" },
         ]}
-        description={estate?.estateName}
         title="Record manual reading"
       />
       {metrics.error || assets.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {metrics.error?.message ?? assets.error?.message}
-            <Button onClick={retry} variant="outline">
-              Retry form options
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message={
+            metrics.error?.message ??
+            assets.error?.message ??
+            "Unable to load form options"
+          }
+          onRetry={retry}
+          retryLabel="Retry form options"
+        />
       ) : null}
       {metrics.isPending ? (
         <LoadingState label="Loading metrics…" rows={2} />

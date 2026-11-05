@@ -16,6 +16,11 @@ beforeEach(() => {
   state.events = [routineCheck];
 });
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
 vi.mock("@/lib/asset-events", () => ({
   assetEventTypeLabel: {
     BREAKDOWN_REPAIR: "Breakdown repair",

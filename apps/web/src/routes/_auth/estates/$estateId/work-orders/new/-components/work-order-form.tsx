@@ -2,7 +2,7 @@ import { Button } from "@proj/ui/components/button";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Textarea } from "@proj/ui/components/textarea";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import type { WorkOrderInput } from "@/lib/work-orders";
 import { useWorkOrderForm } from "./use-work-order-form";
@@ -55,7 +55,7 @@ export function WorkOrderForm({
   }
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: "Work orders",
@@ -64,7 +64,6 @@ export function WorkOrderForm({
           },
           { label: "Create" },
         ]}
-        description={form.access.estateName}
         title="Create work order"
       />
       <WorkOrderSourceFields estateId={estateId} form={form} />
@@ -78,7 +77,7 @@ export function WorkOrderForm({
         {form.reportSource && form.report.isError ? (
           <p role="alert">
             Source report unavailable.{" "}
-            <Button onClick={form.reloadSource} type="button">
+            <Button onClick={form.reloadSource} type="button" variant="outline">
               Retry source
             </Button>
           </p>

@@ -31,6 +31,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { DatePicker } from "@/components/date-picker";
 import { FormActions } from "@/components/form-actions";
 import type { Asset, AssetInput } from "@/lib/assets";
 import {
@@ -248,6 +249,10 @@ export function AssetForm({
     [manufacturers.data]
   );
 
+  const handleInstalledOnChange = useCallback((value: string) => {
+    setValues((current) => ({ ...current, installedOn: value }));
+  }, []);
+
   const handleModelChange = useCallback((value: string) => {
     setValues((current) => ({ ...current, model: value }));
   }, []);
@@ -405,11 +410,9 @@ export function AssetForm({
               <FieldLabel htmlFor={`${id}-installed-on`}>
                 Installation date (optional)
               </FieldLabel>
-              <Input
+              <DatePicker
                 id={`${id}-installed-on`}
-                name="installedOn"
-                onChange={handleChange}
-                type="date"
+                onChange={handleInstalledOnChange}
                 value={values.installedOn}
               />
             </Field>

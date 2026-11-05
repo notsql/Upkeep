@@ -1,19 +1,21 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button, buttonVariants } from "@proj/ui/components/button";
-import { ClipboardList, Plus } from "lucide-react";
-
+import { ClipboardList } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import {
+  CreateButton,
+  type CreateButtonProps,
+} from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { Pagination } from "@/components/pagination";
 import { ReportCard } from "@/components/reports/report-card";
 import { useAuthenticatedSession } from "@/lib/access";
 import { useReportList } from "@/lib/reports";
 
 interface HistoryProps {
   estateId?: string;
-  estateName?: string;
 }
 export function MyReportsPage(props: HistoryProps) {
   const { userId } = useAuthenticatedSession();
@@ -21,7 +23,7 @@ export function MyReportsPage(props: HistoryProps) {
     <ReportHistory key={`${userId}:${props.estateId ?? "all"}`} {...props} />
   );
 }
-function ReportHistory({ estateId, estateName }: HistoryProps) {
+function ReportHistory({ estateId }: HistoryProps) {
   const [cursor, setCursor] = useState<string>();
   const [previous, setPrevious] = useState<(string | undefined)[]>([]);
   const reports = useReportList(cursor, estateId);
@@ -34,58 +36,29 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
     setPrevious((pages) => [...pages, cursor]);
     setCursor(reports.data?.nextCursor ?? undefined);
   }, [cursor, reports.data?.nextCursor]);
+  const create: CreateButtonProps = {
+    search: estateId ? { estateId } : {},
+    to: "/reports/new",
+  };
 
   return (
     <PageLayout>
-      <PageHeader
-        actions={
-          <a
-            className={buttonVariants({ size: "sm" })}
-            href={
-              estateId
-                ? `/reports/new?estateId=${encodeURIComponent(estateId)}`
-                : "/reports/new"
-            }
-          >
-            Report a fault
-          </a>
-        }
+      <ListPageHeader
+        create={create}
         description={
-          estateName ??
-          (estateId
-            ? "Your reports for the selected estate."
-            : "Your reports across all estates.")
+          estateId ? "Reports for this estate" : "Reports across all estates"
         }
+        icon={ClipboardList}
         title="My reports"
       />
       {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            Unable to load reports.{" "}
-            <Button onClick={retry} type="button" variant="outline">
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState message="Unable to load reports" onRetry={retry} />
       ) : null}
       {reports.data && (reports.data.items?.length ?? 0) === 0 ? (
         <EmptyState
-          action={
-            <a
-              className={buttonVariants()}
-              href={
-                estateId
-                  ? `/reports/new?estateId=${encodeURIComponent(estateId)}`
-                  : "/reports/new"
-              }
-            >
-              <Plus aria-hidden="true" />
-              Report a fault
-            </a>
-          }
-          description="Faults you report appear here with their progress."
-          icon={ClipboardList}
+          action={<CreateButton {...create} />}
+          description="Reported faults appear here"
           title={estateId ? "No reports for this estate yet" : "No reports yet"}
         />
       ) : null}
@@ -104,18 +77,15 @@ function ReportHistory({ estateId, estateName }: HistoryProps) {
           />
         ))}
       </div>
-      {reports.data ? (
-        <div className="mt-4 flex gap-2">
-          {previous.length > 0 ? (
-            <Button onClick={goPrevious} variant="outline">
-              Previous
-            </Button>
-          ) : null}
-          {reports.data.nextCursor ? (
-            <Button onClick={goNext} variant="outline">
-              Next
-            </Button>
-          ) : null}
+      {reports.data?.items?.length ? (
+        <div className="mt-4">
+          <Pagination
+            canNext={Boolean(reports.data.nextCursor)}
+            canPrevious={previous.length > 0}
+            label="Report pages"
+            onNext={goNext}
+            onPrevious={goPrevious}
+          />
         </div>
       ) : null}
     </PageLayout>

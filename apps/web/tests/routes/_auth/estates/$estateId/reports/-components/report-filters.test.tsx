@@ -139,3 +139,17 @@ it.each(["invalid", "1.5", "2147483648"])(
     expect(onChange).not.toHaveBeenCalled();
   }
 );
+
+it("counts applied filters and clears them from the filter header", () => {
+  const onChange = vi.fn();
+  renderWithProviders(
+    <ReportFilters
+      filters={{ blockId: "a", minLevelPosition: 0 }}
+      locations={locations}
+      onChange={onChange}
+    />
+  );
+  screen.getByText("2 active");
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(onChange).toHaveBeenCalledWith({});
+});

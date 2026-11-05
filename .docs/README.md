@@ -56,12 +56,13 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/account.md](frontend/account.md) | `/account` |
 | [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit` (Estate settings + Danger zone), directory filters and estate deactivation |
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
-| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
+| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/maintenance`, `/inspections`, `/documents`, `/costs`, `/devices` sub-pages; legacy `?tab=` redirects), `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
-| [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories`: silent-failure flags per asset category with asset counts and last change |
+| [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories` (+ `/$interval` views: days, months, years, not-set): silent-failure flags per asset category with asset counts and last change |
 | [frontend/inspection-list.md](frontend/inspection-list.md) | `/estates/$estateId/inspections`: summary cards, generate/regenerate, checks grouped by block and level with Overdue/Due/Done badges, and unscheduled assets |
 | [frontend/service-intervals.md](frontend/service-intervals.md) | Service interval column with unit-coloured labels, filter by unit or Not set, and dialog on Asset categories; the asset details `AssetServiceIntervalCard` |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
+| [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors` (Needs review) and `/estates/$estateId/sensors/all`: device monitoring, flatline review, metric policies and maintenance pauses |
 | [frontend/readings.md](frontend/readings.md) | Estate-wide/legacy reading browsers, attributed manual entry, provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |

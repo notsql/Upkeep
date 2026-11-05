@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
@@ -12,6 +11,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { LoadingState } from "@/components/loading-state";
 import { type Asset, type AssetFilters, useAssets } from "@/lib/assets";
@@ -102,14 +102,11 @@ export function DocumentAssetPicker({
         <LoadingState label="Loading assets…" rows={2} />
       ) : null}
       {assets.isError ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {assets.error.message}
-            <Button onClick={retry} type="button" variant="outline">
-              Retry assets
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message={assets.error.message}
+          onRetry={retry}
+          retryLabel="Retry assets"
+        />
       ) : null}
       {!assets.isError && assets.data?.length === 0 ? (
         <p>

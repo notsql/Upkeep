@@ -4,6 +4,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-retirement-panel";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
 }));
@@ -94,7 +95,7 @@ it("explains an invalid retirement date when correcting information", () => {
   fireEvent.click(
     screen.getByRole("button", { name: "Edit retirement information" })
   );
-  fireEvent.change(screen.getByLabelText("Retirement date"), {
+  fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
     target: { value: "2023-12-31" },
   });
   expect(screen.getByRole("alert").textContent).toContain("2024-01-01");

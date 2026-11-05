@@ -20,6 +20,8 @@ import { Route as AuthInvitationsIndexRouteImport } from './routes/_auth/invitat
 import { Route as AuthReportsIndexRouteImport } from './routes/_auth/reports/index'
 import { Route as AuthAdminUsersIndexRouteImport } from './routes/_auth/admin/users/index'
 import { Route as AuthEstatesEstateIdIndexRouteImport } from './routes/_auth/estates/$estateId/index'
+import { Route as AuthEstatesEstateIdAssetCategoriesRouteRouteImport } from './routes/_auth/estates/$estateId/asset-categories/route'
+import { Route as AuthEstatesEstateIdSensorsRouteRouteImport } from './routes/_auth/estates/$estateId/sensors/route'
 import { Route as AuthEstatesNewIndexRouteImport } from './routes/_auth/estates/new/index'
 import { Route as AuthReportsReportIdIndexRouteImport } from './routes/_auth/reports/$reportId/index'
 import { Route as AuthReportsNewIndexRouteImport } from './routes/_auth/reports/new/index'
@@ -28,6 +30,7 @@ import { Route as ApiAuthSignInIndexRouteImport } from './routes/api/auth/sign-i
 import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-up/index'
 import { Route as AuthEstatesEstateIdAssetCategoriesIndexRouteImport } from './routes/_auth/estates/$estateId/asset-categories/index'
 import { Route as AuthEstatesEstateIdAssetsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdRouteRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/route'
 import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_auth/estates/$estateId/council/index'
 import { Route as AuthEstatesEstateIdDevicesIndexRouteImport } from './routes/_auth/estates/$estateId/devices/index'
 import { Route as AuthEstatesEstateIdDocumentsIndexRouteImport } from './routes/_auth/estates/$estateId/documents/index'
@@ -40,14 +43,25 @@ import { Route as AuthEstatesEstateIdReportsIndexRouteImport } from './routes/_a
 import { Route as AuthEstatesEstateIdRolesIndexRouteImport } from './routes/_auth/estates/$estateId/roles/index'
 import { Route as AuthEstatesEstateIdSensorsIndexRouteImport } from './routes/_auth/estates/$estateId/sensors/index'
 import { Route as AuthEstatesEstateIdWorkOrdersIndexRouteImport } from './routes/_auth/estates/$estateId/work-orders/index'
-import { Route as AuthEstatesEstateIdAssetsAssetIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/index'
+import { Route as AuthEstatesEstateIdAssetCategoriesIntervalIndexRouteImport } from './routes/_auth/estates/$estateId/asset-categories/$interval/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/route'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
+import { Route as AuthEstatesEstateIdCouncilInvitationsIndexRouteImport } from './routes/_auth/estates/$estateId/council/invitations/index'
 import { Route as AuthEstatesEstateIdReadingsNewIndexRouteImport } from './routes/_auth/estates/$estateId/readings/new/index'
 import { Route as AuthEstatesEstateIdReportsReportIdIndexRouteImport } from './routes/_auth/estates/$estateId/reports/$reportId/index'
+import { Route as AuthEstatesEstateIdRolesNewIndexRouteImport } from './routes/_auth/estates/$estateId/roles/new/index'
+import { Route as AuthEstatesEstateIdSensorsAllIndexRouteImport } from './routes/_auth/estates/$estateId/sensors/all/index'
 import { Route as AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRouteImport } from './routes/_auth/estates/$estateId/work-orders/$workOrderId/index'
 import { Route as AuthEstatesEstateIdWorkOrdersNewIndexRouteImport } from './routes/_auth/estates/$estateId/work-orders/new/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/readings/index'
+import { Route as AuthEstatesEstateIdRolesRoleIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/roles/$roleId/edit/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/costs/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/devices/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/documents/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/inspections/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/maintenance/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/new/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/inspections/new/index'
@@ -108,6 +122,18 @@ const AuthEstatesEstateIdIndexRoute =
     path: '/estates/$estateId/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetCategoriesRouteRoute =
+  AuthEstatesEstateIdAssetCategoriesRouteRouteImport.update({
+    id: '/estates/$estateId/asset-categories',
+    path: '/estates/$estateId/asset-categories',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdSensorsRouteRoute =
+  AuthEstatesEstateIdSensorsRouteRouteImport.update({
+    id: '/estates/$estateId/sensors',
+    path: '/estates/$estateId/sensors',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesNewIndexRoute = AuthEstatesNewIndexRouteImport.update({
   id: '/estates/new/',
   path: '/estates/new/',
@@ -141,14 +167,20 @@ const ApiAuthSignUpIndexRoute = ApiAuthSignUpIndexRouteImport.update({
 } as any)
 const AuthEstatesEstateIdAssetCategoriesIndexRoute =
   AuthEstatesEstateIdAssetCategoriesIndexRouteImport.update({
-    id: '/estates/$estateId/asset-categories/',
-    path: '/estates/$estateId/asset-categories/',
-    getParentRoute: () => AuthRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthEstatesEstateIdAssetCategoriesRouteRoute,
   } as any)
 const AuthEstatesEstateIdAssetsIndexRoute =
   AuthEstatesEstateIdAssetsIndexRouteImport.update({
     id: '/estates/$estateId/assets/',
     path: '/estates/$estateId/assets/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdRouteRoute =
+  AuthEstatesEstateIdAssetsAssetIdRouteRouteImport.update({
+    id: '/estates/$estateId/assets/$assetId',
+    path: '/estates/$estateId/assets/$assetId',
     getParentRoute: () => AuthRouteRoute,
   } as any)
 const AuthEstatesEstateIdCouncilIndexRoute =
@@ -213,9 +245,9 @@ const AuthEstatesEstateIdRolesIndexRoute =
   } as any)
 const AuthEstatesEstateIdSensorsIndexRoute =
   AuthEstatesEstateIdSensorsIndexRouteImport.update({
-    id: '/estates/$estateId/sensors/',
-    path: '/estates/$estateId/sensors/',
-    getParentRoute: () => AuthRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthEstatesEstateIdSensorsRouteRoute,
   } as any)
 const AuthEstatesEstateIdWorkOrdersIndexRoute =
   AuthEstatesEstateIdWorkOrdersIndexRouteImport.update({
@@ -223,16 +255,27 @@ const AuthEstatesEstateIdWorkOrdersIndexRoute =
     path: '/estates/$estateId/work-orders/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
-const AuthEstatesEstateIdAssetsAssetIdIndexRoute =
-  AuthEstatesEstateIdAssetsAssetIdIndexRouteImport.update({
-    id: '/estates/$estateId/assets/$assetId/',
-    path: '/estates/$estateId/assets/$assetId/',
-    getParentRoute: () => AuthRouteRoute,
+const AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute =
+  AuthEstatesEstateIdAssetCategoriesIntervalIndexRouteImport.update({
+    id: '/$interval/',
+    path: '/$interval/',
+    getParentRoute: () => AuthEstatesEstateIdAssetCategoriesRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteImport.update({
+    id: '/_details',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
   } as any)
 const AuthEstatesEstateIdAssetsNewIndexRoute =
   AuthEstatesEstateIdAssetsNewIndexRouteImport.update({
     id: '/estates/$estateId/assets/new/',
     path: '/estates/$estateId/assets/new/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdCouncilInvitationsIndexRoute =
+  AuthEstatesEstateIdCouncilInvitationsIndexRouteImport.update({
+    id: '/estates/$estateId/council/invitations/',
+    path: '/estates/$estateId/council/invitations/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
 const AuthEstatesEstateIdReadingsNewIndexRoute =
@@ -247,6 +290,18 @@ const AuthEstatesEstateIdReportsReportIdIndexRoute =
     path: '/estates/$estateId/reports/$reportId/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdRolesNewIndexRoute =
+  AuthEstatesEstateIdRolesNewIndexRouteImport.update({
+    id: '/estates/$estateId/roles/new/',
+    path: '/estates/$estateId/roles/new/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdSensorsAllIndexRoute =
+  AuthEstatesEstateIdSensorsAllIndexRouteImport.update({
+    id: '/all/',
+    path: '/all/',
+    getParentRoute: () => AuthEstatesEstateIdSensorsRouteRoute,
+  } as any)
 const AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute =
   AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRouteImport.update({
     id: '/estates/$estateId/work-orders/$workOrderId/',
@@ -259,44 +314,86 @@ const AuthEstatesEstateIdWorkOrdersNewIndexRoute =
     path: '/estates/$estateId/work-orders/new/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
+  } as any)
 const AuthEstatesEstateIdAssetsAssetIdEditIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport.update({
-    id: '/estates/$estateId/assets/$assetId/edit/',
-    path: '/estates/$estateId/assets/$assetId/edit/',
-    getParentRoute: () => AuthRouteRoute,
+    id: '/edit/',
+    path: '/edit/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
   } as any)
 const AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport.update({
-    id: '/estates/$estateId/assets/$assetId/readings/',
-    path: '/estates/$estateId/assets/$assetId/readings/',
+    id: '/readings/',
+    path: '/readings/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
+  } as any)
+const AuthEstatesEstateIdRolesRoleIdEditIndexRoute =
+  AuthEstatesEstateIdRolesRoleIdEditIndexRouteImport.update({
+    id: '/estates/$estateId/roles/$roleId/edit/',
+    path: '/estates/$estateId/roles/$roleId/edit/',
     getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRouteImport.update({
+    id: '/costs/',
+    path: '/costs/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRouteImport.update({
+    id: '/devices/',
+    path: '/devices/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRouteImport.update({
+    id: '/documents/',
+    path: '/documents/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRouteImport.update({
+    id: '/inspections/',
+    path: '/inspections/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
+  } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRouteImport.update({
+    id: '/maintenance/',
+    path: '/maintenance/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
   } as any)
 const AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport.update({
-    id: '/estates/$estateId/assets/$assetId/devices/new/',
-    path: '/estates/$estateId/assets/$assetId/devices/new/',
-    getParentRoute: () => AuthRouteRoute,
+    id: '/devices/new/',
+    path: '/devices/new/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
   } as any)
 const AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRouteImport.update(
     {
-      id: '/estates/$estateId/assets/$assetId/inspections/$inspectionId/',
-      path: '/estates/$estateId/assets/$assetId/inspections/$inspectionId/',
-      getParentRoute: () => AuthRouteRoute,
+      id: '/inspections/$inspectionId/',
+      path: '/inspections/$inspectionId/',
+      getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
     } as any,
   )
 const AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRouteImport.update({
-    id: '/estates/$estateId/assets/$assetId/inspections/new/',
-    path: '/estates/$estateId/assets/$assetId/inspections/new/',
-    getParentRoute: () => AuthRouteRoute,
+    id: '/inspections/new/',
+    path: '/inspections/new/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
   } as any)
 const AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport.update(
     {
-      id: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/',
-      path: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/',
-      getParentRoute: () => AuthRouteRoute,
+      id: '/devices/$deviceId/replace/',
+      path: '/devices/$deviceId/replace/',
+      getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
     } as any,
   )
 
@@ -309,6 +406,8 @@ export interface FileRoutesByFullPath {
   '/estates/': typeof AuthEstatesIndexRoute
   '/invitations/': typeof AuthInvitationsIndexRoute
   '/reports/': typeof AuthReportsIndexRoute
+  '/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren
+  '/estates/$estateId/sensors': typeof AuthEstatesEstateIdSensorsRouteRouteWithChildren
   '/admin/users/': typeof AuthAdminUsersIndexRoute
   '/estates/$estateId/': typeof AuthEstatesEstateIdIndexRoute
   '/estates/new/': typeof AuthEstatesNewIndexRoute
@@ -317,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
+  '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdRouteRouteWithChildren
   '/estates/$estateId/asset-categories/': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
@@ -331,14 +431,24 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
   '/estates/$estateId/sensors/': typeof AuthEstatesEstateIdSensorsIndexRoute
   '/estates/$estateId/work-orders/': typeof AuthEstatesEstateIdWorkOrdersIndexRoute
-  '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
+  '/estates/$estateId/asset-categories/$interval/': typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
+  '/estates/$estateId/council/invitations/': typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
   '/estates/$estateId/readings/new/': typeof AuthEstatesEstateIdReadingsNewIndexRoute
   '/estates/$estateId/reports/$reportId/': typeof AuthEstatesEstateIdReportsReportIdIndexRoute
+  '/estates/$estateId/roles/new/': typeof AuthEstatesEstateIdRolesNewIndexRoute
+  '/estates/$estateId/sensors/all/': typeof AuthEstatesEstateIdSensorsAllIndexRoute
   '/estates/$estateId/work-orders/$workOrderId/': typeof AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute
   '/estates/$estateId/work-orders/new/': typeof AuthEstatesEstateIdWorkOrdersNewIndexRoute
+  '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  '/estates/$estateId/roles/$roleId/edit/': typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
+  '/estates/$estateId/assets/$assetId/costs/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
+  '/estates/$estateId/assets/$assetId/devices/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
+  '/estates/$estateId/assets/$assetId/documents/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  '/estates/$estateId/assets/$assetId/inspections/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
+  '/estates/$estateId/assets/$assetId/maintenance/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
   '/estates/$estateId/assets/$assetId/inspections/$inspectionId/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
   '/estates/$estateId/assets/$assetId/inspections/new/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
@@ -361,6 +471,7 @@ export interface FileRoutesByTo {
   '/api/auth/callback': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up': typeof ApiAuthSignUpIndexRoute
+  '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
   '/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/estates/$estateId/assets': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/estates/$estateId/council': typeof AuthEstatesEstateIdCouncilIndexRoute
@@ -375,14 +486,23 @@ export interface FileRoutesByTo {
   '/estates/$estateId/roles': typeof AuthEstatesEstateIdRolesIndexRoute
   '/estates/$estateId/sensors': typeof AuthEstatesEstateIdSensorsIndexRoute
   '/estates/$estateId/work-orders': typeof AuthEstatesEstateIdWorkOrdersIndexRoute
-  '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
+  '/estates/$estateId/asset-categories/$interval': typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
+  '/estates/$estateId/council/invitations': typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
   '/estates/$estateId/readings/new': typeof AuthEstatesEstateIdReadingsNewIndexRoute
   '/estates/$estateId/reports/$reportId': typeof AuthEstatesEstateIdReportsReportIdIndexRoute
+  '/estates/$estateId/roles/new': typeof AuthEstatesEstateIdRolesNewIndexRoute
+  '/estates/$estateId/sensors/all': typeof AuthEstatesEstateIdSensorsAllIndexRoute
   '/estates/$estateId/work-orders/$workOrderId': typeof AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute
   '/estates/$estateId/work-orders/new': typeof AuthEstatesEstateIdWorkOrdersNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  '/estates/$estateId/roles/$roleId/edit': typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
+  '/estates/$estateId/assets/$assetId/costs': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
+  '/estates/$estateId/assets/$assetId/devices': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
+  '/estates/$estateId/assets/$assetId/documents': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  '/estates/$estateId/assets/$assetId/inspections': typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
+  '/estates/$estateId/assets/$assetId/maintenance': typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
   '/estates/$estateId/assets/$assetId/inspections/$inspectionId': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
   '/estates/$estateId/assets/$assetId/inspections/new': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
@@ -399,6 +519,8 @@ export interface FileRoutesById {
   '/_auth/estates/': typeof AuthEstatesIndexRoute
   '/_auth/invitations/': typeof AuthInvitationsIndexRoute
   '/_auth/reports/': typeof AuthReportsIndexRoute
+  '/_auth/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren
+  '/_auth/estates/$estateId/sensors': typeof AuthEstatesEstateIdSensorsRouteRouteWithChildren
   '/_auth/admin/users/': typeof AuthAdminUsersIndexRoute
   '/_auth/estates/$estateId/': typeof AuthEstatesEstateIdIndexRoute
   '/_auth/estates/new/': typeof AuthEstatesNewIndexRoute
@@ -407,6 +529,7 @@ export interface FileRoutesById {
   '/api/auth/callback/': typeof ApiAuthCallbackIndexRoute
   '/api/auth/sign-in/': typeof ApiAuthSignInIndexRoute
   '/api/auth/sign-up/': typeof ApiAuthSignUpIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdRouteRouteWithChildren
   '/_auth/estates/$estateId/asset-categories/': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/_auth/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
   '/_auth/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
@@ -421,14 +544,25 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
   '/_auth/estates/$estateId/sensors/': typeof AuthEstatesEstateIdSensorsIndexRoute
   '/_auth/estates/$estateId/work-orders/': typeof AuthEstatesEstateIdWorkOrdersIndexRoute
-  '/_auth/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details': typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteWithChildren
+  '/_auth/estates/$estateId/asset-categories/$interval/': typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
+  '/_auth/estates/$estateId/council/invitations/': typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
   '/_auth/estates/$estateId/readings/new/': typeof AuthEstatesEstateIdReadingsNewIndexRoute
   '/_auth/estates/$estateId/reports/$reportId/': typeof AuthEstatesEstateIdReportsReportIdIndexRoute
+  '/_auth/estates/$estateId/roles/new/': typeof AuthEstatesEstateIdRolesNewIndexRoute
+  '/_auth/estates/$estateId/sensors/all/': typeof AuthEstatesEstateIdSensorsAllIndexRoute
   '/_auth/estates/$estateId/work-orders/$workOrderId/': typeof AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute
   '/_auth/estates/$estateId/work-orders/new/': typeof AuthEstatesEstateIdWorkOrdersNewIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  '/_auth/estates/$estateId/roles/$roleId/edit/': typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/costs/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/devices/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/documents/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/inspections/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/maintenance/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/inspections/new/': typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
@@ -445,6 +579,8 @@ export interface FileRouteTypes {
     | '/estates/'
     | '/invitations/'
     | '/reports/'
+    | '/estates/$estateId/asset-categories'
+    | '/estates/$estateId/sensors'
     | '/admin/users/'
     | '/estates/$estateId/'
     | '/estates/new/'
@@ -453,6 +589,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
+    | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/asset-categories/'
     | '/estates/$estateId/assets/'
     | '/estates/$estateId/council/'
@@ -467,14 +604,24 @@ export interface FileRouteTypes {
     | '/estates/$estateId/roles/'
     | '/estates/$estateId/sensors/'
     | '/estates/$estateId/work-orders/'
-    | '/estates/$estateId/assets/$assetId/'
+    | '/estates/$estateId/asset-categories/$interval/'
     | '/estates/$estateId/assets/new/'
+    | '/estates/$estateId/council/invitations/'
     | '/estates/$estateId/readings/new/'
     | '/estates/$estateId/reports/$reportId/'
+    | '/estates/$estateId/roles/new/'
+    | '/estates/$estateId/sensors/all/'
     | '/estates/$estateId/work-orders/$workOrderId/'
     | '/estates/$estateId/work-orders/new/'
+    | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/$assetId/edit/'
     | '/estates/$estateId/assets/$assetId/readings/'
+    | '/estates/$estateId/roles/$roleId/edit/'
+    | '/estates/$estateId/assets/$assetId/costs/'
+    | '/estates/$estateId/assets/$assetId/devices/'
+    | '/estates/$estateId/assets/$assetId/documents/'
+    | '/estates/$estateId/assets/$assetId/inspections/'
+    | '/estates/$estateId/assets/$assetId/maintenance/'
     | '/estates/$estateId/assets/$assetId/devices/new/'
     | '/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
     | '/estates/$estateId/assets/$assetId/inspections/new/'
@@ -497,6 +644,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback'
     | '/api/auth/sign-in'
     | '/api/auth/sign-up'
+    | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/asset-categories'
     | '/estates/$estateId/assets'
     | '/estates/$estateId/council'
@@ -511,14 +659,23 @@ export interface FileRouteTypes {
     | '/estates/$estateId/roles'
     | '/estates/$estateId/sensors'
     | '/estates/$estateId/work-orders'
-    | '/estates/$estateId/assets/$assetId'
+    | '/estates/$estateId/asset-categories/$interval'
     | '/estates/$estateId/assets/new'
+    | '/estates/$estateId/council/invitations'
     | '/estates/$estateId/readings/new'
     | '/estates/$estateId/reports/$reportId'
+    | '/estates/$estateId/roles/new'
+    | '/estates/$estateId/sensors/all'
     | '/estates/$estateId/work-orders/$workOrderId'
     | '/estates/$estateId/work-orders/new'
     | '/estates/$estateId/assets/$assetId/edit'
     | '/estates/$estateId/assets/$assetId/readings'
+    | '/estates/$estateId/roles/$roleId/edit'
+    | '/estates/$estateId/assets/$assetId/costs'
+    | '/estates/$estateId/assets/$assetId/devices'
+    | '/estates/$estateId/assets/$assetId/documents'
+    | '/estates/$estateId/assets/$assetId/inspections'
+    | '/estates/$estateId/assets/$assetId/maintenance'
     | '/estates/$estateId/assets/$assetId/devices/new'
     | '/estates/$estateId/assets/$assetId/inspections/$inspectionId'
     | '/estates/$estateId/assets/$assetId/inspections/new'
@@ -534,6 +691,8 @@ export interface FileRouteTypes {
     | '/_auth/estates/'
     | '/_auth/invitations/'
     | '/_auth/reports/'
+    | '/_auth/estates/$estateId/asset-categories'
+    | '/_auth/estates/$estateId/sensors'
     | '/_auth/admin/users/'
     | '/_auth/estates/$estateId/'
     | '/_auth/estates/new/'
@@ -542,6 +701,7 @@ export interface FileRouteTypes {
     | '/api/auth/callback/'
     | '/api/auth/sign-in/'
     | '/api/auth/sign-up/'
+    | '/_auth/estates/$estateId/assets/$assetId'
     | '/_auth/estates/$estateId/asset-categories/'
     | '/_auth/estates/$estateId/assets/'
     | '/_auth/estates/$estateId/council/'
@@ -556,14 +716,25 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/roles/'
     | '/_auth/estates/$estateId/sensors/'
     | '/_auth/estates/$estateId/work-orders/'
-    | '/_auth/estates/$estateId/assets/$assetId/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details'
+    | '/_auth/estates/$estateId/asset-categories/$interval/'
     | '/_auth/estates/$estateId/assets/new/'
+    | '/_auth/estates/$estateId/council/invitations/'
     | '/_auth/estates/$estateId/readings/new/'
     | '/_auth/estates/$estateId/reports/$reportId/'
+    | '/_auth/estates/$estateId/roles/new/'
+    | '/_auth/estates/$estateId/sensors/all/'
     | '/_auth/estates/$estateId/work-orders/$workOrderId/'
     | '/_auth/estates/$estateId/work-orders/new/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/'
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
     | '/_auth/estates/$estateId/assets/$assetId/readings/'
+    | '/_auth/estates/$estateId/roles/$roleId/edit/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/costs/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/devices/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/documents/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/inspections/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/maintenance/'
     | '/_auth/estates/$estateId/assets/$assetId/devices/new/'
     | '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
     | '/_auth/estates/$estateId/assets/$assetId/inspections/new/'
@@ -660,6 +831,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/asset-categories': {
+      id: '/_auth/estates/$estateId/asset-categories'
+      path: '/estates/$estateId/asset-categories'
+      fullPath: '/estates/$estateId/asset-categories'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetCategoriesRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/sensors': {
+      id: '/_auth/estates/$estateId/sensors'
+      path: '/estates/$estateId/sensors'
+      fullPath: '/estates/$estateId/sensors'
+      preLoaderRoute: typeof AuthEstatesEstateIdSensorsRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/new/': {
       id: '/_auth/estates/new/'
       path: '/estates/new'
@@ -704,16 +889,23 @@ declare module '@tanstack/react-router' {
     }
     '/_auth/estates/$estateId/asset-categories/': {
       id: '/_auth/estates/$estateId/asset-categories/'
-      path: '/estates/$estateId/asset-categories'
+      path: '/'
       fullPath: '/estates/$estateId/asset-categories/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetCategoriesIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdAssetCategoriesRouteRoute
     }
     '/_auth/estates/$estateId/assets/': {
       id: '/_auth/estates/$estateId/assets/'
       path: '/estates/$estateId/assets'
       fullPath: '/estates/$estateId/assets/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId': {
+      id: '/_auth/estates/$estateId/assets/$assetId'
+      path: '/estates/$estateId/assets/$assetId'
+      fullPath: '/estates/$estateId/assets/$assetId'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/estates/$estateId/council/': {
@@ -788,10 +980,10 @@ declare module '@tanstack/react-router' {
     }
     '/_auth/estates/$estateId/sensors/': {
       id: '/_auth/estates/$estateId/sensors/'
-      path: '/estates/$estateId/sensors'
+      path: '/'
       fullPath: '/estates/$estateId/sensors/'
       preLoaderRoute: typeof AuthEstatesEstateIdSensorsIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdSensorsRouteRoute
     }
     '/_auth/estates/$estateId/work-orders/': {
       id: '/_auth/estates/$estateId/work-orders/'
@@ -800,18 +992,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdWorkOrdersIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
-    '/_auth/estates/$estateId/assets/$assetId/': {
-      id: '/_auth/estates/$estateId/assets/$assetId/'
-      path: '/estates/$estateId/assets/$assetId'
-      fullPath: '/estates/$estateId/assets/$assetId/'
-      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+    '/_auth/estates/$estateId/asset-categories/$interval/': {
+      id: '/_auth/estates/$estateId/asset-categories/$interval/'
+      path: '/$interval'
+      fullPath: '/estates/$estateId/asset-categories/$interval/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetCategoriesRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/_details': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details'
+      path: ''
+      fullPath: '/estates/$estateId/assets/$assetId'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
     }
     '/_auth/estates/$estateId/assets/new/': {
       id: '/_auth/estates/$estateId/assets/new/'
       path: '/estates/$estateId/assets/new'
       fullPath: '/estates/$estateId/assets/new/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsNewIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/council/invitations/': {
+      id: '/_auth/estates/$estateId/council/invitations/'
+      path: '/estates/$estateId/council/invitations'
+      fullPath: '/estates/$estateId/council/invitations/'
+      preLoaderRoute: typeof AuthEstatesEstateIdCouncilInvitationsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/estates/$estateId/readings/new/': {
@@ -828,6 +1034,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdReportsReportIdIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/roles/new/': {
+      id: '/_auth/estates/$estateId/roles/new/'
+      path: '/estates/$estateId/roles/new'
+      fullPath: '/estates/$estateId/roles/new/'
+      preLoaderRoute: typeof AuthEstatesEstateIdRolesNewIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/sensors/all/': {
+      id: '/_auth/estates/$estateId/sensors/all/'
+      path: '/all'
+      fullPath: '/estates/$estateId/sensors/all/'
+      preLoaderRoute: typeof AuthEstatesEstateIdSensorsAllIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdSensorsRouteRoute
+    }
     '/_auth/estates/$estateId/work-orders/$workOrderId/': {
       id: '/_auth/estates/$estateId/work-orders/$workOrderId/'
       path: '/estates/$estateId/work-orders/$workOrderId'
@@ -842,62 +1062,211 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdWorkOrdersNewIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/assets/$assetId/_details/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/'
+      path: '/'
+      fullPath: '/estates/$estateId/assets/$assetId/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
+    }
     '/_auth/estates/$estateId/assets/$assetId/edit/': {
       id: '/_auth/estates/$estateId/assets/$assetId/edit/'
-      path: '/estates/$estateId/assets/$assetId/edit'
+      path: '/edit'
       fullPath: '/estates/$estateId/assets/$assetId/edit/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
     }
     '/_auth/estates/$estateId/assets/$assetId/readings/': {
       id: '/_auth/estates/$estateId/assets/$assetId/readings/'
-      path: '/estates/$estateId/assets/$assetId/readings'
+      path: '/readings'
       fullPath: '/estates/$estateId/assets/$assetId/readings/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
+    }
+    '/_auth/estates/$estateId/roles/$roleId/edit/': {
+      id: '/_auth/estates/$estateId/roles/$roleId/edit/'
+      path: '/estates/$estateId/roles/$roleId/edit'
+      fullPath: '/estates/$estateId/roles/$roleId/edit/'
+      preLoaderRoute: typeof AuthEstatesEstateIdRolesRoleIdEditIndexRouteImport
       parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/_details/costs/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/costs/'
+      path: '/costs'
+      fullPath: '/estates/$estateId/assets/$assetId/costs/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/_details/devices/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/devices/'
+      path: '/devices'
+      fullPath: '/estates/$estateId/assets/$assetId/devices/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/_details/documents/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/documents/'
+      path: '/documents'
+      fullPath: '/estates/$estateId/assets/$assetId/documents/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/_details/inspections/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/inspections/'
+      path: '/inspections'
+      fullPath: '/estates/$estateId/assets/$assetId/inspections/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
+    }
+    '/_auth/estates/$estateId/assets/$assetId/_details/maintenance/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/maintenance/'
+      path: '/maintenance'
+      fullPath: '/estates/$estateId/assets/$assetId/maintenance/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
     }
     '/_auth/estates/$estateId/assets/$assetId/devices/new/': {
       id: '/_auth/estates/$estateId/assets/$assetId/devices/new/'
-      path: '/estates/$estateId/assets/$assetId/devices/new'
+      path: '/devices/new'
       fullPath: '/estates/$estateId/assets/$assetId/devices/new/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
     }
     '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/': {
       id: '/_auth/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
-      path: '/estates/$estateId/assets/$assetId/inspections/$inspectionId'
+      path: '/inspections/$inspectionId'
       fullPath: '/estates/$estateId/assets/$assetId/inspections/$inspectionId/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
     }
     '/_auth/estates/$estateId/assets/$assetId/inspections/new/': {
       id: '/_auth/estates/$estateId/assets/$assetId/inspections/new/'
-      path: '/estates/$estateId/assets/$assetId/inspections/new'
+      path: '/inspections/new'
       fullPath: '/estates/$estateId/assets/$assetId/inspections/new/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
     }
     '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/': {
       id: '/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
-      path: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace'
+      path: '/devices/$deviceId/replace'
       fullPath: '/estates/$estateId/assets/$assetId/devices/$deviceId/replace/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRouteImport
-      parentRoute: typeof AuthRouteRoute
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
     }
   }
 }
+
+interface AuthEstatesEstateIdAssetCategoriesRouteRouteChildren {
+  AuthEstatesEstateIdAssetCategoriesIndexRoute: typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
+  AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute: typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
+}
+
+const AuthEstatesEstateIdAssetCategoriesRouteRouteChildren: AuthEstatesEstateIdAssetCategoriesRouteRouteChildren =
+  {
+    AuthEstatesEstateIdAssetCategoriesIndexRoute:
+      AuthEstatesEstateIdAssetCategoriesIndexRoute,
+    AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute:
+      AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute,
+  }
+
+const AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren =
+  AuthEstatesEstateIdAssetCategoriesRouteRoute._addFileChildren(
+    AuthEstatesEstateIdAssetCategoriesRouteRouteChildren,
+  )
+
+interface AuthEstatesEstateIdSensorsRouteRouteChildren {
+  AuthEstatesEstateIdSensorsIndexRoute: typeof AuthEstatesEstateIdSensorsIndexRoute
+  AuthEstatesEstateIdSensorsAllIndexRoute: typeof AuthEstatesEstateIdSensorsAllIndexRoute
+}
+
+const AuthEstatesEstateIdSensorsRouteRouteChildren: AuthEstatesEstateIdSensorsRouteRouteChildren =
+  {
+    AuthEstatesEstateIdSensorsIndexRoute: AuthEstatesEstateIdSensorsIndexRoute,
+    AuthEstatesEstateIdSensorsAllIndexRoute:
+      AuthEstatesEstateIdSensorsAllIndexRoute,
+  }
+
+const AuthEstatesEstateIdSensorsRouteRouteWithChildren =
+  AuthEstatesEstateIdSensorsRouteRoute._addFileChildren(
+    AuthEstatesEstateIdSensorsRouteRouteChildren,
+  )
+
+interface AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteChildren {
+  AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
+}
+
+const AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteChildren: AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteChildren =
+  {
+    AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute,
+  }
+
+const AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteWithChildren =
+  AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute._addFileChildren(
+    AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteChildren,
+  )
+
+interface AuthEstatesEstateIdAssetsAssetIdRouteRouteChildren {
+  AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteWithChildren
+  AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
+}
+
+const AuthEstatesEstateIdAssetsAssetIdRouteRouteChildren: AuthEstatesEstateIdAssetsAssetIdRouteRouteChildren =
+  {
+    AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteWithChildren,
+    AuthEstatesEstateIdAssetsAssetIdEditIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdEditIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute,
+  }
+
+const AuthEstatesEstateIdAssetsAssetIdRouteRouteWithChildren =
+  AuthEstatesEstateIdAssetsAssetIdRouteRoute._addFileChildren(
+    AuthEstatesEstateIdAssetsAssetIdRouteRouteChildren,
+  )
 
 interface AuthRouteRouteChildren {
   AuthAccountIndexRoute: typeof AuthAccountIndexRoute
   AuthEstatesIndexRoute: typeof AuthEstatesIndexRoute
   AuthInvitationsIndexRoute: typeof AuthInvitationsIndexRoute
   AuthReportsIndexRoute: typeof AuthReportsIndexRoute
+  AuthEstatesEstateIdAssetCategoriesRouteRoute: typeof AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren
+  AuthEstatesEstateIdSensorsRouteRoute: typeof AuthEstatesEstateIdSensorsRouteRouteWithChildren
   AuthAdminUsersIndexRoute: typeof AuthAdminUsersIndexRoute
   AuthEstatesEstateIdIndexRoute: typeof AuthEstatesEstateIdIndexRoute
   AuthEstatesNewIndexRoute: typeof AuthEstatesNewIndexRoute
   AuthReportsReportIdIndexRoute: typeof AuthReportsReportIdIndexRoute
   AuthReportsNewIndexRoute: typeof AuthReportsNewIndexRoute
-  AuthEstatesEstateIdAssetCategoriesIndexRoute: typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdRouteRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRouteWithChildren
   AuthEstatesEstateIdAssetsIndexRoute: typeof AuthEstatesEstateIdAssetsIndexRoute
   AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
   AuthEstatesEstateIdDevicesIndexRoute: typeof AuthEstatesEstateIdDevicesIndexRoute
@@ -909,20 +1278,15 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdReadingsIndexRoute: typeof AuthEstatesEstateIdReadingsIndexRoute
   AuthEstatesEstateIdReportsIndexRoute: typeof AuthEstatesEstateIdReportsIndexRoute
   AuthEstatesEstateIdRolesIndexRoute: typeof AuthEstatesEstateIdRolesIndexRoute
-  AuthEstatesEstateIdSensorsIndexRoute: typeof AuthEstatesEstateIdSensorsIndexRoute
   AuthEstatesEstateIdWorkOrdersIndexRoute: typeof AuthEstatesEstateIdWorkOrdersIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
+  AuthEstatesEstateIdCouncilInvitationsIndexRoute: typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
   AuthEstatesEstateIdReadingsNewIndexRoute: typeof AuthEstatesEstateIdReadingsNewIndexRoute
   AuthEstatesEstateIdReportsReportIdIndexRoute: typeof AuthEstatesEstateIdReportsReportIdIndexRoute
+  AuthEstatesEstateIdRolesNewIndexRoute: typeof AuthEstatesEstateIdRolesNewIndexRoute
   AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute: typeof AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute
   AuthEstatesEstateIdWorkOrdersNewIndexRoute: typeof AuthEstatesEstateIdWorkOrdersNewIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdEditIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute
-  AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute
+  AuthEstatesEstateIdRolesRoleIdEditIndexRoute: typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
 }
 
 const AuthRouteRouteChildren: AuthRouteRouteChildren = {
@@ -930,13 +1294,17 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthEstatesIndexRoute: AuthEstatesIndexRoute,
   AuthInvitationsIndexRoute: AuthInvitationsIndexRoute,
   AuthReportsIndexRoute: AuthReportsIndexRoute,
+  AuthEstatesEstateIdAssetCategoriesRouteRoute:
+    AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren,
+  AuthEstatesEstateIdSensorsRouteRoute:
+    AuthEstatesEstateIdSensorsRouteRouteWithChildren,
   AuthAdminUsersIndexRoute: AuthAdminUsersIndexRoute,
   AuthEstatesEstateIdIndexRoute: AuthEstatesEstateIdIndexRoute,
   AuthEstatesNewIndexRoute: AuthEstatesNewIndexRoute,
   AuthReportsReportIdIndexRoute: AuthReportsReportIdIndexRoute,
   AuthReportsNewIndexRoute: AuthReportsNewIndexRoute,
-  AuthEstatesEstateIdAssetCategoriesIndexRoute:
-    AuthEstatesEstateIdAssetCategoriesIndexRoute,
+  AuthEstatesEstateIdAssetsAssetIdRouteRoute:
+    AuthEstatesEstateIdAssetsAssetIdRouteRouteWithChildren,
   AuthEstatesEstateIdAssetsIndexRoute: AuthEstatesEstateIdAssetsIndexRoute,
   AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
   AuthEstatesEstateIdDevicesIndexRoute: AuthEstatesEstateIdDevicesIndexRoute,
@@ -952,33 +1320,23 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthEstatesEstateIdReadingsIndexRoute: AuthEstatesEstateIdReadingsIndexRoute,
   AuthEstatesEstateIdReportsIndexRoute: AuthEstatesEstateIdReportsIndexRoute,
   AuthEstatesEstateIdRolesIndexRoute: AuthEstatesEstateIdRolesIndexRoute,
-  AuthEstatesEstateIdSensorsIndexRoute: AuthEstatesEstateIdSensorsIndexRoute,
   AuthEstatesEstateIdWorkOrdersIndexRoute:
     AuthEstatesEstateIdWorkOrdersIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdIndexRoute,
   AuthEstatesEstateIdAssetsNewIndexRoute:
     AuthEstatesEstateIdAssetsNewIndexRoute,
+  AuthEstatesEstateIdCouncilInvitationsIndexRoute:
+    AuthEstatesEstateIdCouncilInvitationsIndexRoute,
   AuthEstatesEstateIdReadingsNewIndexRoute:
     AuthEstatesEstateIdReadingsNewIndexRoute,
   AuthEstatesEstateIdReportsReportIdIndexRoute:
     AuthEstatesEstateIdReportsReportIdIndexRoute,
+  AuthEstatesEstateIdRolesNewIndexRoute: AuthEstatesEstateIdRolesNewIndexRoute,
   AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute:
     AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute,
   AuthEstatesEstateIdWorkOrdersNewIndexRoute:
     AuthEstatesEstateIdWorkOrdersNewIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdEditIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdEditIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdInspectionsInspectionIdIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdInspectionsNewIndexRoute,
-  AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute:
-    AuthEstatesEstateIdAssetsAssetIdDevicesDeviceIdReplaceIndexRoute,
+  AuthEstatesEstateIdRolesRoleIdEditIndexRoute:
+    AuthEstatesEstateIdRolesRoleIdEditIndexRoute,
 }
 
 const AuthRouteRouteWithChildren = AuthRouteRoute._addFileChildren(

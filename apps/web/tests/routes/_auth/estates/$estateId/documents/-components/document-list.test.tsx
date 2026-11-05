@@ -48,8 +48,8 @@ it("explains an empty result when only a document type filter is active", () => 
       onDownload={vi.fn()}
     />
   );
-  screen.getByText("No files match your search");
-  expect(screen.queryByText("No documents uploaded")).toBeNull();
+  screen.getByText("No matching documents");
+  expect(screen.queryByText("No documents yet")).toBeNull();
 });
 
 it("offers Clear filters when filters produced no documents", () => {
@@ -78,6 +78,6 @@ it("offers the create action when nothing has been uploaded", () => {
       onDownload={vi.fn()}
     />
   );
-  screen.getByText("No documents uploaded");
+  screen.getByText("No documents yet");
   screen.getByRole("button", { name: "Upload document" });
 });

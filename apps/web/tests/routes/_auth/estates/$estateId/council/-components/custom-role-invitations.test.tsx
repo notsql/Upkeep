@@ -17,6 +17,9 @@ const CONFIRM_ROLE = /confirm|change role|assign role/iu;
 const RETRY = /retry/iu;
 
 const { apiGet } = vi.hoisted(() => ({ apiGet: vi.fn() }));
+const { router } = vi.hoisted(() => ({
+  router: { navigate: vi.fn(), search: {} as Record<string, unknown> },
+}));
 
 vi.mock("@/lib/api", () => ({
   api: { GET: apiGet, POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() },
@@ -28,6 +31,8 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
+  useNavigate: () => router.navigate,
+  useSearch: () => router.search,
 }));
 
 // Wire-response fixtures describe the agreed contract before OpenAPI generation.
@@ -170,6 +175,7 @@ async function openInviteDialog(): Promise<void> {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  router.search = {};
   serve();
   vi.mocked(api.POST).mockResolvedValue({
     data: {
@@ -199,7 +205,7 @@ it("keeps custom-role changes and confirmation available on later member-table p
   );
   expect(table.getAllByRole("row")).toHaveLength(21);
   expect(table.queryByText("Other 21")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await table.findByText("Other 21");
   table.getByRole("cell", { name: definition.name });
   await chooseOption(
@@ -293,7 +299,7 @@ it("disables invitation submission when no roles are eligible", async () => {
   serve({ delegated: true, invitationRoles: [] });
   renderWithProviders(<CouncilPage estateId="estate" />);
   await openInviteDialog();
-  await screen.findByText("No eligible custom roles are available.");
+  await screen.findByText("No eligible roles");
   expect(
     screen.getByRole<HTMLButtonElement>("combobox", { name: "Invitation role" })
       .disabled
@@ -441,72 +447,27 @@ it("refreshes access after a rejected reassignment and disables a now-inactive e
   expect(api.PUT).toHaveBeenCalledTimes(1);
 });
 
-it("creates a role on the fly from the invitation role picker and selects it", async () => {
-  const created = {
-    ...definition,
-    id: "new-role",
-    name: "Gardener",
-    version: 1,
-  };
-  let roles = [option];
-  serve();
-  const base = vi.mocked(api.GET).getMockImplementation();
-  vi.mocked(api.GET).mockImplementation((path, ...rest) => {
-    if (String(path).endsWith("/invitation-roles")) {
-      return Promise.resolve({
-        data: roles,
-        response: new Response(),
-      }) as never;
-    }
-    return (base as (...args: unknown[]) => unknown)(path, ...rest) as never;
-  });
-  vi.mocked(api.POST).mockImplementation((path) => {
-    if (String(path) === "/estates/{estateId}/roles") {
-      roles = [
-        option,
-        {
-          ...option,
-          label: "Gardener",
-          customRoleId: "new-role",
-          customRoleVersion: 1,
-        },
-      ];
-      return Promise.resolve({
-        data: created,
-        response: new Response(null, { status: 201 }),
-      }) as never;
-    }
-    return Promise.resolve({ data: {}, response: new Response() }) as never;
-  });
+it("sends Create new role to the new-role page with a return target", async () => {
   renderWithProviders(<CouncilPage estateId="estate" />);
   await openInviteDialog();
   await chooseOption(
     await screen.findByRole("combobox", { name: "Invitation role" }),
     "Create new role…"
   );
-  const dialog = within(
-    await screen.findByRole("dialog", { name: "Create role" })
-  );
-  fireEvent.change(dialog.getByRole("textbox", { name: "Role name" }), {
-    target: { value: "Gardener" },
+  expect(router.navigate).toHaveBeenCalledWith({
+    to: "/estates/$estateId/roles/new",
+    params: { estateId: "estate" },
+    search: { returnTo: "council" },
   });
-  fireEvent.click(dialog.getByRole("button", { name: "Permissions" }));
-  fireEvent.click(dialog.getByRole("checkbox", { name: permission.label }));
-  fireEvent.click(dialog.getByRole("button", { name: "Create role" }));
-  await waitFor(() =>
-    expect(api.POST).toHaveBeenCalledWith(
-      "/estates/{estateId}/roles",
-      expect.objectContaining({
-        body: expect.objectContaining({ name: "Gardener" }),
-      })
-    )
-  );
-  await waitFor(() =>
-    expect(screen.queryByRole("dialog", { name: "Create role" })).toBeNull()
-  );
+});
+
+it("reopens the invite dialog with the role created on the new-role page", async () => {
+  router.search = { inviteRole: definition.id };
+  renderWithProviders(<CouncilPage estateId="estate" />);
+  await screen.findByRole("dialog", { name: "Invite member" });
   await waitFor(() =>
     expect(
       screen.getByRole("combobox", { name: "Invitation role" }).textContent
-    ).toContain("Gardener")
+    ).toContain(definition.name)
   );
 });

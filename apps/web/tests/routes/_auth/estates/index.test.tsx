@@ -66,6 +66,7 @@ it("restores search, status and access filters after opening a whole estate card
   await router.load();
   renderWithProviders(<RouterProvider router={router} />);
   await screen.findByRole("link", { name: "Oak Park (MCST OP-002)" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByRole("searchbox", { name: "Search estates" }), {
     target: { value: "Oak " },
   });

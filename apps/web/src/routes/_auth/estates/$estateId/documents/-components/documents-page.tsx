@@ -1,17 +1,14 @@
-import { Button } from "@proj/ui/components/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@proj/ui/components/dialog";
+import { Files } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
+import { ErrorState } from "@/components/error-state";
+import { useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { CreateButton } from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { Pagination } from "@/components/pagination";
 import {
   type DocumentAsset,
   useAssetDocumentAccess,
@@ -27,7 +24,7 @@ import {
 import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
 import { DocumentAssetDialog } from "./document-asset-dialog";
 import { DocumentAssets } from "./document-assets";
-import { DocumentFiltersForm } from "./document-filters";
+import { countDocumentFilters, DocumentFiltersForm } from "./document-filters";
 import { DocumentList } from "./document-list";
 import { DocumentWorkOrderDialog } from "./document-work-order-dialog";
 import { UploadDocumentForm } from "./upload-document-form";
@@ -85,6 +82,11 @@ export function DocumentsPage({
   const download = useDownloadDocument(estateId);
   const [selected, setSelected] = useState<EstateDocument>();
   const [notice, setNotice] = useState<string>();
+  const [uploading, setUploading] = useState(false);
+  const openUpload = useCallback(() => setUploading(true), []);
+  const closeUpload = useCallback(() => setUploading(false), []);
+  const activeCount = countDocumentFilters(filters);
+  const panel = useFilterPanel(activeCount);
   const chooseDeletion = useCallback(
     (document: EstateDocument) => {
       deletion.reset();
@@ -116,14 +118,6 @@ export function DocumentsPage({
     () => setAssociationDocument(undefined),
     []
   );
-  const changeDialog = useCallback(
-    (open: boolean) => {
-      if (!(open || deletion.isPending)) {
-        setSelected(undefined);
-      }
-    },
-    [deletion.isPending]
-  );
   const remove = useCallback(() => {
     if (!selected || deletion.isPending) {
       return;
@@ -143,39 +137,40 @@ export function DocumentsPage({
   if (!access.canView) {
     return <p role="alert">Documents are unavailable.</p>;
   }
+  const canUpload = !!access.permission?.canUploadDocuments;
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
-        actions={
-          access.permission?.canUploadDocuments ? (
-            <UploadDocumentForm estateId={estateId} onUploaded={setNotice} />
-          ) : null
-        }
+      <ListPageHeader
+        create={canUpload ? { onClick: openUpload } : undefined}
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={Files}
         title="Documents"
       />
+      {canUpload ? (
+        <UploadDocumentForm
+          estateId={estateId}
+          onClose={closeUpload}
+          onUploaded={setNotice}
+          open={uploading}
+        />
+      ) : null}
       <DocumentFiltersForm
         filters={filters}
         key={filters.filename ?? ""}
         onSearch={onSearch}
+        {...panel.barProps}
       />
       {notice ? <p role="status">{notice}</p> : null}
       {documents.isPending ? (
         <LoadingState label="Loading documents…" variant="table" />
       ) : null}
       {documents.isError ? (
-        <div role="alert">
-          {documents.error.message}{" "}
-          <Button onClick={retry} variant="outline">
-            Retry
-          </Button>
-        </div>
+        <ErrorState message={documents.error.message} onRetry={retry} />
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
       <DocumentList
         createAction={
-          access.permission?.canUploadDocuments ? (
-            <UploadDocumentForm estateId={estateId} onUploaded={setNotice} />
-          ) : undefined
+          canUpload ? <CreateButton onClick={openUpload} /> : undefined
         }
         documentType={filters.documentType}
         downloading={download.isPending}
@@ -190,18 +185,15 @@ export function DocumentsPage({
         onDownload={downloadDocument}
         renderAssets={renderAssets}
       />
-      <div className="flex flex-wrap gap-2">
-        {filters.cursor ? (
-          <Button onClick={first} variant="outline">
-            First page
-          </Button>
-        ) : null}
-        {documents.data?.nextCursor ? (
-          <Button onClick={next} variant="outline">
-            Next
-          </Button>
-        ) : null}
-      </div>
+      {documents.data && !documents.isError ? (
+        <Pagination
+          canNext={!!documents.data.nextCursor}
+          canPrevious={!!filters.cursor}
+          label="Document pages"
+          onNext={next}
+          onPrevious={first}
+        />
+      ) : null}
       {associationDocument ? (
         <DocumentWorkOrderDialog
           document={associationDocument}
@@ -216,36 +208,17 @@ export function DocumentsPage({
         selection={assetSelection}
         userId={assets.userId}
       />
-      <Dialog onOpenChange={changeDialog} open={!!selected}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete file</DialogTitle>
-            <DialogDescription>
-              {selected?.originalFilename} will be removed from the estate
-              documents. This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {deletion.isError ? (
-            <p role="alert">{deletion.error.message}</p>
-          ) : null}
-          <DialogFooter>
-            <Button
-              disabled={deletion.isPending}
-              onClick={close}
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button
-              disabled={deletion.isPending}
-              onClick={remove}
-              variant="destructive"
-            >
-              {deletion.isPending ? "Deleting…" : "Delete file"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        confirmLabel="Delete file"
+        description={`${selected?.originalFilename ?? ""} will be removed from the estate documents. This cannot be undone.`}
+        error={deletion.isError ? deletion.error.message : undefined}
+        onCancel={close}
+        onConfirm={remove}
+        open={!!selected}
+        pending={deletion.isPending}
+        pendingLabel="Deleting…"
+        title="Delete file"
+      />
     </PageLayout>
   );
 }

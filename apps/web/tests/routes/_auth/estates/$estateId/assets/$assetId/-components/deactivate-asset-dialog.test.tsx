@@ -3,6 +3,8 @@ import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/deactivate-asset-dialog";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+
 describe("DeactivateAssetDialog", () => {
   it("keeps confirm disabled until the exact reference is typed", async () => {
     const onConfirm = vi.fn().mockResolvedValue(undefined);
@@ -27,7 +29,7 @@ describe("DeactivateAssetDialog", () => {
     expect(button.disabled).toBe(true);
     fireEvent.change(input, { target: { value: "SUNRISE-A0001" } });
     expect(button.disabled).toBe(true);
-    fireEvent.change(screen.getByLabelText("Retirement date"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
       target: { value: "2025-01-01" },
     });
     fireEvent.change(
@@ -124,7 +126,7 @@ describe("DeactivateAssetDialog", () => {
       screen.getByRole("textbox", { name: "Retirement reason" }),
       { target: { value: "Broken" } }
     );
-    fireEvent.change(screen.getByLabelText("Retirement date"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
       target: { value: "2025-12-31" },
     });
     expect(screen.getByRole("alert").textContent).toContain("2026-01-01");
@@ -132,7 +134,7 @@ describe("DeactivateAssetDialog", () => {
       screen.getByRole<HTMLButtonElement>("button", { name: "Retire asset" })
         .disabled
     ).toBe(true);
-    fireEvent.change(screen.getByLabelText("Retirement date"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
       target: { value: "2026-01-01" },
     });
     expect(screen.queryByRole("alert")).toBeNull();
@@ -159,7 +161,7 @@ describe("DeactivateAssetDialog", () => {
       screen.getByRole("textbox", { name: "Retirement reason" }),
       { target: { value: "Broken" } }
     );
-    fireEvent.change(screen.getByLabelText("Retirement date"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
       target: { value: "2999-01-01" },
     });
     expect(screen.getByRole("alert").textContent).toContain("future");
@@ -203,7 +205,9 @@ describe("DeactivateAssetDialog", () => {
         { target: { value: "Broken" } }
       );
       expect(
-        screen.getByLabelText<HTMLInputElement>("Retirement date").value
+        screen.getByRole<HTMLInputElement>("textbox", {
+          name: "Retirement date",
+        }).value
       ).toBe("2026-10-08");
       const button = screen.getByRole<HTMLButtonElement>("button", {
         name: "Retire asset",

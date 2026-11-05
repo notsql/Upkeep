@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@proj/ui/components/dialog";
 import { Link } from "@tanstack/react-router";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import type { EstateDocument } from "@/lib/documents";
 import { AssociationEditor } from "./association-editor";
@@ -45,12 +46,11 @@ function AssociationBody({
   }
   if (!latest) {
     return association.isError ? (
-      <p role="alert">
-        Unable to load document link.{" "}
-        <Button onClick={retryAssociation} type="button" variant="outline">
-          Retry document link
-        </Button>
-      </p>
+      <ErrorState
+        message="Unable to load document link"
+        onRetry={retryAssociation}
+        retryLabel="Retry document link"
+      />
     ) : (
       <LoadingState label="Loading document link…" rows={1} />
     );
@@ -78,14 +78,11 @@ function AssociationBody({
         ) : null}
       </section>
       {association.isError ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            Unable to refresh the document link.{" "}
-            <Button onClick={refresh} type="button" variant="outline">
-              Retry document link
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message="Unable to refresh the document link"
+          onRetry={refresh}
+          retryLabel="Retry document link"
+        />
       ) : null}
       {access.canWrite && latest.workOrderId && !draft ? (
         <div className="flex flex-wrap gap-2">

@@ -22,9 +22,13 @@ preserving filename and cursor. State remounts when the account or estate change
 
 `DocumentFiltersForm` uses shared shadcn Select, Input, Label and Button
 components. “Filter by type” offers All types, Invoice and Service report.
-Changing type resets the cursor and preserves the active filename. Search and
-Clear search reset pagination while retaining type; selecting All types removes
-the type constraint. Next and First page preserve both filters. The browser
+Changing type resets the cursor and preserves the active filename. Search
+resets pagination while retaining type; the FilterBar's Clear filters (shown with
+an "N active" badge when filename and/or type is set) removes both filters and the
+cursor; selecting All types removes the type constraint. The shared `Pagination`
+("Document pages") "Next page" / "Previous page" (back to the first page)
+preserve both filters. The FilterBar is collapsed behind the header's
+`FilterToggle` until opened (open on load when filters are in the URL). The browser
 sends filters to the API, which applies them before pagination.
 
 The `_auth` guard requires `canViewDocuments` from the authenticated access
@@ -68,16 +72,16 @@ while the asset Documents table retains its Size header and matching cells.
 `document-assets.tsx` loads each visible row's association through
 `useDocumentAsset`, sharing the existing account/estate/document query key and
 mutation invalidation. Pending/error reads show loading/Retry rather than an
-unlinked state. Without asset-read access, the cell shows a dash and makes no
+unlinked state; the error is `ErrorState` whose Retry is named "Retry asset
+link for <file>" (`retryAriaLabel`). Without asset-read access, the cell shows a dash and makes no
 association request. Read-only/inactive access retains existing asset links
 without write controls.
 API `sizeBytes` metadata and upload size validation remain available.
 
 The list includes download actions, newest-first
-cursor navigation and distinct “No documents uploaded”/“No files match your
-search” messages. The no-matches state applies when either filename or type is
-active. Clear search is available for filename filtering; All types clears the
-type filter. Read-only/inactive
+cursor navigation and distinct “No documents yet”/“No matching documents”
+messages. The no-matches state applies when either filename or type is
+active. Clear filters clears both; All types clears the type filter. Read-only/inactive
 access hides upload. Delete appears only when the server's per-row `canDelete`
 is true; inactivity alone does not remove an otherwise authorized delete action.
 Confirmation names the file; Cancel sends no request. Pending confirmation
@@ -111,8 +115,33 @@ Filename/type filters and cursor paging remain URL-backed; pagination buttons wr
 
 `document-filters.tsx` renders a `FilterBar` (`search` landmark "Filter
 documents"): filename search grows, "Filter by type" is `w-full sm:w-48` with a
-full-width trigger, Search/Clear search are actions. `DocumentList` takes
-`onClearFilters` and `createAction`: no matches shows the "No files match your
-search" `EmptyState` with Clear filters; an empty estate shows "No documents
-uploaded" with the Upload document dialog trigger (Upload icon) when the user can
+full-width trigger, Search (outline) is the only action; `activeCount`/`onClear`
+give the header badge and ghost Clear filters. `DocumentList` takes
+`onClearFilters` and `createAction`: no matches shows the "No matching
+documents" `EmptyState` (`SearchX`) with Clear filters; an empty estate shows
+"No documents yet" (default `Inbox`) with a `CreateButton` that opens the upload dialog when the user can
 upload. Access, list, picker, link and history loads use `LoadingState`.
+
+## Design-system pass
+
+PageHeader `icon={Files}`. Row actions (Unlink, Work order, Download, Delete) are
+`ghost` buttons; Delete still opens the "Delete file" confirmation whose confirm
+is `destructive`. The work-order picker's Search work orders is `outline`.
+
+## Shared page components
+
+`DocumentsPage` uses `ListPageHeader` (`icon={Files}`, `filters` =
+`FilterToggle`, `create` = `CreateButton` "Create" with `onClick` opening the
+upload dialog, only with upload permission). `UploadDocumentForm` is now a
+controlled `FormDialog` (`open`, `onClose`, `onUploaded`): title "Upload a
+document", submit "Upload" / "Uploading…", errors via `error`, plus an sr-only
+`role="status"` "Uploading…" while pending. `countDocumentFilters` in
+`document-filters.tsx` gives `activeCount`; `DocumentFiltersForm` takes
+`id`/`open` from `useFilterPanel`. Delete confirmation is the shared
+`ConfirmDialog` ("Delete file", pending "Deleting…", mutation error via `error`).
+List, association-history, asset-link, work-order-picker and asset-picker load
+failures use `ErrorState` (the per-row asset-link error names the file in its
+message). `document-asset-dialog.tsx` and `document-work-order-dialog.tsx` stay
+hand-built Dialogs: their footers switch between Unlink/Save link with a
+conditional disabled state, and the work-order dialog nests the picker's own
+`<form>`, which `FormDialog`'s form cannot contain.

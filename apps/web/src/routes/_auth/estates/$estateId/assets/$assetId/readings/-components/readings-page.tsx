@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { Activity } from "lucide-react";
+import { Activity, SearchX } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
@@ -116,7 +116,8 @@ export function ReadingsPage({
           },
           { label: "Readings" },
         ]}
-        description="Sensor readings for this asset, newest first. Suspect readings are flagged."
+        description="Sensor readings, newest first"
+        icon={Activity}
         title="Readings"
       />
       <ReadingFilterControls filters={filters} onChange={onFiltersChange} />
@@ -137,7 +138,7 @@ export function ReadingsPage({
               </Button>
             ) : undefined
           }
-          icon={Activity}
+          icon={filtered ? SearchX : Activity}
           title={emptyMessage(filters)}
         />
       ) : null}

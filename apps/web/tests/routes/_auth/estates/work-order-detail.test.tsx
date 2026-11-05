@@ -611,8 +611,6 @@ it("shows an empty state when a closed order has no outcome corrections", () => 
   );
   const empty = screen
     .getAllByRole("status")
-    .find((element) =>
-      element.textContent?.includes("No corrections recorded")
-    );
+    .find((element) => element.textContent?.includes("No corrections yet"));
   expect(empty).toBeDefined();
 });

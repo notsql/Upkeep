@@ -53,7 +53,7 @@ const old: Device = {
 };
 let devices: Device[];
 const backToAsset = {
-  to: "/estates/$estateId/assets/$assetId",
+  to: "/estates/$estateId/assets/$assetId/devices",
   params: { estateId: "estate-id", assetId: "asset-id" },
 };
 

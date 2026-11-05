@@ -166,7 +166,7 @@ export function AddFloorsForm({
           ) : null}
         </div>
         <div>
-          <Button onClick={onDone} type="button">
+          <Button onClick={onDone} type="button" variant="outline">
             Done
           </Button>
         </div>

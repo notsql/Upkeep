@@ -12,6 +12,10 @@ it("combines status and category with the existing priority and reference filter
     />
   );
   screen.getByRole("search", { name: "Filter work orders" });
+  screen.getByText("2 active");
+  expect(screen.getAllByRole("button", { name: "Clear filters" })).toHaveLength(
+    1
+  );
   await chooseOption(
     screen.getByRole("combobox", { name: "Status" }),
     "Closed"
@@ -29,4 +33,9 @@ it("combines status and category with the existing priority and reference filter
   });
   fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
   expect(change).toHaveBeenLastCalledWith({});
+});
+
+it("hides Clear filters when nothing is applied", () => {
+  renderWithProviders(<WorkOrderFilters filters={{}} onChange={vi.fn()} />);
+  expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
 });

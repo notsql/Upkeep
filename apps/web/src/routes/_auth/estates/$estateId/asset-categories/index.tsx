@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
-import { AssetCategoriesPage } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
+import { AssetCategoriesList } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/asset-categories/"
@@ -11,5 +11,5 @@ export const Route = createFileRoute(
 
 function AssetCategoriesRoute() {
   const { estateId } = Route.useParams();
-  return <AssetCategoriesPage estateId={estateId} />;
+  return <AssetCategoriesList estateId={estateId} filter="ALL" />;
 }

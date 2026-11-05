@@ -1,4 +1,5 @@
 import type { components } from "@proj/api/schema";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import {
@@ -8,23 +9,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@proj/ui/components/tabs";
-import { Users } from "lucide-react";
+import { SearchX, Users } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { SubNav } from "@/components/sub-nav";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
-import {
-  useEstateMembers,
-  useOutstandingInvitations,
-} from "@/lib/council-invitations";
+import { useEstateMembers } from "@/lib/council-invitations";
 import {
   useEstateRoleDefinitions,
   useEstateRolePermissions,
@@ -34,6 +29,7 @@ import { OwnerInvitations } from "@/routes/_auth/estates/$estateId/council/-comp
 import { InviteMemberDialog } from "@/routes/_auth/estates/$estateId/council/-components/invitation-form";
 import {
   emptyFilter,
+  filterCount,
   isFiltered,
   type MemberFilter,
   MemberFilters,
@@ -88,14 +84,14 @@ function EstateMembers({
   filter,
   options,
   optionsError,
-  onClearFilters,
+  onClear,
 }: {
   estateId: string;
   permission: components["schemas"]["EstateAccessResponse"];
   filter: MemberFilter;
   options: RoleOption[];
   optionsError: Error | null;
-  onClearFilters: () => void;
+  onClear: () => void;
 }) {
   const { userId } = useAuthenticatedSession();
   const estate = useEstate(estateId);
@@ -110,6 +106,10 @@ function EstateMembers({
   const canReassign =
     (permission.canReassignRoles ?? true) && !estate.data?.deactivatedAt;
   const showTable = !members.isError && visible.length > 0;
+  const retry = useCallback(() => {
+    members.refetch();
+    estate.refetch();
+  }, [members, estate]);
   return (
     <Card>
       <MembersHeader count={members.data?.length} />
@@ -123,22 +123,24 @@ function EstateMembers({
         {members.isPending ? (
           <LoadingState label="Loading members…" variant="table" />
         ) : null}
-        {loadError ? <p role="alert">{loadError.message}</p> : null}
+        {loadError ? (
+          <ErrorState message={loadError.message} onRetry={retry} />
+        ) : null}
         {members.data?.length === 0 ? (
           <EmptyState
-            description="Invite someone to get started."
-            icon={Users}
+            description="Invited members appear here"
             title="No members yet"
           />
         ) : null}
         {members.data?.length && !visible.length ? (
           <EmptyState
             action={
-              <Button onClick={onClearFilters} variant="outline">
+              <Button onClick={onClear} variant="outline">
                 Clear filters
               </Button>
             }
-            icon={Users}
+            description="Try another search or role"
+            icon={SearchX}
             title="No matching members"
           />
         ) : null}
@@ -157,17 +159,19 @@ function EstateMembers({
   );
 }
 
-function MembersTabs({
+function MembersWorkspace({
   estateId,
   permission,
+  view,
 }: {
   estateId: string;
   permission: components["schemas"]["EstateAccessResponse"];
+  view: CouncilView;
 }) {
   const [filter, setFilter] = useState<MemberFilter>(emptyFilter);
   const clear = useCallback(() => setFilter(emptyFilter), []);
-  const members = useEstateMembers(estateId, true);
-  const invitations = useOutstandingInvitations(estateId);
+  const activeCount = filterCount(filter);
+  const panel = useFilterPanel(activeCount);
   const { options, error } = useRoleOptions(estateId);
   const roleFilters = [
     { value: OWNER_ROLE, label: "Owner" },
@@ -177,46 +181,87 @@ function MembersTabs({
     })),
   ];
   return (
-    <div className="space-y-4">
-      <MemberFilters filter={filter} onChange={setFilter} roles={roleFilters} />
-      <Tabs defaultValue="members">
-        <TabsList>
-          <TabsTrigger value="members">
-            Members{" "}
-            {members.data ? (
-              <Badge variant="secondary">{members.data.length}</Badge>
-            ) : null}
-          </TabsTrigger>
-          <TabsTrigger value="invitations">
-            Pending invitations{" "}
-            {invitations.data ? (
-              <Badge variant="secondary">{invitations.data.length}</Badge>
-            ) : null}
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="members">
-          <EstateMembers
-            estateId={estateId}
-            filter={filter}
-            onClearFilters={clear}
-            options={options}
-            optionsError={error}
-            permission={permission}
-          />
-        </TabsContent>
-        <TabsContent value="invitations">
-          <OwnerInvitations
-            estateId={estateId}
-            filter={isFiltered(filter) ? filter : undefined}
-            onClearFilters={clear}
-          />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <>
+      <ListPageHeader
+        actions={
+          permission.canInviteMembers ? (
+            <InviteMemberDialog estateId={estateId} />
+          ) : null
+        }
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={Users}
+        title="Members"
+      />
+      <SubNav
+        items={[
+          {
+            exact: true,
+            label: "Members",
+            params: { estateId },
+            to: "/estates/$estateId/council",
+          },
+          {
+            label: "Pending invitations",
+            params: { estateId },
+            to: "/estates/$estateId/council/invitations",
+          },
+        ]}
+        label="Member views"
+      />
+      <InactiveNote permission={permission} />
+      <MemberFilters
+        {...panel.barProps}
+        filter={filter}
+        onChange={setFilter}
+        onClear={clear}
+        roles={roleFilters}
+      />
+      {view === "members" ? (
+        <EstateMembers
+          estateId={estateId}
+          filter={filter}
+          onClear={clear}
+          options={options}
+          optionsError={error}
+          permission={permission}
+        />
+      ) : (
+        <OwnerInvitations
+          estateId={estateId}
+          filter={isFiltered(filter) ? filter : undefined}
+          onClear={clear}
+        />
+      )}
+    </>
   );
 }
 
-export function CouncilPage({ estateId }: { estateId: string }) {
+function InactiveNote({
+  permission,
+}: {
+  permission: components["schemas"]["EstateAccessResponse"];
+}) {
+  return permission.canInviteMembers ? null : (
+    <p className="text-muted-foreground text-sm">
+      This estate is inactive. New invitations are disabled.
+    </p>
+  );
+}
+
+export type CouncilView = "members" | "invitations";
+
+/**
+ * The Members section: header, sub-navigation and filters shared by the
+ * members route (`council/`) and the pending-invitations route
+ * (`council/invitations/`), which pass `view`.
+ */
+export function CouncilPage({
+  estateId,
+  view = "members",
+}: {
+  estateId: string;
+  view?: CouncilView;
+}) {
   const access = useAppAccess();
   const { ready } = useAuthenticatedSession();
   const retry = useCallback(() => {
@@ -226,14 +271,21 @@ export function CouncilPage({ estateId }: { estateId: string }) {
     (estate) => estate.estateId === estateId
   );
   if (!ready || access.isPending) {
-    return <LoadingState label="Loading estate access…" rows={2} />;
+    return (
+      <PageLayout>
+        <LoadingState label="Loading estate access…" rows={2} />
+      </PageLayout>
+    );
   }
   if (access.error) {
     return (
-      <div>
-        <p role="alert">{access.error.message}</p>
-        <Button onClick={retry}>Retry access</Button>
-      </div>
+      <PageLayout>
+        <ErrorState
+          message={access.error.message}
+          onRetry={retry}
+          retryLabel="Retry access"
+        />
+      </PageLayout>
     );
   }
   const manager = permission?.canManageInvitationPermissions === true;
@@ -246,31 +298,37 @@ export function CouncilPage({ estateId }: { estateId: string }) {
     )
   ) {
     return (
-      <p role="alert">
-        You do not have permission to invite members to this estate.
-      </p>
+      <PageLayout>
+        <Alert role="alert" variant="destructive">
+          <AlertDescription>
+            You do not have permission to invite members to this estate.
+          </AlertDescription>
+        </Alert>
+      </PageLayout>
     );
   }
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
-        actions={
-          permission.canInviteMembers ? (
-            <InviteMemberDialog estateId={estateId} />
-          ) : null
-        }
-        description={`People with access to ${permission.estateName}, and invitations waiting to be accepted.`}
-        title={manager ? "Estate members" : "Estate invitations"}
-      />
-      {permission.canInviteMembers ? null : (
-        <p className="text-muted-foreground text-sm">
-          This estate is inactive. New invitations are disabled.
-        </p>
-      )}
       {manager ? (
-        <MembersTabs estateId={estateId} permission={permission} />
+        <MembersWorkspace
+          estateId={estateId}
+          permission={permission}
+          view={view}
+        />
       ) : (
-        <OwnerInvitations estateId={estateId} />
+        <>
+          <ListPageHeader
+            actions={
+              permission.canInviteMembers ? (
+                <InviteMemberDialog estateId={estateId} />
+              ) : null
+            }
+            icon={Users}
+            title="Invitations"
+          />
+          <InactiveNote permission={permission} />
+          <OwnerInvitations estateId={estateId} />
+        </>
       )}
     </PageLayout>
   );

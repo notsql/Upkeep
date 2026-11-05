@@ -23,7 +23,7 @@ All new components are in the route's `-components/` folder:
 | File | Responsibility |
 | --- | --- |
 | `estate-readings-page.tsx` | Access-context header, breadcrumbs, selected asset and queries |
-| `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To Inputs, suspect Checkbox and Clear filters |
+| `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To `DateTimePicker`s, suspect Checkbox; FilterBar `activeCount`/`onClear` (header Clear filters, shown only when a filter is set) |
 | `reading-asset-picker.tsx` | Button/Dialog picker, name/reference search, retired labels, All assets and option pagination |
 | `reading-results.tsx` | Loading, validation, errors/Retry, empty states and page recovery |
 | `reading-pagination.tsx` | Previous/Next, current-page indicator, numbered page jumps and ellipses |
@@ -68,9 +68,10 @@ on context changes. No invalidations are needed. A preselected asset outside
 the current options/results temporarily displays Selected asset, retaining its
 original ID until labelled data is available.
 
-Empty states distinguish No assets yet, No readings yet, No readings match
-these filters and No suspect readings match. A page beyond a nonzero total
-offers Go to first page instead of claiming there have never been readings.
+Empty states distinguish No assets yet, No readings yet, No matching readings
+and No matching suspect readings (`SearchX`). A page beyond a nonzero total
+shows "No readings on this page" with Go to first page instead of claiming there
+have never been readings.
 
 ### Performance evidence
 
@@ -287,8 +288,8 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and description "Sensor readings for this asset, newest first. Suspect readings are flagged."; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
-| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `datetime-local` inputs (each `Field` `w-full sm:w-48`), and a "Suspect only" checkbox. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Input`, `Checkbox`, `Label` |
+| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first"; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
+| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). Filtered empty state uses `SearchX`. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
 
 ### Badges (`flagLabel`)
 
@@ -549,3 +550,29 @@ Export CSV stays below the header. `reading-results.tsx` uses `LoadingState`
 Clear filters action, and the beyond-last-page recovery is an `EmptyState` with
 Go to first page. The asset picker and manual-entry metric load use
 `LoadingState`.
+
+## Design-system pass
+
+Readings and Record manual reading PageHeaders use `icon={Activity}`. From/To
+filters are `DateTimePicker`s (trigger named "From" / "To (exclusive)", time
+fields "From time" / "To (exclusive) time"); values stay `YYYY-MM-DDTHH:mm`.
+Manual reading's Measured at is a `DateTimePicker` (trigger "Measured at", time
+"Measured at time"), defaulting to now; an empty value fails the existing
+validation.
+
+## Shared page components
+
+`EstateReadingsPage` uses `ListPageHeader` (`icon={Activity}`, title
+"Readings", no estate-name description) with `filters` = `FilterToggle` and
+`create` = `CreateButton` "Create" to `/estates/$estateId/readings/new`
+(keeping `assetId`/`metric`), only with record permission.
+`ReadingFilterControls` takes `id`/`open` from
+`useFilterPanel(countReadingFilters(filters)).barProps`, so the "Reading
+filters" bar is collapsed until toggled (open on load when filters are set).
+`ReadingResults` takes `createAction`: "No readings yet" shows the same
+`CreateButton` (not "No assets yet"); empty states use the default `Inbox`
+(`SearchX` for no matches). Reading, asset and asset-picker load failures use
+`ErrorState`. Paging keeps `ReadingPagination`. `ReadingExport` still renders
+below the header. The manual-reading form uses `FormPageHeader` (breadcrumbs
+Readings / Record manual reading, no icon or estate name) and `ErrorState`
+"Retry form options".

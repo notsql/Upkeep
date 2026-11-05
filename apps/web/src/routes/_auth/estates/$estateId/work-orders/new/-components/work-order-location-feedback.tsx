@@ -23,7 +23,7 @@ export function WorkOrderLocationFeedback({
     return (
       <p role="alert">
         Unable to load locations.{" "}
-        <Button onClick={onRetry} type="button">
+        <Button onClick={onRetry} type="button" variant="outline">
           Retry locations
         </Button>
       </p>

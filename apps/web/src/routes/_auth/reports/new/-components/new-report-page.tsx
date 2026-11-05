@@ -1,6 +1,8 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { useCallback } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useResidentContext } from "@/lib/reports";
 import { NewReportForm } from "@/routes/_auth/reports/new/-components/new-report-form";
@@ -15,19 +17,35 @@ export function NewReportPage({
     !!context.data &&
     !!requestedEstateId &&
     !context.data.estates.some((estate) => estate.id === requestedEstateId);
+  const retry = useCallback(() => {
+    context.refetch();
+  }, [context]);
 
   return (
     <PageLayout>
-      {context.data ? <PageHeader title="Report a fault" /> : null}
+      {context.data ? (
+        <FormPageHeader
+          breadcrumbs={[
+            {
+              label: "My reports",
+              search: requestedEstateId
+                ? { estateId: requestedEstateId }
+                : undefined,
+              to: "/reports",
+            },
+            { label: "Report a fault" },
+          ]}
+          title="Report a fault"
+        />
+      ) : null}
       {context.isPending ? (
         <LoadingState label="Loading your estate…" rows={1} />
       ) : null}
       {context.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            Unable to load your estate assignment. Please try again.
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message="Unable to load your estate assignment. Please try again."
+          onRetry={retry}
+        />
       ) : null}
       {unavailable ? (
         <Alert role="alert">

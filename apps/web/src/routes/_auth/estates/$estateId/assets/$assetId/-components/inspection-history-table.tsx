@@ -1,7 +1,5 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
-import { Button, buttonVariants } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
+import { buttonVariants } from "@proj/ui/components/button";
 import {
   Table,
   TableBody,
@@ -11,10 +9,13 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { ClipboardCheck } from "lucide-react";
-import { useCallback, useId, useState } from "react";
+import { ListChecks } from "lucide-react";
+import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
+import { Pagination } from "@/components/pagination";
+import { SectionCard } from "@/components/section-card";
 import {
   type InspectionResult,
   useInspectionAccess,
@@ -110,7 +111,6 @@ function InspectionHistoryPage({
   estateId: string;
   assetId: string;
 }) {
-  const headingId = useId();
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const history = useInspectionResults(estateId, assetId, cursors.at(-1));
   const asset = useInspectionAsset(estateId, assetId);
@@ -134,89 +134,69 @@ function InspectionHistoryPage({
   const retry = useCallback(() => history.refetch(), [history.refetch]);
 
   return (
-    <Card className="mt-6 max-w-full min-w-0">
-      <CardContent>
-        <section aria-labelledby={headingId} className="space-y-4">
-          <h2 className="text-xl font-semibold" id={headingId}>
-            Inspection records
-          </h2>
-          {history.isPending ? (
-            <LoadingState label="Loading inspection records…" rows={2} />
-          ) : null}
-          {history.isError ? (
-            <Alert role="alert" variant="destructive">
-              <AlertDescription>
-                {history.error.message}
-                <Button
-                  disabled={history.isFetching}
-                  onClick={retry}
-                  variant="outline"
-                >
-                  Retry inspections
-                </Button>
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {history.data && history.data.items.length > 0 ? (
-            <Table aria-label="Inspection records">
-              <TableHeader>
-                <TableRow>
-                  <TableHead scope="col">Inspection date</TableHead>
-                  <TableHead scope="col">Outcome</TableHead>
-                  <TableHead scope="col">Follow-up / work order</TableHead>
-                  <TableHead scope="col">Inspector</TableHead>
-                  <TableHead scope="col">View record</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {history.data.items.map((record) => (
-                  <InspectionHistoryRow
-                    canCreateWorkOrder={workAccess.canCreate && active}
-                    canViewWorkOrder={workAccess.canView}
-                    key={record.id}
-                    record={record}
-                  />
-                ))}
-              </TableBody>
-            </Table>
-          ) : null}
-          {history.data?.items.length === 0 ? (
-            <EmptyState
-              description="Saved inspections for this asset will appear here."
-              icon={ClipboardCheck}
-              title="No inspection records yet"
-            />
-          ) : null}
-          {asset.data && !active ? (
-            <p role="note">
-              New work orders are unavailable while the estate, asset or
-              location is inactive or retired.
-            </p>
-          ) : null}
-          {history.data?.items.length || cursors.length > 1 ? (
-            <nav
-              aria-label="Inspection history pages"
-              className="flex flex-wrap gap-2"
-            >
-              <Button
-                disabled={cursors.length === 1 || history.isFetching}
-                onClick={previous}
-                variant="outline"
-              >
-                Previous
-              </Button>
-              <Button
-                disabled={!nextCursor || history.isFetching}
-                onClick={next}
-                variant="outline"
-              >
-                Next
-              </Button>
-            </nav>
-          ) : null}
-        </section>
-      </CardContent>
-    </Card>
+    <SectionCard
+      className="max-w-full min-w-0"
+      icon={ListChecks}
+      title="Inspection records"
+    >
+      <div className="space-y-4">
+        {history.isPending ? (
+          <LoadingState label="Loading inspection records…" rows={2} />
+        ) : null}
+        {history.isError ? (
+          <ErrorState
+            message={history.error.message}
+            onRetry={retry}
+            retryLabel="Retry inspections"
+          />
+        ) : null}
+        {history.data && history.data.items.length > 0 ? (
+          <Table aria-label="Inspection records">
+            <TableHeader>
+              <TableRow>
+                <TableHead scope="col">Inspection date</TableHead>
+                <TableHead scope="col">Outcome</TableHead>
+                <TableHead scope="col">Follow-up / work order</TableHead>
+                <TableHead scope="col">Inspector</TableHead>
+                <TableHead scope="col">View record</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {history.data.items.map((record) => (
+                <InspectionHistoryRow
+                  canCreateWorkOrder={workAccess.canCreate && active}
+                  canViewWorkOrder={workAccess.canView}
+                  key={record.id}
+                  record={record}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        ) : null}
+        {history.data?.items.length === 0 ? (
+          <EmptyState
+            description="Saved inspections appear here"
+            title="No inspection records yet"
+          />
+        ) : null}
+        {asset.data && !active ? (
+          <p role="note">
+            New work orders are unavailable while the estate, asset or location
+            is inactive or retired.
+          </p>
+        ) : null}
+        {history.data?.items.length || cursors.length > 1 ? (
+          <Pagination
+            canNext={Boolean(nextCursor)}
+            canPrevious={cursors.length > 1}
+            disabled={history.isFetching}
+            label="Inspection history pages"
+            onNext={next}
+            onPrevious={previous}
+          />
+        ) : null}
+      </div>
+    </SectionCard>
   );
 }
 

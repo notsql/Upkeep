@@ -20,6 +20,8 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => (
     <span>{children}</span>
   ),
+  useNavigate: () => () => Promise.resolve(),
+  useSearch: () => ({}),
 }));
 
 async function openInviteDialog(): Promise<void> {

@@ -2,10 +2,17 @@
 
 API: [asset-categories.md](../api/asset-categories.md).
 
-## Route
+## Routes
 
-`/estates/$estateId/asset-categories` — `src/routes/_auth/estates/$estateId/asset-categories/index.tsx`
-(title "Asset categories") renders `-components/asset-categories-page.tsx`.
+Folder-based under `src/routes/_auth/estates/$estateId/asset-categories/`, all titled "Asset categories":
+
+| File | URL | Renders |
+| --- | --- | --- |
+| `route.tsx` | layout | `AssetCategoriesLayout` around an `Outlet` |
+| `index.tsx` | `/estates/$estateId/asset-categories` | `AssetCategoriesList filter="ALL"` |
+| `$interval/index.tsx` | `/estates/$estateId/asset-categories/$interval` | `AssetCategoriesList` for `days` / `months` / `years` / `not-set` (`INTERVAL_SLUGS`, `intervalFilterFor`); any other segment is `notFound()` in `beforeLoad` |
+
+The sub-views share the section's `_auth` gate (`SUB_VIEW_SECTIONS`).
 
 Entry: sidebar Administration › **Asset categories**, shown by `canOpenAssetCategories`
 (`owned || canManageInvitationPermissions`); the `_auth` guard 404s otherwise.
@@ -21,8 +28,8 @@ Both throw `estateError(...)` on failure.
 
 ## Screen
 
-`AssetCategoriesPage`: `PageHeader` (no breadcrumbs; top-level section), then a
-`section` labelled "Asset categories" with:
+`AssetCategoriesLayout`: `ListPageHeader` (`Tags` icon, "Silent-failure flags and service intervals"; no breadcrumbs, no filters or create), then a
+`section` labelled "Asset categories" with the summary cards, a `SubNav` ("Filter by service interval": All (exact), Days, Months, Years, Not set - each its own URL) and the child view. `AssetCategoriesList` renders:
 
 - summary cards (Fails silently, Missing service interval, Intervals set), described in
   [service-intervals.md](service-intervals.md);
@@ -38,15 +45,14 @@ Both throw `estateError(...)` on failure.
 - the service-interval summary, unit labels, filter by interval and dialog (ID-81), described in
   [service-intervals.md](service-intervals.md).
 
-Flag / Stop flagging opens `-components/silent-failure-dialog.tsx`, a confirmation `Dialog`
-("Flag <Label> as failing silently?" / "Stop flagging <Label>?") with Cancel and a confirm button
-("Flag category", or destructive "Stop flagging"). Confirming calls the mutation; buttons are
-disabled while pending. Success closes the dialog and toasts "Asset category updated."; a failure
-keeps the dialog open with the error in a destructive `Alert` (`role="alert"`). Nothing is
-optimistic. Loading is `LoadingState` "Loading asset categories…" (`table`); a load error shows a destructive `Alert`.
-The interval filter is shadcn `Tabs` (tablist "Filter by service interval": All, Days, Months,
-Years, Not set; the selected tab is `aria-selected`). When a filter matches nothing the table is
-replaced by `EmptyState` "No matching categories" with an outline "Clear filters" back to All.
+Flag / Stop flagging opens `-components/silent-failure-dialog.tsx`, the shared `ConfirmDialog`
+("Flag <Label> as failing silently?" / "Stop flagging <Label>?", description states the effect) with Cancel and a confirm button
+("Flag category" (default variant), or destructive "Stop flagging"; "Saving…" while pending). Confirming calls the mutation; the dialog
+locks while pending. Success closes the dialog and toasts "Asset category updated."; a failure
+keeps the dialog open with the error as its `role="alert"` line. Nothing is
+optimistic. Loading is `LoadingState` "Loading asset categories…" (`table`); a load error is an `ErrorState` (Retry).
+The Missing service interval card's "Show these categories" is a link to `/asset-categories/not-set`. When a view matches nothing the table is
+replaced by `EmptyState` "No matching categories" ("No category uses this interval", `SearchX`) with an outline "Clear filters" link back to All.
 
 shadcn components: `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`,
-`Badge`, `Button`, `Tabs`, `TabsList`, `TabsTrigger`, `Dialog` (+ Content/Header/Title/Description/Footer), `Alert`, `AlertDescription`; `PageHeader` from `src/components`.
+`Badge`, `Button`, `buttonVariants`; from `src/components`: `ListPageHeader`, `SubNav`, `ErrorState`, `EmptyState`, `ConfirmDialog`, `ServiceIntervalDialog`.

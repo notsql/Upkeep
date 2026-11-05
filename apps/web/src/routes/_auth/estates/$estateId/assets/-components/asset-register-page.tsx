@@ -1,9 +1,5 @@
-import {
-  Alert,
-  AlertAction,
-  AlertDescription,
-} from "@proj/ui/components/alert";
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
@@ -15,14 +11,16 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { Boxes, Plus } from "lucide-react";
+import { Layers, SearchX } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ConditionBadge } from "@/components/condition-badge";
 import { EmptyState } from "@/components/empty-state";
-import { FilterBar } from "@/components/filter-bar";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { CreateButton } from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import {
@@ -89,13 +87,16 @@ export function AssetRegisterPage({
     );
     return () => clearTimeout(timer);
   }, [search, filters, onFiltersChange]);
-  const filtered = Boolean(
-    filters.q ||
-      filters.category ||
-      filters.locationId ||
-      filters.condition ||
-      (filters.status && filters.status !== "ACTIVE")
-  );
+  const activeCount = [
+    filters.q,
+    filters.category,
+    filters.locationId,
+    filters.condition,
+    filters.status && filters.status !== "ACTIVE",
+  ].filter(Boolean).length;
+  const filtered = activeCount > 0;
+  const panel = useFilterPanel(activeCount);
+  const canRegister = !estate.data?.deactivatedAt;
   const locationOptions = useMemo(
     () =>
       Object.fromEntries(
@@ -122,20 +123,15 @@ export function AssetRegisterPage({
   );
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
-        actions={
-          estate.data?.deactivatedAt ? undefined : (
-            <Link
-              className={buttonVariants()}
-              params={{ estateId }}
-              to="/estates/$estateId/assets/new"
-            >
-              <Plus aria-hidden="true" />
-              Register asset
-            </Link>
-          )
+      <ListPageHeader
+        create={
+          canRegister
+            ? { params: { estateId }, to: "/estates/$estateId/assets/new" }
+            : undefined
         }
-        description="Find equipment by location, category and latest condition."
+        description="Equipment in this estate"
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={Layers}
         title="Assets"
       />
       {estate.data?.deactivatedAt ? (
@@ -146,14 +142,10 @@ export function AssetRegisterPage({
         </Alert>
       ) : null}
       <FilterBar
-        actions={
-          filtered ? (
-            <Button onClick={clearFilters} variant="outline">
-              Clear filters
-            </Button>
-          ) : null
-        }
+        activeCount={activeCount}
         label="Filter assets"
+        onClear={clearFilters}
+        {...panel.barProps}
         search={
           <Field>
             <FieldLabel htmlFor="asset-search">Search assets</FieldLabel>
@@ -184,14 +176,11 @@ export function AssetRegisterPage({
         <AssetSortControls onChange={onSortChange} sort={sort} />
       ) : null}
       {locations.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>Locations could not be loaded.</AlertDescription>
-          <AlertAction>
-            <Button onClick={retryLocations} size="sm">
-              Retry locations
-            </Button>
-          </AlertAction>
-        </Alert>
+        <ErrorState
+          message="Locations could not be loaded."
+          onRetry={retryLocations}
+          retryLabel="Retry locations"
+        />
       ) : null}
       {assets.isPending ? (
         <LoadingState
@@ -200,18 +189,15 @@ export function AssetRegisterPage({
         />
       ) : null}
       {assets.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{assets.error.message}</AlertDescription>
-          <AlertAction>
-            <Button onClick={retryAssets} size="sm">
-              Retry assets
-            </Button>
-          </AlertAction>
-        </Alert>
+        <ErrorState
+          message={assets.error.message}
+          onRetry={retryAssets}
+          retryLabel="Retry assets"
+        />
       ) : null}
       {assets.data?.length === 0 ? (
         <AssetsEmpty
-          canRegister={!estate.data?.deactivatedAt}
+          canRegister={canRegister}
           estateId={estateId}
           filtered={filtered}
           onClear={clearFilters}
@@ -348,8 +334,8 @@ function AssetsEmpty({
             Clear filters
           </Button>
         }
-        description="Try a different search or fewer filters."
-        icon={Boxes}
+        description="Try fewer filters"
+        icon={SearchX}
         title="No matching assets"
       />
     );
@@ -358,18 +344,13 @@ function AssetsEmpty({
     <EmptyState
       action={
         canRegister ? (
-          <Link
-            className={buttonVariants()}
+          <CreateButton
             params={{ estateId }}
             to="/estates/$estateId/assets/new"
-          >
-            <Plus aria-hidden="true" />
-            Register asset
-          </Link>
+          />
         ) : undefined
       }
-      description="Registered equipment will appear here. Set Status to All to include retired assets."
-      icon={Boxes}
+      description="Set Status to All to include retired assets"
       title="No assets yet"
     />
   );

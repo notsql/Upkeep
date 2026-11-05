@@ -11,6 +11,7 @@ import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   type Device,
   type DeviceCredential as IssuedCredential,
@@ -60,11 +61,6 @@ export function DeviceCredential({
     generate();
   }, [hasCredential, generate]);
   const cancel = useCallback(() => setConfirming(false), []);
-  const cancelOnClose = useCallback((open: boolean) => {
-    if (!open) {
-      setConfirming(false);
-    }
-  }, []);
   const done = useCallback(() => setIssued(undefined), []);
   const doneOnClose = useCallback((open: boolean) => {
     if (!open) {
@@ -106,27 +102,14 @@ export function DeviceCredential({
         </p>
       ) : null}
 
-      <Dialog onOpenChange={cancelOnClose} open={confirming}>
-        <DialogContent className="p-6 sm:max-w-md" showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Replace the credential for {device.identifier}?
-            </DialogTitle>
-            <DialogDescription className="mt-2 text-sm">
-              The current key stops working immediately. The device cannot send
-              readings until it is given the new key.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={cancel} type="button" variant="outline">
-              Cancel
-            </Button>
-            <Button onClick={generate} type="button" variant="destructive">
-              Replace credential
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        confirmLabel="Replace credential"
+        description="The current key stops working immediately. The device cannot send readings until it is given the new key."
+        onCancel={cancel}
+        onConfirm={generate}
+        open={confirming}
+        title={`Replace the credential for ${device.identifier}?`}
+      />
 
       <Dialog onOpenChange={doneOnClose} open={Boolean(issued)}>
         <DialogContent className="p-6 sm:max-w-lg" showCloseButton={false}>

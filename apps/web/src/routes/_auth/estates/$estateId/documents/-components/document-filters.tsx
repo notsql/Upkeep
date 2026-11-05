@@ -18,12 +18,21 @@ const TYPE_LABELS = {
   SERVICE_REPORT: "Service report",
 };
 
+export function countDocumentFilters(filters: DocumentFilters): number {
+  return [filters.filename, filters.documentType].filter(Boolean).length;
+}
+
 export function DocumentFiltersForm({
   filters,
   onSearch,
+  id,
+  open,
 }: {
   filters: DocumentFilters;
   onSearch: (filters: DocumentFilters) => void;
+  /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
+  id?: string;
+  open?: boolean;
 }) {
   const [value, setValue] = useState(filters.filename ?? "");
   const changeValue = useCallback(
@@ -32,10 +41,9 @@ export function DocumentFiltersForm({
   );
   const clear = useCallback(() => {
     setValue("");
-    onSearch(
-      filters.documentType ? { documentType: filters.documentType } : {}
-    );
-  }, [filters.documentType, onSearch]);
+    onSearch({});
+  }, [onSearch]);
+  const activeCount = countDocumentFilters(filters);
   const submit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -61,16 +69,15 @@ export function DocumentFiltersForm({
     <form onSubmit={submit}>
       <FilterBar
         actions={
-          <>
-            <Button type="submit">Search</Button>
-            {filters.filename || value ? (
-              <Button onClick={clear} type="button" variant="outline">
-                Clear search
-              </Button>
-            ) : null}
-          </>
+          <Button type="submit" variant="outline">
+            Search
+          </Button>
         }
+        activeCount={activeCount}
+        id={id}
         label="Filter documents"
+        onClear={clear}
+        open={open}
         search={
           <div className="grid gap-2">
             <Label htmlFor="document-search">Search by filename</Label>

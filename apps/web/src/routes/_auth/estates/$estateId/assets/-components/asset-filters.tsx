@@ -170,7 +170,7 @@ export function MobileAssetFilters({
       <DialogTrigger
         render={<Button className="sm:self-end" variant="outline" />}
       >
-        Filters{count ? ` (${count})` : ""}
+        Choose filters{count ? ` (${count})` : ""}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>

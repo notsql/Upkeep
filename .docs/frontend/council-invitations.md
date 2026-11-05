@@ -2,42 +2,62 @@
 
 ## Routes and components
 
-`/estates/$estateId/council` retains its URL and presents Estate members (the
-"Members" sidebar item). Its index.tsx and route-local -components folder contain
-CouncilPage, access-controls, access-confirmation, invitation-form,
-member-filters, estate-members-table, member-permission and role-picker.
+The Members section is two folder routes sharing one page component
+(`CouncilPage({ estateId, view })` in `council/-components/council-page.tsx`):
 
-Layout, top to bottom:
+| Route | File | `view` | Tab title |
+| --- | --- | --- | --- |
+| `/estates/$estateId/council` | `council/index.tsx` | `"members"` (default) | "Council members" |
+| `/estates/$estateId/council/invitations` | `council/invitations/index.tsx` | `"invitations"` | "Pending invitations" |
 
-- PageHeader: title ("Estate members" for Managers, "Estate invitations" for
-  delegated inviters), one-line description, and a primary **Invite member**
-  button (only when `canInviteMembers`). The button opens a shadcn Dialog
-  titled "Invite member" that holds the email/role form; there is no inline
-  form on the page.
-- MemberFilters (Managers only): a shared `FilterBar` (search landmark
-  "Filter members") with a `type="search"` Input "Search members"
+Route-local `council/-components/`: CouncilPage, access-controls,
+access-confirmation, invitation-form, member-filters, estate-members-table,
+member-permission and role-picker.
+
+Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
+
+- `ListPageHeader` "Members" (`icon={Users}`, no description) with the
+  Filters toggle (`FilterToggle`, "Filters, N active") and, when
+  `canInviteMembers`, the **Invite member** trigger (`UserPlus`) in the
+  `actions` slot - the last action, where Create sits on other list pages. It
+  is labelled "Invite member", not "Create", because it sends an invitation.
+  The trigger opens a shadcn Dialog titled "Invite member" with the
+  email/role form.
+- `SubNav` "Member views": "Members" (`exact`, `/estates/$estateId/council`)
+  and "Pending invitations" (`/estates/$estateId/council/invitations`). The
+  router marks the current one `aria-current="page"`.
+- Inactive estates show "This estate is inactive. New invitations are disabled."
+- MemberFilters: the retractable `FilterBar` "Filter members" (collapsed by
+  default, `useFilterPanel`), with `type="search"` Input "Search members"
   (name/email, also matches invitation email) and Select "Filter by role"
   (All roles, Owner, the presets and custom roles; `Field w-full sm:w-48`,
-  trigger `w-full`). Filtering is client-side over the loaded roster and
-  invitations and applies to both tabs; the API has no server-side filters.
-- shadcn Tabs (Managers only), default **Members**: tab triggers "Members"
-  and "Pending invitations", each with a count Badge (total loaded rows).
-  Only the active panel is mounted.
-- Members tab: card with heading "Members" and an "N active" Badge, then the
-  paged Table (Name, Email, Role, Status, Actions). Role shows exactly one Badge:
-  "Owner" (with the hint "Full Manager access plus ownership") for the estate
-  owner, otherwise the preset label or custom role name. Status is always
-  "Active" for members. Loading is `LoadingState` "Loading members…" (table);
-  no roster is `EmptyState` "No members yet"; filters with no result show
-  `EmptyState` "No matching members" with a "Clear filters" button.
-- Pending invitations tab (and the whole page body for delegated inviters,
-  without tabs or filters): card with heading plus "N pending" Badge; each row
-  shows email, role Badge, delivery and expiry, and a **Revoke** button
-  (accessible name "Cancel invitation for <email>") that confirms in a Dialog.
-  Empty is `EmptyState` "No pending invitations"; filtered-out is "No matching
-  invitations" with "Clear filters". There is no resend action because the API
-  has no resend endpoint.
-- The access check before render shows `LoadingState` "Loading estate access…".
+  trigger `w-full`). Filtering is client-side; it applies to whichever view is
+  shown. Filter state is per page mount (switching views resets it); the API
+  has no server-side filters.
+- Members view: card "Members" with an "N active" Badge (no icon - the header
+  has Users), then the paged Table (Name, Email, Role, Status, Actions). Role
+  shows exactly one Badge: "Owner" (hint "Full Manager access plus
+  ownership") for the estate owner, otherwise the preset label or custom role
+  name. Loading is `LoadingState` "Loading members…" (table); a failed roster
+  or estate read is `ErrorState` + Retry; no roster is `EmptyState` "No members
+  yet" (default Inbox); filters with no result show `EmptyState` "No matching
+  members" (SearchX) with an outline "Clear filters" action, alongside the
+  FilterBar's own ghost Clear filters.
+- Pending invitations view (and the whole page body for delegated inviters):
+  card "Pending invitations" (`Mail` icon) with an "N pending" Badge; each row
+  shows email, role Badge, delivery and expiry, and a ghost **Revoke** button
+  (accessible name "Cancel invitation for <email>") that confirms in a
+  `ConfirmDialog` ("Cancel invitation?", destructive "Cancel invitation",
+  outline "Keep invitation"). A failed load is `ErrorState` + Retry. Empty is
+  `EmptyState` "No pending invitations" (Inbox); filtered-out is "No matching
+  invitations" (SearchX) with "Clear filters". There is no resend action
+  because the API has no resend endpoint.
+- Delegated inviters (no `canManageInvitationPermissions`) get
+  `ListPageHeader` "Invitations" (Users icon, Invite member action), no
+  SubNav or filters, and the pending-invitations card on both routes.
+- The access check before render shows `LoadingState` "Loading estate
+  access…"; a failed check is `ErrorState` with "Retry access"; no permission
+  is a destructive Alert.
 
 Owner vs Manager: the API returns `role` (the estate membership role) and a
 separate `owner` boolean (`Estate.ownerUserId`). The owner always holds a
@@ -107,7 +127,8 @@ protections remain. Long text wraps; horizontal scrolling is confined to the
 member table on small screens. No API or permission change accompanies this UI.
 
 `estate-members-table.tsx` paginates the existing user-scoped member array at 20 rows,
-with Previous/Next and an exact visible range/total. A shorter refreshed roster
+with the shared `Pagination` (nav "Member pages", outline "Previous page" /
+"Next page", summary "1–20 of 45 members"). A shorter refreshed roster
 clamps the current page. The table is keyed by estate and session user so
 context changes reset pagination. Failed roster reads hide stale member rows.
 The existing useEstateMembers endpoint/query key and mutation invalidations
@@ -144,14 +165,20 @@ eligible custom definitions, with no client preset fallback.
 
 `RolePicker` always renders `SelectTrigger className="w-full"` (form, dialog
 and member-table uses alike). It takes an optional `onCreateRole`; when given,
-the list ends with a separator and a "Create new role…" item that calls it
-instead of selecting. The invite form passes it only when the caller's access
-has `canViewEstateRoles` and `canCreateRoles`: the item opens the shared
-`CreateRoleDialog` (`roles/-components/create-role-dialog.tsx`, see
-[estate-roles.md](estate-roles.md)) stacked over the Invite member dialog. On
-success `useCreateEstateRole` invalidates the user's queries (including
-`[userId, "estate-invitation-roles", estateId]`) and the form selects the new
-role's ID, which resolves once the refreshed choices include it.
+the list ends with a separator and a "Create new role…" (`Plus`) item that calls
+it instead of selecting. The invite form passes it only when the caller's access
+has `canViewEstateRoles` and `canCreateRoles`; it navigates to
+`/estates/$estateId/roles/new?returnTo=council` (see
+[estate-roles.md](estate-roles.md)). After creation that page navigates to
+`/estates/$estateId/council?inviteRole=<id>`; `InviteMemberDialog` reads
+`inviteRole` with `useSearch({ strict: false })`, opens by default and passes it
+as `CouncilInvitationForm`'s `initialRole`. The role resolves once the refreshed
+choices (invalidated by `useCreateEstateRole`) include it. The typed email is not
+preserved across the round trip. The `inviteRole` param stays in the URL.
+
+Invite dialog copy: description "New users get an email · existing users accept
+on Invitations"; trigger `UserPlus` "Invite member"; primary `Send` "Send
+invitation"; empty choices "No eligible roles".
 
 Manager member controls combine the four presets with GET roles and catalogue
 through `lib/estate-roles.ts`. Custom assignment/conversion opens confirmation
@@ -168,3 +195,11 @@ and reports the error, then waits for another explicit click. It never silently
 retries acceptance. Successful acceptance refreshes pending offers, estate lists,
 access and resident context. Definition edits/deletion invalidate current-user
 role/roster/offer/access queries; see [estate-roles.md](estate-roles.md).
+
+## Icons and copy
+
+PageHeader `icon={Users}` (sidebar Members), description "Members and
+invitations · <estate>". Members CardTitle has a Users icon, Pending
+invitations a Mail icon (description "Not yet accepted"). Empty: "No members
+yet" ("Invited members appear here"), "No pending invitations" ("Sent
+invitations appear here"). The access-error "Retry access" is `outline`.

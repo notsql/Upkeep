@@ -227,7 +227,7 @@ function SensorMaintenance({
           aria-label={`Pause ${sensor.deviceIdentifier} ${metricLabel(sensor.metric).toLowerCase()}`}
           className="w-full sm:w-auto"
           onClick={pauseSensor}
-          variant="outline"
+          variant="ghost"
         >
           Pause for maintenance
         </Button>

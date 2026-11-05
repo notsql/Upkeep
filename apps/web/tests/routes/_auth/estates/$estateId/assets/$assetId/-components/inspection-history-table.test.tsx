@@ -83,6 +83,11 @@ const state = vi.hoisted(() => ({
   locationActive: true,
 }));
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
 vi.mock("@/routes/__root", async () => {
   const { createRootRouteWithContext, Outlet } = await import(
     "@tanstack/react-router"
@@ -488,9 +493,11 @@ it("replaces pages using opaque cursors and returns to the first page with Previ
   await setup();
   await screen.findByRole("table", { name: "Inspection records" });
   expect(
-    screen.getByRole("button", { name: "Previous" }).hasAttribute("disabled")
+    screen
+      .getByRole("button", { name: "Previous page" })
+      .hasAttribute("disabled")
   ).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await screen.findByRole("cell", { name: "Mei Lim" });
   expect(state.history).toHaveBeenLastCalledWith(
     expect.objectContaining({
@@ -499,13 +506,15 @@ it("replaces pages using opaque cursors and returns to the first page with Previ
   );
   expect(screen.queryByRole("cell", { name: "Alex Tan" })).toBeNull();
   expect(
-    screen.getByRole("button", { name: "Next" }).hasAttribute("disabled")
+    screen.getByRole("button", { name: "Next page" }).hasAttribute("disabled")
   ).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+  fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
   await screen.findByRole("cell", { name: "Alex Tan" });
   expect(screen.queryByRole("cell", { name: "Mei Lim" })).toBeNull();
   expect(
-    screen.getByRole("button", { name: "Previous" }).hasAttribute("disabled")
+    screen
+      .getByRole("button", { name: "Previous page" })
+      .hasAttribute("disabled")
   ).toBe(true);
 });
 
@@ -519,7 +528,7 @@ it("retries a failed second page with its cursor instead of restarting history",
     .mockResolvedValue(page([olderInspection]));
   await setup();
   await screen.findByRole("table", { name: "Inspection records" });
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await screen.findByRole("alert");
   expect(screen.queryByRole("cell", { name: "Alex Tan" })).toBeNull();
   fireEvent.click(screen.getByRole("button", { name: "Retry inspections" }));
@@ -538,7 +547,7 @@ it("resets pagination and hides old rows while another asset loads", async () =>
     .mockReturnValue(new Promise(() => undefined));
   const view = await setup();
   await screen.findByRole("table", { name: "Inspection records" });
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await screen.findByRole("cell", { name: "Mei Lim" });
   await view.router.navigate({
     to: "/estates/$estateId/assets/$assetId",

@@ -23,6 +23,10 @@ export const emptyFilter: MemberFilter = {
   role: ALL,
 };
 
+export function filterCount(filter: MemberFilter): number {
+  return (filter.search.trim() ? 1 : 0) + (filter.role === ALL ? 0 : 1);
+}
+
 export function isFiltered(filter: MemberFilter): boolean {
   return filter.search.trim() !== "" || filter.role !== ALL;
 }
@@ -75,8 +79,14 @@ export function MemberFilters({
   filter,
   roles,
   onChange,
+  onClear,
+  id,
+  open,
 }: {
   filter: MemberFilter;
+  onClear: () => void;
+  id?: string;
+  open?: boolean;
   roles: { value: string; label: string }[];
   onChange: (filter: MemberFilter) => void;
 }) {
@@ -91,7 +101,11 @@ export function MemberFilters({
   );
   return (
     <FilterBar
+      activeCount={filterCount(filter)}
+      id={id}
       label="Filter members"
+      onClear={onClear}
+      open={open}
       search={
         <Input
           aria-label="Search members"

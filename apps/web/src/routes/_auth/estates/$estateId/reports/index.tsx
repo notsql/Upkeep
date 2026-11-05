@@ -1,12 +1,14 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageSquareWarning } from "lucide-react";
+import { ClipboardList, SearchX } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { Pagination } from "@/components/pagination";
 import { ReportCard } from "@/components/reports/report-card";
 import {
   type EstateReportFilters,
@@ -15,7 +17,10 @@ import {
   useEstateReportLocations,
 } from "@/lib/estate-reports";
 import { pageHead } from "@/lib/page-title";
-import { ReportFilters } from "./-components/report-filters";
+import {
+  countReportFilters,
+  ReportFilters,
+} from "./-components/report-filters";
 
 const INTEGER_POSITION = /^-?\d+$/u;
 
@@ -52,10 +57,9 @@ function EstateReportsPage() {
   const { blockId, minLevelPosition, maxLevelPosition, cursor } =
     Route.useSearch();
   const filters = { blockId, minLevelPosition, maxLevelPosition };
-  const filtered =
-    !!blockId ||
-    minLevelPosition !== undefined ||
-    maxLevelPosition !== undefined;
+  const activeCount = countReportFilters(filters);
+  const filtered = activeCount > 0;
+  const panel = useFilterPanel(activeCount);
   const navigate = Route.useNavigate();
   const access = useEstateReportAccess(estateId);
   const reports = useEstateReportList(estateId, filters, cursor);
@@ -98,38 +102,33 @@ function EstateReportsPage() {
   }
   return (
     <PageLayout className="space-y-4">
-      <PageHeader title="Fault reports" />
+      <ListPageHeader
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={ClipboardList}
+        title="Fault reports"
+      />
       {locations.data ? (
         <ReportFilters
           filters={filters}
           key={`${blockId ?? "all"}:${minLevelPosition ?? ""}:${maxLevelPosition ?? ""}`}
           locations={locations.data}
           onChange={filter}
+          {...panel.barProps}
         />
       ) : null}
       {locations.isPending ? (
         <LoadingState label="Loading locations…" rows={1} />
       ) : null}
       {locations.isError ? (
-        <Alert role="alert">
-          <AlertDescription>
-            Unable to load locations.{" "}
-            <Button onClick={retryLocations} variant="outline">
-              Retry locations
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message="Unable to load locations"
+          onRetry={retryLocations}
+          retryLabel="Retry locations"
+        />
       ) : null}
       {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            Unable to load reports.{" "}
-            <Button onClick={retry} variant="outline">
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState message="Unable to load reports" onRetry={retry} />
       ) : null}
       {reports.data?.items.length === 0 ? (
         <ReportsEmpty filtered={filtered} onClear={clearFilters} />
@@ -150,18 +149,15 @@ function EstateReportsPage() {
               }
             />
           ))}
-      <div className="flex flex-wrap gap-2">
-        {cursor ? (
-          <Button onClick={first} variant="outline">
-            First page
-          </Button>
-        ) : null}
-        {reports.data?.nextCursor ? (
-          <Button onClick={next} variant="outline">
-            Next
-          </Button>
-        ) : null}
-      </div>
+      {reports.data && !reports.isError ? (
+        <Pagination
+          canNext={!!reports.data.nextCursor}
+          canPrevious={!!cursor}
+          label="Report pages"
+          onNext={next}
+          onPrevious={first}
+        />
+      ) : null}
     </PageLayout>
   );
 }
@@ -181,16 +177,15 @@ function ReportsEmpty({
             Clear filters
           </Button>
         }
-        description="Try different filters, or clear them."
-        icon={MessageSquareWarning}
+        description="Try other filters"
+        icon={SearchX}
         title="No matching reports"
       />
     );
   }
   return (
     <EmptyState
-      description="Resident fault reports will appear here."
-      icon={MessageSquareWarning}
+      description="Resident reports appear here"
       title="No reports yet"
     />
   );

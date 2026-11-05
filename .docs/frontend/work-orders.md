@@ -207,7 +207,7 @@ Managers see Start work on Open/Assigned and Complete work order on In Progress.
 Crew see history/outcomes without mutation actions. Active owners/Managers see
 Edit outcome on Closed work.
 
-The completion shadcn Dialog scrolls within the viewport, uses labelled
+The completion dialog (shared `FormDialog`) scrolls within the viewport, uses labelled
 Textarea/Input fields, explains SGD/whole minutes and unknown versus explicit 0,
 and explains that closure retains Closed status while authorized users can correct
 the recorded outcome. Findings/work performed are required.
@@ -333,11 +333,12 @@ Hooks in `lib/work-orders.ts`:
   history and linked owner's asset-work-order-completions cache. It does not
   invalidate or write forecast/manual-event data.
 
-The work-order footer displays the current page's row count and Next/First page.
+The work-order footer is the shared `Pagination` ("Work order pages"): the
+current page's row count as `summary`, then outline "Previous page" / "Next page".
 Previous returns to cursors visited in the current list session. That cursor
 trail is scoped to user, estate and criteria; applying/clearing filters or sorting
-resets it. A directly opened later cursor has First page without an invented
-previous cursor, total or page number. Requests stay server-paginated at 20 rows;
+resets it. A directly opened later cursor has no known previous cursor, so
+"Previous page" returns to the first page (no invented total or page number). Requests stay server-paginated at 20 rows;
 buttons disable while sort placeholder rows are visible. Priority ties are now
 oldest first in both priority directions, then stable descending IDs. Created
 sorting still defaults newest first.
@@ -388,12 +389,37 @@ busy state and retain previous data while the request is pending. Desktop at
 
 Follows design-system "Screen states". The list's filters sit in a `FilterBar`
 (`search` landmark "Filter work orders"; reference search grows, Status/Category/
-Priority fields `w-full sm:w-48`, Apply/Clear filters in actions) inside the
+Priority fields `w-full sm:w-48`, outline Apply filters in actions; `activeCount`
+counts applied priority/status/category/reference and `onClear` gives the ghost
+header Clear filters) inside the
 submitting form. Loading uses `LoadingState` (table variant; access checks use
 `rows={2}`). An empty estate shows the `EmptyState` "No work orders yet" with the
-Create work order link (Plus icon, also in the PageHeader actions) when the user
+shared `CreateButton` ("Create", also in the header) when the user
 can create; "No matching work orders" offers Clear filters, which keeps the sort.
 Detail: status history/corrections/documents load with `LoadingState`; "No
-corrections recorded" and "No documents linked to this work order" are
-`EmptyState`s. New: access/source/location loads use `LoadingState`; the
+corrections yet" and "No documents yet" (under a `SectionHeading` "Documents")
+are `EmptyState`s with the default `Inbox` icon. "No matching work orders" uses
+`SearchX`. Only the list header shows `icon={Wrench}`; Retry
+locations / Retry source are `outline`. New: access/source/location loads use `LoadingState`; the
 "Work order already raised" screen uses `PageHeader`.
+
+## Shared page components
+
+- List (`work-order-list-page.tsx`): `ListPageHeader` (`Wrench`, title "Work
+  orders", no estate-name description) with `filters` = `FilterToggle` and
+  `create` = `CreateButton` "Create" to `/estates/$estateId/work-orders/new`
+  (only with create permission). `useFilterPanel(activeCount)` owns the panel;
+  `WorkOrderFilters` takes `id`/`open` from `panel.barProps`, so the FilterBar
+  is collapsed until toggled (open on load when filters are in the URL).
+  `countWorkOrderFilters` (in `work-order-filters.tsx`) gives `activeCount`.
+  Load failure: `ErrorState` "Unable to load work orders".
+- Detail (`work-order-detail-page.tsx`): `DetailPageHeader` with breadcrumbs,
+  status `Badge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
+  `work-order-progress.tsx` and `work-order-documents.tsx` use `ErrorState`
+  ("Retry history", "Retry corrections", "Retry documents"). The completion
+  dialog is the shared `FormDialog` ("Saving…" while pending): `submitDisabled`
+  while refreshing, conflicted or the status no longer matches; its
+  Refresh-work-order recovery `Alert` and review notice sit in `children`;
+  `onSubmit` reads the uncontrolled fields from the form via `FormData`.
+- Create (`work-order-form.tsx`): `FormPageHeader` "Create work order" with
+  breadcrumbs, no icon or estate-name description.

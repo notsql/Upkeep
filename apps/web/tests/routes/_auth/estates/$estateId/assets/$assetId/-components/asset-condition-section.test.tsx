@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import type { Assessment } from "@/lib/assessments";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-condition-section";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn(), POST: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
@@ -123,7 +124,7 @@ describe("AssetConditionSection", () => {
       screen.getByRole("combobox", { name: "Condition" }),
       "Needs attention"
     );
-    fireEvent.change(screen.getByLabelText("Assessment date"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Assessment date" }), {
       target: { value: "2026-09-27" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: "Notes" }), {

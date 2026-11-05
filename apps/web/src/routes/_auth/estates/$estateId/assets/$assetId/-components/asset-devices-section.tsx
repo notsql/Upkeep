@@ -1,13 +1,14 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { Cpu, Plus } from "lucide-react";
+import { Plus, RadioTower } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { DeviceStatusBadge } from "@/components/device-status-badge";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
+import { SectionCard } from "@/components/section-card";
 import {
   type Device,
   deviceMetrics,
@@ -51,79 +52,75 @@ export function AssetDevicesSection({
       new Map((devices.data ?? []).map((item) => [item.id, item.identifier])),
     [devices.data]
   );
+  const retry = useCallback(() => devices.refetch(), [devices.refetch]);
   return (
-    <Card className="mt-6">
-      <CardContent>
-        <section aria-labelledby="devices-heading">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h2 className="text-xl font-semibold" id="devices-heading">
-              Devices
-            </h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                params={{ estateId }}
-                search={{ assetId }}
-                to="/estates/$estateId/readings"
-              >
-                Readings
-              </Link>
-              {canRegister ? (
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  params={{ estateId, assetId }}
-                  to="/estates/$estateId/assets/$assetId/devices/new"
-                >
-                  Register device
-                </Link>
-              ) : null}
-            </div>
+    <SectionCard
+      actions={
+        <>
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            params={{ estateId }}
+            search={{ assetId }}
+            to="/estates/$estateId/readings"
+          >
+            Readings
+          </Link>
+          {canRegister ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ estateId, assetId }}
+              to="/estates/$estateId/assets/$assetId/devices/new"
+            >
+              Register device
+            </Link>
+          ) : null}
+        </>
+      }
+      icon={RadioTower}
+      title="Devices"
+    >
+      <div className="grid gap-4">
+        {devices.isPending ? (
+          <LoadingState label="Loading devices…" rows={2} />
+        ) : null}
+        {devices.error ? (
+          <ErrorState message={devices.error.message} onRetry={retry} />
+        ) : null}
+        {devices.data?.length === 0 ? (
+          <div>
+            <EmptyState
+              action={
+                canRegister ? (
+                  <Link
+                    className={buttonVariants()}
+                    params={{ estateId, assetId }}
+                    to="/estates/$estateId/assets/$assetId/devices/new"
+                  >
+                    <Plus aria-hidden="true" />
+                    Register device
+                  </Link>
+                ) : undefined
+              }
+              description="Registered sensors appear here"
+              title="No devices yet"
+            />
           </div>
-          {devices.isPending ? (
-            <LoadingState label="Loading devices…" rows={2} />
-          ) : null}
-          {devices.error ? (
-            <p className="text-destructive mt-4" role="alert">
-              {devices.error.message}
-            </p>
-          ) : null}
-          {devices.data?.length === 0 ? (
-            <div className="mt-4">
-              <EmptyState
-                action={
-                  canRegister ? (
-                    <Link
-                      className={buttonVariants()}
-                      params={{ estateId, assetId }}
-                      to="/estates/$estateId/assets/$assetId/devices/new"
-                    >
-                      <Plus aria-hidden="true" />
-                      Register device
-                    </Link>
-                  ) : undefined
-                }
-                description="Sensors registered to this asset will appear here."
-                icon={Cpu}
-                title="No devices yet"
-              />
-            </div>
-          ) : null}
-          <ul aria-label="Devices" className="mt-4 grid gap-3">
-            {devices.data?.map((device) => (
-              <DeviceItem
-                assetId={assetId}
-                canManage={canRegister}
-                device={device}
-                estateId={estateId}
-                identifiers={identifiers}
-                key={device.id}
-                locationPath={paths.get(device.locationId)}
-              />
-            ))}
-          </ul>
-        </section>
-      </CardContent>
-    </Card>
+        ) : null}
+        <ul aria-label="Devices" className="grid gap-3">
+          {devices.data?.map((device) => (
+            <DeviceItem
+              assetId={assetId}
+              canManage={canRegister}
+              device={device}
+              estateId={estateId}
+              identifiers={identifiers}
+              key={device.id}
+              locationPath={paths.get(device.locationId)}
+            />
+          ))}
+        </ul>
+      </div>
+    </SectionCard>
   );
 }
 

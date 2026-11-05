@@ -8,6 +8,7 @@ import {
   SelectValue,
 } from "@proj/ui/components/select";
 import { type ChangeEvent, useCallback } from "react";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { deviceMetrics } from "@/lib/devices";
 import type { ManualReadingFields } from "@/lib/manual-reading-form";
 import type { ReadingAsset, ReadingMetricOption } from "@/lib/readings";
@@ -40,8 +41,7 @@ export function ManualMeasurementFields({
     [onChange]
   );
   const timeChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) =>
-      onChange({ measuredAt: event.target.value }),
+    (measuredAt: string) => onChange({ measuredAt }),
     [onChange]
   );
   return (
@@ -94,11 +94,10 @@ export function ManualMeasurementFields({
       </Field>
       <Field>
         <FieldLabel htmlFor="manual-reading-time">Measured at</FieldLabel>
-        <Input
+        <DateTimePicker
+          aria-label="Measured at"
           id="manual-reading-time"
           onChange={timeChange}
-          required
-          type="datetime-local"
           value={fields.measuredAt}
         />
         <FieldDescription>

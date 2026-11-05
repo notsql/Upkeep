@@ -1,12 +1,12 @@
-import { Button } from "@proj/ui/components/button";
 import { useCallback, useEffect, useRef } from "react";
+import { ErrorState } from "@/components/error-state";
 import { useAcceptCouncilInvitations } from "@/lib/council-invitations";
 import { useEstateSession } from "@/lib/estates";
 
 export function InvitationAcceptance() {
   const { userId, ready } = useEstateSession();
   const checkedUser = useRef<string | undefined>(undefined);
-  const { mutate, error, data, isPending } = useAcceptCouncilInvitations();
+  const { mutate, error, data } = useAcceptCouncilInvitations();
   useEffect(() => {
     if (ready && userId !== checkedUser.current) {
       checkedUser.current = userId;
@@ -16,11 +16,12 @@ export function InvitationAcceptance() {
   const retry = useCallback(() => mutate(), [mutate]);
   if (error) {
     return (
-      <div className="my-4 space-y-2">
-        <p role="alert">{error.message}</p>
-        <Button disabled={isPending} onClick={retry} variant="outline">
-          Retry invitations
-        </Button>
+      <div className="my-4">
+        <ErrorState
+          message={error.message}
+          onRetry={retry}
+          retryLabel="Retry invitations"
+        />
       </div>
     );
   }

@@ -48,12 +48,23 @@ const categoryOptions: {
   { value: "CLEANLINESS", label: "Cleanliness" },
   { value: "SAFETY", label: "Safety" },
 ];
+export function countWorkOrderFilters(filters: Filters): number {
+  return [filters.priority, filters.status, filters.category, filters.q].filter(
+    Boolean
+  ).length;
+}
+
 export function WorkOrderFilters({
   filters,
   onChange,
+  id: panelId,
+  open,
 }: {
   filters: Filters;
   onChange: (filters: Filters) => void;
+  /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
+  id?: string;
+  open?: boolean;
 }) {
   const id = useId();
   const [priority, setPriority] = useState<
@@ -113,18 +124,20 @@ export function WorkOrderFilters({
     setQuery("");
     onChange({});
   }, [onChange]);
+  const activeCount = countWorkOrderFilters(filters);
   return (
     <form onSubmit={apply}>
       <FilterBar
         actions={
-          <>
-            <Button type="submit">Apply filters</Button>
-            <Button onClick={clear} type="button" variant="outline">
-              Clear filters
-            </Button>
-          </>
+          <Button type="submit" variant="outline">
+            Apply filters
+          </Button>
         }
+        activeCount={activeCount}
+        id={panelId}
         label="Filter work orders"
+        onClear={clear}
+        open={open}
         search={
           <Field>
             <FieldLabel htmlFor={`${id}-reference`}>

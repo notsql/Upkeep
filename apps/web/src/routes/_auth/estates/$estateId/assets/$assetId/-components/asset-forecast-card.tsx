@@ -7,8 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { TrendingDown } from "lucide-react";
 import { DetailCard } from "@/components/detail-card";
 import { LoadingState } from "@/components/loading-state";
+import { SectionHeading } from "@/components/section-heading";
 import {
   flagReasonLabel,
   formatProbability,
@@ -27,10 +29,12 @@ export function AssetForecastCard({
   const risk = useAssetFailureRisk(estateId, assetId);
   const reason = risk.data ? noForecastReason(risk.data) : null;
   return (
-    <Card className="mt-6">
+    <Card>
       <CardHeader>
         <CardTitle>
-          <h2>Breakdown forecast</h2>
+          <SectionHeading icon={TrendingDown}>
+            Breakdown forecast
+          </SectionHeading>
         </CardTitle>
         <CardDescription>
           Chance of a breakdown, from this unit's maintenance history.

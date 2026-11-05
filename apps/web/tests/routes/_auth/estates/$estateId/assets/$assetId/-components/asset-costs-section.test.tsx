@@ -3,6 +3,11 @@ import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetCostsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-costs-section";
 
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
+
 const UNKNOWN_COSTS = /unknown costs/u;
 
 function manual(overrides: Record<string, unknown>) {
@@ -152,10 +157,10 @@ it("limits the rows and totals to the chosen dates, inclusive", () => {
     manual({ id: "older", occurredOn: "2026-09-01", labourCost: "5.00" }),
   ];
   const section = renderSection();
-  fireEvent.change(section.getByLabelText("From"), {
+  fireEvent.change(section.getByRole("textbox", { name: "Start date" }), {
     target: { value: "2026-10-01" },
   });
-  fireEvent.change(section.getByLabelText("To"), {
+  fireEvent.change(section.getByRole("textbox", { name: "End date" }), {
     target: { value: "2026-10-01" },
   });
   const rows = bodyRows(section);
@@ -164,17 +169,15 @@ it("limits the rows and totals to the chosen dates, inclusive", () => {
   expect(cells(totalsRow(section))).toEqual(["0.10", "0.20", "0.00", "0.30"]);
 });
 
-it("explains an empty period and a reversed range", () => {
+it("explains an empty period and clears it from the filter bar", () => {
   const section = renderSection();
-  fireEvent.change(section.getByLabelText("From"), {
+  fireEvent.change(section.getByRole("textbox", { name: "Start date" }), {
     target: { value: "2027-01-01" },
   });
-  section.getByText("No maintenance costs in this period.");
-  fireEvent.change(section.getByLabelText("To"), {
-    target: { value: "2026-12-31" },
-  });
-  expect(section.getByRole("alert").textContent).toBe(
-    "The start date must be on or before the end date."
-  );
+  section.getByText("No costs in this period");
   expect(section.queryByRole("table")).toBeNull();
+  const filters = within(section.getByRole("search", { name: "Filter costs" }));
+  filters.getByText("1 active");
+  fireEvent.click(filters.getByRole("button", { name: "Clear filters" }));
+  section.getByRole("table");
 });

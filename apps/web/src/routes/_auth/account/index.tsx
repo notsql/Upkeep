@@ -1,4 +1,5 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { UserRound } from "lucide-react";
 import { DetailCard } from "@/components/detail-card";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
@@ -17,7 +18,8 @@ function AccountPage() {
   return (
     <PageLayout>
       <PageHeader
-        description="Your profile and sign-in identity."
+        description="Profile and sign-in identity"
+        icon={UserRound}
         title="Your account"
       />
       <DetailCard className="mt-6">

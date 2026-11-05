@@ -74,9 +74,8 @@ describe("estate list page", () => {
         "No active estates"
       )
     );
-    within(screen.getByRole("status")).getByRole("link", {
-      name: "Create estate",
-    });
+    within(screen.getByRole("status")).getByRole("link", { name: "Create" });
+    expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(2);
   });
 
   it("loads the requested inactive filter and isolates its cache by user", async () => {
@@ -86,6 +85,7 @@ describe("estate list page", () => {
     });
     const { queryClient } = renderWithProviders(<Directory />);
     await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     await chooseOption(
       screen.getByRole("combobox", { name: "Status" }),
       "Inactive"
@@ -167,6 +167,10 @@ it("searches estate names, codes and addresses and filters ownership", async () 
   });
   renderWithProviders(<Directory />);
   await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
+  expect(
+    screen.queryByRole("searchbox", { name: "Search estates" })
+  ).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   const search = screen.getByRole("searchbox", { name: "Search estates" });
   expect(search.getAttribute("placeholder")).toBe(
     "Search by name, MCST number or address"
@@ -192,8 +196,13 @@ it("searches estate names, codes and addresses and filters ownership", async () 
     screen.queryByRole("link", { name: "Maple Grove (MCST MG-001)" })
   ).toBeNull();
   fireEvent.change(search, { target: { value: "missing" } });
-  await screen.findByText("No estates match your search or access filter.");
-  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await screen.findByText("Try another search or access filter");
+  fireEvent.click(
+    within(screen.getByRole("search", { name: "Filter estates" })).getByRole(
+      "button",
+      { name: "Clear filters" }
+    )
+  );
   await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
 });
 
@@ -216,10 +225,12 @@ it("announces loading and reports how many estates are shown", async () => {
   });
   renderWithProviders(<Directory />);
   screen.getByText("Loading estates…");
+  await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   await screen.findByText("1 estate");
 });
 
-it("offers clearing filters from the empty state instead of creation", async () => {
+it("offers clearing filters instead of creation when nothing matches", async () => {
   vi.mocked(api.GET).mockResolvedValue({
     data: [estate],
     response: new Response(),
@@ -227,14 +238,16 @@ it("offers clearing filters from the empty state instead of creation", async () 
   renderWithProviders(<Directory />);
   await screen.findByRole("link", { name: "Maple Grove (MCST MG-001)" });
   expect(screen.queryByRole("button", { name: "Clear filters" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByRole("searchbox", { name: "Search estates" }), {
     target: { value: "missing" },
   });
   const empty = await screen.findByRole("status");
   within(empty).getByRole("button", { name: "Clear filters" });
-  expect(
-    within(empty).queryByRole("link", { name: "Create estate" })
-  ).toBeNull();
+  const filters = screen.getByRole("search", { name: "Filter estates" });
+  within(filters).getByText("1 active");
+  within(filters).getByRole("button", { name: "Clear filters" });
+  expect(within(empty).queryByRole("link", { name: "Create" })).toBeNull();
 });
 
 it("uses the shared loading, filter and empty states", async () => {
@@ -244,6 +257,7 @@ it("uses the shared loading, filter and empty states", async () => {
   } as never);
   renderWithProviders(<Directory />);
   screen.getByRole("status", { name: "Loading estates…" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   screen.getByRole("search", { name: "Filter estates" });
   await waitFor(() =>
     expect(screen.getByRole("status").textContent).toContain(
@@ -251,5 +265,5 @@ it("uses the shared loading, filter and empty states", async () => {
     )
   );
   const empty = screen.getByRole("status");
-  within(empty).getByRole("link", { name: "Create estate" });
+  within(empty).getByRole("link", { name: "Create" });
 });

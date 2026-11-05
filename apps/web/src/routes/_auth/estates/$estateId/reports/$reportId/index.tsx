@@ -1,9 +1,10 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useCallback } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
@@ -37,7 +38,7 @@ function EstateReportDetailPage() {
   }
   return (
     <PageLayout className="space-y-4">
-      <PageHeader
+      <DetailPageHeader
         actions={
           workOrders.canCreate && report.data && !report.isError ? (
             <Link
@@ -46,6 +47,7 @@ function EstateReportDetailPage() {
               search={{ sourceReportId: reportId }}
               to="/estates/$estateId/work-orders/new"
             >
+              <Plus aria-hidden="true" />
               Create work order
             </Link>
           ) : null
@@ -64,14 +66,10 @@ function EstateReportDetailPage() {
         <LoadingState label="Loading report…" rows={2} />
       ) : null}
       {report.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            Report not found or unavailable.{" "}
-            <Button onClick={reload} variant="outline">
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message="Report not found or unavailable"
+          onRetry={reload}
+        />
       ) : null}
       {report.data && !report.isError ? (
         <ReportCard

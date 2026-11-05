@@ -19,14 +19,27 @@ interface BlockChoice {
   value: string;
 }
 
+export function countReportFilters(filters: EstateReportFilters): number {
+  return [
+    filters.blockId,
+    filters.minLevelPosition,
+    filters.maxLevelPosition,
+  ].filter((value) => value !== undefined).length;
+}
+
 export function ReportFilters({
   filters,
   locations,
   onChange,
+  id: panelId,
+  open,
 }: {
   filters: EstateReportFilters;
   locations: Location[];
   onChange: (filters: EstateReportFilters) => void;
+  /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
+  id?: string;
+  open?: boolean;
 }) {
   const id = useId();
   const [minimum, setMinimum] = useState(
@@ -50,10 +63,7 @@ export function ReportFilters({
   );
   const selected =
     choices.find((choice) => choice.value === filters.blockId) ?? choices[0];
-  const filtered =
-    !!filters.blockId ||
-    filters.minLevelPosition !== undefined ||
-    filters.maxLevelPosition !== undefined;
+  const activeCount = countReportFilters(filters);
   const positions = useMemo(
     () => [
       "",
@@ -125,16 +135,15 @@ export function ReportFilters({
     <form className="space-y-3" noValidate onSubmit={apply}>
       <FilterBar
         actions={
-          <>
-            <Button type="submit">Apply filters</Button>
-            {filtered ? (
-              <Button onClick={clear} type="button" variant="outline">
-                Clear filters
-              </Button>
-            ) : null}
-          </>
+          <Button type="submit" variant="outline">
+            Apply filters
+          </Button>
         }
+        activeCount={activeCount}
+        id={panelId}
         label="Filter reports"
+        onClear={clear}
+        open={open}
       >
         <div className="w-full space-y-2 sm:w-48">
           <Label htmlFor={`${id}-block`}>Block</Label>
@@ -145,7 +154,7 @@ export function ReportFilters({
           >
             <ComboboxInput className="w-full" id={`${id}-block`} />
             <ComboboxContent className="rounded-xl">
-              <ComboboxEmpty>No blocks found.</ComboboxEmpty>
+              <ComboboxEmpty>No blocks found</ComboboxEmpty>
               <ComboboxList>
                 {(choice: BlockChoice) => (
                   <ComboboxItem key={choice.value} value={choice}>

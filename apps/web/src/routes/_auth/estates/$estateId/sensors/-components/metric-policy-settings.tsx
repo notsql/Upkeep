@@ -10,18 +10,11 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { SensorPolicy } from "@/lib/flatlined-sensors";
 import { useMobile } from "@/lib/use-mobile";
 import {
-  MetricPolicyForm,
+  MetricPolicyDialog,
   useMetricPolicyEditor,
 } from "@/routes/_auth/estates/$estateId/sensors/-components/metric-policy-form";
 import { metricLabel } from "@/routes/_auth/estates/$estateId/sensors/-components/sensor-format";
@@ -57,23 +50,19 @@ export function MetricPolicySettings({
   const configured = policies.filter(
     (item) => item.durationMinutes !== null
   ).length;
-  const toggle = useCallback(
+  const open = useCallback(
     (metric: SensorPolicy["metric"]) => {
       if (saving) {
         return;
       }
       lastSelected.current = metric;
-      if (selected === metric) {
-        close();
-        return;
-      }
       const nextPolicy = policies.find((item) => item.metric === metric);
       if (nextPolicy) {
         startEditing(nextPolicy);
         setSelected(metric);
       }
     },
-    [close, policies, saving, selected, startEditing]
+    [policies, saving, startEditing]
   );
   useEffect(() => {
     if (!(selected || saving) && lastSelected.current) {
@@ -81,16 +70,6 @@ export function MetricPolicySettings({
       document.getElementById(`${id}-${lastSelected.current}`)?.focus();
     }
   }, [id, saving, selected]);
-  const form = policy ? (
-    <MetricPolicyForm
-      canManage={canManage}
-      editor={editor}
-      id={`${id}-editor`}
-      key={policy.metric}
-      onClose={close}
-      policy={policy}
-    />
-  ) : null;
 
   return (
     <Card className="min-w-0">
@@ -119,7 +98,7 @@ export function MetricPolicySettings({
                   className="text-muted-foreground mt-1 block text-sm font-normal"
                   id={`${id}-description`}
                 >
-                  Manage estate-wide metric thresholds and tolerances.
+                  Estate-wide thresholds and tolerances
                 </span>
               </span>
               <Badge
@@ -162,16 +141,11 @@ export function MetricPolicySettings({
                     </div>
                     {canManage ? (
                       <PolicyAction
-                        editorId={`${id}-editor`}
                         id={`${id}-${item.metric}`}
-                        onToggle={toggle}
+                        onOpen={open}
                         policy={item}
                         saving={saving}
-                        selected={selected === item.metric}
                       />
-                    ) : null}
-                    {selected === item.metric ? (
-                      <div className="col-span-2 min-w-0">{form}</div>
                     ) : null}
                   </li>
                 ))}
@@ -192,47 +166,39 @@ export function MetricPolicySettings({
                 </TableHeader>
                 <TableBody>
                   {policies.map((item) => (
-                    <Fragment key={item.metric}>
-                      <TableRow>
-                        <TableCell className="py-4">
-                          <PolicyName policy={item} />
+                    <TableRow key={item.metric}>
+                      <TableCell className="py-4">
+                        <PolicyName policy={item} />
+                      </TableCell>
+                      <TableCell className="text-muted-foreground whitespace-normal">
+                        <PolicySummary policy={item} />
+                      </TableCell>
+                      <TableCell>
+                        <PolicyStatus policy={item} />
+                      </TableCell>
+                      {canManage ? (
+                        <TableCell className="text-right">
+                          <PolicyAction
+                            id={`${id}-${item.metric}`}
+                            onOpen={open}
+                            policy={item}
+                            saving={saving}
+                          />
                         </TableCell>
-                        <TableCell className="text-muted-foreground whitespace-normal">
-                          <PolicySummary policy={item} />
-                        </TableCell>
-                        <TableCell>
-                          <PolicyStatus policy={item} />
-                        </TableCell>
-                        {canManage ? (
-                          <TableCell className="text-right">
-                            <PolicyAction
-                              editorId={`${id}-editor`}
-                              id={`${id}-${item.metric}`}
-                              onToggle={toggle}
-                              policy={item}
-                              saving={saving}
-                              selected={selected === item.metric}
-                            />
-                          </TableCell>
-                        ) : null}
-                      </TableRow>
-                      {selected === item.metric ? (
-                        <TableRow>
-                          <TableCell
-                            className="p-0 pb-4 whitespace-normal"
-                            colSpan={canManage ? 4 : 3}
-                          >
-                            {form}
-                          </TableCell>
-                        </TableRow>
                       ) : null}
-                    </Fragment>
+                    </TableRow>
                   ))}
                 </TableBody>
               </Table>
             )}
           </div>
         </section>
+        <MetricPolicyDialog
+          canManage={canManage}
+          editor={editor}
+          onClose={close}
+          policy={policy}
+        />
       </CardContent>
     </Card>
   );
@@ -265,34 +231,28 @@ function PolicyStatus({ policy }: { policy: SensorPolicy }) {
 
 function PolicyAction({
   policy,
-  selected,
   saving,
   id,
-  editorId,
-  onToggle,
+  onOpen,
 }: {
   policy: SensorPolicy;
-  selected: boolean;
   saving: boolean;
   id: string;
-  editorId: string;
-  onToggle: (metric: SensorPolicy["metric"]) => void;
+  onOpen: (metric: SensorPolicy["metric"]) => void;
 }) {
-  const toggle = useCallback(
-    () => onToggle(policy.metric),
-    [onToggle, policy.metric]
+  const open = useCallback(
+    () => onOpen(policy.metric),
+    [onOpen, policy.metric]
   );
-  const editLabel = policy.durationMinutes === null ? "Set up" : "Edit";
-  const label = selected ? "Close" : editLabel;
+  const label = policy.durationMinutes === null ? "Set up" : "Edit";
   return (
     <Button
-      aria-controls={selected ? editorId : undefined}
-      aria-expanded={selected}
+      aria-haspopup="dialog"
       aria-label={`${label} ${metricLabel(policy.metric).toLowerCase()} policy`}
       disabled={saving}
       id={id}
-      onClick={toggle}
-      variant={selected ? "secondary" : "outline"}
+      onClick={open}
+      variant="ghost"
     >
       {label}
     </Button>

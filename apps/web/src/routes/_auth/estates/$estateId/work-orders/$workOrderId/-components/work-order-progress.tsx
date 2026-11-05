@@ -6,18 +6,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@proj/ui/components/dialog";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Textarea } from "@proj/ui/components/textarea";
-import { type FormEvent, useCallback, useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { FormDialog } from "@/components/form-dialog";
 import { LoadingState } from "@/components/loading-state";
 import { CompletionOutcome } from "@/components/work-order-completion";
 import {
@@ -178,14 +173,11 @@ function StatusHistory({
           <LoadingState label="Loading status history…" rows={2} />
         ) : null}
         {history.isError ? (
-          <Alert variant="destructive">
-            <AlertDescription>
-              Unable to load status history.{" "}
-              <Button onClick={onRetry} variant="outline">
-                Retry history
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <ErrorState
+            message="Unable to load status history"
+            onRetry={onRetry}
+            retryLabel="Retry history"
+          />
         ) : null}
         {!history.isError && history.data ? (
           <ol className="space-y-4">
@@ -230,17 +222,14 @@ function OutcomeCorrections({
           <LoadingState label="Loading outcome corrections…" rows={2} />
         ) : null}
         {revisions.isError ? (
-          <Alert variant="destructive">
-            <AlertDescription className="space-y-3">
-              <p>Unable to load outcome corrections.</p>
-              <Button onClick={onRetry} variant="outline">
-                Retry corrections
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <ErrorState
+            message="Unable to load outcome corrections"
+            onRetry={onRetry}
+            retryLabel="Retry corrections"
+          />
         ) : null}
         {!revisions.isError && revisions.data?.length === 0 ? (
-          <EmptyState title="No corrections recorded" />
+          <EmptyState title="No corrections yet" />
         ) : null}
         {revisions.isError
           ? null
@@ -319,9 +308,8 @@ function CompletionDialog({
   const [conflict, setConflict] = useState(false);
   const [reviewing, setReviewing] = useState(false);
   const submit = useCallback(
-    async (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const form = new FormData(event.currentTarget);
+    async (element: HTMLFormElement) => {
+      const form = new FormData(element);
       const value = (key: string) => String(form.get(key) ?? "").trim();
       const body = completionInput(form, expectedVersion);
       if (editing && !value("correctionReason")) {
@@ -372,105 +360,77 @@ function CompletionDialog({
     setReviewing(false);
     setError(undefined);
   }, [order.version]);
-  const changeOpen = useCallback(
-    (open: boolean) => {
-      if (!(open || mutation.isPending)) {
-        onClose();
-      }
-    },
-    [mutation.isPending, onClose]
-  );
   return (
-    <Dialog onOpenChange={changeOpen} open>
-      <DialogContent
-        className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl"
-        showCloseButton={!mutation.isPending}
-      >
-        <DialogHeader>
-          <DialogTitle>
-            {editing ? "Edit completion outcome" : "Complete work order"}
-          </DialogTitle>
-          <DialogDescription>
-            {editing
-              ? "Correct the recorded details and give a reason. The order stays Closed; the original completion and every correction remain in its audit."
-              : "Closing keeps this order Closed. Authorized owners and Managers can correct its recorded outcome later."}{" "}
-            Leave optional costs and downtime blank if unknown; enter 0 for
-            none. Costs are in SGD.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="space-y-4" onSubmit={submit}>
-          <CompletionFields id={id} initialOutcome={initialOutcome} />
-          {editing ? (
-            <Field>
-              <FieldLabel htmlFor={`${id}-reason`}>
-                Correction reason
-              </FieldLabel>
-              <Textarea
-                id={`${id}-reason`}
-                maxLength={500}
-                name="correctionReason"
-                required
-              />
-            </Field>
-          ) : null}
-          {error ? (
-            <Alert className="rounded-xl" variant="destructive">
-              <AlertDescription className="flex flex-col items-start gap-3">
-                <p>{error}</p>
-                <p>
-                  Refresh to check whether completion was saved before retrying.
-                </p>
-                <Button
-                  disabled={refreshing}
-                  onClick={refresh}
-                  type="button"
-                  variant="outline"
-                >
-                  {refreshing ? "Refreshing…" : "Refresh work order"}
-                </Button>
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {reviewing ? (
-            <Alert>
-              <AlertDescription className="flex flex-col items-start gap-3">
-                <p>Review the latest work order below before continuing.</p>
-                <p>Current status: {order.status.replaceAll("_", " ")}</p>
-                {editing && order.completion ? (
-                  <CompletionOutcome completion={order.completion} />
-                ) : null}
-                {order.status === (editing ? "CLOSED" : "IN_PROGRESS") ? (
-                  <Button onClick={review} type="button" variant="outline">
-                    I reviewed the updated work order
-                  </Button>
-                ) : null}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          <div className="flex flex-wrap justify-end gap-2">
+    <FormDialog
+      className="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-xl"
+      description={
+        <>
+          {editing
+            ? "Correct the recorded details and give a reason. The order stays Closed; the original completion and every correction remain in its audit."
+            : "Closing keeps this order Closed. Authorized owners and Managers can correct its recorded outcome later."}{" "}
+          Leave optional costs and downtime blank if unknown; enter 0 for none.
+          Costs are in SGD.
+        </>
+      }
+      onClose={onClose}
+      onSubmit={submit}
+      open
+      pending={mutation.isPending}
+      submitDisabled={
+        refreshing ||
+        conflict ||
+        order.status !== (editing ? "CLOSED" : "IN_PROGRESS")
+      }
+      submitLabel={editing ? "Save correction" : "Complete work order"}
+      title={editing ? "Edit completion outcome" : "Complete work order"}
+    >
+      <CompletionFields id={id} initialOutcome={initialOutcome} />
+      {editing ? (
+        <Field>
+          <FieldLabel htmlFor={`${id}-reason`}>Correction reason</FieldLabel>
+          <Textarea
+            id={`${id}-reason`}
+            maxLength={500}
+            name="correctionReason"
+            required
+          />
+        </Field>
+      ) : null}
+      {error ? (
+        <Alert className="rounded-xl" variant="destructive">
+          <AlertDescription className="flex flex-col items-start gap-3">
+            <p>{error}</p>
+            <p>
+              Refresh to check whether completion was saved before retrying.
+            </p>
             <Button
-              disabled={mutation.isPending}
-              onClick={onClose}
+              disabled={refreshing}
+              onClick={refresh}
               type="button"
               variant="outline"
             >
-              Cancel
+              {refreshing ? "Refreshing…" : "Refresh work order"}
             </Button>
-            <Button
-              disabled={
-                mutation.isPending ||
-                refreshing ||
-                conflict ||
-                order.status !== (editing ? "CLOSED" : "IN_PROGRESS")
-              }
-              type="submit"
-            >
-              {editing ? "Save correction" : "Complete work order"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {reviewing ? (
+        <Alert>
+          <AlertDescription className="flex flex-col items-start gap-3">
+            <p>Review the latest work order below before continuing.</p>
+            <p>Current status: {order.status.replaceAll("_", " ")}</p>
+            {editing && order.completion ? (
+              <CompletionOutcome completion={order.completion} />
+            ) : null}
+            {order.status === (editing ? "CLOSED" : "IN_PROGRESS") ? (
+              <Button onClick={review} type="button" variant="outline">
+                I reviewed the updated work order
+              </Button>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+    </FormDialog>
   );
 }
 

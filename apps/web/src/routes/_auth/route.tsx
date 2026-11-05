@@ -39,6 +39,19 @@ const OWNER_GATED: Record<string, DestinationPredicate> = {
   edit: canOpenEstateSettings,
 };
 
+// Sections whose sub-views (one segment deeper) share the section's gate.
+const SUB_VIEW_SECTIONS = new Set(["sensors", "asset-categories"]);
+
+/** True for a section root (/estates/:id/:feature) or one of its sub-views. */
+function isSectionPath(segments: string[], feature: string | undefined) {
+  return (
+    segments.length === 3 ||
+    (segments.length === 4 &&
+      feature !== undefined &&
+      SUB_VIEW_SECTIONS.has(feature))
+  );
+}
+
 const PERSONAL_PATHS = new Set([
   "/reports",
   "/account",
@@ -133,8 +146,11 @@ function guardInspectionContext(
     }
     return true;
   }
+  // The asset page and its Inspections sub-page are open to inspection viewers.
   const context =
-    segments.length === 0 || (segments.length === 1 && segments[0] !== "new");
+    segments.length === 0 ||
+    (segments.length === 1 && segments[0] !== "new") ||
+    (segments.length === 2 && segments[1] === "inspections");
   return context && !!estate?.canViewInspectionResults;
 }
 
@@ -188,10 +204,10 @@ function guardEstatePath(
   }
 }
 
-/** Single-segment sections whose rule lives in guardDestination. */
+/** Section roots (and sub-views) whose rule lives in guardDestination. */
 function checkedByDestination(path: string, feature: string | undefined) {
   return (
-    path.split("/").filter(Boolean).length === 3 &&
+    isSectionPath(path.split("/").filter(Boolean), feature) &&
     (feature === "assets" || (feature !== undefined && feature in OWNER_GATED))
   );
 }
@@ -207,7 +223,7 @@ async function guardDestination(
 ) {
   const segments = path.split("/").filter(Boolean);
   const [, estateId, feature] = segments;
-  if (!(estateId && feature) || segments.length !== 3) {
+  if (!(estateId && feature && isSectionPath(segments, feature))) {
     return;
   }
   const estate = access.estates.find((item) => item.estateId === estateId);

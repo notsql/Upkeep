@@ -1,8 +1,11 @@
-import { fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
-import { AssetDetailsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
+import {
+  AssetDetailsLayout,
+  AssetMaintenance,
+  AssetOverview,
+} from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page";
 
 const BACK_LINK = /^Back to/u;
 
@@ -23,6 +26,11 @@ beforeEach(() => {
 });
 
 // Sections that fetch their own data stay pending: this test is about breadcrumbs.
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
 vi.mock("@/lib/api", () => ({
   api: {
     GET: vi.fn(() => new Promise(() => undefined)),
@@ -34,8 +42,25 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
-    <a href={to} {...props}>
+  Link: ({
+    children,
+    to,
+    params,
+    activeOptions: _activeOptions,
+    ...props
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    activeOptions?: unknown;
+  }) => (
+    <a
+      href={Object.entries(params ?? {}).reduce(
+        (path, [key, value]) => path.replace(`$${key}`, value),
+        to
+      )}
+      {...props}
+    >
       {children}
     </a>
   ),
@@ -74,8 +99,16 @@ vi.mock(
   })
 );
 
+function renderLayout() {
+  return renderWithProviders(
+    <AssetDetailsLayout assetId="asset" estateId="estate">
+      <p>Section content</p>
+    </AssetDetailsLayout>
+  );
+}
+
 it("starts asset detail breadcrumbs at Assets, without back links", () => {
-  renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
+  renderLayout();
   const breadcrumbs = within(
     screen.getByRole("navigation", { name: "Breadcrumbs" })
   );
@@ -85,40 +118,31 @@ it("starts asset detail breadcrumbs at Assets, without back links", () => {
   expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
 });
 
-it("groups the asset's sections into tabs, starting on Overview", () => {
-  renderWithProviders(<AssetDetailsPage assetId="asset" estateId="estate" />);
-  const tabs = within(screen.getByRole("tablist", { name: "Asset sections" }));
-  expect(tabs.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
-    "Overview",
-    "Maintenance",
-    "Inspections",
-    "Documents",
-    "Costs",
-    "Devices",
+it("links each asset section as its own page under one header", () => {
+  renderLayout();
+  screen.getByRole("heading", { level: 1, name: "Water pump" });
+  const nav = within(
+    screen.getByRole("navigation", { name: "Asset sections" })
+  );
+  expect(
+    nav
+      .getAllByRole("link")
+      .map((link) => [link.textContent, link.getAttribute("href")])
+  ).toEqual([
+    ["Overview", "/estates/estate/assets/asset"],
+    ["Maintenance", "/estates/estate/assets/asset/maintenance"],
+    ["Inspections", "/estates/estate/assets/asset/inspections"],
+    ["Documents", "/estates/estate/assets/asset/documents"],
+    ["Costs", "/estates/estate/assets/asset/costs"],
+    ["Devices", "/estates/estate/assets/asset/devices"],
   ]);
-  expect(
-    tabs.getByRole("tab", { name: "Overview" }).getAttribute("aria-selected")
-  ).toBe("true");
+  screen.getByText("Section content");
+  expect(screen.queryByRole("tablist")).toBeNull();
+});
+
+it("shows the asset's details on the overview", () => {
+  renderWithProviders(<AssetOverview assetId="asset" estateId="estate" />);
   screen.getByText("Serial number");
-  expect(
-    screen.queryByRole("region", { name: "Maintenance costs" })
-  ).toBeNull();
-});
-
-it("reports the chosen tab so the route can keep it in the URL", () => {
-  const change = vi.fn();
-  renderWithProviders(
-    <AssetDetailsPage assetId="asset" estateId="estate" onTabChange={change} />
-  );
-  fireEvent.click(screen.getByRole("tab", { name: "Costs" }));
-  expect(change).toHaveBeenCalledWith("costs");
-});
-
-it("shows the asset's maintenance costs", async () => {
-  renderWithProviders(
-    <AssetDetailsPage assetId="asset" estateId="estate" tab="costs" />
-  );
-  await screen.findByRole("region", { name: "Maintenance costs" });
 });
 
 it.each([
@@ -127,9 +151,7 @@ it.each([
   [{ owned: false, canManageInvitationPermissions: false }, false],
 ])("shows the service interval to Managers only (%o)", (access, shown) => {
   page.estate = { ...page.estate, ...access };
-  renderWithProviders(
-    <AssetDetailsPage assetId="asset" estateId="estate" tab="maintenance" />
-  );
+  renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
   expect(screen.queryByText("Service interval card") !== null).toBe(shown);
 });
 
@@ -147,8 +169,6 @@ it.each([
 ])("locks the service interval with a reason", (asset, estate, reason) => {
   page.asset = { ...page.asset, ...asset };
   page.estate = { ...page.estate, owned: true, ...estate };
-  renderWithProviders(
-    <AssetDetailsPage assetId="asset" estateId="estate" tab="maintenance" />
-  );
+  renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
   screen.getByText(`Service interval card: ${reason}`);
 });

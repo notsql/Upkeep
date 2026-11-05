@@ -16,14 +16,24 @@ const { get, auth, listeners } = vi.hoisted(() => ({
 }));
 const LEAKING_PIPE = /Leaking pipe/iu;
 const NO_REPORTS = /no reports/iu;
-const REPORT_A_FAULT = /Report a fault/iu;
+const REPORT_A_FAULT = /^Create$/u;
 const NEXT = /Next/iu;
 const RETRY = /Retry/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
-  Link: ({ children, to }: { children: ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children: ReactNode;
+    to: string;
+    search?: { estateId?: string };
+  }) => (
+    <a href={search?.estateId ? `${to}?estateId=${search.estateId}` : to}>
+      {children}
+    </a>
   ),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", async () => {
@@ -130,6 +140,10 @@ it("loads the next page only when the resident requests it", async () => {
   renderWithProviders(<Page />);
   await screen.findByText("Leaking pipe");
   expect(screen.queryByText("Older fault")).toBeNull();
+  within(screen.getByRole("navigation", { name: "Report pages" })).getByRole(
+    "button",
+    { name: "Previous page" }
+  );
   fireEvent.click(screen.getByRole("button", { name: NEXT }));
   await screen.findByText("Older fault");
   await waitFor(() =>
@@ -197,9 +211,9 @@ it("does not show the previous resident's cached report after an account change"
 
 it("loads an estate-scoped history and preselects that estate for a new report", async () => {
   get.mockResolvedValue({ data: { items: [], nextCursor: null } });
-  renderWithProviders(<Page estateId="maple" estateName="Maple Estate" />);
+  renderWithProviders(<Page estateId="maple" />);
   await screen.findByText(NO_REPORTS);
-  screen.getByText("Maple Estate");
+  expect(screen.getAllByRole("link", { name: REPORT_A_FAULT })).toHaveLength(2);
   expect(get).toHaveBeenCalledWith(
     "/resident/reports",
     expect.objectContaining({ params: { query: { estateId: "maple" } } })
@@ -240,12 +254,15 @@ it("starts from the first page when the selected estate changes", async () => {
     "/resident/reports",
     expect.objectContaining({ params: { query: { estateId: "oak" } } })
   );
-  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Previous page" })
+      .disabled
+  ).toBe(true);
 });
 
 it("preserves the selected estate when opening a report", async () => {
   get.mockResolvedValue({ data: { items: [report], nextCursor: null } });
-  renderWithProviders(<Page estateId="maple" estateName="Maple Estate" />);
+  renderWithProviders(<Page estateId="maple" />);
   const link = await screen.findByRole("link", { name: LEAKING_PIPE });
   expect(link.getAttribute("href")).toBe(
     `/reports/${report.id}?estateId=maple`

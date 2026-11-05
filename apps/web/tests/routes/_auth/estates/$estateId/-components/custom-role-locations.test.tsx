@@ -72,8 +72,9 @@ beforeEach(() => {
 it("lets a location creator add a block and bulk floors without estate-detail editing", async () => {
   serve({ create: true });
   renderWithProviders(<LocationsSection estateId="estate" />);
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   screen.getByRole("searchbox", { name: "Search locations" });
-  await screen.findByRole("button", { name: "Add block" });
+  await screen.findByRole("button", { name: "Create" });
   fireEvent.click(
     await screen.findByRole("button", { name: "Actions for Block A" })
   );
@@ -89,7 +90,7 @@ it("lets a location editor rename and move locations without creation or deactiv
     await screen.findByRole("button", { name: "Actions for Block A" })
   );
   await screen.findByRole("menuitem", { name: "Edit Block A" });
-  expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
   expect(
     screen.queryByRole("menuitem", { name: "Add levels to Block A" })
   ).toBeNull();
@@ -104,7 +105,7 @@ it("does not treat estate-detail editing as permission to create locations", asy
   await waitFor(() =>
     expect(queryClient.getQueryData(["member", "app-access"])).toBeDefined()
   );
-  expect(screen.queryByRole("button", { name: "Add block" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
   expect(api.POST).not.toHaveBeenCalled();
 });
 
@@ -113,7 +114,7 @@ it("removes an open location form when creation permission is revoked", async ()
   const { queryClient } = renderWithProviders(
     <LocationsSection estateId="estate" />
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Add block" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Create" }));
   await screen.findByRole("dialog", { name: "Add block" });
   serve();
   await queryClient.invalidateQueries({ queryKey: ["member", "app-access"] });

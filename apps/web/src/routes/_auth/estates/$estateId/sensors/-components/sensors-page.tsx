@@ -1,17 +1,15 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@proj/ui/components/tabs";
-import { Activity } from "lucide-react";
-import { useCallback, useState } from "react";
+import { Gauge } from "lucide-react";
+import { type ReactNode, useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { Pagination } from "@/components/pagination";
+import { SectionCard } from "@/components/section-card";
+import { SubNav } from "@/components/sub-nav";
 import {
   type MonitoredSensor,
   type SensorReview,
@@ -24,8 +22,57 @@ import { PauseSensorDialog } from "@/routes/_auth/estates/$estateId/sensors/-com
 import { timeLabel } from "@/routes/_auth/estates/$estateId/sensors/-components/sensor-format";
 import { SensorMonitoringTable } from "@/routes/_auth/estates/$estateId/sensors/-components/sensor-monitoring-table";
 
-export function SensorsPage({ estateId }: { estateId: string }) {
-  const [view, setView] = useState<SensorView>("REVIEW");
+const PAGE_SIZE = 25;
+
+/** The frame shared by both device metric views: header, note and SubNav. */
+export function SensorsLayout({
+  estateId,
+  children,
+}: {
+  estateId: string;
+  children: ReactNode;
+}) {
+  return (
+    <PageLayout className="min-w-0">
+      <ListPageHeader
+        description="Flatline review, policies and pauses"
+        icon={Gauge}
+        title="Device monitoring"
+      />
+      <p className="text-muted-foreground mb-5 text-sm">
+        A possible flatline means a device kept sending nearly unchanged values.
+        It needs review; it does not prove the device or asset is faulty.
+        Silence does not count as unchanged readings.
+      </p>
+      <SubNav
+        items={[
+          {
+            exact: true,
+            label: "Needs review",
+            params: { estateId },
+            to: "/estates/$estateId/sensors",
+          },
+          {
+            label: "All device metrics",
+            params: { estateId },
+            to: "/estates/$estateId/sensors/all",
+          },
+        ]}
+        label="Device metric views"
+      />
+      {children}
+    </PageLayout>
+  );
+}
+
+/** One device metric view (needs review, or all), then the metric policies. */
+export function SensorsView({
+  estateId,
+  view,
+}: {
+  estateId: string;
+  view: SensorView;
+}) {
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<MonitoredSensor>();
   const policies = useFlatlinePolicies(estateId);
@@ -45,118 +92,77 @@ export function SensorsPage({ estateId }: { estateId: string }) {
   );
   const refreshReview = useCallback(() => refetchReview(), [refetchReview]);
   const closePause = useCallback(() => setSelected(undefined), []);
-  const changeView = useCallback((value: unknown) => {
-    if (value === "REVIEW" || value === "ALL") {
-      setView(value);
-      setPage(0);
-    }
-  }, []);
-  return (
-    <PageLayout className="min-w-0">
-      <PageHeader
-        description="Review device readings and manage metric policies and maintenance pauses."
-        title="Device monitoring"
+  if (policies.isPending) {
+    return <LoadingState label="Loading metric policies…" rows={2} />;
+  }
+  if (policies.error) {
+    return (
+      <ErrorState
+        message={policies.error.message}
+        onRetry={refreshPolicies}
+        retryLabel="Retry metric policies"
       />
-      <p className="text-muted-foreground my-4">
-        Each row tracks one device and metric. A possible flatline means the
-        device kept sending nearly unchanged values. It needs review; it does
-        not prove the device or asset is faulty. Silence does not count as
-        unchanged readings.
-      </p>
-      {policies.isPending ? (
-        <LoadingState label="Loading metric policies…" rows={2} />
-      ) : null}
-      {policies.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{policies.error.message}</AlertDescription>
-          <Button onClick={refreshPolicies} variant="outline">
-            Retry metric policies
-          </Button>
+    );
+  }
+  return (
+    <div className="grid min-w-0 gap-6">
+      {policies.data.estateActive ? null : (
+        <Alert>
+          <AlertDescription>
+            This estate is inactive. Metric policies remain available to view.
+          </AlertDescription>
         </Alert>
-      ) : null}
-      {policies.data && !policies.error ? (
-        <>
-          {policies.data.estateActive ? null : (
-            <Alert>
-              <AlertDescription>
-                This estate is inactive. Metric policies remain available to
-                view.
-              </AlertDescription>
-            </Alert>
-          )}
-          <section
-            aria-labelledby="monitoring-title"
-            className="my-6 grid min-w-0 gap-4"
+      )}
+      <SectionCard
+        actions={
+          <Button
+            disabled={review.isFetching}
+            onClick={refreshReview}
+            variant="outline"
           >
-            <h2 className="text-lg font-semibold" id="monitoring-title">
-              Device metrics
-            </h2>
-            <Tabs onValueChange={changeView} value={view}>
-              <div className="flex flex-wrap items-center gap-3">
-                <TabsList aria-label="Device metric view">
-                  <TabsTrigger value="REVIEW">Needs review</TabsTrigger>
-                  <TabsTrigger value="ALL">All device metrics</TabsTrigger>
-                </TabsList>
-                <Button
-                  disabled={review.isFetching}
-                  onClick={refreshReview}
-                  variant="outline"
-                >
-                  Refresh readings
-                </Button>
-              </div>
-              {(["REVIEW", "ALL"] as const).map((value) => (
-                <TabsContent
-                  className="grid min-w-0 gap-4"
-                  key={value}
-                  value={value}
-                >
-                  {review.isPending ? (
-                    <LoadingState
-                      label="Loading device metrics…"
-                      variant="table"
-                    />
-                  ) : null}
-                  {review.error ? (
-                    <Alert variant="destructive">
-                      <AlertDescription>
-                        {review.error.message}
-                      </AlertDescription>
-                      <Button onClick={refreshReview} variant="outline">
-                        Retry device metrics
-                      </Button>
-                    </Alert>
-                  ) : null}
-                  {review.data && !review.error ? (
-                    <SensorReviewResults
-                      canManage={canManage}
-                      data={review.data}
-                      fetching={review.isFetching}
-                      onPageChange={setPage}
-                      onPause={setSelected}
-                      page={page}
-                      view={view}
-                    />
-                  ) : null}
-                </TabsContent>
-              ))}
-            </Tabs>
-          </section>
-          <MetricPolicySettings
-            canManage={canManage}
-            estateId={estateId}
-            policies={policies.data.policies}
-          />
-          {selected && canManage ? (
-            <PauseSensorDialog
-              estateId={estateId}
-              onClose={closePause}
-              sensor={selected}
+            Refresh readings
+          </Button>
+        }
+        className="min-w-0"
+        title="Device metrics"
+      >
+        <div className="grid min-w-0 gap-4">
+          {review.isPending ? (
+            <LoadingState label="Loading device metrics…" variant="table" />
+          ) : null}
+          {review.error ? (
+            <ErrorState
+              message={review.error.message}
+              onRetry={refreshReview}
+              retryLabel="Retry device metrics"
             />
           ) : null}
-        </>
+          {review.data && !review.error ? (
+            <SensorReviewResults
+              canManage={canManage}
+              data={review.data}
+              fetching={review.isFetching}
+              onPageChange={setPage}
+              onPause={setSelected}
+              page={page}
+              view={view}
+            />
+          ) : null}
+        </div>
+      </SectionCard>
+      <MetricPolicySettings
+        canManage={canManage}
+        estateId={estateId}
+        policies={policies.data.policies}
+      />
+      {selected && canManage ? (
+        <PauseSensorDialog
+          estateId={estateId}
+          onClose={closePause}
+          sensor={selected}
+        />
       ) : null}
-    </PageLayout>
+    </div>
   );
 }
 
@@ -168,31 +174,31 @@ function emptyMessage(
 ): { title: string; description?: string } {
   if (!active) {
     return {
-      title: "Monitoring is unavailable while this estate is inactive.",
+      title: "Monitoring unavailable",
+      description: "Estate inactive",
     };
   }
   if (page > 0) {
     return {
       title: "No device metrics on this page",
-      description: "Return to the previous page.",
+      description: "Go back a page",
     };
   }
   if (view === "ALL") {
     return {
-      title: "No devices are registered on active assets in this estate.",
+      title: "No devices yet",
+      description: "Devices on active assets appear here",
     };
   }
   if (!hasReadings) {
     return {
       title: "No device readings yet",
-      description:
-        "Use All device metrics to review devices and configure their metrics.",
+      description: "See All device metrics",
     };
   }
   return {
-    title: "No device metrics currently need review",
-    description:
-      "Unconfigured metrics and metrics without enough evidence are listed under All device metrics.",
+    title: "Nothing needs review",
+    description: "Other metrics are under All device metrics",
   };
 }
 
@@ -236,7 +242,6 @@ function SensorReviewResults({
         />
       ) : (
         <EmptyState
-          icon={Activity}
           {...emptyMessage(
             data.estateActive,
             data.hasSensorReadings,
@@ -245,28 +250,15 @@ function SensorReviewResults({
           )}
         />
       )}
-      <nav
-        aria-label="Device metric pages"
-        className="flex flex-wrap items-center gap-3"
-      >
-        <Button
-          disabled={page === 0 || fetching}
-          onClick={previousPage}
-          variant="outline"
-        >
-          Previous page
-        </Button>
-        <p>
-          Page {page + 1} · {data.totalElements} device metrics
-        </p>
-        <Button
-          disabled={(page + 1) * 25 >= data.totalElements || fetching}
-          onClick={nextPage}
-          variant="outline"
-        >
-          Next page
-        </Button>
-      </nav>
+      <Pagination
+        canNext={(page + 1) * PAGE_SIZE < data.totalElements}
+        canPrevious={page > 0}
+        disabled={fetching}
+        label="Device metric pages"
+        onNext={nextPage}
+        onPrevious={previousPage}
+        summary={`Page ${page + 1} · ${data.totalElements} device metrics`}
+      />
     </>
   );
 }

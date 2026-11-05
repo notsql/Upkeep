@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
-import Loader from "@/components/loader";
 import { NotFoundPage } from "@/components/not-found-page";
+import { RoutePending } from "@/components/route-pending";
 import { routeTree } from "./routeTree.gen";
 
 export const getRouter = () => {
@@ -20,7 +20,12 @@ export const getRouter = () => {
   const router = createTanStackRouter({
     context: { queryClient },
     defaultNotFoundComponent: NotFoundPage,
-    defaultPendingComponent: () => <Loader />,
+    defaultPendingComponent: RoutePending,
+    // Fast loads never show the skeleton; slow ones keep it long enough not to flicker.
+    defaultPendingMinMs: 300,
+    defaultPendingMs: 200,
+    // Hovering or focusing a link runs its guards and loaders ahead of the click.
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     routeTree,
     scrollRestoration: true,

@@ -38,7 +38,7 @@ export function DocumentActions({
         <Button
           aria-label={`Unlink ${document.originalFilename}`}
           onClick={unlink}
-          variant="outline"
+          variant="ghost"
         >
           Unlink
         </Button>
@@ -47,7 +47,7 @@ export function DocumentActions({
         <Button
           aria-label={`Work-order link for ${document.originalFilename}`}
           onClick={association}
-          variant="outline"
+          variant="ghost"
         >
           Work order
         </Button>
@@ -56,7 +56,7 @@ export function DocumentActions({
         aria-label={`Download ${document.originalFilename}`}
         disabled={downloading}
         onClick={download}
-        variant="outline"
+        variant="ghost"
       >
         Download
       </Button>
@@ -64,7 +64,7 @@ export function DocumentActions({
         <Button
           aria-label={`Delete ${document.originalFilename}`}
           onClick={remove}
-          variant="destructive"
+          variant="ghost"
         >
           Delete
         </Button>

@@ -33,6 +33,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { DatePicker } from "@/components/date-picker";
 import { localToday } from "@/lib/assessments";
 import {
   type AssetEventInput,
@@ -151,6 +152,10 @@ export function RecordEventDialog({
     []
   );
 
+  const handleOccurredOnChange = useCallback((value: string) => {
+    setValues((current) => ({ ...current, occurredOn: value }));
+  }, []);
+
   const handleTypeChange = useCallback((value: string | null) => {
     setValues((current) => ({ ...current, type: value ?? "" }));
   }, []);
@@ -259,14 +264,11 @@ export function RecordEventDialog({
             </Field>
             <Field>
               <FieldLabel htmlFor={`${id}-occurred-on`}>Event date</FieldLabel>
-              <Input
+              <DatePicker
                 {...errorProps("occurredOn")}
                 id={`${id}-occurred-on`}
                 max={today}
-                name="occurredOn"
-                onChange={handleChange}
-                required
-                type="date"
+                onChange={handleOccurredOnChange}
                 value={values.occurredOn}
               />
               {errorText("occurredOn")}

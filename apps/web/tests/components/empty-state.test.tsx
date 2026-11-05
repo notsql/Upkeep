@@ -28,3 +28,10 @@ it("renders the create action when one is given", () => {
     name: "New work order",
   });
 });
+
+it("shows a neutral icon by default", () => {
+  renderWithProviders(<EmptyState title="Nothing" />);
+  expect(
+    screen.getByRole("status").querySelector("svg.lucide-inbox")
+  ).not.toBeNull();
+});

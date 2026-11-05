@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { LayoutDashboard, Settings } from "lucide-react";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
@@ -40,11 +41,13 @@ export function EstateDetailsPage({ estateId }: { estateId: string }) {
                   params={{ estateId }}
                   to="/estates/$estateId/edit"
                 >
+                  <Settings aria-hidden="true" />
                   Estate settings
                 </Link>
               ) : undefined
             }
             description={estate.data.description || undefined}
+            icon={LayoutDashboard}
             status={
               <LifecycleStatusBadge
                 inactive={Boolean(estate.data.deactivatedAt)}

@@ -4,8 +4,9 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
   type InspectionResult,
@@ -138,8 +139,11 @@ export function InspectionDetail({
   if (query.isError) {
     return (
       <PageLayout>
-        <p role="alert">{query.error.message}</p>
-        <Button onClick={retry}>Retry inspection</Button>
+        <ErrorState
+          message={query.error.message}
+          onRetry={retry}
+          retryLabel="Retry inspection"
+        />
       </PageLayout>
     );
   }
@@ -153,7 +157,7 @@ export function InspectionDetail({
     asset.data.locationActive;
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
+      <DetailPageHeader
         breadcrumbs={[
           {
             label: asset.data?.name ?? "Asset",
@@ -162,16 +166,16 @@ export function InspectionDetail({
           },
           { label: "Inspection record" },
         ]}
-        description={
+        meta={
           asset.data
             ? `${asset.data.reference} · ${asset.data.name}`
-            : access.estateName
+            : undefined
         }
+        status={<Badge>{record.outcome === "PASS" ? "Pass" : "Fail"}</Badge>}
         title="Inspection record"
       />
       <Card>
         <CardContent className="space-y-5 pt-6">
-          <Badge>{record.outcome === "PASS" ? "Pass" : "Fail"}</Badge>
           <DetailCard>
             <div>
               <dt>Inspection date</dt>

@@ -23,6 +23,12 @@ import {
 import { screen, waitFor, within } from "@tests/test-utils";
 import { expect, it, vi } from "vitest";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
+
 const DOCUMENTS_HEADING = /^documents$/iu;
 const INVOICE_FILENAME = /invoice\.pdf/iu;
 const INVOICE_CONFIRMATION = /invoice\.pdf/u;
@@ -32,7 +38,7 @@ const DOWNLOAD_INVOICE = /download invoice\.pdf/iu;
 const UNLINK_BUTTON = /unlink/iu;
 const ASSET_REFERENCE = /TT-A0001/u;
 const RETRY_BUTTON = /retry/iu;
-const NO_LINKED_DOCUMENTS = /no.*documents.*link|no.*linked.*documents/iu;
+const NO_LINKED_DOCUMENTS = /no documents yet/iu;
 const NEXT_PAGE = /^next(?: page)?$|load more/iu;
 const SECOND_FILENAME = /second\.pdf/iu;
 

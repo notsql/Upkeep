@@ -9,15 +9,37 @@ import {
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
-import type { MonitoredSensor, SensorPolicy } from "@/lib/flatlined-sensors";
-import { SensorsPage } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page";
+import type {
+  MonitoredSensor,
+  SensorPolicy,
+  SensorView,
+} from "@/lib/flatlined-sensors";
+import {
+  SensorsLayout,
+  SensorsView,
+} from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page";
 
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), PUT: vi.fn(), POST: vi.fn() },
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    params,
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: Record<string, string>;
+  }) => (
+    <a
+      href={Object.entries(params ?? {}).reduce(
+        (path, [key, value]) => path.replace(`$${key}`, value),
+        to
+      )}
+    >
+      {children}
+    </a>
   ),
 }));
 let userId = "owner";
@@ -98,6 +120,14 @@ function serve() {
   }) as never);
 }
 
+function SensorsPage({ view = "REVIEW" }: { view?: SensorView }) {
+  return (
+    <SensorsLayout estateId="estate-id">
+      <SensorsView estateId="estate-id" view={view} />
+    </SensorsLayout>
+  );
+}
+
 async function expandPolicies() {
   const toggle = await screen.findByRole("button", { name: "Metric policies" });
   if (toggle.getAttribute("aria-expanded") !== "true") {
@@ -128,7 +158,7 @@ describe("SensorsPage", () => {
   });
 
   it("shows last observed flatline evidence and metric settings without claiming the asset is faulty", async () => {
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     await screen.findByRole("heading", { name: "Device monitoring" });
     const table = within(
@@ -140,7 +170,7 @@ describe("SensorsPage", () => {
     table.getByText("Unchanged for 120 seconds");
     screen.getByRole("table", { name: "Metric policies" });
     expect(
-      screen.queryByRole("form", { name: "Temperature policy" })
+      screen.queryByRole("dialog", { name: "Temperature policy" })
     ).toBeNull();
     screen.getByRole("button", { name: "Edit temperature policy" });
     expect(screen.queryByText("FAULTY")).toBeNull();
@@ -163,7 +193,7 @@ describe("SensorsPage", () => {
         },
       ];
       total = 2;
-      renderWithProviders(<SensorsPage estateId="estate-id" />);
+      renderWithProviders(<SensorsPage />);
       await expandPolicies();
       const results = within(
         await screen.findByRole(isMobile ? "list" : "table", {
@@ -180,12 +210,10 @@ describe("SensorsPage", () => {
 
   it("lets Council read settings and pauses without exposing edit controls or restricted asset links", async () => {
     canManage = false;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     await screen.findByText("Possible flatline");
-    expect(
-      screen.queryByRole("button", { name: "Save temperature policy" })
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save policy" })).toBeNull();
     expect(
       screen.queryByRole("button", { name: "Pause PUMP-01 temperature" })
     ).toBeNull();
@@ -196,8 +224,8 @@ describe("SensorsPage", () => {
     );
   });
 
-  it("summarizes saved policies and opens only one editor at a time", async () => {
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+  it("summarizes saved policies and edits each one in a dialog", async () => {
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     const summary = within(
       await screen.findByRole("table", { name: "Metric policies" })
@@ -205,24 +233,23 @@ describe("SensorsPage", () => {
     screen.getByText("1 of 2 configured");
     summary.getByText("2 minutes · tolerance 0 °C");
     summary.getByText("Not set");
-    expect(screen.queryByRole("form")).toBeNull();
-    const edit = summary.getByRole("button", {
-      name: "Edit temperature policy",
-    });
-    expect(edit.getAttribute("aria-expanded")).toBe("false");
-    fireEvent.click(edit);
-    screen.getByRole("form", { name: "Temperature policy" });
-    expect(document.activeElement).toBe(
-      screen.getByRole("heading", { name: "Temperature policy" })
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(
+      summary.getByRole("button", { name: "Edit temperature policy" })
     );
-    expect(edit.getAttribute("aria-expanded")).toBe("true");
+    const dialog = within(
+      await screen.findByRole("dialog", { name: "Temperature policy" })
+    );
+    dialog.getByRole("spinbutton", { name: "Threshold" });
+    expect(summary.queryByRole("spinbutton")).toBeNull();
+    fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     fireEvent.click(
       summary.getByRole("button", { name: "Set up pressure policy" })
     );
-    expect(
-      screen.queryByRole("form", { name: "Temperature policy" })
-    ).toBeNull();
-    const form = within(screen.getByRole("form", { name: "Pressure policy" }));
+    const form = within(
+      await screen.findByRole("dialog", { name: "Pressure policy" })
+    );
     expect(
       form.getByRole<HTMLInputElement>("spinbutton", { name: "Threshold" })
         .value
@@ -238,7 +265,7 @@ describe("SensorsPage", () => {
     "starts Metric policies collapsed with its count visible and expands on demand (mobile=%s)",
     async (isMobile) => {
       mobile = isMobile;
-      renderWithProviders(<SensorsPage estateId="estate-id" />);
+      renderWithProviders(<SensorsPage />);
       const toggle = await screen.findByRole("button", {
         name: "Metric policies",
       });
@@ -267,100 +294,44 @@ describe("SensorsPage", () => {
     }
   );
 
-  it("preserves the inline editor draft when the policy section is collapsed and reopened", async () => {
+  it("opens the mobile policy editor in a dialog, not inside the list", async () => {
     mobile = true;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit temperature policy" })
+    const list = within(
+      await screen.findByRole("list", { name: "Metric policies" })
     );
-    fireEvent.change(screen.getByRole("spinbutton", { name: "Threshold" }), {
-      target: { value: "10" },
-    });
-    const toggle = screen.getByRole("button", { name: "Metric policies" });
-    fireEvent.click(toggle);
-    expect(
-      screen.queryByRole("form", { name: "Temperature policy" })
-    ).toBeNull();
-    fireEvent.click(toggle);
-    expect(
-      screen.getByRole<HTMLInputElement>("spinbutton", { name: "Threshold" })
-        .value
-    ).toBe("10");
-    expect(api.PUT).not.toHaveBeenCalled();
-    const entries = within(
-      screen.getByRole("list", { name: "Metric policies" })
-    ).getAllByRole("listitem");
-    within(entries[0]).getByRole("form", { name: "Temperature policy" });
+    fireEvent.click(
+      list.getByRole("button", { name: "Set up pressure policy" })
+    );
+    within(
+      await screen.findByRole("dialog", { name: "Pressure policy" })
+    ).getByRole("spinbutton", { name: "Threshold" });
+    expect(list.queryByRole("spinbutton")).toBeNull();
   });
 
   it("cancels a policy draft without saving and restores the saved values on reopening", async () => {
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     const edit = await screen.findByRole("button", {
       name: "Edit temperature policy",
     });
     fireEvent.click(edit);
     const form = within(
-      screen.getByRole("form", { name: "Temperature policy" })
+      await screen.findByRole("dialog", { name: "Temperature policy" })
     );
     fireEvent.change(form.getByRole("spinbutton", { name: "Threshold" }), {
       target: { value: "10" },
     });
     fireEvent.click(form.getByRole("button", { name: "Cancel" }));
-    expect(screen.queryByRole("form")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(api.PUT).not.toHaveBeenCalled();
-    expect(document.activeElement).toBe(edit);
     fireEvent.click(edit);
     expect(
       within(
-        screen.getByRole("form", { name: "Temperature policy" })
+        await screen.findByRole("dialog", { name: "Temperature policy" })
       ).getByRole<HTMLInputElement>("spinbutton", { name: "Threshold" }).value
     ).toBe("2");
-  });
-
-  it("opens Edit directly beneath its mobile metric and Set up inside the selected metric entry", async () => {
-    mobile = true;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
-    await expandPolicies();
-    const list = within(
-      await screen.findByRole("list", { name: "Metric policies" })
-    );
-    const entries = list.getAllByRole("listitem");
-    fireEvent.click(
-      list.getByRole("button", { name: "Edit temperature policy" })
-    );
-    within(entries[0]).getByRole("form", { name: "Temperature policy" });
-    expect(within(entries[1]).queryByRole("form")).toBeNull();
-    fireEvent.click(
-      list.getByRole("button", { name: "Set up pressure policy" })
-    );
-    within(entries[1]).getByRole("form", { name: "Pressure policy" });
-    expect(within(entries[0]).queryByRole("form")).toBeNull();
-  });
-
-  it("inserts the desktop editor row immediately after the selected metric", async () => {
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
-    await expandPolicies();
-    const table = within(
-      await screen.findByRole("table", { name: "Metric policies" })
-    );
-    fireEvent.click(
-      table.getByRole("button", { name: "Edit temperature policy" })
-    );
-    const policyRows = table.getAllByRole("row");
-    within(policyRows[1]).getByText("Temperature");
-    within(policyRows[2]).getByRole("form", { name: "Temperature policy" });
-    within(policyRows[3]).getByText("Pressure");
-    fireEvent.click(
-      table.getByRole("button", { name: "Set up pressure policy" })
-    );
-    const updated = table.getAllByRole("row");
-    within(updated[2]).getByText("Pressure");
-    within(updated[3]).getByRole("form", { name: "Pressure policy" });
-    expect(
-      screen.queryByRole("form", { name: "Temperature policy" })
-    ).toBeNull();
   });
 
   it("closes the editor after a successful save and shows the updated summary", async () => {
@@ -371,13 +342,13 @@ describe("SensorsPage", () => {
       ];
       return Promise.resolve({ data: policies[0], response: new Response() });
     }) as never);
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Edit temperature policy" })
     );
     const form = within(
-      screen.getByRole("form", { name: "Temperature policy" })
+      screen.getByRole("dialog", { name: "Temperature policy" })
     );
     fireEvent.change(form.getByRole("spinbutton", { name: "Threshold" }), {
       target: { value: "10" },
@@ -385,11 +356,9 @@ describe("SensorsPage", () => {
     fireEvent.change(form.getByRole("spinbutton", { name: "Tolerance (°C)" }), {
       target: { value: "0.5" },
     });
-    fireEvent.click(
-      form.getByRole("button", { name: "Save temperature policy" })
-    );
+    fireEvent.click(form.getByRole("button", { name: "Save policy" }));
     await screen.findByText("10 minutes · tolerance 0.5 °C");
-    await waitFor(() => expect(screen.queryByRole("form")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
   it("prevents closing or switching the editor until the save completes", async () => {
@@ -400,43 +369,28 @@ describe("SensorsPage", () => {
           finish = () => resolve({ data: policy, response: new Response() });
         })) as never
     );
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Edit temperature policy" })
     );
     const form = within(
-      screen.getByRole("form", { name: "Temperature policy" })
+      screen.getByRole("dialog", { name: "Temperature policy" })
     );
-    fireEvent.click(
-      form.getByRole("button", { name: "Save temperature policy" })
-    );
+    fireEvent.click(form.getByRole("button", { name: "Save policy" }));
     await waitFor(() => expect(api.PUT).toHaveBeenCalled());
-    expect(
-      screen.getByRole<HTMLButtonElement>("button", { name: "Metric policies" })
-        .disabled
-    ).toBe(true);
     expect(
       form.getByRole<HTMLButtonElement>("button", { name: "Cancel" }).disabled
     ).toBe(true);
-    expect(
-      screen.getByRole<HTMLButtonElement>("button", {
-        name: "Set up pressure policy",
-      }).disabled
-    ).toBe(true);
-    expect(
-      screen.getByRole<HTMLButtonElement>("button", {
-        name: "Close temperature policy",
-      }).disabled
-    ).toBe(true);
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    screen.getByRole("dialog", { name: "Temperature policy" });
+    expect(screen.queryByRole("button", { name: "Close" })).toBeNull();
     await act(async () => finish?.());
-    await waitFor(() => expect(screen.queryByRole("form")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   });
 
   it("keeps an open policy draft during background refresh and a change to mobile layout", async () => {
-    const { rerender, queryClient } = renderWithProviders(
-      <SensorsPage estateId="estate-id" />
-    );
+    const { rerender, queryClient } = renderWithProviders(<SensorsPage />);
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Edit temperature policy" })
@@ -451,8 +405,7 @@ describe("SensorsPage", () => {
       })
     );
     mobile = true;
-    rerender(<SensorsPage estateId="estate-id" />);
-    await expandPolicies();
+    rerender(<SensorsPage />);
     expect(
       screen.getByRole<HTMLInputElement>("spinbutton", { name: "Threshold" })
         .value
@@ -463,7 +416,7 @@ describe("SensorsPage", () => {
 
   it("shows one mobile sensor list with all evidence and maintenance actions", async () => {
     mobile = true;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     const list = within(
       await screen.findByRole("list", { name: "Device metrics" })
@@ -486,7 +439,7 @@ describe("SensorsPage", () => {
   it("keeps mobile policies read-only for Council", async () => {
     mobile = true;
     canManage = false;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     const list = within(
       await screen.findByRole("list", { name: "Metric policies" })
@@ -503,16 +456,14 @@ describe("SensorsPage", () => {
       data: { ...policy, durationMinutes: 120, tolerance: 0.01 },
       response: new Response(),
     } as never);
-    const { queryClient } = renderWithProviders(
-      <SensorsPage estateId="estate-id" />
-    );
+    const { queryClient } = renderWithProviders(<SensorsPage />);
     await expandPolicies();
     const invalidate = vi.spyOn(queryClient, "invalidateQueries");
     fireEvent.click(
       await screen.findByRole("button", { name: "Edit temperature policy" })
     );
     const form = within(
-      await screen.findByRole("form", { name: "Temperature policy" })
+      await screen.findByRole("dialog", { name: "Temperature policy" })
     );
     await chooseOption(
       form.getByRole("combobox", { name: "Time unit" }),
@@ -524,9 +475,7 @@ describe("SensorsPage", () => {
     fireEvent.change(form.getByRole("spinbutton", { name: "Tolerance (°C)" }), {
       target: { value: "0.01" },
     });
-    fireEvent.click(
-      form.getByRole("button", { name: "Save temperature policy" })
-    );
+    fireEvent.click(form.getByRole("button", { name: "Save policy" }));
     await waitFor(() =>
       expect(api.PUT).toHaveBeenCalledWith(
         "/estates/{estateId}/flatline-policies/{metric}",
@@ -548,26 +497,26 @@ describe("SensorsPage", () => {
       error: { message: "Your estate role changed." },
       response: new Response(null, { status: 403 }),
     } as never);
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Edit temperature policy" })
     );
-    const element = await screen.findByRole("form", {
-      name: "Temperature policy",
-    });
-    const form = within(element);
+    const form = within(
+      await screen.findByRole("dialog", { name: "Temperature policy" })
+    );
+    const save = form.getByRole("button", { name: "Save policy" });
     const threshold = form.getByRole<HTMLInputElement>("spinbutton", {
       name: "Threshold",
     });
     fireEvent.change(threshold, { target: { value: "1.5" } });
-    fireEvent.submit(element);
+    fireEvent.click(save);
     expect(api.PUT).not.toHaveBeenCalled();
     expect((await screen.findByRole("alert")).textContent).toContain(
       "whole-number"
     );
     fireEvent.change(threshold, { target: { value: "10" } });
-    fireEvent.submit(element);
+    fireEvent.click(save);
     await screen.findByText("Your estate role changed.");
     expect(threshold.value).toBe("10");
   });
@@ -583,7 +532,7 @@ describe("SensorsPage", () => {
       },
       response: new Response(null, { status: 201 }),
     } as never);
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Pause PUMP-01 temperature" })
@@ -629,7 +578,7 @@ describe("SensorsPage", () => {
         },
       },
     ];
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     await screen.findByText("Maintenance paused");
     expect(
@@ -638,14 +587,26 @@ describe("SensorsPage", () => {
     expect(screen.queryByText("Unchanged for 120 seconds")).toBeNull();
   });
 
-  it("switches to all sensors for maintenance and sends the selected page", async () => {
-    total = 26;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
-    await expandPolicies();
-    screen.getByRole("tab", { name: "Needs review", selected: true });
-    fireEvent.click(
-      await screen.findByRole("tab", { name: "All device metrics" })
+  it("links the two device metric views as separate pages", () => {
+    renderWithProviders(<SensorsPage />);
+    const nav = within(
+      screen.getByRole("navigation", { name: "Device metric views" })
     );
+    expect(
+      nav
+        .getAllByRole("link")
+        .map((link) => [link.textContent, link.getAttribute("href")])
+    ).toEqual([
+      ["Needs review", "/estates/estate-id/sensors"],
+      ["All device metrics", "/estates/estate-id/sensors/all"],
+    ]);
+    expect(screen.queryByRole("tablist")).toBeNull();
+  });
+
+  it("pages through all device metrics and sends the selected page", async () => {
+    total = 26;
+    renderWithProviders(<SensorsPage view="ALL" />);
+    await expandPolicies();
     fireEvent.click(await screen.findByRole("button", { name: "Next page" }));
     await waitFor(() =>
       expect(api.GET).toHaveBeenCalledWith(
@@ -662,17 +623,21 @@ describe("SensorsPage", () => {
 
   it("reports review failures with retry instead of showing zero flatlines", async () => {
     reviewError = true;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     await screen.findByText("Device readings are temporarily unavailable.");
     screen.getByRole("button", { name: "Retry device metrics" });
-    expect(
-      screen.queryByText("No device metrics currently need review.")
-    ).toBeNull();
+    expect(screen.queryByText("Nothing needs review")).toBeNull();
   });
 
-  it("retains a policy draft during a failed review refresh and resumes editing after retry", async () => {
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+  it("retains a policy draft during a failed background review refresh and resumes editing after recovery", async () => {
+    const { queryClient } = renderWithProviders(<SensorsPage />);
+    const refresh = () =>
+      act(async () =>
+        queryClient.invalidateQueries({
+          queryKey: ["owner", "flatline", "estate-id"],
+        })
+      );
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Edit temperature policy" })
@@ -681,48 +646,47 @@ describe("SensorsPage", () => {
       target: { value: "10" },
     });
     reviewError = true;
-    fireEvent.click(screen.getByRole("button", { name: "Refresh readings" }));
+    await refresh();
     await screen.findByText("Device readings are temporarily unavailable.");
     const threshold = screen.getByRole<HTMLInputElement>("spinbutton", {
       name: "Threshold",
     });
     expect(threshold.value).toBe("10");
     expect(threshold.disabled).toBe(true);
+    screen.getByText("Saving is paused until device metrics load");
     expect(
-      screen.queryByRole("button", { name: "Save temperature policy" })
-    ).toBeNull();
+      screen.getByRole<HTMLButtonElement>("button", { name: "Save policy" })
+        .disabled
+    ).toBe(true);
+    expect(api.PUT).not.toHaveBeenCalled();
     reviewError = false;
-    fireEvent.click(
-      screen.getByRole("button", { name: "Retry device metrics" })
-    );
-    await screen.findByRole("button", { name: "Save temperature policy" });
+    await refresh();
+    await waitFor(() => expect(threshold.disabled).toBe(false));
     expect(threshold.value).toBe("10");
-    expect(threshold.disabled).toBe(false);
+    expect(
+      screen.queryByText("Saving is paused until device metrics load")
+    ).toBeNull();
   });
 
   it("keeps inactive estates readable without edit or pause actions", async () => {
     estateActive = false;
     rows = [];
     total = 0;
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     await screen.findByText(
       "This estate is inactive. Metric policies remain available to view."
     );
-    expect(
-      screen.queryByRole("button", { name: "Save temperature policy" })
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save policy" })).toBeNull();
   });
 
   it("uses a fresh account cache when the signed-in user changes", async () => {
-    const { rerender, queryClient } = renderWithProviders(
-      <SensorsPage estateId="estate-id" />
-    );
+    const { rerender, queryClient } = renderWithProviders(<SensorsPage />);
     await expandPolicies();
     await screen.findByText("Possible flatline");
     userId = "council";
     canManage = false;
-    rerender(<SensorsPage estateId="estate-id" />);
+    rerender(<SensorsPage />);
     await expandPolicies();
     await screen.findByText(
       "Only estate owners and assigned managers can change metric policies."
@@ -747,7 +711,7 @@ describe("SensorsPage", () => {
       vi.mocked(api.GET).mock.calls.filter((call) => call[0] === REVIEW_PATH)
         .length;
     try {
-      renderWithProviders(<SensorsPage estateId="estate-id" />);
+      renderWithProviders(<SensorsPage />);
       await expandPolicies();
       await screen.findByText("Possible flatline");
       const initial = countReviews();
@@ -774,7 +738,7 @@ describe("SensorsPage", () => {
       },
       response: new Response(null, { status: 409 }),
     } as never);
-    renderWithProviders(<SensorsPage estateId="estate-id" />);
+    renderWithProviders(<SensorsPage />);
     await expandPolicies();
     fireEvent.click(
       await screen.findByRole("button", { name: "Pause PUMP-01 temperature" })

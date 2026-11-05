@@ -7,8 +7,12 @@ import {
 } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { toDateValue } from "@/components/date-picker";
 import { assetQueryKey } from "@/lib/assets";
+
 import { ManualReadingForm } from "@/routes/_auth/estates/$estateId/readings/new/-components/manual-reading-form";
+
+const TWO_DIGITS = /\d{2}/u;
 
 const { get, post, permission } = vi.hoisted(() => ({
   get: vi.fn(),
@@ -118,9 +122,15 @@ async function fill(value = "21.5") {
   fireEvent.change(screen.getByRole("spinbutton", { name: "Value" }), {
     target: { value },
   });
-  fireEvent.change(screen.getByLabelText("Measured at"), {
-    target: { value: "2026-10-01T16:00" },
-  });
+  screen.getByRole("button", { name: "Measured at" });
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Measured at hour" }),
+    "16"
+  );
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Measured at minute" }),
+    "00"
+  );
 }
 
 describe("manual reading form", () => {
@@ -137,6 +147,14 @@ describe("manual reading form", () => {
     );
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(post.mock.calls[0][1].body.value).toBe(expected);
+  });
+  it("leaves the estate name out of the form header", async () => {
+    show();
+    await screen.findByRole("heading", {
+      level: 1,
+      name: "Record manual reading",
+    });
+    expect(screen.queryByText("Maple Estate")).toBeNull();
   });
   it("keeps retry identity for equivalent decimal text", async () => {
     fail = true;
@@ -203,10 +221,14 @@ describe("manual reading form", () => {
     const before = Date.now();
     show();
     await screen.findByRole("spinbutton", { name: "Value" });
-    const input = screen.getByLabelText("Measured at") as HTMLInputElement;
-    expect(Math.abs(new Date(input.value).getTime() - before)).toBeLessThan(
-      61_000
-    );
+    const hour = screen.getByRole("combobox", { name: "Measured at hour" });
+    const minute = screen.getByRole("combobox", { name: "Measured at minute" });
+    const time = `${hour.textContent?.match(TWO_DIGITS)?.[0]}:${minute.textContent?.match(TWO_DIGITS)?.[0]}`;
+    expect(
+      Math.abs(
+        new Date(`${toDateValue(new Date())}T${time}`).getTime() - before
+      )
+    ).toBeLessThan(61_000);
     screen.getByText("Unit: °C · Expected range: -40 to 150 °C");
   });
   it("requires an asset, metric and value and does not submit an empty form", async () => {
@@ -255,7 +277,7 @@ describe("manual reading form", () => {
         metric: "TEMPERATURE",
         value: "21.5",
         unit: "°C",
-        measuredAt: new Date("2026-10-01T16:00").toISOString(),
+        measuredAt: new Date(`${toDateValue(new Date())}T16:00`).toISOString(),
         submissionId: expect.any(String),
       }),
     });

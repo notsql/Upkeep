@@ -4,8 +4,9 @@ import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
 import { WorkOrderDocuments } from "./work-order-documents";
@@ -32,12 +33,12 @@ export function WorkOrderDetailPage({
   }
   if (order.isError && !(order.data && isTransientFailure(order.error))) {
     return (
-      <p role="alert">
-        Work order not found or unavailable.{" "}
-        <Button onClick={retry} variant="outline">
-          Retry
-        </Button>
-      </p>
+      <PageLayout>
+        <ErrorState
+          message="Work order not found or unavailable"
+          onRetry={retry}
+        />
+      </PageLayout>
     );
   }
   if (!order.data) {
@@ -46,7 +47,7 @@ export function WorkOrderDetailPage({
   const { data } = order;
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
+      <DetailPageHeader
         breadcrumbs={[
           {
             label: "Work orders",
@@ -55,7 +56,7 @@ export function WorkOrderDetailPage({
           },
           { label: data.reference },
         ]}
-        description={access.estateName}
+        meta={`Opened ${new Date(data.createdAt).toLocaleDateString()}`}
         status={<Badge variant="outline">{data.status}</Badge>}
         title={data.reference}
       />

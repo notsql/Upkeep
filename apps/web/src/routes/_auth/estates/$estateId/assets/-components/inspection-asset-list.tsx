@@ -3,26 +3,30 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Link } from "@tanstack/react-router";
-import { Boxes } from "lucide-react";
+import { Layers, Search, SearchX } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { FilterBar } from "@/components/filter-bar";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { Pagination } from "@/components/pagination";
 import { useInspectionAccess, useInspectionAssets } from "@/lib/inspections";
 
 export function InspectionAssetList({ estateId }: { estateId: string }) {
   const access = useInspectionAccess(estateId);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
-  const [cursor, setCursor] = useState<string>();
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
+  const cursor = cursors.at(-1);
   const assets = useInspectionAssets(estateId, query, cursor);
+  const panel = useFilterPanel(0);
   const find = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setQuery(search.trim());
-      setCursor(undefined);
+      setCursors([undefined]);
     },
     [search]
   );
@@ -31,10 +35,18 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
     []
   );
   const retry = useCallback(() => assets.refetch(), [assets.refetch]);
-  const first = useCallback(() => setCursor(undefined), []);
-  const next = useCallback(
-    () => setCursor(assets.data?.nextCursor ?? undefined),
-    [assets.data?.nextCursor]
+  const nextCursor = assets.data?.nextCursor;
+  const next = useCallback(() => {
+    if (nextCursor) {
+      setCursors((current) => [...current, nextCursor]);
+    }
+  }, [nextCursor]);
+  const previous = useCallback(
+    () =>
+      setCursors((current) =>
+        current.length > 1 ? current.slice(0, -1) : current
+      ),
+    []
   );
   if (access.pending) {
     return <LoadingState label="Loading access…" rows={2} />;
@@ -44,12 +56,16 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
   }
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
-        description="Browse asset context and record inspections."
+      <ListPageHeader
+        description="Asset context and inspections"
+        filters={{ activeCount: query ? 1 : 0, ...panel.toggleProps }}
+        icon={Layers}
         title="Assets"
       />
       <FilterBar
+        activeCount={query ? 1 : 0}
         label="Search assets"
+        {...panel.barProps}
         search={
           <form className="flex items-end gap-3" onSubmit={find}>
             <Field className="flex-1">
@@ -64,7 +80,10 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
                 value={search}
               />
             </Field>
-            <Button type="submit">Search</Button>
+            <Button type="submit" variant="outline">
+              <Search aria-hidden="true" />
+              Search
+            </Button>
           </form>
         }
       />
@@ -72,12 +91,11 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
         <LoadingState label="Loading assets…" variant="cards" />
       ) : null}
       {assets.isError ? (
-        <div>
-          <p role="alert">{assets.error.message}</p>
-          <Button onClick={retry} variant="outline">
-            Retry assets
-          </Button>
-        </div>
+        <ErrorState
+          message={assets.error.message}
+          onRetry={retry}
+          retryLabel="Retry assets"
+        />
       ) : null}
       <div className="grid gap-3 md:grid-cols-2">
         {assets.data?.items.map((asset) => (
@@ -102,23 +120,21 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
       </div>
       {assets.data?.items.length === 0 ? (
         <EmptyState
-          description={query ? "Try a different name or reference." : undefined}
-          icon={Boxes}
+          description={query ? "Try a different name or reference" : undefined}
+          icon={query ? SearchX : undefined}
           title={query ? "No matching assets" : "No assets yet"}
         />
       ) : null}
-      <div className="flex gap-3">
-        {cursor ? (
-          <Button onClick={first} variant="outline">
-            First page
-          </Button>
-        ) : null}
-        {assets.data?.nextCursor ? (
-          <Button onClick={next} variant="outline">
-            Next
-          </Button>
-        ) : null}
-      </div>
+      {nextCursor || cursors.length > 1 ? (
+        <Pagination
+          canNext={Boolean(nextCursor)}
+          canPrevious={cursors.length > 1}
+          disabled={assets.isFetching}
+          label="Asset pages"
+          onNext={next}
+          onPrevious={previous}
+        />
+      ) : null}
     </PageLayout>
   );
 }

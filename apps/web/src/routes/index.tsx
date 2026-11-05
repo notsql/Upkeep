@@ -1,10 +1,12 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { HomePending } from "@/components/route-pending";
 import { getSessionAccess } from "@/lib/access-server";
 import { estateDestination } from "@/lib/estate-destinations";
 import { pageHead } from "@/lib/page-title";
 import { HomePage } from "@/routes/-components/home-page";
 export const Route = createFileRoute("/")({
   component: HomePage,
+  pendingComponent: HomePending,
   beforeLoad: async ({ context }) => {
     const { user, access } = await getSessionAccess();
     if (user && access) {

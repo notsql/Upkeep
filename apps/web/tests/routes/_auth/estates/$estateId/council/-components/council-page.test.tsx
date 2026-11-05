@@ -18,6 +18,8 @@ vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to }: { children: ReactNode; to: string }) => (
     <a href={to}>{children}</a>
   ),
+  useNavigate: () => () => Promise.resolve(),
+  useSearch: () => ({}),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
@@ -33,7 +35,6 @@ const estate = {
 let currentEstate = estate;
 let allowed = false;
 let removed = false;
-const PENDING_TAB = /^Pending invitations/u;
 let cancelled = false;
 async function openInviteDialog(): Promise<void> {
   fireEvent.click(await screen.findByRole("button", { name: "Invite member" }));
@@ -303,8 +304,7 @@ it("confirms cancellation with the email before invalidating the pending list", 
       response: new Response(null, { status: 204 }),
     });
   });
-  renderWithProviders(<CouncilPage estateId="estate-id" />);
-  fireEvent.click(await screen.findByRole("tab", { name: PENDING_TAB }));
+  renderWithProviders(<CouncilPage estateId="estate-id" view="invitations" />);
   fireEvent.click(
     await screen.findByRole("button", {
       name: "Cancel invitation for bob@example.com",
@@ -414,7 +414,7 @@ it("does not expose owner removal controls to delegates", async () => {
   screen.getByRole("heading", { name: "Pending invitations" });
 });
 
-const ESTATES_GUIDANCE = /Existing users accept on Invitations\./u;
+const ESTATES_GUIDANCE = /existing users accept on Invitations/u;
 it("uses Invitations consistently in invitation guidance", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   await openInviteDialog();
@@ -464,13 +464,13 @@ it("shows members in a table with bounded pages and clamps after the roster shri
   expect(table.getAllByRole("row")).toHaveLength(21);
   expect(table.queryByText("Member 21")).toBeNull();
   screen.getByText("1–20 of 21 members");
-  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await table.findByText("Member 21");
   expect(table.queryByText("Member 1")).toBeNull();
   screen.getByText("21–21 of 21 members");
-  fireEvent.click(screen.getByRole("button", { name: "Previous members" }));
+  fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
   await table.findByText("Member 1");
-  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   roster = roster.slice(0, 20);
   await view.queryClient.invalidateQueries({
     queryKey: ["owner", "estate-members", "estate-id"],
@@ -512,7 +512,7 @@ it("resets the member page when switching estates", async () => {
   });
   const view = renderWithProviders(<CouncilPage estateId="estate-id" />);
   await screen.findByRole("table", { name: "Estate members" });
-  fireEvent.click(screen.getByRole("button", { name: "Next members" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await screen.findByText("21–21 of 21 members");
   view.rerender(<CouncilPage estateId="other-estate" />);
   await screen.findByText("1–20 of 21 members");

@@ -106,6 +106,36 @@ describe("estate asset register", () => {
     screen.getByRole("cell", { name: "Faulty" });
     screen.getByRole("cell", { name: "Block A › Level 1" });
   });
+  it("puts a Filters toggle and Create in the header, with filters collapsed", async () => {
+    vi.mocked(api.GET).mockImplementation(
+      async (path) =>
+        ({
+          data:
+            path === "/estates/{id}"
+              ? { id: "estate", name: "Maple Grove", owned: true }
+              : [],
+          response: new Response(),
+        }) as never
+    );
+    renderWithProviders(
+      <AssetRegisterPage
+        estateId="estate"
+        filters={{}}
+        onFiltersChange={vi.fn()}
+      />
+    );
+    const toggle = await screen.findByRole("button", { name: "Filters" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("search", { name: "Filter assets" })).toBeNull();
+    await screen.findByText("No assets yet");
+    const creates = screen.getAllByRole("link", { name: "Create" });
+    expect(creates).toHaveLength(2);
+    for (const link of creates) {
+      expect(link.getAttribute("href")).toBe("/estates/estate/assets/new");
+    }
+    fireEvent.click(toggle);
+    screen.getByRole("search", { name: "Filter assets" });
+  });
   it("offers clear filters for an empty filtered register", async () => {
     const change = vi.fn();
     renderWithProviders(
@@ -116,10 +146,9 @@ describe("estate asset register", () => {
       />
     );
     await screen.findByText("No matching assets");
-    within(screen.getByRole("search", { name: "Filter assets" })).getByRole(
-      "button",
-      { name: "Clear filters" }
-    );
+    const filterBar = screen.getByRole("search", { name: "Filter assets" });
+    within(filterBar).getByRole("button", { name: "Clear filters" });
+    within(filterBar).getByText("2 active");
     const clear = screen.getAllByRole("button", { name: "Clear filters" });
     expect(clear).toHaveLength(2);
     fireEvent.click(clear[1] as HTMLElement);
@@ -158,7 +187,7 @@ describe("estate asset register", () => {
     await screen.findByText(
       "This estate is inactive. Existing assets remain available."
     );
-    expect(screen.queryByRole("link", { name: "Register asset" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   });
 });
 
@@ -368,7 +397,7 @@ it("applies mobile filter drafts, discards Cancel and keeps search when clearing
   mockMobileViewport();
   renderWithProviders(<MobileRegister />);
   expect(screen.queryByRole("combobox", { name: "Condition" })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters" }));
   await screen.findByRole("dialog", { name: "Filter assets" });
   await chooseOption(
     screen.getByRole("combobox", { name: "Condition" }),
@@ -384,7 +413,7 @@ it("applies mobile filter drafts, discards Cancel and keeps search when clearing
   );
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   expect(screen.queryByRole("dialog")).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters" }));
   expect(
     screen.getByRole("combobox", { name: "Condition" }).textContent
   ).toContain("All conditions");
@@ -393,7 +422,7 @@ it("applies mobile filter drafts, discards Cancel and keeps search when clearing
     "Faulty"
   );
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
-  screen.getByRole("button", { name: "Filters (1)" });
+  screen.getByRole("button", { name: "Choose filters (1)" });
   await waitFor(() =>
     expect(api.GET).toHaveBeenCalledWith("/estates/{estateId}/assets", {
       params: {
@@ -402,12 +431,12 @@ it("applies mobile filter drafts, discards Cancel and keeps search when clearing
       },
     })
   );
-  fireEvent.click(screen.getByRole("button", { name: "Filters (1)" }));
+  fireEvent.click(screen.getByRole("button", { name: "Choose filters (1)" }));
   fireEvent.click(
     screen.getByRole("button", { name: "Clear secondary filters" })
   );
   fireEvent.click(screen.getByRole("button", { name: "Apply filters" }));
-  screen.getByRole("button", { name: "Filters" });
+  screen.getByRole("button", { name: "Choose filters" });
   expect(
     screen.getByRole<HTMLInputElement>("textbox", { name: "Search assets" })
       .value

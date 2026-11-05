@@ -1,5 +1,4 @@
 import type { components } from "@proj/api/schema";
-import { Button } from "@proj/ui/components/button";
 import {
   Table,
   TableBody,
@@ -9,6 +8,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { useCallback, useEffect, useState } from "react";
+import { Pagination } from "@/components/pagination";
 import { MemberPermission } from "./member-permission";
 import type { RoleOption } from "./role-picker";
 
@@ -67,33 +67,14 @@ export function EstateMembersTable({
           ))}
         </TableBody>
       </Table>
-      <nav
-        aria-label="Member pages"
-        className="flex flex-wrap items-center justify-between gap-3"
-      >
-        <p className="text-muted-foreground text-sm">
-          {members.length ? start + 1 : 0}–
-          {Math.min(start + 20, members.length)} of {members.length} members
-        </p>
-        <div className="flex gap-2">
-          <Button
-            aria-label="Previous members"
-            disabled={page === 0}
-            onClick={previous}
-            variant="outline"
-          >
-            Previous
-          </Button>
-          <Button
-            aria-label="Next members"
-            disabled={page === lastPage}
-            onClick={next}
-            variant="outline"
-          >
-            Next
-          </Button>
-        </div>
-      </nav>
+      <Pagination
+        canNext={page < lastPage}
+        canPrevious={page > 0}
+        label="Member pages"
+        onNext={next}
+        onPrevious={previous}
+        summary={`${members.length ? start + 1 : 0}–${Math.min(start + 20, members.length)} of ${members.length} members`}
+      />
     </div>
   );
 }

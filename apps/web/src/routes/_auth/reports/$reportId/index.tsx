@@ -1,7 +1,8 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { useCallback } from "react";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
@@ -23,9 +24,12 @@ function ReportDetailPage() {
   const { reportId } = useParams({ strict: false });
   const { estateId } = useSearch({ strict: false });
   const report = useReport(reportId ?? "");
+  const retry = useCallback(() => {
+    report.refetch();
+  }, [report]);
   return (
     <PageLayout>
-      <PageHeader
+      <DetailPageHeader
         breadcrumbs={[
           {
             label: "My reports",
@@ -40,9 +44,7 @@ function ReportDetailPage() {
         <LoadingState label="Loading report…" rows={1} />
       ) : null}
       {report.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>Report not found or unavailable.</AlertDescription>
-        </Alert>
+        <ErrorState message="Report not found or unavailable" onRetry={retry} />
       ) : null}
       {report.data ? (
         <ReportCard report={report.data}>

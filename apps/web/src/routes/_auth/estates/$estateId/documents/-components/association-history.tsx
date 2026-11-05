@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import type { AssociationDialogState } from "./use-document-work-order-dialog";
 
@@ -16,12 +17,11 @@ export function AssociationHistory({
         <LoadingState label="Loading association history…" rows={2} />
       ) : null}
       {history.isError ? (
-        <p role="alert">
-          Unable to load association history.{" "}
-          <Button onClick={retryHistory} type="button" variant="outline">
-            Retry history
-          </Button>
-        </p>
+        <ErrorState
+          message="Unable to load association history"
+          onRetry={retryHistory}
+          retryLabel="Retry history"
+        />
       ) : null}
       {!history.isError && history.data?.items.length === 0 ? (
         <p>No association changes recorded.</p>

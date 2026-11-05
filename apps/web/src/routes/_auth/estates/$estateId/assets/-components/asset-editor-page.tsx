@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
   type AssetInput,
@@ -31,7 +31,7 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
   }, [navigate, estateId]);
   return (
     <PageLayout className="max-w-3xl">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: "Assets",
@@ -40,7 +40,7 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
           },
           { label: "Register asset" },
         ]}
-        description="Add equipment and its location to this estate."
+        description="Equipment and its location"
         title="Register asset"
       />
       <AssetForm estateId={estateId} onCancel={cancel} onSave={save} />
@@ -77,7 +77,7 @@ export function EditAssetPage({
   }, [navigate, estateId, assetId]);
   return (
     <PageLayout className="max-w-3xl">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: "Assets",
@@ -91,7 +91,7 @@ export function EditAssetPage({
           },
           { label: "Edit" },
         ]}
-        description="Update equipment details without changing its reference."
+        description="Reference stays the same"
         title="Edit asset"
       />
       {asset.isPending ? (

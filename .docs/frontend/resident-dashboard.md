@@ -13,18 +13,21 @@ resident estate) to `ResidentDashboard`.
 
 - `PageLayout` + `PageHeader` titled "Dashboard", action "Report a fault"
   (`buttonVariants()` link to `/reports/new`, with `estateId` when known).
-- Loading: `LoadingState` "Loading reports…". Error: destructive `Alert`
-  "Unable to load reports.".
+- Loading: `LoadingState` "Loading reports…". Error: `ErrorState` "Unable to
+  load reports" with Retry (refetches the list).
 - Three count `Card`s (each `role="region"` named by its label): **Open**,
   **In progress**, **Resolved**, read from `counts` on the response.
-- "Recent reports" section (`h2`): the first 5 `items` as shared `ReportCard`s,
+- "Recent reports" section (`SectionHeading` h2 with ClipboardList icon): the first 5 `items` as shared `ReportCard`s,
   each title linking to `/reports/$reportId` (keeping `estateId`), plus an
   outline "View all" link to `/reports` when there are items.
-- Empty state: `EmptyState` "No reports yet" ("You haven't reported any
-  faults yet.") with a "Report a fault" link action.
+- Empty state: `EmptyState` "No reports yet" ("Reported faults appear
+  here", default Inbox icon - ClipboardList is the section heading's) with a
+  "Report a fault" link action.
+- PageHeader "Dashboard" uses `icon={LayoutDashboard}`; "Report a fault" links
+  lead with ClipboardPenLine (the sidebar's icon).
 
-shadcn: `Card`, `CardHeader`, `CardTitle`, `CardContent`, `Alert`,
-`AlertDescription`, `buttonVariants`.
+shadcn: `Card`, `CardHeader`, `CardTitle`, `CardContent`, `buttonVariants`
+(plus the shared `ErrorState`).
 
 The resident sidebar (`components/estates/resident-navigation.ts`) shows
 "Dashboard" -> `/` only for resident-only accounts; mixed resident + staff

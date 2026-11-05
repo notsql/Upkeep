@@ -73,6 +73,7 @@ const done = check({
 const state = vi.hoisted(() => ({
   data: undefined as unknown,
   error: null as Error | null,
+  refetch: vi.fn(),
   generate: vi.fn(),
   canCreate: true,
 }));
@@ -98,6 +99,7 @@ beforeEach(() => {
     ],
   };
   state.error = null;
+  state.refetch = vi.fn();
   state.generate = vi.fn(() => Promise.resolve({ added: 2 }));
   state.canCreate = true;
   vi.mocked(toast.success).mockReset();
@@ -109,6 +111,7 @@ vi.mock("@/lib/inspection-list", () => ({
     data: state.data,
     error: state.error,
     isPending: !(state.data || state.error),
+    refetch: state.refetch,
   }),
   useGenerateInspectionList: () => ({
     mutateAsync: state.generate,
@@ -308,6 +311,8 @@ it("shows a load error", () => {
   state.error = new Error("Estate not found.");
   renderWithProviders(<InspectionsPage estateId="oak" />);
   expect(screen.getByRole("alert").textContent).toContain("Estate not found.");
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  expect(state.refetch).toHaveBeenCalled();
 });
 
 it("explains that nothing can be due when no category is flagged", () => {

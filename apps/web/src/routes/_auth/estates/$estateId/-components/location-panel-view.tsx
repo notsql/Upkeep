@@ -8,7 +8,6 @@ import {
 } from "@/lib/locations";
 import type { AddFloorsResult } from "@/routes/_auth/estates/$estateId/-components/add-floors-form";
 import { AddLevelsTabs } from "@/routes/_auth/estates/$estateId/-components/add-levels-tabs";
-import { DeactivateLocation } from "@/routes/_auth/estates/$estateId/-components/deactivate-location";
 import {
   LocationForm,
   type LocationFormValues,
@@ -26,7 +25,6 @@ export function PanelView({
   onAddFloors,
   onCreate,
   onUpdate,
-  onDeactivate,
   onCancel,
 }: {
   onPendingChange: (pending: boolean) => void;
@@ -39,7 +37,6 @@ export function PanelView({
   ) => Promise<AddFloorsResult>;
   onCreate: (type: LocationType, values: LocationFormValues) => Promise<void>;
   onUpdate: (node: LocationNode, values: LocationFormValues) => Promise<void>;
-  onDeactivate: (node: LocationNode) => Promise<void>;
   onCancel: () => void;
 }) {
   const save = useCallback(
@@ -64,13 +61,6 @@ export function PanelView({
         : Promise.resolve({ created: [], skipped: [] }),
     [panel, onAddFloors]
   );
-  const confirm = useCallback(
-    () =>
-      panel.kind === "deactivate"
-        ? onDeactivate(panel.node)
-        : Promise.resolve(),
-    [panel, onDeactivate]
-  );
   if (panel.kind === "levels") {
     const { node } = panel;
     return (
@@ -85,14 +75,8 @@ export function PanelView({
     );
   }
   if (panel.kind === "deactivate") {
-    return (
-      <DeactivateLocation
-        name={panel.node.name}
-        onCancel={onCancel}
-        onConfirm={confirm}
-        onPendingChange={onPendingChange}
-      />
-    );
+    // Deactivation is a ConfirmDialog of its own (see LocationsSection).
+    return null;
   }
   if (panel.kind === "edit") {
     const { node } = panel;

@@ -1,5 +1,4 @@
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +9,13 @@ import {
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import { Textarea } from "@proj/ui/components/textarea";
-import { History } from "lucide-react";
+import { ScrollText } from "lucide-react";
 import { type SubmitEvent, useCallback, useState } from "react";
+import { DatePicker } from "@/components/date-picker";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
+import { SectionCard } from "@/components/section-card";
 import {
   type Asset,
   retirementDateError,
@@ -61,11 +63,6 @@ function RetirementEdit({
       setReason(event.target.value),
     []
   );
-  const changeDate = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-      setDate(event.target.value),
-    []
-  );
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (!(open || correction.isPending)) {
@@ -85,18 +82,17 @@ function RetirementEdit({
         </DialogHeader>
         <form className="grid gap-4" onSubmit={submit}>
           <Label htmlFor="correction-date">Retirement date</Label>
-          <Input
+          <DatePicker
             aria-describedby={
               dateError ? "correction-date-error" : "correction-date-help"
             }
             aria-invalid={Boolean(dateError)}
+            clearable={false}
             disabled={correction.isPending}
             id="correction-date"
             max={today}
             min={asset.installedOn ?? undefined}
-            onChange={changeDate}
-            required
-            type="date"
+            onChange={setDate}
             value={date}
           />
           <p
@@ -236,80 +232,77 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
   const openRestoration = useCallback(() => setMode("restore"), []);
   const openCorrection = useCallback(() => setMode("edit"), []);
   return (
-    <Card className="mt-6">
-      <CardContent>
-        <section aria-label="Asset lifecycle" className="space-y-3">
-          {asset.deactivatedAt ? (
-            <>
-              <dl>
-                <dt>Retirement date</dt>
-                <dd>{asset.retiredOn ?? "Not recorded"}</dd>
-                <dt>Retirement reason</dt>
-                <dd className="whitespace-pre-wrap">
-                  {asset.retirementReason ?? "Not recorded"}
-                </dd>
-              </dl>
-              <div className="flex flex-wrap gap-4">
-                <Button onClick={openCorrection} variant="outline">
-                  Edit retirement information
-                </Button>
-                <Button onClick={openRestoration}>Restore asset</Button>
-              </div>
-            </>
-          ) : null}
-          <h2 className="text-xl font-semibold">Lifecycle history</h2>
-          {history.isPending ? (
-            <LoadingState label="Loading lifecycle history…" rows={2} />
-          ) : null}
-          {history.error ? (
-            <div role="alert">
-              {history.error.message}
-              <Button onClick={retryHistory}>Retry history</Button>
+    <SectionCard icon={ScrollText} title="Lifecycle history">
+      <div className="space-y-3">
+        {asset.deactivatedAt ? (
+          <>
+            <dl>
+              <dt>Retirement date</dt>
+              <dd>{asset.retiredOn ?? "Not recorded"}</dd>
+              <dt>Retirement reason</dt>
+              <dd className="whitespace-pre-wrap">
+                {asset.retirementReason ?? "Not recorded"}
+              </dd>
+            </dl>
+            <div className="flex flex-wrap gap-4">
+              <Button onClick={openCorrection} variant="outline">
+                Edit retirement information
+              </Button>
+              <Button onClick={openRestoration}>Restore asset</Button>
             </div>
-          ) : null}
-          {history.data?.length === 0 ? (
-            <EmptyState icon={History} title="No lifecycle events recorded." />
-          ) : null}
-          <ol aria-label="Lifecycle events" className="grid gap-3">
-            {history.data?.map((event) => (
-              <li
-                className="grid gap-2 rounded-lg border p-3 text-sm"
-                key={event.id}
-              >
-                <p>
-                  {actionLabels[event.action ?? ""] ?? event.action} ·{" "}
-                  {event.occurredAt
-                    ? new Date(event.occurredAt).toLocaleString("en-SG", {
-                        timeZone: "Asia/Singapore",
-                      })
-                    : "Not recorded"}{" "}
-                  (Singapore)
-                </p>
-                <p className="text-muted-foreground break-all">
-                  By {event.actorUserId}
-                </p>
-                <p>
-                  Previous retirement:{" "}
-                  {event.previousRetiredOn ?? "Not recorded"} —{" "}
-                  {event.previousRetirementReason ?? "Not recorded"}
-                </p>
-                <p>
-                  Result:{" "}
-                  {event.deactivatedAt
-                    ? `${event.retiredOn ?? "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
-                    : "Active"}
-                </p>
-              </li>
-            ))}
-          </ol>
-          {mode === "edit" ? (
-            <RetirementEdit asset={asset} onClose={closeDialog} />
-          ) : null}
-          {mode === "restore" ? (
-            <Restoration asset={asset} onClose={closeDialog} />
-          ) : null}
-        </section>
-      </CardContent>
-    </Card>
+          </>
+        ) : null}
+        {history.isPending ? (
+          <LoadingState label="Loading lifecycle history…" rows={2} />
+        ) : null}
+        {history.error ? (
+          <ErrorState
+            message={history.error.message}
+            onRetry={retryHistory}
+            retryLabel="Retry history"
+          />
+        ) : null}
+        {history.data?.length === 0 ? (
+          <EmptyState title="No lifecycle events yet" />
+        ) : null}
+        <ol aria-label="Lifecycle events" className="grid gap-3">
+          {history.data?.map((event) => (
+            <li
+              className="grid gap-2 rounded-lg border p-3 text-sm"
+              key={event.id}
+            >
+              <p>
+                {actionLabels[event.action ?? ""] ?? event.action} ·{" "}
+                {event.occurredAt
+                  ? new Date(event.occurredAt).toLocaleString("en-SG", {
+                      timeZone: "Asia/Singapore",
+                    })
+                  : "Not recorded"}{" "}
+                (Singapore)
+              </p>
+              <p className="text-muted-foreground break-all">
+                By {event.actorUserId}
+              </p>
+              <p>
+                Previous retirement: {event.previousRetiredOn ?? "Not recorded"}{" "}
+                — {event.previousRetirementReason ?? "Not recorded"}
+              </p>
+              <p>
+                Result:{" "}
+                {event.deactivatedAt
+                  ? `${event.retiredOn ?? "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
+                  : "Active"}
+              </p>
+            </li>
+          ))}
+        </ol>
+        {mode === "edit" ? (
+          <RetirementEdit asset={asset} onClose={closeDialog} />
+        ) : null}
+        {mode === "restore" ? (
+          <Restoration asset={asset} onClose={closeDialog} />
+        ) : null}
+      </div>
+    </SectionCard>
   );
 }

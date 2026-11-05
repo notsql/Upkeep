@@ -10,10 +10,12 @@ import {
 } from "@proj/ui/components/card";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
+import { OctagonAlert } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
@@ -41,15 +43,13 @@ function EstateCreationStatus({
   }
   if (isError) {
     return (
-      <Alert className="mt-6" role="alert" variant="destructive">
-        <AlertDescription>
-          Estate created, but we could not refresh your access or open the
-          estate. Try again to continue.
-          <Button onClick={retry} variant="outline">
-            Retry access
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <div className="mt-6">
+        <ErrorState
+          message="Estate created, but we could not refresh your access or open the estate. Try again to continue."
+          onRetry={retry}
+          retryLabel="Retry access"
+        />
+      </div>
     );
   }
   return (
@@ -60,21 +60,23 @@ function EstateCreationStatus({
 }
 
 function EstateEditorHeader({ editing }: { editing: boolean }) {
+  // Estate settings is a top-level estate section, so it has no breadcrumbs.
   if (editing) {
     return (
-      <PageHeader
-        description="Keep estate identity and address details organised."
+      <FormPageHeader
+        breadcrumbs={[]}
+        description="Identity and address"
         title="Estate settings"
       />
     );
   }
   return (
-    <PageHeader
+    <FormPageHeader
       breadcrumbs={[
         { label: "Estates", to: "/estates" },
         { label: "Create estate" },
       ]}
-      description="Keep estate identity and address details organised."
+      description="Identity and address"
       title="Create estate"
     />
   );
@@ -121,7 +123,13 @@ function EstateDangerZone({
     <Card className="border-destructive/50 mt-6">
       <CardHeader>
         <CardTitle>
-          <h2>Danger zone</h2>
+          <h2 className="flex items-center gap-2">
+            <OctagonAlert
+              aria-hidden="true"
+              className="text-muted-foreground size-4"
+            />
+            Danger zone
+          </h2>
         </CardTitle>
         <CardDescription>
           Deactivating keeps existing records but stops new assets and reports.

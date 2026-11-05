@@ -1,7 +1,4 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Card, CardContent } from "@proj/ui/components/card";
-import { Field, FieldError, FieldLabel } from "@proj/ui/components/field";
-import { Input } from "@proj/ui/components/input";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Table,
   TableBody,
@@ -13,9 +10,16 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { Receipt } from "lucide-react";
-import { type ChangeEvent, useCallback, useId, useState } from "react";
+import { useCallback, useId, useState } from "react";
+import {
+  DateRangePicker,
+  type DateRangeValue,
+} from "@/components/date-range-picker";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
+import { SectionCard } from "@/components/section-card";
 import { assetEventTypeLabel, useAssetEvents } from "@/lib/asset-events";
 import {
   useAssetWorkOrderCompletions,
@@ -83,7 +87,7 @@ function CostTable({
   const other = sum(rows.map((row) => row.other));
   return (
     <>
-      <Table className="mt-4">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Date</TableHead>
@@ -153,18 +157,13 @@ export function AssetCostsSection({
   const events = useAssetEvents(estateId, assetId);
   const completions = useAssetWorkOrderCompletions(estateId, assetId);
   const access = useWorkOrderAccess(estateId);
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const handleFrom = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setFrom(event.target.value),
-    []
-  );
-  const handleTo = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setTo(event.target.value),
-    []
-  );
-
-  const reversed = Boolean(from && to && from > to);
+  const [period, setPeriod] = useState<DateRangeValue>({ from: "", to: "" });
+  const retry = useCallback(() => {
+    events.refetch();
+    completions.refetch();
+  }, [events.refetch, completions.refetch]);
+  const clearPeriod = useCallback(() => setPeriod({ from: "", to: "" }), []);
+  const { from, to } = period;
   const rows: CostRow[] = [
     ...(events.data ?? []).map((event) => ({
       at: event.occurredOn,
@@ -193,67 +192,47 @@ export function AssetCostsSection({
   const loaded = Boolean(events.data && completions.data);
 
   return (
-    <Card className="mt-6">
-      <CardContent>
-        <section aria-labelledby="costs-heading">
-          <h2 className="text-xl font-semibold" id="costs-heading">
-            Maintenance costs
-          </h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor={`${id}-from`}>From</FieldLabel>
-              <Input
-                aria-describedby={reversed ? `${id}-range-error` : undefined}
-                aria-invalid={reversed || undefined}
-                id={`${id}-from`}
-                onChange={handleFrom}
-                type="date"
-                value={from}
+    <SectionCard icon={Receipt} title="Maintenance costs">
+      <div className="grid gap-4">
+        <div>
+          <FilterBar
+            activeCount={from || to ? 1 : 0}
+            label="Filter costs"
+            onClear={clearPeriod}
+          >
+            <Field className="w-full sm:w-72">
+              <FieldLabel htmlFor={`${id}-period`}>Period</FieldLabel>
+              <DateRangePicker
+                id={`${id}-period`}
+                onChange={setPeriod}
+                value={period}
               />
             </Field>
-            <Field>
-              <FieldLabel htmlFor={`${id}-to`}>To</FieldLabel>
-              <Input
-                id={`${id}-to`}
-                onChange={handleTo}
-                type="date"
-                value={to}
-              />
-            </Field>
-          </div>
-          {reversed ? (
-            <FieldError className="mt-2" id={`${id}-range-error`}>
-              The start date must be on or before the end date.
-            </FieldError>
-          ) : null}
-          {events.isPending || completions.isPending ? (
-            <LoadingState label="Loading costs…" rows={2} />
-          ) : null}
-          {events.error || completions.error ? (
-            <Alert className="mt-4" variant="destructive">
-              <AlertDescription>
-                {(events.error ?? completions.error)?.message}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {loaded && !reversed && rows.length === 0 ? (
-            <div className="mt-4">
-              <EmptyState
-                description="Try a longer period."
-                icon={Receipt}
-                title="No maintenance costs in this period."
-              />
-            </div>
-          ) : null}
-          {loaded && !reversed && rows.length > 0 ? (
-            <CostTable
-              canView={Boolean(access.canView)}
-              estateId={estateId}
-              rows={rows}
-            />
-          ) : null}
-        </section>
-      </CardContent>
-    </Card>
+          </FilterBar>
+        </div>
+        {events.isPending || completions.isPending ? (
+          <LoadingState label="Loading costs…" rows={2} />
+        ) : null}
+        {events.error || completions.error ? (
+          <ErrorState
+            message={(events.error ?? completions.error)?.message ?? ""}
+            onRetry={retry}
+          />
+        ) : null}
+        {loaded && rows.length === 0 ? (
+          <EmptyState
+            description="Try a longer period"
+            title="No costs in this period"
+          />
+        ) : null}
+        {loaded && rows.length > 0 ? (
+          <CostTable
+            canView={Boolean(access.canView)}
+            estateId={estateId}
+            rows={rows}
+          />
+        ) : null}
+      </div>
+    </SectionCard>
   );
 }

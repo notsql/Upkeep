@@ -1,9 +1,13 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
-import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Activity } from "lucide-react";
 import { useCallback, useState } from "react";
-import { PageHeader } from "@/components/page-header";
+import { ErrorState } from "@/components/error-state";
+import { useFilterPanel } from "@/components/filter-bar";
+import {
+  CreateButton,
+  type CreateButtonProps,
+} from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAppAccess } from "@/lib/access";
 import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
@@ -14,7 +18,10 @@ import {
   useReadingAssets,
 } from "@/lib/readings";
 import { ReadingExport } from "./reading-export";
-import { ReadingFilterControls } from "./reading-filter-controls";
+import {
+  countReadingFilters,
+  ReadingFilterControls,
+} from "./reading-filter-controls";
 import { ReadingResults } from "./reading-results";
 
 function selectedLabel(
@@ -58,6 +65,8 @@ export function EstateReadingsPage({
     [filters, onFiltersChange]
   );
   const retryAssets = useCallback(() => assets.refetch(), [assets.refetch]);
+  const activeCount = countReadingFilters(filters);
+  const panel = useFilterPanel(activeCount);
   const error = readingFilterError(filters);
   const selected =
     chosen?.id === filters.assetId
@@ -77,26 +86,19 @@ export function EstateReadingsPage({
       </Alert>
     );
   }
+  const create: CreateButtonProps | undefined = estate?.canRecordReadings
+    ? {
+        params: { estateId },
+        search: { assetId: filters.assetId, metric: filters.metric },
+        to: "/estates/$estateId/readings/new",
+      }
+    : undefined;
   return (
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
-      <PageHeader
-        actions={
-          estate?.canRecordReadings ? (
-            <Button
-              render={
-                <Link
-                  params={{ estateId }}
-                  search={{ assetId: filters.assetId, metric: filters.metric }}
-                  to="/estates/$estateId/readings/new"
-                />
-              }
-            >
-              <Plus aria-hidden="true" />
-              Record manual reading
-            </Button>
-          ) : null
-        }
-        description={estate?.estateName}
+      <ListPageHeader
+        create={create}
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={Activity}
         title="Readings"
       />
       <ReadingExport
@@ -116,20 +118,19 @@ export function EstateReadingsPage({
         filters={filters}
         onChoose={chooseAsset}
         onFiltersChange={onFiltersChange}
+        {...panel.barProps}
       />
       {assets.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {assets.error.message}
-            <Button onClick={retryAssets} variant="outline">
-              Retry assets
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message={assets.error.message}
+          onRetry={retryAssets}
+          retryLabel="Retry assets"
+        />
       ) : null}
       <ReadingResults
         assetsPending={assets.isPending}
         assetTotal={assets.data?.totalItems}
+        createAction={create ? <CreateButton {...create} /> : undefined}
         filters={filters}
         onFiltersChange={onFiltersChange}
         readings={readings}

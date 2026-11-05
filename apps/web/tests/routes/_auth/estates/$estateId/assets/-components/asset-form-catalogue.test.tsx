@@ -12,6 +12,7 @@ import { api } from "@/lib/api";
 import type { Location } from "@/lib/locations";
 import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form";
 
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
 }));

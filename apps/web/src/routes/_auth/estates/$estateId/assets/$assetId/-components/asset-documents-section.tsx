@@ -1,6 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
-import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
 import {
   Table,
   TableBody,
@@ -11,7 +8,10 @@ import {
 import { FileText } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
+import { Pagination } from "@/components/pagination";
+import { SectionCard } from "@/components/section-card";
 import {
   useAssetDocumentAccess,
   useAssetDocuments,
@@ -51,7 +51,8 @@ function AssetDocumentsContent({
   assetId: string;
   canWrite: boolean;
 }) {
-  const [cursor, setCursor] = useState<string>();
+  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
+  const cursor = cursors.at(-1);
   const [selected, setSelected] = useState<EstateDocument>();
   const documents = useAssetDocuments(estateId, assetId, cursor);
   const association = useDocumentAsset(estateId, selected?.id ?? "");
@@ -62,40 +63,41 @@ function AssetDocumentsContent({
     [download.mutate]
   );
   const retry = useCallback(() => documents.refetch(), [documents.refetch]);
-  const next = useCallback(
-    () => setCursor(documents.data?.nextCursor ?? undefined),
-    [documents.data?.nextCursor]
+  const nextCursor = documents.data?.nextCursor;
+  const next = useCallback(() => {
+    if (nextCursor) {
+      setCursors((current) => [...current, nextCursor]);
+    }
+  }, [nextCursor]);
+  const previous = useCallback(
+    () =>
+      setCursors((current) =>
+        current.length > 1 ? current.slice(0, -1) : current
+      ),
+    []
   );
-  const first = useCallback(() => setCursor(undefined), []);
   const retryAssociation = useCallback(
     () => association.refetch(),
     [association.refetch]
   );
   return (
-    <Card>
-      <CardHeader>
-        <h2 className="text-lg font-semibold">Documents</h2>
-      </CardHeader>
-      <CardContent className="min-w-0 space-y-4">
+    <SectionCard icon={FileText} title="Documents">
+      <div className="min-w-0 space-y-4">
         {documents.isPending ? (
           <LoadingState label="Loading documents…" rows={2} />
         ) : null}
         {documents.isError ? (
-          <Alert variant="destructive">
-            <AlertDescription>
-              {documents.error.message}
-              <Button onClick={retry} type="button" variant="outline">
-                Retry documents
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <ErrorState
+            message={documents.error.message}
+            onRetry={retry}
+            retryLabel="Retry documents"
+          />
         ) : null}
         {download.isError ? <p role="alert">{download.error.message}</p> : null}
         {documents.data?.items.length === 0 ? (
           <EmptyState
-            description="Documents linked to this asset will appear here."
-            icon={FileText}
-            title="No documents linked to this asset."
+            description="Linked documents appear here"
+            title="No documents yet"
           />
         ) : null}
         {documents.data?.items.length ? (
@@ -122,34 +124,25 @@ function AssetDocumentsContent({
             </TableBody>
           </Table>
         ) : null}
-        <div className="flex flex-wrap gap-2">
-          {cursor ? (
-            <Button onClick={first} type="button" variant="outline">
-              First page
-            </Button>
-          ) : null}
-          {documents.data?.nextCursor ? (
-            <Button onClick={next} type="button" variant="outline">
-              Next
-            </Button>
-          ) : null}
-        </div>
+        {nextCursor || cursors.length > 1 ? (
+          <Pagination
+            canNext={Boolean(nextCursor)}
+            canPrevious={cursors.length > 1}
+            disabled={documents.isFetching}
+            label="Document pages"
+            onNext={next}
+            onPrevious={previous}
+          />
+        ) : null}
         {selected && association.isPending ? (
           <LoadingState label="Loading document link…" rows={2} />
         ) : null}
         {selected && association.isError ? (
-          <Alert variant="destructive">
-            <AlertDescription>
-              {association.error.message}
-              <Button
-                onClick={retryAssociation}
-                type="button"
-                variant="outline"
-              >
-                Retry association
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <ErrorState
+            message={association.error.message}
+            onRetry={retryAssociation}
+            retryLabel="Retry association"
+          />
         ) : null}
         {selected && association.data && canWrite ? (
           <DocumentAssetDialog
@@ -161,7 +154,7 @@ function AssetDocumentsContent({
             onClose={close}
           />
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }

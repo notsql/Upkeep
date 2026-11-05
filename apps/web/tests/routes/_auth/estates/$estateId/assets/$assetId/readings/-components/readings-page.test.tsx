@@ -13,6 +13,10 @@ import type { AssetReadingPage, ReadingFilters } from "@/lib/readings";
 import { ReadingsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/readings-page";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
+vi.mock(
+  "@/components/date-time-picker",
+  () => import("@tests/date-picker-stubs")
+);
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
@@ -117,7 +121,11 @@ describe("ReadingsPage", () => {
     readingPage = { items: [], page: 0, size: 50, totalItems: 0 };
     const change = renderPage({ metric: "HUMIDITY" });
     await screen.findByText("No readings match these filters");
-    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    const filterBar = screen.getByRole("search", { name: "Filter readings" });
+    within(filterBar).getByText("1 active");
+    fireEvent.click(
+      within(filterBar).getByRole("button", { name: "Clear filters" })
+    );
     expect(change).toHaveBeenCalledWith({});
   });
 
@@ -149,14 +157,14 @@ describe("ReadingsPage", () => {
 
   it("filters by time and returns to the first page", async () => {
     const change = renderPage({ page: 2 });
-    fireEvent.change(await screen.findByLabelText("From"), {
+    fireEvent.change(await screen.findByRole("textbox", { name: "From" }), {
       target: { value: "2026-10-01T08:00" },
     });
     expect(change).toHaveBeenCalledWith({
       from: "2026-10-01T08:00",
       page: undefined,
     });
-    fireEvent.change(screen.getByLabelText("To"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "To" }), {
       target: { value: "2026-10-02T08:00" },
     });
     expect(change).toHaveBeenCalledWith({

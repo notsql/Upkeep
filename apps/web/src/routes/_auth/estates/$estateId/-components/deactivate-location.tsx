@@ -1,13 +1,11 @@
-import { Button } from "@proj/ui/components/button";
 import { useCallback, useState } from "react";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 export function DeactivateLocation({
-  onPendingChange,
   name,
   onConfirm,
   onCancel,
 }: {
-  onPendingChange: (pending: boolean) => void;
   name: string;
   onConfirm: () => Promise<unknown>;
   onCancel: () => void;
@@ -19,7 +17,6 @@ export function DeactivateLocation({
       return;
     }
     setPending(true);
-    onPendingChange(true);
     setError(undefined);
     try {
       await onConfirm();
@@ -31,29 +28,19 @@ export function DeactivateLocation({
       );
     } finally {
       setPending(false);
-      onPendingChange(false);
     }
-  }, [onConfirm, pending, onPendingChange]);
+  }, [onConfirm, pending]);
   return (
-    <fieldset className="mt-2 grid gap-2 border p-3">
-      <legend className="text-sm font-medium">Deactivate {name}?</legend>
-      <p className="text-muted-foreground text-sm">
-        It stays on record so existing references keep working, but it is hidden
-        from the hierarchy and cannot be changed or reactivated.
-      </p>
-      {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      ) : null}
-      <div className="flex flex-wrap gap-2">
-        <Button disabled={pending} onClick={confirm} variant="destructive">
-          {pending ? "Deactivating…" : "Deactivate"}
-        </Button>
-        <Button disabled={pending} onClick={onCancel} variant="outline">
-          Cancel
-        </Button>
-      </div>
-    </fieldset>
+    <ConfirmDialog
+      confirmLabel="Deactivate"
+      description="It stays on record so existing references keep working, but it is hidden from the hierarchy and cannot be changed or reactivated."
+      error={error}
+      onCancel={onCancel}
+      onConfirm={confirm}
+      open
+      pending={pending}
+      pendingLabel="Deactivating…"
+      title={`Deactivate ${name}?`}
+    />
   );
 }

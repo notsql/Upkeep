@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import {
@@ -9,10 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { FileText } from "lucide-react";
+import { Files } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
+import { SectionHeading } from "@/components/section-heading";
 import { type EstateDocument, useDownloadDocument } from "@/lib/documents";
 import {
   useWorkOrderDocumentAccess,
@@ -81,25 +82,22 @@ export function WorkOrderDocuments({
   return (
     <Card>
       <CardContent className="min-w-0 space-y-4">
-        <h2 className="text-lg font-medium">Documents</h2>
+        <SectionHeading icon={Files}>Documents</SectionHeading>
         {documents.isPending ? (
           <LoadingState label="Loading documents…" variant="table" />
         ) : null}
         {documents.isError ? (
-          <Alert variant="destructive">
-            <AlertDescription>
-              Unable to load documents.{" "}
-              <Button onClick={retry} variant="outline">
-                Retry documents
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <ErrorState
+            message="Unable to load documents"
+            onRetry={retry}
+            retryLabel="Retry documents"
+          />
         ) : null}
         {download.isError ? <p role="alert">{download.error.message}</p> : null}
         {!documents.isError && documents.data?.items.length === 0 ? (
           <EmptyState
-            icon={FileText}
-            title="No documents linked to this work order"
+            description="Linked documents appear here"
+            title="No documents yet"
           />
         ) : null}
         {!documents.isError && documents.data?.items.length ? (

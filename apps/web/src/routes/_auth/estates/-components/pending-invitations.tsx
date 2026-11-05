@@ -6,9 +6,9 @@ import {
   AlertTitle,
 } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { MailOpen } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import {
   useAcceptInAppInvitation,
   usePendingCouncilInvitations,
@@ -88,15 +88,12 @@ export function PendingInvitations({
   }, [invitations]);
   if (invitations.error) {
     return (
-      <div className="my-4 space-y-2">
-        <p role="alert">{invitations.error.message}</p>
-        <Button
-          disabled={invitations.isFetching}
-          onClick={retry}
-          variant="outline"
-        >
-          Retry pending invitations
-        </Button>
+      <div className="my-4">
+        <ErrorState
+          message={invitations.error.message}
+          onRetry={retry}
+          retryLabel="Retry pending invitations"
+        />
       </div>
     );
   }
@@ -105,8 +102,7 @@ export function PendingInvitations({
       return (
         <div className="my-4">
           <EmptyState
-            description="You have no estate invitations to review right now."
-            icon={MailOpen}
+            description="Estate invitations appear here"
             title="No pending invitations"
           />
         </div>

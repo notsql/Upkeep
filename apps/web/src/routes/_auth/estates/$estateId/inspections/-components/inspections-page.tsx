@@ -6,13 +6,15 @@ import {
   CircleCheck,
   CircleDashed,
   ClipboardCheck,
+  ListPlus,
   TriangleAlert,
 } from "lucide-react";
 import { useCallback, useId, useState } from "react";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { SummaryCard } from "@/components/summary-card";
 import {
@@ -206,6 +208,7 @@ function GenerateButton({
       onClick={onGenerate}
       type="button"
     >
+      <ListPlus aria-hidden="true" />
       {data.generatedAt ? "Regenerate list" : "Generate list"}
     </Button>
   );
@@ -216,10 +219,9 @@ function NoChecks({ generated }: { generated: boolean }) {
     <EmptyState
       description={
         generated
-          ? "No flagged assets are due for a check this month."
-          : "Generate this month's list to see the checks that are due."
+          ? "Nothing due this month"
+          : "Generate the list to see due checks"
       }
-      icon={ClipboardCheck}
       title="No checks this month"
     />
   );
@@ -245,11 +247,12 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
       );
     }
   }, [mutateAsync]);
-  const { data } = list;
+  const { data, refetch } = list;
+  const retry = useCallback(() => refetch(), [refetch]);
 
   return (
     <PageLayout>
-      <PageHeader
+      <ListPageHeader
         actions={
           data ? (
             <GenerateButton
@@ -260,13 +263,12 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
           ) : null
         }
         description={data ? monthLabel(data.month) : undefined}
+        icon={ClipboardCheck}
         title="Inspections"
       />
       {list.isPending ? <LoadingState label="Loading inspections…" /> : null}
       {list.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{list.error.message}</AlertDescription>
-        </Alert>
+        <ErrorState message={list.error.message} onRetry={retry} />
       ) : null}
       {data ? (
         <div className="grid gap-6">

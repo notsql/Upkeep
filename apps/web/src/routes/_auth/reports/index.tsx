@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useAppAccess } from "@/lib/access";
 import { pageHead } from "@/lib/page-title";
 import { MyReportsPage } from "./-components/my-reports-page";
 
@@ -14,9 +13,5 @@ export const Route = createFileRoute("/_auth/reports/")({
 });
 function MyReportsRoute() {
   const { estateId } = Route.useSearch();
-  const access = useAppAccess();
-  const estateName = access.data?.estates.find(
-    (estate) => estate.estateId === estateId
-  )?.estateName;
-  return <MyReportsPage estateId={estateId} estateName={estateName} />;
+  return <MyReportsPage estateId={estateId} />;
 }

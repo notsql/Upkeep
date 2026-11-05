@@ -16,6 +16,7 @@ import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/a
 vi.mock("@/lib/api", () => ({
   api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
 }));
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
@@ -106,8 +107,10 @@ function locationField() {
   return screen.getByRole("combobox", { name: "Location" });
 }
 function installedOnField() {
-  // Date inputs have no ARIA role, so fall back to the label.
-  return screen.getByLabelText<HTMLInputElement>(INSTALLED_ON_LABEL);
+  // The date picker is stubbed as a text box; a native date input has no role.
+  return screen.getByRole<HTMLInputElement>("textbox", {
+    name: INSTALLED_ON_LABEL,
+  });
 }
 function manufacturerField() {
   // Manufacturer and model are comboboxes that also accept free text.
@@ -146,7 +149,6 @@ describe("AssetForm", () => {
     manufacturerField();
     modelField();
     serialNumberField();
-    expect(installedOnField().type).toBe("date");
   });
 
   it("offers every asset category", async () => {

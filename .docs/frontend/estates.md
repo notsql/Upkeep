@@ -27,12 +27,12 @@ resident dashboard; see [shell.md](shell.md)).
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/MCST number/address (placeholder "Search by name, MCST number or address"), Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you), Create estate (Plus icon), result count, Skeleton loading and a grid of whole-card details links with name, MCST number (`MCST <code>`), address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty` (+`EmptyHeader`/`EmptyMedia`/`EmptyTitle`/`EmptyDescription`/`EmptyContent`), `Button`, `InputGroup`, `InputGroupAddon`, `InputGroupInput`, `Skeleton`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
-| `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | Create ("Create estate", breadcrumbs `Estates › Create estate`) or edit ("Estate settings", no breadcrumbs). In edit mode, after the form, an `EstateDangerZone` `Card` titled "Danger zone" with a destructive "Deactivate estate" button opening `DeactivateEstateDialog`, shown only when `estate.owned` and the estate is active. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an alert and Retry access. | `Alert`, `AlertDescription`, `Button`, `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` |
+| `EstateListPage` (`estates/-components/estate-list-page.tsx`) | Search by name/MCST number/address (placeholder "Search by name, MCST number or address"), Status (`ACTIVE` default, `INACTIVE`, `ALL`) and Access (All access/Owner/Shared with you) in the retractable `FilterBar` "Filter estates" (collapsed by default; opens on load when the URL carries filters) toggled from `ListPageHeader`'s Filters button, `CreateButton` "Create" (to `/estates/new`), result count (inside the filter panel), Skeleton loading and a grid of whole-card details links with name, MCST number (`MCST <code>`), address, ownership and lifecycle badges. | `buttonVariants`, `Card`, `Badge`, `Alert`, `Empty` (+`EmptyHeader`/`EmptyMedia`/`EmptyTitle`/`EmptyDescription`/`EmptyContent`), `Button`, `InputGroup`, `InputGroupAddon`, `InputGroupInput`, `Skeleton`, `Select`, `SelectContent`, `SelectItem`, `SelectTrigger`, `SelectValue` |
+| `EstateEditorPage` (`estates/-components/estate-editor-page.tsx`) | `FormPageHeader` (no icon, description "Identity and address"): create ("Create estate", breadcrumbs `Estates › Create estate`) or edit ("Estate settings", no breadcrumbs). In edit mode, after the form, an `EstateDangerZone` `Card` titled "Danger zone" with a destructive "Deactivate estate" button opening `DeactivateEstateDialog`, shown only when `estate.owned` and the estate is active. Editing requires current ownership or the target estate's `canManageEstate` capability from `useAppAccess`; direct navigation by other roles shows a permission alert with no form. Waits for non-owner permissions and shows an alert if access loading fails. Inactive editing does not reactivate the estate. Creation refreshes access before toast/navigation; a committed creation replaces the form with progress or an `ErrorState` with Retry access. | `Alert`, `AlertDescription`, `Button`, `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent` |
 | `EstateForm` (`estates/-components/estate-form.tsx`) | Fields: `name` (req, max 200), `code` labelled "MCST number" (req, max 50, placeholder "e.g. 1234", `inputMode="numeric"`, hint asks for the number only without "MCST"), `address` (req, max 500), `postalCode` (req, max 20), `description` (optional, max 2000). Submit "Create estate" / "Save changes". | `Button`, `Input`, `Label`, `Textarea` |
 | `EstateDetailsPage` (`estates/$estateId/-components/estate-details-page.tsx`) | The estate overview dashboard: `PageHeader` (estate name, `LifecycleStatusBadge`, description; action: an outline "Estate settings" link to `/estates/$estateId/edit` for owners and `canManageEstate`), a compact `dl` line (MCST number, address, postal code), the inactive `Alert` (`role="note"`), the shared read-only note for non-editors, then `EstateDashboard`. No inline forms: editing lives in Estate settings. Load errors are `Alert`s. | `Alert`, `Button` (variants) |
 | `EstateDashboard` (`estates/$estateId/-components/estate-dashboard.tsx`) | Stat row of `SummaryCard`s (amber when non-zero): "Open work orders" (non-CLOSED in the newest page of 20; urgent count, or "Among the latest 20" when more pages exist), "Overdue inspections" (`overdueCount`, due this month), "Offline devices" (online count), "Flagged assets". Then list `Card`s (`role="region"`, up to 5 rows, footer link to the full screen): "Open work" (links to work-order detail, priority `Badge`), "Recent fault reports" (links to report detail, status `Badge`), "At-risk assets" (links to asset detail). Each section is mounted only when its `lib/estate-destinations.ts` predicate passes (`dashboardAccess`), so unpermitted endpoints are never called. | `Card`, `Badge`, `SummaryCard` |
-| `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the stored estate `code` exactly (field labelled "MCST number") to enable "Deactivate estate". Closing is blocked while pending. | `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `Button`, `Input`, `Label` |
+| `DeactivateEstateDialog` (`estates/$estateId/-components/deactivate-estate-dialog.tsx`) | Always-open modal; user must type the stored estate `code` exactly (field labelled "MCST number") to enable "Deactivate estate" (shared `ConfirmDialog` with `confirmDisabled`; "Deactivating…" while pending). Closing is blocked while pending. | `ConfirmDialog`, `Input`, `Label` |
 
 ## Data (`lib/estates.ts`)
 
@@ -118,20 +118,23 @@ restores the search and choices without an entry per keystroke.
 The filters are the shared `FilterBar` (search landmark "Filter estates"): an
 `InputGroup` search (leading Search icon, accessible name "Search estates") and
 the Status and Access `Select`s (`Field w-full sm:w-48`, trigger `w-full`,
-accessible names via `aria-label`), stacking on phones. The actions end with a
-ghost Clear filters button (when filters differ from the defaults and results
-are shown) and a result count ("1 estate" / "N estates"). While loading,
+accessible names via `aria-label`), stacking on phones. `activeCount` counts
+search, non-default Access and non-default Status, so the header shows "N
+active" and the bar's ghost Clear filters (`onClear` resets all three); the
+actions hold only the result count ("1 estate" / "N estates"). While loading,
 `LoadingState` "Loading estates…" renders three skeleton cards (`cards`). Cards sit in a 1/2/3-column grid (base/sm/lg). Each
 card is one real link named `estate name (MCST code)`, with visible keyboard focus
 and no nested buttons/links. It shows a monogram tile (initials, colour derived
 from the estate id), name, monospace `MCST <code>`, address with a MapPin icon, and the
 Owner/Shared with you and lifecycle badges; hover adds a ring, shadow and a
 chevron. Transitions respect reduced-motion preferences. The empty state is the shared
-`EmptyState` with a Building2 icon: with default filters it says "No active
-estates." (or the ALL/INACTIVE variant) and offers the primary "Create estate"
-link;
-with filters active it says "No matching estates" and offers Clear filters, which
-resets search/access/status.
+`EmptyState` (default Inbox icon): with default filters it says "No active
+estates" (or the ALL/INACTIVE variant) and offers the same `CreateButton`
+"Create" as the header; with filters active it says "No matching estates"
+(SearchX, "Try another search or access filter" / "No inactive estates") with
+an outline "Clear filters" (the FilterBar keeps its own ghost one). A failed
+list is `ErrorState` "Retry estates". `ListPageHeader` "Estates" uses
+`icon={Building2}`, description "Estates you own or can access".
 
 ## Custom estate permissions
 
@@ -165,5 +168,16 @@ It is used on estate cards, the details page and admin member estates.
 - Estate editor (edit mode): `LoadingState` "Loading estate…" while the estate
   or permissions load.
 - Estate details: `LoadingState` "Loading estate…"; dashboard cards with no
-  rows show `EmptyState` "Nothing to show".
-- `PendingInvitations` with `showEmpty`: `EmptyState` "No pending invitations".
+  rows show `EmptyState` "Nothing to show" (default Inbox). Stat cards use the
+  section icons (Wrench, ClipboardCheck, Cpu, AlertTriangle); list cards use
+  distinct ones so no icon repeats: Open work `History`, Recent reports
+  `ClipboardList`, At-risk assets `Flag`. The details PageHeader
+  uses `icon={LayoutDashboard}`; the "Estate settings" link leads with Settings.
+- Estate editor: `FormPageHeader` (no icon), description "Identity and
+  address"; Danger zone title has an OctagonAlert icon. `DeactivateEstateDialog`
+  stays a hand-built Dialog: its confirm must stay disabled until the MCST
+  number is typed, which `ConfirmDialog` cannot express yet.
+- `PendingInvitations` with `showEmpty`: `EmptyState` "No pending invitations"
+  (default Inbox). Load failures in `PendingInvitations` and
+  `InvitationAcceptance` are `ErrorState` ("Retry pending invitations",
+  "Retry invitations").

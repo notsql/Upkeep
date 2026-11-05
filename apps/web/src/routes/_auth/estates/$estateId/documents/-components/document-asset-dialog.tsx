@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@proj/ui/components/dialog";
 import { Link } from "@tanstack/react-router";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import type { DocumentAsset } from "@/lib/asset-documents";
 import type { EstateDocument } from "@/lib/documents";
@@ -109,14 +110,11 @@ function AssetLinkBody({
         <LoadingState label="Loading asset link…" rows={1} />
       ) : null}
       {state.association.isError ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            Unable to load asset association.{" "}
-            <Button onClick={state.retry} type="button" variant="outline">
-              Retry association
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message="Unable to load asset association"
+          onRetry={state.retry}
+          retryLabel="Retry association"
+        />
       ) : null}
       {state.removing && state.draft ? (
         <div className="space-y-2">

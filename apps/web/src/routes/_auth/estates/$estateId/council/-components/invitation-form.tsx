@@ -9,22 +9,22 @@ import {
 } from "@proj/ui/components/dialog";
 import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Send, UserPlus } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
+import { ErrorState } from "@/components/error-state";
+import { LoadingState } from "@/components/loading-state";
 import {
   useCouncilInvitation,
   useEstateInvitationRoles,
 } from "@/lib/council-invitations";
-import {
-  type EstateRoleDefinition,
-  useEstateRoleAccess,
-} from "@/lib/estate-roles";
+import { useEstateRoleAccess } from "@/lib/estate-roles";
 import {
   type RoleOption,
   RolePicker,
   roleSelection,
   roleValue,
 } from "@/routes/_auth/estates/$estateId/council/-components/role-picker";
-import { CreateRoleDialog } from "@/routes/_auth/estates/$estateId/roles/-components/create-role-dialog";
 
 function getSelectedRole(
   options: RoleOption[],
@@ -49,50 +49,46 @@ function InvitationRolePicker({
   value,
   disabled,
   onChange,
-  onCreated,
 }: {
   estateId: string;
   options: RoleOption[];
   value: string;
   disabled: boolean;
   onChange: (option: RoleOption) => void;
-  onCreated: (customRoleId: string) => void;
 }) {
-  const [creating, setCreating] = useState(false);
+  const navigate = useNavigate();
   const { estate } = useEstateRoleAccess(estateId);
-  const canCreate = canCreateRoles(estate);
-  const open = useCallback(() => setCreating(true), []);
-  const created = useCallback(
-    (role: EstateRoleDefinition) => onCreated(role.id),
-    [onCreated]
-  );
+  // Leaves the council page; the new-role page returns with ?inviteRole=<id>.
+  const create = useCallback(() => {
+    navigate({
+      to: "/estates/$estateId/roles/new",
+      params: { estateId },
+      search: { returnTo: "council" },
+    });
+  }, [navigate, estateId]);
   return (
-    <>
-      <RolePicker
-        disabled={disabled}
-        label="Invitation role"
-        onChange={onChange}
-        onCreateRole={canCreate ? open : undefined}
-        options={options}
-        value={value}
-      />
-      {canCreate ? (
-        <CreateRoleDialog
-          estateId={estateId}
-          onCreated={created}
-          onOpenChange={setCreating}
-          open={creating}
-        />
-      ) : null}
-    </>
+    <RolePicker
+      disabled={disabled}
+      label="Invitation role"
+      onChange={onChange}
+      onCreateRole={canCreateRoles(estate) ? create : undefined}
+      options={options}
+      value={value}
+    />
   );
 }
 
-export function CouncilInvitationForm({ estateId }: { estateId: string }) {
+export function CouncilInvitationForm({
+  estateId,
+  initialRole,
+}: {
+  estateId: string;
+  initialRole?: string;
+}) {
   const invitation = useCouncilInvitation(estateId);
   const choices = useEstateInvitationRoles(estateId);
   const [email, setEmail] = useState("");
-  const [selection, setSelection] = useState<string>();
+  const [selection, setSelection] = useState<string | undefined>(initialRole);
   const selected = getSelectedRole(choices.data ?? [], selection);
   const retry = useCallback(() => {
     choices.refetch();
@@ -121,18 +117,17 @@ export function CouncilInvitationForm({ estateId }: { estateId: string }) {
   return (
     <div className="grid gap-3">
       {choices.isPending ? (
-        <p role="status">Loading invitation roles…</p>
+        <LoadingState label="Loading invitation roles…" rows={2} />
       ) : null}
       {choices.error ? (
-        <div>
-          <p role="alert">{choices.error.message}</p>
-          <Button onClick={retry} variant="outline">
-            Retry invitation roles
-          </Button>
-        </div>
+        <ErrorState
+          message={choices.error.message}
+          onRetry={retry}
+          retryLabel="Retry invitation roles"
+        />
       ) : null}
       {choices.data?.length === 0 ? (
-        <p>No eligible custom roles are available.</p>
+        <p className="text-muted-foreground text-sm">No eligible roles</p>
       ) : null}
       {choices.data && !choices.isError ? (
         <form className="grid gap-4" onSubmit={submit}>
@@ -154,7 +149,6 @@ export function CouncilInvitationForm({ estateId }: { estateId: string }) {
             }
             estateId={estateId}
             onChange={changeRole}
-            onCreated={setSelection}
             options={choices.data ?? []}
             value={selected ? roleValue(selected) : ""}
           />
@@ -168,6 +162,7 @@ export function CouncilInvitationForm({ estateId }: { estateId: string }) {
             }
             type="submit"
           >
+            <Send aria-hidden="true" />
             {invitation.isPending ? "Sending invitation…" : "Send invitation"}
           </Button>
           {invitation.error ? (
@@ -189,18 +184,23 @@ export function CouncilInvitationForm({ estateId }: { estateId: string }) {
 }
 
 export function InviteMemberDialog({ estateId }: { estateId: string }) {
+  // Back from the new-role page: reopen with the created role selected.
+  const search: { inviteRole?: unknown } = useSearch({ strict: false });
+  const inviteRole =
+    typeof search.inviteRole === "string" ? search.inviteRole : undefined;
   return (
-    <Dialog>
-      <DialogTrigger render={<Button />}>Invite member</DialogTrigger>
+    <Dialog defaultOpen={Boolean(inviteRole)}>
+      <DialogTrigger render={<Button />}>
+        <UserPlus aria-hidden="true" /> Invite member
+      </DialogTrigger>
       <DialogContent className="p-6 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Invite member</DialogTitle>
           <DialogDescription>
-            New users receive an email invitation. Existing users accept on
-            Invitations. Existing accounts keep their current access.
+            New users get an email · existing users accept on Invitations
           </DialogDescription>
         </DialogHeader>
-        <CouncilInvitationForm estateId={estateId} />
+        <CouncilInvitationForm estateId={estateId} initialRole={inviteRole} />
       </DialogContent>
     </Dialog>
   );

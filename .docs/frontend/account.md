@@ -17,7 +17,7 @@ loader data (`getRouteApi("/_auth").useLoaderData().user`) and shows a
 - **Name** - `firstName lastName`, or "Not provided".
 - **Email** - `user.email`.
 
-Read-only. Uses shared `PageHeader` (no breadcrumbs) and the
+Read-only. Uses shared `PageHeader` (no breadcrumbs, `icon={UserRound}`, description "Profile and sign-in identity") and the
 `DetailCard` summary surface. No edits or API calls are introduced.
 
 Entry: "Account settings" in the circular top-right account menu (the only

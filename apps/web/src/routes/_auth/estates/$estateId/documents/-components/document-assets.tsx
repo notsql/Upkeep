@@ -1,6 +1,7 @@
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { ErrorState } from "@/components/error-state";
 import { type DocumentAsset, useDocumentAsset } from "@/lib/asset-documents";
 import type { EstateDocument } from "@/lib/documents";
 
@@ -25,16 +26,11 @@ export function DocumentAssets({
 
   if (association.isError) {
     return (
-      <div role="alert">
-        Unable to load asset link.{" "}
-        <Button
-          aria-label={`Retry asset link for ${document.originalFilename}`}
-          onClick={retry}
-          variant="outline"
-        >
-          Retry
-        </Button>
-      </div>
+      <ErrorState
+        message={`Unable to load asset link for ${document.originalFilename}`}
+        onRetry={retry}
+        retryAriaLabel={`Retry asset link for ${document.originalFilename}`}
+      />
     );
   }
   if (!association.data) {

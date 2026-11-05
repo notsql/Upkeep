@@ -2,9 +2,9 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Label } from "@proj/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2 } from "lucide-react";
 import { type ReactNode, useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 
 import { api } from "@/lib/api";
@@ -108,7 +108,9 @@ export function MemberEstates({
     [mutate]
   );
 
-  const error = access.error ?? change.error;
+  const retry = useCallback(() => {
+    access.refetch();
+  }, [access]);
 
   const section = (
     <section
@@ -126,12 +128,14 @@ export function MemberEstates({
         their own estates. Changes apply on their next request.
       </p>
 
-      {error ? (
-        <p
-          className="border-destructive/30 bg-destructive/10 text-destructive mt-4 rounded-md border p-3 text-sm"
-          role="alert"
-        >
-          {error.message}
+      {access.error ? (
+        <div className="mt-4">
+          <ErrorState message={access.error.message} onRetry={retry} />
+        </div>
+      ) : null}
+      {change.error ? (
+        <p className="text-destructive mt-4 text-sm" role="alert">
+          {change.error.message}
         </p>
       ) : null}
 
@@ -143,7 +147,7 @@ export function MemberEstates({
 
       {access.data?.length === 0 ? (
         <div className="mt-4">
-          <EmptyState icon={Building2} title="No estates yet" />
+          <EmptyState title="No estates yet" />
         </div>
       ) : null}
 

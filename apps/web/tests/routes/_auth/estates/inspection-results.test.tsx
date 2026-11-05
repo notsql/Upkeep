@@ -74,6 +74,15 @@ const state = vi.hoisted(() => ({
   context: {} as Record<string, unknown>,
   revoked: false,
 }));
+vi.mock("@/components/date-picker", () => import("@tests/date-picker-stubs"));
+vi.mock(
+  "@/components/date-range-picker",
+  () => import("@tests/date-picker-stubs")
+);
+vi.mock(
+  "@/components/date-time-picker",
+  () => import("@tests/date-picker-stubs")
+);
 vi.mock("@/routes/__root", async () => {
   const { createRootRouteWithContext, Outlet } = await import(
     "@tanstack/react-router"
@@ -200,9 +209,9 @@ it("defaults the date to Singapore today and requires an explicit outcome", asyn
   vi.useFakeTimers({ toFake: ["Date"] });
   vi.setSystemTime(new Date("2026-10-25T16:30:00Z"));
   await setup();
-  const date = (await screen.findByLabelText(
-    "Inspection date"
-  )) as HTMLInputElement;
+  const date = (await screen.findByRole("textbox", {
+    name: "Inspection date",
+  })) as HTMLInputElement;
   expect(date.value).toBe("2026-10-26");
   expect(
     screen.getByRole("combobox", { name: "Outcome" }).textContent
@@ -333,7 +342,7 @@ it("requires explicit confirmation of a refreshed location and preserves edits o
   fireEvent.change(screen.getByRole("textbox", { name: NOTES }), {
     target: { value: "Keep these notes" },
   });
-  fireEvent.change(screen.getByLabelText("Inspection date"), {
+  fireEvent.change(screen.getByRole("textbox", { name: "Inspection date" }), {
     target: { value: "2026-10-01" },
   });
   fireEvent.click(
@@ -487,7 +496,7 @@ it.each([409, 503])(
     fireEvent.change(screen.getByRole("textbox", { name: NOTES }), {
       target: { value: "Keep these notes" },
     });
-    fireEvent.change(screen.getByLabelText("Inspection date"), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Inspection date" }), {
       target: { value: "2026-10-01" },
     });
     fireEvent.click(
@@ -499,7 +508,11 @@ it.each([409, 503])(
         .value
     ).toBe("Keep these notes");
     expect(
-      (screen.getByLabelText("Inspection date") as HTMLInputElement).value
+      (
+        screen.getByRole("textbox", {
+          name: "Inspection date",
+        }) as HTMLInputElement
+      ).value
     ).toBe("2026-10-01");
     expect(
       screen.getByRole("combobox", { name: "Outcome" }).textContent

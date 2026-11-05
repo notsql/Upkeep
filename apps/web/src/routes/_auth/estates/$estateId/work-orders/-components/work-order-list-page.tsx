@@ -1,18 +1,21 @@
-import { Button, buttonVariants } from "@proj/ui/components/button";
-import { Link } from "@tanstack/react-router";
-import { Plus, Wrench } from "lucide-react";
+import { Button } from "@proj/ui/components/button";
+import { SearchX, Wrench } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
+import { useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { CreateButton } from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { Pagination } from "@/components/pagination";
 import {
   type WorkOrderFilters as Filters,
   useWorkOrderAccess,
   useWorkOrderList,
   type WorkOrderListSearch,
 } from "@/lib/work-orders";
-import { WorkOrderFilters } from "./work-order-filters";
+import { countWorkOrderFilters, WorkOrderFilters } from "./work-order-filters";
 import { WorkOrderTable } from "./work-order-table";
 export function WorkOrderListPage({
   estateId,
@@ -45,13 +48,18 @@ export function WorkOrderListPage({
   }>({ scope, cursors: [] });
   const cursors = trail.scope === scope ? trail.cursors : [];
   const currentIndex = cursors.indexOf(cursor);
-  const canPrevious = currentIndex > 0;
+  // A directly opened cursor has no known previous page: go to the first.
+  const canPrevious = currentIndex > 0 || (currentIndex < 0 && !!cursor);
   const previous = useCallback(() => {
     if (currentIndex > 0) {
       onChange({ ...options, cursor: cursors[currentIndex - 1] });
+      return;
     }
+    onChange(options);
   }, [onChange, options, cursors, currentIndex]);
-  const filtered = !!priority || !!q || !!status || !!category;
+  const activeCount = countWorkOrderFilters(filters);
+  const filtered = activeCount > 0;
+  const panel = useFilterPanel(activeCount);
   const orders = useWorkOrderList(estateId, options, cursor);
   const changeFilters = useCallback(
     (values: Filters) => {
@@ -77,7 +85,6 @@ export function WorkOrderListPage({
     [options, onChange, sortBy, descending]
   );
   const retry = useCallback(() => orders.refetch(), [orders.refetch]);
-  const first = useCallback(() => onChange(options), [onChange, options]);
   const clearFilters = useCallback(() => changeFilters({}), [changeFilters]);
   const next = useCallback(() => {
     const nextCursor = orders.data?.nextCursor;
@@ -109,37 +116,27 @@ export function WorkOrderListPage({
   }
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
-        actions={
-          access.canCreate ? (
-            <Link
-              className={buttonVariants()}
-              params={{ estateId }}
-              to="/estates/$estateId/work-orders/new"
-            >
-              <Plus aria-hidden="true" />
-              Create work order
-            </Link>
-          ) : null
+      <ListPageHeader
+        create={
+          access.canCreate
+            ? { params: { estateId }, to: "/estates/$estateId/work-orders/new" }
+            : undefined
         }
-        description={access.estateName}
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={Wrench}
         title="Work orders"
       />
       <WorkOrderFilters
         filters={filters}
         key={JSON.stringify(filters)}
         onChange={changeFilters}
+        {...panel.barProps}
       />
       {orders.isPending ? (
         <LoadingState label="Loading work orders…" variant="table" />
       ) : null}
       {orders.isError ? (
-        <p role="alert">
-          Unable to load work orders.{" "}
-          <Button onClick={retry} variant="outline">
-            Retry
-          </Button>
-        </p>
+        <ErrorState message="Unable to load work orders" onRetry={retry} />
       ) : null}
       {orders.data && !orders.isError ? (
         <>
@@ -160,15 +157,16 @@ export function WorkOrderListPage({
               sortBy={sortBy ?? "CREATED_AT"}
             />
           )}
-          <WorkOrderPages
+          <Pagination
+            canNext={!!orders.data.nextCursor}
             canPrevious={canPrevious}
-            count={orders.data.items.length}
-            cursor={cursor}
-            hasNext={!!orders.data.nextCursor}
-            onFirst={first}
+            disabled={orders.isPlaceholderData}
+            label="Work order pages"
             onNext={next}
             onPrevious={previous}
-            pending={orders.isPlaceholderData}
+            summary={`${orders.data.items.length} ${
+              orders.data.items.length === 1 ? "work order" : "work orders"
+            } on this page`}
           />
         </>
       ) : null}
@@ -195,8 +193,8 @@ function WorkOrderEmptyState({
             Clear filters
           </Button>
         }
-        description="Try different filters, or clear them."
-        icon={Wrench}
+        description="Try other filters"
+        icon={SearchX}
         title="No matching work orders"
       />
     );
@@ -205,67 +203,14 @@ function WorkOrderEmptyState({
     <EmptyState
       action={
         canCreate ? (
-          <Link
-            className={buttonVariants()}
+          <CreateButton
             params={{ estateId }}
             to="/estates/$estateId/work-orders/new"
-          >
-            <Plus aria-hidden="true" />
-            Create work order
-          </Link>
+          />
         ) : undefined
       }
-      description="Saved work orders will appear here."
-      icon={Wrench}
+      description="Saved work orders appear here"
       title="No work orders yet"
     />
-  );
-}
-
-function WorkOrderPages({
-  count,
-  cursor,
-  canPrevious,
-  hasNext,
-  pending,
-  onFirst,
-  onPrevious,
-  onNext,
-}: {
-  count: number;
-  cursor?: string;
-  canPrevious: boolean;
-  hasNext: boolean;
-  pending: boolean;
-  onFirst: () => void;
-  onPrevious: () => void;
-  onNext: () => void;
-}) {
-  return (
-    <nav
-      aria-label="Work-order pages"
-      className="flex flex-wrap items-center justify-between gap-3"
-    >
-      <p className="text-muted-foreground text-sm">
-        {count} {count === 1 ? "work order" : "work orders"} on this page
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {cursor ? (
-          <Button disabled={pending} onClick={onFirst} variant="outline">
-            First page
-          </Button>
-        ) : null}
-        {canPrevious ? (
-          <Button disabled={pending} onClick={onPrevious} variant="outline">
-            Previous
-          </Button>
-        ) : null}
-        {hasNext ? (
-          <Button disabled={pending} onClick={onNext} variant="outline">
-            Next
-          </Button>
-        ) : null}
-      </div>
-    </nav>
   );
 }

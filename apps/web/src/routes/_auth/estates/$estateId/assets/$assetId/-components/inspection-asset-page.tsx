@@ -1,10 +1,12 @@
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useCallback } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { DetailPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useInspectionAccess, useInspectionAsset } from "@/lib/inspections";
 import { InspectionHistoryTable } from "./inspection-history-table";
@@ -28,8 +30,7 @@ export function InspectionAssetPage({
   if (asset.isError) {
     return (
       <PageLayout>
-        <p role="alert">{asset.error.message}</p>
-        <Button onClick={retry}>Retry asset</Button>
+        <ErrorState message={asset.error.message} onRetry={retry} />
       </PageLayout>
     );
   }
@@ -41,7 +42,7 @@ export function InspectionAssetPage({
     context.assetActive && context.estateActive && context.locationActive;
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
+      <DetailPageHeader
         actions={
           access.canCreate && active ? (
             <Link
@@ -49,6 +50,7 @@ export function InspectionAssetPage({
               params={{ estateId, assetId }}
               to="/estates/$estateId/assets/$assetId/inspections/new"
             >
+              <Plus aria-hidden="true" />
               Create inspection record
             </Link>
           ) : undefined
@@ -61,7 +63,7 @@ export function InspectionAssetPage({
           },
           { label: context.name },
         ]}
-        description={context.reference}
+        meta={context.reference}
         title={context.name}
       />
       <Card>

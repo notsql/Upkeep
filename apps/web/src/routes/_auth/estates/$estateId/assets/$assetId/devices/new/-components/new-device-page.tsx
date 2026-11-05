@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useRegisterDevice } from "@/lib/devices";
@@ -24,7 +24,7 @@ export function NewDevicePage({
   const cancel = useCallback(
     () =>
       navigate({
-        to: "/estates/$estateId/assets/$assetId",
+        to: "/estates/$estateId/assets/$assetId/devices",
         params: { estateId, assetId },
       }),
     [navigate, estateId, assetId]
@@ -46,7 +46,7 @@ export function NewDevicePage({
     !asset.data.deactivatedAt;
   return (
     <PageLayout className="max-w-3xl">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: "Assets",
@@ -60,7 +60,7 @@ export function NewDevicePage({
           },
           { label: "Register device" },
         ]}
-        description="Add a device, choose its measurements and set its reporting interval."
+        description="Measurements and reporting interval"
         title="Register device"
       />
       {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}

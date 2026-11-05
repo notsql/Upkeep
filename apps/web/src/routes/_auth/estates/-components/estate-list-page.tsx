@@ -1,6 +1,5 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { Button } from "@proj/ui/components/button";
 import { Card } from "@proj/ui/components/card";
 import { Field } from "@proj/ui/components/field";
 import {
@@ -16,13 +15,15 @@ import {
   SelectValue,
 } from "@proj/ui/components/select";
 import { Link } from "@tanstack/react-router";
-import { Building2, ChevronRight, MapPin, Plus, Search } from "lucide-react";
+import { Building2, ChevronRight, MapPin, Search, SearchX } from "lucide-react";
 import { type ChangeEvent, useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { FilterBar } from "@/components/filter-bar";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LifecycleStatusBadge } from "@/components/lifecycle-status-badge";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { CreateButton } from "@/components/page-actions";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { type EstateStatus, formatMcst, useEstateList } from "@/lib/estates";
 import type {
@@ -80,12 +81,12 @@ function emptyMessageFor(
   hasSearchOrAccess: boolean
 ): string {
   if (hasSearchOrAccess) {
-    return "No estates match your search or access filter.";
+    return "Try another search or access filter";
   }
   if (status === "ALL") {
-    return "No estates yet. Create your first estate to get started.";
+    return "No estates yet";
   }
-  return `No ${status.toLowerCase()} estates.`;
+  return `No ${status.toLowerCase()} estates`;
 }
 
 function EstateFilterToolbar({
@@ -93,13 +94,18 @@ function EstateFilterToolbar({
   changeAccess,
   changeSearch,
   changeStatus,
+  activeCount,
   clearFilters,
   count,
   filters,
-  showClear,
   showCount,
   status,
+  id,
+  open,
 }: {
+  id: string;
+  open: boolean;
+  activeCount: number;
   access: EstateAccess;
   changeAccess: (value: EstateAccess | null) => void;
   changeSearch: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -107,28 +113,24 @@ function EstateFilterToolbar({
   clearFilters: () => void;
   count: number;
   filters: EstateDirectoryFilters;
-  showClear: boolean;
   showCount: boolean;
   status: EstateStatus;
 }) {
   return (
-    <div className="mb-6">
+    <div className="has-[search]:mb-6">
       <FilterBar
         actions={
-          <>
-            {showClear ? (
-              <Button onClick={clearFilters} variant="ghost">
-                Clear filters
-              </Button>
-            ) : null}
-            {showCount ? (
-              <p className="text-muted-foreground text-sm tabular-nums">
-                {count} {count === 1 ? "estate" : "estates"}
-              </p>
-            ) : null}
-          </>
+          showCount ? (
+            <p className="text-muted-foreground text-sm tabular-nums">
+              {count} {count === 1 ? "estate" : "estates"}
+            </p>
+          ) : null
         }
+        activeCount={activeCount}
+        id={id}
         label="Filter estates"
+        onClear={clearFilters}
+        open={open}
         search={
           <InputGroup>
             <InputGroupAddon>
@@ -186,34 +188,29 @@ function EstateFilterToolbar({
 }
 
 function EstateEmptyState({
-  clearFilters,
   emptyMessage,
   filtersActive,
+  onClear,
 }: {
-  clearFilters: () => void;
   emptyMessage: string;
   filtersActive: boolean;
+  onClear: () => void;
 }) {
   return (
     <EmptyState
       action={
         filtersActive ? (
-          <Button onClick={clearFilters} variant="outline">
+          <Button onClick={onClear} variant="outline">
             Clear filters
           </Button>
         ) : (
-          <Link className={buttonVariants()} to="/estates/new">
-            <Plus aria-hidden="true" />
-            Create estate
-          </Link>
+          <CreateButton to="/estates/new" />
         )
       }
       description={
-        filtersActive
-          ? emptyMessage
-          : "Create an estate to start tracking its assets, readings and work orders."
+        filtersActive ? emptyMessage : "Assets, readings and work orders"
       }
-      icon={Building2}
+      icon={filtersActive ? SearchX : undefined}
       title={filtersActive ? "No matching estates" : emptyMessage}
     />
   );
@@ -314,32 +311,35 @@ export function EstateListPage({
     [onFiltersChange]
   );
   const emptyMessage = emptyMessageFor(status, hasSearchOrAccess);
-  const filtersActive = hasSearchOrAccess || status !== "ACTIVE";
+  const activeCount =
+    (search ? 1 : 0) +
+    (access === "ALL" ? 0 : 1) +
+    (status === "ACTIVE" ? 0 : 1);
+  const filtersActive = activeCount > 0;
   const count = visible?.length ?? 0;
+  const panel = useFilterPanel(activeCount);
 
   return (
     <PageLayout>
       <InvitationAcceptance />
       <PendingInvitations />
-      <PageHeader
-        actions={
-          <Link className={buttonVariants()} to="/estates/new">
-            <Plus aria-hidden="true" />
-            Create estate
-          </Link>
-        }
-        description="Estates you own or have access to."
+      <ListPageHeader
+        create={{ to: "/estates/new" }}
+        description="Estates you own or can access"
+        filters={{ activeCount, ...panel.toggleProps }}
+        icon={Building2}
         title="Estates"
       />
       <EstateFilterToolbar
+        {...panel.barProps}
         access={access}
+        activeCount={activeCount}
         changeAccess={changeAccess}
         changeSearch={changeSearch}
         changeStatus={changeStatus}
         clearFilters={clearFilters}
         count={count}
         filters={filters}
-        showClear={filtersActive && count > 0}
         showCount={Boolean(visible)}
         status={status}
       />
@@ -347,20 +347,17 @@ export function EstateListPage({
         <LoadingState label="Loading estates…" variant="cards" />
       ) : null}
       {estates.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {estates.error.message}
-            <Button onClick={retry} variant="outline">
-              Retry estates
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message={estates.error.message}
+          onRetry={retry}
+          retryLabel="Retry estates"
+        />
       ) : null}
       {visible?.length === 0 ? (
         <EstateEmptyState
-          clearFilters={clearFilters}
           emptyMessage={emptyMessage}
           filtersActive={filtersActive}
+          onClear={clearFilters}
         />
       ) : null}
       {count > 0 ? (

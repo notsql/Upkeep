@@ -1,7 +1,5 @@
-import { Button } from "@proj/ui/components/button";
 import { Checkbox } from "@proj/ui/components/checkbox";
 import { Field, FieldLabel } from "@proj/ui/components/field";
-import { Input } from "@proj/ui/components/input";
 import { Label } from "@proj/ui/components/label";
 import {
   Select,
@@ -10,12 +8,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
-import { type ChangeEvent, useCallback } from "react";
+import { useCallback } from "react";
+import { DateTimePicker } from "@/components/date-time-picker";
 import { FilterBar } from "@/components/filter-bar";
 import { deviceMetrics } from "@/lib/devices";
 import type { ReadingSearch } from "@/lib/reading-filters";
 import type { ReadingAsset } from "@/lib/readings";
 import { ReadingAssetPicker } from "./reading-asset-picker";
+
+export function countReadingFilters(filters: ReadingSearch): number {
+  return [
+    filters.assetId,
+    filters.metric,
+    filters.from,
+    filters.to,
+    filters.suspect,
+  ].filter(Boolean).length;
+}
 
 export function ReadingFilterControls({
   estateId,
@@ -24,6 +33,8 @@ export function ReadingFilterControls({
   error,
   onChoose,
   onFiltersChange,
+  id,
+  open,
 }: {
   estateId: string;
   assetLabel: string;
@@ -31,6 +42,9 @@ export function ReadingFilterControls({
   error?: string;
   onChoose: (asset: ReadingAsset | undefined) => void;
   onFiltersChange: (filters: ReadingSearch) => void;
+  /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
+  id?: string;
+  open?: boolean;
 }) {
   const change = useCallback(
     (next: Partial<ReadingSearch>) =>
@@ -42,13 +56,11 @@ export function ReadingFilterControls({
     [change]
   );
   const fromChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) =>
-      change({ from: event.target.value || undefined }),
+    (from: string) => change({ from: from || undefined }),
     [change]
   );
   const toChange = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) =>
-      change({ to: event.target.value || undefined }),
+    (to: string) => change({ to: to || undefined }),
     [change]
   );
   const suspectChange = useCallback(
@@ -56,14 +68,14 @@ export function ReadingFilterControls({
     [change]
   );
   const clear = useCallback(() => onFiltersChange({}), [onFiltersChange]);
+  const activeCount = countReadingFilters(filters);
   return (
     <FilterBar
-      actions={
-        <Button onClick={clear} variant="outline">
-          Clear filters
-        </Button>
-      }
+      activeCount={activeCount}
+      id={id}
       label="Reading filters"
+      onClear={clear}
+      open={open}
     >
       <Field className="w-full sm:w-48">
         <FieldLabel>Asset</FieldLabel>
@@ -96,21 +108,21 @@ export function ReadingFilterControls({
       </Field>
       <Field className="w-full sm:w-48">
         <FieldLabel htmlFor="estate-readings-from">From</FieldLabel>
-        <Input
+        <DateTimePicker
           aria-describedby={error ? "reading-filter-error" : undefined}
+          aria-label="From"
           id="estate-readings-from"
           onChange={fromChange}
-          type="datetime-local"
           value={filters.from ?? ""}
         />
       </Field>
       <Field className="w-full sm:w-48">
         <FieldLabel htmlFor="estate-readings-to">To (exclusive)</FieldLabel>
-        <Input
+        <DateTimePicker
           aria-describedby={error ? "reading-filter-error" : undefined}
+          aria-label="To (exclusive)"
           id="estate-readings-to"
           onChange={toChange}
-          type="datetime-local"
           value={filters.to ?? ""}
         />
       </Field>

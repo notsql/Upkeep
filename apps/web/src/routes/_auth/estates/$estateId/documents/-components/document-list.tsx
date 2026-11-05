@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { FileText } from "lucide-react";
+import { SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/empty-state";
 import type { DocumentFilters, EstateDocument } from "@/lib/documents";
@@ -57,18 +57,17 @@ export function DocumentList({
               </Button>
             ) : undefined
           }
-          description="Try a different filename or type, or clear the filters."
-          icon={FileText}
-          title="No files match your search"
+          description="Try other filters"
+          icon={SearchX}
+          title="No matching documents"
         />
       );
     }
     return (
       <EmptyState
         action={createAction}
-        description="Uploaded invoices and service reports will appear here."
-        icon={FileText}
-        title="No documents uploaded"
+        description="Uploads appear here"
+        title="No documents yet"
       />
     );
   }

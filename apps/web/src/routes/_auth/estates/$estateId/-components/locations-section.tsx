@@ -1,6 +1,4 @@
 import type { components } from "@proj/api/schema";
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Dialog,
@@ -12,9 +10,13 @@ import {
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building, MapPin } from "lucide-react";
 import { type ChangeEvent, useCallback, useId, useMemo, useState } from "react";
-import { FilterBar } from "@/components/filter-bar";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
+import { ListPageHeader } from "@/components/page-header";
+import { SectionHeading } from "@/components/section-heading";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { estateError, useEstate, useEstateSession } from "@/lib/estates";
@@ -29,6 +31,7 @@ import {
   useLocations,
 } from "@/lib/locations";
 import type { AddFloorsResult } from "@/routes/_auth/estates/$estateId/-components/add-floors-form";
+import { DeactivateLocation } from "@/routes/_auth/estates/$estateId/-components/deactivate-location";
 import type { LocationFormValues } from "@/routes/_auth/estates/$estateId/-components/location-form";
 import {
   dialogDescription,
@@ -92,6 +95,7 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   const items = locations.data ?? EMPTY;
   const tree = useMemo(() => buildLocationTree(items), [items]);
   const searching = query.trim() !== "";
+  const filters = useFilterPanel(searching ? 1 : 0);
   const summaries = useMemo(() => locationSummaries(tree), [tree]);
   const visibleTree = useMemo(
     () => filterLocationTree(tree, query),
@@ -217,14 +221,22 @@ export function LocationsSection({ estateId }: { estateId: string }) {
     [estateId, saved]
   );
 
+  const confirmDeactivate = useCallback(
+    () =>
+      panel?.kind === "deactivate" ? deactivate(panel.node) : Promise.resolve(),
+    [panel, deactivate]
+  );
+  const retryLocations = useCallback(() => {
+    locations.refetch();
+  }, [locations]);
+  const deactivating = panel?.kind === "deactivate" && canOpenPanel;
   const panelView =
-    panel && canOpenPanel ? (
+    panel && canOpenPanel && !deactivating ? (
       <PanelView
         items={items}
         onAddFloors={addFloors}
         onCancel={close}
         onCreate={create}
-        onDeactivate={deactivate}
         onPendingChange={setBusy}
         onUpdate={update}
         panel={panel}
@@ -241,98 +253,107 @@ export function LocationsSection({ estateId }: { estateId: string }) {
   );
   const returnFocus = useCallback(() => {
     const nodeId = panel?.kind === "create" ? panel.parent?.id : panel?.node.id;
-    return (
-      // biome-ignore lint/style/useDomQuerySelector: useId values are not valid CSS selectors
-      document.getElementById(
-        nodeId ? `location-actions-${nodeId}` : `${id}-add`
-      ) ??
-      // biome-ignore lint/style/useDomQuerySelector: useId values are not valid CSS selectors
-      document.getElementById(`${id}-add`)
+    // biome-ignore lint/style/useDomQuerySelector: useId values are not valid CSS selectors
+    return document.getElementById(
+      nodeId ? `location-actions-${nodeId}` : `${id}-add-block`
     );
   }, [panel, id]);
 
   return (
-    <Dialog onOpenChange={changeOpen} open={Boolean(panel && canOpenPanel)}>
-      <Card>
-        <CardContent>
-          <section
-            aria-labelledby={`${id}-heading`}
-            className="scroll-mt-24"
-            id="locations"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-lg font-semibold" id={`${id}-heading`}>
+    <>
+      <ListPageHeader
+        create={
+          canCreate ? { id: `${id}-add-block`, onClick: addBlock } : undefined
+        }
+        filters={{ activeCount: searching ? 1 : 0, ...filters.toggleProps }}
+        icon={MapPin}
+        title="Locations"
+      />
+      <FilterBar
+        activeCount={searching ? 1 : 0}
+        label="Filter locations"
+        onClear={clearSearch}
+        search={
+          <Field>
+            <FieldLabel htmlFor={`${id}-search`}>Search locations</FieldLabel>
+            <Input
+              id={`${id}-search`}
+              onChange={search}
+              placeholder="Block, level or common area name"
+              type="search"
+              value={query}
+            />
+          </Field>
+        }
+        {...filters.barProps}
+      />
+      <Dialog onOpenChange={changeOpen} open={Boolean(panelView)}>
+        <Card className="mt-4">
+          <CardContent>
+            <section
+              aria-labelledby={`${id}-heading`}
+              className="scroll-mt-24"
+              id="locations"
+            >
+              <SectionHeading icon={Building} id={`${id}-heading`}>
                 Blocks and levels
-              </h2>
-              {canCreate ? (
-                <Button id={`${id}-add`} onClick={addBlock} variant="outline">
-                  Add block
-                </Button>
+              </SectionHeading>
+              {locations.isPending ? (
+                <div className="mt-4">
+                  <LoadingState label="Loading locations…" />
+                </div>
               ) : null}
-            </div>
-            <div className="mt-4">
-              <FilterBar
-                label="Filter locations"
-                search={
-                  <Field>
-                    <FieldLabel htmlFor={`${id}-search`}>
-                      Search locations
-                    </FieldLabel>
-                    <Input
-                      id={`${id}-search`}
-                      onChange={search}
-                      placeholder="Block, level or common area name"
-                      type="search"
-                      value={query}
-                    />
-                  </Field>
-                }
-              />
-            </div>
-            {locations.isPending ? (
-              <div className="mt-4">
-                <LoadingState label="Loading locations…" />
-              </div>
-            ) : null}
-            {locations.error ? (
-              <Alert className="mt-4" variant="destructive">
-                <AlertDescription>{locations.error.message}</AlertDescription>
-              </Alert>
-            ) : null}
-            {locations.data ? (
-              <LocationTree
-                canCreate={canCreate}
-                canCreateFloors={canCreateFloors}
-                canDeactivate={canDeactivate}
-                canEdit={canEdit}
-                expandedIds={expandedIds ?? EMPTY_EXPANSION}
-                onClearSearch={clearSearch}
-                onPanel={setPanel}
-                onToggle={toggleLocation}
-                query={query}
-                searching={searching}
-                summaries={summaries}
-                tree={visibleTree}
-              />
-            ) : null}
-            {panelView ? (
-              <DialogContent
-                className="sm:max-w-lg"
-                finalFocus={returnFocus}
-                showCloseButton={!busy}
-              >
-                <DialogHeader>
-                  <DialogTitle>{dialogTitle}</DialogTitle>
-                  <DialogDescription>
-                    {dialogDescription(panel)}
-                  </DialogDescription>
-                </DialogHeader>
-                {panelView}
-              </DialogContent>
-            ) : null}
-          </section>
-        </CardContent>
-      </Card>
-    </Dialog>
+              {locations.error ? (
+                <div className="mt-4">
+                  <ErrorState
+                    message={locations.error.message}
+                    onRetry={retryLocations}
+                  />
+                </div>
+              ) : null}
+              {locations.data ? (
+                <LocationTree
+                  canCreate={canCreate}
+                  canCreateFloors={canCreateFloors}
+                  canDeactivate={canDeactivate}
+                  canEdit={canEdit}
+                  expandedIds={expandedIds ?? EMPTY_EXPANSION}
+                  onClear={clearSearch}
+                  onCreate={addBlock}
+                  onPanel={setPanel}
+                  onToggle={toggleLocation}
+                  query={query}
+                  searching={searching}
+                  summaries={summaries}
+                  tree={visibleTree}
+                />
+              ) : null}
+              {panelView ? (
+                <DialogContent
+                  className="sm:max-w-lg"
+                  finalFocus={returnFocus}
+                  showCloseButton={!busy}
+                >
+                  <DialogHeader>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
+                    <DialogDescription>
+                      {dialogDescription(panel)}
+                    </DialogDescription>
+                  </DialogHeader>
+                  {panelView}
+                </DialogContent>
+              ) : null}
+            </section>
+          </CardContent>
+        </Card>
+      </Dialog>
+      {deactivating ? (
+        <DeactivateLocation
+          name={panel.node.name}
+          onCancel={close}
+          onConfirm={confirmDeactivate}
+        />
+      ) : null}
+    </>
   );
 }

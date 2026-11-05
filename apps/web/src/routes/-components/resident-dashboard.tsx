@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { buttonVariants } from "@proj/ui/components/button";
 import {
   Card,
@@ -7,12 +6,15 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, ClipboardPenLine, LayoutDashboard } from "lucide-react";
+import { useCallback } from "react";
 import { EmptyState } from "@/components/empty-state";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
+import { SectionHeading } from "@/components/section-heading";
 import { useReportList } from "@/lib/reports";
 
 const RECENT_LIMIT = 5;
@@ -37,6 +39,7 @@ function ReportFaultLink({ estateId }: { estateId?: string }) {
       search={estateId ? { estateId } : {}}
       to="/reports/new"
     >
+      <ClipboardPenLine aria-hidden="true" />
       Report a fault
     </Link>
   );
@@ -46,17 +49,19 @@ function ReportFaultLink({ estateId }: { estateId?: string }) {
 export function ResidentDashboard({ estateId }: { estateId?: string }) {
   const reports = useReportList(undefined, estateId);
   const items = reports.data?.items ?? [];
+  const retry = useCallback(() => {
+    reports.refetch();
+  }, [reports]);
   return (
     <PageLayout>
       <PageHeader
         actions={<ReportFaultLink estateId={estateId} />}
+        icon={LayoutDashboard}
         title="Dashboard"
       />
       {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>Unable to load reports.</AlertDescription>
-        </Alert>
+        <ErrorState message="Unable to load reports" onRetry={retry} />
       ) : null}
       {reports.data ? (
         <div className="grid gap-8">
@@ -70,9 +75,9 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
           </div>
           <section aria-labelledby="recent-reports" className="grid gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-xl font-semibold" id="recent-reports">
+              <SectionHeading icon={ClipboardList} id="recent-reports">
                 Recent reports
-              </h2>
+              </SectionHeading>
               {items.length > 0 ? (
                 <Link
                   className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -86,8 +91,7 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
             {items.length === 0 ? (
               <EmptyState
                 action={<ReportFaultLink estateId={estateId} />}
-                description="You haven't reported any faults yet."
-                icon={ClipboardList}
+                description="Reported faults appear here"
                 title="No reports yet"
               />
             ) : (

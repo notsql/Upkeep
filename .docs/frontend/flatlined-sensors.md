@@ -1,7 +1,15 @@
 # Device monitoring (ID-68)
 
-Route: `apps/web/src/routes/_auth/estates/$estateId/sensors/index.tsx`, URL
-`/estates/$estateId/sensors`, title Device monitoring. Requires the `_auth` session guard.
+Routes (folder-based, under `apps/web/src/routes/_auth/estates/$estateId/sensors/`):
+
+| File | URL | Title | Renders |
+| --- | --- | --- | --- |
+| `route.tsx` | layout for both below | - | `SensorsLayout` around an `Outlet` |
+| `index.tsx` | `/estates/$estateId/sensors` | Device monitoring | `SensorsView view="REVIEW"` (Needs review) |
+| `all/index.tsx` | `/estates/$estateId/sensors/all` | All device metrics | `SensorsView view="ALL"` |
+
+Requires the `_auth` session guard; `/sensors/all` shares the `/sensors` gate
+(`SUB_VIEW_SECTIONS` in `routes/_auth/route.tsx`).
 All API types come from the generated `@proj/api/schema` contract.
 See [API behaviour](../api/flatlined-sensors.md) and decision 0030.
 
@@ -17,11 +25,12 @@ responses determine whether edit and pause controls appear.
 
 | File / component | Behaviour / shadcn components |
 | --- | --- |
-| sensors-page.tsx / SensorsPage, SensorReviewResults | PageHeader, shadcn Tabs (Needs review / All device metrics, list labelled "Device metric view") with Refresh readings beside the tab list, checked time, refresh, paging, errors/retry and distinct empty states as `EmptyState` (title plus description); `LoadingState` for policies and device metrics; Tabs, Button, Alert |
+| sensors-page.tsx / SensorsLayout | `ListPageHeader` (`Gauge`, "Flatline review, policies and pauses"; no filters or create), a short muted note on what a possible flatline means, and a `SubNav` ("Device metric views": Needs review → `/sensors` (exact), All device metrics → `/sensors/all`) above the child view |
+| sensors-page.tsx / SensorsView, SensorReviewResults | One view: `LoadingState` / `ErrorState` ("Retry metric policies") for policies; inactive-estate `Alert`; a "Device metrics" `SectionCard` (no icon; header action outline "Refresh readings") holding `LoadingState`, `ErrorState` ("Retry device metrics"), checked time, the table and distinct `EmptyState`s (default icon), then the shared `Pagination` ("Device metric pages", summary "Page N · T device metrics", 25 per page); then `MetricPolicySettings` and the pause dialog. Page state is per view |
 | sensor-monitoring-table.tsx / SensorMonitoringTable, SensorRow | Desktop table or a divided mobile list below 768px; shared device/asset identity, metric/unit, textual state, observed duration/range, last measurement and maintenance cutoff/actions; Table, Badge, Button |
-| metric-policy-settings.tsx / MetricPolicySettings | Collapsible Metric policies section with configured count, metric/unit, saved threshold/tolerance, Configured/Not set badge, and Edit/Set up/Close buttons; table on desktop, stacked rows on mobile; one inline editor, read-only for Council/inactive estates; Table, Badge, Button |
-| metric-policy-form.tsx / MetricPolicyForm, useMetricPolicyEditor | Expanded per-metric editor, whole minutes/hours and nonnegative tolerance shared estate-wide; Cancel and Save policy; draft/validation/mutation state is owned by the summary component through the hook; Field, Input, Select, Alert, Button |
-| pause-sensor-dialog.tsx / PauseSensorDialog | Finite pause for one device/metric, seven-day maximum, automatic expiry/fresh-start explanation; Dialog, Field, Input, Select, Alert, Button |
+| metric-policy-settings.tsx / MetricPolicySettings | Collapsible Metric policies section with configured count, metric/unit, saved threshold/tolerance, Configured/Not set badge, and Edit/Set up buttons; table on desktop, stacked rows on mobile; Edit/Set up (ghost) opens the editor Dialog, read-only for Council/inactive estates; Table, Badge, Button |
+| metric-policy-form.tsx / MetricPolicyDialog, useMetricPolicyEditor | `MetricPolicyDialog`: the shared `FormDialog` (title "<Metric> policy", description the current threshold; fields Threshold, Time unit, Tolerance) with Cancel and "Save policy" ("Saving…" while pending, no dismissal); whole minutes/hours and nonnegative tolerance shared estate-wide; validation and save errors show as the dialog's `role="alert"` line. If management is lost mid-edit (e.g. the review fails to load) the draft stays, fields disable and saving is blocked with "Saving is paused until device metrics load" ("Save policy" disabled via `submitDisabled`). Draft/validation/mutation state is owned by the summary component through the hook; FormDialog, Field, Input, Select |
+| pause-sensor-dialog.tsx / PauseSensorDialog | `FormDialog` "Pause <device> <metric>": finite pause for one device/metric, seven-day maximum, automatic expiry/fresh-start explanation; fields Pause duration and Time unit; "Start pause" / "Starting pause…"; errors keep the chosen duration; FormDialog, Field, Input, Select |
 | sensor-format.ts | Metric/time labels and integer minutes/hours conversion with bounds/overflow validation |
 
 Needs review is the initial view (flatlined/paused). All device metrics also includes
@@ -56,16 +65,14 @@ and the subtitle/count describe the button. The header wraps the count below its
 title on narrow screens. Hidden contents stay mounted to preserve the draft and
 validation when collapsing/reopening; the header disables while saving.
 
-Within the expanded section, policy editors start closed. Edit/Set up opens one editor directly beneath the selected
-metric, before the next metric: inside that mobile list entry, or in the immediately
-following full-width desktop table row. Its heading receives focus and scrolls into
-view. Close/Cancel discards unsaved edits
-without a request and returns focus to the summary action. Switching metrics opens
-the newly selected editor. A successful save invalidates the existing keys,
+Within the expanded section, Edit/Set up opens the editor in a modal Dialog named
+"<Metric> policy" (one at a time, on mobile and desktop). Cancel, X or Escape
+discards unsaved edits
+without a request and returns focus to the summary action. A successful save invalidates the existing keys,
 refreshes the summary and closes the editor; failures preserve input. While saving,
-closing/switching and duplicate submission are blocked. Polling updates saved
+Cancel, X and Escape are blocked and duplicate submission is prevented. Polling updates saved
 summaries without replacing the open draft. Draft/validation and mutation state live
-above the responsive branches, so moving the form between list/table rows retains
+above the responsive branches, so a switch between list/table layouts retains
 entered values and an in-progress save. Council/inactive estates have no edit or pause actions. If
 review access becomes unavailable while editing, preserve the draft in disabled
 fields and remove Save until a successful retry restores the required capability.
@@ -92,3 +99,12 @@ gate mutation controls. Backend validation and authorization repeat every check.
 
 This screen does not implement ML, gap alerts, asset-condition changes, raw history,
 notifications, pause extension or early resume.
+
+## Design-system pass
+
+`Gauge` appears once, in the `ListPageHeader` (it was repeated on the section heading and every
+empty state). "Device metrics" is a `SectionCard` with no icon; Metric policies keeps its
+`SlidersHorizontal`. Empty states use the default `Inbox`. Row Pause buttons are
+`ghost`. Empty states are fragments: "Monitoring unavailable" / "Estate inactive",
+"No devices yet", "No device readings yet" / "See All device metrics", "Nothing
+needs review", "No device metrics on this page" / "Go back a page".

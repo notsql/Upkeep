@@ -72,7 +72,7 @@ const DOCUMENTS_HEADING = /documents/iu;
 const SUPPORTED_FORMATS = /PDF.*JPEG.*PNG/iu;
 const MAX_FILE_SIZE = /5 MB/u;
 const UPLOAD_FILE = /^upload$|^upload file$/iu;
-const UPLOAD_DOCUMENT = /^upload document$/iu;
+const UPLOAD_DOCUMENT = /^create$/iu;
 const UPLOAD_SUCCESS = /invoice\.pdf.*uploaded successfully/iu;
 const UPLOADING = /uploading/iu;
 const EMPTY_FILE = /empty|at least one byte/iu;
@@ -82,16 +82,17 @@ const UNCERTAIN_UPLOAD = /refresh|check.*list|confirm.*upload/iu;
 const RETRY = /retry/iu;
 const UPLOAD_FAILED = /upload failed/iu;
 const DOWNLOAD_INVOICE = /download.*April Invoice/iu;
-const UPLOAD_CONTROL = /upload/iu;
+const UPLOAD_CONTROL = /upload|^create$/iu;
 const SEARCH = /^search$/iu;
-const CLEAR_SEARCH = /^clear$|^clear search$/iu;
-const NO_MATCHES = /no files match your search/iu;
-const NO_DOCUMENTS = /no documents uploaded/iu;
+const CLEAR_FILTERS = /^clear filters$/iu;
+const NO_MATCHES = /no matching documents/iu;
+const NO_DOCUMENTS = /no documents yet/iu;
 const CANCEL = /^cancel$/iu;
 const DELETE_SUCCESS = /April Invoice\.pdf.*removed/iu;
 const DELETION_DESCRIPTION = /will be removed/u;
 const DELETE_DENIED = /only the uploader/iu;
 const TYPE_FILTER = "Filter by type";
+const FILTERS_TOGGLE = /^Filters/u;
 const DOCUMENT_ROW = /April Invoice\.pdf/u;
 
 const estateId = "00000000-0000-0000-0000-000000000001";
@@ -210,7 +211,21 @@ async function chooseFile(file = selectedFile()) {
   fireEvent.change(fileInput(), { target: { files: [file] } });
 }
 
+/** Filters start collapsed; open them when the bar is not shown. */
+function openFilters() {
+  if (!screen.queryByRole("search", { name: "Filter documents" })) {
+    fireEvent.click(screen.getByRole("button", { name: FILTERS_TOGGLE }));
+  }
+}
+
+async function typeFilter() {
+  await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
+  openFilters();
+  return screen.getByRole("combobox", { name: TYPE_FILTER });
+}
+
 function filenameSearch() {
+  openFilters();
   return (
     screen.queryByRole<HTMLInputElement>("searchbox", {
       name: "Search by filename",
@@ -283,12 +298,16 @@ it.each(["MANAGER", "COUNCIL", "CREW", "CUSTOM"])(
   }
 );
 
-it("groups the filename search and type filter in a search toolbar", async () => {
+it("groups the filename search and type filter in a collapsed search toolbar", async () => {
   await openDocuments();
+  const toggle = await screen.findByRole("button", { name: FILTERS_TOGGLE });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  expect(screen.queryByRole("search", { name: "Filter documents" })).toBeNull();
+  fireEvent.click(toggle);
   await screen.findByRole("search", { name: "Filter documents" });
 });
 
-it("keeps the upload form behind an Upload document dialog", async () => {
+it("keeps the upload form behind the Create dialog", async () => {
   await openDocuments();
   await screen.findByText(filename);
   expect(screen.queryByLabelText(FILE_INPUT)).toBeNull();
@@ -523,7 +542,7 @@ it("clearing a filename search resets its pagination cursor", async () => {
     "?filename=invoice&cursor=previous-page"
   );
   await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
-  fireEvent.click(screen.getByRole("button", { name: CLEAR_SEARCH }));
+  fireEvent.click(screen.getByRole("button", { name: CLEAR_FILTERS }));
 
   await waitFor(() => {
     expect(router.state.location.search).not.toHaveProperty("filename");
@@ -540,7 +559,9 @@ it.each([false, true])(
 
     await screen.findByText(searching ? NO_MATCHES : NO_DOCUMENTS);
     if (searching) {
-      screen.getByRole("button", { name: CLEAR_SEARCH });
+      expect(
+        screen.getAllByRole("button", { name: CLEAR_FILTERS })
+      ).toHaveLength(2);
     }
   }
 );
@@ -768,7 +789,7 @@ it.each([true, false])(
       fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
       expect(apiDelete).not.toHaveBeenCalled();
     }
-    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
     await waitFor(() =>
       expect(router.state.location.search).toMatchObject({
         filename: "Invoice",
@@ -789,7 +810,7 @@ it("shows the Documents table without a Size column or size cells", async () => 
 
 it("offers All types, Invoice and Service report in the type filter", async () => {
   await openDocuments();
-  const filter = await screen.findByRole("combobox", { name: TYPE_FILTER });
+  const filter = await typeFilter();
   expect(filter.textContent).toContain("All types");
   fireEvent.click(filter);
   expect(screen.getAllByRole("option")).toHaveLength(3);
@@ -851,7 +872,7 @@ it("restores the type from a direct link and browser back navigation", async () 
 });
 
 it.each(["search", "clear"])(
-  "retains the selected type when applying filename action %s",
+  "applies filename action %s (search keeps the type, clear resets it)",
   async (action) => {
     const { router } = await openDocuments(
       "?filename=invoice&documentType=SERVICE_REPORT&cursor=old-page"
@@ -861,32 +882,32 @@ it.each(["search", "clear"])(
       fireEvent.change(filenameSearch(), { target: { value: "maintenance" } });
       fireEvent.click(screen.getByRole("button", { name: SEARCH }));
     } else {
-      fireEvent.click(screen.getByRole("button", { name: CLEAR_SEARCH }));
+      fireEvent.click(screen.getByRole("button", { name: CLEAR_FILTERS }));
     }
     await waitFor(() => {
-      expect(router.state.location.search).toHaveProperty(
-        "documentType",
-        "SERVICE_REPORT"
-      );
       expect(router.state.location.search).not.toHaveProperty("cursor");
       if (action === "search") {
+        expect(router.state.location.search).toHaveProperty(
+          "documentType",
+          "SERVICE_REPORT"
+        );
         expect(router.state.location.search).toHaveProperty(
           "filename",
           "maintenance"
         );
       } else {
-        expect(router.state.location.search).not.toHaveProperty("filename");
+        expect(router.state.location.search).toEqual({});
       }
     });
   }
 );
 
-it("preserves type and filename through Next and First page", async () => {
+it("preserves type and filename through Next and Previous page", async () => {
   nextCursor = "next-type-page";
   const { router } = await openDocuments(
     "?filename=invoice&documentType=INVOICE"
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Next" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Next page" }));
   await waitFor(() =>
     expect(apiGet).toHaveBeenCalledWith(
       documentsPath,
@@ -901,7 +922,7 @@ it("preserves type and filename through Next and First page", async () => {
       })
     )
   );
-  fireEvent.click(await screen.findByRole("button", { name: "First page" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
   await waitFor(() => {
     expect(router.state.location.search).toHaveProperty("filename", "invoice");
     expect(router.state.location.search).toHaveProperty(
@@ -929,7 +950,7 @@ it("shows the filtered empty state and clears the type back to All types", async
 
 it("omits unsupported type values from URL filters", async () => {
   const { router } = await openDocuments("?documentType=OTHERS");
-  const filter = await screen.findByRole("combobox", { name: TYPE_FILTER });
+  const filter = await typeFilter();
   expect(filter.textContent).toContain("All types");
   expect(router.state.location.search).not.toHaveProperty("documentType");
 });

@@ -67,7 +67,7 @@ Shared app pieces live in `apps/web/src/components/`:
 - `PageHeader`: title, optional description/status, breadcrumbs, contextual
   actions (right-aligned `actions`; the page's primary action goes there).
   Breadcrumb `to` is a union of `/estates`, `/reports`,
-  `/estates/$estateId/{assets,readings,work-orders,reports}` and
+  `/estates/$estateId/{assets,readings,work-orders,reports,roles,council,locations,devices,sensors,documents,inspections,failure-risk,asset-categories}` and
   `/estates/$estateId/assets/$assetId` (no `/`), with optional `params` and
   `search` (`{ estateId? }`, used by resident crumbs).
 - `FormActions`: submit label/pending state and optional Cancel callback; disables
@@ -139,8 +139,7 @@ editors and device registration use full pages; short location/assessment tasks
 use existing Dialogs, destructive actions use confirmation Dialogs and email
 invitations stay inline. Cancel returns to the parent page or dismisses the popup.
 Keep inputs
-on failures. Use the primary Button variant for the main task, outline for
-secondary actions, destructive for retirement/deactivation/removal. Destructive
+on failures. Button variants follow [Buttons](#buttons-one-variant-per-role). Destructive
 confirmations identify their target and state the actual effect. Exact code/asset
 reference, retirement date constraints and pending-close prevention are preserved.
 
@@ -181,9 +180,109 @@ markup or bespoke filter rows.
 ### Page header
 
 `PageHeader` is the only page header. Each screen renders exactly one, first
-inside `PageLayout`; the primary create action goes in `actions` (primary
-Button/Link with a lucide `Plus`). Sections inside a page use `Card` +
-`CardHeader`/`CardTitle` with an `h2`, never a second `h1`.
+inside `PageLayout`. Pass `icon` (a `LucideIcon`, the same one the sidebar uses
+for that section) to show it in a muted tile beside the `h1`. Sections inside a
+page use `Card` + `CardHeader`/`CardTitle` with an `h2`, never a second `h1`.
+
+**Subtitle rule:** `description` never repeats the estate name (the header
+bar's estate switcher already shows it) or any other context the shell shows.
+Use it only for a short fragment describing the page ("Equipment in this
+estate"), or omit it. Record pages may use the record's own name as the title.
+
+### Header variants (`components/page-header.tsx`)
+
+Screens use one of three variants; do not assemble `PageHeader` + actions by
+hand. `PageHeader` itself stays the primitive underneath (and for the odd page
+that fits none, e.g. dashboards). It also takes `meta?: ReactNode`, a muted
+line under the title.
+
+| Variant | Use for | Props |
+| --- | --- | --- |
+| `ListPageHeader` | Top-level list pages (work orders, assets, roles, documents…) | `title`, `icon?`, `description?`, `filters?: FilterToggleProps`, `create?: CreateButtonProps`, `actions?` (extras, e.g. Export; rendered between Filters and Create) |
+| `DetailPageHeader` | One record (work order, asset, report, inspection) | `breadcrumbs`, `title`, `status?` (badge), `meta?` (e.g. "Opened 3 Mar 2026 · Pump A"), `actions?` (outline Edit first, destructive last) |
+| `FormPageHeader` | Create/edit pages | `breadcrumbs`, `title`, `description?`; no actions (the form footer submits) |
+
+The "back link" on detail and form pages is the breadcrumb trail (the parent
+crumb is a link); there is still no `BackLink` component (see Page header
+convention).
+
+```tsx
+<ListPageHeader
+  create={canCreate ? { params: { estateId }, to: "/estates/$estateId/roles/new" } : undefined}
+  filters={{ activeCount, ...panel.toggleProps }}
+  icon={ShieldCheck}
+  title="Roles"
+/>
+
+<DetailPageHeader
+  actions={<><Button variant="outline">Edit</Button><Button variant="destructive">Cancel work order</Button></>}
+  breadcrumbs={[{ label: "Work orders", params: { estateId }, to: "/estates/$estateId/work-orders" }, { label: order.reference }]}
+  meta={`Opened ${opened} · ${order.assetName}`}
+  status={<WorkOrderStatusBadge status={order.status} />}
+  title={order.reference}
+/>
+
+<FormPageHeader
+  breadcrumbs={[{ label: "Estates", to: "/estates" }, { label: "Create estate" }]}
+  title="Create estate"
+/>
+```
+
+Breadcrumb `to` is a closed union; add a route to `Breadcrumb` in
+`page-header.tsx` when a new parent needs linking.
+
+### List-page header actions: `CreateButton`, `FilterToggle` (`components/page-actions.tsx`)
+
+Every list page puts the same actions, in the same order, in `PageHeader
+actions`: `FilterToggle` (if the page has filters) then `CreateButton` (if the
+user can create). Never hand-roll a create button or rename it ("New work
+order", "Record manual reading"): the label is always "Create".
+
+- `CreateButton`: either `to` (+ optional `params`, `search`; typed router
+  `Link` styled with `buttonVariants()`, so it is a real link) **or**
+  `onClick: () => void` (a `type="button"` Button, e.g. to open a Dialog).
+  Renders a primary button with a `Plus` icon and the text "Create".
+  Optional `id` lands on the button/link, so a dialog's `finalFocus` can
+  return focus to it (Locations "Add block").
+- `FilterToggle`: `expanded: boolean`, `controls: string` (the FilterBar's
+  id), `onToggle: () => void`, `activeCount?: number`. An outline button with
+  `ListFilter` and "Filters", a secondary `Badge` with the count when
+  `activeCount > 0`, `aria-expanded`/`aria-controls`, and accessible name
+  "Filters" or "Filters, N active". Spread `useFilterPanel(...).toggleProps`.
+
+```tsx
+import { CreateButton, FilterToggle } from "@/components/page-actions";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
+
+const panel = useFilterPanel(activeCount);
+
+<PageHeader
+  actions={
+    <>
+      <FilterToggle activeCount={activeCount} {...panel.toggleProps} />
+      {canCreate ? (
+        <CreateButton params={{ estateId }} to="/estates/$estateId/work-orders/new" />
+      ) : null}
+    </>
+  }
+  icon={Wrench}
+  title="Work orders"
+/>
+<FilterBar activeCount={activeCount} label="Filter work orders" onClear={clear} {...panel.barProps}>
+  {/* fields */}
+</FilterBar>
+
+// Dialog-driven create:
+<CreateButton onClick={() => setDialogOpen(true)} />
+```
+
+### Section titles: `SectionHeading` (`components/section-heading.tsx`)
+
+Props: `children: ReactNode`, `icon?: LucideIcon`, `level?: 2 | 3 | 4`
+(default 2), `id?: string` (for `aria-labelledby`), `className?: string`.
+Renders `h{level}` (`text-lg font-semibold`) with the icon decorative
+(`aria-hidden`) and muted. Use it for card and section titles, or put the same
+icon + text inside `CardTitle`.
 
 ### Empty: `EmptyState` (`components/empty-state.tsx`)
 
@@ -191,9 +290,11 @@ Props: `title: string`, `description?: ReactNode`, `icon?: LucideIcon`,
 `action?: ReactNode`. Renders shadcn `Empty` as a dashed card
 (`bg-card border border-dashed`) with `role="status"`.
 
-- No data and the user can create: `action` is the primary create action
-  (same label as the header action, e.g. "New work order"). Without create
-  permission: omit `action`.
+- **Icon:** defaults to the neutral lucide `Inbox`. Do not pass the page's
+  icon (it would repeat the header's). Pass `SearchX` only for "No matching …".
+- No data: when the user can create, `action` is a `CreateButton` (the same
+  component as the header's), so an empty list is a card with its add button.
+  Omit it when the user cannot create.
 - Filters produced no results: title "No matching …", `action` is an outline
   "Clear filters" Button.
 - Inside a Card section (asset documents, work-order corrections) use it as-is;
@@ -201,15 +302,12 @@ Props: `title: string`, `description?: ReactNode`, `icon?: LucideIcon`,
   and `ComboboxEmpty` stay plain text - they are not page states.
 
 ```tsx
+<EmptyState description="Saved work orders appear here" title="No work orders yet" />
+
 <EmptyState
-  action={canCreate ? (
-    <Link className={buttonVariants()} params={{ estateId }} to="/estates/$estateId/work-orders/new">
-      <Plus aria-hidden="true" /> New work order
-    </Link>
-  ) : undefined}
-  description="Saved work orders will appear here."
-  icon={Wrench}
-  title="No work orders yet"
+  action={<Button onClick={clear} variant="outline">Clear filters</Button>}
+  icon={SearchX}
+  title="No matching work orders"
 />
 ```
 
@@ -237,15 +335,45 @@ if (workOrders.isPending) {
 
 ### Filters: `FilterBar` (`components/filter-bar.tsx`)
 
-Props: `label: string` (accessible name of the `search` landmark),
-`search?: ReactNode`, `children?: ReactNode` (filter fields), `actions?:
-ReactNode` (Clear filters, result count). Stacks below 640px; above it the
-search grows (`min-w-64 flex-1`), filters wrap, actions sit at the end.
+The filter area is its own section: a muted, bordered panel
+(`bg-muted/40 rounded-lg border p-3 sm:p-4`) headed by a lucide `ListFilter`
+icon and a "Filters" label, visibly apart from the results below. Leave a gap
+(`space-y-*` / `mt-4`) between it and the results; it sets no outer margin.
+
+Props:
+
+- `label: string` - accessible name of the `search` landmark.
+- `search?: ReactNode` - grows to fill the row (`min-w-64 flex-1`).
+- `children?: ReactNode` - filter fields.
+- `actions?: ReactNode` - extras at the end of the field row (result count,
+  Apply). Backward compatible: existing screens that pass "Clear filters" here
+  keep working.
+- `activeCount?: number` (default 0) - when above 0 the header shows an
+  "N active" secondary `Badge`.
+- `onClear?: () => void` - with `activeCount > 0`, the header shows a ghost
+  `X` "Clear filters" button. New screens use this instead of putting Clear in
+  `actions`; when migrating a screen, remove its own Clear button so it is not
+  shown twice.
+
+- `id?: string`, `open?: boolean` - make the panel **retractable** (shadcn
+  `Collapsible`, `@proj/ui/components/collapsible`). Spread
+  `useFilterPanel(activeCount).barProps`; the header's `FilterToggle` gets
+  `toggleProps`. Without `open` the bar is always shown (old behaviour).
+
+`useFilterPanel(activeCount: number)` returns `{ open, setOpen, toggleProps:
+{ controls, expanded, onToggle }, barProps: { id, open } }`. The panel is
+collapsed by default and starts expanded when `activeCount > 0` on first
+render (filters arrived from the URL). When retractable, the bar drops its own
+`ListFilter` icon since the toggle shows it. Every list page with filters uses
+the retractable form.
+
+Stacks below 640px; above it the fields wrap.
 
 Sizing rules (the stock `SelectTrigger` is `w-fit`, so set widths):
 
 - Each filter field: `Field className="w-full sm:w-48"` and
-  `SelectTrigger className="w-full"`. Date inputs the same width.
+  `SelectTrigger className="w-full"`. Date pickers the same width; a
+  `DateRangePicker` may take `sm:w-72`.
 - Selects in forms and dialogs (role pickers, type, unit): always
   `SelectTrigger className="w-full"`.
 - Mobile "Filters" dialogs (assets) keep their dialog; its trigger button goes
@@ -253,13 +381,137 @@ Sizing rules (the stock `SelectTrigger` is `w-fit`, so set widths):
 
 ```tsx
 <FilterBar
-  actions={filtered ? <Button onClick={clear} variant="ghost">Clear filters</Button> : null}
+  activeCount={activeCount}
   label="Filter work orders"
+  onClear={clear}
   search={<Field><FieldLabel htmlFor={id}>Search</FieldLabel><Input id={id} type="search" /></Field>}
 >
   <Field className="w-full sm:w-48">{/* label + Select with w-full trigger */}</Field>
 </FilterBar>
 ```
+
+### Dates and times: `DatePicker`, `DateTimePicker`, `DateRangePicker`
+
+Never use native `<input type="date" | "datetime-local">`. Use these shared
+fields, built on shadcn `Popover` + `Calendar` (`@proj/ui/components/popover`,
+`@proj/ui/components/calendar`, react-day-picker). Values are the same strings
+the native inputs used, so they drop into existing state and API mapping.
+
+- `DatePicker` (`components/date-picker.tsx`): `value: string`
+  (`YYYY-MM-DD`, `""` when empty), `onChange(value: string)`,
+  `placeholder?` ("Pick a date"), `clearable?` (default true; shows a "Clear
+  date" button in the popover), `min?`/`max?` (`YYYY-MM-DD`, days outside are
+  disabled), plus trigger props `id`, `aria-label`, `aria-describedby`,
+  `aria-invalid`, `disabled`, `className` (default `w-full`). The trigger is an
+  outline Button with a `CalendarIcon` showing e.g. "14 Mar 2026". Label it with
+  `<FieldLabel htmlFor={id}>` - the trigger is a button, so the label names it.
+  Also exports `parseDateValue`, `toDateValue`, `formatDateValue`.
+- `DateTimePicker` (`components/date-time-picker.tsx`): `value: string`
+  (`YYYY-MM-DDTHH:mm`, as `datetime-local`), `onChange`, `placeholder?`, same
+  trigger props. A DatePicker plus a `TimePicker` (group named
+  "<aria-label> time", Selects "<aria-label> hour"/"<aria-label> minute"; id
+  `<id>-time`). Picking a day keeps the time (00:00 if none); changing the
+  time keeps the date (today if none).
+- `TimePicker` (`components/time-picker.tsx`): `value: string` (`HH:mm`, `""`
+  empty), `onChange(value: string)`, `minuteStep?` (default 5; an off-step
+  current minute stays listed), `partLabel?` (prefix for the hour/minute
+  names, defaults to `aria-label`), plus `id` (on the hour Select; minute gets
+  `<id>-minute`), `aria-label` (default "Time"), `aria-describedby`,
+  `aria-invalid`, `disabled`, `className`. A `role="group"` with a `Clock`
+  icon and two shadcn `Select`s (hour 00-23, minute). Picking one part
+  defaults the other to 00. shadcn has no TimePicker component - its "date
+  and time picker" calendar blocks use a native `Input type="time"`, which is
+  the browser widget - so this is built from `Select`. **Never use
+  `<input type="time">`**; every time field uses `TimePicker` or
+  `DateTimePicker`.
+- `DateRangePicker` (`components/date-range-picker.tsx`): `value: { from:
+  string; to: string }` (`YYYY-MM-DD` each, `""` unset), `onChange`,
+  `placeholder?` ("Any date"), same trigger props. One outline trigger
+  ("1 Mar 2026 – 31 Mar 2026", `CalendarRange` icon) opening a two-month range
+  calendar with "Clear dates". For from/to filters.
+
+```tsx
+<Field className="w-full sm:w-48">
+  <FieldLabel htmlFor="due">Due</FieldLabel>
+  <DatePicker id="due" onChange={setDue} value={due} />
+</Field>
+```
+
+## Buttons: one variant per role
+
+Colour tells the user how important an action is, so variants follow the
+action's role, not taste.
+
+| Variant | Use for | Examples |
+| --- | --- | --- |
+| `default` (primary) | The **one** main action of the view: page-header create action, form submit, dialog confirm (non-destructive). At most one per view/dialog footer. | "New work order", "Save", "Create estate" |
+| `outline` | Secondary actions beside the primary; Cancel; Retry in error alerts; pagination; picker/dialog triggers; export; Clear filters as an EmptyState action | "Cancel", "Retry", "Next", "Export CSV" |
+| `ghost` | Row/inline and icon-only actions inside tables, cards and toolbars; FilterBar's Clear filters; dismiss | row "Edit", kebab menu |
+| `destructive` | Only the confirm button of a destructive action (in its confirmation dialog), and the trigger that opens it on a details page | "Delete file", "Retire asset", "Deactivate" |
+| `secondary` | Not used. Use `outline`. | - |
+| `link` | Inline navigation inside text | "View inspection" in a sentence |
+
+Rules:
+
+- Retry is `outline`, never `default` - it is recovery, not the main task.
+- Pagination is all `outline` (Previous and Next match).
+- Cancel is always `outline` and sits after the primary.
+- A row action that deletes opens a confirmation; the row trigger is `ghost`
+  (or a menu item with `variant="destructive"`), the confirm is `destructive`.
+- Links that look like buttons use `buttonVariants({ variant })` with the same
+  rules.
+
+## Copy: terse UI chrome
+
+Labels, titles and descriptions are fragments, not sentences. No trailing full
+stops in titles, labels, buttons or badges. Sentences are allowed only in
+error alerts, confirmation dialog bodies (state the effect) and help text that
+explains a rule.
+
+| Element | Rule | Do | Don't |
+| --- | --- | --- | --- |
+| Button | Verb + noun, 1-3 words | "New work order", "Retry", "Export CSV" | "Click here to create a new work order" |
+| Page description | Optional; <= ~8 words, no full stop | "Equipment in this estate" | "Every device in this estate and whether it is still reporting. Devices that have gone quiet are listed first." |
+| Empty title | "No <things> yet" / "No matching <things>", no full stop | "No documents yet" | "No documents linked to this asset." |
+| Empty description | Optional; one short fragment | "Uploads appear here" | "Uploaded invoices and service reports will appear here." |
+| Section title | Noun phrase | "Maintenance costs" | "Here are your maintenance costs" |
+| Field label | Noun, no colon | "Due date" | "Please select the due date:" |
+| Loading label | "Loading <things>…" | "Loading readings…" | - |
+| Pending button | Present participle + … | "Saving…" | "Please wait while we save" |
+
+## Icons: lucide-react
+
+Icons come from `lucide-react` only, are decorative (`aria-hidden="true"`) and
+never replace a visible label (icon-only buttons need `aria-label`). Default
+size is the component's (`size-4` in buttons); do not set colours except
+`text-muted-foreground` for section/filter icons.
+
+Use one per:
+
+**Never show the same icon twice on one screen.** The section's icon appears
+only in the sidebar and the `PageHeader`; empty states use the neutral
+`Inbox` default (or `SearchX` for no matches); section titles use a distinct
+icon or none; the filter `ListFilter` lives only on the `FilterToggle`.
+
+- **Nav items and page headers**: the same icon for a section in the sidebar
+  and in `PageHeader icon`, taken from `components/app-navigation.tsx`:
+  `LayoutDashboard` overview, `Wrench` work orders, `ClipboardList` fault
+  reports, `ClipboardCheck` inspections, `MapPin` locations, `Layers` assets,
+  `Cpu` devices, `Activity` readings, `Gauge` device monitoring,
+  `AlertTriangle` failure risk, `Files` documents, `Users` members,
+  `ShieldCheck` roles, `Tags` asset categories, `Settings` estate settings,
+  `Building2` estates. Pages outside that list: `UserRound` account,
+  `ShieldCheck` admin users, `ClipboardPenLine` resident "Report a fault". Check
+  `components/app-navigation.tsx` and reuse what it uses.
+- **Primary actions**: leading icon - `Plus` create, `Save`/none for submit,
+  `Upload`, `Download`, `Send`, `UserPlus`.
+- **Empty states**: no `icon` prop (neutral `Inbox` default); `SearchX` for
+  "No matching …".
+- **Section / card titles**: `SectionHeading icon` or an icon inside
+  `CardTitle`.
+- **Filters**: built into `FilterToggle` (`ListFilter`).
+
+Not on: every row action, every field, badges, pagination text buttons.
 
 ### Lists and tables
 
@@ -267,13 +519,102 @@ Results below the FilterBar: shadcn `Table` at >=768px, Card records below
 (see Tables and feedback). Order of states: `LoadingState` -> Alert + Retry ->
 `EmptyState` -> results. Pagination sits after the results.
 
-### Tabs
+### Shared building blocks
 
-Use shadcn `Tabs` (`@proj/ui/components/tabs`) when a page has distinct
-sub-views of the same subject that are not needed at once, and in place of
-`aria-pressed` toggle-button groups that switch between whole views. Keep
-filters that narrow one list in the FilterBar. Put the active tab in the URL
-search params when the screen already uses search params.
+Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
+
+- **`ErrorState`** (`components/error-state.tsx`): `message: string`,
+  `onRetry: () => void`, `retryLabel?` (default "Retry"), `retryAriaLabel?`
+  (accessible name when several Retry buttons share a screen, e.g. "Retry
+  asset link for <file>" per document row). Destructive `Alert`
+  (`role="alert"`, `CircleAlert` icon) with an outline Retry button. Every
+  failed query renders this - not `<p role="alert">… <Button>Retry</Button></p>`.
+  Mutation errors inside dialogs stay a `text-destructive` `role="alert"` line
+  (ConfirmDialog/FormDialog do this via `error`).
+- **`Pagination`** (`components/pagination.tsx`): `label` (nav name, e.g.
+  "Work order pages"), `summary?` ("1–20 of 45"), `canPrevious`, `canNext`,
+  `onPrevious`, `onNext`, `disabled?`. Outline "Previous page"/"Next page".
+  The caller owns offset or cursor state. Readings keep their numbered
+  `ReadingPagination`.
+- **`SectionCard`** (`components/section-card.tsx`): `title`, `icon?`,
+  `level?` (2), `description?`, `actions?` (header top right), `className?`,
+  `children`. A `Card` holding a `section` labelled by its `SectionHeading`.
+  Use for every titled card section on detail pages instead of `Card` +
+  `CardHeader` + `SectionHeading` by hand. `icon` must not repeat the page icon.
+- **`ConfirmDialog`** (`components/confirm-dialog.tsx`): `open`, `title`,
+  `description?` (the effect), `children?` (identify the target),
+  `confirmLabel`, `pendingLabel?`, `cancelLabel?` ("Cancel"; e.g. "Keep
+  role"), `confirmIcon?`, `destructive?` (true), `pending?`,
+  `confirmDisabled?` (keeps confirm disabled, e.g. until a typed MCST
+  number / asset reference / device identifier matches), `error?`,
+  `onConfirm`, `onCancel`. Locks while pending (buttons disabled, no X,
+  Escape/outside ignored). For every delete/deactivate/retire confirmation,
+  including the type-to-confirm ones (deactivate estate, retire asset,
+  deactivate device). It is not a `<form>`: Enter in its inputs does not
+  confirm.
+- **`FormDialog`** (`components/form-dialog.tsx`): `open`, `title`,
+  `description?`, `children` (fields), `submitLabel`, `pendingLabel?`
+  ("Saving…"), `pending?`, `submitDisabled?`, `secondaryActions?` (extra
+  footer buttons before Cancel, e.g. report "Reload" after a conflict),
+  `className?` (on `DialogContent`, e.g. `max-h-… overflow-y-auto sm:max-w-xl`),
+  `error?` (a plain `role="alert"` line; put a richer recovery `Alert` in
+  `children` instead), `onSubmit: (form: HTMLFormElement) => void` (default
+  prevented; read uncontrolled fields with `new FormData(form)`), `onClose`.
+  A `<form>` named by the dialog title (`aria-labelledby`, so
+  `getByRole("form", { name })` works) with a Cancel + submit footer;
+  cannot be dismissed while pending. For short create/edit tasks (work-order
+  completion, report change location, metric policy, pause sensor, upload
+  document). Children must not contain another `<form>`. The documents
+  asset-link and work-order-link dialogs stay hand-built `Dialog`s: they are
+  multi-mode panels (read-only view, Close-only footer, destructive Unlink,
+  inline editor/picker forms) with no single submit.
+
+```tsx
+{orders.isError ? <ErrorState message="Unable to load work orders" onRetry={retry} /> : null}
+
+<Pagination canNext={!!data.nextCursor} canPrevious={index > 0} label="Work order pages" onNext={next} onPrevious={previous} />
+
+<SectionCard actions={<Button variant="outline">Upload</Button>} title="Documents">…</SectionCard>
+
+<ConfirmDialog
+  cancelLabel="Keep role" confirmIcon={Trash2} confirmLabel="Delete role"
+  description="Permanent · pending links stop working" error={deletion.error?.message}
+  onCancel={close} onConfirm={confirm} open={Boolean(role)}
+  pending={deletion.isPending} pendingLabel="Deleting role…" title="Delete role"
+>
+  <p className="font-medium">{role?.name}</p>
+</ConfirmDialog>
+```
+
+Not built (too varied to share yet): a list wrapper - keep the state order
+`LoadingState` -> `ErrorState` -> `EmptyState` -> results by hand; a form page
+layout - use `PageLayout className="max-w-3xl"` + `Card` + `FormActions`.
+
+### Sub-views: separate routes + `SubNav` (`components/sub-nav.tsx`)
+
+Distinct sub-views of one subject are **separate routes**, not in-page
+`Tabs`: folder-based child routes (`estates/$estateId/locations/index.tsx`
+beside `estates/$estateId/index.tsx`), each its own URL, linked by a shared
+`SubNav` under the `PageHeader`. Do not add new in-page `Tabs` for whole
+views; keep shadcn `Tabs` only for small in-card toggles that are not
+destinations. Filters that narrow one list stay in the FilterBar.
+
+Props: `label: string` (the `nav`'s accessible name), `items: { label;
+to; params?; search?; exact? }[]` (`to` typed against the route tree; set
+`exact: true` on the section's index route so it is not active on children).
+Renders `<nav aria-label>` > `<ul>` styled with shadcn `tabsListVariants`;
+each item is a router `Link`, and the router sets `aria-current="page"` on the
+active one, which drives the active (Tabs-trigger-like) styling.
+
+```tsx
+<SubNav
+  items={[
+    { exact: true, label: "Overview", params: { estateId }, to: "/estates/$estateId" },
+    { label: "Locations", params: { estateId }, to: "/estates/$estateId/locations" },
+  ]}
+  label="Estate sections"
+/>
+```
 
 ## Adding a screen and reviewing this change
 

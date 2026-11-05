@@ -9,8 +9,9 @@ import {
   useState,
 } from "react";
 import { DetailCard } from "@/components/detail-card";
+import { ErrorState } from "@/components/error-state";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { FormPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
 import {
   type InspectionAsset,
@@ -152,10 +153,6 @@ export function InspectionForm({
       setOutcome(value === "PASS" || value === "FAIL" ? value : ""),
     []
   );
-  const changeDate = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setDate(event.target.value),
-    []
-  );
   const changeNotes = useCallback(
     (event: ChangeEvent<HTMLTextAreaElement>) => setNotes(event.target.value),
     []
@@ -184,8 +181,11 @@ export function InspectionForm({
   if (asset.isError) {
     return (
       <PageLayout>
-        <p role="alert">{asset.error.message}</p>
-        <Button onClick={retryAsset}>Retry asset</Button>
+        <ErrorState
+          message={asset.error.message}
+          onRetry={retryAsset}
+          retryLabel="Retry asset"
+        />
       </PageLayout>
     );
   }
@@ -196,7 +196,7 @@ export function InspectionForm({
     observed.estateActive && observed.assetActive && observed.locationActive;
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
           {
             label: observed.name,
@@ -231,7 +231,7 @@ export function InspectionForm({
           date={date}
           installedOn={observed.installedOn}
           notes={notes}
-          onDateChange={changeDate}
+          onDateChange={setDate}
           onNotesChange={changeNotes}
           onOutcomeChange={changeOutcome}
           outcome={outcome}

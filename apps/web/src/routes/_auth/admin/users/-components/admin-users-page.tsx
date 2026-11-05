@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Users } from "lucide-react";
+import { SearchX, ShieldCheck, Users } from "lucide-react";
 import {
   type ChangeEvent,
   type MouseEvent,
@@ -37,10 +37,12 @@ import {
   useState,
 } from "react";
 import { EmptyState } from "@/components/empty-state";
-import { FilterBar } from "@/components/filter-bar";
+import { ErrorState } from "@/components/error-state";
+import { FilterBar, useFilterPanel } from "@/components/filter-bar";
 import { LoadingState } from "@/components/loading-state";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page-header";
 import { PageLayout } from "@/components/page-layout";
+import { SectionHeading } from "@/components/section-heading";
 import { api } from "@/lib/api";
 import { useMobile } from "@/lib/use-mobile";
 import { MemberEstates } from "@/routes/_auth/admin/-components/member-estates";
@@ -369,11 +371,22 @@ export function AdminUsersPage() {
     })),
   ];
 
-  const error =
-    organizations.error ??
-    members.error ??
-    organizationRoles.error ??
-    roleUpdate.error;
+  const loadError =
+    organizations.error ?? members.error ?? organizationRoles.error;
+  const retryLoad = useCallback(() => {
+    if (organizations.error) {
+      organizations.refetch();
+    }
+    if (members.error) {
+      members.refetch();
+    }
+    if (organizationRoles.error) {
+      organizationRoles.refetch();
+    }
+  }, [organizations, members, organizationRoles]);
+  const activeCount = search.trim() ? 1 : 0;
+  // Starts open: the estate picker that scopes the page lives in the panel.
+  const panel = useFilterPanel(1);
 
   const isLoadingOrganization =
     Boolean(organizationId) &&
@@ -385,7 +398,7 @@ export function AdminUsersPage() {
   return (
     <PageLayout>
       <div className="mx-auto max-w-6xl space-y-6">
-        <PageHeader
+        <ListPageHeader
           actions={
             <Card className="gap-1 px-4" size="sm">
               <p className="text-muted-foreground text-xs">Total users</p>
@@ -394,16 +407,23 @@ export function AdminUsersPage() {
               </p>
             </Card>
           }
-          description="Manage each member's role and estate access. Changes save automatically."
+          description="Member roles and estate access"
+          filters={
+            organizations.data?.length
+              ? { activeCount, ...panel.toggleProps }
+              : undefined
+          }
+          icon={ShieldCheck}
           title="User roles"
         />
 
-        {error ? (
-          <p
-            className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border p-3 text-sm"
-            role="alert"
-          >
-            {error.message}
+        {loadError ? (
+          <ErrorState message={loadError.message} onRetry={retryLoad} />
+        ) : null}
+
+        {roleUpdate.error ? (
+          <p className="text-destructive text-sm" role="alert">
+            {roleUpdate.error.message}
           </p>
         ) : null}
 
@@ -413,15 +433,17 @@ export function AdminUsersPage() {
 
         {organizations.data?.length === 0 && (
           <EmptyState
-            description="Estates appear here once they are created."
-            icon={Building2}
-            title="No estates found"
+            description="Created estates appear here"
+            title="No estates yet"
           />
         )}
 
         {Boolean(organizations.data?.length) && (
           <FilterBar
+            {...panel.barProps}
+            activeCount={activeCount}
             label="Filter users"
+            onClear={clearSearch}
             search={
               <Field>
                 <FieldLabel className="sr-only" htmlFor="user-search">
@@ -477,11 +499,11 @@ export function AdminUsersPage() {
         >
           <div className="border-border flex flex-col gap-4 border-b p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="font-semibold" id="members-heading">
+              <SectionHeading icon={Users} id="members-heading">
                 Members
-              </h2>
+              </SectionHeading>
               <p className="text-muted-foreground mt-1 text-sm">
-                Choose a role for each member.
+                Role per member
               </p>
             </div>
           </div>
@@ -603,8 +625,7 @@ export function AdminUsersPage() {
           {!organizationId && (
             <div className="p-4">
               <EmptyState
-                description="Select an estate to view its members."
-                icon={Building2}
+                description="Pick an estate to see members"
                 title="No estate selected"
               />
             </div>
@@ -619,15 +640,12 @@ export function AdminUsersPage() {
                       Clear filters
                     </Button>
                   }
-                  description="Try another name or email."
-                  icon={Users}
+                  description="Try another name or email"
+                  icon={SearchX}
                   title="No matching users"
                 />
               ) : (
-                <EmptyState
-                  icon={Users}
-                  title="No members in this estate yet"
-                />
+                <EmptyState title="No members yet" />
               )}
             </div>
           )}

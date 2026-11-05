@@ -7,7 +7,11 @@ import {
   within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
-import { AssetCategoriesPage } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
+import {
+  AssetCategoriesLayout,
+  AssetCategoriesList,
+  type IntervalFilter,
+} from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page";
 
 const EDIT_INTERVAL = /^Edit service interval/u;
 
@@ -78,6 +82,7 @@ vi.mock("@/lib/asset-categories", () => ({
     data: state.data,
     error: state.error,
     isPending: !(state.data || state.error),
+    refetch: vi.fn(),
   }),
   useSetSilentFailure: () => ({
     mutate: state.mutate,
@@ -89,10 +94,38 @@ vi.mock("@/lib/service-intervals", async (importOriginal) => ({
   useSetCategoryServiceInterval: () => ({ mutateAsync: state.saveInterval }),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    params,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    params?: Record<string, string>;
+  }) => (
+    <a
+      href={Object.entries(params ?? {}).reduce(
+        (path, [key, value]) => path.replace(`$${key}`, value),
+        to
+      )}
+    >
+      {children}
+    </a>
   ),
 }));
+
+function AssetCategoriesPage({
+  filter = "ALL",
+}: {
+  estateId?: string;
+  filter?: IntervalFilter;
+}) {
+  return (
+    <AssetCategoriesLayout estateId="oak">
+      <AssetCategoriesList estateId="oak" filter={filter} />
+    </AssetCategoriesLayout>
+  );
+}
 
 function row(label: string) {
   return screen.getByRole("row", { name: new RegExp(`^${label}`, "u") });
@@ -222,11 +255,13 @@ it("locks the flags of an inactive estate", () => {
   }
 });
 
-it("shows a load error", () => {
+it("shows a load error with Retry", () => {
   state.data = undefined;
   state.error = new Error("Estate not found.");
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  expect(screen.getByRole("alert").textContent).toContain("Estate not found.");
+  const alert = screen.getByRole("alert");
+  expect(alert.textContent).toContain("Estate not found.");
+  within(alert).getByRole("button", { name: "Retry" });
 });
 
 it("shows the latest change to either the flag or the interval", () => {
@@ -236,7 +271,7 @@ it("shows the latest change to either the flag or the interval", () => {
 
 function filters() {
   return within(
-    screen.getByRole("tablist", { name: "Filter by service interval" })
+    screen.getByRole("navigation", { name: "Filter by service interval" })
   );
 }
 
@@ -262,19 +297,13 @@ it("summarises flags and intervals in cards", () => {
   card("Intervals set").getByText("1 in months · 1 in years");
 });
 
-it("shows the categories missing an interval from their card", () => {
+it("links to the categories missing an interval from their card", () => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  fireEvent.click(
-    card("Missing service interval").getByRole("button", {
-      name: "Show these categories",
-    })
-  );
   expect(
-    filters()
-      .getByRole("tab", { name: "Not set" })
-      .getAttribute("aria-selected")
-  ).toBe("true");
-  expect(shownCategories()).toEqual(["Lift"]);
+    card("Missing service interval")
+      .getByRole("link", { name: "Show these categories" })
+      .getAttribute("href")
+  ).toBe("/estates/oak/asset-categories/not-set");
 });
 
 it("reassures when every category has an interval", () => {
@@ -283,7 +312,7 @@ it("reassures when every category has an interval", () => {
   card("Missing service interval").getByText("0");
   card("Missing service interval").getByText("Every category has an interval.");
   expect(
-    card("Missing service interval").queryByRole("button", {
+    card("Missing service interval").queryByRole("link", {
       name: "Show these categories",
     })
   ).toBeNull();
@@ -296,39 +325,43 @@ it("says when no interval is set yet", () => {
   card("Intervals set").getByText("None yet");
 });
 
-it("shows every category until a filter is chosen", () => {
+it("links each service interval view as its own page", () => {
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  const pressed = ["All", "Days", "Months", "Years", "Not set"].map((name) =>
-    filters().getByRole("tab", { name }).getAttribute("aria-selected")
-  );
-  expect(pressed).toEqual(["true", "false", "false", "false", "false"]);
+  expect(
+    filters()
+      .getAllByRole("link")
+      .map((link) => [link.textContent, link.getAttribute("href")])
+  ).toEqual([
+    ["All", "/estates/oak/asset-categories"],
+    ["Days", "/estates/oak/asset-categories/days"],
+    ["Months", "/estates/oak/asset-categories/months"],
+    ["Years", "/estates/oak/asset-categories/years"],
+    ["Not set", "/estates/oak/asset-categories/not-set"],
+  ]);
+  expect(screen.queryByRole("tablist")).toBeNull();
+});
+
+it("shows every category on All", () => {
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
   expect(shownCategories()).toEqual(["Lift", "Lighting", "Pump"]);
 });
 
 it.each([
-  ["Months", ["Pump"]],
-  ["Years", ["Lighting"]],
-  ["Not set", ["Lift"]],
-])("filters to %s", (name, shown) => {
-  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  fireEvent.click(filters().getByRole("tab", { name }));
-  expect(
-    filters().getByRole("tab", { name }).getAttribute("aria-selected")
-  ).toBe("true");
-  expect(
-    filters().getByRole("tab", { name: "All" }).getAttribute("aria-selected")
-  ).toBe("false");
+  ["MONTH", ["Pump"]],
+  ["YEAR", ["Lighting"]],
+  ["NONE", ["Lift"]],
+] as const)("filters to %s", (filter, shown) => {
+  renderWithProviders(<AssetCategoriesPage filter={filter} />);
   expect(shownCategories()).toEqual(shown);
 });
 
-it("says when a filter matches nothing, and All shows everything again", () => {
-  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
-  fireEvent.click(filters().getByRole("tab", { name: "Days" }));
+it("says when a filter matches nothing, linking back to All", () => {
+  renderWithProviders(<AssetCategoriesPage filter="DAY" />);
   screen.getByText("No matching categories");
-  screen.getByRole("button", { name: "Clear filters" });
+  expect(
+    screen.getByRole("link", { name: "Clear filters" }).getAttribute("href")
+  ).toBe("/estates/oak/asset-categories");
   expect(screen.queryByRole("table")).toBeNull();
-  fireEvent.click(filters().getByRole("tab", { name: "All" }));
-  expect(shownCategories()).toEqual(["Lift", "Lighting", "Pump"]);
 });
 
 it("saves a category's interval from the dialog", async () => {

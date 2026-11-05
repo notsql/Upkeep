@@ -131,4 +131,19 @@ describe("FailureRiskPage", () => {
     await screen.findByText(EMPTY);
     expect(screen.queryByRole("table")).toBeNull();
   });
+
+  it("offers Retry when the forecasts cannot be loaded", async () => {
+    vi.mocked(api.GET).mockImplementation(((path: string) =>
+      Promise.resolve(
+        path === "/estates/{estateId}/failure-risk"
+          ? {
+              error: { message: "Forecasts unavailable." },
+              response: new Response(null, { status: 503 }),
+            }
+          : { data: estate, response: new Response() }
+      )) as never);
+    renderWithProviders(<FailureRiskPage estateId="estate-id" />);
+    const alert = within(await screen.findByRole("alert"));
+    alert.getByRole("button", { name: "Retry" });
+  });
 });

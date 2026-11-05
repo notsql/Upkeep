@@ -1,4 +1,5 @@
-import { Button } from "@proj/ui/components/button";
+import { buttonVariants } from "@proj/ui/components/button";
+import { Link } from "@tanstack/react-router";
 import {
   CalendarClock,
   CircleCheck,
@@ -23,10 +24,10 @@ function unitBreakdown(categories: EstateAssetCategory[]): string {
 /** Flag and service-interval insights above the Asset categories table (ID-83, ID-81). */
 export function CategorySummaryCards({
   categories,
-  onShowMissing,
+  estateId,
 }: {
   categories: EstateAssetCategory[];
-  onShowMissing: () => void;
+  estateId: string;
 }) {
   const flagged = categories.filter((category) => category.failsSilently);
   const missing = categories.filter((category) => !category.serviceInterval);
@@ -49,15 +50,17 @@ export function CategorySummaryCards({
             <p className="text-muted-foreground text-sm">
               {`${missing.length} of ${categories.length} categories need an interval`}
             </p>
-            <Button
-              className="justify-self-start"
-              onClick={onShowMissing}
-              size="sm"
-              type="button"
-              variant="outline"
+            <Link
+              className={buttonVariants({
+                className: "justify-self-start",
+                size: "sm",
+                variant: "outline",
+              })}
+              params={{ estateId, interval: "not-set" }}
+              to="/estates/$estateId/asset-categories/$interval"
             >
               Show these categories
-            </Button>
+            </Link>
           </>
         ) : (
           <p className="text-muted-foreground text-sm">

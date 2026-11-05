@@ -1,5 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import {
@@ -9,15 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, useCallback, useId, useState } from "react";
+import { FormDialog } from "@/components/form-dialog";
 import {
   type SensorPolicy,
   useSetFlatlinePolicy,
@@ -56,50 +47,46 @@ export function useMetricPolicyEditor({
     },
     [reset]
   );
-  const handleSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      if (isPending || !canManage || !policy) {
-        return;
+  const handleSubmit = useCallback(() => {
+    if (isPending || !canManage || !policy) {
+      return;
+    }
+    setValidation(undefined);
+    reset();
+    try {
+      const durationMinutes = wholeMinutes(duration, unit, 43_200);
+      const value = Number(tolerance);
+      if (
+        !(TOLERANCE.test(tolerance) && Number.isFinite(value)) ||
+        value < 0 ||
+        value >= 1e12
+      ) {
+        throw new Error(
+          "Tolerance must be non-negative, with at most 12 digits before and 6 after the decimal point."
+        );
       }
-      setValidation(undefined);
-      reset();
-      try {
-        const durationMinutes = wholeMinutes(duration, unit, 43_200);
-        const value = Number(tolerance);
-        if (
-          !(TOLERANCE.test(tolerance) && Number.isFinite(value)) ||
-          value < 0 ||
-          value >= 1e12
-        ) {
-          throw new Error(
-            "Tolerance must be non-negative, with at most 12 digits before and 6 after the decimal point."
-          );
+      mutate(
+        { durationMinutes, tolerance: value },
+        {
+          onSuccess: onClose,
         }
-        mutate(
-          { durationMinutes, tolerance: value },
-          {
-            onSuccess: onClose,
-          }
-        );
-      } catch (error) {
-        setValidation(
-          error instanceof Error ? error.message : "Check the policy values."
-        );
-      }
-    },
-    [
-      canManage,
-      duration,
-      isPending,
-      mutate,
-      onClose,
-      policy,
-      reset,
-      tolerance,
-      unit,
-    ]
-  );
+      );
+    } catch (error) {
+      setValidation(
+        error instanceof Error ? error.message : "Check the policy values."
+      );
+    }
+  }, [
+    canManage,
+    duration,
+    isPending,
+    mutate,
+    onClose,
+    policy,
+    reset,
+    tolerance,
+    unit,
+  ]);
   const changeDuration = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setDuration(event.target.value),
     []
@@ -109,7 +96,12 @@ export function useMetricPolicyEditor({
       setUnit(value);
     }
   }, []);
-  const errorMessage = validation || save.error?.message;
+  // The dialog only opens for managers, so losing that right mid-edit means
+  // the review failed to load: keep the draft but do not save it.
+  const errorMessage =
+    validation ||
+    save.error?.message ||
+    (canManage ? undefined : "Saving is paused until device metrics load");
   const changeTolerance = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setTolerance(event.target.value),
     []
@@ -128,131 +120,125 @@ export function useMetricPolicyEditor({
   };
 }
 
-export function MetricPolicyForm({
+/** The metric policy editor, opened in a FormDialog from its row's Edit / Set up button. */
+export function MetricPolicyDialog({
   policy,
-  id: editorId,
   onClose,
   canManage,
   editor,
 }: {
-  policy: SensorPolicy;
-  id: string;
+  policy: SensorPolicy | undefined;
   onClose: () => void;
   canManage: boolean;
   editor: ReturnType<typeof useMetricPolicyEditor>;
 }) {
+  const label = policy ? metricLabel(policy.metric) : "";
+  let description: string | undefined;
+  if (policy) {
+    description =
+      policy.durationMinutes === null
+        ? "Not configured"
+        : `Current: ${policy.durationMinutes} minutes · tolerance ${policy.tolerance} ${policy.unit}`;
+  }
+  return (
+    <FormDialog
+      description={description}
+      error={editor.errorMessage}
+      onClose={onClose}
+      onSubmit={editor.handleSubmit}
+      open={Boolean(policy)}
+      pending={editor.isPending}
+      submitDisabled={!canManage}
+      submitLabel="Save policy"
+      title={`${label} policy`}
+    >
+      {policy ? (
+        <MetricPolicyFields
+          canManage={canManage}
+          editor={editor}
+          key={policy.metric}
+          policy={policy}
+        />
+      ) : null}
+    </FormDialog>
+  );
+}
+
+function MetricPolicyFields({
+  policy,
+  canManage,
+  editor,
+}: {
+  policy: SensorPolicy;
+  canManage: boolean;
+  editor: ReturnType<typeof useMetricPolicyEditor>;
+}) {
   const id = useId();
-  const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    heading.current?.focus({ preventScroll: true });
-    heading.current?.scrollIntoView?.({ block: "nearest" });
-  }, []);
   const label = metricLabel(policy.metric);
   const {
     duration,
     unit,
     tolerance,
-    errorMessage,
     isPending,
-    handleSubmit,
     changeDuration,
     changeUnit,
     changeTolerance,
   } = editor;
   return (
-    <div className="bg-muted/40 rounded-xl p-4 sm:p-6" id={editorId}>
-      <h3 className="mb-4 text-base font-semibold" ref={heading} tabIndex={-1}>
-        {label} policy
-      </h3>
-      <p className="text-muted-foreground mb-3">
-        {policy.durationMinutes === null
-          ? "Not configured"
-          : `Current threshold: ${policy.durationMinutes} minutes; tolerance: ${policy.tolerance} ${policy.unit}`}
-      </p>
-      <form
-        aria-label={`${label} policy`}
-        className="grid gap-3"
-        noValidate
-        onSubmit={handleSubmit}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor={`${id}-duration`}>Threshold</FieldLabel>
-            <Input
-              disabled={isPending || !canManage}
-              id={`${id}-duration`}
-              min={1}
-              onChange={changeDuration}
-              required
-              step={1}
-              type="number"
-              value={duration}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-unit`}>Time unit</FieldLabel>
-            <Select
-              disabled={isPending || !canManage}
-              onValueChange={changeUnit}
-              value={unit}
-            >
-              <SelectTrigger className="w-full" id={`${id}-unit`}>
-                <SelectValue>
-                  {unit === "minutes" ? "Minutes" : "Hours"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="minutes">Minutes</SelectItem>
-                <SelectItem value="hours">Hours</SelectItem>
-              </SelectContent>
-            </Select>
-          </Field>
-        </div>
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor={`${id}-tolerance`}>
-            Tolerance ({policy.unit})
-          </FieldLabel>
+          <FieldLabel htmlFor={`${id}-duration`}>Threshold</FieldLabel>
           <Input
             disabled={isPending || !canManage}
-            id={`${id}-tolerance`}
-            min={0}
-            onChange={changeTolerance}
+            id={`${id}-duration`}
+            min={1}
+            onChange={changeDuration}
             required
-            step="0.000001"
+            step={1}
             type="number"
-            value={tolerance}
+            value={duration}
           />
         </Field>
-        <p className="text-muted-foreground">
-          Zero requires exact matching. This policy applies to{" "}
-          {label.toLowerCase()} readings from every device in this estate.
-          Maximum threshold: 30 days.
-        </p>
-        {errorMessage ? (
-          <Alert variant="destructive">
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
-        ) : null}
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button
-            disabled={isPending}
-            onClick={onClose}
-            type="button"
-            variant="outline"
+        <Field>
+          <FieldLabel htmlFor={`${id}-unit`}>Time unit</FieldLabel>
+          <Select
+            disabled={isPending || !canManage}
+            onValueChange={changeUnit}
+            value={unit}
           >
-            Cancel
-          </Button>
-          {canManage ? (
-            <Button
-              aria-label={`Save ${label.toLowerCase()} policy`}
-              disabled={isPending}
-              type="submit"
-            >
-              {isPending ? "Saving…" : "Save policy"}
-            </Button>
-          ) : null}
-        </div>
-      </form>
-    </div>
+            <SelectTrigger className="w-full" id={`${id}-unit`}>
+              <SelectValue>
+                {unit === "minutes" ? "Minutes" : "Hours"}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="minutes">Minutes</SelectItem>
+              <SelectItem value="hours">Hours</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+      </div>
+      <Field>
+        <FieldLabel htmlFor={`${id}-tolerance`}>
+          Tolerance ({policy.unit})
+        </FieldLabel>
+        <Input
+          disabled={isPending || !canManage}
+          id={`${id}-tolerance`}
+          min={0}
+          onChange={changeTolerance}
+          required
+          step="0.000001"
+          type="number"
+          value={tolerance}
+        />
+      </Field>
+      <p className="text-muted-foreground text-sm">
+        Zero requires exact matching. This policy applies to{" "}
+        {label.toLowerCase()} readings from every device in this estate. Maximum
+        threshold: 30 days.
+      </p>
+    </>
   );
 }

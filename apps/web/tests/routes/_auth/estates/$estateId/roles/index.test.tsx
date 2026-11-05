@@ -19,6 +19,8 @@ import { routeTree } from "@/routeTree.gen";
 // Exercise the real registered route. Before it exists, assertions fail on the
 // missing screen rather than an unresolved import of a future component.
 const CREATE_ROLE = /^create role$/iu;
+const CREATE = /^create$/iu;
+const NEW_ROLE = /^create role$/iu;
 const PREREQUISITE = /requires.*view estate|view estate.*required/iu;
 const SAVING = /creating|saving/iu;
 const DELETE_REVIEWER = /delete.*fault reviewer/iu;
@@ -200,15 +202,15 @@ function serve({
   });
 }
 
-async function openRoles() {
+let router: ReturnType<typeof createRouter>;
+
+async function openAt(path: string) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
-  const router = createRouter({
+  router = createRouter({
     routeTree,
-    history: createMemoryHistory({
-      initialEntries: [`/estates/${estateId}/roles`],
-    }),
+    history: createMemoryHistory({ initialEntries: [path] }),
     context: { queryClient },
     defaultPendingMinMs: 0,
     defaultNotFoundComponent: () => <p role="alert">Page unavailable</p>,
@@ -217,12 +219,17 @@ async function openRoles() {
   return renderWithProviders(<RouterProvider router={router} />);
 }
 
-async function openCreateRole() {
-  await openRoles();
-  fireEvent.click(
-    (await screen.findAllByRole("button", { name: CREATE_ROLE }))[0]
-  );
-  await screen.findByRole("dialog", { name: "Create role" });
+const rolesPath = `/estates/${estateId}/roles`;
+const openRoles = () => openAt(rolesPath);
+const openNewRole = (search = "") => openAt(`${rolesPath}/new${search}`);
+
+function choose(label: string) {
+  fireEvent.click(screen.getByRole("checkbox", { name: label }));
+}
+
+function checked(label: string): boolean {
+  const box = screen.getByRole<HTMLInputElement>("checkbox", { name: label });
+  return box.checked || box.getAttribute("aria-checked") === "true";
 }
 
 beforeEach(() => {
@@ -231,81 +238,17 @@ beforeEach(() => {
   serve();
 });
 
-it("opens the permissions dropdown to reveal the unchecked permissions table", async () => {
-  await openCreateRole();
-  await screen.findByRole("textbox", { name: "Role name" });
-  screen.getByRole("textbox", { name: "Description" });
-  expect(screen.queryByRole("table", { name: "Permissions" })).toBeNull();
-  fireEvent.click(
-    screen.getByRole("button", { name: "Permissions", expanded: false })
-  );
-  const table = within(screen.getByRole("table", { name: "Permissions" }));
-  table.getByRole("columnheader", { name: "Select" });
-  table.getByRole("columnheader", { name: "Permission name" });
-  table.getByRole("columnheader", { name: "Description" });
-  for (const permission of permissions) {
-    const checkbox = table.getByRole<HTMLInputElement>("checkbox", {
-      name: permission.label,
-    });
-    expect(
-      checkbox.checked || checkbox.getAttribute("aria-checked") === "true"
-    ).toBe(false);
-    table.getByText(permission.label);
-    table.getByRole("cell", {
-      name: (name) => name.startsWith(permission.description),
-    });
-  }
-});
+// Roles list
 
-it("creates the exact selected permission set and shows the saved role", async () => {
-  await openCreateRole();
-  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
-    target: { value: "Fault reviewer" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
-  fireEvent.click(screen.getByRole("checkbox", { name: "View fault reports" }));
-  fireEvent.click(
-    screen.getByRole("button", { name: "Permissions", expanded: true })
-  );
-  expect(screen.queryByRole("table", { name: "Permissions" })).toBeNull();
-  fireEvent.click(
-    screen.getByRole("button", { name: "Permissions", expanded: false })
-  );
-  expect(
-    screen
-      .getByRole("checkbox", { name: "View fault reports" })
-      .getAttribute("aria-checked")
-  ).toBe("true");
-  fireEvent.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: CREATE_ROLE,
-    })
-  );
-  await waitFor(() =>
-    expect(api.POST).toHaveBeenCalledWith(
-      "/estates/{estateId}/roles",
-      expect.objectContaining({
-        params: { path: { estateId } },
-        body: expect.objectContaining({
-          name: "Fault reviewer",
-          permissions: ["VIEW_FAULT_REPORTS"],
-        }),
-      })
-    )
-  );
-  await waitFor(() =>
-    expect(screen.queryByRole("dialog", { name: "Create role" })).toBeNull()
-  );
-  within(await screen.findByRole("table", { name: "Custom roles" })).getByRole(
-    "cell",
-    { name: REVIEWER_NAME }
-  );
-});
-
-it("shows an empty state with a create action when there are no custom roles", async () => {
+it("links the header and empty-state create actions to the new-role page", async () => {
   await openRoles();
   await screen.findByText("No custom roles yet");
-  expect(screen.getAllByRole("button", { name: CREATE_ROLE })).toHaveLength(2);
+  expect(screen.queryByText("Maple Estate")).toBeNull();
+  const links = screen.getAllByRole("link", { name: CREATE });
+  expect(links).toHaveLength(2);
+  for (const link of links) {
+    expect(link.getAttribute("href")).toBe(`${rolesPath}/new`);
+  }
   expect(screen.queryByRole("textbox", { name: "Role name" })).toBeNull();
 });
 
@@ -315,132 +258,27 @@ it("lists custom roles in a table with a permissions summary and filters by sear
   const table = within(
     await screen.findByRole("table", { name: "Custom roles" })
   );
-  table.getByRole("cell", { name: REVIEWER_NAME });
+  table.getByRole("cell", { name: "Fault reviewer" });
   table.getByText("View fault reports");
+  expect(screen.queryByRole("search", { name: "Filter roles" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByRole("searchbox", { name: "Search roles" }), {
     target: { value: "zzz" },
   });
   await screen.findByText("No matching roles");
   expect(screen.queryByRole("table", { name: "Custom roles" })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  const filters = within(screen.getByRole("search", { name: "Filter roles" }));
+  filters.getByText("1 active");
+  screen.getByRole("button", { name: "Filters, 1 active" });
+  fireEvent.click(filters.getByRole("button", { name: "Clear filters" }));
   await screen.findByRole("table", { name: "Custom roles" });
 });
 
-it("edits a role in a dialog", async () => {
+it("links Edit to the role's edit page", async () => {
   serve({ existing: true });
   await openRoles();
-  fireEvent.click(await screen.findByRole("button", { name: EDIT_REVIEWER }));
-  const dialog = within(
-    await screen.findByRole("dialog", { name: "Edit Fault reviewer" })
-  );
-  fireEvent.click(dialog.getByRole("button", { name: "Save role" }));
-  await waitFor(() => expect(api.PUT).toHaveBeenCalled());
-});
-
-it("explains a missing prerequisite without silently selecting it", async () => {
-  await openCreateRole();
-  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
-    target: { value: "Editor" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
-  fireEvent.click(screen.getByRole("checkbox", { name: "Edit estate" }));
-  fireEvent.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: CREATE_ROLE,
-    })
-  );
-  await screen.findByText(PREREQUISITE);
-  expect(
-    screen
-      .getByRole("checkbox", { name: "View estate" })
-      .getAttribute("aria-checked")
-  ).not.toBe("true");
-  expect(api.POST).not.toHaveBeenCalled();
-});
-
-it("retains the entered role and permissions after a save error", async () => {
-  vi.mocked(api.POST).mockResolvedValue({
-    error: { message: "A role with this name already exists." },
-    response: new Response(null, { status: 409 }),
-  } as never);
-  await openCreateRole();
-  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
-    target: { value: "Fault reviewer" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
-  fireEvent.click(screen.getByRole("checkbox", { name: "View fault reports" }));
-  fireEvent.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: CREATE_ROLE,
-    })
-  );
-  await screen.findByRole("alert");
-  expect(
-    screen.getByRole<HTMLInputElement>("textbox", { name: "Role name" }).value
-  ).toBe("Fault reviewer");
-  const checkbox = screen.getByRole<HTMLInputElement>("checkbox", {
-    name: "View fault reports",
-  });
-  expect(
-    checkbox.checked || checkbox.getAttribute("aria-checked") === "true"
-  ).toBe(true);
-});
-
-it("prevents duplicate saves while a role request is pending", async () => {
-  vi.mocked(api.POST).mockImplementation(() => new Promise(() => undefined));
-  await openCreateRole();
-  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
-    target: { value: "Fault reviewer" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Permissions" }));
-  fireEvent.click(screen.getByRole("checkbox", { name: "View fault reports" }));
-  fireEvent.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: CREATE_ROLE,
-    })
-  );
-  const saving = await screen.findByRole<HTMLButtonElement>("button", {
-    name: SAVING,
-  });
-  expect(saving.disabled).toBe(true);
-  expect(
-    screen.getByRole<HTMLButtonElement>("button", { name: "Permissions" })
-      .disabled
-  ).toBe(true);
-  fireEvent.click(saving);
-  expect(api.POST).toHaveBeenCalledTimes(1);
-});
-
-it("opens the permissions dropdown while editing with saved selections intact", async () => {
-  serve({ existing: true });
-  await openRoles();
-  fireEvent.click(await screen.findByRole("button", { name: EDIT_REVIEWER }));
-  const editor = within(
-    await screen.findByRole("form", { name: "Edit Fault reviewer" })
-  );
-  expect(editor.queryByRole("table", { name: "Permissions" })).toBeNull();
-  fireEvent.click(
-    editor.getByRole("button", { name: "Permissions", expanded: false })
-  );
-  editor.getByRole("table", { name: "Permissions" });
-  expect(
-    editor
-      .getByRole("checkbox", { name: "View fault reports" })
-      .getAttribute("aria-checked")
-  ).toBe("true");
-  expect(api.PUT).not.toHaveBeenCalled();
-});
-
-it("opens role authoring for a delegated member without fetching estate details or the roster", async () => {
-  serve({ delegated: true });
-  await openCreateRole();
-  await screen.findByRole("textbox", { name: "Role name" });
-  expect(apiGet.mock.calls.map(([path]) => String(path))).not.toContain(
-    "/estates/{id}"
-  );
-  expect(apiGet.mock.calls.map(([path]) => String(path))).not.toContain(
-    "/estates/{estateId}/members"
-  );
+  const edit = await screen.findByRole("link", { name: EDIT_REVIEWER });
+  expect(edit.getAttribute("href")).toBe(`${rolesPath}/${roleId}/edit`);
 });
 
 it("confirms deletion with the role name and permanent invitation-history loss", async () => {
@@ -456,9 +294,7 @@ it("confirms deletion with the role name and permanent invitation-history loss",
   await waitFor(() =>
     expect(api.DELETE).toHaveBeenCalledWith(
       "/estates/{estateId}/roles/{roleId}",
-      {
-        params: { path: { estateId, roleId } },
-      }
+      { params: { path: { estateId, roleId } } }
     )
   );
   await waitFor(() => expect(screen.queryByText("Fault reviewer")).toBeNull());
@@ -496,10 +332,7 @@ it("prevents a delegated author from editing their own role or deleting any role
   serve({ delegated: true, ownRole: true });
   await openRoles();
   await screen.findByText("Fault reviewer");
-  const edit = screen.queryByRole<HTMLButtonElement>("button", {
-    name: EDIT_REVIEWER,
-  });
-  expect(edit === null || edit.disabled).toBe(true);
+  expect(screen.queryByRole("link", { name: EDIT_REVIEWER })).toBeNull();
   screen.getByText(OWN_ROLE);
   expect(screen.queryByRole("button", { name: DELETE_REVIEWER })).toBeNull();
 });
@@ -509,17 +342,175 @@ it("disables writes for an inactive estate while displaying saved definitions", 
   await openRoles();
   await screen.findByText("Fault reviewer");
   screen.getByText(INACTIVE);
+  expect(screen.queryByRole("link", { name: CREATE })).toBeNull();
   const deletion = screen.queryByRole<HTMLButtonElement>("button", {
     name: DELETE_REVIEWER,
   });
   expect(deletion === null || deletion.disabled).toBe(true);
-  expect(api.POST).not.toHaveBeenCalled();
 });
 
-it("does not allow saving when the permission catalogue fails", async () => {
+it("shows Retry when the permission catalogue fails", async () => {
   serve({ catalogueError: true });
   await openRoles();
   await screen.findByRole("alert");
   screen.getByRole("button", { name: RETRY });
+});
+
+// New role page
+
+it("shows the new-role page with details and permissions grouped by area", async () => {
+  await openNewRole();
+  await screen.findByRole("heading", { level: 1, name: NEW_ROLE });
+  expect(
+    within(screen.getByRole("navigation", { name: "Breadcrumbs" }))
+      .getByRole("link", { name: "Roles" })
+      .getAttribute("href")
+  ).toBe(rolesPath);
+  expect(screen.queryByText("Maple Estate")).toBeNull();
+  await screen.findByRole("heading", { name: "Details" });
+  screen.getByRole("textbox", { name: "Role name" });
+  screen.getByRole("textbox", { name: "Description" });
+  screen.getByRole("heading", { name: "Permissions" });
+  within(screen.getByRole("group", { name: "Estate" })).getByRole("checkbox", {
+    name: "Edit estate",
+  });
+  within(screen.getByRole("group", { name: "Fault reports" })).getByRole(
+    "checkbox",
+    { name: "View fault reports" }
+  );
+  for (const permission of permissions) {
+    expect(checked(permission.label)).toBe(false);
+    screen.getByText(permission.description);
+  }
+});
+
+it("creates the exact selected permission set and returns to the roles list", async () => {
+  await openNewRole();
+  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
+    target: { value: "Fault reviewer" },
+  });
+  choose("View fault reports");
+  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith(
+      "/estates/{estateId}/roles",
+      expect.objectContaining({
+        params: { path: { estateId } },
+        body: expect.objectContaining({
+          name: "Fault reviewer",
+          permissions: ["VIEW_FAULT_REPORTS"],
+        }),
+      })
+    )
+  );
+  await waitFor(() => expect(router.state.location.pathname).toBe(rolesPath));
+  await screen.findByRole("table", { name: "Custom roles" });
+});
+
+it("returns to the invite dialog with the new role when opened from it", async () => {
+  await openNewRole("?returnTo=council");
+  const cancel = await screen.findByRole("link", { name: "Cancel" });
+  expect(cancel.getAttribute("href")).toBe(`/estates/${estateId}/council`);
+  expect(
+    within(screen.getByRole("navigation", { name: "Breadcrumbs" }))
+      .getByRole("link", { name: "Members" })
+      .getAttribute("href")
+  ).toBe(`/estates/${estateId}/council`);
+  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
+    target: { value: "Fault reviewer" },
+  });
+  choose("View fault reports");
+  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe(`/estates/${estateId}/council`)
+  );
+  expect(router.state.location.search).toEqual({ inviteRole: roleId });
+});
+
+it("explains a missing prerequisite without silently selecting it", async () => {
+  await openNewRole();
+  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
+    target: { value: "Editor" },
+  });
+  choose("Edit estate");
+  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  await screen.findByText(PREREQUISITE);
+  expect(checked("View estate")).toBe(false);
   expect(api.POST).not.toHaveBeenCalled();
+});
+
+it("retains the entered role and permissions after a save error", async () => {
+  vi.mocked(api.POST).mockResolvedValue({
+    error: { message: "A role with this name already exists." },
+    response: new Response(null, { status: 409 }),
+  } as never);
+  await openNewRole();
+  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
+    target: { value: "Fault reviewer" },
+  });
+  choose("View fault reports");
+  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  await screen.findByRole("alert");
+  expect(
+    screen.getByRole<HTMLInputElement>("textbox", { name: "Role name" }).value
+  ).toBe("Fault reviewer");
+  expect(checked("View fault reports")).toBe(true);
+});
+
+it("prevents duplicate saves while a role request is pending", async () => {
+  vi.mocked(api.POST).mockImplementation(() => new Promise(() => undefined));
+  await openNewRole();
+  fireEvent.change(await screen.findByRole("textbox", { name: "Role name" }), {
+    target: { value: "Fault reviewer" },
+  });
+  choose("View fault reports");
+  fireEvent.click(screen.getByRole("button", { name: CREATE_ROLE }));
+  const saving = await screen.findByRole<HTMLButtonElement>("button", {
+    name: SAVING,
+  });
+  expect(saving.disabled).toBe(true);
+  fireEvent.click(saving);
+  expect(api.POST).toHaveBeenCalledTimes(1);
+});
+
+it("opens role authoring for a delegated member without fetching estate details or the roster", async () => {
+  serve({ delegated: true });
+  await openNewRole();
+  await screen.findByRole("textbox", { name: "Role name" });
+  const paths = apiGet.mock.calls.map(([path]) => String(path));
+  expect(paths).not.toContain("/estates/{id}");
+  expect(paths).not.toContain("/estates/{estateId}/members");
+});
+
+// Edit role page
+
+it("edits a role on its own page with saved selections and the observed version", async () => {
+  serve({ existing: true });
+  await openAt(`${rolesPath}/${roleId}/edit`);
+  await screen.findByRole("heading", { level: 1, name: EDIT_REVIEWER });
+  expect(
+    within(screen.getByRole("navigation", { name: "Breadcrumbs" }))
+      .getByRole("link", { name: "Roles" })
+      .getAttribute("href")
+  ).toBe(rolesPath);
+  expect(screen.queryByText("Maple Estate")).toBeNull();
+  expect(checked("View fault reports")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Save role" }));
+  await waitFor(() =>
+    expect(api.PUT).toHaveBeenCalledWith(
+      "/estates/{estateId}/roles/{roleId}",
+      expect.objectContaining({
+        params: { path: { estateId, roleId } },
+        body: expect.objectContaining({ expectedVersion: 1 }),
+      })
+    )
+  );
+  await waitFor(() => expect(router.state.location.pathname).toBe(rolesPath));
+});
+
+it("blocks editing your own assigned role", async () => {
+  serve({ delegated: true, ownRole: true });
+  await openAt(`${rolesPath}/${roleId}/edit`);
+  await screen.findByText(OWN_ROLE);
+  expect(screen.queryByRole("button", { name: "Save role" })).toBeNull();
 });
