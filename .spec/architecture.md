@@ -110,7 +110,7 @@ so a blank value builds a `JwtDecoder` against no issuer and fails at startup.
 On the web side, the official AuthKit TanStack Start middleware validates and
 refreshes the session stored in an encrypted HTTP-only cookie. Protected route
 loaders call `getAuth()` before rendering. `AuthProvider`
-(`apps/web/src/components/auth-provider.tsx`) supplies reactive client hooks,
+(`apps/web/src/components/auth/auth-provider.tsx`) supplies reactive client hooks,
 and `AuthTokenBridge` hands a fresh access token resolver to the generated
 client's `getToken` callback. The resolver is installed browser-side only - a
 module-scope resolver on the SSR server would be shared across requests.

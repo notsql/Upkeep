@@ -11,7 +11,7 @@ same change as the code.
 - [Asset document association](api/asset-documents.md): owner-authorized link/unlink, retired assets, attachment reads and work-order consistency.
 
 - [Admin role updates](api/admin-roles.md): retired global WorkOS organization-role contracts; use estate-local roles.
-- [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries.
+- [Portfolio dashboard](api/dashboard.md): accessible estate counts and owner-scoped active-asset condition summaries (no longer called by the web app).
 - [Work-order document association](api/work-order-documents.md): same-estate links, audited corrections, permission intersection and deletion integration.
 - [Estates](api/estates.md): creation by any authenticated account, estate details, owner/assigned-Manager/custom-permission editing and owner-only deactivation.
 - [Assets, register and lifecycle](api/assets.md): asset registration, filtering,
@@ -49,22 +49,23 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/asset-documents.md](frontend/asset-documents.md) | Document/asset link picker, explicit unlink and the asset detail Documents section |
 | [frontend/work-order-documents.md](frontend/work-order-documents.md) | Document/work-order association dialog, correction history and work-order attachments |
 | [frontend/documents.md](frontend/documents.md) | Estate Documents screen, responsive table/cards, asset links, permitted actions, upload/download/deletion and filename/type filtering |
-| [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared dashboard components, desktop/mobile navigation and conventions for future screens |
-| [frontend/shell.md](frontend/shell.md) | Root layout, providers, ordered estate navigation/mobile section menu, estate-scoped resident reporting, home page (`/`), and shared API/session/query/error conventions |
-| [frontend/dashboard.md](frontend/dashboard.md) | Signed-in Home portfolio totals, condition breakdown, attention links and compact invitations |
+| [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared components, header/sidebar navigation, page-header/breadcrumb convention and conventions for future screens |
+| [frontend/shell.md](frontend/shell.md) | Root layout, providers, header (estate switcher, account menu), grouped estate sidebar, shared destination predicates and route guards, resident sidebar, `/` redirects, and shared API/session/query/error conventions |
+| [frontend/resident-dashboard.md](frontend/resident-dashboard.md) | Resident-only `/`: Open/In progress/Resolved count cards, five recent reports, Report a fault / View all |
 | [frontend/auth.md](frontend/auth.md) | `/login`, `/register`, `/logout`, `/api/auth/*` handlers, `_auth` guard, idle sign-out, `AuthButton`, token bridge |
 | [frontend/account.md](frontend/account.md) | `/account` |
-| [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit`, directory filters and estate deactivation |
+| [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit` (Estate settings + Danger zone), directory filters and estate deactivation |
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
-| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId`, `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
+| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/maintenance`, `/inspections`, `/documents`, `/costs`, `/devices` sub-pages; legacy `?tab=` redirects), `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
-| [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories`: silent-failure flags per asset category with asset counts and last change |
+| [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories` (+ `/$interval` views: days, months, years, not-set): silent-failure flags per asset category with asset counts and last change |
 | [frontend/inspection-list.md](frontend/inspection-list.md) | `/estates/$estateId/inspections`: summary cards, generate/regenerate, checks grouped by block and level with Overdue/Due/Done badges, and unscheduled assets |
 | [frontend/service-intervals.md](frontend/service-intervals.md) | Service interval column with unit-coloured labels, filter by unit or Not set, and dialog on Asset categories; the asset details `AssetServiceIntervalCard` |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
+| [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors` (Needs review) and `/estates/$estateId/sensors/all`: device monitoring, flatline review, metric policies and maintenance pauses |
 | [frontend/readings.md](frontend/readings.md) | Estate-wide/legacy reading browsers, attributed manual entry, provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
-| [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer and /invitations |
+| [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer; pending invitations on /estates (/invitations redirects) |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
 | [frontend/estate-reports.md](frontend/estate-reports.md) | Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |

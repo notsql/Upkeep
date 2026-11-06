@@ -26,6 +26,12 @@
 		<jooq.jdbc.password>${env.SPRING_DATASOURCE_PASSWORD}</jooq.jdbc.password>
 	</properties>
 	<dependencies>
+		<!-- Readings CSV export (ReadingCsvWriter). Not managed by the Boot parent. -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.14.1</version>
+		</dependency>
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>

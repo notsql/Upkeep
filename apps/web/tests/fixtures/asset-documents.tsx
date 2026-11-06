@@ -172,7 +172,7 @@ export async function openAssetDocuments(
     history: createMemoryHistory({
       initialEntries: [
         page === "asset"
-          ? `/estates/${estateId}/assets/${assetId}`
+          ? `/estates/${estateId}/assets/${assetId}?tab=documents`
           : `/estates/${estateId}/documents`,
       ],
     }),

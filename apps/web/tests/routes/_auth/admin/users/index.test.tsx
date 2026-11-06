@@ -5,6 +5,7 @@ import {
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -72,6 +73,7 @@ it("shows a failed load without displaying mock users", async () => {
   expect((await screen.findByRole("alert")).textContent).toContain(
     "Unable to load organizations"
   );
+  screen.getByRole("button", { name: "Retry" });
   expect(screen.queryByText("Alex Morgan")).toBeNull();
 });
 it("reports a failed save and keeps the saved role", async () => {
@@ -148,4 +150,26 @@ it("shows all member information and role controls on mobile cards", async () =>
   await screen.findByRole("dialog", { name: "Estate access for Casey Doe" });
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
   expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+it("uses the shared filter, loading and empty states", async () => {
+  renderWithProviders(<Page />);
+  screen.getByRole("status", { name: "Loading estates…" });
+  await screen.findByText("Select an estate");
+  screen.getByRole("search", { name: "Filter users" });
+  const toggle = screen.getByRole("button", { name: "Filters" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("true");
+  await chooseOption(screen.getByRole("combobox", { name: "Estate" }), "Acme");
+  await screen.findByRole("combobox", { name: "Role for Casey Doe" });
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search users" }), {
+    target: { value: "nobody" },
+  });
+  await screen.findByText("No matching users");
+  const empty = screen
+    .getAllByRole("status")
+    .find((node) => node.textContent?.includes("No matching users"));
+  fireEvent.click(
+    within(empty as HTMLElement).getByRole("button", { name: "Clear filters" })
+  );
+  await screen.findByRole("combobox", { name: "Role for Casey Doe" });
 });

@@ -19,11 +19,11 @@ describe("DeactivateEstateDialog", () => {
       name: "Deactivate estate",
     });
     expect(button.disabled).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: "Estate code" }), {
+    fireEvent.change(screen.getByRole("textbox", { name: "MCST number" }), {
       target: { value: "mg-001" },
     });
     expect(button.disabled).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: "Estate code" }), {
+    fireEvent.change(screen.getByRole("textbox", { name: "MCST number" }), {
       target: { value: "MG-001" },
     });
     expect(button.disabled).toBe(false);

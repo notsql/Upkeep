@@ -21,12 +21,18 @@ vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
-vi.mock("@/routes/_auth/estates/-components/pending-invitations", () => ({
-  PendingInvitations: () => null,
-}));
-vi.mock("@/routes/_auth/estates/-components/invitation-acceptance", () => ({
-  InvitationAcceptance: () => null,
-}));
+vi.mock(
+  "@/routes/_auth/estates/-components/estate-list-page/pending-invitations",
+  () => ({
+    PendingInvitations: () => null,
+  })
+);
+vi.mock(
+  "@/routes/_auth/estates/-components/estate-list-page/invitation-acceptance",
+  () => ({
+    InvitationAcceptance: () => null,
+  })
+);
 function EstateDestination() {
   return <h1>Estate destination</h1>;
 }
@@ -65,7 +71,8 @@ it("restores search, status and access filters after opening a whole estate card
   });
   await router.load();
   renderWithProviders(<RouterProvider router={router} />);
-  await screen.findByRole("link", { name: "Oak Park (OP-002)" });
+  await screen.findByRole("link", { name: "Oak Park (MCST OP-002)" });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByRole("searchbox", { name: "Search estates" }), {
     target: { value: "Oak " },
   });
@@ -78,13 +85,13 @@ it("restores search, status and access filters after opening a whole estate card
     screen.getByRole("combobox", { name: "Access" }),
     "Shared with you"
   );
-  const card = screen.getByRole("link", { name: "Oak Park (OP-002)" });
+  const card = screen.getByRole("link", { name: "Oak Park (MCST OP-002)" });
   expect(within(card).queryAllByRole("link")).toHaveLength(0);
   expect(within(card).queryAllByRole("button")).toHaveLength(0);
   fireEvent.click(card);
   await screen.findByRole("heading", { name: "Estate destination" });
   router.history.back();
-  await screen.findByRole("link", { name: "Oak Park (OP-002)" });
+  await screen.findByRole("link", { name: "Oak Park (MCST OP-002)" });
   expect(
     screen.getByRole<HTMLInputElement>("searchbox", { name: "Search estates" })
       .value

@@ -238,7 +238,7 @@ Authentication is WorkOS AuthKit, and both sides stay dormant until configured
   unauthenticated.
 
 The bearer token reaches the API through `createApiClient`'s `getToken`, wired
-by `AuthTokenBridge` in `apps/web/src/components/auth-provider.tsx`. Never
+by `AuthTokenBridge` in `apps/web/src/components/auth/auth-provider.tsx`. Never
 attach the header by hand.
 
 ---

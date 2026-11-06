@@ -13,12 +13,10 @@ delegates blob presentation and URL cleanup to `ReportImage`, supplying the
 existing "Loading image…" status.
 
 Routes are folder-based under `apps/web/src/routes/_auth/estates/$estateId/reports/`.
-List and detail use the shared PageHeader with Estates / estate name / Fault
-reports breadcrumbs; detail adds Details and places Create work order in the
-header actions. The estate name comes from access context and links to the
-overview only with `canViewManagement`; Crew see plain text and do not fetch
-management estate details. The Fault reports breadcrumb replaces the old return
-button on detail.
+List and detail use the shared PageHeader. The list has no breadcrumbs; detail
+("Fault report details") shows `Fault reports › <report title>` ("Fault report"
+while loading) and places Create work order in the header actions. No back
+link.
 `_auth` authenticates and checks the requested estate's `canViewFaultReports`
 before any child query can mount. Crew and custom report readers can enter report routes without general
 management rights. Council/Resident membership and provider-admin claims cannot
@@ -30,10 +28,10 @@ supplies the existing report capabilities.
 
 | Route folder | Screen and components | API calls |
 | --- | --- | --- |
-| `reports/index.tsx` → `/estates/{estateId}/reports` | Shared report cards with linked title, labelled estate name, full location path, status Badge and submission time. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
-| `reports/$reportId/index.tsx` → `/estates/{estateId}/reports/{reportId}` | Shared report Card/Badge and metadata, Updated timestamp, complete plain-text description, private images and empty/image-error states. Correction uses shadcn Dialog, Label, Select, Button and Alert in adjacent `-components/change-location-dialog.tsx`. The adjacent `-components/private-report-image.tsx` provides the responder query wrapper. | GET `/estates/{estateId}/reports/{reportId}`; GET `/estates/{estateId}/reports/{reportId}/images/{imageId}`; PATCH `/estates/{estateId}/reports/{reportId}/location`; locations for correction |
+| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, state in `use-estate-reports-page.ts`) | Shared report cards with linked title, labelled estate name, full location path, status Badge and submission time. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
+| `reports/$reportId/index.tsx` → `/estates/{estateId}/reports/{reportId}` | Shared report Card/Badge and metadata, Updated timestamp, complete plain-text description, private images and empty/image-error states. Correction uses shadcn Dialog, Label, Select, Button and Alert in adjacent `-components/change-location-dialog/change-location-dialog.tsx`. The adjacent `-components/private-report-image.tsx` provides the responder query wrapper. | GET `/estates/{estateId}/reports/{reportId}`; GET `/estates/{estateId}/reports/{reportId}/images/{imageId}`; PATCH `/estates/{estateId}/reports/{reportId}/location`; locations for correction |
 
-The list's adjacent `-components/report-filters.tsx` renders two filter groups:
+The list's adjacent `-components/report-filters/report-filters.tsx` renders two filter groups:
 a searchable Block combobox and a Level position fieldset with Minimum position
 and Maximum position searchable comboboxes matching the Block control's format.
 All three controls have equal widths and align along their bottom edge on wider
@@ -58,9 +56,10 @@ typed integer bounds and application behavior remain unchanged.
 URL search fields are `blockId`, `minLevelPosition`, `maxLevelPosition`, `cursor`.
 Invalid URL bounds fail route validation before report queries mount. Changing
 or clearing a filter removes the cursor in the same navigation; refresh and back
-restore controls. First page clears only the cursor; Next retains both filters.
+restore controls. The shared `Pagination` ("Report pages"): "Previous page"
+(enabled on a cursor page) clears only the cursor; "Next page" retains both filters.
 Controls wait for location labels rather than briefly showing UUIDs. A valid
-empty filtered result shows "No matching reports." Position filtering uses the
+empty filtered result shows the "No matching reports" `EmptyState` with a Clear filters action; an empty estate shows "No reports yet". Position filtering uses the
 backend's level `sortOrder` and includes common areas beneath matching levels.
 Direct block common areas appear only when neither position bound is supplied.
 The range applies across the estate when All blocks is selected; inactive
@@ -68,7 +67,9 @@ history remains readable. The old locationId subtree filter remains an API
 capability, while this screen uses the replacement block/range controls.
 
 Change location appears only with `canRelocateFaultReports` and opens once the
-location choices load. The modal shows current placement and editable Block,
+location choices load. The modal (the shared `FormDialog`: Cancel + "Save
+location", `submitDisabled` while invalid/reloading/conflicted, and a
+"Reload" `secondaryActions` button after a 409) shows current placement and editable Block,
 Level and Common area controls. Parent changes clear dependent selections.
 None means level-only placement; a common area can also sit directly under a
 block. Selecting No level requires a block common area: the common-area control
@@ -103,25 +104,21 @@ data, identity or component lifetime changes; image requests use responder URLs.
 Fault reports appears in desktop/contextual estate navigation for Manager/Crew/custom report readers,
 including inactive-estate reads. Crew-only accounts land on assigned reports.
 The estate dropdown uses names/capabilities from access context to switch
-assigned report estates, including mixed Manager/Crew memberships. It appears
-on report pages and on Crew estate navigation, without management estate queries
-for Crew or overview access. Outside a report-capable estate, Respond to faults
-provides an entry to an assigned report estate on desktop and mobile overflow.
+assigned report estates, including mixed Manager/Crew memberships. It is the
+header switcher, without management estate queries for Crew. There is no
+global Respond to faults entry.
 
 The detail screen offers Create work order only with both report-read and
 work-order creation capabilities. It links to the creation route with a validated
 sourceReportId. Reports remain selectable after conversion; creating work does
 not alter or invalidate report data. See [work-orders.md](work-orders.md).
 
-ReportEstateSwitcher uses the shared EstateFeatureSwitcher: building icon,
-estate name, chevrons and an accessible Switch estate button, matching work-order
-and management estate navigation without a separate field title. The context dropdown includes all accessible membership estates and labels their
+The header uses the shared EstateFeatureSwitcher (feature `reports`) on these
+pages. The context dropdown includes all accessible membership estates and labels their
 estate-local roles; feature access remains capability-gated. An eligible choice
 keeps the report list; other choices open a permitted management, Crew or resident
 destination. Inactive Resident choices explain reporting unavailability.
-Respond to faults opens the same EstateFeatureChooser Dialog used by Work orders,
-on desktop and mobile, then routes to the chosen estate report list. It does not
-automatically choose the first estate. Report access requires Manager/Crew membership
+Report access requires Manager/Crew membership
 or custom VIEW_FAULT_REPORTS; ownership alone does not grant report authority.
 
 ## Custom estate permissions
@@ -133,3 +130,25 @@ filters; Change location additionally requires canRelocateFaultReports from
 RELOCATE_FAULT_REPORTS and an active estate. The existing query keys, correction
 DTO and invalidations remain. Live definition edits/reassignment update access
 and the API independently rejects stale UI authority with the same token.
+
+## Screen states
+
+`report-filters.tsx` renders a `FilterBar` (`search` landmark "Filter reports")
+with the Block combobox and the Level position fieldset as fields, an outline
+Apply filters action, and `activeCount` (block, minimum, maximum) / `onClear` for
+the header badge and ghost Clear filters; the same toolbar appears inside the work-order report picker
+dialog. List, detail, image and correction-location loads use `LoadingState`.
+
+## Design-system pass
+
+The list uses `ListPageHeader` (`icon={ClipboardList}`, `filters` =
+`FilterToggle`; no create action). `ReportFilters` takes `id`/`open` from
+`useFilterPanel(countReportFilters(filters)).barProps`, so the bar is collapsed
+until toggled (open on load when the URL has filters). The detail uses
+`DetailPageHeader` (breadcrumbs, no icon) whose Create work order link has a
+leading `Plus`. Load errors (reports, locations, detail, correction locations)
+use `ErrorState`. The change-location dialog stays a hand-built Dialog because
+its Save is disabled until a valid destination is chosen and it adds a Reload
+action on 409, which `FormDialog` does not support. Empty states: "No reports
+yet" (default `Inbox`, "Resident reports appear here") and "No matching reports" (`SearchX`, "Try other
+filters", outline Clear filters).

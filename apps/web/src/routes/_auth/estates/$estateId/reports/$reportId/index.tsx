@@ -1,21 +1,24 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useCallback } from "react";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { DetailPageHeader } from "@/components/page/detail-page-header";
+import { PageLayout } from "@/components/page/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
+import { pageHead } from "@/lib/page-title";
 import { useWorkOrderAccess } from "@/lib/work-orders";
-import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog";
+import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog/change-location-dialog";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/reports/$reportId/"
 )({
   component: EstateReportDetailPage,
-  head: () => ({ meta: [{ title: "Fault Report Details" }] }),
+  head: () => pageHead("Fault Report Details"),
 });
 
 function EstateReportDetailPage() {
@@ -28,14 +31,14 @@ function EstateReportDetailPage() {
     return result.isError ? undefined : result.data;
   }, [report.refetch]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Fault report unavailable.</p>;
   }
   return (
     <PageLayout className="space-y-4">
-      <PageHeader
+      <DetailPageHeader
         actions={
           workOrders.canCreate && report.data && !report.isError ? (
             <Link
@@ -44,36 +47,29 @@ function EstateReportDetailPage() {
               search={{ sourceReportId: reportId }}
               to="/estates/$estateId/work-orders/new"
             >
+              <Plus aria-hidden="true" />
               Create work order
             </Link>
           ) : null
         }
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: access.canViewManagement ? "/estates/$estateId" : undefined,
-            params: { estateId },
-          },
           {
             label: "Fault reports",
             to: "/estates/$estateId/reports",
             params: { estateId },
           },
-          { label: "Details" },
+          { label: report.data?.title ?? "Fault report" },
         ]}
         title="Fault report details"
       />
-      {report.isPending ? <p role="status">Loading report…</p> : null}
+      {report.isPending ? (
+        <LoadingState label="Loading report…" rows={2} />
+      ) : null}
       {report.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            Report not found or unavailable.{" "}
-            <Button onClick={reload} variant="outline">
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState
+          message="Report not found or unavailable"
+          onRetry={reload}
+        />
       ) : null}
       {report.data && !report.isError ? (
         <ReportCard

@@ -1,23 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
-import { InvitationAcceptance } from "@/routes/_auth/estates/-components/invitation-acceptance";
-import { PendingInvitations } from "@/routes/_auth/estates/-components/pending-invitations";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Pending invitations now show at the top of /estates. This route stays so
+// links already sent (bookmarks, emails, the post-sign-in return path) still land.
 export const Route = createFileRoute("/_auth/invitations/")({
-  component: InvitationsPage,
-  head: () => ({ meta: [{ title: "Estate invitations" }] }),
+  beforeLoad: () => {
+    throw redirect({ to: "/estates" });
+  },
 });
-
-function InvitationsPage() {
-  return (
-    <PageLayout>
-      <PageHeader
-        description="Review the estate and offered role before accepting an invitation."
-        title="Estate invitations"
-      />
-      <InvitationAcceptance />
-      <PendingInvitations showEmpty />
-    </PageLayout>
-  );
-}

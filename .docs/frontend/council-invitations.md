@@ -2,9 +2,69 @@
 
 ## Routes and components
 
-`/estates/$estateId/council` retains its URL and now presents Estate members.
-Its index.tsx and route-local -components folder contain CouncilPage,
-access-controls and access-confirmation. Managers see the four preset invitation roles and eligible custom roles,
+The Members section is two folder routes sharing one page component
+(`CouncilPage({ estateId, view })` in `council/-components/council-page/council-page.tsx`):
+
+| Route | File | `view` | Tab title |
+| --- | --- | --- | --- |
+| `/estates/$estateId/council` | `council/index.tsx` | `"members"` (default) | "Council members" |
+| `/estates/$estateId/council/invitations` | `council/invitations/index.tsx` | `"invitations"` | "Pending invitations" |
+
+Route-local `council/-components/`: CouncilPage, access-controls,
+access-confirmation, invitation-form, member-filters, estate-members-table,
+member-permission and role-picker.
+
+Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
+
+- `ListPageHeader` "Members" (`icon={Users}`, no description) with the
+  Filters toggle (`FilterToggle`, "Filters, N active") and, when
+  `canInviteMembers`, the **Invite member** trigger (`UserPlus`) in the
+  `actions` slot - the last action, where Create sits on other list pages. It
+  is labelled "Invite member", not "Create", because it sends an invitation.
+  The trigger opens a shadcn Dialog titled "Invite member" with the
+  email/role form.
+- `SubNav` "Member views": "Members" (`exact`, `/estates/$estateId/council`)
+  and "Pending invitations" (`/estates/$estateId/council/invitations`). The
+  router marks the current one `aria-current="page"`.
+- Inactive estates show "This estate is inactive. New invitations are disabled."
+- MemberFilters: the retractable `FilterBar` "Filter members" (collapsed by
+  default, `useFilterPanel`), with `type="search"` Input "Search members"
+  (name/email, also matches invitation email) and Select "Filter by role"
+  (All roles, Owner, the presets and custom roles; `Field w-full sm:w-48`,
+  trigger `w-full`). Filtering is client-side; it applies to whichever view is
+  shown. Filter state is per page mount (switching views resets it); the API
+  has no server-side filters.
+- Members view: card "Members" with an "N active" Badge (no icon - the header
+  has Users), then the paged Table (Name, Email, Role, Status, Actions). Role
+  shows exactly one Badge: "Owner" (hint "Full Manager access plus
+  ownership") for the estate owner, otherwise the preset label or custom role
+  name. Loading is `LoadingState` "Loading members…" (table); a failed roster
+  or estate read is `ErrorState` + Retry; no roster is `EmptyState` "No members
+  yet" (default Inbox); filters with no result show `EmptyState` "No matching
+  members" (SearchX) with an outline "Clear filters" action, alongside the
+  FilterBar's own ghost Clear filters.
+- Pending invitations view (and the whole page body for delegated inviters):
+  card "Pending invitations" (`Mail` icon) with an "N pending" Badge; each row
+  shows email, role Badge, delivery and expiry, and a ghost **Revoke** button
+  (accessible name "Cancel invitation for <email>") that confirms in a
+  `ConfirmDialog` ("Cancel invitation?", destructive "Cancel invitation",
+  outline "Keep invitation"). A failed load is `ErrorState` + Retry. Empty is
+  `EmptyState` "No pending invitations" (Inbox); filtered-out is "No matching
+  invitations" (SearchX) with "Clear filters". There is no resend action
+  because the API has no resend endpoint.
+- Delegated inviters (no `canManageInvitationPermissions`) get
+  `ListPageHeader` "Invitations" (Users icon, Invite member action), no
+  SubNav or filters, and the pending-invitations card on both routes.
+- The access check before render shows `LoadingState` "Loading estate
+  access…"; a failed check is `ErrorState` with "Retry access"; no permission
+  is a destructive Alert.
+
+Owner vs Manager: the API returns `role` (the estate membership role) and a
+separate `owner` boolean (`Estate.ownerUserId`). The owner always holds a
+MANAGER membership (creation and transfer both guarantee it), so the UI shows
+"Owner" in place of the Manager label rather than both.
+
+Managers see the four preset invitation roles and eligible custom roles,
 member roles, cancellation and removal. Shadcn Button, Card, Label, Input, Select,
 Badge, Table and Dialog supply the controls. Delegation checkboxes are removed.
 
@@ -16,18 +76,22 @@ only the owner can transfer, to another existing Manager, with confirmation.
 Transfer refreshes ownership and capabilities. Removal/cancellation dialogs retain
 errors and explain their estate-only effects and pending-invitation cancellation.
 
-`/invitations` is `apps/web/src/routes/_auth/invitations/index.tsx`. Every signed-in
-identity can enter, including unassigned, Resident-only and Crew-only accounts.
-The auth guard checks identity without requiring workspace access. Desktop/mobile
-navigation includes Invitations. WorkOS invitation sign-in returns here with
-PKCE/state preserved. Existing estate/home invitation summaries remain.
-After the pending-invitations query succeeds with an empty list, this page shows
-a shadcn Empty panel headed "No pending invitations" with explanatory text.
-It stays hidden during loading or errors; failures keep the retry action instead.
+There is no separate invitations screen. Pending invitations (all of them, not
+truncated) render as Alert rows at the top of `/estates`, which every signed-in
+identity can open, including unassigned, Resident-only and Crew-only accounts;
+`/estates` also mounts `InvitationAcceptance`. `/invitations`
+(`apps/web/src/routes/_auth/invitations/index.tsx`) is kept only as a
+`beforeLoad` redirect to `/estates` so old links still land; there is no
+Invitations navigation entry. WorkOS invitation sign-in
+(`/api/auth/sign-in?invitation_token=...`) returns to `/estates` with PKCE/state
+preserved. The home page summary links to `/estates` ("Review invitations").
 The shared summary on the Estates page still hides an empty list.
 
-Shared pending/acceptance components remain in estates/-components. Pending cards
-show estate, offered role and expiry; Accept is explicit. Loading never explicitly
+Shared pending/acceptance components remain in estates/-components. Pending
+offers render as a `<ul aria-label="Pending estate invitations">` of compact
+shadcn Alert rows (MailOpen icon, subtle primary tint; "You're invited to <estate>", offered role and expiry) with an
+inline AlertAction "Accept" button (accessible name "Accept invitation to
+<estate>"); there is no decline, as the API has no decline endpoint. Accept is explicit. Loading never explicitly
 accepts. Failures retain the offer and permit retry. The separate email component
 reconciles only provider-accepted invitations once per mounted user, with Retry.
 Resident acceptance works with the estate selector in [resident-reports.md](resident-reports.md).
@@ -63,7 +127,8 @@ protections remain. Long text wraps; horizontal scrolling is confined to the
 member table on small screens. No API or permission change accompanies this UI.
 
 `estate-members-table.tsx` paginates the existing user-scoped member array at 20 rows,
-with Previous/Next and an exact visible range/total. A shorter refreshed roster
+with the shared `Pagination` (nav "Member pages", outline "Previous page" /
+"Next page", summary "1–20 of 45 members"). A shorter refreshed roster
 clamps the current page. The table is keyed by estate and session user so
 context changes reset pagination. Failed roster reads hide stale member rows.
 The existing useEstateMembers endpoint/query key and mutation invalidations
@@ -85,7 +150,8 @@ invitation cards show the email, role name, delivery status, expiry and cancel
 action, without permission labels or descriptions. Inactive
 estates retain the list and roster but disable sending and member reassignment.
 
-Route-local `invitation-form.tsx`, `role-picker.tsx` and `member-permission.tsx`
+Route-local `invitation-form.tsx` (state in `use-invitation-form.ts`, result
+messages in `invitation-form-outcome.tsx`), `role-picker.tsx` and `member-permission.tsx`
 use generated DTOs. `useEstateInvitationRoles` reads
 GET `/estates/{estateId}/invitation-roles`, key
 `[userId, "estate-invitation-roles", estateId]`, gated by resolved invitation
@@ -97,6 +163,23 @@ sending. A manual selection is preserved across refreshes; if it becomes unavail
 sending is disabled until another eligible role is selected. Failed sends preserve email/selection and refresh
 choices. Preset choices remain for Managers; custom delegates receive only
 eligible custom definitions, with no client preset fallback.
+
+`RolePicker` always renders `SelectTrigger className="w-full"` (form, dialog
+and member-table uses alike). It takes an optional `onCreateRole`; when given,
+the list ends with a separator and a "Create new role…" (`Plus`) item that calls
+it instead of selecting. The invite form passes it only when the caller's access
+has `canViewEstateRoles` and `canCreateRoles`; it navigates to
+`/estates/$estateId/roles/new?returnTo=council` (see
+[estate-roles.md](estate-roles.md)). After creation that page navigates to
+`/estates/$estateId/council?inviteRole=<id>`; `InviteMemberDialog` reads
+`inviteRole` with `useSearch({ strict: false })`, opens by default and passes it
+as `CouncilInvitationForm`'s `initialRole`. The role resolves once the refreshed
+choices (invalidated by `useCreateEstateRole`) include it. The typed email is not
+preserved across the round trip. The `inviteRole` param stays in the URL.
+
+Invite dialog copy: description "New users get an email · existing users accept
+on Invitations"; trigger `UserPlus` "Invite member"; primary `Send` "Send
+invitation"; empty choices "No eligible roles".
 
 Manager member controls combine the four presets with GET roles and catalogue
 through `lib/estate-roles.ts`. Custom assignment/conversion opens confirmation
@@ -113,3 +196,11 @@ and reports the error, then waits for another explicit click. It never silently
 retries acceptance. Successful acceptance refreshes pending offers, estate lists,
 access and resident context. Definition edits/deletion invalidate current-user
 role/roster/offer/access queries; see [estate-roles.md](estate-roles.md).
+
+## Icons and copy
+
+PageHeader `icon={Users}` (sidebar Members), description "Members and
+invitations · <estate>". Members CardTitle has a Users icon, Pending
+invitations a Mail icon (description "Not yet accepted"). Empty: "No members
+yet" ("Invited members appear here"), "No pending invitations" ("Sent
+invitations appear here"). The access-error "Retry access" is `outline`.

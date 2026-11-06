@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { LoginPage } from "@/routes/login";
+import { LoginPage } from "@/routes/login/-components/login-page";
 
 describe("LoginPage", () => {
   it("links to hosted sign-in while preserving the protected destination", () => {

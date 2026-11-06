@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { pageHead } from "@/lib/page-title";
 import { NewDevicePage } from "@/routes/_auth/estates/$estateId/assets/$assetId/devices/new/-components/new-device-page";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/devices/new/"
 )({
   component: NewDeviceRoute,
-  head: () => ({ meta: [{ title: "Register device" }] }),
+  head: () => pageHead("Register device"),
 });
 function NewDeviceRoute() {
   const { estateId, assetId } = Route.useParams();

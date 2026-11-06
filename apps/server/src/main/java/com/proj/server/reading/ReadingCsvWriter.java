@@ -6,12 +6,18 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.QuoteMode;
 
 final class ReadingCsvWriter {
     static final String HEADER =
             "reading_id,measured_at,asset_id,asset_reference,asset_name,metric,value,unit,source,device_id,device_identifier,recorded_by_user_id,recorded_by_name,recorded_at,flags\r\n";
     private static final DateTimeFormatter TIME =
             DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSS'Z'").withZone(ZoneOffset.UTC);
+    // RFC 4180 (CRLF records, doubled quotes) with every field quoted, matching schema v1.
+    private static final CSVFormat FORMAT =
+            CSVFormat.RFC4180.builder().setQuoteMode(QuoteMode.ALL).get();
 
     private ReadingCsvWriter() {}
 
@@ -33,13 +39,8 @@ final class ReadingCsvWriter {
             TIME.format(row.recordedAt()),
             row.flags().stream().map(flag -> flag.type().name()).collect(Collectors.joining(";"))
         };
-        for (int i = 0; i < cells.length; i++) {
-            if (i > 0) writer.write(',');
-            writer.write('"');
-            writer.write(cells[i].replace("\"", "\"\""));
-            writer.write('"');
-        }
-        writer.write("\r\n");
+        // Not closed: closing the printer would close the response stream mid-export.
+        new CSVPrinter(writer, FORMAT).printRecord((Object[]) cells);
     }
 
     private static String safeText(String value) {

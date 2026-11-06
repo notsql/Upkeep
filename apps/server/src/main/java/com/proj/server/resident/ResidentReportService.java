@@ -103,7 +103,7 @@ public class ResidentReportService {
         }
     }
 
-    public IssueReportPageResponse list(String userId, UUID estateId, String cursor, Integer requestedLimit) {
+    public ResidentReportPageResponse list(String userId, UUID estateId, String cursor, Integer requestedLimit) {
         int limit = requestedLimit == null ? 20 : requestedLimit;
         if (limit < 1 || limit > 50) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Limit must be between 1 and 50.");
@@ -139,7 +139,12 @@ public class ResidentReportService {
                     .encodeToString(("v1|" + scope + "|" + last.createdAt() + "|" + last.id())
                             .getBytes(StandardCharsets.UTF_8));
         }
-        return new IssueReportPageResponse(page, next);
+        var byStatus = reports.statusCounts(userId, estateId);
+        var counts = new ResidentReportPageResponse.ReportCounts(
+                byStatus.getOrDefault("SUBMITTED", 0),
+                byStatus.getOrDefault("ASSIGNED", 0) + byStatus.getOrDefault("IN_PROGRESS", 0),
+                byStatus.getOrDefault("CLOSED", 0));
+        return new ResidentReportPageResponse(page, next, counts);
     }
 
     public IssueReportDetailResponse detail(String userId, UUID reportId) {

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { RegistrationPage } from "@/routes/register";
+import { RegistrationPage } from "@/routes/register/-components/registration-page";
 
 describe("RegistrationPage", () => {
   it("starts the hosted WorkOS sign-up flow", () => {

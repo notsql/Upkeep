@@ -1,13 +1,14 @@
 import { Card, CardContent } from "@proj/ui/components/card";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { FormPageHeader } from "@/components/page/form-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { LoadingState } from "@/components/states/loading-state";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useRegisterDevice } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
-import { DeviceForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form";
+import { DeviceForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form";
 
 export function NewDevicePage({
   estateId,
@@ -23,7 +24,7 @@ export function NewDevicePage({
   const cancel = useCallback(
     () =>
       navigate({
-        to: "/estates/$estateId/assets/$assetId",
+        to: "/estates/$estateId/assets/$assetId/devices",
         params: { estateId, assetId },
       }),
     [navigate, estateId, assetId]
@@ -45,21 +46,8 @@ export function NewDevicePage({
     !asset.data.deactivatedAt;
   return (
     <PageLayout className="max-w-3xl">
-      <Link
-        className="text-sm underline"
-        params={{ estateId, assetId }}
-        to="/estates/$estateId/assets/$assetId"
-      >
-        Back to asset
-      </Link>
-      <PageHeader
+      <FormPageHeader
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.data?.name ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",
@@ -72,10 +60,10 @@ export function NewDevicePage({
           },
           { label: "Register device" },
         ]}
-        description="Add a device, choose its measurements and set its reporting interval."
+        description="Measurements and reporting interval"
         title="Register device"
       />
-      {loading ? <p role="status">Loading asset…</p> : null}
+      {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}
       {loading || error || allowed ? null : (
         <p role="alert">

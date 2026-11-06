@@ -122,7 +122,7 @@ public class ResidentReportController {
                 description = "Sign in required",
                 content = @Content(schema = @Schema(implementation = EstateError.class)))
     })
-    public IssueReportPageResponse list(
+    public ResidentReportPageResponse list(
             @AuthenticationPrincipal Jwt principal,
             @RequestParam(required = false) UUID estateId,
             @RequestParam(required = false) String cursor,

@@ -29,3 +29,22 @@ export const getSessionAccess = createServerFn({ method: "GET" }).handler(
     return { user: auth.user, access: data };
   }
 );
+
+// The route guard needs `owned`, which only `GET /estates/{id}` carries.
+// Returns null when the estate cannot be read, so callers fail closed.
+export const getSessionEstate = createServerFn({ method: "GET" })
+  .validator((estateId: string) => estateId)
+  .handler(async ({ data: estateId }) => {
+    const auth = await getAuth();
+    if (!auth.user) {
+      return null;
+    }
+    const client = createApiClient({
+      baseUrl: env.VITE_API_URL,
+      getToken: () => auth.accessToken,
+    });
+    const { data, error } = await client.GET("/estates/{id}", {
+      params: { path: { id: estateId } },
+    });
+    return error || !data ? null : data;
+  });

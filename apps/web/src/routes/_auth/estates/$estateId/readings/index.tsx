@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { pageHead } from "@/lib/page-title";
 import {
   mergeReadingSearch,
   parseReadingSearch,
   type ReadingSearch,
 } from "@/lib/reading-filters";
-import { EstateReadingsPage } from "./-components/estate-readings-page";
+import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/estate-readings-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/readings/")({
   validateSearch: parseReadingSearch,
   component: ReadingsRoute,
-  head: () => ({ meta: [{ title: "Readings" }] }),
+  head: () => pageHead("Readings"),
 });
 
 function ReadingsRoute() {

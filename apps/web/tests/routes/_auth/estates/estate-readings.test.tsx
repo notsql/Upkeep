@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { ReadingSearch } from "@/lib/reading-filters";
-import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page";
+import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/estate-readings-page";
 
 const { get, permission } = vi.hoisted(() => ({
   get: vi.fn(),
@@ -149,7 +149,8 @@ describe("estate reading browser", () => {
     within(table).getByText("Manual");
     within(table).getByText("Alex Technician");
     expect(within(table).queryByText("SENSOR-001")).toBeNull();
-    screen.getByRole("link", { name: "Record manual reading" });
+    screen.getByRole("link", { name: "Create" });
+    expect(screen.queryByText("Maple Estate")).toBeNull();
   });
 
   it("shows Sensor labels and hides recording when only historical reads are allowed", async () => {
@@ -157,9 +158,7 @@ describe("estate reading browser", () => {
     show();
     const table = await screen.findByRole("table", { name: "Readings" });
     within(table).getByText("Sensor");
-    expect(
-      screen.queryByRole("link", { name: "Record manual reading" })
-    ).toBeNull();
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   });
 
   it("hides cached readings as soon as access context revokes permission", async () => {
@@ -415,12 +414,12 @@ describe("estate reading browser", () => {
     {
       filters: { metric: "PRESSURE" },
       assets: 1,
-      message: "No readings match these filters",
+      message: "No matching readings",
     },
     {
       filters: { suspect: true },
       assets: 1,
-      message: "No suspect readings match",
+      message: "No matching suspect readings",
     },
   ])(
     "distinguishes empty states: $message",
@@ -433,8 +432,25 @@ describe("estate reading browser", () => {
       };
       show(filters);
       await screen.findByText(message);
+      const filtered = Object.keys(filters).length > 0;
+      expect(
+        screen.queryAllByRole("button", { name: "Clear filters" })
+      ).toHaveLength(filtered ? 2 : 0);
+      // Only the header's Create; empty states carry no create action.
+      expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(1);
     }
   );
+
+  it("keeps the reading filters collapsed behind the Filters toggle", async () => {
+    show({});
+    const toggle = await screen.findByRole("button", { name: "Filters" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(
+      screen.queryByRole("search", { name: "Reading filters" })
+    ).toBeNull();
+    fireEvent.click(toggle);
+    await screen.findByRole("search", { name: "Reading filters" });
+  });
 
   it("offers page-one recovery when a bookmarked page is beyond the results", async () => {
     page = { ...page, items: [], totalItems: 1 };

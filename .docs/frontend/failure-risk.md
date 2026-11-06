@@ -11,15 +11,15 @@ asset details are documented in [assets.md](assets.md).
 | --- | --- | --- | --- | --- |
 | `index.tsx` | `/estates/$estateId/failure-risk` | `estateId` | "Failure risk" | `FailureRiskPage` (keyed by `estateId`) |
 
-Entry point: "Failure risk" outline link (`buttonVariants`) on the estate
-details page, shown to owners only. No sidebar item.
+Entry point: sidebar Assets › "Failure risk", shown by `canOpenFailureRisk`
+(owners only); the `_auth` guard loads ownership and 404s otherwise.
 
 ## Screens and components
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `FailureRiskPage` (`-components/failure-risk-page.tsx`) | `PageHeader` with breadcrumbs Estates / estate name ("Estate" while loading) / Failure risk, and description "Chance of a breakdown in the next 30, 60 and 90 days. Flagged assets need a check." States: "Loading forecasts…" (`aria-live="polite"`), error message (destructive `Alert`), empty "There are no assets to forecast in this estate yet." (`role="status"`). Otherwise a table: Asset, Reference, 30 days, 60 days, 90 days, Check, End of life, Flags. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Empty`, `Alert`, `AlertDescription` |
-| `RiskRow` (same file) | Asset name links to `/estates/$estateId/assets/$assetId`. When `noForecastReason` returns text ("Not supported" or "Not enough data") it spans the four forecast columns, muted; otherwise probabilities via `formatProbability` (rounded %, "—" when null) and `timeframeLabel` ("—" when null). End of life is `expectedEndOfLife` or "Not recorded". Each flag reason is a destructive `Badge` labelled by `flagReasonLabel`. | `TableRow`, `TableCell`, `Badge` |
+| `FailureRiskPage` (`-components/failure-risk-page/failure-risk-page.tsx`) | `ListPageHeader` (no breadcrumbs, filters or create) with `icon={AlertTriangle}` and description "Breakdown odds over 30, 60 and 90 days". States: `LoadingState` "Loading forecasts…" (table skeleton), `ErrorState` (message + outline Retry, refetches), `EmptyState` "No assets to forecast yet" ("Forecasts appear once assets are added"). Otherwise a table: Asset, Reference, 30 days, 60 days, 90 days, Check, End of life, Flags. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`; `ListPageHeader`, `EmptyState`, `ErrorState`, `LoadingState` |
+| `RiskRow` (`-components/failure-risk-page/risk-row.tsx`) | Asset name links to `/estates/$estateId/assets/$assetId`. When `noForecastReason` returns text ("Not supported" or "Not enough data") it spans the four forecast columns, muted; otherwise probabilities via `formatProbability` (rounded %, "—" when null) and `timeframeLabel` ("—" when null). End of life is `expectedEndOfLife` or "Not recorded". Each flag reason is a destructive `Badge` labelled by `flagReasonLabel`. | `TableRow`, `TableCell`, `Badge` |
 
 ## Data (`lib/failure-risk.ts`)
 

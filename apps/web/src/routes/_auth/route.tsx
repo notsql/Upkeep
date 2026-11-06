@@ -5,9 +5,52 @@ import {
   Outlet,
   redirect,
 } from "@tanstack/react-router";
-import { getSessionAccess, getSessionIdentity } from "@/lib/access-server";
+import {
+  getSessionAccess,
+  getSessionEstate,
+  getSessionIdentity,
+} from "@/lib/access-server";
 
 import { buildSignInPath } from "@/lib/auth-redirect";
+import {
+  canOpenAssetCategories,
+  canOpenAssets,
+  canOpenDevices,
+  canOpenEstateSettings,
+  canOpenFailureRisk,
+  canOpenInspections,
+  canOpenSensors,
+} from "@/lib/estate-destinations";
+
+type EstatePermission = components["schemas"]["EstateAccessResponse"];
+type DestinationPredicate = (
+  permission: EstatePermission | undefined,
+  owned?: boolean,
+  platformAdmin?: boolean
+) => boolean;
+
+// Sections the sidebar gates on ownership; the guard uses the same predicates.
+const OWNER_GATED: Record<string, DestinationPredicate> = {
+  devices: canOpenDevices,
+  "asset-categories": canOpenAssetCategories,
+  inspections: canOpenInspections,
+  sensors: canOpenSensors,
+  "failure-risk": canOpenFailureRisk,
+  edit: canOpenEstateSettings,
+};
+
+// Sections whose sub-views (one segment deeper) share the section's gate.
+const SUB_VIEW_SECTIONS = new Set(["sensors", "asset-categories"]);
+
+/** True for a section root (/estates/:id/:feature) or one of its sub-views. */
+function isSectionPath(segments: string[], feature: string | undefined) {
+  return (
+    segments.length === 3 ||
+    (segments.length === 4 &&
+      feature !== undefined &&
+      SUB_VIEW_SECTIONS.has(feature))
+  );
+}
 
 const PERSONAL_PATHS = new Set([
   "/reports",
@@ -59,6 +102,23 @@ export const Route = createFileRoute("/_auth")({
       throw redirect({ href: "/reports/new" });
     }
     guardEstatePath(path, access);
+    await guardDestination(path, access, async (estateId) => {
+      try {
+        const estate = await context.queryClient.ensureQueryData({
+          queryKey: ["estates", user.id, "details", estateId],
+          queryFn: async () => {
+            const result = await getSessionEstate({ data: estateId });
+            if (!result) {
+              throw new Error("Unable to load the estate.");
+            }
+            return result;
+          },
+        });
+        return Boolean(estate.owned);
+      } catch {
+        return false;
+      }
+    });
     return { user };
   },
   loader: ({ context }) => ({ user: context.user }),
@@ -86,8 +146,11 @@ function guardInspectionContext(
     }
     return true;
   }
+  // The asset page and its Inspections sub-page are open to inspection viewers.
   const context =
-    segments.length === 0 || (segments.length === 1 && segments[0] !== "new");
+    segments.length === 0 ||
+    (segments.length === 1 && segments[0] !== "new") ||
+    (segments.length === 2 && segments[1] === "inspections");
   return context && !!estate?.canViewInspectionResults;
 }
 
@@ -129,12 +192,57 @@ function guardEstatePath(
       }
       return;
     default:
+      if (checkedByDestination(path, feature)) {
+        return;
+      }
       if (
         !estate?.canViewManagement ||
         (feature === "assets" && !estate.canViewAssets)
       ) {
         throw notFound();
       }
+  }
+}
+
+/** Section roots (and sub-views) whose rule lives in guardDestination. */
+function checkedByDestination(path: string, feature: string | undefined) {
+  return (
+    isSectionPath(path.split("/").filter(Boolean), feature) &&
+    (feature === "assets" || (feature !== undefined && feature in OWNER_GATED))
+  );
+}
+
+/**
+ * Destinations whose rule may depend on ownership. Ownership is fetched only
+ * when the access flags alone do not already open the destination.
+ */
+async function guardDestination(
+  path: string,
+  access: components["schemas"]["AppAccessResponse"],
+  loadOwned: (estateId: string) => Promise<boolean>
+) {
+  const segments = path.split("/").filter(Boolean);
+  const [, estateId, feature] = segments;
+  if (!(estateId && feature && isSectionPath(segments, feature))) {
+    return;
+  }
+  const estate = access.estates.find((item) => item.estateId === estateId);
+  if (feature === "assets") {
+    if (!canOpenAssets(estate)) {
+      throw notFound();
+    }
+    return;
+  }
+  const open = OWNER_GATED[feature];
+  if (!open) {
+    return;
+  }
+  const admin = access.canAccessPlatformAdmin;
+  if (open(estate, false, admin)) {
+    return;
+  }
+  if (!(estate && open(estate, await loadOwned(estateId), admin))) {
+    throw notFound();
   }
 }
 
