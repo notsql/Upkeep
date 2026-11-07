@@ -27,7 +27,6 @@ import { expect, it } from "vitest";
 const INVOICE_CONFIRMATION = /invoice\.pdf/u;
 const DOWNLOAD_INVOICE = /download invoice\.pdf/iu;
 const ASSET_REFERENCE = /TT-A0001/u;
-const RETRY_BUTTON = /retry/iu;
 const RETIRED_STATUS = /retired/iu;
 const SEARCH_LABEL = /search/iu;
 const CATEGORY_LABEL = /^category$/iu;
@@ -486,7 +485,11 @@ it("offers Retry for an association read failure without issuing a mutation", as
   );
   await row.findByRole("alert");
   expect(row.queryByRole("button", { name: assetAction })).toBeNull();
-  fireEvent.click(row.getByRole("button", { name: RETRY_BUTTON }));
+  fireEvent.click(
+    row.getByRole("button", {
+      name: "Retry asset link for invoice.pdf",
+    })
+  );
   fireEvent.click(await row.findByRole("button", { name: assetAction }));
   const dialog = within(await screen.findByRole("dialog"));
   await dialog.findByRole("checkbox", { name: selectAsset });

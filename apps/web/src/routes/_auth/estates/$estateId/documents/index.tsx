@@ -2,7 +2,8 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { useAuthenticatedSession } from "@/lib/access";
 import type { DocumentFilters } from "@/lib/documents";
-import { DocumentsPage } from "./-components/documents-page";
+import { pageHead } from "@/lib/page-title";
+import { DocumentsPage } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/documents-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/documents/")({
   validateSearch: (search: Record<string, unknown>): DocumentFilters => ({
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/_auth/estates/$estateId/documents/")({
     });
   },
   component: DocumentsRoute,
-  head: () => ({ meta: [{ title: "Documents" }] }),
+  head: () => pageHead("Documents"),
 });
 
 function DocumentsRoute() {

@@ -1,7 +1,7 @@
 # Duplicate fault reports API (ID-74)
 
 Source of truth: `packages/api/openapi.json`. Spec:
-`.spec/features/fault-report-duplicates.md`; decision 0043. Implementation:
+`.spec/features/fault-report-duplicates.md`; decision 0044. Implementation:
 `com.proj.server.report` (`DuplicateDetector`, `DuplicateRepository`,
 `DuplicateService`, `EstateReportService`); Prisma model
 `IssueReportDuplicate`.
@@ -83,6 +83,11 @@ The threshold and the word lists are untuned first guesses, held as constants in
 | `EstateIssueReportPageResponse` | `items: EstateIssueReportSummaryResponse[]`, `nextCursor: string \| null` |
 | `ReviewDuplicateRequest` | `state: CONFIRMED \| REJECTED`, `expectedState: SUSPECTED \| CONFIRMED` (both required) |
 | `LinkDuplicateRequest` | `originalReportId: UUID` (required) |
+
+`duplicateOf` is `oneOf: [DuplicateOf, null]` in the contract, so the generated
+type is `DuplicateOf | null`. `DuplicateOpenApiConfiguration` rewrites it,
+following the other feature nullability customizers, because a nullable sibling
+of `$ref` generates as always present.
 
 Neither the counts nor `duplicateOf` include `REJECTED` links. The estate list,
 detail and relocation endpoints (see [estate-reports.md](estate-reports.md))

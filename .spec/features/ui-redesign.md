@@ -76,6 +76,12 @@ use an existing shadcn control rather than adding a new dependency.
 
 ### Application shell and navigation — desktop sidebar / mobile bottom app bar
 
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md). This section no
+> longer matches the code: there is no bottom app bar, no "Home / Estates /
+> More" bar and no Overview / Assets / Council mobile links. The header holds the
+> estate switcher and account menu; the sidebar exists only in estate scope (and
+> for residents) and opens as a Sheet on mobile.
+
 - Signed-out users see a compact public header and local home/sign-in/register
   pages. Signed-in users see an application shell. No authenticated data is fetched
   before the existing session/token bridge is ready.
@@ -538,6 +544,9 @@ in the current working tree, without a new commit or push.
 
 ## Home/Estates differentiation — approved follow-up (2026-10-08)
 
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md). The signed-in
+> portfolio Home was removed; `/` redirects (or shows the resident dashboard).
+
 The user found the implemented Home estate cards repetitive with Estates and
 supplied a multi-estate dashboard suggestion. See
 [portfolio-home-and-estate-directory.md](portfolio-home-and-estate-directory.md)
@@ -582,6 +591,10 @@ Tests await React Query's asynchronous UI-state notifications rather than fixed
 delays. Docs cover count scope, per-user/estate memory and reload semantics.
 
 ## Contextual estate switching (2026-10-09)
+
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md). The switcher now
+> lives in the header (`EstateFeatureSwitcher`, "Select estate" outside an
+> estate); the sidebar switcher and its wrappers were removed.
 
 **Status:** implemented after user approval; visual acceptance pending.
 

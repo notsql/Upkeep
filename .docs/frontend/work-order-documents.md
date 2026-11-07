@@ -217,6 +217,11 @@ production web build. A 200-character unbroken selected name now stays inside th
 199px sidebar column; long menu names/custom roles fit the 320px viewport. The
 new history header also wraps unbroken names without widening the page. Existing
 Resident report history tests moved beside the extracted route component in
-`tests/routes/_auth/reports/-components/my-reports-page.test.tsx` without removing
+`tests/routes/_auth/reports/-components/my-reports-page/my-reports-page.test.tsx` without removing
 assertions. Scoped history/detail/return links, user/estate pagination reset,
 creation intent and unavailable-reporting/history access have regression coverage.
+
+## Design-system pass
+
+The detail-page Documents card titles with `SectionHeading icon={Files}`; the empty
+state is "No documents yet" ("Linked documents appear here").

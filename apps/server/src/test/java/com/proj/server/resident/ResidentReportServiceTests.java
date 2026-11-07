@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -72,5 +73,17 @@ class ResidentReportServiceTests {
                 service.create("resident-a", estateId, "  " + title + "  ", "Description", locationId, List.of()));
         verify(reports).create(any(), eq("resident-a"), eq(estateId), eq(locationId), eq(title), eq("Description"));
         verifyNoInteractions(validator, images);
+    }
+
+    @Test
+    void listCountsEveryStatusAcrossAllPagesWithAssignedAsInProgressAndClosedAsResolved() {
+        var estateId = UUID.randomUUID();
+        when(reports.list("resident-a", estateId, null, null, 2)).thenReturn(List.of());
+        when(reports.statusCounts("resident-a", estateId))
+                .thenReturn(Map.of("SUBMITTED", 3, "ASSIGNED", 2, "IN_PROGRESS", 1, "CLOSED", 4));
+
+        var page = service.list("resident-a", estateId, null, 1);
+
+        assertEquals(new ResidentReportPageResponse.ReportCounts(3, 3, 4), page.counts());
     }
 }

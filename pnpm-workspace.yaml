@@ -31,6 +31,8 @@ catalog:
   "@workos/authkit-tanstack-react-start": ^0.12.0
   "@cloudflare/vite-plugin": ^1.67.0
   wrangler: ^4.156.2
+  react-day-picker: ^9.11.1
+  date-fns: ^4.1.0
 minimumReleaseAgeExclude:
   - '@tanstack/history@1.162.2'
   - '@tanstack/router-core@1.171.28'

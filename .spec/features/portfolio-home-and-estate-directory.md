@@ -29,6 +29,12 @@ layouts on 2026-10-08. Use the test-first workflow and review the result afterwa
 
 ### Home: understand and prioritise
 
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md). The
+> portfolio dashboard was dropped: `workspace-home.tsx`, `lib/dashboard.ts` and the
+> dashboard invalidations were deleted, and signed-in `/` now redirects (one
+> membership -> its estate, otherwise `/estates`) or renders the resident
+> dashboard. `GET /dashboard/summary` remains on the server, unused by web.
+
 - Replace the full estate-card directory with a compact portfolio dashboard.
   Retain the compact header, themes and fixed mobile navigation already built.
 - Show accessible estate count with an active/inactive breakdown. Asset summaries
@@ -79,6 +85,10 @@ layouts on 2026-10-08. Use the test-first workflow and review the result afterwa
   action or Clear filters. Detailed condition analytics belong on Home/assets.
 
 ### Individual estate Overview: manage this estate
+
+> **Superseded (2026-11-04)** by [navigation-rearchitecture.md](navigation-rearchitecture.md). The overview
+> no longer has an action row; sections are in the grouped sidebar and
+> deactivation moved to Estate settings (`/edit`) → Danger zone.
 
 - Preserve the currently built compact summary, management action group, location
   hierarchy and Assets/Council entry points. Opening a Home attention item leads

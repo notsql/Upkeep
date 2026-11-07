@@ -19,6 +19,17 @@ const REPORT_NOT_FOUND = /report.*not found|report.*unavailable/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({
+    children,
+    to,
+    search: query,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    search?: Record<string, string>;
+  }) => (
+    <a href={query ? `${to}?${new URLSearchParams(query)}` : to}>{children}</a>
+  ),
   useSearch: () => search,
   useParams: () => ({ reportId: "00000000-0000-0000-0000-000000000010" }),
 }));
@@ -83,7 +94,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 it("displays the saved title alongside the original description and estate", async () => {
   renderWithProviders(<Page />);
-  await screen.findByText(detail.title);
+  await screen.findByRole("heading", { level: 2, name: detail.title });
   screen.getByText("Maple Estate");
   screen.getByText(detail.description, { exact: false });
 });
@@ -222,11 +233,27 @@ it("removes the previous user's image and revokes its blob URL on an account cha
   expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:resident-image");
 });
 
-it("returns to the selected estate's report history", async () => {
+it("returns to the selected estate's report history through My reports breadcrumbs", async () => {
   search.estateId = "maple";
   renderWithProviders(<Page />);
-  const back = await screen.findByRole("link", {
-    name: "Return to My Reports",
-  });
-  expect(back.getAttribute("href")).toBe("/reports?estateId=maple");
+  screen.getByRole("heading", { level: 1, name: "Report details" });
+  await screen.findByRole("heading", { level: 2, name: detail.title });
+  const breadcrumbs = within(
+    screen.getByRole("navigation", { name: "Breadcrumbs" })
+  );
+  expect(
+    breadcrumbs.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe("/reports?estateId=maple");
+  expect(breadcrumbs.getByText(detail.title).getAttribute("aria-current")).toBe(
+    "page"
+  );
+  expect(
+    screen.queryByRole("link", { name: "Return to My Reports" })
+  ).toBeNull();
+});
+
+it("announces loading with the shared loading state", async () => {
+  renderWithProviders(<Page />);
+  screen.getByRole("status", { name: "Loading report…" });
+  await screen.findByRole("heading", { level: 2, name: detail.title });
 });

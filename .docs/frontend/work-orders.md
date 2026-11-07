@@ -9,7 +9,7 @@ All route paths are beneath `src/routes/_auth/estates/$estateId/work-orders/`:
 
 | Folder | URL | Screen |
 | --- | --- | --- |
-| index.tsx; -components/work-order-list-page.tsx; -components/work-order-filters.tsx | /estates/$estateId/work-orders | Status/category/priority/reference filters, paginated list and conditional Create |
+| index.tsx; -components/work-order-list-page/work-order-list-page.tsx; -components/work-order-list-page/work-order-filters.tsx | /estates/$estateId/work-orders | Status/category/priority/reference filters, paginated list and conditional Create |
 | new/index.tsx; new/-components/ | /estates/$estateId/work-orders/new | Creation form; optional validated sourceReportId UUID search |
 | $workOrderId/index.tsx; $workOrderId/-components/ | /estates/$estateId/work-orders/$workOrderId | Saved detail, progress, audit and completion |
 
@@ -22,9 +22,11 @@ field. Selected assets survive searches and can be removed. The detail footer
 shows the creator display name and creation time; unavailable names use Name
 unavailable instead of exposing the account ID.
 
-List/create/detail breadcrumbs include Estates → estate name → Work orders.
-The estate name links to `/estates/$estateId` only with `canViewManagement`;
-Crew also link to their read-only estate overview via canViewEstateDetails.
+The list has no breadcrumbs (top-level section). Create shows
+`Work orders › Create`; detail shows `Work orders › <reference>`. The two
+dead-end create-from-inspection screens (the inspection already has a work
+order; the inspection did not fail) show an outline "View inspection" link to
+the source inspection. No back links.
 
 The list's shadcn Select offers All priorities, Low, Medium, High and Urgent.
 Search reference accepts a partial visible reference, such as MG-W0001 (max 200
@@ -39,7 +41,9 @@ No work orders yet. Status/category filters share the same URL/pagination rules.
 Route-local components split source selection, optional asset search, location
 feedback and save errors. The existing ReportFilters is reused outside the
 creation form, so its filter form is never nested inside another form.
-`new/-components/work-order-form.tsx` composes the creation screen;
+`new/-components/work-order-form/work-order-form.tsx` composes the creation screen from
+`work-order-form-source-status.tsx`, `work-order-form-details-fields.tsx`,
+`work-order-form-asset-fields.tsx` and `work-order-form-footer.tsx`;
 `use-work-order-form.ts` owns its state, prefill, source-conflict choices and
 submission guard. `work-order-source-fields.tsx` renders the source selector,
 report picker and manual source reference. These share the existing feature
@@ -53,17 +57,15 @@ queries. Its Cancel button returns to the asset history without creating work.
 
 The auth route checks work-order capabilities before the generic management
 guard. Crew can enter list/detail, but `/new` is denied and creation actions are
-hidden because `canCreateWorkOrders` is false. AppNavigation exposes
-Work orders locally or as an entry to an authorized estate. WorkOrderEstateSwitcher
-uses labels, estate-local roles and capabilities from access context. It includes
+hidden because `canCreateWorkOrders` is false. The sidebar shows Operations › Work orders
+with `canOpenWorkOrders`. The header `EstateFeatureSwitcher` (feature
+`work-orders`) uses labels, estate-local roles and capabilities from access context. It includes
 all membership estates and retains the work-order list when permitted in the
 chosen estate; otherwise it opens that estate's allowed management, Crew or
 resident destination. Crew do not request management estate lists. The trigger
 uses the normal building icon, estate name and chevrons, without an additional
-Work-order estate label. Outside an authorized estate, the global Work orders
-button opens the shared EstateFeatureChooser, a shadcn Dialog that asks the user to choose
-an estate. It never silently opens the first permitted estate. The same chooser
-is available from mobile overflow, and filters choices using canViewWorkOrders.
+Work-order estate label. There is no global Work orders entry or estate chooser
+dialog; users pick an estate in the header switcher.
 Crew details render returned asset reference/location, linking assets only with
 canViewAssets and source reports only with canViewFaultReports.
 
@@ -136,8 +138,8 @@ belong to follow-up stories.
 4. Use a Crew account to read and switch authorized estate work-order lists.
    Create actions must be absent and direct /new access must be denied. Non-owner Managers
    can link an active asset without gaining access to the asset register.
-5. As an owner/Manager, use the estate-name breadcrumb from list, create and
-   detail to return to the overview. Crew can use the same breadcrumb for their read-only overview.
+5. From create and detail, use the Work orders breadcrumb to return to the
+   list; the sidebar Overview returns to the estate overview.
 6. Apply a priority and partial reference search together. Check Next/First page,
    refresh and browser back retain criteria; Clear filters restores all results.
    A nonexistent reference should say No matching work orders.
@@ -154,19 +156,16 @@ first be submitted by a resident assigned to that estate through Report a fault.
 Existing owners receive their MANAGER membership through the owner backfill
 migration documented in [access.md](../api/access.md).
 
-Work orders uses the Wrench navigation icon; fault reports/Respond to faults use
-ClipboardList. Global chooser buttons explicitly match sidebar-link alignment,
-height, padding and spacing so shadcn Button defaults cannot center them.
-EstateFeatureSwitcher is shared by WorkOrderEstateSwitcher and
-ReportEstateSwitcher. EstateFeatureChooser handles both global destinations,
-filtering by their existing independent capabilities and routing to the chosen
-feature list. Neither entry picks the first estate automatically.
+Work orders uses the Wrench navigation icon; Fault reports uses ClipboardList.
+The header's single `EstateFeatureSwitcher` serves every feature (the
+WorkOrderEstateSwitcher/ReportEstateSwitcher wrappers and EstateFeatureChooser
+were removed).
 
 ## Column sorting
 
-The list's `-components/work-order-table.tsx` renders sortable Reference,
+The list's `-components/work-order-list-page/work-order-table.tsx` renders sortable Reference,
 Category, Priority and Created headers using shared
-`components/sortable-table-head.tsx` (shadcn Button/TableHead with direction
+`components/table/sortable-table-head.tsx` (shadcn Button/TableHead with direction
 icons, keyboard interaction and aria-sort). First selecting Priority/Created
 uses descending order; Reference/Category use ascending. Clicking again reverses.
 Default is Created descending. Description and Status stay static.
@@ -210,7 +209,7 @@ Managers see Start work on Open/Assigned and Complete work order on In Progress.
 Crew see history/outcomes without mutation actions. Active owners/Managers see
 Edit outcome on Closed work.
 
-The completion shadcn Dialog scrolls within the viewport, uses labelled
+The completion dialog (shared `FormDialog`) scrolls within the viewport, uses labelled
 Textarea/Input fields, explains SGD/whole minutes and unknown versus explicit 0,
 and explains that closure retains Closed status while authorized users can correct
 the recorded outcome. Findings/work performed are required.
@@ -218,7 +217,7 @@ Failed saves retain entered values. The version the user reviewed is retained;
 background refetch cannot silently authorize a new version. Conflicts offer
 Refresh work order and explicit review before retrying. Refresh after an ambiguous
 response lets the user check whether the first request saved. No mutation retries
-automatically. `components/work-order-completion.tsx` renders read-only outcomes
+automatically. `components/work-orders/work-order-completion.tsx` renders read-only outcomes
 on both work-order detail and asset maintenance; unknown values stay Unknown.
 
 Status history shows chronological transitions, actor display name (or Name
@@ -336,11 +335,12 @@ Hooks in `lib/work-orders.ts`:
   history and linked owner's asset-work-order-completions cache. It does not
   invalidate or write forecast/manual-event data.
 
-The work-order footer displays the current page's row count and Next/First page.
+The work-order footer is the shared `Pagination` ("Work order pages"): the
+current page's row count as `summary`, then outline "Previous page" / "Next page".
 Previous returns to cursors visited in the current list session. That cursor
 trail is scoped to user, estate and criteria; applying/clearing filters or sorting
-resets it. A directly opened later cursor has First page without an invented
-previous cursor, total or page number. Requests stay server-paginated at 20 rows;
+resets it. A directly opened later cursor has no known previous cursor, so
+"Previous page" returns to the first page (no invented total or page number). Requests stay server-paginated at 20 rows;
 buttons disable while sort placeholder rows are visible. Priority ties are now
 oldest first in both priority directions, then stable descending IDs. Created
 sorting still defaults newest first.
@@ -376,7 +376,7 @@ See [inspection screens](inspections.md) for routes, query keys and failure stat
 
 ## Responsive work-order list
 
-Below 768px, `-components/work-order-table.tsx` uses the existing `useMobile`
+Below 768px, `-components/work-order-list-page/work-order-table.tsx` uses the existing `useMobile`
 hook to render `work-order-cards.tsx` and `work-order-sort-controls.tsx` instead
 of the table. The single `Work orders` list shows reference/detail link,
 description, priority, readable status/category and created time using shadcn
@@ -386,3 +386,43 @@ a repeated desktop header click. Filters, cursor trail, scroll preservation and
 the server's stable priority tie order are unchanged. Cards expose refreshing
 busy state and retain previous data while the request is pending. Desktop at
 >=768px keeps the sortable table; only one presentation is mounted.
+
+## Screen states
+
+Follows design-system "Screen states". The list's filters sit in a `FilterBar`
+(`search` landmark "Filter work orders"; reference search grows, Status/Category/
+Priority fields `w-full sm:w-48`, outline Apply filters in actions; `activeCount`
+counts applied priority/status/category/reference and `onClear` gives the ghost
+header Clear filters) inside the
+submitting form. Loading uses `LoadingState` (table variant; access checks use
+`rows={2}`). An empty estate shows the `EmptyState` "No work orders yet" ("Use Create to add the
+first work order" when the user can create, else "Saved work orders appear
+here"; no action - the header Create is the entry point); "No matching work orders" offers Clear filters, which keeps the sort.
+Detail: status history/corrections/documents load with `LoadingState`; "No
+corrections yet" and "No documents yet" (under a `SectionHeading` "Documents")
+are `EmptyState`s (no icon). Only the list header shows `icon={Wrench}`; Retry
+locations / Retry source are `outline`. New: access/source/location loads use `LoadingState`; the
+"Work order already raised" screen uses `PageHeader`.
+
+## Shared page components
+
+- List (`work-order-list-page.tsx`; state in `use-work-order-list-page.ts`,
+  loading/error/table/pagination in `work-order-list-results.tsx`): `ListPageHeader` (`Wrench`, title "Work
+  orders", no estate-name description) with `filters` = `FilterToggle` and
+  `create` = `CreateButton` "Create" to `/estates/$estateId/work-orders/new`
+  (only with create permission). `useFilterPanel(activeCount)` owns the panel;
+  `WorkOrderFilters` takes `id`/`open` from `panel.barProps`, so the FilterBar
+  is collapsed until toggled (open on load when filters are in the URL).
+  `countWorkOrderFilters` (in `work-order-filters.tsx`) gives `activeCount`.
+  Load failure: `ErrorState` "Unable to load work orders".
+- Detail (`work-order-detail-page.tsx`; the description/details card is
+  `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
+  status `Badge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
+  `work-order-progress.tsx` and `work-order-documents.tsx` use `ErrorState`
+  ("Retry history", "Retry corrections", "Retry documents"). The completion
+  dialog is the shared `FormDialog` ("Saving…" while pending): `submitDisabled`
+  while refreshing, conflicted or the status no longer matches; its
+  Refresh-work-order recovery `Alert` and review notice sit in `children`;
+  `onSubmit` reads the uncontrolled fields from the form via `FormData`.
+- Create (`work-order-form.tsx`): `FormPageHeader` "Create work order" with
+  breadcrumbs, no icon or estate-name description.

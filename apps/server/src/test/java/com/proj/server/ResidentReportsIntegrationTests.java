@@ -426,8 +426,21 @@ class ResidentReportsIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(older.toString()))
                 .andExpect(jsonPath("$.nextCursor").isEmpty());
+        db.execute("update \"IssueReport\" set status='CLOSED' where id=?", older);
+        db.execute("update \"IssueReport\" set status='ASSIGNED' where id=?", otherEstate);
+        mvc.perform(asUser(
+                        get("/resident/reports")
+                                .param("estateId", firstEstate.toString())
+                                .param("limit", "1"),
+                        "resident-a"))
+                .andExpect(jsonPath("$.counts.open").value(1))
+                .andExpect(jsonPath("$.counts.inProgress").value(0))
+                .andExpect(jsonPath("$.counts.resolved").value(1));
         mvc.perform(asUser(get("/resident/reports"), "resident-a"))
-                .andExpect(jsonPath("$.items.length()").value(3));
+                .andExpect(jsonPath("$.items.length()").value(3))
+                .andExpect(jsonPath("$.counts.open").value(1))
+                .andExpect(jsonPath("$.counts.inProgress").value(1))
+                .andExpect(jsonPath("$.counts.resolved").value(1));
         mvc.perform(asUser(
                         get("/resident/reports")
                                 .param("estateId", UUID.randomUUID().toString()),

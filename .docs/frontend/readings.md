@@ -22,8 +22,9 @@ All new components are in the route's `-components/` folder:
 
 | File | Responsibility |
 | --- | --- |
-| `estate-readings-page.tsx` | Access-context header, breadcrumbs, selected asset and queries |
-| `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To Inputs, suspect Checkbox and Clear filters |
+| `estate-readings-page.tsx` | Composes header, export, filters and results |
+| `use-estate-readings-page.ts` | Access, queries, selected asset label and Create target |
+| `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To `DateTimePicker`s, suspect Checkbox; FilterBar `activeCount`/`onClear` (header Clear filters, shown only when a filter is set) |
 | `reading-asset-picker.tsx` | Button/Dialog picker, name/reference search, retired labels, All assets and option pagination |
 | `reading-results.tsx` | Loading, validation, errors/Retry, empty states and page recovery |
 | `reading-pagination.tsx` | Previous/Next, current-page indicator, numbered page jumps and ellipses |
@@ -68,9 +69,10 @@ on context changes. No invalidations are needed. A preselected asset outside
 the current options/results temporarily displays Selected asset, retaining its
 original ID until labelled data is available.
 
-Empty states distinguish No assets yet, No readings yet, No readings match
-these filters and No suspect readings match. A page beyond a nonzero total
-offers Go to first page instead of claiming there have never been readings.
+Empty states distinguish No assets yet, No readings yet, No matching readings
+and No matching suspect readings (`SearchX`). A page beyond a nonzero total
+shows "No readings on this page" with Go to first page instead of claiming there
+have never been readings.
 
 ### Performance evidence
 
@@ -194,7 +196,10 @@ Components in `readings/new/-components/`:
 
 | File | Responsibility |
 | --- | --- |
-| `manual-reading-form.tsx` | Access/header, local state, options feedback, warning and save/cancel UI |
+| `manual-reading-form.tsx` | Access/header, options feedback and the form card |
+| `use-manual-reading-form.ts` | Local state, queries, selected asset/metric and range check |
+| `manual-reading-form-alerts.tsx` | Out-of-range warning and save error |
+| `manual-reading-form-footer.tsx` | Save/Cancel buttons |
 | `manual-measurement-fields.tsx` | Existing shadcn asset picker in record mode, metric Select, numeric Value and local measurement-time Input |
 | `use-manual-reading-submission.ts` | Validation, stable retry UUID/fingerprint, pending/saved state and success callback |
 
@@ -263,7 +268,7 @@ Manual review additions:
 (`routes/_auth/estates/$estateId/assets/$assetId/readings/index.tsx`, page
 title "Readings"). Requires sign-in. Linked from the asset details page by an
 outline "Readings" link in `AssetDevicesSection`'s action row
-(`$assetId/-components/asset-devices-section.tsx`, see [devices.md](devices.md)),
+(`$assetId/-components/asset-devices/asset-devices-section.tsx`, see [devices.md](devices.md)),
 shown to everyone who can see the section, before "Register device".
 
 ### Search params
@@ -287,8 +292,8 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | "Back to asset" link; `PageHeader` "Readings" with breadcrumbs Estates / estate name / Assets / asset name / Readings (from `useEstate`, `useAsset`) and description "Sensor readings for this asset, newest first. Suspect readings are flagged."; the filters; "Loading readings…" (`role="status"`) while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`, `Empty`, `EmptyHeader`, `EmptyTitle` |
-| `ReadingFilterControls` (`reading-filters.tsx`) | "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `datetime-local` inputs, and a "Suspect only" checkbox. | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Input`, `Checkbox`, `Label` |
+| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). State in `use-readings-page.ts`; sections `readings-header.tsx`, `readings-table.tsx`, `readings-pagination.tsx`. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
+| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
 
 ### Badges (`flagLabel`)
 
@@ -300,8 +305,8 @@ Both in `readings/-components/`.
 
 ### Empty states
 
-Shown (as an `Empty`, `role="status"`) when the response has `totalItems` 0.
-First match wins:
+Shown (as an `EmptyState`) when the response has `totalItems` 0. When any filter is
+set it carries an outline "Clear filters" that resets every filter. First match wins:
 
 1. `suspect` on: "No suspect readings match"
 2. `metric`, `from` or `to` set: "No readings match these filters"
@@ -347,7 +352,7 @@ state while existing data remains visible.
 ## Export CSV (ID-61 / ID-64)
 
 The estate Readings screen has a shadcn Export CSV Button with help: Exports all
-matching readings, across every page. `-components/reading-export.tsx` supplies
+matching readings, across every page. `-components/estate-readings-page/reading-export.tsx` supplies
 pending Spinner, Cancel export Button, destructive error Alert and cancellation
 status. Visibility follows current `canViewReadings` plus a ready authenticated
 session; no new permission is introduced. The action is disabled for invalid
@@ -466,7 +471,7 @@ worker and connection. These are local measurements, not a deployed Cloud Run SL
 ### Resolved QA finding: manual-entry decimal precision (ID-63)
 
 Original QA finding, corrected by the follow-up below. The form accepted up to
-12 integer digits, but `new/-components/use-manual-reading-submission.ts` converted
+12 integer digits, but `new/-components/manual-reading-form/use-manual-reading-submission.ts` converted
 the user's string with `Number(fields.value)` before JSON serialization.
 Entering `999999999999.123456` produced the actual outbound numeric payload
 `999999999999.1234`. This changes the requested six-decimal measurement before
@@ -538,3 +543,39 @@ When checking very large CSV values in Excel, import the value column as Text
 before numeric conversion. The CSV retains all stored digits, but Excel numeric
 cells support only 15 significant digits; formatting a previously rounded cell
 cannot restore its original digits. See [Microsoft's import guidance](https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers).
+
+## Screen states
+
+`reading-filter-controls.tsx` no longer wraps its fields in a Card: it renders a
+`FilterBar` (`search` landmark "Reading filters", fields `w-full sm:w-48`, Clear
+filters in actions). Record manual reading (Plus icon) is the PageHeader action;
+Export CSV stays below the header. `reading-results.tsx` uses `LoadingState`
+(table) and `EmptyState` for the four empty messages; the filtered ones add a
+Clear filters action, and the beyond-last-page recovery is an `EmptyState` with
+Go to first page. The asset picker and manual-entry metric load use
+`LoadingState`.
+
+## Design-system pass
+
+Readings and Record manual reading PageHeaders use `icon={Activity}`. From/To
+filters are `DateTimePicker`s (trigger named "From" / "To (exclusive)", time
+fields "From time" / "To (exclusive) time"); values stay `YYYY-MM-DDTHH:mm`.
+Manual reading's Measured at is a `DateTimePicker` (trigger "Measured at", time
+"Measured at time"), defaulting to now; an empty value fails the existing
+validation.
+
+## Shared page components
+
+`EstateReadingsPage` uses `ListPageHeader` (`icon={Activity}`, title
+"Readings", no estate-name description) with `filters` = `FilterToggle` and
+`create` = `CreateButton` "Create" to `/estates/$estateId/readings/new`
+(keeping `assetId`/`metric`), only with record permission.
+`ReadingFilterControls` takes `id`/`open` from
+`useFilterPanel(countReadingFilters(filters)).barProps`, so the "Reading
+filters" bar is collapsed until toggled (open on load when filters are set).
+`ReadingResults` empty states carry no create button (the header Create is
+the entry point) and no icon; "No matching" states offer Clear filters. Reading, asset and asset-picker load failures use
+`ErrorState`. Paging keeps `ReadingPagination`. `ReadingExport` still renders
+below the header. The manual-reading form uses `FormPageHeader` (breadcrumbs
+Readings / Record manual reading, no icon or estate name) and `ErrorState`
+"Retry form options".

@@ -1592,7 +1592,7 @@
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/IssueReportPageResponse"
+                  "$ref": "#/components/schemas/ResidentReportPageResponse"
                 }
               }
             }
@@ -9208,8 +9208,10 @@
           "confirmedDuplicateCount": { "type": "integer", "format": "int32" },
           "suspectedDuplicateCount": { "type": "integer", "format": "int32" },
           "duplicateOf": {
-            "type": "null",
-            "$ref": "#/components/schemas/DuplicateOf"
+            "oneOf": [
+              { "$ref": "#/components/schemas/DuplicateOf" },
+              { "type": "null" }
+            ]
           },
           "images": {
             "type": "array",
@@ -10979,19 +10981,6 @@
         },
         "required": ["expectedVersion", "retiredOn", "retirementReason"]
       },
-      "IssueReportPageResponse": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IssueReportSummaryResponse"
-            }
-          },
-          "nextCursor": { "type": ["string", "null"] }
-        },
-        "required": ["items", "nextCursor"]
-      },
       "IssueReportSummaryResponse": {
         "type": "object",
         "properties": {
@@ -11014,6 +11003,29 @@
           "title",
           "updatedAt"
         ]
+      },
+      "ReportCounts": {
+        "type": "object",
+        "properties": {
+          "open": { "type": "integer", "format": "int32" },
+          "inProgress": { "type": "integer", "format": "int32" },
+          "resolved": { "type": "integer", "format": "int32" }
+        },
+        "required": ["inProgress", "open", "resolved"]
+      },
+      "ResidentReportPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueReportSummaryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] },
+          "counts": { "$ref": "#/components/schemas/ReportCounts" }
+        },
+        "required": ["counts", "items", "nextCursor"]
       },
       "ResidentLocationResponse": {
         "type": "object",
@@ -11198,8 +11210,10 @@
           "confirmedDuplicateCount": { "type": "integer", "format": "int32" },
           "suspectedDuplicateCount": { "type": "integer", "format": "int32" },
           "duplicateOf": {
-            "type": "null",
-            "$ref": "#/components/schemas/DuplicateOf"
+            "oneOf": [
+              { "$ref": "#/components/schemas/DuplicateOf" },
+              { "type": "null" }
+            ]
           }
         },
         "required": [

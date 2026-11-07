@@ -9,10 +9,10 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { ThemeProvider } from "next-themes";
-import { AppShell } from "@/components/app-shell";
-import { AuthProvider } from "@/components/auth-provider";
-
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { AppShell } from "@/components/shell/app-shell";
 import appCss from "@/index.css?url";
+import { pageTitle } from "@/lib/page-title";
 
 export interface RouterAppContext {
   queryClient: QueryClient;
@@ -29,7 +29,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "UpKeep",
+        title: pageTitle(),
       },
     ],
     links: [

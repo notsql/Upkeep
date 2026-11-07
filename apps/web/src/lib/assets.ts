@@ -1,7 +1,6 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
-import { dashboardQueryKey } from "@/lib/dashboard";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Asset = components["schemas"]["AssetResponse"];
@@ -54,7 +53,6 @@ export function useCreateAsset(estateId: string) {
         queryClient.invalidateQueries({
           queryKey: ["estates", userId, "assets", estateId],
         }),
-        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
       ]);
     },
   });
@@ -105,7 +103,6 @@ export function useDeactivateAsset(estateId: string, assetId: string) {
         queryClient.invalidateQueries({
           queryKey: ["estates", userId, "assets", estateId],
         }),
-        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
       ]);
     },
   });
@@ -173,7 +170,6 @@ export function useRestoreAsset(estateId: string, assetId: string) {
         client.invalidateQueries({
           queryKey: ["estates", userId, "assets", estateId],
         }),
-        client.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
       ]);
     },
   });

@@ -710,6 +710,16 @@ class FaultReportDuplicatesIntegrationTests {
         mvc.perform(createWorkOrder(f, original)).andExpect(status().isCreated());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"EstateIssueReportSummaryResponse", "EstateIssueReportDetailResponse"})
+    void openApiRepresentsDuplicateOfAsANullableObject(String schema) throws Exception {
+        var property = "$.components.schemas." + schema + ".properties.duplicateOf";
+        mvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(property + ".oneOf[0].$ref").value("#/components/schemas/DuplicateOf"))
+                .andExpect(jsonPath(property + ".oneOf[1].type").value("null"));
+    }
+
     // ---- Access context --------------------------------------------------------------------
 
     @ParameterizedTest

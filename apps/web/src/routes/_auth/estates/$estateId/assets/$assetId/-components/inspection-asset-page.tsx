@@ -1,12 +1,15 @@
-import { Button, buttonVariants } from "@proj/ui/components/button";
+import { buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useCallback } from "react";
-import { DetailCard } from "@/components/detail-card";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { DetailCard } from "@/components/page/detail-card";
+import { DetailPageHeader } from "@/components/page/detail-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { useInspectionAccess, useInspectionAsset } from "@/lib/inspections";
-import { InspectionHistoryTable } from "./inspection-history-table";
+import { InspectionHistoryTable } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-table";
 
 export function InspectionAssetPage({
   estateId,
@@ -19,7 +22,7 @@ export function InspectionAssetPage({
   const asset = useInspectionAsset(estateId, assetId);
   const retry = useCallback(() => asset.refetch(), [asset.refetch]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canView) {
     return <p role="alert">Inspection access is unavailable.</p>;
@@ -27,20 +30,19 @@ export function InspectionAssetPage({
   if (asset.isError) {
     return (
       <PageLayout>
-        <p role="alert">{asset.error.message}</p>
-        <Button onClick={retry}>Retry asset</Button>
+        <ErrorState message={asset.error.message} onRetry={retry} />
       </PageLayout>
     );
   }
   if (!asset.data) {
-    return <p role="status">Loading asset…</p>;
+    return <LoadingState label="Loading asset…" rows={2} />;
   }
   const context = asset.data;
   const active =
     context.assetActive && context.estateActive && context.locationActive;
   return (
     <PageLayout className="space-y-6">
-      <PageHeader
+      <DetailPageHeader
         actions={
           access.canCreate && active ? (
             <Link
@@ -48,17 +50,12 @@ export function InspectionAssetPage({
               params={{ estateId, assetId }}
               to="/estates/$estateId/assets/$assetId/inspections/new"
             >
+              <Plus aria-hidden="true" />
               Create inspection record
             </Link>
           ) : undefined
         }
         breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: access.estateName ?? "Estate",
-            to: "/estates/$estateId",
-            params: { estateId },
-          },
           {
             label: "Assets",
             to: "/estates/$estateId/assets",
@@ -66,7 +63,7 @@ export function InspectionAssetPage({
           },
           { label: context.name },
         ]}
-        description={context.reference}
+        meta={context.reference}
         title={context.name}
       />
       <Card>

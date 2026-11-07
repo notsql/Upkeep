@@ -9,12 +9,13 @@ import {
 } from "@proj/ui/components/dialog";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { type MouseEvent, useCallback, useId, useState } from "react";
+import { LoadingState } from "@/components/states/loading-state";
 import {
   type EstateReportFilters,
   useEstateReportList,
 } from "@/lib/estate-reports";
 import { useLocations } from "@/lib/locations";
-import { ReportFilters } from "@/routes/_auth/estates/$estateId/reports/-components/report-filters";
+import { ReportFilters } from "@/routes/_auth/estates/$estateId/reports/-components/report-filters/report-filters";
 
 export function ReportSourcePicker({
   estateId,
@@ -103,7 +104,7 @@ export function ReportSourcePicker({
             />
           ) : null}
           {reports.isPending ? (
-            <p role="status">Loading resident reports…</p>
+            <LoadingState label="Loading resident reports…" rows={2} />
           ) : null}
           {reports.isError ? (
             <p role="alert">

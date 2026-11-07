@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { WorkOrderForm } from "./-components/work-order-form";
+import { pageHead } from "@/lib/page-title";
+import { WorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 export const Route = createFileRoute(
@@ -30,7 +31,7 @@ export const Route = createFileRoute(
     };
   },
   component: NewWorkOrderRoute,
-  head: () => ({ meta: [{ title: "Create work order" }] }),
+  head: () => pageHead("Create work order"),
 });
 function NewWorkOrderRoute() {
   const { estateId } = Route.useParams();

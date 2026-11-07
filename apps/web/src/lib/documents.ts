@@ -9,6 +9,8 @@ export type DocumentFilters = NonNullable<
   paths["/estates/{estateId}/documents"]["get"]["parameters"]["query"]
 >;
 
+const OBJECT_URL_LIFETIME = 1000;
+
 function documentError(error: unknown, fallback: string): Error {
   return new Error(
     error &&
@@ -146,7 +148,9 @@ export function useDownloadDocument(estateId: string) {
         link.click();
       } finally {
         link.remove();
-        URL.revokeObjectURL(url);
+        // Safari cancels the save if the URL is revoked in the same task as
+        // the click, so release it once the download has started.
+        window.setTimeout(() => URL.revokeObjectURL(url), OBJECT_URL_LIFETIME);
       }
     },
   });

@@ -9,10 +9,11 @@ import {
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/reports/new";
-import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page";
+import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page/new-report-page";
 
 const { get, post, navigate, auth } = vi.hoisted(() => ({
   get: vi.fn(),
@@ -34,6 +35,19 @@ const ESTATE = /estate/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get, POST: post } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    search?: { estateId?: string };
+  }) => (
+    <a href={search?.estateId ? `${to}?estateId=${search.estateId}` : to}>
+      {children}
+    </a>
+  ),
   useNavigate: () => navigate,
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
@@ -122,6 +136,17 @@ it("uses the estate selected through context navigation instead of silently choo
     "/resident/locations",
     expect.objectContaining({ params: { query: { estateId: "other" } } })
   );
+});
+
+it("links back to the selected estate's reports through breadcrumbs", async () => {
+  renderWithProviders(<NewReportPage requestedEstateId={estateId} />);
+  await screen.findByRole("heading", { level: 1, name: REPORT_A_FAULT });
+  const crumbs = within(
+    screen.getByRole("navigation", { name: "Breadcrumbs" })
+  );
+  expect(
+    crumbs.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe(`/reports?estateId=${estateId}`);
 });
 
 it("explains an unavailable selected estate without falling back to another assignment", async () => {
@@ -358,4 +383,10 @@ it("lets a multi-estate resident choose an estate and clears the old location se
     search: { estateId: "other" },
   });
   expect(post).not.toHaveBeenCalled();
+});
+
+it("announces loading the estate with the shared loading state", async () => {
+  renderWithProviders(<NewReportPage />);
+  screen.getByRole("status", { name: "Loading your estate…" });
+  await screen.findByRole("heading", { name: "Report a fault" });
 });

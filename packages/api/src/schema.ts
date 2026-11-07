@@ -1761,7 +1761,7 @@ export interface components {
       confirmedDuplicateCount: number;
       /** Format: int32 */
       suspectedDuplicateCount: number;
-      duplicateOf: components["schemas"]["DuplicateOf"];
+      duplicateOf: components["schemas"]["DuplicateOf"] | null;
       images: components["schemas"]["ReportImage"][];
       /** @description SUSPECTED and CONFIRMED duplicates of this report, newest first */
       duplicates: components["schemas"]["LinkedDuplicate"][];
@@ -2759,10 +2759,6 @@ export interface components {
       /** Format: int32 */
       expectedVersion: number;
     };
-    IssueReportPageResponse: {
-      items: components["schemas"]["IssueReportSummaryResponse"][];
-      nextCursor: string | null;
-    };
     IssueReportSummaryResponse: {
       /** Format: uuid */
       id: string;
@@ -2775,6 +2771,19 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    ReportCounts: {
+      /** Format: int32 */
+      open: number;
+      /** Format: int32 */
+      inProgress: number;
+      /** Format: int32 */
+      resolved: number;
+    };
+    ResidentReportPageResponse: {
+      items: components["schemas"]["IssueReportSummaryResponse"][];
+      nextCursor: string | null;
+      counts: components["schemas"]["ReportCounts"];
     };
     ResidentLocationResponse: {
       /** Format: uuid */
@@ -2884,7 +2893,7 @@ export interface components {
       confirmedDuplicateCount: number;
       /** Format: int32 */
       suspectedDuplicateCount: number;
-      duplicateOf: components["schemas"]["DuplicateOf"];
+      duplicateOf: components["schemas"]["DuplicateOf"] | null;
     };
     EstateReadingPage: {
       items: components["schemas"]["EstateReadingResponse"][];
@@ -9010,7 +9019,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportPageResponse"];
+          "*/*": components["schemas"]["ResidentReportPageResponse"];
         };
       };
       /** @description Invalid estate filter, cursor or limit */

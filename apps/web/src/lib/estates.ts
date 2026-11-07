@@ -3,10 +3,17 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { dashboardQueryKey } from "@/lib/dashboard";
 
 const INTERNAL_ERROR =
   /jooq|sql|exception|org\.(?:postgresql|springframework)|stack trace/iu;
+
+const MCST_PREFIX = /^mcst/iu;
+
+// Estate codes are Singapore MCST numbers, stored without the "MCST" prefix.
+// Legacy codes that already carry it are shown as-is.
+export function formatMcst(code: string): string {
+  return MCST_PREFIX.test(code) ? code : `MCST ${code}`;
+}
 
 export type EstateStatus = NonNullable<
   NonNullable<operations["list"]["parameters"]["query"]>["status"]
@@ -119,7 +126,6 @@ export function useSaveEstate(
         queryClient.invalidateQueries({
           queryKey: ["estates", userId, "list"],
         }),
-        queryClient.invalidateQueries({ queryKey: dashboardQueryKey(userId) }),
       ]);
       if (estateId) {
         await onSaved(data);

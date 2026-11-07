@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { deviceMetrics } from "@/lib/devices";
+import { pageHead } from "@/lib/page-title";
 import type { ReadingFilters } from "@/lib/readings";
-import { ReadingsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/readings-page";
+import { ReadingsPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/readings/-components/readings-page/readings-page";
 
 const LOCAL_DATE_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/u;
 
@@ -32,7 +33,7 @@ export const Route = createFileRoute(
 )({
   validateSearch,
   component: ReadingsRoute,
-  head: () => ({ meta: [{ title: "Readings" }] }),
+  head: () => pageHead("Readings"),
 });
 
 function ReadingsRoute() {

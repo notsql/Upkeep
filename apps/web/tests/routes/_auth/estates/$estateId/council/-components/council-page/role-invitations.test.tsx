@@ -1,0 +1,161 @@
+import { fireEvent } from "@testing-library/react";
+import { ownerEstateAccess, unassignedAccess } from "@tests/fixtures/access";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+} from "@tests/test-utils";
+import { beforeEach, expect, it, vi } from "vitest";
+import { api } from "@/lib/api";
+import { CouncilPage } from "@/routes/_auth/estates/$estateId/council/-components/council-page/council-page";
+
+vi.mock("@/lib/api", () => ({
+  api: { GET: vi.fn(), POST: vi.fn(), PUT: vi.fn(), DELETE: vi.fn() },
+}));
+vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
+  useAuth: () => ({ user: { id: "manager" }, loading: false }),
+}));
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children }: { children: React.ReactNode }) => (
+    <span>{children}</span>
+  ),
+  useNavigate: () => () => Promise.resolve(),
+  useSearch: () => ({}),
+}));
+
+async function openInviteDialog(): Promise<void> {
+  fireEvent.click(await screen.findByRole("button", { name: "Invite member" }));
+  await screen.findByRole("dialog", { name: "Invite member" });
+}
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.mocked(api.GET).mockImplementation((path) => {
+    let data: unknown = {
+      id: "estate",
+      name: "Maple",
+      owned: false,
+      canInviteMembers: true,
+      canManageInvitationPermissions: true,
+    };
+    if (path === "/estates/{estateId}/members") {
+      data = [
+        {
+          userId: "manager",
+          name: "Me",
+          email: "me@example.com",
+          role: "MANAGER",
+          owner: false,
+        },
+        {
+          userId: "other",
+          name: "Other",
+          email: "other@example.com",
+          role: "COUNCIL",
+          owner: false,
+        },
+      ];
+    }
+    if (path === "/estates/{estateId}/council-invitations") {
+      data = [];
+    }
+    if (path === "/access/context") {
+      data = {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [
+          {
+            ...ownerEstateAccess,
+            estateId: "estate",
+            estateName: "Maple",
+            canViewEstateInvitations: true,
+            canViewEstateRoles: true,
+            canReassignRoles: true,
+          },
+        ],
+      };
+    }
+    if (
+      path === "/estates/{estateId}/roles" ||
+      path === "/estates/{estateId}/role-permissions"
+    ) {
+      data = [];
+    }
+    if (path === "/estates/{estateId}/invitation-roles") {
+      data = [
+        { role: "MANAGER", label: "Manager (Admin)" },
+        { role: "COUNCIL", label: "Council member" },
+        { role: "RESIDENT", label: "Resident" },
+        { role: "CREW", label: "Crew" },
+      ];
+    }
+    return Promise.resolve({ data, response: new Response() }) as never;
+  });
+});
+
+it("defaults to Council even when another eligible role is listed first", async () => {
+  vi.mocked(api.POST).mockResolvedValue({
+    data: { email: "council@example.com", role: "COUNCIL", status: "IN_APP" },
+    response: new Response(null, { status: 201 }),
+  } as never);
+  renderWithProviders(<CouncilPage estateId="estate" />);
+  await openInviteDialog();
+  expect(
+    (await screen.findByRole("combobox", { name: "Invitation role" }))
+      .textContent
+  ).toContain("Council member");
+  fireEvent.change(screen.getByRole("textbox", { name: "Email" }), {
+    target: { value: "council@example.com" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith(
+      "/estates/{estateId}/council-invitations",
+      {
+        params: { path: { estateId: "estate" } },
+        body: { email: "council@example.com", role: "COUNCIL" },
+      }
+    )
+  );
+});
+
+it("lets a non-owner Manager invite Crew with the selected stored role", async () => {
+  vi.mocked(api.POST).mockResolvedValue({
+    data: { email: "crew@example.com", role: "CREW", status: "IN_APP" },
+    response: new Response(null, { status: 201 }),
+  } as never);
+  renderWithProviders(<CouncilPage estateId="estate" />);
+  await openInviteDialog();
+  fireEvent.change(await screen.findByRole("textbox", { name: "Email" }), {
+    target: { value: "crew@example.com" },
+  });
+  await chooseOption(
+    screen.getByRole("combobox", { name: "Invitation role" }),
+    "Crew"
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Send invitation" }));
+  await waitFor(() =>
+    expect(api.POST).toHaveBeenCalledWith(
+      "/estates/{estateId}/council-invitations",
+      {
+        params: { path: { estateId: "estate" } },
+        body: { email: "crew@example.com", role: "CREW" },
+      }
+    )
+  );
+  expect((await screen.findByRole("status")).textContent).toContain(
+    "No email was sent"
+  );
+  expect(screen.queryByRole("checkbox")).toBeNull();
+});
+
+it("offers role management to another Manager while hiding self-removal and self-demotion", async () => {
+  renderWithProviders(<CouncilPage estateId="estate" />);
+  await screen.findByRole("combobox", { name: "Role for Other" });
+  expect(screen.queryByRole("combobox", { name: "Role for Me" })).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Remove access for me@example.com" })
+  ).toBeNull();
+  screen.getByRole("button", { name: "Remove access for other@example.com" });
+});

@@ -20,6 +20,8 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 
+const BACK_LINK = /^Back to/u;
+
 vi.mock("@/routes/__root", async () => {
   const { createRootRouteWithContext, Outlet } = await import(
     "@tanstack/react-router"
@@ -122,7 +124,7 @@ it("lets Crew view work orders without creation or progress controls", async () 
   state.crew = true;
   const { router } = await setup();
   const detail = await screen.findByRole("link", { name: "TEST-W0001" });
-  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   fireEvent.click(detail);
   await waitFor(() =>
     expect(router.state.location.pathname).toBe(`${basePath}/${order.id}`)
@@ -193,7 +195,7 @@ it("keeps the work-order table mounted while a new sort is loading", async () =>
   );
   screen.getByRole("link", { name: "TEST-W0001" });
   expect(
-    screen.getByRole("button", { name: "Next" }).hasAttribute("disabled")
+    screen.getByRole("button", { name: "Next page" }).hasAttribute("disabled")
   ).toBe(true);
   await act(async () =>
     resolveRequest({
@@ -208,8 +210,15 @@ it("keeps the work-order table mounted while a new sort is loading", async () =>
   expect(screen.queryByRole("link", { name: "TEST-W0001" })).toBeNull();
 });
 
-it.each(["", "/new", `/${order.id}`])(
-  "links the estate overview from work-order breadcrumbs on %s",
+it("shows no breadcrumbs or back link on the top-level work order list", async () => {
+  await setup();
+  await screen.findByRole("heading", { level: 1, name: "Work orders" });
+  expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
+  expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
+});
+
+it.each(["/new", `/${order.id}`])(
+  "starts work-order breadcrumbs at the section on %s",
   async (suffix) => {
     await setup(basePath + suffix);
     const breadcrumbs = await screen.findByRole("navigation", {
@@ -217,28 +226,16 @@ it.each(["", "/new", `/${order.id}`])(
     });
     expect(
       within(breadcrumbs)
-        .getByRole("link", { name: "Testing" })
-        .getAttribute("href")
-    ).toBe(`/estates/${estateId}`);
+        .getAllByRole("link")
+        .map((link) => [link.textContent, link.getAttribute("href")])
+    ).toEqual([["Work orders", basePath]]);
+    expect(within(breadcrumbs).queryByText("Testing")).toBeNull();
   }
 );
 
-it("links the estate breadcrumb for Crew with read-only estate access", async () => {
-  state.crew = true;
-  await setup();
-  const breadcrumbs = await screen.findByRole("navigation", {
-    name: "Breadcrumbs",
-  });
-  within(breadcrumbs).getByText("Testing");
-  expect(
-    within(breadcrumbs)
-      .getByRole("link", { name: "Testing" })
-      .getAttribute("href")
-  ).toBe(`/estates/${estateId}`);
-});
-
 it("applies priority and reference to the server query and URL and resets pagination", async () => {
   const { router } = await setup(`${basePath}?cursor=old-page`);
+  fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
   await chooseOption(
     await screen.findByRole("combobox", { name: "Priority" }),
     "High"
@@ -269,7 +266,7 @@ it("applies priority and reference to the server query and URL and resets pagina
       })
     )
   );
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await waitFor(() =>
     expect(router.state.location.search).toEqual({
       priority: "HIGH",
@@ -305,8 +302,11 @@ it("restores applied filters from URL navigation and distinguishes no matches fr
     screen.getByRole("combobox", { name: "Priority" }).textContent
   ).toContain("Urgent");
   await screen.findByText("No matching work orders");
-  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  const clearButtons = screen.getAllByRole("button", { name: "Clear filters" });
+  expect(clearButtons).toHaveLength(2);
+  fireEvent.click(clearButtons[1] as HTMLElement);
   await screen.findByText("No work orders yet");
+  expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(1);
   await act(async () => router.history.back());
   await waitFor(() =>
     expect(
@@ -371,7 +371,7 @@ it("sorts work orders from headers while retaining filters, pages and browser hi
       await screen.findByRole("columnheader", { name: "Priority" })
     ).getAttribute("aria-sort")
   ).toBe("descending");
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await waitFor(() =>
     expect(router.state.location.search).toEqual({
       priority: "HIGH",
@@ -506,32 +506,47 @@ it.each(["sortBy=PRIORITY", "direction=SIDEWAYS"])(
 it("returns to visited cursor pages without losing filters and resets the trail after a filter change", async () => {
   const { router } = await setup(`${basePath}?priority=HIGH&q=TEST`);
   await screen.findByRole("link", { name: "TEST-W0001" });
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await waitFor(() =>
     expect(router.state.location.search.cursor).toBe("page-two")
   );
-  fireEvent.click(await screen.findByRole("button", { name: "Previous" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
   await waitFor(() =>
     expect(router.state.location.search).toEqual({
       priority: "HIGH",
       q: "TEST",
     })
   );
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await waitFor(() =>
     expect(router.state.location.search.cursor).toBe("page-two")
   );
   fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
   await waitFor(() => expect(router.state.location.search).toEqual({}));
-  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
+  expect(
+    screen
+      .getByRole("button", { name: "Previous page" })
+      .hasAttribute("disabled")
+  ).toBe(true);
   screen.getByText("1 work order on this page");
 });
 
-it("offers First page for a directly opened cursor without inventing a previous page", async () => {
-  await setup(`${basePath}?cursor=direct-link`);
-  await screen.findByRole("button", { name: "First page" });
-  expect(screen.queryByRole("button", { name: "Previous" })).toBeNull();
-  screen.getByText("1 work order on this page");
+it("returns a directly opened cursor to the first page", async () => {
+  const { router } = await setup(`${basePath}?cursor=direct-link`);
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
+  await waitFor(() => expect(router.state.location.search).toEqual({}));
+  await screen.findByText("1 work order on this page");
+});
+
+it("keeps filters collapsed until the Filters toggle opens them", async () => {
+  await setup();
+  const toggle = await screen.findByRole("button", { name: "Filters" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  expect(
+    screen.queryByRole("search", { name: "Filter work orders" })
+  ).toBeNull();
+  fireEvent.click(toggle);
+  await screen.findByRole("search", { name: "Filter work orders" });
 });
 
 it("shows mobile work-order summaries with sorting, filtering and paging intact", async () => {
@@ -549,7 +564,7 @@ it("shows mobile work-order summaries with sorting, filtering and paging intact"
   list.getByText("OPEN");
   list.getByText("CLEANLINESS");
   expect(screen.queryByRole("table", { name: "Work orders" })).toBeNull();
-  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   await chooseOption(
     screen.getByRole("combobox", { name: "Sort work orders by" }),
     "Priority"
@@ -570,10 +585,10 @@ it("shows mobile work-order summaries with sorting, filtering and paging intact"
   );
   await waitFor(() =>
     expect(
-      screen.getByRole("button", { name: "Next" }).hasAttribute("disabled")
+      screen.getByRole("button", { name: "Next page" }).hasAttribute("disabled")
     ).toBe(false)
   );
-  fireEvent.click(screen.getByRole("button", { name: "Next" }));
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
   await waitFor(() =>
     expect(router.state.location.search).toMatchObject({
       priority: "HIGH",

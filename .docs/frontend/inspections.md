@@ -6,13 +6,14 @@ Routes use folder-based files under
 | Route file | Screen |
 | --- | --- |
 | `index.tsx` | Existing owner asset register, or `-components/inspection-asset-list.tsx` for permitted Managers/Crew |
-| `$assetId/index.tsx` | Owner detail or `$assetId/-components/inspection-asset-page.tsx` with limited context; both mount `-components/inspection-history-table.tsx` |
-| `$assetId/inspections/new/index.tsx` | `-components/inspection-form.tsx`: required explicit outcome/date, optional notes and private photos |
-| `$assetId/inspections/$inspectionId/index.tsx` | `-components/inspection-detail.tsx`: immutable result, evidence and follow-up |
+| `$assetId/_details/route.tsx` | Layout: owner asset frame (`AssetDetailsLayout`) or, for inspection-only viewers, `$assetId/-components/inspection-asset-page.tsx` (`DetailPageHeader`, limited context, `ErrorState` on failure) |
+| `$assetId/_details/inspections/index.tsx` | The asset's Inspections sub-page: `-components/inspection-history-table/inspection-history-table.tsx` (the inspection-only page also mounts it) |
+| `$assetId/inspections/new/index.tsx` | `-components/inspection-form/inspection-form.tsx`: required explicit outcome/date, optional notes and private photos |
+| `$assetId/inspections/$inspectionId/index.tsx` | `-components/inspection-detail/inspection-detail.tsx`: immutable result, evidence and follow-up |
 
 The work-order `new/index.tsx` validates `sourceInspectionId` as a UUID,
 rejecting mixed report/inspection source IDs before reading either source.
-It renders the existing `-components/work-order-form.tsx` for all sources,
+It renders the existing `-components/work-order-form/work-order-form.tsx` for all sources,
 including failed inspections. There is no separate inspection work-order form.
 
 ## Access and screen composition
@@ -65,10 +66,10 @@ detail/history and source lookup, without invalidating other users or estates.
 
 ## Inspection history table
 
-Open **Estates → select estate → Assets → select asset**. Both the full Owner
+Pick the estate in the header switcher, then sidebar **Assets → select asset**. Both the full Owner
 screen and limited Manager/Crew screen show **Inspection records** when
 `canViewInspectionResults` is granted. The shared route-local component is
-`$assetId/-components/inspection-history-table.tsx`.
+`$assetId/-components/inspection-history-table/inspection-history-table.tsx`.
 
 The five columns are Inspection date, Outcome, Follow-up / work order,
 Inspector and View record. The table preserves the API order (inspection date,
@@ -79,13 +80,13 @@ its follow-up cell is empty. A linked Fail retains its failed outcome and shows
 the work-order reference, linked only with independent work-order read access.
 View record opens the immutable detail with notes and photos.
 
-The table uses `useInspectionResults`, loading twenty records per page with
-opaque cursor Next/Previous navigation. The first/last controls are disabled;
+The table (a `SectionCard` "Inspection records", `ListChecks`) uses `useInspectionResults`, loading twenty records per page with
+opaque cursor navigation through the shared `Pagination` ("Inspection history pages": Previous page / Next page). The first/last controls are disabled;
 page changes replace rows. Its inner page component is keyed by user, estate
 and asset, resetting cursor history when identity changes. No other asset's
 cached rows are shown while loading. Revoked inspection access unmounts the
-table and its actions. Failed reads hide cached rows, show an alert and Retry
-inspections for the same cursor. Loading and successful empty history have
+table and its actions. Failed reads hide cached rows, show an `ErrorState` with "Retry
+inspections" for the same cursor. Loading and successful empty history have
 distinct status messages; a history failure leaves asset context and the
 recording entry point available.
 
@@ -111,9 +112,10 @@ manual acceptance checks.
 
 The recording route's `new/-components/` folder contains:
 
-- `inspection-form.tsx`: access/loading gates, page header and asset summary,
-  form values and selected files, observed/reviewed location, duplicate-save
-  guard, mutation, saved state, navigation and save/cancel actions.
+- `inspection-form.tsx`: access/loading gates and form composition;
+  `inspection-form-asset-summary.tsx` renders the page header, asset summary and
+  inactive note; `use-inspection-form.ts` holds form values and selected files, observed/reviewed location, duplicate-save
+  guard, mutation, saved state and navigation; the form keeps save/cancel actions.
 - `inspection-fields.tsx`: controlled outcome, Singapore-date constraints and
   optional notes using shadcn Field, Select, Input and Textarea.
 - `inspection-photo-field.tsx`: controlled photo selection, count/type/size
@@ -130,7 +132,9 @@ The extracted UI components receive explicit props; API/query hooks stay in the
 parent and the existing recovery component. See
 [decision 0038](../../.spec/decisions/0038-inspection-form-component-boundaries.md).
 
-The form has no outcome default; inspection date defaults to Singapore today.
+The form has no outcome default; inspection date (a `DatePicker`, not clearable, bounded by
+installation date and Singapore today) defaults to Singapore today. Asset-unavailable and
+record-unavailable errors use `ErrorState`; form and record headers carry no icon.
 Asset/location context is read-only. Files have previews/removal before save;
 the browser checks count/type/size and the server validates content/dimensions.
 Save prevents duplicate clicks and failures retain outcome/date/notes. A 409
@@ -181,3 +185,11 @@ current `locationId` and `expectedSourceLocationId`. Retired/inactive resources
 show why creation is blocked. Already linked sources display the existing
 work-order reference instead of a fresh creation form. A closed work order
 does not turn the saved Fail into Pass.
+
+## Shared page components
+
+The create page (`inspection-form.tsx`) uses `FormPageHeader` (breadcrumbs,
+description "<reference> · <name>", no icon) and the record page
+(`inspection-detail.tsx`) uses `DetailPageHeader` with the Pass/Fail `Badge` as
+`status` and "<reference> · <name>" as `meta` (no estate-name fallback). Asset
+and record load failures use `ErrorState` ("Retry asset", "Retry inspection").

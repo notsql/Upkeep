@@ -1,11 +1,13 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
-import { DetailCard } from "@/components/detail-card";
-import { PageHeader } from "@/components/page-header";
-import { PageLayout } from "@/components/page-layout";
+import { UserRound } from "lucide-react";
+import { DetailCard } from "@/components/page/detail-card";
+import { PageHeader } from "@/components/page/page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { pageHead } from "@/lib/page-title";
 
 export const Route = createFileRoute("/_auth/account/")({
   component: AccountPage,
-  head: () => ({ meta: [{ title: "Your account" }] }),
+  head: () => pageHead("Your account"),
 });
 
 const authenticatedRoute = getRouteApi("/_auth");
@@ -16,8 +18,8 @@ function AccountPage() {
   return (
     <PageLayout>
       <PageHeader
-        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Account" }]}
-        description="Your profile and sign-in identity."
+        description="Profile and sign-in identity"
+        icon={UserRound}
         title="Your account"
       />
       <DetailCard className="mt-6">

@@ -32,7 +32,7 @@ server enforces it.
   - `DuplicateStateBadge` is the single state badge.
 - `report-card.tsx` has an optional `badges` slot in the card header.
 - `report-source-picker.tsx` (`ReportSourcePicker`) moved here from
-  `work-orders/new/-components/` because two routes use it. It gained optional
+  `work-orders/new/-components/work-order-form/` because two routes use it. It gained optional
   `label`, `chooseLabel`, `emptyText` and `excludeId` props; the defaults keep
   the work-order wording. It never offers a report with `duplicateOf` set, since such a report can be neither a work-order source nor an original. Its test is at
   `tests/components/reports/report-source-picker.test.tsx`.
@@ -41,12 +41,12 @@ server enforces it.
 
 | Route folder | What it shows |
 | --- | --- |
-| `estates/$estateId/reports/index.tsx` | Each report card passes `<DuplicateBadges>` into `ReportCard`'s `badges` slot. |
-| `estates/$estateId/reports/$reportId/index.tsx` | `-components/duplicate-section.tsx` below the report card (details below). |
-| `estates/$estateId/work-orders/` list | `-components/duplicate-count-badge.tsx` puts an "N duplicate(s)" Badge beside the priority in the table and mobile cards when `sourceReportConfirmedDuplicateCount > 0`. |
-| `estates/$estateId/work-orders/$workOrderId` | The detail adds "Duplicate reports: N confirmed duplicate(s)" when the count is above 0. |
+| `estates/$estateId/reports/index.tsx` | `-components/estate-reports-page/estate-reports-results.tsx` passes `<DuplicateBadges>` into each `ReportCard`'s `badges` slot. |
+| `estates/$estateId/reports/$reportId/index.tsx` | `-components/duplicate-section/duplicate-section.tsx` below the report card (details below). |
+| `estates/$estateId/work-orders/` list | `-components/work-order-list-page/duplicate-count-badge.tsx` puts an "N duplicate(s)" Badge beside the priority in the table and mobile cards when `sourceReportConfirmedDuplicateCount > 0`. |
+| `estates/$estateId/work-orders/$workOrderId` | `-components/work-order-detail-page/work-order-detail-summary.tsx` adds "Duplicate reports: N confirmed duplicate(s)" when the count is above 0. |
 
-`duplicate-section.tsx` renders up to three labelled `<section>` regions, each a
+`duplicate-section/duplicate-section.tsx` renders up to three labelled `<section>` regions, each a
 shadcn Card:
 
 - **Duplicate** (the report has a link):
