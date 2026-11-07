@@ -8,7 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/** Responder report detail: the resident detail plus duplicate information (ID-74). */
+/** Responder report detail: the resident detail plus duplicate and urgency information. */
 @Schema(
         requiredProperties = {
             "id",
@@ -23,7 +23,11 @@ import java.util.UUID;
             "suspectedDuplicateCount",
             "duplicateOf",
             "images",
-            "duplicates"
+            "duplicates",
+            "urgency",
+            "isSafety",
+            "urgencyVersion",
+            "lastUrgencyChange"
         })
 public record EstateIssueReportDetailResponse(
         UUID id,
@@ -40,9 +44,18 @@ public record EstateIssueReportDetailResponse(
         List<ReportImage> images,
 
         @Schema(description = "SUSPECTED and CONFIRMED duplicates of this report, newest first")
-        List<LinkedDuplicate> duplicates) {
+        List<LinkedDuplicate> duplicates,
+
+        ReportUrgency urgency,
+        boolean isSafety,
+        int urgencyVersion,
+        @Schema(types = {"object", "null"}) ReportUrgencyChange lastUrgencyChange) {
     static EstateIssueReportDetailResponse of(
-            IssueReportDetailResponse report, DuplicateRepository.Summary info, List<LinkedDuplicate> duplicates) {
+            IssueReportDetailResponse report,
+            DuplicateRepository.Summary info,
+            List<LinkedDuplicate> duplicates,
+            ReportUrgencyRepository.Values values,
+            ReportUrgencyChange change) {
         return new EstateIssueReportDetailResponse(
                 report.id(),
                 report.title(),
@@ -56,6 +69,10 @@ public record EstateIssueReportDetailResponse(
                 info.suspected(),
                 info.duplicateOf(),
                 report.images(),
-                duplicates);
+                duplicates,
+                values.urgency(),
+                values.isSafety(),
+                values.version(),
+                change);
     }
 }

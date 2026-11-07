@@ -2,6 +2,7 @@ package com.proj.server.resident;
 
 import com.proj.server.estate.EstateError;
 import com.proj.server.report.EstateReportController;
+import com.proj.server.report.ReportUrgencyController;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
-@RestControllerAdvice(assignableTypes = {ResidentReportController.class, EstateReportController.class})
+@RestControllerAdvice(
+        assignableTypes = {ResidentReportController.class, EstateReportController.class, ReportUrgencyController.class})
 public class ResidentReportExceptionHandler {
     @ExceptionHandler(ResidentReportException.class)
     ResponseEntity<EstateError> report(ResidentReportException error) {

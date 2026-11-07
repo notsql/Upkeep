@@ -1251,6 +1251,23 @@ export interface paths {
     patch: operations["relocateEstateReport"];
     trace?: never;
   };
+  "/estates/{estateId}/reports/{reportId}/urgency": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Change report urgency and Safety marking (Managers only) */
+    patch: operations["changeEstateReportUrgency"];
+    trace?: never;
+  };
   "/estates/{estateId}/role-permissions": {
     parameters: {
       query?: never;
@@ -1765,6 +1782,12 @@ export interface components {
       images: components["schemas"]["ReportImage"][];
       /** @description SUSPECTED and CONFIRMED duplicates of this report, newest first */
       duplicates: components["schemas"]["LinkedDuplicate"][];
+      /** @enum {string} */
+      urgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      isSafety: boolean;
+      /** Format: int32 */
+      urgencyVersion: number;
+      lastUrgencyChange: components["schemas"]["ReportUrgencyChange"] | null;
     };
     LinkedDuplicate: {
       /** Format: uuid */
@@ -1785,6 +1808,21 @@ export interface components {
       /** Format: uuid */
       id: string;
       label: string;
+    };
+    ReportUrgencyChange: {
+      /** Format: uuid */
+      id: string;
+      /** Format: int32 */
+      version: number;
+      /** @enum {string} */
+      fromUrgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      /** @enum {string} */
+      toUrgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      fromIsSafety: boolean;
+      toIsSafety: boolean;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
     };
     UpdateEstateRoleRequest: {
       /** @enum {string} */
@@ -2719,6 +2757,13 @@ export interface components {
        */
       downtimeMinutes?: number | null;
     };
+    ChangeReportUrgencyRequest: {
+      /** @enum {string} */
+      urgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      isSafety: boolean;
+      /** Format: int32 */
+      expectedVersion: number;
+    };
     RelocateReportRequest: {
       /** Format: uuid */
       locationId: string;
@@ -2894,6 +2939,11 @@ export interface components {
       /** Format: int32 */
       suspectedDuplicateCount: number;
       duplicateOf: components["schemas"]["DuplicateOf"] | null;
+      /** @enum {string} */
+      urgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      isSafety: boolean;
+      /** Format: int32 */
+      urgencyVersion: number;
     };
     EstateReadingPage: {
       items: components["schemas"]["EstateReadingResponse"][];
@@ -3405,6 +3455,7 @@ export interface components {
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
       canReviewFaultReportDuplicates: boolean;
+      canChangeFaultReportUrgency: boolean;
     };
   };
 }
@@ -4027,6 +4078,78 @@ export interface operations {
       };
       /** @description Document association operation failed */
       500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  changeEstateReportUrgency: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeReportUrgencyRequest"];
+      };
+    };
+    responses: {
+      /** @description Updated report and its latest change */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid request or Safety below Urgent */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Manager membership required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or report not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Stale version or inactive estate */
+      409: {
         headers: {
           [name: string]: unknown;
         };
@@ -8528,6 +8651,9 @@ export interface operations {
         maxLevelPosition?: number;
         cursor?: string;
         limit?: number;
+        openOnly?: boolean;
+        /** @description URGENCY: Safety and urgency first; NEWEST/OLDEST: submission time descending/ascending */
+        sort?: "URGENCY" | "NEWEST" | "OLDEST";
       };
       header?: never;
       path: {
