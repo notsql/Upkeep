@@ -91,5 +91,11 @@ public record AppAccessResponse(
             boolean canReassignRoles,
             boolean canViewEstateInvitations,
             boolean canViewDocuments,
-            boolean canUploadDocuments) {}
+            boolean canUploadDocuments,
+
+            @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            boolean canImportReadings,
+
+            @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            boolean canRevertReadingImports) {}
 }

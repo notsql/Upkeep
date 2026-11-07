@@ -146,7 +146,9 @@ public class AccessService {
                     canReassignRoles,
                     canViewEstateInvitations,
                     canViewDocuments,
-                    canUploadDocuments);
+                    canUploadDocuments,
+                    manager && active,
+                    manager && active);
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)

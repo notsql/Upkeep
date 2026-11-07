@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@tests/test-utils";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toDateValue } from "@/components/forms/date-picker";
 import { assetQueryKey } from "@/lib/assets";
 
@@ -65,6 +65,9 @@ const retiredPump = /OLD-001/u;
 let fail = false;
 
 beforeEach(() => {
+  // The helper selects 16:00 today; keep it in the past in every timezone.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 28, 17));
   vi.resetAllMocks();
   permission.canRecord = true;
   fail = false;
@@ -104,6 +107,9 @@ beforeEach(() => {
         : { data: saved, response: new Response(null, { status: 201 }) }
     )
   );
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 function show(initialAssetId: string | undefined = ASSET) {
   const onSaved = vi.fn();
@@ -236,6 +242,18 @@ describe("manual reading form", () => {
     await screen.findByRole("spinbutton", { name: "Value" });
     fireEvent.click(
       screen.getByRole("button", { name: "Save manual reading" })
+    );
+    expect(post).not.toHaveBeenCalled();
+  });
+  it("rejects measurement times more than five minutes in the future", async () => {
+    vi.setSystemTime(new Date(2026, 9, 28, 15, 54));
+    show();
+    await fill();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Save manual reading" })
+    );
+    await screen.findByText(
+      "Measurement time cannot be more than five minutes in the future."
     );
     expect(post).not.toHaveBeenCalled();
   });

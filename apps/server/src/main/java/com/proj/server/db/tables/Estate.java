@@ -23,6 +23,7 @@ import com.proj.server.db.tables.Inspectioncheck.InspectioncheckPath;
 import com.proj.server.db.tables.Inspectionlistrun.InspectionlistrunPath;
 import com.proj.server.db.tables.Issuereport.IssuereportPath;
 import com.proj.server.db.tables.Location.LocationPath;
+import com.proj.server.db.tables.Readingimportbatch.ReadingimportbatchPath;
 import com.proj.server.db.tables.Workorder.WorkorderPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
@@ -409,6 +410,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _location = new LocationPath(this, null, Keys.LOCATION__LOCATION_ESTATEID_FKEY.getInverseKey());
 
         return _location;
+    }
+
+    private transient ReadingimportbatchPath _readingimportbatch;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.ReadingImportBatch</code> table
+     */
+    public ReadingimportbatchPath readingimportbatch() {
+        if (_readingimportbatch == null)
+            _readingimportbatch = new ReadingimportbatchPath(this, null, Keys.READINGIMPORTBATCH__READINGIMPORTBATCH_ESTATEID_FKEY.getInverseKey());
+
+        return _readingimportbatch;
     }
 
     private transient WorkorderPath _workorder;

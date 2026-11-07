@@ -1135,6 +1135,86 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/readings/imports": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listReadingImports"];
+    put?: never;
+    post: operations["importHistoricalReadings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/imports/{batchId}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getReadingImport"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/imports/{batchId}/report": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["downloadReadingImportReport"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/imports/{batchId}/revert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["revertReadingImport"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/imports/{batchId}/rows": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listReadingImportRows"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/readings/manual": {
     parameters: {
       query?: never;
@@ -2012,11 +2092,67 @@ export interface components {
       /** Format: date-time */
       recordedAt: string;
       /** @enum {string} */
-      source: "SENSOR" | "MANUAL";
+      source: "SENSOR" | "IMPORT" | "MANUAL";
       recordedByUserId: string;
       recordedByName: string | null;
       /** @description Exact stored decimal for display without binary floating-point conversion */
       valueText?: string;
+    };
+    ReadingImportOptions: {
+      /** Format: uuid */
+      submissionId: string;
+      sourceLabel: string;
+      /** @enum {string} */
+      preset: "VENDOR" | "EXPORT";
+      assetLookupMode: string;
+      mapping: {
+        [key: string]: string;
+      };
+    };
+    ReadingImportBatchResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      estateId: string;
+      /** Format: uuid */
+      submissionId: string;
+      sourceLabel: string;
+      originalFilename: string;
+      fileHash: string;
+      /** Format: int32 */
+      sizeBytes: number;
+      mapping: {
+        [key: string]: string;
+      };
+      /** @enum {string} */
+      preset: "VENDOR" | "EXPORT";
+      assetLookupMode: string;
+      parserVersion: string;
+      uploaderUserId: string;
+      uploaderName?: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      /** @enum {string} */
+      status: "COMPLETED" | "REVERTED";
+      /** Format: int32 */
+      totalRows: number;
+      /** Format: int32 */
+      importedRows: number;
+      /** Format: int32 */
+      duplicateRows: number;
+      /** Format: int32 */
+      invalidRows: number;
+      /** Format: int32 */
+      warningRows: number;
+      rollbackUserId?: string | null;
+      /** Format: date-time */
+      rollbackAt?: string | null;
+      rollbackReason?: string | null;
+      /** Format: int32 */
+      removedCount?: number | null;
+    };
+    RevertReadingImportRequest: {
+      reason: string;
     };
     TransferOwnershipRequest: {
       newOwnerUserId: string;
@@ -2841,11 +2977,14 @@ export interface components {
       deviceIdentifier: string | null;
       flags: components["schemas"]["ReadingFlagResponse"][];
       /** @enum {string} */
-      source: "SENSOR" | "MANUAL";
+      source: "SENSOR" | "IMPORT" | "MANUAL";
       recordedByUserId: string | null;
       recordedByName: string | null;
       /** Format: date-time */
       recordedAt: string;
+      /** Format: uuid */
+      importBatchId?: string | null;
+      sourceLabel?: string | null;
       /** @description Exact stored decimal for display without binary floating-point conversion */
       valueText?: string;
     };
@@ -2884,6 +3023,51 @@ export interface components {
       validMin: number;
       /** Format: double */
       validMax: number;
+    };
+    ReadingImportBatchPage: {
+      items: components["schemas"]["ReadingImportBatchResponse"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
+    };
+    ReadingImportIssue: {
+      field: string;
+      code: string;
+      reason: string;
+    };
+    ReadingImportRowPage: {
+      items: components["schemas"]["ReadingImportRowResponse"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
+    };
+    ReadingImportRowResponse: {
+      /** Format: int32 */
+      recordNumber: number;
+      /** Format: int32 */
+      startingLineNumber: number;
+      /** @enum {string} */
+      outcome: "IMPORTED" | "DUPLICATE" | "INVALID";
+      /** Format: uuid */
+      readingId?: string | null;
+      /** @enum {string|null} */
+      source?: "SENSOR" | "IMPORT" | "MANUAL" | null;
+      /** Format: uuid */
+      assetId?: string | null;
+      metric?: string | null;
+      /** Format: date-time */
+      measuredAt?: string | null;
+      valueText?: string | null;
+      origin: {
+        [key: string]: string;
+      };
+      issues: components["schemas"]["ReadingImportIssue"][];
     };
     ReadingAssetOption: {
       /** Format: uuid */
@@ -3157,11 +3341,14 @@ export interface components {
       /** @description Empty when nothing is suspect */
       flags: components["schemas"]["ReadingFlagResponse"][];
       /** @enum {string} */
-      source: "SENSOR" | "MANUAL";
+      source: "SENSOR" | "IMPORT" | "MANUAL";
       recordedByUserId: string | null;
       recordedByName: string | null;
       /** Format: date-time */
       recordedAt: string;
+      /** Format: uuid */
+      importBatchId?: string | null;
+      sourceLabel?: string | null;
       /** @description Exact stored decimal for display without binary floating-point conversion */
       valueText?: string;
     };
@@ -3312,6 +3499,8 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
+      canImportReadings?: boolean;
+      canRevertReadingImports?: boolean;
     };
   };
 }
@@ -5359,6 +5548,101 @@ export interface operations {
       };
     };
   };
+  downloadReadingImportReport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        batchId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Complete CSV row report */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": string;
+        };
+      };
+      /** @description Invalid file, mapping or options */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or batch not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or submission conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File, record or field limit exceeded */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported file or encoding */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Import capacity or database unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   exportEstateReadings: {
     parameters: {
       query?: {
@@ -6710,6 +6994,101 @@ export interface operations {
       };
     };
   };
+  getReadingImport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        batchId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Batch metadata and rollback audit */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingImportBatchResponse"];
+        };
+      };
+      /** @description Invalid file, mapping or options */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or batch not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or submission conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File, record or field limit exceeded */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported file or encoding */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Import capacity or database unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getResidentReport: {
     parameters: {
       query?: never;
@@ -7104,6 +7483,117 @@ export interface operations {
         };
         content: {
           "*/*": components["schemas"]["HealthResponse"];
+        };
+      };
+    };
+  };
+  importHistoricalReadings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "multipart/form-data": {
+          /** Format: binary */
+          file: string;
+          options: components["schemas"]["ReadingImportOptions"];
+        };
+      };
+    };
+    responses: {
+      /** @description Identical submission retry */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingImportBatchResponse"];
+        };
+      };
+      /** @description Completed batch */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingImportBatchResponse"];
+        };
+      };
+      /** @description Invalid file, mapping or options */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or batch not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or submission conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File, record or field limit exceeded */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported file or encoding */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Import capacity or database unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
         };
       };
     };
@@ -8777,6 +9267,202 @@ export interface operations {
       };
     };
   };
+  listReadingImportRows: {
+    parameters: {
+      query?: {
+        page?: number;
+        size?: number;
+        outcome?: "IMPORTED" | "DUPLICATE" | "INVALID";
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        batchId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated row outcomes */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingImportRowPage"];
+        };
+      };
+      /** @description Invalid file, mapping or options */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or batch not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or submission conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File, record or field limit exceeded */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported file or encoding */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Import capacity or database unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listReadingImports: {
+    parameters: {
+      query?: {
+        page?: number;
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Paginated import batches */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingImportBatchPage"];
+        };
+      };
+      /** @description Invalid file, mapping or options */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or batch not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or submission conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File, record or field limit exceeded */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported file or encoding */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Import capacity or database unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listReadingMetrics: {
     parameters: {
       query?: never;
@@ -10216,6 +10902,105 @@ export interface operations {
       };
       /** @description Inactive estate, asset or location, or a conflicting change */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  revertReadingImport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        batchId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RevertReadingImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Recorded rollback result */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingImportBatchResponse"];
+        };
+      };
+      /** @description Invalid file, mapping or options */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or batch not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate or submission conflict */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File, record or field limit exceeded */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported file or encoding */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Import capacity or database unavailable */
+      503: {
         headers: {
           [name: string]: unknown;
         };

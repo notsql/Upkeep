@@ -12,9 +12,11 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 public class DocumentMultipartExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<EstateError> oversized(HttpServletRequest request) {
-        String message = request.getRequestURI().endsWith("/documents")
-                ? "Choose exactly one file no larger than 5 MB."
-                : "The upload is larger than 17 MB.";
+        String message = request.getRequestURI().matches("/estates/[^/]+/readings/imports")
+                ? "Choose a CSV no larger than 25 MiB."
+                : request.getRequestURI().endsWith("/documents")
+                        ? "Choose exactly one file no larger than 5 MB."
+                        : "The upload is larger than 17 MB.";
         return ResponseEntity.status(413).body(new EstateError(message));
     }
 }

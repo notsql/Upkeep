@@ -18,6 +18,7 @@ export interface Breadcrumb {
     | "/reports"
     | "/estates/$estateId/assets"
     | "/estates/$estateId/readings"
+    | "/estates/$estateId/readings/imports"
     | "/estates/$estateId/work-orders"
     | "/estates/$estateId/reports"
     | "/estates/$estateId/roles"

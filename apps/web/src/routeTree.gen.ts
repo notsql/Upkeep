@@ -47,6 +47,7 @@ import { Route as AuthEstatesEstateIdAssetCategoriesIntervalIndexRouteImport } f
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/route'
 import { Route as AuthEstatesEstateIdAssetsNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/new/index'
 import { Route as AuthEstatesEstateIdCouncilInvitationsIndexRouteImport } from './routes/_auth/estates/$estateId/council/invitations/index'
+import { Route as AuthEstatesEstateIdReadingsImportsIndexRouteImport } from './routes/_auth/estates/$estateId/readings/imports/index'
 import { Route as AuthEstatesEstateIdReadingsNewIndexRouteImport } from './routes/_auth/estates/$estateId/readings/new/index'
 import { Route as AuthEstatesEstateIdReportsReportIdIndexRouteImport } from './routes/_auth/estates/$estateId/reports/$reportId/index'
 import { Route as AuthEstatesEstateIdRolesNewIndexRouteImport } from './routes/_auth/estates/$estateId/roles/new/index'
@@ -56,6 +57,7 @@ import { Route as AuthEstatesEstateIdWorkOrdersNewIndexRouteImport } from './rou
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/edit/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/readings/index'
+import { Route as AuthEstatesEstateIdReadingsImportsBatchIdIndexRouteImport } from './routes/_auth/estates/$estateId/readings/imports/$batchId/index'
 import { Route as AuthEstatesEstateIdRolesRoleIdEditIndexRouteImport } from './routes/_auth/estates/$estateId/roles/$roleId/edit/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/costs/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/devices/index'
@@ -278,6 +280,12 @@ const AuthEstatesEstateIdCouncilInvitationsIndexRoute =
     path: '/estates/$estateId/council/invitations/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
+const AuthEstatesEstateIdReadingsImportsIndexRoute =
+  AuthEstatesEstateIdReadingsImportsIndexRouteImport.update({
+    id: '/estates/$estateId/readings/imports/',
+    path: '/estates/$estateId/readings/imports/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
 const AuthEstatesEstateIdReadingsNewIndexRoute =
   AuthEstatesEstateIdReadingsNewIndexRouteImport.update({
     id: '/estates/$estateId/readings/new/',
@@ -331,6 +339,12 @@ const AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute =
     id: '/readings/',
     path: '/readings/',
     getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdRouteRoute,
+  } as any)
+const AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute =
+  AuthEstatesEstateIdReadingsImportsBatchIdIndexRouteImport.update({
+    id: '/estates/$estateId/readings/imports/$batchId/',
+    path: '/estates/$estateId/readings/imports/$batchId/',
+    getParentRoute: () => AuthRouteRoute,
   } as any)
 const AuthEstatesEstateIdRolesRoleIdEditIndexRoute =
   AuthEstatesEstateIdRolesRoleIdEditIndexRouteImport.update({
@@ -434,6 +448,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/asset-categories/$interval/': typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
   '/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/council/invitations/': typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
+  '/estates/$estateId/readings/imports/': typeof AuthEstatesEstateIdReadingsImportsIndexRoute
   '/estates/$estateId/readings/new/': typeof AuthEstatesEstateIdReadingsNewIndexRoute
   '/estates/$estateId/reports/$reportId/': typeof AuthEstatesEstateIdReportsReportIdIndexRoute
   '/estates/$estateId/roles/new/': typeof AuthEstatesEstateIdRolesNewIndexRoute
@@ -443,6 +458,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/$assetId/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
   '/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  '/estates/$estateId/readings/imports/$batchId/': typeof AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute
   '/estates/$estateId/roles/$roleId/edit/': typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/costs/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
@@ -489,6 +505,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/asset-categories/$interval': typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
   '/estates/$estateId/assets/new': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/estates/$estateId/council/invitations': typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
+  '/estates/$estateId/readings/imports': typeof AuthEstatesEstateIdReadingsImportsIndexRoute
   '/estates/$estateId/readings/new': typeof AuthEstatesEstateIdReadingsNewIndexRoute
   '/estates/$estateId/reports/$reportId': typeof AuthEstatesEstateIdReportsReportIdIndexRoute
   '/estates/$estateId/roles/new': typeof AuthEstatesEstateIdRolesNewIndexRoute
@@ -497,6 +514,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/work-orders/new': typeof AuthEstatesEstateIdWorkOrdersNewIndexRoute
   '/estates/$estateId/assets/$assetId/edit': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/readings': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  '/estates/$estateId/readings/imports/$batchId': typeof AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute
   '/estates/$estateId/roles/$roleId/edit': typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
   '/estates/$estateId/assets/$assetId/costs': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   '/estates/$estateId/assets/$assetId/devices': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
@@ -548,6 +566,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/asset-categories/$interval/': typeof AuthEstatesEstateIdAssetCategoriesIntervalIndexRoute
   '/_auth/estates/$estateId/assets/new/': typeof AuthEstatesEstateIdAssetsNewIndexRoute
   '/_auth/estates/$estateId/council/invitations/': typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
+  '/_auth/estates/$estateId/readings/imports/': typeof AuthEstatesEstateIdReadingsImportsIndexRoute
   '/_auth/estates/$estateId/readings/new/': typeof AuthEstatesEstateIdReadingsNewIndexRoute
   '/_auth/estates/$estateId/reports/$reportId/': typeof AuthEstatesEstateIdReportsReportIdIndexRoute
   '/_auth/estates/$estateId/roles/new/': typeof AuthEstatesEstateIdRolesNewIndexRoute
@@ -557,6 +576,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/$assetId/_details/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/edit/': typeof AuthEstatesEstateIdAssetsAssetIdEditIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/readings/': typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRoute
+  '/_auth/estates/$estateId/readings/imports/$batchId/': typeof AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute
   '/_auth/estates/$estateId/roles/$roleId/edit/': typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/_details/costs/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/_details/devices/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
@@ -607,6 +627,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/asset-categories/$interval/'
     | '/estates/$estateId/assets/new/'
     | '/estates/$estateId/council/invitations/'
+    | '/estates/$estateId/readings/imports/'
     | '/estates/$estateId/readings/new/'
     | '/estates/$estateId/reports/$reportId/'
     | '/estates/$estateId/roles/new/'
@@ -616,6 +637,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/'
     | '/estates/$estateId/assets/$assetId/edit/'
     | '/estates/$estateId/assets/$assetId/readings/'
+    | '/estates/$estateId/readings/imports/$batchId/'
     | '/estates/$estateId/roles/$roleId/edit/'
     | '/estates/$estateId/assets/$assetId/costs/'
     | '/estates/$estateId/assets/$assetId/devices/'
@@ -662,6 +684,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/asset-categories/$interval'
     | '/estates/$estateId/assets/new'
     | '/estates/$estateId/council/invitations'
+    | '/estates/$estateId/readings/imports'
     | '/estates/$estateId/readings/new'
     | '/estates/$estateId/reports/$reportId'
     | '/estates/$estateId/roles/new'
@@ -670,6 +693,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/work-orders/new'
     | '/estates/$estateId/assets/$assetId/edit'
     | '/estates/$estateId/assets/$assetId/readings'
+    | '/estates/$estateId/readings/imports/$batchId'
     | '/estates/$estateId/roles/$roleId/edit'
     | '/estates/$estateId/assets/$assetId/costs'
     | '/estates/$estateId/assets/$assetId/devices'
@@ -720,6 +744,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/asset-categories/$interval/'
     | '/_auth/estates/$estateId/assets/new/'
     | '/_auth/estates/$estateId/council/invitations/'
+    | '/_auth/estates/$estateId/readings/imports/'
     | '/_auth/estates/$estateId/readings/new/'
     | '/_auth/estates/$estateId/reports/$reportId/'
     | '/_auth/estates/$estateId/roles/new/'
@@ -729,6 +754,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/$assetId/_details/'
     | '/_auth/estates/$estateId/assets/$assetId/edit/'
     | '/_auth/estates/$estateId/assets/$assetId/readings/'
+    | '/_auth/estates/$estateId/readings/imports/$batchId/'
     | '/_auth/estates/$estateId/roles/$roleId/edit/'
     | '/_auth/estates/$estateId/assets/$assetId/_details/costs/'
     | '/_auth/estates/$estateId/assets/$assetId/_details/devices/'
@@ -1020,6 +1046,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdCouncilInvitationsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
+    '/_auth/estates/$estateId/readings/imports/': {
+      id: '/_auth/estates/$estateId/readings/imports/'
+      path: '/estates/$estateId/readings/imports'
+      fullPath: '/estates/$estateId/readings/imports/'
+      preLoaderRoute: typeof AuthEstatesEstateIdReadingsImportsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
     '/_auth/estates/$estateId/readings/new/': {
       id: '/_auth/estates/$estateId/readings/new/'
       path: '/estates/$estateId/readings/new'
@@ -1082,6 +1115,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/estates/$estateId/assets/$assetId/readings/'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdReadingsIndexRouteImport
       parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRoute
+    }
+    '/_auth/estates/$estateId/readings/imports/$batchId/': {
+      id: '/_auth/estates/$estateId/readings/imports/$batchId/'
+      path: '/estates/$estateId/readings/imports/$batchId'
+      fullPath: '/estates/$estateId/readings/imports/$batchId/'
+      preLoaderRoute: typeof AuthEstatesEstateIdReadingsImportsBatchIdIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
     }
     '/_auth/estates/$estateId/roles/$roleId/edit/': {
       id: '/_auth/estates/$estateId/roles/$roleId/edit/'
@@ -1281,11 +1321,13 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdWorkOrdersIndexRoute: typeof AuthEstatesEstateIdWorkOrdersIndexRoute
   AuthEstatesEstateIdAssetsNewIndexRoute: typeof AuthEstatesEstateIdAssetsNewIndexRoute
   AuthEstatesEstateIdCouncilInvitationsIndexRoute: typeof AuthEstatesEstateIdCouncilInvitationsIndexRoute
+  AuthEstatesEstateIdReadingsImportsIndexRoute: typeof AuthEstatesEstateIdReadingsImportsIndexRoute
   AuthEstatesEstateIdReadingsNewIndexRoute: typeof AuthEstatesEstateIdReadingsNewIndexRoute
   AuthEstatesEstateIdReportsReportIdIndexRoute: typeof AuthEstatesEstateIdReportsReportIdIndexRoute
   AuthEstatesEstateIdRolesNewIndexRoute: typeof AuthEstatesEstateIdRolesNewIndexRoute
   AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute: typeof AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute
   AuthEstatesEstateIdWorkOrdersNewIndexRoute: typeof AuthEstatesEstateIdWorkOrdersNewIndexRoute
+  AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute: typeof AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute
   AuthEstatesEstateIdRolesRoleIdEditIndexRoute: typeof AuthEstatesEstateIdRolesRoleIdEditIndexRoute
 }
 
@@ -1326,6 +1368,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdAssetsNewIndexRoute,
   AuthEstatesEstateIdCouncilInvitationsIndexRoute:
     AuthEstatesEstateIdCouncilInvitationsIndexRoute,
+  AuthEstatesEstateIdReadingsImportsIndexRoute:
+    AuthEstatesEstateIdReadingsImportsIndexRoute,
   AuthEstatesEstateIdReadingsNewIndexRoute:
     AuthEstatesEstateIdReadingsNewIndexRoute,
   AuthEstatesEstateIdReportsReportIdIndexRoute:
@@ -1335,6 +1379,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdWorkOrdersWorkOrderIdIndexRoute,
   AuthEstatesEstateIdWorkOrdersNewIndexRoute:
     AuthEstatesEstateIdWorkOrdersNewIndexRoute,
+  AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute:
+    AuthEstatesEstateIdReadingsImportsBatchIdIndexRoute,
   AuthEstatesEstateIdRolesRoleIdEditIndexRoute:
     AuthEstatesEstateIdRolesRoleIdEditIndexRoute,
 }
