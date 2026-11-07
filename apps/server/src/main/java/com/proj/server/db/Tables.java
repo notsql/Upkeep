@@ -26,6 +26,7 @@ import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
+import com.proj.server.db.tables.Importedreading;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
@@ -34,6 +35,8 @@ import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Readingimportbatch;
+import com.proj.server.db.tables.Readingimportrow;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
@@ -157,6 +160,11 @@ public class Tables {
     public static final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
 
     /**
+     * The table <code>public.ImportedReading</code>.
+     */
+    public static final Importedreading IMPORTEDREADING = Importedreading.IMPORTEDREADING;
+
+    /**
      * The table <code>public.InspectionCheck</code>.
      */
     public static final Inspectioncheck INSPECTIONCHECK = Inspectioncheck.INSPECTIONCHECK;
@@ -195,6 +203,16 @@ public class Tables {
      * The table <code>public.Permission</code>.
      */
     public static final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
+     * The table <code>public.ReadingImportBatch</code>.
+     */
+    public static final Readingimportbatch READINGIMPORTBATCH = Readingimportbatch.READINGIMPORTBATCH;
+
+    /**
+     * The table <code>public.ReadingImportRow</code>.
+     */
+    public static final Readingimportrow READINGIMPORTROW = Readingimportrow.READINGIMPORTROW;
 
     /**
      * The table <code>public.WorkOrder</code>.

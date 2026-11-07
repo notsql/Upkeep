@@ -292,7 +292,7 @@ Both in `readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). State in `use-readings-page.ts`; sections `readings-header.tsx`, `readings-table.tsx`, `readings-pagination.tsx`. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
+| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor/Import, human recorder or import batch), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). State in `use-readings-page.ts`; sections `readings-header.tsx`, `readings-table.tsx`, `readings-pagination.tsx`. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
 | `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
 
 ### Badges (`flagLabel`)
@@ -339,7 +339,7 @@ No mutations, so nothing is invalidated.
 
 Below 768px, `components/readings/reading-cards.tsx` renders both the estate-wide
 and legacy asset lists as a single accessible `Readings` list. Each shadcn Card
-shows the metric/value/unit, measured time, Manual/Sensor provenance (including
+shows the metric/value/unit, measured time, Manual/Sensor/Import provenance (including
 manual recorder name/ID fallback), applicable device, all flags and estate-list
 asset name/reference. Long labels and flags wrap. Manual entries do not invent
 a device. The estate `reading-table.tsx` and asset `readings-page.tsx` use the
@@ -383,7 +383,7 @@ server fetching stays bounded. A safe server attachment filename is used with a
 `readings-v1.csv` fallback. The temporary object URL/link is cleaned up after use.
 
 The API document defines every CSV column, UTC/decimal/null/source/escaping rule
-and a pipeline parser example. No legacy per-asset export button, CSV import,
+and a pipeline parser example. No legacy per-asset export button,
 source filter, chart, scheduled export or background job is included.
 
 The validation decoder consumes the leading BOM, while the downloaded Blob
@@ -507,6 +507,12 @@ from the running Spring OpenAPI document; the uncached Maven exporter cannot run
 offline under the repository's no-install rule, so the installed type generator
 consumes that actual runtime export.
 
+Manual-reading form tests freeze only `Date` at 17:00 local time so their
+16:00 measurement stays in the past regardless of the runner's clock or
+timezone. Timers remain real for UI interactions and query updates. A separate
+case sets the clock to 15:54 and verifies that a 16:00 measurement is rejected
+by the five-minute future-time limit.
+
 Both reading lists, legacy asset history and shared mobile cards prefer optional
 valueText from the server, falling back to value for older responses. Exact display
 text removes unnecessary trailing zeroes while retaining every significant digit;
@@ -579,3 +585,10 @@ the entry point) and no icon; "No matching" states offer Clear filters. Reading,
 below the header. The manual-reading form uses `FormPageHeader` (breadcrumbs
 Readings / Record manual reading, no icon or estate name) and `ErrorState`
 "Retry form options".
+
+## Historical CSV imports
+
+Historical imports are available through the estate Readings **Import CSV** action.
+See [historical reading imports](reading-imports.md) for the complete built flow and contract.
+Reading sources now include IMPORT alongside SENSOR and MANUAL; imported rows carry
+optional batch/source provenance and participate in lists, flags, filters and export.

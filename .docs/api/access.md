@@ -157,3 +157,10 @@ Residents override ownership; independent ownership survives other memberships.
 Owner/Manager authority. Crew have `canViewWorkOrders: true` and both write
 capabilities false. `canViewAssets` stays owner-only. See
 [inspections](inspections.md) for limited asset APIs, evidence and source lookup.
+
+## Reading import capabilities
+
+EstateAccessResponse additionally includes optional boolean `canImportReadings`
+and `canRevertReadingImports`. Both project current Owner/Manager authority on
+an active estate. Crew and other roles receive false. Inactive Managers retain
+read access to batch history/reports; see [reading imports](reading-imports.md).

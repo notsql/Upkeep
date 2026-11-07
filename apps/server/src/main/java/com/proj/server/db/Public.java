@@ -26,6 +26,7 @@ import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
+import com.proj.server.db.tables.Importedreading;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
@@ -34,6 +35,8 @@ import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Readingimportbatch;
+import com.proj.server.db.tables.Readingimportrow;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
@@ -172,6 +175,11 @@ public class Public extends SchemaImpl {
     public final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
 
     /**
+     * The table <code>public.ImportedReading</code>.
+     */
+    public final Importedreading IMPORTEDREADING = Importedreading.IMPORTEDREADING;
+
+    /**
      * The table <code>public.InspectionCheck</code>.
      */
     public final Inspectioncheck INSPECTIONCHECK = Inspectioncheck.INSPECTIONCHECK;
@@ -210,6 +218,16 @@ public class Public extends SchemaImpl {
      * The table <code>public.Permission</code>.
      */
     public final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
+     * The table <code>public.ReadingImportBatch</code>.
+     */
+    public final Readingimportbatch READINGIMPORTBATCH = Readingimportbatch.READINGIMPORTBATCH;
+
+    /**
+     * The table <code>public.ReadingImportRow</code>.
+     */
+    public final Readingimportrow READINGIMPORTROW = Readingimportrow.READINGIMPORTROW;
 
     /**
      * The table <code>public.WorkOrder</code>.
@@ -269,6 +287,7 @@ public class Public extends SchemaImpl {
             Estaterolepermission.ESTATEROLEPERMISSION,
             Estateuser.ESTATEUSER,
             Flatlinepolicy.FLATLINEPOLICY,
+            Importedreading.IMPORTEDREADING,
             Inspectioncheck.INSPECTIONCHECK,
             Inspectionlistrun.INSPECTIONLISTRUN,
             Issuereport.ISSUEREPORT,
@@ -277,6 +296,8 @@ public class Public extends SchemaImpl {
             Manualreading.MANUALREADING,
             Manufacturer.MANUFACTURER,
             Permission.PERMISSION,
+            Readingimportbatch.READINGIMPORTBATCH,
+            Readingimportrow.READINGIMPORTROW,
             Workorder.WORKORDER,
             Workordercompletion.WORKORDERCOMPLETION,
             Workordercompletionrevision.WORKORDERCOMPLETIONREVISION,

@@ -289,7 +289,13 @@ function guardFeaturePath(
     case "readings":
       if (
         !estate?.canViewReadings ||
-        (path.split("/")[4] === "new" && !estate.canRecordReadings)
+        (path.split("/")[4] === "new" && !estate.canRecordReadings) ||
+        (path.split("/")[4] === "imports" &&
+          !(
+            estate.canImportReadings ||
+            estate.canRevertReadingImports ||
+            estate.role === "MANAGER"
+          ))
       ) {
         throw notFound();
       }
