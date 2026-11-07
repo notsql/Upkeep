@@ -52,6 +52,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 const estateId = "00000000-0000-0000-0000-000000000001";
 const basePath = `/estates/${estateId}/work-orders`;
 const WORK_ORDER_WRITES = /start work|complete work|correct outcome/iu;
+const DUPLICATE = /duplicate/iu;
 const order = {
   id: "00000000-0000-0000-0000-000000000002",
   estateId,
@@ -597,4 +598,68 @@ it("shows mobile work-order summaries with sorting, filtering and paging intact"
       cursor: "page-two",
     })
   );
+});
+
+it("shows the source report's confirmed duplicate count beside the priority", async () => {
+  const serve = state.get.getMockImplementation();
+  const repeated = {
+    ...order,
+    id: "00000000-0000-0000-0000-000000000003",
+    reference: "TEST-W0002",
+    source: "RESIDENT_REPORT",
+    sourceReportConfirmedDuplicateCount: 3,
+  };
+  state.nextCursor = "";
+  state.get.mockImplementation((path: string, ...options: unknown[]) =>
+    path === "/estates/{estateId}/work-orders"
+      ? Promise.resolve({
+          data: {
+            items: [
+              { ...order, sourceReportConfirmedDuplicateCount: 0 },
+              repeated,
+            ],
+            nextCursor: null,
+          },
+          response: new Response(),
+        })
+      : serve?.(path, ...options)
+  );
+  await setup();
+  const table = within(
+    await screen.findByRole("table", { name: "Work orders" })
+  );
+  const rows = table.getAllByRole("row");
+  const repeatedRow = rows.find((row) =>
+    within(row).queryByRole("link", { name: "TEST-W0002" })
+  );
+  const plainRow = rows.find((row) =>
+    within(row).queryByRole("link", { name: "TEST-W0001" })
+  );
+  expect(repeatedRow).toBeDefined();
+  expect(plainRow).toBeDefined();
+  within(repeatedRow as HTMLElement).getByText("3 duplicates");
+  expect(within(plainRow as HTMLElement).queryByText(DUPLICATE)).toBeNull();
+});
+
+it("shows the duplicate count on mobile work-order summaries", async () => {
+  const original = window.matchMedia;
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    ...original(query),
+    matches: query === "(max-width: 767px)",
+  }));
+  const serve = state.get.getMockImplementation();
+  state.get.mockImplementation((path: string, ...options: unknown[]) =>
+    path === "/estates/{estateId}/work-orders"
+      ? Promise.resolve({
+          data: {
+            items: [{ ...order, sourceReportConfirmedDuplicateCount: 1 }],
+            nextCursor: null,
+          },
+          response: new Response(),
+        })
+      : serve?.(path, ...options)
+  );
+  await setup();
+  const list = within(await screen.findByRole("list", { name: "Work orders" }));
+  list.getByText("1 duplicate");
 });

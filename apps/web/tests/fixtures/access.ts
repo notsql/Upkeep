@@ -41,6 +41,7 @@ export const residentEstateAccess = {
   canDeleteRoles: false,
   canReassignRoles: false,
   canViewEstateInvitations: false,
+  canReviewFaultReportDuplicates: false,
 };
 
 export const councilEstateAccess = {
@@ -83,6 +84,7 @@ export const ownerEstateAccess = {
   canDeleteRoles: true,
   canReassignRoles: true,
   canViewEstateInvitations: true,
+  canReviewFaultReportDuplicates: true,
 };
 
 export const crewEstateAccess = {

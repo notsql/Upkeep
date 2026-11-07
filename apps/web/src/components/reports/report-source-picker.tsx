@@ -22,11 +22,20 @@ export function ReportSourcePicker({
   value,
   onChange,
   selectedTitle,
+  label: fieldLabel = "Resident report",
+  chooseLabel = "Choose resident report",
+  emptyText = "No reports match these filters. You can create a manual work order instead.",
+  excludeId,
 }: {
   estateId: string;
   value: string;
   onChange: (id: string) => void;
   selectedTitle?: string;
+  label?: string;
+  chooseLabel?: string;
+  emptyText?: string;
+  /** A report never offered as a choice, such as the report being linked. */
+  excludeId?: string;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -34,6 +43,11 @@ export function ReportSourcePicker({
   const [filters, setFilters] = useState<EstateReportFilters>({});
   const [cursor, setCursor] = useState<string>();
   const reports = useEstateReportList(estateId, filters, cursor);
+  const choices =
+    reports.data?.items.filter(
+      // Linked duplicates can neither get a work order nor be an original (ID-74).
+      (report) => report.id !== excludeId && !report.duplicateOf
+    ) ?? [];
   const locations = useLocations(estateId, true);
   const changeFilters = useCallback((nextFilters: EstateReportFilters) => {
     setFilters(nextFilters);
@@ -61,7 +75,7 @@ export function ReportSourcePicker({
   );
   return (
     <Field>
-      <FieldLabel htmlFor={id}>Resident report</FieldLabel>
+      <FieldLabel htmlFor={id}>{fieldLabel}</FieldLabel>
       <Dialog onOpenChange={setOpen} open={open}>
         <DialogTrigger
           render={
@@ -73,13 +87,11 @@ export function ReportSourcePicker({
             />
           }
         >
-          {selectedTitle ??
-            label ??
-            (value ? "Selected report" : "Choose resident report")}
+          {selectedTitle ?? label ?? (value ? "Selected report" : chooseLabel)}
         </DialogTrigger>
         <DialogContent className="sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Choose resident report</DialogTitle>
+            <DialogTitle>{chooseLabel}</DialogTitle>
             <DialogDescription>
               Filter reports by block and level position, then choose a report.
             </DialogDescription>
@@ -105,7 +117,7 @@ export function ReportSourcePicker({
           {reports.data && !reports.isError ? (
             <>
               <div className="grid max-h-72 gap-2 overflow-y-auto">
-                {reports.data.items.map((report) => (
+                {choices.map((report) => (
                   <Button
                     aria-pressed={report.id === value}
                     className="h-auto min-h-11 justify-start text-left whitespace-normal"
@@ -119,12 +131,7 @@ export function ReportSourcePicker({
                   </Button>
                 ))}
               </div>
-              {reports.data.items.length === 0 ? (
-                <p>
-                  No reports match these filters. You can create a manual work
-                  order instead.
-                </p>
-              ) : null}
+              {choices.length === 0 ? <p>{emptyText}</p> : null}
               <div className="flex gap-2">
                 {cursor ? (
                   <Button onClick={first} type="button" variant="outline">

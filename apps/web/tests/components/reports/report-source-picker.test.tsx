@@ -6,7 +6,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
-import { ReportSourcePicker } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/report-source-picker";
+import { ReportSourcePicker } from "@/components/reports/report-source-picker";
 
 const state = vi.hoisted(() => ({ list: vi.fn() }));
 vi.mock("@/lib/estate-reports", () => ({ useEstateReportList: state.list }));
@@ -62,4 +62,35 @@ it("keeps report filters in a dialog and retains a selected report across pages"
   expect(
     screen.getByRole("button", { name: "Resident report" }).textContent
   ).toContain("Second leak");
+});
+
+it("does not offer reports that are linked as duplicates", async () => {
+  state.list.mockImplementation(() => ({
+    data: {
+      items: [
+        { id: "original", title: "Original leak", duplicateOf: null },
+        {
+          id: "suspected",
+          title: "Leak again",
+          duplicateOf: { reportId: "original", title: "x", state: "SUSPECTED" },
+        },
+        {
+          id: "confirmed",
+          title: "Same leak",
+          duplicateOf: { reportId: "original", title: "x", state: "CONFIRMED" },
+        },
+      ],
+      nextCursor: null,
+    },
+    isPending: false,
+    isError: false,
+  }));
+  renderWithProviders(
+    <ReportSourcePicker estateId="oak" onChange={vi.fn()} value="" />
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Resident report" }));
+  const dialog = within(await screen.findByRole("dialog"));
+  dialog.getByRole("button", { name: "Original leak" });
+  expect(dialog.queryByRole("button", { name: "Leak again" })).toBeNull();
+  expect(dialog.queryByRole("button", { name: "Same leak" })).toBeNull();
 });

@@ -1,8 +1,6 @@
 package com.proj.server.report;
 
 import com.proj.server.estate.EstateError;
-import com.proj.server.resident.IssueReportDetailResponse;
-import com.proj.server.resident.IssueReportPageResponse;
 import com.proj.server.resident.ResidentReportException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,6 +18,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,7 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "403",
-            description = "Responder membership required",
+            description = "Responder membership required (manager membership to review or link duplicates)",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "404",
@@ -57,7 +56,7 @@ public class EstateReportController {
             operationId = "listEstateReports",
             summary = "List fault reports by location subtree, block and inclusive level-position range")
     @ApiResponse(responseCode = "200", description = "Reports ordered by creation time and ID, newest first")
-    public ResponseEntity<IssueReportPageResponse> list(
+    public ResponseEntity<EstateIssueReportPageResponse> list(
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @RequestParam(required = false) UUID locationId,
@@ -79,7 +78,7 @@ public class EstateReportController {
     @GetMapping("/{reportId}")
     @Operation(operationId = "getEstateReport")
     @ApiResponse(responseCode = "200", description = "Report with current location path and private image metadata")
-    public ResponseEntity<IssueReportDetailResponse> detail(
+    public ResponseEntity<EstateIssueReportDetailResponse> detail(
             @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID reportId) {
         return privateResponse(reports.detail(estateId, subject(principal), reportId));
     }
@@ -91,12 +90,46 @@ public class EstateReportController {
             responseCode = "409",
             description = "Stale placement, inactive estate or inactive destination/ancestor",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
-    public ResponseEntity<IssueReportDetailResponse> relocate(
+    public ResponseEntity<EstateIssueReportDetailResponse> relocate(
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @PathVariable UUID reportId,
             @Valid @RequestBody RelocateReportRequest request) {
         return privateResponse(reports.relocate(estateId, subject(principal), reportId, request));
+    }
+
+    @PatchMapping("/{reportId}/duplicate")
+    @Operation(
+            operationId = "reviewEstateReportDuplicate",
+            summary = "Confirm or reject a report's duplicate link (managers only)")
+    @ApiResponse(responseCode = "200", description = "The report with its updated link")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Stale expected state or inactive estate",
+            content = @Content(schema = @Schema(implementation = EstateError.class)))
+    public ResponseEntity<EstateIssueReportDetailResponse> reviewDuplicate(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID reportId,
+            @Valid @RequestBody ReviewDuplicateRequest request) {
+        return privateResponse(reports.review(estateId, subject(principal), reportId, request));
+    }
+
+    @PutMapping("/{reportId}/duplicate")
+    @Operation(
+            operationId = "linkEstateReportDuplicate",
+            summary = "Link a report to an original by hand (managers only)")
+    @ApiResponse(responseCode = "200", description = "The report with its CONFIRMED manual link")
+    @ApiResponse(
+            responseCode = "409",
+            description = "The report already has a SUSPECTED or CONFIRMED link, or the estate is inactive",
+            content = @Content(schema = @Schema(implementation = EstateError.class)))
+    public ResponseEntity<EstateIssueReportDetailResponse> linkDuplicate(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID reportId,
+            @Valid @RequestBody LinkDuplicateRequest request) {
+        return privateResponse(reports.link(estateId, subject(principal), reportId, request));
     }
 
     @GetMapping(

@@ -33,7 +33,9 @@ name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is fal
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
 CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewAssetHistory/canViewReadings/canRecordReadings/canInviteMembers/
 canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
-canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments: boolean. Owners project as MANAGER; ownership is
+canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments/
+canReviewFaultReportDuplicates: boolean. canReviewFaultReportDuplicates is true only for current MANAGER
+membership in an active estate ([fault-report-duplicates.md](fault-report-duplicates.md)). Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot
 receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
 no management access. Asset visibility and other management mutations retain
