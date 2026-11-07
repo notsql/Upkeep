@@ -19,7 +19,8 @@ import java.util.UUID;
             "version",
             "createdByUserId",
             "createdAt",
-            "updatedAt"
+            "updatedAt",
+            "sourceReportConfirmedDuplicateCount"
         })
 public record WorkOrderResponse(
         UUID id,
@@ -45,7 +46,10 @@ public record WorkOrderResponse(
         String createdByName,
 
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt) {
+        OffsetDateTime updatedAt,
+
+        @Schema(description = "CONFIRMED duplicates of the source report; 0 without a source report.")
+        int sourceReportConfirmedDuplicateCount) {
     public WorkOrderResponse withCreatorName(String name) {
         return new WorkOrderResponse(
                 id,
@@ -68,6 +72,7 @@ public record WorkOrderResponse(
                 createdByUserId,
                 name,
                 createdAt,
-                updatedAt);
+                updatedAt,
+                sourceReportConfirmedDuplicateCount);
     }
 }

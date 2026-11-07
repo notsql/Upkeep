@@ -1,5 +1,8 @@
 # Estate fault report screens
 
+Duplicate badges, the detail duplicate section and Mark as duplicate are
+documented in [fault-report-duplicates.md](fault-report-duplicates.md).
+
 Estate and resident report lists/details use the same presentation components
 in `apps/web/src/components/reports/`: `report-card.tsx`,
 `report-metadata.tsx`, `report-details.tsx` and `report-image.tsx`. Cards show

@@ -23,6 +23,7 @@ const state = vi.hoisted(() => ({
   error: false,
   queryError: undefined as Error | undefined,
   creatorName: "Alex Tan" as string | undefined,
+  duplicates: 0,
   status: "OPEN",
   version: 0,
   refetch: vi.fn(),
@@ -67,6 +68,7 @@ vi.mock("@/lib/work-orders", () => ({
       createdAt: "2026-10-22T00:00:00Z",
       createdByUserId: "manager",
       createdByName: state.creatorName,
+      sourceReportConfirmedDuplicateCount: state.duplicates,
     },
   }),
   useWorkOrderStatusHistory: () => ({
@@ -118,6 +120,21 @@ beforeEach(() => {
   state.currentId = "order";
   state.queryError = undefined;
   state.creatorName = "Alex Tan";
+  state.duplicates = 0;
+});
+it("shows how many confirmed duplicates the source report has", () => {
+  state.duplicates = 2;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  screen.getByText("Duplicate reports");
+  screen.getByText("2 confirmed duplicates");
+});
+it("omits the duplicate count when the source report has none", () => {
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  expect(screen.queryByText("Duplicate reports")).toBeNull();
 });
 it("lets Managers explicitly start unassigned work using the observed version", async () => {
   state.access.canUpdate = true;

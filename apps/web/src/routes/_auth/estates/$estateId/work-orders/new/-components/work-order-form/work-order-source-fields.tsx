@@ -1,5 +1,5 @@
+import { ReportSourcePicker } from "@/components/reports/report-source-picker";
 import type { WorkOrderInput } from "@/lib/work-orders";
-import { ReportSourcePicker } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/report-source-picker";
 import type { useWorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-form";
 import { WorkOrderSelect } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-select";
 

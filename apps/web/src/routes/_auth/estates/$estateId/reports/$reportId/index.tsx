@@ -12,6 +12,7 @@ import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
 import { pageHead } from "@/lib/page-title";
 import { useWorkOrderAccess } from "@/lib/work-orders";
 import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog/change-location-dialog";
+import { DuplicateSection } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/duplicate-section/duplicate-section";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
 
 export const Route = createFileRoute(
@@ -40,7 +41,10 @@ function EstateReportDetailPage() {
     <PageLayout className="space-y-4">
       <DetailPageHeader
         actions={
-          workOrders.canCreate && report.data && !report.isError ? (
+          workOrders.canCreate &&
+          report.data &&
+          !report.isError &&
+          !report.data.duplicateOf ? (
             <Link
               className={buttonVariants()}
               params={{ estateId }}
@@ -96,6 +100,14 @@ function EstateReportDetailPage() {
             ))}
           </ReportDetails>
         </ReportCard>
+      ) : null}
+      {report.data && !report.isError ? (
+        <DuplicateSection
+          canReview={access.canReviewDuplicates}
+          estateId={estateId}
+          reload={reload}
+          report={report.data}
+        />
       ) : null}
     </PageLayout>
   );

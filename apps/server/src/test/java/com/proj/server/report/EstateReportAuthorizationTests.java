@@ -18,8 +18,11 @@ import org.springframework.http.HttpStatus;
 
 class EstateReportAuthorizationTests {
     private final EstateReportRepository repository = mock(EstateReportRepository.class);
-    private final EstateReportService service =
-            new EstateReportService(repository, mock(ResidentReportRepository.class), mock(ResidentImageStore.class));
+    private final EstateReportService service = new EstateReportService(
+            repository,
+            mock(ResidentReportRepository.class),
+            mock(ResidentImageStore.class),
+            mock(DuplicateRepository.class));
     private final UUID estateId = UUID.randomUUID();
 
     @ParameterizedTest
