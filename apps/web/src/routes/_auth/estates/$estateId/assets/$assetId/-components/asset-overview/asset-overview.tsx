@@ -1,8 +1,12 @@
 import { DetailCard } from "@/components/page/detail-card";
+import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
+import { useEstate } from "@/lib/estates";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
+import { OverviewDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/overview-devices-section";
+import { OverviewReadingsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/overview-readings-section";
 
 const NOT_RECORDED = "Not recorded";
 
@@ -15,9 +19,18 @@ export function AssetOverview({
 }) {
   const asset = useAsset(estateId, assetId);
   const categories = useAssetCategories();
+  const estate = useEstate(estateId);
+  const access = useAppAccess();
   if (!asset.data) {
     return null;
   }
+  // Each section mounts only for viewers its endpoint serves, so none 403s.
+  const owned = Boolean(estate.data?.owned);
+  const permission = access.data?.estates.find(
+    (item) => item.estateId === estateId
+  );
+  const assetActive = !asset.data.deactivatedAt;
+  const canSeeDevices = owned || permission?.role === "MANAGER";
   return (
     <>
       <DetailCard>
@@ -56,11 +69,25 @@ export function AssetOverview({
       </DetailCard>
       <AssetConditionSection
         assetId={assetId}
-        canRecord={!asset.data.deactivatedAt}
+        canRecord={assetActive}
         estateId={estateId}
       />
-      {asset.data.category === "PUMP" ? (
+      {owned && asset.data.category === "PUMP" ? (
         <AssetForecastCard assetId={assetId} estateId={estateId} />
+      ) : null}
+      {canSeeDevices ? (
+        <OverviewDevicesSection
+          assetId={assetId}
+          canRegister={owned && assetActive && !estate.data?.deactivatedAt}
+          estateId={estateId}
+        />
+      ) : null}
+      {permission?.canViewReadings ? (
+        <OverviewReadingsSection
+          assetId={assetId}
+          canRecord={permission.canRecordReadings}
+          estateId={estateId}
+        />
       ) : null}
     </>
   );

@@ -36,11 +36,12 @@ export function ReadingFilterControls({
   id,
   open,
 }: {
-  estateId: string;
-  assetLabel: string;
   filters: ReadingSearch;
   error?: string;
-  onChoose: (asset: ReadingAsset | undefined) => void;
+  /** Omit with `onChoose` where the asset is fixed (an asset's own readings). */
+  estateId?: string;
+  assetLabel?: string;
+  onChoose?: (asset: ReadingAsset | undefined) => void;
   onFiltersChange: (filters: ReadingSearch) => void;
   /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
   id?: string;
@@ -77,14 +78,16 @@ export function ReadingFilterControls({
       onClear={clear}
       open={open}
     >
-      <Field className="w-full sm:w-48">
-        <FieldLabel>Asset</FieldLabel>
-        <ReadingAssetPicker
-          estateId={estateId}
-          label={assetLabel}
-          onChoose={onChoose}
-        />
-      </Field>
+      {estateId && onChoose ? (
+        <Field className="w-full sm:w-48">
+          <FieldLabel>Asset</FieldLabel>
+          <ReadingAssetPicker
+            estateId={estateId}
+            label={assetLabel ?? "All assets"}
+            onChoose={onChoose}
+          />
+        </Field>
+      ) : null}
       <Field className="w-full sm:w-48">
         <FieldLabel>Metric</FieldLabel>
         <Select onValueChange={metricChange} value={filters.metric ?? ""}>

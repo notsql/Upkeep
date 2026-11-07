@@ -11,10 +11,29 @@ management/resident fallbacks, rendering Page not found for unavailable features
 Owner, Manager and Crew receive this read capability without asset-register
 access. Header labels come from access context; no owner-only queries are made.
 
-Readings appears in desktop/mobile estate navigation only with that capability.
-Estate switching preserves Readings for permitted destinations and retains the
-Resident fallback to estate-filtered My reports. The asset detail Devices
-section links here with `assetId` preselected. Legacy per-asset bookmarks remain.
+There is no Readings sidebar item. Owners and Managers reach this page from
+the "All readings" link on the Assets views (`AssetViewsNav`,
+`canOpenAllReadings`: `canViewReadings` and not CREW); Crew reach one asset's
+readings from a work order (see [work-orders.md](work-orders.md)). Estate
+switching preserves Readings for permitted destinations and retains the
+Resident fallback to estate-filtered My reports.
+
+An asset filter lives in the path: `beforeLoad` redirects `?assetId=` (with
+`replace: true`, keeping the other filters) to `/estates/$estateId/readings/$assetId`,
+so choosing an asset in the picker lands there too.
+
+### One asset's readings (`readings/$assetId/index.tsx`)
+
+URL `/estates/$estateId/readings/$assetId`, title "Readings", same gate as
+`/readings` (`canViewReadings`). Renders the same `EstateReadingsPage` with
+filters `{ ...search, assetId }` (the API call still sends `assetId` as a
+query param to `GET /estates/{estateId}/readings`). Filter edits merge with
+`mergeReadingSearch` and navigate with `readingsLocation` (`lib/reading-filters.ts`):
+another asset stays in the path, All assets returns to `/readings`.
+
+`readingsLocation(estateId, search)` and `manualReadingLocation(estateId,
+{ assetId, metric })` return `{ to, params, search }`: the `$assetId` route
+when an asset is given, else `/readings` / `/readings/new`.
 
 ### Components
 
@@ -32,7 +51,9 @@ All new components are in the route's `-components/` folder:
 
 Filters stack on mobile; long labels wrap without widening the page. Both estate-wide and legacy tables use auto-height, width-bounded flag badges with wrapping, left-aligned text and a readable line height; long flag labels stay inside their borders. Device columns reserve a readable minimum width rather than wrapping identifiers into tall strips. Both Flags columns reserve a minimum width so labels remain readable on mobile; the table scrolls within its own region. Browser checks cover 1280, 375 and 320 px. Crew rows
 do not link to owner-only asset pages. **Record manual reading** appears only
-with `canRecordReadings` and preselects the current asset/metric.
+with `canRecordReadings` and preselects the current asset/metric
+(`manualReadingLocation`: `/readings/$assetId/new?metric=` with an asset, else
+`/readings/new`).
 
 The estate table shows every page for up to six pages. Longer results show the
 first/last pages plus an edge window or the current page and its neighbours, with
@@ -191,6 +212,12 @@ Route `/estates/$estateId/readings/new` lives in
 `canRecordReadings`, checked before management/Resident fallbacks. Owners,
 Managers and Crew receive this capability only in active estates. A refreshed
 access projection immediately hides the form if recording access is revoked.
+`?assetId=` redirects (`replace: true`, metric kept) to
+`/estates/$estateId/readings/$assetId/new`
+(`readings/$assetId/new/index.tsx`, title "Record manual reading", same
+`canRecordReadings` gate), which renders the same `ManualReadingForm` with
+`initialAssetId` from the path and `initialMetric` from `?metric=`. The static
+`new` segment still resolves to `/readings/new`.
 
 Components in `readings/new/-components/`:
 
@@ -223,8 +250,8 @@ Hook contracts in `lib/readings.ts`:
 | `useCreateManualReading(estateId)` | POST `/estates/{estateId}/readings/manual`; checks ready/write capability and throws API errors |
 
 Successful creation invalidates `[userId, "estate-readings", estateId]` and
-`[...assetQueryKey(userId, estateId, assetId), "readings"]`. The route then returns
-to Readings with only that asset selected, clearing stale time/metric/suspect/page
+`[...assetQueryKey(userId, estateId, assetId), "readings"]`. Both entry routes then
+return to `/estates/$estateId/readings/$assetId` (that asset only), clearing stale time/metric/suspect/page
 filters. Ordering remains newest first, so a backdated entry may require paging
 or time filtering. The mutation invalidates access and asset options on
 403/404/409 to refresh stale permissions/lifecycle state.
@@ -266,34 +293,38 @@ Manual review additions:
 
 `/estates/$estateId/assets/$assetId/readings`
 (`routes/_auth/estates/$estateId/assets/$assetId/readings/index.tsx`, page
-title "Readings"). Requires sign-in. Linked from the asset details page by an
-outline "Readings" link in `AssetDevicesSection`'s action row
-(`$assetId/-components/asset-devices/asset-devices-section.tsx`, see [devices.md](devices.md)),
-shown to everyone who can see the section, before "Register device".
+title "Readings"). Requires sign-in. Linked from the asset Overview's Readings
+section ("View all readings", see [assets.md](assets.md)). It is built on the
+estate readings components and `GET /estates/{estateId}/readings` with
+`assetId` fixed from the path (serves Owner, Manager and Crew), not the
+owner-only legacy `GET /estates/{estateId}/assets/{assetId}/readings`.
 
 ### Search params
 
-Filters live in the URL, so a filtered view can be shared. `validateSearch`
-drops anything invalid.
+`validateSearch` is `parseReadingSearch` with `assetId` dropped - the asset is
+the path segment. Edits merge with `mergeReadingSearch` as on `/readings`.
 
 | Param | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `metric` | DeviceMetric | all | Must be a key of `deviceMetrics` |
-| `from` | string | none | `datetime-local` value (`YYYY-MM-DDTHH:mm[:ss]`), browser-local time |
+| `metric` | string | all | Invalid values are explained before any request (`readingFilterError`) |
+| `from` | string | none | `datetime-local` value, browser-local time |
 | `to` | string | none | As `from` |
-| `suspect` | `true` | off | `true` or `"true"`; anything else is dropped |
+| `suspect` | `true` | off | |
 | `page` | integer | 0 | Only kept when a whole number > 0 |
 
-Any filter change (metric, from, to, suspect) resets `page` to the first page.
+Any filter change resets `page` to the first page.
 
 ## Screens and components
 
-Both in `readings/-components/`.
+In `assets/$assetId/readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `ReadingsPage` (`readings-page.tsx`) | `PageHeader` "Readings" with breadcrumbs Assets / asset name ("Asset" while loading) / Readings (from `useAsset`) and `icon` `Activity`, description "Sensor readings, newest first", and - when `useAppAccess()`'s entry for the estate has `canRecordReadings` - a `CreateButton` "Create" to `/estates/$estateId/readings/new` with search `{ assetId, metric }` (metric only when filtered), as on the estate readings page; the filters; `LoadingState` "Loading readings…" while pending; errors as a destructive alert. Table `aria-label="Readings"`, columns Measured (`toLocaleString`), Metric (catalogue name), Value (`{value} {unit}`), Source (Manual/Sensor and human recorder), Device (`deviceIdentifier`), Flags (one outline badge per flag). Pagination `nav` "Pagination": "Page {n} of {pages} · {total} reading(s)", "Previous page" (disabled on the first page) and "Next page" (disabled on the last). State in `use-readings-page.ts`; sections `readings-header.tsx`, `readings-table.tsx`, `readings-pagination.tsx`. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`, `Button`, `Alert`, `AlertDescription`; `EmptyState`, `LoadingState` |
-| `ReadingFilterControls` (`reading-filters.tsx`) | A `FilterBar` ("Filter readings"): "Metric" select ("All metrics" plus each catalogue name), "From" and "To" `DateTimePicker`s (each `Field` `w-full sm:w-72`), and a "Suspect only" checkbox. `activeCount` counts metric, From, To and suspect; `onClear` resets all filters (header "Clear filters"). | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Field`, `FieldLabel`, `Checkbox`, `Label`; `FilterBar`, `DateTimePicker` |
+| `AssetReadingsPage` (`asset-readings-page.tsx`) | `AssetReadingsHeader`; the estate `ReadingExport` (CSV with the asset and current filters); the estate `ReadingFilterControls` without the asset picker (always shown); the estate `ReadingResults` (table/cards, `LoadingState`, `ErrorState` "Retry readings", empty states, numbered `ReadingPagination`). `useEstateReadings(estateId, { ...filters, assetId })`, query key `[userId, "estate-readings", estateId, filters]`. Without `canViewReadings` it shows "Readings access is no longer available." | `Alert`, `AlertDescription` (rest via the estate components) |
+| `AssetReadingsHeader` (`asset-readings-header.tsx`) | `PageHeader` "Readings" (`Activity`), breadcrumbs Assets / asset name ("Asset" while loading) / Readings, description "Sensor and manual readings, newest first", and - with `canRecordReadings` - a `CreateButton` to `/estates/$estateId/readings/$assetId/new` with search `{ metric }`. | via `PageHeader` |
+
+`ReadingFilterControls` (`readings/-components/estate-readings-page/reading-filter-controls.tsx`)
+renders its Asset picker only when given `estateId` and `onChoose`.
 
 ### Badges (`flagLabel`)
 
@@ -305,12 +336,10 @@ Both in `readings/-components/`.
 
 ### Empty states
 
-Shown (as an `EmptyState`) when the response has `totalItems` 0. When any filter is
-set it carries an outline "Clear filters" that resets every filter. First match wins:
-
-1. `suspect` on: "No suspect readings match"
-2. `metric`, `from` or `to` set: "No readings match these filters"
-3. Otherwise: "No readings yet"
+From the estate `ReadingResults`, judged on the page's own filters (the fixed
+asset does not count): suspect on - "No matching suspect readings"; metric,
+from or to set - "No matching readings" with "Clear filters"; otherwise "No
+readings yet". An empty later page offers "Go to first page".
 
 ## Data (`lib/readings.ts`)
 
@@ -324,7 +353,7 @@ Query key: `readingsQueryKey(userId, estateId, assetId, filters)` =
 
 | Hook | Endpoint | On success |
 | --- | --- | --- |
-| `useReadings(estateId, assetId, filters)` | `GET /estates/{estateId}/assets/{assetId}/readings` | query |
+| `useReadings(estateId, assetId, filters)` | `GET /estates/{estateId}/assets/{assetId}/readings` | query (no screen uses it since the asset readings page moved to the estate endpoint) |
 
 Query params sent: `metric`; `from`/`to` converted from `datetime-local` to ISO
 UTC (`new Date(local).toISOString()`); `flag` = `GAP`, `DUPLICATE_TIMESTAMP`,
@@ -342,7 +371,7 @@ and legacy asset lists as a single accessible `Readings` list. Each shadcn Card
 shows the metric/value/unit, measured time, Manual/Sensor provenance (including
 manual recorder name/ID fallback), applicable device, all flags and estate-list
 asset name/reference. Long labels and flags wrap. Manual entries do not invent
-a device. The estate `reading-table.tsx` and asset `readings-page.tsx` use the
+a device. The estate `reading-table.tsx` (also used by the asset Overview and asset readings page) uses the
 existing `useMobile` hook to select cards or desktop tables from the same query
 result; filters, query keys, numbered estate paging and legacy paging are
 unchanged. Only the current presentation mounts. Cards expose refresh busy

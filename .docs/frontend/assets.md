@@ -16,6 +16,7 @@ are relative to `apps/web/src/`; route folders below are under
 | File | URL | Params | Title | Renders |
 | --- | --- | --- | --- | --- |
 | `index.tsx` | `/estates/$estateId/assets` | `estateId`; validated URL filters | "Assets" | `AssetRegisterPage` |
+| `devices/index.tsx` | `/estates/$estateId/assets/devices` | `estateId` | "All devices" | `AllDevicesPage` (see [devices.md](devices.md#all-devices-assets--all-devices)) |
 | `new/index.tsx` | `/estates/$estateId/assets/new` | `estateId` | "Register asset" | `NewAssetPage` |
 | `$assetId/route.tsx` | - | - | - | Plain `Outlet` parent, so `_details` below is pathless and does not swallow `edit`, `inspections/new`, `devices/new` and the rest |
 | `$assetId/_details/route.tsx` | (pathless layout) | `estateId`, `assetId` | - | `AssetDetailsLayout` around an `Outlet`; `InspectionAssetPage` instead for inspection-only viewers (`!canViewAssets`) |
@@ -27,7 +28,7 @@ are relative to `apps/web/src/`; route folders below are under
 | `$assetId/_details/devices/index.tsx` | `…/assets/$assetId/devices` | `estateId`, `assetId` | "Asset devices" | `AssetDevices` |
 | `$assetId/edit/index.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
 
-Entry point: sidebar Assets › Assets (`canOpenAssets`: `canViewAssets || canViewInspectionResults`); the register's `ListPageHeader` "Create" (`CreateButton`) opens Register asset. The `_auth` guard lets inspection-only viewers (`canViewInspectionResults`) open `/assets/$assetId` and `/assets/$assetId/inspections`; the other sub-pages need `canViewManagement && canViewAssets`. The register has no breadcrumbs; deeper pages use section-first breadcrumbs (`Assets › <asset name>`, `Assets › Register asset`, `Assets › <asset name> › Edit`). No back links; see the page header convention in [design-system.md](design-system.md).
+Entry point: sidebar Assets › Assets (`assetsEntry`: `/assets` with `canOpenAssets`, i.e. `canViewAssets || canViewInspectionResults`; otherwise `/assets/devices` for the All devices audience); `/failure-risk` redirects to `/assets`; the register's `ListPageHeader` "Create" (`CreateButton`) opens Register asset. The `_auth` guard lets inspection-only viewers (`canViewInspectionResults`) open `/assets/$assetId` and `/assets/$assetId/inspections`; the other sub-pages need `canViewManagement && canViewAssets`. The register has no breadcrumbs; deeper pages use section-first breadcrumbs (`Assets › <asset name>`, `Assets › Register asset`, `Assets › <asset name> › Edit`). No back links; see the page header convention in [design-system.md](design-system.md).
 
 ## Screens and components
 
@@ -37,7 +38,10 @@ Entry point: sidebar Assets › Assets (`canOpenAssets`: `canViewAssets || canVi
 | `EditAssetPage` (`assets/-components/edit-asset-page.tsx`) | Loads the asset. If deactivated, shows "can no longer be edited" instead of the form. On save: toast "Asset details updated.", navigate to details. | - |
 | `AssetForm` (`assets/-components/asset-form/asset-form.tsx`) | Read-only "Reference" when editing. Fields: `name` (req, max 200), `category` (req, select from `useAssetCategories`; placeholder "Loading categories…" while pending, error shown in a destructive `Alert`), `locationId` (req, select of `flattenLocations` paths from `useLocations`), `installedOn` (optional `DatePicker`), `manufacturer`, `model`, `serialNumber` (optional, max 200). Manufacturer and model are `SuggestField` comboboxes (free text, max 200): typing suggests names from `useManufacturers`; model suggestions come from `useAssetModels` only once a listed manufacturer was picked and a category is set. Any text is accepted; an unlisted name is added to the catalogue on save. Client-side required checks; blank optional fields are omitted from the payload. Each field is a `Field` with `FieldLabel`; missing required fields show a `FieldError` (`role="alert"`) linked by `aria-describedby`; a save failure shows a destructive `Alert`. | `Button`, `Input`, `Field`, `FieldSet`, `FieldLegend`, `FieldLabel`, `FieldDescription`, `FieldError`, `Alert`, `AlertDescription`, `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `Combobox`, `ComboboxInput`, `ComboboxContent`, `ComboboxList`, `ComboboxItem` |
 | `AssetDetailsLayout` (`assets/$assetId/-components/asset-details-page/asset-details-page.tsx`) | The shared frame of every asset sub-page. `DetailPageHeader`: breadcrumbs `Assets › <name>`, title = name, Active/Retired status badge, `meta` = reference. While active the actions are outline "Edit" link, primary "Create inspection record" (`Plus`, inspection creators on an active estate) and destructive "Retire asset" (opens `DeactivateAssetDialog`). Then the retired notice (`Alert role="note"`) and a `SubNav` ("Asset sections": Overview (exact), Maintenance, Inspections, Documents, Costs, Devices - each a route, see Routes). The child sub-page renders only once `useAsset` has loaded. Loading is `LoadingState`; a load error is `ErrorState` (Retry refetches). | `Button`, `buttonVariants`, `Alert`, `AlertDescription`; `DetailPageHeader`, `SubNav`, `ErrorState` |
-| `AssetOverview` (`asset-overview.tsx`, same folder) | Details `DetailCard` (reference, category label from `useAssetCategories` with code fallback, `locationPath`, installation date, manufacturer, model, serial number; "Not recorded" when absent), `AssetConditionSection`, and `AssetForecastCard` for category `PUMP` only. | - |
+| `AssetOverview` (`asset-overview.tsx`, same folder) | The asset's monitoring home. In order: details `DetailCard` (reference, category label from `useAssetCategories` with code fallback, `locationPath`, installation date, manufacturer, model, serial number; "Not recorded" when absent), `AssetConditionSection`, `AssetForecastCard` (category `PUMP` **and** the viewer owns the estate, `useEstate().owned`), `OverviewDevicesSection` (owner, or `useAppAccess()` role `MANAGER`), `OverviewReadingsSection` (`canViewReadings`). A section that its viewer may not call is not mounted, so it makes no request. | - |
+| `OverviewDevicesSection` (`asset-overview/overview-devices-section.tsx`) | `SectionCard` "Devices" (`RadioTower`). Actions: outline "Add device" link to `/estates/$estateId/assets/$assetId/devices/new` (owner, asset active, estate active) and outline "Manage devices" link to the Devices sub-page (credentials, replace, deactivate stay there). Devices from `useDevices(estateId, assetId)` in a list `aria-label="Asset devices"`; flatline state from `useAllFlatlineReview(estateId, "ALL")`, filtered to this asset's entries. Devices and review each have their own `LoadingState`/`ErrorState` ("Retry devices", "Retry device monitoring"); a failed review leaves the device list without flatline state. Empty: `EmptyState` "No devices yet". Owns the `PauseSensorDialog` (shown only while the review's `canManage`). | `buttonVariants`; `SectionCard`, `EmptyState`, `ErrorState`, `LoadingState` |
+| `OverviewDeviceItem` (`asset-overview/overview-device-item.tsx`) | One `li` labelled by its identifier heading: `DeviceStatusBadge`, "Last seen <time>" / "Not seen yet", and for active devices one line per reviewed metric: metric label and a state badge ("Possible flatline" destructive, "Paused until <time>", "Monitoring", "Not configured", "No readings yet", "Waiting for fresh readings"), plus a ghost "Pause for maintenance" button (`aria-label` "Pause <device> <metric>") when the review has `canManage`, the metric has a policy and is not paused. | `Badge`, `Button` |
+| `OverviewReadingsSection` (`asset-overview/overview-readings-section.tsx`) | `SectionCard` "Readings" (`Activity`), "The latest 50 readings, from sensors and manual entry." `useEstateReadings(estateId, { assetId })` page 0 shown with the estate `ReadingTable` (cards below 768px). Actions: "Record manual reading" (with `canRecordReadings`) to `/estates/$estateId/readings/$assetId/new`, and "View all readings" to `/estates/$estateId/assets/$assetId/readings`. Own `LoadingState`, `ErrorState` ("Retry readings") and `EmptyState` "No readings yet". | `buttonVariants`; `SectionCard`, `EmptyState`, `ErrorState`, `LoadingState` |
 | `AssetMaintenance` (`asset-maintenance.tsx`, same folder) | `AssetMaintenanceSection`, `AssetServiceIntervalCard` for owner or Manager only (see [service-intervals.md](service-intervals.md); locked with a reason for an inactive estate or a retired asset) and `AssetRetirementPanel`. | - |
 | `AssetDevices` (`asset-devices.tsx`, same folder) | `AssetDevicesSection` (see [devices.md](devices.md)), registration allowed while the asset is active. | - |
 | `DeactivateAssetDialog` (`assets/$assetId/-components/asset-details-page/deactivate-asset-dialog.tsx`) | Always-open shared `ConfirmDialog` ("Retire <name>?", destructive "Retire asset", "Retiring…" while pending, `confirmDisabled` until the typed reference, date and reason are valid); exact reference plus retirement date and trimmed reason are required. Dates default to Singapore today and cannot precede known installation or exceed today. Submits the displayed lifecycle version. Closing blocked while pending. On success: toast "Asset retired. Its record has been preserved." | `ConfirmDialog`, `Input`, `Label`, `Textarea`, `DatePicker` |
@@ -127,7 +131,7 @@ hook beside it:
 
 | Page / form | Hook | Sections |
 | --- | --- | --- |
-| `asset-register-page.tsx` | `use-asset-register-page.ts` | `asset-register-filters.tsx`, `asset-register-cards.tsx` (mobile), `asset-register-table.tsx` (desktop) |
+| `asset-register-page.tsx` | `use-asset-register-page.ts` | `asset-register-filters.tsx`, `asset-register-cards.tsx` (mobile), `asset-register-table.tsx` (desktop), `asset-monitoring-cells.tsx` (`DeviceSummary`, `RiskFlag`) |
 | `asset-form.tsx` | `use-asset-form.ts` (values, validation, payload) | `asset-form-identity-fields.tsx` (reference/name/category/location), `asset-form-detail-fields.tsx` (installed date/manufacturer/model/serial), `asset-form-required-error.tsx` |
 | `$assetId/-components/asset-details-page/asset-details-page.tsx` | `use-asset-details-layout.ts` | `asset-details-header.tsx`, `asset-details-nav.tsx` |
 | `$assetId/-components/asset-overview/asset-condition-section/asset-condition-section.tsx` | `use-asset-condition-section.ts` | `asset-condition-history.tsx` |
@@ -150,6 +154,53 @@ URL query fields q/category/locationId/condition/status
 are validated in assets/index.tsx; invalid values are omitted. Filters combine
 with AND; Clear filters returns to the default active register. Loading, retry,
 empty and no-match states are explicit. Browser back restores URL filters.
+
+### By location (asset-centric navigation, phase 2)
+
+The register groups rows by block, then level, on desktop and mobile alike.
+`groupAssetsByLocation(sortedAssets, locations)` (`lib/asset-monitoring.ts`)
+resolves each asset's `locationId` in `useLocations(estateId, true)`: the
+top-level ancestor is the block (`<h2>`), the next node the level (`<h3>`);
+assets on the block itself form a "Block-wide" level shown first, and
+unresolvable locations a final "Unknown location" group with no level
+subheading. Groups follow the location tree (`flattenLocations` order: levels
+highest first); inside a group the chosen sort applies. If no asset resolves
+(or locations failed), the list renders ungrouped. Rows wait for the locations
+request to settle (table/list skeleton) so they never regroup.
+
+- Desktop: one `Table` "Assets"; each block is a `TableBody` whose first row is
+  a `colgroup` `TableHead` holding the block heading, then a level heading row
+  per level.
+- Mobile: a `section` per block; each level is a list labelled
+  "`<block> › <level>` assets" ("`<block>` assets" for Unknown location); card
+  names are `<h4>` when grouped, `<h2>` when ungrouped (list "Assets").
+
+Monitoring columns, each mounted only for viewers its endpoint serves
+(`useAppAccess` role, `EstateResponse.owned`):
+
+| Column | Shown to | Source | Cell |
+| --- | --- | --- | --- |
+| Devices | owner or `MANAGER` | `useEstateDevices(estateId, enabled)` | `deviceSummaries`: "No devices", "N device(s) online", or "X of N offline" (offline and awaiting count as not online; deactivated excluded) |
+| Risk | owner | `useEstateFailureRisk(estateId, enabled)` | destructive `Badge` "Flagged: <reasons>" (`flagReasonLabel`) when the entry has flag reasons; empty otherwise |
+
+While a source loads its cells show a `Skeleton` (`role="status"`, "Loading
+device summary" / "Loading failure risk"); row order depends only on asset and
+location data, so nothing moves when they resolve. A failed source makes its
+cells "Unavailable" and shows one `ErrorState` naming the failed sources
+("Device status could not be loaded.", "Failure risk could not be loaded.", or
+"Device status and failure risk could not be loaded.") whose Retry refetches
+only the failed ones; the rows stay. Only an assets failure blanks the list.
+`AssetViewsNav` (`assets/-components/asset-views-nav.tsx`) is the `SubNav`
+"Asset views": By location → `/assets` (exact) and All devices →
+`/assets/devices`, plus an outline "All readings" link (`Activity`) to
+`/estates/$estateId/readings` when `canOpenAllReadings` (owners and Managers;
+not Crew). It is rendered by `AssetRegisterPage`, `InspectionAssetList` (both
+under their header) and `AllDevicesPage`, not by an `assets/route.tsx` layout,
+because such a layout would also wrap asset detail and Register asset. The
+tabs show only when the viewer can open asset pages (`canOpenAssets`) and All
+devices (`canOpenAllDevices`); one tab alone would switch to nothing, so
+Council (no asset pages) and Crew (no All devices) see no tab bar. Access
+comes from `useAssetViewsAccess` in `lib/devices.ts`.
 
 `useAssets(estateId, filters)` calls GET `/estates/{estateId}/assets`; key
 `["estates", userId, "assets", estateId, "list", filters]`. Different filter
@@ -276,9 +327,8 @@ saved-record links and work-order follow-up under independent permissions.
 
 ## Estate reading browser entry (ID-60)
 
-The owner asset-detail Devices section's Readings action now opens
-`/estates/$estateId/readings?assetId=$assetId`, using the estate browser and
-preselecting the current asset. Existing per-asset reading bookmarks still work.
+The owner asset-detail Devices section's Readings action opens
+`/estates/$estateId/readings/$assetId`, the estate browser with the asset fixed. Existing per-asset reading bookmarks still work.
 The dedicated browser supports Owner/Manager/Crew reads independently of asset
 register access; see [readings.md](readings.md).
 

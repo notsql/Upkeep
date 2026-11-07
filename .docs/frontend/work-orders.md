@@ -68,6 +68,13 @@ Work-order estate label. There is no global Work orders entry or estate chooser
 dialog; users pick an estate in the header switcher.
 Crew details render returned asset reference/location, linking assets only with
 canViewAssets and source reports only with canViewFaultReports.
+With a linked asset, `WorkOrderDetailSummary` also shows outline
+(`buttonVariants`) links "View readings" to
+`/estates/$estateId/readings/$assetId` (with canViewReadings) and "Record
+reading" to `/estates/$estateId/readings/$assetId/new` (with
+canRecordReadings); `useWorkOrderAccess` exposes both flags. This is how Crew
+reach readings, since the sidebar has no Readings item (see
+[readings.md](readings.md)).
 
 The existing estate-report detail screen adds Create work order only when both
 creation and report-read capabilities are present. It passes sourceReportId to

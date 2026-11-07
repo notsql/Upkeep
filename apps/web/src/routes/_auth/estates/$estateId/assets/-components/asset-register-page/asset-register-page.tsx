@@ -12,6 +12,7 @@ import { AssetRegisterTable } from "@/routes/_auth/estates/$estateId/assets/-com
 import { AssetSortControls } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-sort-controls";
 import { AssetsEmpty } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/assets-empty";
 import { useAssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/use-asset-register-page";
+import { AssetViewsNav } from "@/routes/_auth/estates/$estateId/assets/-components/asset-views-nav";
 
 export function AssetRegisterPage({
   estateId,
@@ -36,13 +37,17 @@ export function AssetRegisterPage({
     clearFilters,
     descending,
     estate,
+    failedSources,
     filtered,
+    groups,
     locations,
     locationOptions,
     mobile,
+    monitoring,
     panel,
     retryAssets,
     retryLocations,
+    retryMonitoring,
     search,
     sortColumn,
     sortedAssets,
@@ -66,6 +71,7 @@ export function AssetRegisterPage({
         icon={Layers}
         title="Assets"
       />
+      <AssetViewsNav estateId={estateId} />
       {estate.data?.deactivatedAt ? (
         <Alert role="note">
           <AlertDescription>
@@ -94,7 +100,13 @@ export function AssetRegisterPage({
           retryLabel="Retry locations"
         />
       ) : null}
-      {assets.isPending ? (
+      {failedSources.length > 0 && assets.data ? (
+        <ErrorState
+          message={monitoringFailure(failedSources)}
+          onRetry={retryMonitoring}
+        />
+      ) : null}
+      {assets.isPending || (assets.data && locations.isPending) ? (
         <LoadingState
           label="Loading assets…"
           variant={mobile ? "list" : "table"}
@@ -114,23 +126,43 @@ export function AssetRegisterPage({
           onClear={clearFilters}
         />
       ) : null}
-      {assets.data && assets.data.length > 0 && mobile ? (
+      {assets.data &&
+      assets.data.length > 0 &&
+      !locations.isPending &&
+      mobile ? (
         <AssetRegisterCards
           assets={sortedAssets}
           categories={categories}
           estateId={estateId}
+          groups={groups}
+          monitoring={monitoring}
         />
       ) : null}
-      {assets.data && assets.data.length > 0 && !mobile ? (
+      {assets.data &&
+      assets.data.length > 0 &&
+      !locations.isPending &&
+      !mobile ? (
         <AssetRegisterTable
           assets={sortedAssets}
           categories={categories}
           descending={descending}
           estateId={estateId}
+          groups={groups}
+          monitoring={monitoring}
           onSort={changeSort}
           sortColumn={sortColumn}
         />
       ) : null}
     </PageLayout>
   );
+}
+
+/** One message naming every secondary source that failed. */
+function monitoringFailure(sources: ("devices" | "risk")[]): string {
+  if (sources.length === 2) {
+    return "Device status and failure risk could not be loaded.";
+  }
+  return sources[0] === "devices"
+    ? "Device status could not be loaded."
+    : "Failure risk could not be loaded.";
 }

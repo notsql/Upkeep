@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  manualReadingLocation,
   mergeReadingSearch,
   parseReadingSearch,
   readingFilterError,
+  readingsLocation,
 } from "@/lib/reading-filters";
 
 describe("estate readings search", () => {
@@ -74,5 +76,43 @@ describe("estate readings search", () => {
     { from: "2024-02-29T10:00" },
   ])("allows valid one-sided ranges and leap dates: %j", (input) => {
     expect(readingFilterError(parseReadingSearch(input))).toBeUndefined();
+  });
+});
+
+describe("reading locations", () => {
+  const estateId = "3f6c1f9e-8a2b-4c5d-9e0f-1a2b3c4d5e6f";
+  const assetId = "7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f";
+
+  it("puts a chosen asset in the path and keeps the other filters", () => {
+    expect(
+      readingsLocation(estateId, { assetId, metric: "TEMPERATURE", page: 2 })
+    ).toEqual({
+      to: "/estates/$estateId/readings/$assetId",
+      params: { estateId, assetId },
+      search: { metric: "TEMPERATURE", page: 2 },
+    });
+  });
+
+  it("browses the whole estate without an asset", () => {
+    expect(readingsLocation(estateId, { suspect: true })).toEqual({
+      to: "/estates/$estateId/readings",
+      params: { estateId },
+      search: { suspect: true },
+    });
+  });
+
+  it("opens manual entry for an asset by path", () => {
+    expect(
+      manualReadingLocation(estateId, { assetId, metric: "TEMPERATURE" })
+    ).toEqual({
+      to: "/estates/$estateId/readings/$assetId/new",
+      params: { estateId, assetId },
+      search: { metric: "TEMPERATURE" },
+    });
+    expect(manualReadingLocation(estateId, {})).toEqual({
+      to: "/estates/$estateId/readings/new",
+      params: { estateId },
+      search: {},
+    });
   });
 });

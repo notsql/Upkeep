@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@tests/test-utils";
 import type { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toDateValue } from "@/components/forms/date-picker";
 import { assetQueryKey } from "@/lib/assets";
 
@@ -66,6 +66,9 @@ let fail = false;
 
 beforeEach(() => {
   vi.resetAllMocks();
+  // fill() picks 16:00 today; the form rejects times over five minutes ahead,
+  // so pin "now" to the evening instead of depending on the wall clock.
+  vi.setSystemTime(new Date(2026, 9, 28, 20, 0));
   permission.canRecord = true;
   fail = false;
   get.mockImplementation((path: string) =>
@@ -104,6 +107,9 @@ beforeEach(() => {
         : { data: saved, response: new Response(null, { status: 201 }) }
     )
   );
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 function show(initialAssetId: string | undefined = ASSET) {
   const onSaved = vi.fn();

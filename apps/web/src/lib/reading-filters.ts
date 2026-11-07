@@ -41,6 +41,43 @@ export function mergeReadingSearch(
   return merged;
 }
 
+/** The readings browser for `search`; a chosen asset lives in the path. */
+export function readingsLocation(estateId: string, search: ReadingSearch) {
+  const { assetId, ...rest } = search;
+  if (assetId) {
+    return {
+      to: "/estates/$estateId/readings/$assetId",
+      params: { estateId, assetId },
+      search: rest,
+    } as const;
+  }
+  return {
+    to: "/estates/$estateId/readings",
+    params: { estateId },
+    search: rest,
+  } as const;
+}
+
+/** Manual entry, preselected to an asset by path when one is given. */
+export function manualReadingLocation(
+  estateId: string,
+  search: Pick<ReadingSearch, "assetId" | "metric">
+) {
+  const { assetId, ...rest } = search;
+  if (assetId) {
+    return {
+      to: "/estates/$estateId/readings/$assetId/new",
+      params: { estateId, assetId },
+      search: rest,
+    } as const;
+  }
+  return {
+    to: "/estates/$estateId/readings/new",
+    params: { estateId },
+    search: rest,
+  } as const;
+}
+
 function text(value: unknown): string | undefined {
   return value === undefined || value === null || value === ""
     ? undefined

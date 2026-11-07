@@ -43,9 +43,8 @@ export function AssetDevicesSection({
         <>
           <Link
             className={buttonVariants({ variant: "outline" })}
-            params={{ estateId }}
-            search={{ assetId }}
-            to="/estates/$estateId/readings"
+            params={{ estateId, assetId }}
+            to="/estates/$estateId/readings/$assetId"
           >
             Readings
           </Link>

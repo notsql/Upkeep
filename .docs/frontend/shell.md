@@ -20,7 +20,14 @@ estate/role URLs render Page not found. Switching estates preserves Readings
 when permitted. See [readings.md](readings.md). The
 `/estates/$estateId/readings/new` route also requires `canRecordReadings`;
 bookmarked read-only/inactive entry URLs return Page not found before loading
-the form.
+the form. `/readings/$assetId` (that asset's readings) and
+`/readings/$assetId/new` (manual entry for that asset) share those two gates
+(the guard treats `new` in either position as an entry URL). `?assetId=` on
+`/readings` or `/readings/new` redirects to the path form.
+
+Retired pages redirect in their route's `beforeLoad` (`replace: true`), and
+the `_auth` guard then checks the destination: `/devices`, `/sensors`,
+`/sensors/all` -> `/assets/devices`; `/failure-risk` -> `/assets`.
 
 | File | URL | Guard | Screen |
 | --- | --- | --- | --- |
@@ -130,16 +137,19 @@ a group with no visible items is not rendered.
 | Operations | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
 | Operations | Inspections | `/inspections` | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
 | Assets | Locations | `/locations` | `canViewManagement` |
-| Assets | Assets | `/assets` | `canOpenAssets`: `canViewAssets \|\| canViewInspectionResults` |
-| Assets | Devices | `/devices` | `canOpenDevices`: `owned \|\| canManageInvitationPermissions` |
-| Assets | Readings | `/readings` | `canOpenReadings`: `canViewReadings` |
-| Assets | Device monitoring | `/sensors` | `canOpenSensors`: `owned`, or `canViewManagement` with role MANAGER/COUNCIL, or MEMBER and platform admin |
-| Assets | Failure risk | `/failure-risk` | `canOpenFailureRisk`: `owned` |
+| Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |
 | Records | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
 | Administration | Members | `/council` | `canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions` |
 | Administration | Roles | `/roles` | `canOpenRoles`: `canViewEstateRoles` |
 | Administration | Asset categories | `/asset-categories` | `canOpenAssetCategories`: `owned \|\| canManageInvitationPermissions` |
 | Administration | Estate settings | `/edit` | `canOpenEstateSettings`: `owned \|\| canManageEstate` |
+
+There is no Devices, Readings, Device monitoring or Failure risk item: those
+pages live under Assets (All devices, the asset Overview, By location's risk
+column). Owners and Managers reach `/readings` through the "All readings" link
+on the Assets views (`canOpenAllReadings`: `canViewReadings` and not CREW);
+Crew reach an asset's readings from a work order's "View readings" / "Record
+reading" links (see [work-orders.md](work-orders.md)).
 
 `owned` comes from `useEstate(estateId)` (`EstateResponse.owned`, key
 `["estates", userId, "details", estateId]`), mounted only when
@@ -172,8 +182,13 @@ In `_auth/route.tsx`, `guardDestination` handles the section-level URLs
 
 - `/assets` (list) 404s unless `canOpenAssets`. Asset children
   (`/assets/$assetId/**`) keep `guardInspectionContext`.
-- `/devices`, `/asset-categories`, `/inspections`, `/sensors`,
-  `/failure-risk`, `/edit` use `OWNER_GATED` predicates. If access flags alone
+- `/assets/devices` (All devices) is matched first (`isAllDevicesPath`, so
+  "devices" is never treated as an asset ID by `guardInspectionContext`) and
+  uses `canOpenAllDevices` (`canOpenDevices || canOpenSensors`), loading
+  ownership like the owner-gated sections: owner, Manager and Council open it
+  without `canViewAssets`; Crew and inspection-only readers get `notFound()`.
+- `/asset-categories`, `/inspections`, `/edit` use `OWNER_GATED`
+  predicates. If access flags alone
   do not open the page, the guard loads ownership with
   `queryClient.ensureQueryData` on `["estates", userId, "details", estateId]`
   (server function `getSessionEstate`, i.e. `GET /estates/{id}`); a failed

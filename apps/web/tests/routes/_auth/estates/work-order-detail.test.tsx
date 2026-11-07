@@ -9,6 +9,7 @@ import {
 import { beforeEach, expect, it, vi } from "vitest";
 import { WorkOrderDetailPage } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/work-order-detail-page";
 
+const ASSET = vi.hoisted(() => "7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f");
 const state = vi.hoisted(() => ({
   access: {
     canView: true,
@@ -16,10 +17,13 @@ const state = vi.hoisted(() => ({
     canUpdate: false,
     canReadReports: false,
     canViewAssets: false,
+    canViewReadings: false,
+    canRecordReadings: false,
     pending: false,
     estateName: "Oak",
   },
   currentId: "order",
+  assetId: ASSET as string | undefined,
   error: false,
   queryError: undefined as Error | undefined,
   creatorName: "Alex Tan" as string | undefined,
@@ -55,7 +59,7 @@ vi.mock("@/lib/work-orders", () => ({
       reference: "OAK-W0001",
       description: "Repair pump",
       locationPath: "Block A / L1",
-      assetId: "pump",
+      assetId: state.assetId,
       assetReference: "OAK-A0001",
       category: "EQUIPMENT_FAULT",
       priority: "HIGH",
@@ -95,14 +99,32 @@ vi.mock("@/lib/work-orders", () => ({
   }),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    to,
+    params,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    params?: Record<string, string>;
+  }) => (
+    <a
+      href={Object.entries(params ?? {}).reduce(
+        (path, [key, value]) => path.replace(`$${key}`, value),
+        to
+      )}
+    >
+      {children}
+    </a>
   ),
 }));
 beforeEach(() => {
   state.access.canView = true;
   state.access.canReadReports = false;
   state.access.canViewAssets = false;
+  state.access.canViewReadings = false;
+  state.access.canRecordReadings = false;
+  state.assetId = ASSET;
   state.access.canUpdate = false;
   state.status = "OPEN";
   state.version = 0;
@@ -259,6 +281,37 @@ it("shows Crew the saved asset reference without an owner-only asset link", () =
   screen.getByText("Block A / L1");
   expect(screen.queryByRole("link", { name: "OAK-A0001" })).toBeNull();
   expect(screen.queryByRole("link", { name: "View source report" })).toBeNull();
+});
+it("links Crew to the linked asset's readings and manual entry", () => {
+  state.access.canViewReadings = true;
+  state.access.canRecordReadings = true;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  expect(
+    screen.getByRole("link", { name: "View readings" }).getAttribute("href")
+  ).toBe(`/estates/oak/readings/${ASSET}`);
+  expect(
+    screen.getByRole("link", { name: "Record reading" }).getAttribute("href")
+  ).toBe(`/estates/oak/readings/${ASSET}/new`);
+});
+it("offers each readings link only with its permission", () => {
+  state.access.canViewReadings = true;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  screen.getByRole("link", { name: "View readings" });
+  expect(screen.queryByRole("link", { name: "Record reading" })).toBeNull();
+});
+it("offers no readings links without a linked asset", () => {
+  state.access.canViewReadings = true;
+  state.access.canRecordReadings = true;
+  state.assetId = undefined;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  expect(screen.queryByRole("link", { name: "View readings" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Record reading" })).toBeNull();
 });
 it("links source reports only for independent report readers", () => {
   state.access.canReadReports = true;

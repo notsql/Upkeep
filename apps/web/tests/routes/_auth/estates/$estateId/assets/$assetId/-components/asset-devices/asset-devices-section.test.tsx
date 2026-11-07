@@ -114,7 +114,7 @@ describe("AssetDevicesSection", () => {
       (await screen.findByRole("link", { name: "Readings" })).getAttribute(
         "href"
       )
-    ).toBe("/estates/estate-id/readings?assetId=asset-id");
+    ).toBe("/estates/estate-id/readings/asset-id");
   });
 
   it("shows a newly registered device as awaiting its first reading", async () => {
@@ -169,7 +169,7 @@ it("links to the estate browser preselected to the asset, even when deactivated"
   renderSection(false);
   expect(
     screen.getByRole<HTMLAnchorElement>("link", { name: "Readings" }).href
-  ).toContain("/estates/estate-id/readings?assetId=asset-id");
+  ).toContain("/estates/estate-id/readings/asset-id");
 });
 
 describe("AssetDevicesSection credentials", () => {

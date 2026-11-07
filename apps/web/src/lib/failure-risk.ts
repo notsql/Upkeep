@@ -20,11 +20,11 @@ export function assetFailureRiskQueryKey(
   return [...estateFailureRiskQueryKey(userId, estateId), assetId] as const;
 }
 
-export function useEstateFailureRisk(estateId: string) {
+export function useEstateFailureRisk(estateId: string, enabled = true) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: estateFailureRiskQueryKey(userId, estateId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(

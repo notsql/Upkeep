@@ -2,7 +2,11 @@ import { useCallback, useState } from "react";
 import { useFilterPanel } from "@/components/filters/filter-bar";
 import type { CreateButtonProps } from "@/components/page/page-actions";
 import { useAppAccess } from "@/lib/access";
-import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
+import {
+  manualReadingLocation,
+  type ReadingSearch,
+  readingFilterError,
+} from "@/lib/reading-filters";
 import {
   type EstateReading,
   type ReadingAsset,
@@ -60,11 +64,10 @@ export function useEstateReadingsPage(
     readings.data?.items.find((item) => item.assetId === filters.assetId)
   );
   const create: CreateButtonProps | undefined = estate?.canRecordReadings
-    ? {
-        params: { estateId },
-        search: { assetId: filters.assetId, metric: filters.metric },
-        to: "/estates/$estateId/readings/new",
-      }
+    ? manualReadingLocation(estateId, {
+        assetId: filters.assetId,
+        metric: filters.metric,
+      })
     : undefined;
   return {
     activeCount,

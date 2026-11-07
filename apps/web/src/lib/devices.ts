@@ -1,7 +1,14 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
-import { estateError, useEstateSession } from "@/lib/estates";
+import {
+  canOpenAllDevices,
+  canOpenAllReadings,
+  canOpenAssets,
+  canOpenSensors,
+} from "@/lib/estate-destinations";
+import { estateError, useEstate, useEstateSession } from "@/lib/estates";
 
 export type Device = components["schemas"]["DeviceResponse"];
 export type EstateDevice = components["schemas"]["EstateDeviceResponse"];
@@ -70,11 +77,11 @@ export function estateDevicesQueryKey(
 }
 
 /** Status is derived on read (decision 0027), so the list polls while open. */
-export function useEstateDevices(estateId: string) {
+export function useEstateDevices(estateId: string, enabled = true) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: estateDevicesQueryKey(userId, estateId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
@@ -89,6 +96,39 @@ export function useEstateDevices(estateId: string) {
       return data;
     },
   });
+}
+
+/**
+ * Who may see what in the Assets views. `devices` follows the estate devices
+ * endpoint (owner or MANAGER); `review` follows the flatline review (today's
+ * Device monitoring audience), so neither source is requested for a viewer it
+ * would refuse.
+ */
+export function useAssetViewsAccess(estateId: string) {
+  const access = useAppAccess();
+  const permission = access.data?.estates?.find(
+    (item) => item.estateId === estateId
+  );
+  // Only management roles and asset readers may read the estate (ownership);
+  // anyone else, such as Crew, is never an owner.
+  const manages = Boolean(
+    permission?.canViewManagement || permission?.canViewAssets
+  );
+  const estate = useEstate(manages ? estateId : undefined);
+  const owned = Boolean(estate.data?.owned);
+  const admin = access.data?.canAccessPlatformAdmin;
+  return {
+    pending: access.isPending || (manages && estate.isPending),
+    /** The full register (owner-only); inspection readers get their own list. */
+    register: Boolean(permission?.canViewAssets),
+    /** Asset detail pages, including inspection readers'. */
+    assetPages: canOpenAssets(permission),
+    allDevices: canOpenAllDevices(permission, owned, admin),
+    devices: Boolean(permission && (owned || permission.role === "MANAGER")),
+    review: canOpenSensors(permission, owned, admin),
+    /** The estate-wide readings browser, linked from the Assets views. */
+    allReadings: canOpenAllReadings(permission),
+  };
 }
 
 export function useRegisterDevice(estateId: string, assetId: string) {

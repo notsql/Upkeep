@@ -4,10 +4,10 @@ IoT devices registered to an asset. Paths are relative to `apps/web/src/`.
 
 ## Routes
 
-`/estates/$estateId/devices` (`routes/_auth/estates/$estateId/devices/index.tsx`,
-title "Devices") renders `EstateDevicesPage` from its adjacent `-components/`.
-Linked as "Devices" from the estate page's actions for Managers
-(`estate.owned || estate.canManageInvitationPermissions`), active or inactive estate.
+`/estates/$estateId/devices` (`routes/_auth/estates/$estateId/devices/index.tsx`)
+is retired: its `beforeLoad` redirects (`replace: true`) to
+`/estates/$estateId/assets/devices` (All devices, below). The old
+`EstateDevicesPage` is deleted.
 
 `AssetDevicesSection` renders on the asset details page,
 `/estates/$estateId/assets/$assetId`
@@ -18,7 +18,6 @@ Linked as "Devices" from the estate page's actions for Managers
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `EstateDevicesPage` (`devices/-components/estate-devices-page/estate-devices-page.tsx`) | `ListPageHeader` (`Cpu` icon, "Reporting status, quiet devices first"; no breadcrumbs, no filters, no Create - devices are registered from an asset; sidebar Assets › Devices, `canOpenDevices`), "Refreshes every 60 seconds while this page is open." A table labelled "Devices" in the server's order (Offline, Awaiting first reading, Online): Device (`identifier`, `model`), Asset (link "`assetName`" to the asset page, `assetReference`, "Retired" badge when `assetRetired`), Location (path from `useLocations`, or "Location unavailable"), Last seen (`toLocaleString` in a `<time>`, or "Never"), Status (`DeviceStatusBadge`). Loading: "Loading devices…" (`LoadingState`, `table`); empty: `EmptyState` "No devices yet" ("Register devices from an asset's Devices page", no action); errors as `ErrorState` (outline Retry refetches). | `Table`, `Badge`; `ListPageHeader`, `ErrorState`, `EmptyState` |
 | `DeviceStatusBadge` (`components/badges/device-status-badge.tsx`, shared) | "Online" (secondary), "Offline" (destructive), "Awaiting first reading" (outline), "Deactivated" (secondary, ID-45). | `Badge` |
 
 All four files are in `routes/_auth/estates/$estateId/assets/$assetId/-components/`.
@@ -52,7 +51,46 @@ active estate/asset, and shows loading/errors or a denial for direct links.
 existing toast and navigates back to the asset's Devices sub-page, where the device query is
 invalidated. Cancel returns there too. Cancel makes no registration request. Errors retain form input.
 
+## All devices (Assets › All devices)
+
+Route `assets/devices/index.tsx` → `/estates/$estateId/assets/devices`, title
+"All devices", renders `AllDevicesPage`. Components live in
+`assets/devices/-components/all-devices-page/`; the metric-policy components
+live in `assets/devices/-components/metric-policy-settings/`. `/devices`,
+`/sensors` and `/sensors/all` redirect here.
+
+Gate: `canOpenAllDevices` (`canOpenDevices ∪ canOpenSensors`) in
+`lib/estate-destinations.ts`, enforced by the `_auth` guard (owner, Manager,
+Council; not Crew, residents or inspection-only readers), even without
+`canViewAssets`. The sidebar's Assets item lands here for viewers who cannot
+open By location (`assetsEntry`); others reach it from `AssetViewsNav`.
+
+| Component (file) | Does | shadcn |
+| --- | --- | --- |
+| `AllDevicesPage` (`all-devices-page.tsx`) | `ListPageHeader` (`Cpu`, "All devices", "Every device, most urgent first"; action `MetricPoliciesDialog`), `AssetViewsNav`, then the results. Access from `useAssetViewsAccess`: `devices` (owner or `MANAGER`, the estate devices endpoint's audience) and `review` (`canOpenSensors`). Viewers without `review` get `EmptyState` "No device view". | `ListPageHeader`, `LoadingState`, `EmptyState` |
+| `AllDevicesResults` (same file) / `useAllDevicesPage` (`use-all-devices-page.ts`) | Joins `useEstateDevices` (only when `devices`; Council never requests `/devices`) with `useAllFlatlineReview(estateId, "ALL")` and ranks with `rankDevices` from `lib/asset-monitoring.ts`. Table skeleton until both sources settle; the rank is then held (polling refreshes cells, not order; new devices append), and recomputed only after the user's Retry changes a source's outcome. Each failed source shows its own `ErrorState` (`Retry devices` / `Retry device monitoring`); a failed review leaves the rows ranked by device status; a failed device list falls back to review-only rows. Location: the device's location path from `useLocations` (device rows) or `deviceLocationPath` (review rows). `PauseSensorDialog` opens for the chosen metric when `canManage` (review `canManage && estateActive`, and the viewer has `devices`). | `ErrorState`, `EmptyState` |
+| `AllDevicesTable` (`all-devices-table.tsx`) | Table "All devices": Device (row header: identifier, model), Asset (link to the asset when `canOpenAssets`, else text; reference; "Retired"), Location, Last seen and Status (`DeviceStatusBadge`; both only with a device list, so not for Council), Monitoring (per metric `SensorLine`: state badge "Possible flatline" / "Paused until <time>" / …, and "Pause for maintenance" when `canManage`, a threshold is set and the metric is not paused). Deactivated devices show no metrics or actions. | `Table`, `Badge`, `Button` |
+| `MetricPoliciesDialog` (`metric-policies-dialog.tsx`) | Outline "Metric policies" button opening a `Dialog` (same title) whose content mounts on open: `useFlatlinePolicies`, inactive-estate `Alert`, then `MetricPolicySettings defaultExpanded` (read-only unless policies `canManage && estateActive`, so Council and inactive estates read only). | `Dialog`, `Button`, `Alert` |
+| `SensorLine` (`components/sensors/sensor-line.tsx`, shared with the asset Overview) | One metric of a device: name, state badge (destructive for Possible flatline) and the optional Pause button (`aria-label` "Pause <identifier> <metric>"). | `Badge`, `Button` |
+
+Ranking (`rankDevices(devices | null, sensors)`): Possible flatline (any metric
+`FLATLINED`) → Offline → Awaiting first reading → Online → Deactivated; ties by
+asset name, then identifier. Paused metrics do not raise a device. With `null`
+devices, rows are built from review entries (status `null`, ranked as Online
+unless flatlined). The ALL review view is used (not REVIEW) so every metric can
+be paused before a flag, as the retired `/sensors/all` allowed; FLATLINED entries are the
+same in both.
+
 ## Data (`lib/devices.ts`)
+
+`useAssetViewsAccess(estateId)` (uses `useAppAccess`, and `useEstate` only
+when `canViewManagement || canViewAssets`, so Crew never request
+`GET /estates/{id}`) returns
+`{ pending, register, assetPages, allDevices, devices, review, allReadings }`:
+`register` = `canViewAssets`, `assetPages` = `canOpenAssets`, `allDevices` =
+`canOpenAllDevices`, `devices` = owner or `MANAGER`, `review` =
+`canOpenSensors`, `allReadings` = `canOpenAllReadings`. Used by
+`AssetViewsNav` and `AllDevicesPage`.
 
 Types: `Device` = `DeviceResponse` (includes nullable `credentialIssuedAt`, `deactivatedAt`, `replacesDeviceId`, `replacedByDeviceId` and required `status`),
 `EstateDevice` = `EstateDeviceResponse`, `DeviceStatus` = `Device["status"]`,
@@ -72,7 +110,7 @@ Query key: `devicesQueryKey(userId, estateId, assetId)` =
 | Hook | Endpoint | On success |
 | --- | --- | --- |
 | `useDevices(estateId, assetId)` | `GET /estates/{estateId}/assets/{assetId}/devices` | query |
-| `useEstateDevices(estateId)` | `GET /estates/{estateId}/devices` | query, key `estateDevicesQueryKey(userId, estateId)` = `["estates", userId, "estate-devices", estateId]`; `refetchInterval: 60_000`, not in the background |
+| `useEstateDevices(estateId, enabled = true)` | `GET /estates/{estateId}/devices` | query (`enabled` lets the asset register skip it for viewers the endpoint does not serve; also feeds the register's device summary column, see assets.md), key `estateDevicesQueryKey(userId, estateId)` = `["estates", userId, "estate-devices", estateId]`; `refetchInterval: 60_000`, not in the background |
 | `useRegisterDevice(estateId, assetId)` | `POST /estates/{estateId}/assets/{assetId}/devices` | invalidate `devicesQueryKey(...)` |
 | `useIssueDeviceCredential(estateId, assetId)`, `mutate(deviceId)` | `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential` | invalidate `devicesQueryKey(...)` |
 | `useDeactivateDevice(estateId, assetId)`, `mutate({ deviceId, identifier })` | `POST /estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate` | invalidate `devicesQueryKey(...)` |
