@@ -132,6 +132,26 @@ public class Document extends TableImpl<DocumentRecord> {
      */
     public final TableField<DocumentRecord, UUID> WORKORDERID = createField(DSL.name("workOrderId"), SQLDataType.UUID, this, "");
 
+    /**
+     * The column <code>public.Document.assetAssociationChangedAt</code>.
+     */
+    public final TableField<DocumentRecord, OffsetDateTime> ASSETASSOCIATIONCHANGEDAT = createField(DSL.name("assetAssociationChangedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
+
+    /**
+     * The column <code>public.Document.assetAssociationChangedByUserId</code>.
+     */
+    public final TableField<DocumentRecord, String> ASSETASSOCIATIONCHANGEDBYUSERID = createField(DSL.name("assetAssociationChangedByUserId"), SQLDataType.VARCHAR(255), this, "");
+
+    /**
+     * The column <code>public.Document.assetAssociationVersion</code>.
+     */
+    public final TableField<DocumentRecord, Integer> ASSETASSOCIATIONVERSION = createField(DSL.name("assetAssociationVersion"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
+    /**
+     * The column <code>public.Document.assetId</code>.
+     */
+    public final TableField<DocumentRecord, UUID> ASSETID = createField(DSL.name("assetId"), SQLDataType.UUID, this, "");
+
     private Document(Name alias, Table<DocumentRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -201,7 +221,7 @@ public class Document extends TableImpl<DocumentRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.DOCUMENT_DELETEDAT_STORAGEDELETEDAT_IDX, Indexes.DOCUMENT_ESTATEID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ESTATEID_WORKORDERID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ID_ESTATEID_KEY, Indexes.DOCUMENT_STORAGEKEY_KEY);
+        return Arrays.asList(Indexes.DOCUMENT_DELETEDAT_STORAGEDELETEDAT_IDX, Indexes.DOCUMENT_ESTATEID_ASSETID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ESTATEID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ESTATEID_WORKORDERID_CREATEDAT_ID_IDX, Indexes.DOCUMENT_ID_ESTATEID_KEY, Indexes.DOCUMENT_STORAGEKEY_KEY);
     }
 
     @Override

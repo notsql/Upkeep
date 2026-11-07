@@ -217,6 +217,62 @@ public class DocumentRecord extends UpdatableRecordImpl<DocumentRecord> {
         return (UUID) get(13);
     }
 
+    /**
+     * Setter for <code>public.Document.assetAssociationChangedAt</code>.
+     */
+    public void setAssetassociationchangedat(OffsetDateTime value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.Document.assetAssociationChangedAt</code>.
+     */
+    public OffsetDateTime getAssetassociationchangedat() {
+        return (OffsetDateTime) get(14);
+    }
+
+    /**
+     * Setter for <code>public.Document.assetAssociationChangedByUserId</code>.
+     */
+    public void setAssetassociationchangedbyuserid(String value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.Document.assetAssociationChangedByUserId</code>.
+     */
+    public String getAssetassociationchangedbyuserid() {
+        return (String) get(15);
+    }
+
+    /**
+     * Setter for <code>public.Document.assetAssociationVersion</code>.
+     */
+    public void setAssetassociationversion(Integer value) {
+        set(16, value);
+    }
+
+    /**
+     * Getter for <code>public.Document.assetAssociationVersion</code>.
+     */
+    public Integer getAssetassociationversion() {
+        return (Integer) get(16);
+    }
+
+    /**
+     * Setter for <code>public.Document.assetId</code>.
+     */
+    public void setAssetid(UUID value) {
+        set(17, value);
+    }
+
+    /**
+     * Getter for <code>public.Document.assetId</code>.
+     */
+    public UUID getAssetid() {
+        return (UUID) get(17);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -240,7 +296,7 @@ public class DocumentRecord extends UpdatableRecordImpl<DocumentRecord> {
     /**
      * Create a detached, initialised DocumentRecord
      */
-    public DocumentRecord(UUID id, UUID estateid, String documenttype, String originalfilename, String contenttype, Integer sizebytes, String storagekey, String uploadedbyuserid, OffsetDateTime createdat, OffsetDateTime deletedat, String deletedbyuserid, OffsetDateTime storagedeletedat, Integer workorderassociationversion, UUID workorderid) {
+    public DocumentRecord(UUID id, UUID estateid, String documenttype, String originalfilename, String contenttype, Integer sizebytes, String storagekey, String uploadedbyuserid, OffsetDateTime createdat, OffsetDateTime deletedat, String deletedbyuserid, OffsetDateTime storagedeletedat, Integer workorderassociationversion, UUID workorderid, OffsetDateTime assetassociationchangedat, String assetassociationchangedbyuserid, Integer assetassociationversion, UUID assetid) {
         super(Document.DOCUMENT);
 
         setId(id);
@@ -257,6 +313,10 @@ public class DocumentRecord extends UpdatableRecordImpl<DocumentRecord> {
         setStoragedeletedat(storagedeletedat);
         setWorkorderassociationversion(workorderassociationversion);
         setWorkorderid(workorderid);
+        setAssetassociationchangedat(assetassociationchangedat);
+        setAssetassociationchangedbyuserid(assetassociationchangedbyuserid);
+        setAssetassociationversion(assetassociationversion);
+        setAssetid(assetid);
         resetTouchedOnNotNull();
     }
 }

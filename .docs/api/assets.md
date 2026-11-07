@@ -1,5 +1,10 @@
 # Assets API
 
+Asset detail also exposes [linked document reads and associations](asset-documents.md).
+Those endpoints have a separate contract: metadata requires document-read access,
+and link/unlink remains available on retired assets while preserving the uploaded
+file, work-order link and equipment fields.
+
 Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing resources return 404. Writes require an active estate and lock estate before asset. No invitation-role dependency.
 
 ## GET `/estates/{estateId}/assets`

@@ -31,6 +31,8 @@ public record AppAccessResponse(
                 "canViewManagement",
                 "canManageEstate",
                 "canViewAssets",
+                "canViewReadings",
+                "canRecordReadings",
                 "canViewEstateDetails",
                 "canViewInspectionResults",
                 "canCreateInspectionResults",
@@ -53,7 +55,8 @@ public record AppAccessResponse(
                 "canReassignRoles",
                 "canViewEstateInvitations",
                 "canViewDocuments",
-                "canUploadDocuments"
+                "canUploadDocuments",
+                "canReviewFaultReportDuplicates"
             })
     public record EstateAccessResponse(
             UUID estateId,
@@ -65,6 +68,8 @@ public record AppAccessResponse(
             boolean canViewManagement,
             boolean canManageEstate,
             boolean canViewAssets,
+            boolean canViewReadings,
+            boolean canRecordReadings,
             boolean canViewEstateDetails,
             boolean canViewInspectionResults,
             boolean canCreateInspectionResults,
@@ -87,5 +92,6 @@ public record AppAccessResponse(
             boolean canReassignRoles,
             boolean canViewEstateInvitations,
             boolean canViewDocuments,
-            boolean canUploadDocuments) {}
+            boolean canUploadDocuments,
+            boolean canReviewFaultReportDuplicates) {}
 }

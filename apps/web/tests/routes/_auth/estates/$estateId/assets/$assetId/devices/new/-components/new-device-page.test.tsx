@@ -23,7 +23,7 @@ vi.mock("@tanstack/react-router", () => ({
     <a href={to}>{children}</a>
   ),
 }));
-const INTERVAL = /^Expected reporting interval/;
+const INTERVAL = /^Expected reporting interval/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
 const at = "2026-09-28T00:00:00Z";
 const locations: Location[] = [
@@ -107,7 +107,7 @@ it("registers a device and returns to the asset", async () => {
   );
   await waitFor(() =>
     expect(navigate).toHaveBeenCalledWith({
-      to: "/estates/$estateId/assets/$assetId",
+      to: "/estates/$estateId/assets/$assetId/devices",
       params: { estateId: "estate-id", assetId: "asset-id" },
     })
   );
@@ -147,7 +147,7 @@ it("cancels registration and returns to the asset without saving", async () => {
   );
   fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
   expect(navigate).toHaveBeenCalledWith({
-    to: "/estates/$estateId/assets/$assetId",
+    to: "/estates/$estateId/assets/$assetId/devices",
     params: { estateId: "estate-id", assetId: "asset-id" },
   });
   expect(api.POST).not.toHaveBeenCalled();

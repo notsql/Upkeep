@@ -46,6 +46,10 @@ A same-estate RESIDENT membership takes precedence over conflicting ownership an
 | serviceProvider | string / null | no |  |
 | partsReplaced | string / null | no |  |
 | downtimeMinutes | integer / null | no |  |
+| labourCost | string / null | no | SGD, two decimals |
+| partsCost | string / null | no | SGD, two decimals |
+| otherCost | string / null | no | SGD, two decimals |
+| totalCost | string / null | no | SGD, two decimals; null when any cost is unknown |
 
 ## CreateAssetEventRequest
 
@@ -59,6 +63,9 @@ A same-estate RESIDENT membership takes precedence over conflicting ownership an
 | serviceProvider | string | no | maxLength=200 |
 | partsReplaced | string | no | maxLength=2500 |
 | downtimeMinutes | integer | no | minimum=0 |
+| labourCost | string | no | pattern `[0-9]{1,12}(\.[0-9]{1,2})?` |
+| partsCost | string | no | pattern `[0-9]{1,12}(\.[0-9]{1,2})?` |
+| otherCost | string | no | pattern `[0-9]{1,12}(\.[0-9]{1,2})?` |
 
 ## EstateError
 
@@ -74,6 +81,7 @@ A same-estate RESIDENT membership takes precedence over conflicting ownership an
 - Each event snapshots the asset's manufacturer and model at the time (`assetManufacturer`, `assetModel`, display names). `countsTowardForecast` is true when the type counts (both current types do), the date is on or after `installedOn`, and the snapshot matches the asset's current manufacturer and model: events from a replaced unit stay in history but stop feeding the forecast.
 - `recordedByName` comes from WorkOS and may be null. A constraint that still fires returns 409.
 - Maintenance details (ID-49) are optional: `findings`, `workPerformed`, `serviceProvider`, `partsReplaced` and `downtimeMinutes`. Text is trimmed; omitted or blank text is stored as null ("not known"). `downtimeMinutes` must be a JSON whole number of 0 or more: `0` means no downtime, null means not known. A negative or fractional number, a string, or text over its limit returns 400. Events recorded before ID-49 return null for all five. The details do not affect `countsTowardForecast` or the forecast.
+- Costs (ID-50) are optional SGD decimal strings validated exactly as work-order completion costs: 1–12 whole digits, at most two decimals, not negative; scientific notation, excess precision, blanks and non-numbers return 400 with no write. Omitted means unknown (null); explicit zero stays zero. Responses are two-decimal strings (`"0"` → `"0.00"`). `totalCost` is the sum of the three and is null when any is unknown, matching work orders. Costs do not affect forecasts. Events recorded before ID-50 have null costs.
 - Recording an event changes the derived failure risk (`failure-risk.md`) on the next read.
 
 Example: `POST /estates/{estateId}/assets/{assetId}/events`
@@ -81,7 +89,8 @@ Example: `POST /estates/{estateId}/assets/{assetId}/events`
 ```json
 {"type":"BREAKDOWN_REPAIR","occurredOn":"2026-10-02","notes":"Pump tripped",
  "findings":"Mechanical seal worn","workPerformed":"Replaced mechanical seal",
- "serviceProvider":"Acme Pumps","partsReplaced":"Mechanical seal","downtimeMinutes":90}
+ "serviceProvider":"Acme Pumps","partsReplaced":"Mechanical seal","downtimeMinutes":90,
+ "labourCost":"120","partsCost":"35.50","otherCost":"0"}
 ```
 
 Completed work-order outcomes are read separately through

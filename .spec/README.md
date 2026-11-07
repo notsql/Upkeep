@@ -31,6 +31,12 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [export-filtered-readings-csv.md](features/export-filtered-readings-csv.md) | ID-61 / ID-64 CSV | implemented and verified; complete filtered CSV v1 with provenance, bounded streaming and cancellation; 1,470 server / 866 web tests, types, formatting/build, live role/mobile QA and million-row HTTP check pass |
+| [mobile-estate-navigation-and-lists.md](features/mobile-estate-navigation-and-lists.md) | readings/mobile QA follow-up | built and verified 2026-10-28; estate-scoped resident reporting, responsive lists and resize recovery; 849 web / 1,449 server tests, types, formatting/build and live Chrome mobile/role checks pass |
+| [manual-readings-and-provenance.md](features/manual-readings-and-provenance.md) | ID-63 / ID-64 | implemented and verified; exact-decimal correction complete; 1,480 server / 880 web tests, types, formatting/build, mobile/role/CSV checks pass |
+| [browse-raw-sensor-readings.md](features/browse-raw-sensor-readings.md) | ID-60 | implemented; 1,420 server / 818 web tests, types, lint and build pass; browser roles/mobile, flag layout and performance checked |
+| [document-type-filter.md](features/document-type-filter.md) | - | built and verified; filter existing types and remove Size from the Documents page; 1,425 Java and 815 web tests, types and formatting pass |
+| [document-asset-association.md](features/document-asset-association.md) | implemented; manual acceptance pending | Owner link/unlink for ordinary uploads and retired assets, asset Documents section, versioning and work-order consistency; automated tests pass |
 | [crew-work-orders-read-only.md](features/crew-work-orders-read-only.md) | - | built and verified 2026-10-26; Crew work-order reads retained and creation/writes denied; tests first, 1,354 backend and 754 web tests, type checks and formatting passed |
 | [work-order-document-association.md](features/work-order-document-association.md) | ID-26 | link/change/remove, audit and attachments implemented on ID-22 PR #37 base; automated, isolated live and real Neon/R2 checks passed; database/bucket cleanup coordination and ID-23/24/25 integration pending |
 | [create-inspection-results.md](features/create-inspection-results.md) | ID-36 / ID-49 integration | recording and asset inspection-history table implemented 2026-10-26; all 26 table tests, 722 web tests, 1,329 Java tests, type checks, formatting and web build pass; real-browser checks remain manual; monthly due-list generation remains separate |
@@ -48,6 +54,7 @@ code, it belongs here.
 | [manager-account-authorization.md](features/manager-account-authorization.md) | ID-21 | invitations verified; broader estate roles are follow-up |
 | [estate-role-invitations.md](features/estate-role-invitations.md) | - | implemented and verified; role invitations, owner preservation, no Manager self-removal/demotion and multi-estate residents; account migration and asset editing excluded; staff editing limited to location under fault-report-locations |
 | [fault-report-locations.md](features/fault-report-locations.md) | - | draft; location display, hierarchy filters and location-only editing for Manager/Admin and Crew; other report information/images retained |
+| [fault-report-duplicates.md](features/fault-report-duplicates.md) | ID-74 | built 2026-11-05; suggested links on submission, manager confirm/reject and manual linking, counts on reports and work orders, no work orders from linked reports; priority change deferred; 1,726 server / 1,049 web tests, types and formatting pass; manual browser check pending |
 | [fault-report-block-level-filters.md](features/fault-report-block-level-filters.md) | - | built and verified; searchable block and numeric level-position range |
 | [neon-role-management.md](features/neon-role-management.md) | - | invitation/member Neon authority implemented and verified; unified Manager/Admin; existing-account migration deferred |
 | `estate-management.md` | - | built |
@@ -61,6 +68,7 @@ code, it belongs here.
 | [ui-redesign.md](features/ui-redesign.md) | ID-93 | implemented; current iteration accepted by user; Git merge/PR review pending |
 | [portfolio-home-and-estate-directory.md](features/portfolio-home-and-estate-directory.md) | ID-93 follow-up | implemented; current iteration accepted by user; Git merge/PR review pending |
 | [equipment-fault-work-orders.md](features/equipment-fault-work-orders.md) | ID-70 | implemented on feat/id-70-report-routing; tests pass; migration not yet on Neon dev; model evaluation and secrets outstanding |
+| [lift-fault-classifier.md](features/lift-fault-classifier.md) | ID-70 | agreed 2026-11-08; replaces ID-70's Anthropic classifier with a trained lift model |
 
 Draft specs carry an **Implementation phases** checklist. Build them in the
 order listed, test-first, and tick the boxes as you go. New specs start from

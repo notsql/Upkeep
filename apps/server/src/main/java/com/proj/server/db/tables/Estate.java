@@ -9,6 +9,8 @@ import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Asset.AssetPath;
 import com.proj.server.db.tables.Assetassessment.AssetassessmentPath;
+import com.proj.server.db.tables.Assetcategoryflagchange.AssetcategoryflagchangePath;
+import com.proj.server.db.tables.Assetcategoryintervalchange.AssetcategoryintervalchangePath;
 import com.proj.server.db.tables.Assetevent.AsseteventPath;
 import com.proj.server.db.tables.Assetinspectionresult.AssetinspectionresultPath;
 import com.proj.server.db.tables.Device.DevicePath;
@@ -18,6 +20,8 @@ import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
 import com.proj.server.db.tables.Estateroledefinition.EstateroledefinitionPath;
 import com.proj.server.db.tables.Estateuser.EstateuserPath;
 import com.proj.server.db.tables.Flatlinepolicy.FlatlinepolicyPath;
+import com.proj.server.db.tables.Inspectioncheck.InspectioncheckPath;
+import com.proj.server.db.tables.Inspectionlistrun.InspectionlistrunPath;
 import com.proj.server.db.tables.Issuereport.IssuereportPath;
 import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.Serviceprovider.ServiceproviderPath;
@@ -227,6 +231,32 @@ public class Estate extends TableImpl<EstateRecord> {
         return _assetassessment;
     }
 
+    private transient AssetcategoryflagchangePath _assetcategoryflagchange;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.AssetCategoryFlagChange</code> table
+     */
+    public AssetcategoryflagchangePath assetcategoryflagchange() {
+        if (_assetcategoryflagchange == null)
+            _assetcategoryflagchange = new AssetcategoryflagchangePath(this, null, Keys.ASSETCATEGORYFLAGCHANGE__ASSETCATEGORYFLAGCHANGE_ESTATEID_FKEY.getInverseKey());
+
+        return _assetcategoryflagchange;
+    }
+
+    private transient AssetcategoryintervalchangePath _assetcategoryintervalchange;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.AssetCategoryIntervalChange</code> table
+     */
+    public AssetcategoryintervalchangePath assetcategoryintervalchange() {
+        if (_assetcategoryintervalchange == null)
+            _assetcategoryintervalchange = new AssetcategoryintervalchangePath(this, null, Keys.ASSETCATEGORYINTERVALCHANGE__ASSETCATEGORYINTERVALCHANGE_ESTATEID_FKEY.getInverseKey());
+
+        return _assetcategoryintervalchange;
+    }
+
     private transient AsseteventPath _assetevent;
 
     /**
@@ -342,6 +372,32 @@ public class Estate extends TableImpl<EstateRecord> {
             _flatlinepolicy = new FlatlinepolicyPath(this, null, Keys.FLATLINEPOLICY__FLATLINEPOLICY_ESTATEID_FKEY.getInverseKey());
 
         return _flatlinepolicy;
+    }
+
+    private transient InspectioncheckPath _inspectioncheck;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.InspectionCheck</code> table
+     */
+    public InspectioncheckPath inspectioncheck() {
+        if (_inspectioncheck == null)
+            _inspectioncheck = new InspectioncheckPath(this, null, Keys.INSPECTIONCHECK__INSPECTIONCHECK_ESTATEID_FKEY.getInverseKey());
+
+        return _inspectioncheck;
+    }
+
+    private transient InspectionlistrunPath _inspectionlistrun;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.InspectionListRun</code> table
+     */
+    public InspectionlistrunPath inspectionlistrun() {
+        if (_inspectionlistrun == null)
+            _inspectionlistrun = new InspectionlistrunPath(this, null, Keys.INSPECTIONLISTRUN__INSPECTIONLISTRUN_ESTATEID_FKEY.getInverseKey());
+
+        return _inspectionlistrun;
     }
 
     private transient IssuereportPath _issuereport;

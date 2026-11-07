@@ -1,0 +1,90 @@
+import { Input } from "@proj/ui/components/input";
+import { type ChangeEvent, useCallback } from "react";
+import { FilterBar } from "@/components/filters/filter-bar";
+
+import {
+  ALL,
+  FilterSelect,
+} from "@/routes/_auth/estates/$estateId/council/-components/council-page/filter-select";
+
+export interface MemberFilter {
+  role: string;
+  search: string;
+}
+
+export const OWNER_ROLE = "OWNER";
+
+export const emptyFilter: MemberFilter = {
+  search: "",
+  role: ALL,
+};
+
+export function filterCount(filter: MemberFilter): number {
+  return (filter.search.trim() ? 1 : 0) + (filter.role === ALL ? 0 : 1);
+}
+
+export function isFiltered(filter: MemberFilter): boolean {
+  return filter.search.trim() !== "" || filter.role !== ALL;
+}
+
+export function matchesFilter(
+  filter: MemberFilter,
+  entry: { text: string[]; role: string }
+): boolean {
+  const query = filter.search.trim().toLowerCase();
+  const textMatch =
+    !query || entry.text.some((value) => value.toLowerCase().includes(query));
+  const roleMatch = filter.role === ALL || filter.role === entry.role;
+  return textMatch && roleMatch;
+}
+
+export function MemberFilters({
+  filter,
+  roles,
+  onChange,
+  onClear,
+  id,
+  open,
+}: {
+  filter: MemberFilter;
+  onClear: () => void;
+  id?: string;
+  open?: boolean;
+  roles: { value: string; label: string }[];
+  onChange: (filter: MemberFilter) => void;
+}) {
+  const search = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) =>
+      onChange({ ...filter, search: event.target.value }),
+    [filter, onChange]
+  );
+  const role = useCallback(
+    (value: string) => onChange({ ...filter, role: value }),
+    [filter, onChange]
+  );
+  return (
+    <FilterBar
+      activeCount={filterCount(filter)}
+      id={id}
+      label="Filter members"
+      onClear={onClear}
+      open={open}
+      search={
+        <Input
+          aria-label="Search members"
+          onChange={search}
+          placeholder="Search name or email"
+          type="search"
+          value={filter.search}
+        />
+      }
+    >
+      <FilterSelect
+        items={[{ value: ALL, label: "All roles" }, ...roles]}
+        label="Filter by role"
+        onChange={role}
+        value={filter.role}
+      />
+    </FilterBar>
+  );
+}

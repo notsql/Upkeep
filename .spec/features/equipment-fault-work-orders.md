@@ -21,8 +21,8 @@ ID-70 adds: classification, routing, Manager review and contractor email. The
 first version's migration was never applied to a shared database. It is
 deleted and authored again on top of `main`'s migrations.
 
-The decision records are numbered 0041 and 0042, because `main` already
-uses 0032 to 0040.
+The decision records are numbered 0045 and 0046, because `main` already
+uses up to 0044.
 
 ## Problem
 
@@ -84,6 +84,10 @@ The screen is unchanged: one name and email per equipment type. Underneath:
 - Changing routes never changes work orders that already exist.
 
 ### Classification
+
+> **Agreed revision (2026-11-08):** the model call below is replaced by a
+> classifier the team trains, scoped to lifts and reading text only. See
+> [lift-fault-classifier.md](lift-fault-classifier.md) and decision 0047.
 
 Unchanged. Submission queues the report in `ReportRouting` (`CLASSIFYING`).
 Reports from before routing are never classified. A scheduled job sends the
@@ -282,7 +286,7 @@ Everything in the first version's list, plus:
   shared and is not carried over.
 - [x] Prisma: `ServiceProvider`, `EquipmentProviderRoute`, `ReportRouting`,
   `ReportClassification` and `WorkOrderDispatch` on top of `main`, in migration
-  `20261026155915_report_routing_and_dispatch`, with jOOQ regenerated against a
+  `20261108090000_report_routing_and_dispatch`, with jOOQ regenerated against a
   disposable Postgres. **Not yet on Neon `dev` (rule 16).**
 - [x] Red-green: shared creation, automatic routing into `WorkOrder`, the
   dispatch outbox, Manager send, dismiss, dispatch and retry, and the
@@ -293,7 +297,7 @@ Everything in the first version's list, plus:
   the work-order link and the contractor-email section) were written before
   their tests; each new test was then shown to fail against a deliberately
   broken version.
-- [x] Decision records 0041 (classification in Spring) and 0042 (contractor
+- [x] Decision records 0045 (classification in Spring) and 0046 (contractor
   email dispatch on work orders). `.docs` updated; full checks run.
 - [ ] Apply the migration to Neon `dev`, add the secrets, run the model
   evaluation by hand and record its result here.

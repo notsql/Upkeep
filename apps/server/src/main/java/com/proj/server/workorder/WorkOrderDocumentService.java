@@ -67,8 +67,7 @@ public class WorkOrderDocumentService {
         var document = document(estate, id, true);
         if (document.getWorkorderassociationversion().intValue() != request.expectedAssociationVersion())
             throw error(HttpStatus.CONFLICT, "This document association changed. Refresh and review it before saving.");
-        if (request.workOrderId() != null && links.reference(estate, request.workOrderId()) == null)
-            throw error(HttpStatus.NOT_FOUND, "Work order not found.");
+        documents.requireCompatibleWorkOrder(estate, request.workOrderId(), document.getAssetid());
         if (Objects.equals(document.getWorkorderid(), request.workOrderId())) return response(document);
         String reason = request.correctionReason() == null
                 ? null

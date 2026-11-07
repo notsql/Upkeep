@@ -234,6 +234,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/asset-categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateAssetCategories"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/asset-categories/{category}/service-interval": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setAssetCategoryServiceInterval"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/asset-categories/{category}/silent-failure": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations["setAssetCategorySilentFailure"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets": {
     parameters: {
       query?: never;
@@ -324,6 +372,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["replaceDevice"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetDocuments"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -436,6 +500,22 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["checkAssetReadings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/service-interval": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetServiceInterval"];
+    put: operations["setAssetServiceInterval"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -670,6 +750,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/documents/{documentId}/asset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getDocumentAsset"];
+    put: operations["changeDocumentAsset"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/documents/{documentId}/content": {
     parameters: {
       query?: never;
@@ -808,6 +904,38 @@ export interface paths {
     get: operations["getInspectionAsset"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-list": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getInspectionList"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/inspection-list/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["generateInspectionList"];
     delete?: never;
     options?: never;
     head?: never;
@@ -993,6 +1121,88 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/readings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listEstateReadings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listReadingAssets"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/export": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Export every matching manual and sensor reading as CSV v1 */
+    get: operations["exportEstateReadings"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/manual": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Record an attributed human measurement */
+    post: operations["createManualReading"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/readings/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listReadingMetrics"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/reports": {
     parameters: {
       query?: never;
@@ -1041,6 +1251,24 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/reports/{reportId}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Link a report to an original by hand (managers only) */
+    put: operations["linkEstateReportDuplicate"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Confirm or reject a report's duplicate link (managers only) */
+    patch: operations["reviewEstateReportDuplicate"];
     trace?: never;
   };
   "/estates/{estateId}/reports/{reportId}/images/{imageId}": {
@@ -1553,6 +1781,11 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+      /**
+       * Format: int32
+       * @description CONFIRMED duplicates of the source report; 0 without a source report.
+       */
+      sourceReportConfirmedDuplicateCount: number;
     };
     EstateError: {
       message: string;
@@ -1604,6 +1837,101 @@ export interface components {
       version: number;
       canEdit: boolean;
       canDelete: boolean;
+    };
+    LinkDuplicateRequest: {
+      /** Format: uuid */
+      originalReportId: string;
+    };
+    ClassificationResponse: {
+      /** @enum {string} */
+      outcome: "EQUIPMENT_FAULT" | "INCONCLUSIVE" | "NOT_EQUIPMENT";
+      /** @enum {string|null} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | null;
+      confidence: number;
+      reason: string;
+      /** Format: date-time */
+      createdAt: string;
+    };
+    DuplicateOf: {
+      /** Format: uuid */
+      reportId: string;
+      title: string;
+      /** @enum {string} */
+      state: "SUSPECTED" | "CONFIRMED" | "REJECTED";
+    };
+    EstateIssueReportDetailResponse: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      estateName: string;
+      location: components["schemas"]["ReportLocation"];
+      status: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: int32 */
+      confirmedDuplicateCount: number;
+      /** Format: int32 */
+      suspectedDuplicateCount: number;
+      duplicateOf: components["schemas"]["DuplicateOf"] | null;
+      images: components["schemas"]["ReportImage"][];
+      /** @description SUSPECTED and CONFIRMED duplicates of this report, newest first */
+      duplicates: components["schemas"]["LinkedDuplicate"][];
+      /** @description Null for reports submitted before automatic routing */
+      routing: components["schemas"]["ReportRoutingResponse"];
+    };
+    LinkedDuplicate: {
+      /** Format: uuid */
+      reportId: string;
+      title: string;
+      location: components["schemas"]["ReportLocation"];
+      /** @enum {string} */
+      state: "SUSPECTED" | "CONFIRMED" | "REJECTED";
+      /** Format: date-time */
+      createdAt: string;
+    };
+    ReportImage: {
+      /** Format: uuid */
+      id: string;
+      contentType: string;
+    };
+    ReportLocation: {
+      /** Format: uuid */
+      id: string;
+      label: string;
+    };
+    ReportRoutingResponse: {
+      /** @enum {string} */
+      state: "CLASSIFYING" | "NEEDS_REVIEW" | "WORK_ORDER" | "DISMISSED";
+      reason: string | null;
+      classification: components["schemas"]["ClassificationResponse"];
+      workOrder: components["schemas"]["RoutedWorkOrder"];
+      /** Format: date-time */
+      decidedAt: string | null;
+    };
+    RoutedWorkOrder: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      /** @enum {string} */
+      status: "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "CLOSED";
+      dispatch: components["schemas"]["WorkOrderDispatchResponse"];
+    };
+    WorkOrderDispatchResponse: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      contractorName: string;
+      contractorEmail: string;
+      /** @enum {string} */
+      approval: "AUTOMATIC" | "MANAGER";
+      /** @enum {string} */
+      status: "PENDING" | "SENT" | "FAILED";
+      /** Format: date-time */
+      sentAt: string | null;
+      /** Format: date-time */
+      createdAt: string;
     };
     UpdateEstateRoleRequest: {
       /** @enum {string} */
@@ -1671,6 +1999,97 @@ export interface components {
       /** Format: date-time */
       changedAt?: string | null;
     };
+    ChangeDocumentAssetRequest: {
+      /**
+       * Format: uuid
+       * @description Send null explicitly to unlink; unlink before selecting another asset
+       */
+      assetId: string | null;
+      /** Format: int32 */
+      expectedAssociationVersion: number;
+    };
+    DocumentAssetResponse: {
+      /** Format: uuid */
+      documentId: string;
+      /** Format: uuid */
+      assetId: string | null;
+      assetReference: string | null;
+      assetName: string | null;
+      /** Format: int32 */
+      associationVersion: number;
+      /** Format: date-time */
+      changedAt: string | null;
+    };
+    EquipmentContractorRequest: {
+      name: string;
+      /** Format: email */
+      email: string;
+    };
+    EquipmentContractorResponse: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      name: string;
+      email: string;
+      /** Format: date-time */
+      updatedAt: string;
+    };
+    ServiceInterval: {
+      /**
+       * Format: int32
+       * @description 1-3650 days, 1-120 months or 1-10 years
+       */
+      value: number;
+      /** @enum {string} */
+      unit: "DAY" | "MONTH" | "YEAR";
+    };
+    SetServiceIntervalRequest: {
+      interval: components["schemas"]["ServiceInterval"] | null;
+    };
+    AssetServiceIntervalResponse: {
+      effective: components["schemas"]["ServiceInterval"] | null;
+      /** @enum {string} */
+      source: "ASSET" | "CATEGORY" | "NONE";
+      override: components["schemas"]["ServiceInterval"] | null;
+      categoryInterval: components["schemas"]["ServiceInterval"] | null;
+      categoryLabel: string;
+      lastOverrideChange:
+        | components["schemas"]["IntervalChangeResponse"]
+        | null;
+    };
+    IntervalChangeResponse: {
+      interval: components["schemas"]["ServiceInterval"] | null;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
+    SetSilentFailureRequest: {
+      failsSilently: boolean;
+    };
+    EstateAssetCategoryResponse: {
+      code: string;
+      label: string;
+      failsSilently: boolean;
+      /** @description True until the flag has been changed in this estate */
+      isDefault: boolean;
+      /**
+       * Format: int32
+       * @description Active (not retired) assets of this category in the estate
+       */
+      activeAssetCount: number;
+      lastChange: components["schemas"]["FlagChangeResponse"];
+      serviceInterval: components["schemas"]["ServiceInterval"] | null;
+      lastIntervalChange:
+        | components["schemas"]["IntervalChangeResponse"]
+        | null;
+    };
+    FlagChangeResponse: {
+      failsSilently: boolean;
+      changedByUserId: string;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
     UserRoles: {
       roleSlugs?: string[];
     };
@@ -1699,16 +2118,6 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
       images: components["schemas"]["ReportImage"][];
-    };
-    ReportImage: {
-      /** Format: uuid */
-      id: string;
-      contentType: string;
-    };
-    ReportLocation: {
-      /** Format: uuid */
-      id: string;
-      label: string;
     };
     EstateRequest: {
       name: string;
@@ -1762,6 +2171,10 @@ export interface components {
       /** Format: uuid */
       expectedSourceLocationId?: string;
     };
+    DispatchRequest: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+    };
     CreateEstateRoleRequest: {
       name: string;
       description?: string | null;
@@ -1778,6 +2191,67 @@ export interface components {
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
       )[];
+    };
+    SendToContractorRequest: {
+      /** @enum {string} */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      /** @enum {string} */
+      priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+    };
+    CreateManualReadingRequest: {
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /** @description Prefer exact decimal text: at most twelve integer and six fractional digits. Legacy JSON numbers retain half-up rounding to six decimal places. */
+      value: number | string;
+      unit: string;
+      /**
+       * Format: date-time
+       * @description Timestamp with UTC offset; backdating allowed, at most five minutes ahead
+       */
+      measuredAt: string;
+      /**
+       * Format: uuid
+       * @description Reuse for an identical retry; generate a new UUID for an edited submission
+       */
+      submissionId: string;
+    };
+    ManualReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      value: number;
+      unit: string;
+      /** Format: date-time */
+      measuredAt: string;
+      /** Format: date-time */
+      recordedAt: string;
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string;
+      recordedByName: string | null;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
     };
     TransferOwnershipRequest: {
       newOwnerUserId: string;
@@ -1828,6 +2302,83 @@ export interface components {
       created: components["schemas"]["LocationResponse"][];
       /** @description Names of floors the block already had, highest first */
       skipped: string[];
+    };
+    CheckResultResponse: {
+      /** Format: uuid */
+      id: string;
+      /** @enum {string} */
+      outcome: "PASS" | "FAIL";
+      /** Format: date */
+      inspectedOn: string;
+    };
+    GenerateInspectionListResponse: {
+      /**
+       * Format: int32
+       * @description Checks added by this generation; 0 when nothing new is due
+       */
+      added: number;
+      list: components["schemas"]["InspectionListResponse"];
+    };
+    InspectionCheckResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      categoryLabel: string;
+      block: components["schemas"]["InspectionLocationResponse"];
+      level: components["schemas"]["InspectionLocationResponse"] | null;
+      /** Format: date */
+      dueOn: string;
+      /** @enum {string} */
+      dueBasis: "PREDICTION" | "INTERVAL" | "NEVER_INSPECTED";
+      interval: components["schemas"]["ServiceInterval"] | null;
+      /** @enum {string|null} */
+      intervalSource: "ASSET" | "CATEGORY" | null;
+      /** @enum {string} */
+      status: "OVERDUE" | "DUE" | "DONE";
+      result: components["schemas"]["CheckResultResponse"] | null;
+    };
+    InspectionListResponse: {
+      /**
+       * Format: date
+       * @description The first day of the current month (Singapore)
+       */
+      month: string;
+      estateActive: boolean;
+      /**
+       * Format: date-time
+       * @description The latest generation this month, or null when not yet generated
+       */
+      generatedAt: string | null;
+      generatedByName: string | null;
+      /** Format: int32 */
+      overdueCount: number;
+      /** Format: int32 */
+      dueCount: number;
+      /** Format: int32 */
+      doneCount: number;
+      /** @description Overdue checks and this month's checks, by block, level, status, due date and reference */
+      checks: components["schemas"]["InspectionCheckResponse"][];
+      unscheduled: components["schemas"]["UnscheduledAssetResponse"][];
+      /**
+       * Format: int32
+       * @description Categories flagged as failing silently in the estate; 0 means nothing can be due
+       */
+      flaggedCategoryCount: number;
+    };
+    InspectionLocationResponse: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+    };
+    UnscheduledAssetResponse: {
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      categoryLabel: string;
     };
     UploadDocumentRequest: {
       /** @enum {string} */
@@ -2093,6 +2644,9 @@ export interface components {
       partsReplaced?: string;
       /** Format: int32 */
       downtimeMinutes?: number;
+      labourCost?: string;
+      partsCost?: string;
+      otherCost?: string;
     };
     AssetEventResponse: {
       /** Format: uuid */
@@ -2119,6 +2673,14 @@ export interface components {
       partsReplaced?: string | null;
       /** Format: int32 */
       downtimeMinutes?: number | null;
+      /** @description SGD, two decimals */
+      labourCost?: string | null;
+      /** @description SGD, two decimals */
+      partsCost?: string | null;
+      /** @description SGD, two decimals */
+      otherCost?: string | null;
+      /** @description SGD, two decimals; null when any cost is unknown */
+      totalCost?: string | null;
     };
     CreateDeviceRequest: {
       identifier: string;
@@ -2333,6 +2895,15 @@ export interface components {
       /** Format: uuid */
       expectedLocationId: string;
     };
+    ReviewDuplicateRequest: {
+      /** @enum {string} */
+      state: "CONFIRMED" | "REJECTED";
+      /**
+       * @description The link state the caller saw
+       * @enum {string}
+       */
+      expectedState: "SUSPECTED" | "CONFIRMED";
+    };
     UpdateLocationRequest: {
       /** Format: uuid */
       parentId?: string;
@@ -2358,10 +2929,6 @@ export interface components {
       /** Format: int32 */
       expectedVersion: number;
     };
-    IssueReportPageResponse: {
-      items: components["schemas"]["IssueReportSummaryResponse"][];
-      nextCursor: string | null;
-    };
     IssueReportSummaryResponse: {
       /** Format: uuid */
       id: string;
@@ -2374,6 +2941,19 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    ReportCounts: {
+      /** Format: int32 */
+      open: number;
+      /** Format: int32 */
+      inProgress: number;
+      /** Format: int32 */
+      resolved: number;
+    };
+    ResidentReportPageResponse: {
+      items: components["schemas"]["IssueReportSummaryResponse"][];
+      nextCursor: string | null;
+      counts: components["schemas"]["ReportCounts"];
     };
     ResidentLocationResponse: {
       /** Format: uuid */
@@ -2435,6 +3015,9 @@ export interface components {
       items: components["schemas"]["DocumentResponse"][];
       nextCursor: string | null;
     };
+    WorkOrderDispatchStatusResponse: {
+      dispatch: components["schemas"]["WorkOrderDispatchResponse"];
+    };
     WorkOrderCompletionRevisionResponse: {
       /** Format: uuid */
       id: string;
@@ -2462,6 +3045,128 @@ export interface components {
     WorkOrderAssetPageResponse: {
       items: components["schemas"]["WorkOrderAssetOptionResponse"][];
       nextCursor?: string;
+    };
+    EstateIssueReportPageResponse: {
+      items: components["schemas"]["EstateIssueReportSummaryResponse"][];
+      nextCursor: string | null;
+    };
+    EstateIssueReportSummaryResponse: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      estateName: string;
+      location: components["schemas"]["ReportLocation"];
+      status: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: int32 */
+      confirmedDuplicateCount: number;
+      /** Format: int32 */
+      suspectedDuplicateCount: number;
+      duplicateOf: components["schemas"]["DuplicateOf"] | null;
+      /** @description Null for reports submitted before automatic routing */
+      routing: components["schemas"]["ReportRoutingResponse"];
+    };
+    EstateReadingPage: {
+      items: components["schemas"]["EstateReadingResponse"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
+    };
+    EstateReadingResponse: {
+      /** Format: uuid */
+      id: string;
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      /**
+       * Format: date-time
+       * @description In UTC
+       */
+      measuredAt: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      value: number;
+      /** Format: uuid */
+      deviceId: string | null;
+      deviceIdentifier: string | null;
+      flags: components["schemas"]["ReadingFlagResponse"][];
+      /** @enum {string} */
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string | null;
+      recordedByName: string | null;
+      /** Format: date-time */
+      recordedAt: string;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
+    };
+    ReadingFlagResponse: {
+      /** @enum {string} */
+      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE";
+      /**
+       * Format: int64
+       * @description GAP only: whole seconds since the previous reading of this metric on the asset
+       */
+      gapSeconds?: number;
+      /**
+       * Format: double
+       * @description OUT_OF_RANGE only: the metric's inclusive minimum
+       */
+      validMin?: number;
+      /**
+       * Format: double
+       * @description OUT_OF_RANGE only: the metric's inclusive maximum
+       */
+      validMax?: number;
+    };
+    ReadingMetricOption: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** Format: double */
+      validMin: number;
+      /** Format: double */
+      validMax: number;
+    };
+    ReadingAssetOption: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      name: string;
+      retired: boolean;
+    };
+    ReadingAssetOptionPage: {
+      items: components["schemas"]["ReadingAssetOption"][];
+      /** Format: int32 */
+      page: number;
+      /** Format: int32 */
+      size: number;
+      /** Format: int64 */
+      totalItems: number;
     };
     EstateInvitationRoleOptionResponse: {
       /** @enum {string} */
@@ -2714,33 +3419,27 @@ export interface components {
       /** @description As stored: rounded to 6 decimal places */
       value: number;
       /** Format: uuid */
-      deviceId: string;
-      deviceIdentifier: string;
+      deviceId: string | null;
+      deviceIdentifier: string | null;
       /** @description Empty when nothing is suspect */
       flags: components["schemas"]["ReadingFlagResponse"][];
-    };
-    ReadingFlagResponse: {
       /** @enum {string} */
-      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE";
-      /**
-       * Format: int64
-       * @description GAP only: whole seconds since the previous reading of this metric on the asset
-       */
-      gapSeconds?: number;
-      /**
-       * Format: double
-       * @description OUT_OF_RANGE only: the metric's inclusive minimum
-       */
-      validMin?: number;
-      /**
-       * Format: double
-       * @description OUT_OF_RANGE only: the metric's inclusive maximum
-       */
-      validMax?: number;
+      source: "SENSOR" | "MANUAL";
+      recordedByUserId: string | null;
+      recordedByName: string | null;
+      /** Format: date-time */
+      recordedAt: string;
+      /** @description Exact stored decimal for display without binary floating-point conversion */
+      valueText?: string;
     };
     InspectionResultPageResponse: {
       items: components["schemas"]["InspectionResultResponse"][];
       nextCursor: string | null;
+    };
+    EstateAssetCategoriesResponse: {
+      estateActive: boolean;
+      /** @description Flagged categories first, then the rest, each by label */
+      categories: components["schemas"]["EstateAssetCategoryResponse"][];
     };
     DashboardConditionCounts: {
       /** Format: int64 */
@@ -2854,6 +3553,8 @@ export interface components {
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
+      canViewReadings: boolean;
+      canRecordReadings: boolean;
       canViewEstateDetails: boolean;
       canViewInspectionResults: boolean;
       canCreateInspectionResults: boolean;
@@ -2878,108 +3579,7 @@ export interface components {
       canViewEstateInvitations: boolean;
       canViewDocuments: boolean;
       canUploadDocuments: boolean;
-    };
-    EquipmentContractorRequest: {
-      name: string;
-      /** Format: email */
-      email: string;
-    };
-    EquipmentContractorResponse: {
-      /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
-      name: string;
-      email: string;
-      /** Format: date-time */
-      updatedAt: string;
-    };
-    DispatchRequest: {
-      /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
-    };
-    WorkOrderDispatchResponse: {
-      /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
-      contractorName: string;
-      contractorEmail: string;
-      /** @enum {string} */
-      approval: "AUTOMATIC" | "MANAGER";
-      /** @enum {string} */
-      status: "PENDING" | "SENT" | "FAILED";
-      /** Format: date-time */
-      sentAt: string | null;
-      /** Format: date-time */
-      createdAt: string;
-    };
-    SendToContractorRequest: {
-      /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
-      /** @enum {string} */
-      priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-    };
-    ClassificationResponse: {
-      /** @enum {string} */
-      outcome: "EQUIPMENT_FAULT" | "INCONCLUSIVE" | "NOT_EQUIPMENT";
-      /** @enum {string|null} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | null;
-      confidence: number;
-      reason: string;
-      /** Format: date-time */
-      createdAt: string;
-    };
-    ReportRoutingResponse: {
-      /** @enum {string} */
-      state: "CLASSIFYING" | "NEEDS_REVIEW" | "WORK_ORDER" | "DISMISSED";
-      reason: string | null;
-      classification: components["schemas"]["ClassificationResponse"];
-      workOrder: components["schemas"]["RoutedWorkOrder"];
-      /** Format: date-time */
-      decidedAt: string | null;
-    };
-    RoutedWorkOrder: {
-      /** Format: uuid */
-      id: string;
-      reference: string;
-      /** @enum {string} */
-      status: "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "CLOSED";
-      dispatch: components["schemas"]["WorkOrderDispatchResponse"];
-    };
-    EstateReportDetailResponse: {
-      /** Format: uuid */
-      id: string;
-      title: string;
-      description: string;
-      estateName: string;
-      location: components["schemas"]["ReportLocation"];
-      status: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-      images: components["schemas"]["ReportImage"][];
-      /** @description Null for reports submitted before automatic routing */
-      routing: components["schemas"]["ReportRoutingResponse"];
-    };
-    WorkOrderDispatchStatusResponse: {
-      dispatch: components["schemas"]["WorkOrderDispatchResponse"];
-    };
-    EstateReportPageResponse: {
-      items: components["schemas"]["EstateReportSummaryResponse"][];
-      nextCursor: string | null;
-    };
-    EstateReportSummaryResponse: {
-      /** Format: uuid */
-      id: string;
-      title: string;
-      description: string;
-      estateName: string;
-      location: components["schemas"]["ReportLocation"];
-      status: string;
-      /** Format: date-time */
-      createdAt: string;
-      /** Format: date-time */
-      updatedAt: string;
-      /** @description Null for reports submitted before automatic routing */
-      routing: components["schemas"]["ReportRoutingResponse"];
+      canReviewFaultReportDuplicates: boolean;
     };
   };
 }
@@ -3440,6 +4040,87 @@ export interface operations {
       };
       /** @description Storage unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  changeDocumentAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangeDocumentAssetRequest"];
+      };
+    };
+    responses: {
+      /** @description Saved association or current-version no-op; retired assets allowed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentAssetResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -4196,6 +4877,86 @@ export interface operations {
         };
       };
       /** @description Duplicate name or level position, inactive estate or location, or active children */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  createManualReading: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CreateManualReadingRequest"];
+      };
+    };
+    responses: {
+      /** @description Identical retry; original reading returned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ManualReadingResponse"];
+        };
+      };
+      /** @description Manual reading recorded */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ManualReadingResponse"];
+        };
+      };
+      /** @description Invalid request payload, filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired asset or conflicting submission */
       409: {
         headers: {
           [name: string]: unknown;
@@ -5006,6 +5767,149 @@ export interface operations {
       };
     };
   };
+  exportEstateReadings: {
+    parameters: {
+      query?: {
+        assetId?: string;
+        metric?:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+        from?: string;
+        to?: string;
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description CSV v1; X-Export-Row-Count is the complete matching count, including beyond any browser page */
+      200: {
+        headers: {
+          /** @description Complete row count from the same query snapshot */
+          "X-Export-Row-Count": number;
+          /** @description CSV v1 attachment filename */
+          "Content-Disposition": string;
+          [name: string]: unknown;
+        };
+        content: {
+          "text/csv": string;
+        };
+      };
+      /** @description Invalid filters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Export capacity busy; retry later */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  generateInspectionList: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Checks added (possibly none) and the list after generating */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["GenerateInspectionListResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   get: {
     parameters: {
       query?: never;
@@ -5179,6 +6083,86 @@ export interface operations {
       };
     };
   };
+  getAssetDocuments: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current nondeleted documents, newest upload first */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentPageResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getAssetFailureRisk: {
     parameters: {
       query?: never;
@@ -5211,6 +6195,133 @@ export interface operations {
       };
       /** @description Estate or asset not found */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getAssetServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's effective interval, override and category interval */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetServiceIntervalResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getDocumentAsset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        documentId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Current document asset association, including unlinked state */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["DocumentAssetResponse"];
+        };
+      };
+      /** @description Invalid asset, version, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Asset authority or document read permission required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or missing, foreign or deleted document/asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, stale version, direct reassignment or conflicting work-order asset */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document association operation failed */
+      500: {
         headers: {
           [name: string]: unknown;
         };
@@ -5395,7 +6506,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["EstateReportDetailResponse"];
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -5416,7 +6527,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -5479,7 +6590,7 @@ export interface operations {
           "image/png": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -5597,6 +6708,55 @@ export interface operations {
       };
       /** @description Storage or persistence unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getInspectionList: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description This month's checks, overdue checks and unscheduled assets */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionListResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -6667,6 +7827,78 @@ export interface operations {
       };
     };
   };
+  linkEstateReportDuplicate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LinkDuplicateRequest"];
+      };
+    };
+    responses: {
+      /** @description The report with its CONFIRMED manual link */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required (manager membership to review or link duplicates) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description The report already has a SUSPECTED or CONFIRMED link, or the estate is inactive */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   list: {
     parameters: {
       query?: {
@@ -7376,6 +8608,7 @@ export interface operations {
     parameters: {
       query?: {
         filename?: string;
+        documentType?: "INVOICE" | "SERVICE_REPORT";
         cursor?: string;
         limit?: number;
       };
@@ -7510,6 +8743,55 @@ export interface operations {
       };
     };
   };
+  listEstateAssetCategories: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every asset category with its flag and active-asset count */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoriesResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listEstateDevices: {
     parameters: {
       query?: never;
@@ -7599,6 +8881,82 @@ export interface operations {
       };
     };
   };
+  listEstateReadings: {
+    parameters: {
+      query?: {
+        assetId?: string;
+        metric?:
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY";
+        /** @description Inclusive */
+        from?: string;
+        /** @description Exclusive */
+        to?: string;
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+        page?: number;
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Matching sensor and manual readings, newest first, with provenance and per-asset flags */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateReadingPage"];
+        };
+      };
+      /** @description Invalid request payload, filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listEstateReports: {
     parameters: {
       query?: {
@@ -7632,7 +8990,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["EstateReportPageResponse"];
+          "*/*": components["schemas"]["EstateIssueReportPageResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -7653,7 +9011,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -7969,6 +9327,126 @@ export interface operations {
       };
     };
   };
+  listReadingAssets: {
+    parameters: {
+      query?: {
+        search?: string;
+        page?: number;
+        size?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Minimal same-estate asset labels, including retired assets */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingAssetOptionPage"];
+        };
+      };
+      /** @description Invalid request payload, filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listReadingMetrics: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Fixed metric catalogue with units and expected ranges */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingMetricOption"][];
+        };
+      };
+      /** @description Invalid request payload, filters or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner, Manager or Crew readings access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or selected asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listResidentReports: {
     parameters: {
       query?: {
@@ -7988,7 +9466,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportPageResponse"];
+          "*/*": components["schemas"]["ResidentReportPageResponse"];
         };
       };
       /** @description Invalid estate filter, cursor or limit */
@@ -8949,7 +10427,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["EstateReportDetailResponse"];
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -8970,7 +10448,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -9564,6 +11042,78 @@ export interface operations {
       };
     };
   };
+  reviewEstateReportDuplicate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReviewDuplicateRequest"];
+      };
+    };
+    responses: {
+      /** @description The report with its updated link */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required (manager membership to review or link duplicates) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Stale expected state or inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   saveEquipmentContractor: {
     parameters: {
       query?: never;
@@ -9770,6 +11320,222 @@ export interface operations {
         };
       };
       /** @description Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setAssetCategoryServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        category: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetServiceIntervalRequest"];
+      };
+    };
+    responses: {
+      /** @description The category with its current interval */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoryResponse"];
+        };
+      };
+      /** @description interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setAssetCategorySilentFailure: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        category: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetSilentFailureRequest"];
+      };
+    };
+    responses: {
+      /** @description The category with its current flag */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateAssetCategoryResponse"];
+        };
+      };
+      /** @description failsSilently missing or not a boolean */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  setAssetServiceInterval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SetServiceIntervalRequest"];
+      };
+    };
+    responses: {
+      /** @description The asset's interval after the change */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetServiceIntervalResponse"];
+        };
+      };
+      /** @description interval missing, or not null or a value and unit (DAY up to 3650, MONTH up to 120, YEAR up to 10) */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller, or unknown category or asset */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, or retired asset */
       409: {
         headers: {
           [name: string]: unknown;

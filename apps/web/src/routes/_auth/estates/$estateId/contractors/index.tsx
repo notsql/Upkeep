@@ -1,55 +1,43 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
 import { createFileRoute } from "@tanstack/react-router";
+import { HardHat } from "lucide-react";
 import { useCallback } from "react";
-import { PageHeader } from "@/components/page-header";
+import { ListPageHeader } from "@/components/page/list-page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
 import { useContractors } from "@/lib/contractors";
+import { pageHead } from "@/lib/page-title";
 import { EQUIPMENT_TYPES, useRoutingAccess } from "@/lib/report-routing";
-import { useWorkOrderAccess } from "@/lib/work-orders";
-import { ContractorRow } from "./-components/contractor-row";
+import { ContractorRow } from "@/routes/_auth/estates/$estateId/contractors/-components/contractor-row";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/contractors/")({
   component: ContractorsPage,
-  head: () => ({ meta: [{ title: "Contractors" }] }),
+  head: () => pageHead("Contractors"),
 });
 
 function ContractorsPage() {
   const { estateId } = Route.useParams();
   const access = useRoutingAccess(estateId);
-  const estate = useWorkOrderAccess(estateId);
   const contractors = useContractors(estateId);
   const retry = useCallback(() => contractors.refetch(), [contractors.refetch]);
   if (access.pending) {
-    return <p role="status">Loading access…</p>;
+    return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canManage) {
     return <p role="alert">Contractors are available to managers only.</p>;
   }
   return (
-    <main className="page-layout space-y-4">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Estates", to: "/estates" },
-          {
-            label: estate.estateName ?? "Estate",
-            to: estate.canViewManagement ? "/estates/$estateId" : undefined,
-            params: { estateId },
-          },
-          { label: "Contractors" },
-        ]}
+    <PageLayout className="space-y-4">
+      <ListPageHeader
         description="When a resident reports a fault in this equipment, its contractor is assigned the work order and receives it by email with the resident's words and photos."
+        icon={HardHat}
         title="Contractors"
       />
-      {contractors.isPending ? <p role="status">Loading contractors…</p> : null}
+      {contractors.isPending ? (
+        <LoadingState label="Loading contractors…" />
+      ) : null}
       {contractors.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>
-            Unable to load contractors.{" "}
-            <Button onClick={retry} variant="outline">
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <ErrorState message="Unable to load contractors" onRetry={retry} />
       ) : null}
       {contractors.data
         ? EQUIPMENT_TYPES.map((type) => {
@@ -67,6 +55,6 @@ function ContractorsPage() {
             );
           })
         : null}
-    </main>
+    </PageLayout>
   );
 }

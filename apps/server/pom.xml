@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.1</version>
+		<version>4.1.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.proj</groupId>
@@ -15,7 +15,7 @@
 	<description>Spring Boot API server</description>
 	<properties>
 		<java.version>25</java.version>
-		<spring-ai.version>2.0.1</spring-ai.version>
+		<spring-ai.version>2.0.2</spring-ai.version>
 		<!--
 			Where jOOQ's code generator reads the schema from: the same Neon
 			database the app uses. Nx loads apps/server/.env into the task's
@@ -26,6 +26,12 @@
 		<jooq.jdbc.password>${env.SPRING_DATASOURCE_PASSWORD}</jooq.jdbc.password>
 	</properties>
 	<dependencies>
+		<!-- Readings CSV export (ReadingCsvWriter). Not managed by the Boot parent. -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+			<version>1.14.1</version>
+		</dependency>
 		<dependency>
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
@@ -77,7 +83,7 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>3.1.1</version>
+			<version>3.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.ai</groupId>
@@ -86,7 +92,7 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>2.29.0</version>
+			<version>2.57.8</version>
 		</dependency>
 
 		<!--
@@ -96,7 +102,7 @@
 		<dependency>
 			<groupId>com.microsoft.onnxruntime</groupId>
 			<artifactId>onnxruntime</artifactId>
-			<version>1.22.0</version>
+			<version>1.31.1</version>
 		</dependency>
 
 		<dependency>
@@ -147,7 +153,7 @@
         <dependency>
             <groupId>com.workos</groupId>
             <artifactId>workos</artifactId>
-            <version>7.4.0</version>
+            <version>7.5.0</version>
         </dependency>
 	</dependencies>
 	<dependencyManagement>
@@ -193,7 +199,7 @@
 			<plugin>
 				<groupId>com.diffplug.spotless</groupId>
 				<artifactId>spotless-maven-plugin</artifactId>
-				<version>3.4.0</version>
+				<version>3.11.0</version>
 				<configuration>
 					<java>
 						<excludes>

@@ -73,20 +73,21 @@ const oldBlock = "00000000-0000-0000-0000-000000000012";
 const imageId = "00000000-0000-0000-0000-000000000011";
 const basePath = `/estates/${estateId}/reports`;
 const timestamp = "2026-10-01T00:00:00Z";
-const CHANGE_LOCATION = /Change location/i;
-const SAVE = /^Save/i;
-const NEXT = /^Next/i;
-const RETRY = /Retry/i;
-const RELOAD = /Reload/i;
-const LOCATION_CHANGED = /location.*changed|placement.*changed/i;
-const NO_MATCHES = /no.*reports.*location|no.*matching.*reports/i;
-const EMPTY_REPORTS = /no.*reports/i;
+const CHANGE_LOCATION = /Change location/iu;
+const SAVE = /^Save/iu;
+const NEXT = /^Next/iu;
+const RETRY = /Retry/iu;
+const RELOAD = /Reload/iu;
+const LOCATION_CHANGED = /location.*changed|placement.*changed/iu;
+const NO_MATCHES = /no.*reports.*location|no.*matching.*reports/iu;
+const EMPTY_REPORTS = /no.*reports/iu;
+const DUPLICATE_BADGE = /duplicate|to review/iu;
 
-const LEVEL_TWO = /Level 2/;
-const NONE = /none|no common area|level only/i;
-const UNAVAILABLE = /unavailable|unable|not found/i;
+const LEVEL_TWO = /Level 2/u;
+const NONE = /none|no common area|level only/iu;
+const UNAVAILABLE = /unavailable|unable|not found/iu;
 const NO_DESTINATIONS =
-  /no.*active.*locations|no.*destinations|no.*locations.*available/i;
+  /no.*active.*locations|no.*destinations|no.*locations.*available/iu;
 
 const report = {
   id: reportId,
@@ -98,6 +99,10 @@ const report = {
   createdAt: timestamp,
   updatedAt: timestamp,
   images: [{ id: imageId, contentType: "image/png" }],
+  confirmedDuplicateCount: 0,
+  suspectedDuplicateCount: 0,
+  duplicateOf: null,
+  duplicates: [],
 };
 const locations = [
   { id: blockA, type: "BLOCK", name: "Block A", parentId: null },
@@ -234,60 +239,27 @@ beforeEach(() => {
 
 afterEach(() => vi.unstubAllGlobals());
 
-it.each([false, true])(
-  "provides report detail breadcrumbs with management access %s",
-  async (canViewManagement) => {
-    get.mockImplementation((path: string) => {
-      if (path === "/access/context") {
-        const data = access();
-        data.estates[0].canViewManagement = canViewManagement;
-        return Promise.resolve({ data });
-      }
-      return serve(path);
-    });
-    const { router } = await setup(`${basePath}/${reportId}`);
-    await screen.findByRole("heading", { name: report.title });
-    const breadcrumbs = within(
-      screen.getByRole("navigation", { name: "Breadcrumbs" })
-    );
-    expect(
-      breadcrumbs.getByRole("link", { name: "Estates" }).getAttribute("href")
-    ).toBe("/estates");
-    if (canViewManagement) {
-      expect(
-        breadcrumbs
-          .getByRole("link", { name: crewEstateAccess.estateName })
-          .getAttribute("href")
-      ).toBe(`/estates/${estateId}`);
-    } else {
-      breadcrumbs.getByText(crewEstateAccess.estateName);
-      expect(
-        breadcrumbs.queryByRole("link", { name: crewEstateAccess.estateName })
-      ).toBeNull();
-      expect(get.mock.calls.some(([path]) => path === "/estates/{id}")).toBe(
-        false
-      );
-    }
-    expect(breadcrumbs.getByText("Details").getAttribute("aria-current")).toBe(
-      "page"
-    );
-    fireEvent.click(breadcrumbs.getByRole("link", { name: "Fault reports" }));
-    await waitFor(() => expect(router.state.location.pathname).toBe(basePath));
-    await screen.findByRole("link", { name: report.title });
-  }
-);
-
-it("provides named estate breadcrumbs on the fault report list", async () => {
-  await setup();
-  await screen.findByRole("link", { name: report.title });
+it("starts report detail breadcrumbs at Fault reports and names the report", async () => {
+  const { router } = await setup(`${basePath}/${reportId}`);
+  await screen.findByRole("heading", { name: report.title });
   const breadcrumbs = within(
     screen.getByRole("navigation", { name: "Breadcrumbs" })
   );
-  breadcrumbs.getByRole("link", { name: "Estates" });
-  breadcrumbs.getByText(crewEstateAccess.estateName);
   expect(
-    breadcrumbs.getByText("Fault reports").getAttribute("aria-current")
-  ).toBe("page");
+    breadcrumbs.getAllByRole("link").map((link) => link.textContent)
+  ).toEqual(["Fault reports"]);
+  expect(breadcrumbs.getByText(report.title).getAttribute("aria-current")).toBe(
+    "page"
+  );
+  fireEvent.click(breadcrumbs.getByRole("link", { name: "Fault reports" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe(basePath));
+  await screen.findByRole("link", { name: report.title });
+});
+
+it("shows no breadcrumbs on the top-level fault report list", async () => {
+  await setup();
+  await screen.findByRole("link", { name: report.title });
+  expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
 });
 
 it("labels each estate report's metadata like the resident report cards", async () => {
@@ -450,7 +422,7 @@ it("applies numeric range bounds, resets pagination and keeps filters on next an
       cursor: "next-page",
     })
   );
-  fireEvent.click(screen.getByRole("button", { name: "First page" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
   await waitFor(() =>
     expect(router.state.location.search).toEqual({
       blockId: blockA,
@@ -496,8 +468,18 @@ it("clears block and range filters together and restores the controls on browser
   });
 });
 
+it("keeps report filters collapsed until the Filters toggle opens them", async () => {
+  await setup();
+  const toggle = await screen.findByRole("button", { name: "Filters" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  expect(screen.queryByRole("search", { name: "Filter reports" })).toBeNull();
+  fireEvent.click(toggle);
+  await screen.findByRole("search", { name: "Filter reports" });
+});
+
 it("shows a range validation error without sending reversed bounds", async () => {
   await setup();
+  fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
   fireEvent.change(
     await screen.findByRole("combobox", { name: "Minimum position" }),
     { target: { value: "4" } }
@@ -541,6 +523,9 @@ it("distinguishes an empty estate from a filter with no matching reports", async
     await router.navigate({ href: `${basePath}?blockId=${blockA}` });
   });
   await screen.findByText(NO_MATCHES);
+  screen.getByRole("button", { name: "Filters, 1 active" });
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await screen.findByText(EMPTY_REPORTS);
 });
 
 it("preserves the selected filter while retrying a failed list request", async () => {
@@ -878,7 +863,7 @@ it("explains when no active destination is available without hiding report histo
     (dialog.getByRole("button", { name: SAVE }) as HTMLButtonElement).disabled
   ).toBe(true);
   // A modal removes background content from the accessibility tree while open.
-  screen.getByText(report.title);
+  screen.getByText(report.title, { selector: "h2" });
   expect(patch).not.toHaveBeenCalled();
 });
 
@@ -947,6 +932,66 @@ it("does not mount responder queries when access capability lookup fails", async
       path.startsWith("/estates/{estateId}/reports")
     )
   ).toBe(false);
+});
+
+it("badges originals with duplicate counts and linked reports with their state", async () => {
+  const original = {
+    ...report,
+    id: "00000000-0000-0000-0000-000000000040",
+    title: "Original leak",
+    confirmedDuplicateCount: 2,
+    suspectedDuplicateCount: 1,
+    duplicateOf: null,
+  };
+  const suspected = {
+    ...report,
+    id: "00000000-0000-0000-0000-000000000041",
+    title: "Leak again",
+    confirmedDuplicateCount: 0,
+    suspectedDuplicateCount: 0,
+    duplicateOf: {
+      reportId: original.id,
+      title: original.title,
+      state: "SUSPECTED",
+    },
+  };
+  const confirmed = {
+    ...suspected,
+    id: "00000000-0000-0000-0000-000000000042",
+    title: "Same leak",
+    duplicateOf: { ...suspected.duplicateOf, state: "CONFIRMED" },
+  };
+  const plain = {
+    ...report,
+    id: "00000000-0000-0000-0000-000000000043",
+    title: "Broken light",
+    confirmedDuplicateCount: 0,
+    suspectedDuplicateCount: 0,
+    duplicateOf: null,
+  };
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({
+          data: {
+            items: [original, suspected, confirmed, plain],
+            nextCursor: null,
+          },
+        })
+      : serve(path)
+  );
+  await setup();
+  const card = async (title: string) => {
+    const link = await screen.findByRole("link", { name: title });
+    const found = link.closest("[data-slot='card']");
+    expect(found).not.toBeNull();
+    return within(found as HTMLElement);
+  };
+  const originalCard = await card("Original leak");
+  originalCard.getByText("2 duplicates");
+  originalCard.getByText("1 to review");
+  (await card("Leak again")).getByText("Possible duplicate");
+  (await card("Same leak")).getByText("Duplicate");
+  expect((await card("Broken light")).queryByText(DUPLICATE_BADGE)).toBeNull();
 });
 
 it("shows each report's routing state and filters the list by it", async () => {

@@ -34,4 +34,16 @@ public record AssetEventResponse(
         @Schema(nullable = true) String workPerformed,
         @Schema(nullable = true) String serviceProvider,
         @Schema(nullable = true) String partsReplaced,
-        @Schema(nullable = true) Integer downtimeMinutes) {}
+        @Schema(nullable = true) Integer downtimeMinutes,
+
+        @Schema(nullable = true, description = "SGD, two decimals")
+        String labourCost,
+
+        @Schema(nullable = true, description = "SGD, two decimals")
+        String partsCost,
+
+        @Schema(nullable = true, description = "SGD, two decimals")
+        String otherCost,
+
+        @Schema(nullable = true, description = "SGD, two decimals; null when any cost is unknown")
+        String totalCost) {}

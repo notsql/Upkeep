@@ -12,7 +12,8 @@ Creation requires an active resident membership and active estate. List, detail 
 | `ResidentLocationResponse` | `id: UUID`; `type: string` (`BLOCK`, `LEVEL`, `COMMON_AREA`); `name: string`; `parentId: UUID \| null`; `sortOrder: integer \| null` |
 | `IssueReportSummaryResponse` | `id: UUID`; `title: string` (1–150 characters); `description: string`; `estateName: string`; `location: { id: UUID, label: string }`; `status: string`; `createdAt: date-time`; `updatedAt: date-time` |
 | `IssueReportDetailResponse` | Summary fields plus `images: { id: UUID, contentType: string }[]` |
-| `IssueReportPageResponse` | `items: IssueReportSummaryResponse[]`; `nextCursor: string \| null` |
+| `ResidentReportPageResponse` | `items: IssueReportSummaryResponse[]`; `nextCursor: string \| null`; `counts: ReportCounts` (all required) |
+| `ReportCounts` | `open: integer`; `inProgress: integer`; `resolved: integer` |
 | `EstateError` | `message: string` |
 
 Storage keys, other residents' data and management notes never appear in these DTOs.
@@ -26,7 +27,7 @@ Storage keys, other residents' data and management notes never appear in these D
 | `GET /resident/context` | None | 200 `ResidentContextResponse`; empty estates and `canSubmit=false` without an active resident membership | 401 |
 | `GET /resident/locations` | Required estateId: UUID query | 200 `ResidentLocationResponse[]`; active hierarchy in the selected resident estate; inactive/unassigned estate returns 403 | 400, 401, 403 |
 | `POST /resident/reports` | `multipart/form-data`: required estateId: UUID, required `title` (1–50 characters after trimming), required `description` (1–2,500 characters), required `locationId` (UUID of active level or common area), optional repeated `images` (up to 3 JPEG/PNG files, 5 MB each, 4,032 × 3,024 maximum) | 201 `IssueReportDetailResponse` and `Location: /resident/reports/{id}` | 400 invalid title/text/location/image, 401, 403 missing assignment, 413 upload too large, 415 unsupported image, 503 image storage unavailable |
-| `GET /resident/reports` | Optional `estateId: UUID`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `IssueReportPageResponse`, newest first; caller-owned history, optionally narrowed to an estate | 400 invalid estate filter/cursor/limit, 401 |
+| `GET /resident/reports` | Optional `estateId: UUID`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `ResidentReportPageResponse`, newest first; caller-owned history, optionally narrowed to an estate, with status `counts` | 400 invalid estate filter/cursor/limit, 401 |
 | `GET /resident/reports/{reportId}` | UUID path | 200 `IssueReportDetailResponse` | 401, 404 missing or not owned |
 | `GET /resident/reports/{reportId}/images/{imageId}` | UUID path | 200 JPEG/PNG bytes, `Cache-Control: private, no-store` | 401, 404 missing or not owned, 503 storage unavailable |
 
@@ -67,6 +68,15 @@ Image storage requires four nonblank server settings: `S3_ENDPOINT` (the R2 S3 A
 
 R2 uses `S3_ENDPOINT`, `R2_ACCESS_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`; the bucket must be private. Failed uploads are deleted and a bounded scheduled sweep removes old unreferenced objects.
 
+
+## Report counts
+
+`GET /resident/reports` also returns `counts`, totals over **every** report the
+caller submitted (all pages, not just the returned page), narrowed by `estateId`
+when given. Status mapping: `SUBMITTED` → `open`; `ASSIGNED` and `IN_PROGRESS`
+→ `inProgress`; `CLOSED` → `resolved`. Cursor and `limit` do not affect them.
+Example: `{"items":[…],"nextCursor":null,"counts":{"open":2,"inProgress":1,"resolved":4}}`.
+The resident dashboard at `/` reads these.
 
 ## Estate-scoped personal history
 

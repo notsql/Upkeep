@@ -11,13 +11,12 @@ import {
   workspaceAccess,
 } from "@tests/fixtures/access";
 import {
-  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
   within,
 } from "@tests/test-utils";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { beforeEach, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
 
 vi.mock("@/routes/__root", async () => {
@@ -31,103 +30,104 @@ vi.mock("@/routes/__root", async () => {
   };
 });
 
-const { get, post, auth, state } = vi.hoisted(() => ({
+const { get, patch, put, state } = vi.hoisted(() => ({
   get: vi.fn(),
-  post: vi.fn(),
-  auth: { user: { id: "manager" }, loading: false },
-  state: { role: "MANAGER", routing: null as unknown },
+  patch: vi.fn(),
+  put: vi.fn(),
+  state: { manager: true },
 }));
-vi.mock("@/lib/api", () => ({ api: { GET: get, POST: post } }));
+vi.mock("@/lib/api", () => ({ api: { GET: get, PATCH: patch, PUT: put } }));
 vi.mock("@/lib/access-server", () => ({
-  getSessionIdentity: () => Promise.resolve(auth.user),
-  getSessionAccess: async () => {
-    const result = await get("/access/context");
-    return { user: auth.user, access: result.data };
-  },
+  getSessionIdentity: async () => ({ id: "staff" }),
+  getSessionAccess: async () => ({
+    user: { id: "staff" },
+    access: (await get("/access/context")).data,
+  }),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
-  useAuth: () => auth,
+  useAuth: () => ({ user: { id: "staff" }, loading: false }),
 }));
 
 const estateId = "00000000-0000-0000-0000-000000000001";
 const reportId = "00000000-0000-0000-0000-000000000010";
-const workOrderId = "00000000-0000-0000-0000-000000000020";
+const originalId = "00000000-0000-0000-0000-000000000020";
+const otherId = "00000000-0000-0000-0000-000000000030";
 const timestamp = "2026-10-01T00:00:00Z";
-const SEND = /Send to contractor/;
-const DISMISS = /^Dismiss/;
-const RETRY = /Retry sending/;
-const ROUTING = /^Routing$/;
+const detailPath = `/estates/${estateId}/reports/${reportId}`;
+const location = { id: "loc", label: "Block A › Level 4" };
+const POSSIBLE_DUPLICATE_OF = /Possible duplicate of/u;
+const DUPLICATE_OF = /^Duplicate of/u;
+const CHANGED = /changed/iu;
+const LINK_TO_ORIGINAL = /Link to its original instead/u;
+const NO_OWN_WORK_ORDER = /cannot get its own work order/iu;
+const REJECT_TO_ALLOW = /reject the link/iu;
 
-const dispatch = {
-  equipmentType: "LIFT",
-  contractorName: "Acme Lifts",
-  contractorEmail: "faults@acmelifts.example",
-  approval: "MANAGER",
-  status: "PENDING",
-  sentAt: null,
-  createdAt: timestamp,
-};
-const workOrder = {
-  id: workOrderId,
-  reference: "MG-W0042",
-  status: "ASSIGNED",
-  dispatch,
-};
-const review = {
-  state: "NEEDS_REVIEW",
-  reason: "Water near the lift lobby needs an on-site check",
-  classification: {
-    outcome: "INCONCLUSIVE",
-    equipmentType: "LIFT",
-    confidence: 0.62,
-    reason: "Water near the lift lobby needs an on-site check",
-    createdAt: timestamp,
-  },
-  workOrder: null,
-  decidedAt: null,
-};
-const report = {
+const base = {
   id: reportId,
-  title: "Water near lift",
-  description: "water dripping near lift lobby",
+  title: "Water on floor",
+  description: "Puddle by the lift",
   estateName: "Maple Estate",
-  location: { id: reportId, label: "Block A › Level 4 › Lift lobby" },
+  location,
   status: "SUBMITTED",
   createdAt: timestamp,
   updatedAt: timestamp,
   images: [],
+  confirmedDuplicateCount: 0,
+  suspectedDuplicateCount: 0,
+  duplicateOf: null as null | {
+    reportId: string;
+    title: string;
+    state: string;
+  },
+  duplicates: [] as {
+    reportId: string;
+    title: string;
+    location: typeof location;
+    state: string;
+    createdAt: string;
+  }[],
 };
+let report = base;
 
-function serve(requested: string) {
-  if (requested === "/access/context") {
-    const permission =
-      state.role === "MANAGER"
-        ? { ...ownerEstateAccess, estateId }
-        : { ...crewEstateAccess, estateId };
-    return Promise.resolve({
-      data: { ...workspaceAccess, estates: [permission] },
-    });
-  }
-  if (requested === "/estates/{estateId}/reports/{reportId}") {
-    return Promise.resolve({ data: { ...report, routing: state.routing } });
-  }
-  if (requested === "/estates/{estateId}/contractors") {
-    return Promise.resolve({
-      data: [
-        {
-          equipmentType: "LIFT",
-          name: "Acme Lifts",
-          email: "faults@acmelifts.example",
-          updatedAt: timestamp,
-        },
-      ],
-    });
-  }
-  if (requested === "/estates/{estateId}/locations") {
-    return Promise.resolve({ data: [] });
-  }
-  return Promise.resolve({ data: [] });
+function access() {
+  const estate = state.manager
+    ? {
+        ...ownerEstateAccess,
+        canReviewFaultReportDuplicates: true,
+      }
+    : { ...crewEstateAccess, canReviewFaultReportDuplicates: false };
+  return {
+    ...workspaceAccess,
+    estates: [{ ...estate, estateId, estateName: "Maple Estate" }],
+  };
 }
+
+beforeEach(() => {
+  state.manager = true;
+  report = { ...base };
+  patch.mockReset();
+  put.mockReset();
+  get.mockReset().mockImplementation((path: string) => {
+    if (path === "/access/context") {
+      return Promise.resolve({ data: access() });
+    }
+    if (path.endsWith("/reports/{reportId}")) {
+      return Promise.resolve({ data: report });
+    }
+    if (path.endsWith("/reports")) {
+      return Promise.resolve({
+        data: {
+          items: [
+            { ...base, id: reportId, title: "Water on floor" },
+            { ...base, id: originalId, title: "Leaking pipe" },
+          ],
+          nextCursor: null,
+        },
+      });
+    }
+    return Promise.resolve({ data: [] });
+  });
+});
 
 async function setup() {
   const queryClient = new QueryClient({
@@ -135,249 +135,228 @@ async function setup() {
   });
   const router = createRouter({
     routeTree,
-    history: createMemoryHistory({
-      initialEntries: [`/estates/${estateId}/reports/${reportId}`],
-    }),
+    history: createMemoryHistory({ initialEntries: [detailPath] }),
     context: { queryClient },
     defaultPendingMinMs: 0,
   });
   await router.load();
-  return renderWithProviders(<RouterProvider router={router} />);
+  return { router, ...renderWithProviders(<RouterProvider router={router} />) };
 }
 
-async function routingCard() {
-  const heading = await screen.findByRole("heading", { name: ROUTING });
-  return within(heading.closest("[data-slot=card]") as HTMLElement);
-}
-
-function detailRequests() {
-  return get.mock.calls.filter(
-    (call) => call[0] === "/estates/{estateId}/reports/{reportId}"
-  ).length;
-}
-
-beforeEach(() => {
-  auth.user = { id: "manager" };
-  state.role = "MANAGER";
-  state.routing = review;
-  get.mockReset().mockImplementation(serve);
-  post
-    .mockReset()
-    .mockResolvedValue({ data: { ...review, state: "WORK_ORDER", workOrder } });
-  vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
-});
-
-afterEach(() => vi.useRealTimers());
-
-it("shows why the system escalated the report and the model's assessment", async () => {
-  await setup();
-  const card = await routingCard();
-
-  card.getByText("Needs review");
-  card.getByText("Water near the lift lobby needs an on-site check", {
-    selector: "dd",
-  });
-  card.getByText("Inconclusive · Lift · 62% confidence");
-});
-
-it("lets a manager send the report to the contractor for the chosen type", async () => {
-  await setup();
-  const card = await routingCard();
-  fireEvent.click(card.getByRole("button", { name: SEND }));
-  const dialog = within(await screen.findByRole("dialog"));
-  const type = dialog.getByRole("combobox", { name: "Equipment type" });
-  await chooseOption(type, "Lift");
-  dialog.getByText(
-    "Acme Lifts (faults@acmelifts.example) will receive the resident's words and photos."
-  );
-  const before = detailRequests();
-
-  fireEvent.click(dialog.getByRole("button", { name: "Send work order" }));
-
-  await waitFor(() =>
-    expect(post).toHaveBeenCalledWith(
-      "/estates/{estateId}/reports/{reportId}/work-order",
-      {
-        params: { path: { estateId, reportId } },
-        body: { equipmentType: "LIFT", priority: "MEDIUM" },
-      }
-    )
-  );
-  await waitFor(() => expect(detailRequests()).toBeGreaterThan(before));
-});
-
-it("lets a manager choose the work order's priority before sending", async () => {
-  await setup();
-  const card = await routingCard();
-  fireEvent.click(card.getByRole("button", { name: SEND }));
-  const dialog = within(await screen.findByRole("dialog"));
-  await chooseOption(
-    dialog.getByRole("combobox", { name: "Equipment type" }),
-    "Lift"
-  );
-  await chooseOption(
-    dialog.getByRole("combobox", { name: "Priority" }),
-    "High"
-  );
-
-  fireEvent.click(dialog.getByRole("button", { name: "Send work order" }));
-
-  await waitFor(() =>
-    expect(post).toHaveBeenCalledWith(
-      "/estates/{estateId}/reports/{reportId}/work-order",
-      {
-        params: { path: { estateId, reportId } },
-        body: { equipmentType: "LIFT", priority: "HIGH" },
-      }
-    )
-  );
-});
-
-it("says when no contractor is set up for the chosen type and does not send", async () => {
-  await setup();
-  const card = await routingCard();
-  fireEvent.click(card.getByRole("button", { name: SEND }));
-  const dialog = within(await screen.findByRole("dialog"));
-
-  await chooseOption(
-    dialog.getByRole("combobox", { name: "Equipment type" }),
-    "Gate"
-  );
-
-  dialog.getByText("No gate contractor is set up for this estate.");
-  expect(
-    (
-      dialog.getByRole("button", {
-        name: "Send work order",
-      }) as HTMLButtonElement
-    ).disabled
-  ).toBe(true);
-});
-
-it("links to contractor setup when the chosen type has no contractor", async () => {
-  await setup();
-  const card = await routingCard();
-  fireEvent.click(card.getByRole("button", { name: SEND }));
-  const dialog = within(await screen.findByRole("dialog"));
-
-  await chooseOption(
-    dialog.getByRole("combobox", { name: "Equipment type" }),
-    "Gate"
-  );
-
-  expect(
-    dialog
-      .getByRole("link", { name: "Set up contractors" })
-      .getAttribute("href")
-  ).toBe(`/estates/${estateId}/contractors`);
-});
-
-it("dismisses an escalated report only after confirmation", async () => {
-  post.mockResolvedValue({
-    data: { ...review, state: "DISMISSED", decidedAt: timestamp },
-  });
-  await setup();
-  const card = await routingCard();
-  fireEvent.click(card.getByRole("button", { name: DISMISS }));
-  const dialog = within(await screen.findByRole("dialog"));
-  expect(post).not.toHaveBeenCalled();
-
-  fireEvent.click(dialog.getByRole("button", { name: "Dismiss report" }));
-
-  await waitFor(() =>
-    expect(post).toHaveBeenCalledWith(
-      "/estates/{estateId}/reports/{reportId}/dismiss",
-      { params: { path: { estateId, reportId } } }
-    )
-  );
-});
-
-it("shows the work order and lets a manager retry one that failed to send", async () => {
-  state.routing = {
-    ...review,
-    state: "WORK_ORDER",
-    workOrder: { ...workOrder, dispatch: { ...dispatch, status: "FAILED" } },
-  };
-  await setup();
-  const card = await routingCard();
-
-  card.getByText("Work order created");
-  const link = card.getByRole("link", { name: "MG-W0042" });
-  expect(link.getAttribute("href")).toBe(
-    `/estates/${estateId}/work-orders/${workOrderId}`
-  );
-  card.getByText("· Assigned", { exact: false });
-  card.getByText("Acme Lifts (faults@acmelifts.example)");
-  card.getByText("Failed to send");
-  expect(card.queryByRole("button", { name: SEND })).toBeNull();
-  fireEvent.click(card.getByRole("button", { name: RETRY }));
-
-  await waitFor(() =>
-    expect(post).toHaveBeenCalledWith(
-      "/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry",
-      { params: { path: { estateId, workOrderId } } }
-    )
-  );
-});
-
-it("says when the system sent the work order on its own", async () => {
-  state.routing = {
-    ...review,
-    state: "WORK_ORDER",
-    workOrder: {
-      ...workOrder,
-      dispatch: {
-        ...dispatch,
-        approval: "AUTOMATIC",
-        status: "SENT",
-        sentAt: timestamp,
-      },
+function linkedTo(linkState: string) {
+  report = {
+    ...base,
+    duplicateOf: {
+      reportId: originalId,
+      title: "Leaking pipe",
+      state: linkState,
     },
   };
-  await setup();
-  const card = await routingCard();
+}
 
-  card.getByText("Sent automatically");
-  card.getByText(`Sent ${new Date(timestamp).toLocaleString()}`);
+it("names the original of a suspected duplicate and links to it", async () => {
+  linkedTo("SUSPECTED");
+  await setup();
+  const section = within(
+    await screen.findByRole("region", { name: "Duplicate" })
+  );
+  section.getByText(POSSIBLE_DUPLICATE_OF);
+  const link = section.getByRole("link", { name: "Leaking pipe" });
+  expect(link.getAttribute("href")).toBe(
+    `/estates/${estateId}/reports/${originalId}`
+  );
 });
 
-it("shows crew the routing and the contractor but no decisions", async () => {
-  state.role = "CREW";
-  state.routing = {
-    ...review,
-    state: "WORK_ORDER",
-    workOrder: { ...workOrder, dispatch: { ...dispatch, status: "FAILED" } },
-  };
-  await setup();
-  const card = await routingCard();
-
-  card.getByText("Acme Lifts (faults@acmelifts.example)");
-  expect(card.queryByRole("button", { name: RETRY })).toBeNull();
-  expect(card.queryByRole("button", { name: SEND })).toBeNull();
-  expect(card.queryByRole("button", { name: DISMISS })).toBeNull();
-});
-
-it("shows no routing for a report submitted before routing existed", async () => {
-  state.routing = null;
-  await setup();
-  await screen.findByRole("heading", { name: "Water near lift" });
-
-  expect(screen.queryByRole("heading", { name: ROUTING })).toBeNull();
-});
-
-it("checks again every few seconds while the report is being classified", async () => {
-  state.routing = {
-    ...review,
-    state: "CLASSIFYING",
-    reason: null,
-    classification: null,
-  };
-  await setup();
-  const card = await routingCard();
-  card.getByText("Classifying");
-  const before = detailRequests();
-
-  await waitFor(() => expect(detailRequests()).toBeGreaterThan(before), {
-    timeout: 7000,
+it("lets managers confirm a suspected duplicate using the state they saw", async () => {
+  linkedTo("SUSPECTED");
+  patch.mockImplementation(() => {
+    // The server persists the decision, so the follow-up refetch sees it too.
+    linkedTo("CONFIRMED");
+    return Promise.resolve({ data: report });
   });
-}, 10_000);
+  await setup();
+  fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+  await waitFor(() =>
+    expect(patch).toHaveBeenCalledWith(
+      "/estates/{estateId}/reports/{reportId}/duplicate",
+      {
+        params: { path: { estateId, reportId } },
+        body: { state: "CONFIRMED", expectedState: "SUSPECTED" },
+      }
+    )
+  );
+  await screen.findByText(DUPLICATE_OF);
+});
+
+it("lets managers reject a suspected duplicate", async () => {
+  linkedTo("SUSPECTED");
+  patch.mockResolvedValue({ data: base });
+  await setup();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Not a duplicate" })
+  );
+  await waitFor(() =>
+    expect(patch).toHaveBeenCalledWith(
+      "/estates/{estateId}/reports/{reportId}/duplicate",
+      expect.objectContaining({
+        body: { state: "REJECTED", expectedState: "SUSPECTED" },
+      })
+    )
+  );
+});
+
+it("offers only Not a duplicate on a confirmed duplicate", async () => {
+  linkedTo("CONFIRMED");
+  await setup();
+  const section = within(
+    await screen.findByRole("region", { name: "Duplicate" })
+  );
+  section.getByText(DUPLICATE_OF);
+  expect(section.queryByRole("button", { name: "Confirm" })).toBeNull();
+  fireEvent.click(section.getByRole("button", { name: "Not a duplicate" }));
+  await waitFor(() =>
+    expect(patch).toHaveBeenCalledWith(
+      "/estates/{estateId}/reports/{reportId}/duplicate",
+      expect.objectContaining({
+        body: { state: "REJECTED", expectedState: "CONFIRMED" },
+      })
+    )
+  );
+});
+
+it("shows no review or link controls without the review capability", async () => {
+  state.manager = false;
+  linkedTo("SUSPECTED");
+  await setup();
+  await screen.findByRole("link", { name: "Leaking pipe" });
+  expect(screen.queryByRole("button", { name: "Confirm" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Not a duplicate" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Original report" })).toBeNull();
+});
+
+it("explains a review conflict and reloads the report", async () => {
+  linkedTo("SUSPECTED");
+  patch.mockResolvedValue({
+    error: { message: "The duplicate link changed. Reload before deciding." },
+    response: { status: 409 },
+  });
+  await setup();
+  fireEvent.click(await screen.findByRole("button", { name: "Confirm" }));
+  const alert = await screen.findByRole("alert");
+  within(alert).getByText(CHANGED);
+  const calls = get.mock.calls.length;
+  fireEvent.click(within(alert).getByRole("button", { name: "Reload" }));
+  await waitFor(() => expect(get.mock.calls.length).toBeGreaterThan(calls));
+});
+
+it("lists an original's duplicates with their counts", async () => {
+  report = {
+    ...base,
+    confirmedDuplicateCount: 1,
+    suspectedDuplicateCount: 1,
+    duplicates: [
+      {
+        reportId: otherId,
+        title: "Leak again",
+        location,
+        state: "SUSPECTED",
+        createdAt: timestamp,
+      },
+      {
+        reportId: originalId,
+        title: "Dripping ceiling",
+        location,
+        state: "CONFIRMED",
+        createdAt: timestamp,
+      },
+    ],
+  };
+  await setup();
+  const section = within(
+    await screen.findByRole("region", { name: "Duplicates" })
+  );
+  section.getByText("1 confirmed");
+  section.getByText("1 to review");
+  const items = section.getAllByRole("listitem");
+  expect(items).toHaveLength(2);
+  within(items[0] as HTMLElement).getByRole("link", { name: "Leak again" });
+  within(items[0] as HTMLElement).getByText("Possible duplicate");
+  within(items[1] as HTMLElement).getByText("Duplicate");
+  expect(screen.queryByRole("button", { name: "Original report" })).toBeNull();
+});
+
+it("lets managers link an unlinked report to an original by hand", async () => {
+  put.mockImplementation(() => {
+    linkedTo("CONFIRMED");
+    return Promise.resolve({ data: report });
+  });
+  await setup();
+  const link = await screen.findByRole("button", {
+    name: "Link as duplicate",
+  });
+  expect(link.hasAttribute("disabled")).toBe(true);
+  fireEvent.click(screen.getByRole("button", { name: "Original report" }));
+  const dialog = within(await screen.findByRole("dialog"));
+  expect(dialog.queryByRole("button", { name: "Water on floor" })).toBeNull();
+  fireEvent.click(await dialog.findByRole("button", { name: "Leaking pipe" }));
+  await waitFor(() => expect(link.hasAttribute("disabled")).toBe(false));
+  fireEvent.click(link);
+  await waitFor(() =>
+    expect(put).toHaveBeenCalledWith(
+      "/estates/{estateId}/reports/{reportId}/duplicate",
+      {
+        params: { path: { estateId, reportId } },
+        body: { originalReportId: originalId },
+      }
+    )
+  );
+  await screen.findByText(DUPLICATE_OF);
+});
+
+it("shows the server's reason when a manual link is refused", async () => {
+  put.mockResolvedValue({
+    error: {
+      message:
+        "That report is itself a duplicate. Link to its original instead.",
+    },
+    response: { status: 400 },
+  });
+  await setup();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Original report" })
+  );
+  fireEvent.click(
+    await within(await screen.findByRole("dialog")).findByRole("button", {
+      name: "Leaking pipe",
+    })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Link as duplicate" }));
+  await screen.findByText(LINK_TO_ORIGINAL);
+});
+
+it("offers Create work order on an unlinked report", async () => {
+  await setup();
+  await screen.findByRole("link", { name: "Create work order" });
+});
+
+it("hides Create work order on a suspected duplicate and explains why", async () => {
+  linkedTo("SUSPECTED");
+  await setup();
+  const section = within(
+    await screen.findByRole("region", { name: "Duplicate" })
+  );
+  section.getByText(NO_OWN_WORK_ORDER);
+  section.getByText(REJECT_TO_ALLOW);
+  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
+});
+
+it("hides Create work order on a confirmed duplicate", async () => {
+  linkedTo("CONFIRMED");
+  await setup();
+  const section = within(
+    await screen.findByRole("region", { name: "Duplicate" })
+  );
+  section.getByText(NO_OWN_WORK_ORDER);
+  expect(section.queryByText(REJECT_TO_ALLOW)).toBeNull();
+  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
+});

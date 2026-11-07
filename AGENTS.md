@@ -104,9 +104,9 @@ something in. Equally, do not leave dependencies behind that nothing imports.
 | Inference | onnxruntime (Java), in process | `apps/server` | - |
 | Contract | springdoc -> `openapi-typescript` -> `openapi-fetch` | `packages/api` | - |
 | Database | Postgres 18, Prisma 7 | `packages/db` | 5432 |
-| Orchestration | Nx 23 + `@nx/maven`, pnpm workspaces | root | - |
+| Orchestration | Nx 24 + `@nx/maven`, pnpm workspaces | root | - |
 | Testing | Vitest + Testing Library (web), JUnit (server) | - | - |
-| Hosting | Cloudflare Worker `web` (Workers Builds); Spring on Cloud Run `api` (GitHub Actions `deploy.yml`) | `apps/web/wrangler.jsonc`, `.github/workflows/deploy.yml` | - |
+| Hosting | Cloudflare Worker `web` (Workers Builds); Spring on Cloud Run `upkeep-server-prd` (GitHub Actions `deploy.yml`) | `apps/web/wrangler.jsonc`, `.github/workflows/deploy.yml` | - |
 | Data fetching | React Query over the generated client | `apps/web` | - |
 
 The browser calls Spring **directly** (CORS, not a proxy), so the browser's
@@ -163,7 +163,7 @@ change.
 
 **Deploys come from `main`, never by hand.** Branch flow is `feat/*` -> PR
 into `dev` -> PR `dev` into `main`. A push to `dev` migrates Neon `dev`; a push
-to `main` migrates Neon `prd`, `deploy.yml` deploys `api` to Cloud Run and
+to `main` migrates Neon `prd`, `deploy.yml` deploys `upkeep-server-prd` to Cloud Run and
 Workers Builds deploys `web`, with no ordering between them - so migrations must be compatible with the code
 already running (expand now, contract in a later PR). See
 `.spec/decisions/0029-*`.
@@ -262,7 +262,7 @@ Authentication is WorkOS AuthKit, and both sides stay dormant until configured
   unauthenticated.
 
 The bearer token reaches the API through `createApiClient`'s `getToken`, wired
-by `AuthTokenBridge` in `apps/web/src/components/auth-provider.tsx`. Never
+by `AuthTokenBridge` in `apps/web/src/components/auth/auth-provider.tsx`. Never
 attach the header by hand.
 
 ---

@@ -101,12 +101,13 @@ public class DocumentController {
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @RequestParam(required = false) @Schema(maxLength = 255) String filename,
+            @RequestParam(required = false) DocumentType documentType,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) @Schema(minimum = "1", maximum = "100", defaultValue = "25")
                     Integer limit) {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
-                .body(documents.list(estateId, subject(principal), filename, cursor, limit));
+                .body(documents.list(estateId, subject(principal), filename, documentType, cursor, limit));
     }
 
     @GetMapping("/{documentId}/content")

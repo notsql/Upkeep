@@ -29,7 +29,13 @@ vi.mock("@/lib/api", () => ({ api: { GET: get } }));
 // A route's server-side access lookup must use a client scoped to that request.
 vi.mock("@proj/api", () => ({ createApiClient: () => ({ GET: get }) }));
 vi.mock("@tanstack/react-start", () => ({
-  createServerFn: () => ({ handler: (handler: () => unknown) => handler }),
+  createServerFn: () => {
+    const builder = {
+      validator: () => builder,
+      handler: (handler: () => unknown) => handler,
+    };
+    return builder;
+  },
 }));
 
 function ManagementPage() {
@@ -77,9 +83,18 @@ function routerFor(path: string) {
     "/estates/$estateId/assets/$assetId",
     "/estates/$estateId/assets/$assetId/edit",
     "/estates/$estateId/assets/$assetId/readings",
+    "/estates/$estateId/readings",
+    "/estates/$estateId/readings/new",
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
     "/estates/$estateId/edit",
+    "/estates/$estateId/devices",
+    "/estates/$estateId/asset-categories",
+    "/estates/$estateId/asset-categories/$interval",
+    "/estates/$estateId/inspections",
+    "/estates/$estateId/sensors",
+    "/estates/$estateId/sensors/all",
+    "/estates/$estateId/failure-risk",
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
@@ -128,6 +143,77 @@ beforeEach(() => {
   });
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
 });
+
+it("denies a bookmarked manual-entry route when write capability is unavailable", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...unassignedAccess,
+      canEnterWorkspace: true,
+      estates: [
+        {
+          ...crewEstateAccess,
+          canViewReadings: true,
+          canRecordReadings: false,
+        },
+      ],
+    },
+    response: new Response(),
+  });
+  const router = routerFor(
+    `/estates/${crewEstateAccess.estateId}/readings/new`
+  );
+  await router.load();
+  expect(
+    router.state.matches.some((match) => match.status === "notFound")
+  ).toBe(true);
+  expect(managementLoader).not.toHaveBeenCalled();
+});
+
+it.each([crewEstateAccess, { ...ownerEstateAccess, canViewAssets: false }])(
+  "allows an estate readings reader without owner-only asset access: $role",
+  async (estate) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [{ ...estate, canViewReadings: true }],
+      },
+      response: new Response(),
+    });
+    const path = `/estates/${estate.estateId}/readings`;
+    const router = routerFor(path);
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(false);
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+  }
+);
+
+it.each([
+  residentAccess,
+  unassignedAccess,
+  {
+    ...unassignedAccess,
+    canEnterWorkspace: true,
+    estates: [{ ...councilEstateAccess, canViewReadings: false }],
+  },
+])(
+  "hides unauthorized readings URLs before loaders without redirecting to reporting: %j",
+  async (access) => {
+    get.mockResolvedValue({ data: access, response: new Response() });
+    const estateId = access.estates[0]?.estateId ?? "foreign";
+    const path = `/estates/${estateId}/readings`;
+    const router = routerFor(path);
+    await router.load();
+    expect(router.state.location.pathname).toBe(path);
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
 
 it.each(
   [residentAccess, mixedAccess, unassignedAccess].flatMap((access) =>
@@ -518,3 +604,109 @@ it("does not let a WorkOS admin claim bypass a missing report capability", async
   await router.load();
   expect(managementLoader).not.toHaveBeenCalled();
 });
+
+const OWNER_GATED = [
+  "/estates/oak/devices",
+  "/estates/oak/asset-categories",
+  "/estates/oak/inspections",
+  "/estates/oak/sensors",
+  "/estates/oak/sensors/all",
+  "/estates/oak/asset-categories/months",
+  "/estates/oak/failure-risk",
+  "/estates/oak/edit",
+  "/estates/oak/assets",
+];
+const managementOnly = {
+  ...councilEstateAccess,
+  role: "MEMBER",
+  canViewManagement: true,
+  canViewAssets: false,
+  canViewInspectionResults: false,
+  canManageEstate: false,
+  canManageInvitationPermissions: false,
+};
+function estateAccess(
+  estate: typeof managementOnly,
+  owned: boolean | "error" = false
+) {
+  get.mockImplementation((path: string) => {
+    if (path === "/estates/{id}") {
+      return Promise.resolve(
+        owned === "error"
+          ? {
+              error: { message: "Forbidden" },
+              response: new Response(null, { status: 403 }),
+            }
+          : {
+              data: { id: estate.estateId, name: estate.estateName, owned },
+              response: new Response(),
+            }
+      );
+    }
+    return Promise.resolve({
+      data: { ...unassignedAccess, canEnterWorkspace: true, estates: [estate] },
+      response: new Response(),
+    });
+  });
+}
+
+it.each(OWNER_GATED)(
+  "404s %s for a management-only non-owner",
+  async (path) => {
+    estateAccess(managementOnly);
+    const router = routerFor(path);
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it.each(OWNER_GATED)("404s %s when the owner lookup fails", async (path) => {
+  estateAccess(managementOnly, "error");
+  const router = routerFor(path);
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
+});
+
+it.each([
+  ...OWNER_GATED.filter((path) => !path.endsWith("/assets")).map((path) => ({
+    path,
+    estate: managementOnly,
+    owned: true,
+  })),
+  ...[
+    "/estates/oak/devices",
+    "/estates/oak/asset-categories",
+    "/estates/oak/inspections",
+  ].map((path) => ({
+    path,
+    estate: { ...managementOnly, canManageInvitationPermissions: true },
+    owned: false,
+  })),
+  {
+    path: "/estates/oak/sensors",
+    estate: { ...managementOnly, role: "COUNCIL" },
+    owned: false,
+  },
+  {
+    path: "/estates/oak/edit",
+    estate: { ...managementOnly, canManageEstate: true },
+    owned: false,
+  },
+  {
+    path: "/estates/oak/assets",
+    estate: { ...managementOnly, canViewAssets: true },
+    owned: false,
+  },
+])(
+  "opens $path when its destination predicate holds",
+  async ({ path, estate, owned }) => {
+    estateAccess(estate, owned);
+    const router = routerFor(path);
+    await router.load();
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+  }
+);

@@ -345,6 +345,62 @@ class AssetEventIntegrationTests {
                 .andExpect(jsonPath("$.message").isNotEmpty());
     }
 
+    @Test
+    void recordsAndListsCostsAsTwoDecimalSgdWithTheirTotal() throws Exception {
+        var json = """
+                {"type":"BREAKDOWN_REPAIR","occurredOn":"2026-09-01","notes":"Fixed",
+                 "labourCost":"120","partsCost":"35.5","otherCost":"0"}""";
+        mvc.perform(record(json))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.labourCost").value("120.00"))
+                .andExpect(jsonPath("$.partsCost").value("35.50"))
+                .andExpect(jsonPath("$.otherCost").value("0.00"))
+                .andExpect(jsonPath("$.totalCost").value("155.50"));
+        mvc.perform(as("owner", get(events)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].labourCost").value("120.00"))
+                .andExpect(jsonPath("$[0].partsCost").value("35.50"))
+                .andExpect(jsonPath("$[0].otherCost").value("0.00"))
+                .andExpect(jsonPath("$[0].totalCost").value("155.50"));
+    }
+
+    @Test
+    void anUnknownCostLeavesTheTotalUnknown() throws Exception {
+        mvc.perform(record(withDetail("labourCost", "\"10\"")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.labourCost").value("10.00"))
+                .andExpect(jsonPath("$.partsCost").value(nullValue()))
+                .andExpect(jsonPath("$.otherCost").value(nullValue()))
+                .andExpect(jsonPath("$.totalCost").value(nullValue()));
+        mvc.perform(record(body("PREVENTIVE", "2026-09-02", "No costs")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.labourCost").value(nullValue()))
+                .andExpect(jsonPath("$.totalCost").value(nullValue()));
+    }
+
+    @Test
+    void acceptsTheLargestCost() throws Exception {
+        mvc.perform(record(withDetail("otherCost", "\"999999999999.99\"")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.otherCost").value("999999999999.99"));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "labourCost,-1",
+        "partsCost,1.234",
+        "otherCost,1e3",
+        "labourCost,1234567890123",
+        "partsCost,''",
+        "otherCost,abc"
+    })
+    void rejectsInvalidCosts(String field, String cost) throws Exception {
+        mvc.perform(record(withDetail(field, "\"" + cost + "\"")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").isNotEmpty());
+        assertNoEvents();
+    }
+
     static String withDetail(String field, String json) {
         return """
                 {"type":"PREVENTIVE","occurredOn":"2026-09-01","notes":"Fine","%s":%s}""".formatted(field, json);

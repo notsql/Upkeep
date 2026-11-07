@@ -1,0 +1,342 @@
+import type { components } from "@proj/api/schema";
+import { fireEvent } from "@testing-library/react";
+import {
+  chooseOption,
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { api } from "@/lib/api";
+import type { Asset } from "@/lib/assets";
+import type { Location } from "@/lib/locations";
+import { AssetForm } from "@/routes/_auth/estates/$estateId/assets/-components/asset-form/asset-form";
+
+vi.mock("@/lib/api", () => ({
+  api: { GET: vi.fn(), POST: vi.fn(), PATCH: vi.fn() },
+}));
+vi.mock(
+  "@/components/forms/date-picker",
+  () => import("@tests/date-picker-stubs")
+);
+vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
+  useAuth: () => ({ user: { id: "owner" }, loading: false }),
+}));
+
+const INSTALLED_ON_LABEL = /^Installation date/u;
+const MANUFACTURER_LABEL = /^Manufacturer/u;
+const MODEL_LABEL = /^Model/u;
+const SERIAL_NUMBER_LABEL = /^Serial number/u;
+const REQUIRED = /required/iu;
+
+const at = "2026-09-27T00:00:00Z";
+function location(
+  id: string,
+  type: Location["type"],
+  name: string,
+  parentId?: string,
+  sortOrder?: number
+): Location {
+  return { id, type, name, parentId, sortOrder, createdAt: at, updatedAt: at };
+}
+// The locations endpoint only returns active locations, in server order.
+const locations: Location[] = [
+  location("b1", "BLOCK", "Blk 101"),
+  location("b2", "BLOCK", "Blk 102"),
+  location("l1", "LEVEL", "Level 1", "b1", 1),
+  location("a1", "COMMON_AREA", "Lift", "b1"),
+  location("a2", "COMMON_AREA", "Lift lobby", "l1"),
+];
+
+const asset: Asset = {
+  lifecycleVersion: 0,
+  id: "asset-id",
+  estateId: "estate-id",
+  reference: "SUNRISE-A0001",
+  name: "Lift A",
+  category: "LIFT",
+  locationId: "a2",
+  locationPath: "Blk 101 › Level 1 › Lift lobby",
+  installedOn: "2020-05-01",
+  manufacturer: "Otis",
+  model: "Gen2",
+  serialNumber: "SN-123",
+  createdAt: at,
+  updatedAt: at,
+};
+
+type AssetCategory = components["schemas"]["AssetCategoryResponse"];
+// The server orders categories by label.
+const categories: AssetCategory[] = [
+  { code: "LIFT", label: "Lift" },
+  { code: "OTHER", label: "Other" },
+  { code: "PUMP", label: "Pump" },
+];
+
+function serveLocations() {
+  const data: Record<string, unknown> = {
+    "/estates/{estateId}/locations": locations,
+    "/asset-categories": categories,
+    "/manufacturers": [],
+    "/manufacturers/{manufacturerId}/models": [],
+  };
+  vi.mocked(api.GET).mockImplementation(((path: string) =>
+    Promise.resolve({
+      data: data[path],
+      response: new Response(),
+    })) as never);
+}
+
+/** Resolves once the location options have arrived. */
+async function locationsLoaded() {
+  await waitFor(() => within(locationField()).getByText("Select a location"));
+}
+
+/** Opens a select and lists its options' labels. */
+async function optionLabels(trigger: HTMLElement): Promise<string[]> {
+  fireEvent.click(trigger);
+  const options = await screen.findAllByRole("option");
+  return options.map((option) => option.textContent ?? "");
+}
+
+function nameField() {
+  return screen.getByRole<HTMLInputElement>("textbox", { name: "Name" });
+}
+function categoryField() {
+  return screen.getByRole("combobox", { name: "Category" });
+}
+function locationField() {
+  return screen.getByRole("combobox", { name: "Location" });
+}
+function installedOnField() {
+  // The date picker is stubbed as a text box; a native date input has no role.
+  return screen.getByRole<HTMLInputElement>("textbox", {
+    name: INSTALLED_ON_LABEL,
+  });
+}
+function manufacturerField() {
+  // Manufacturer and model are comboboxes that also accept free text.
+  return screen.getByRole<HTMLInputElement>("combobox", {
+    name: MANUFACTURER_LABEL,
+  });
+}
+function modelField() {
+  return screen.getByRole<HTMLInputElement>("combobox", { name: MODEL_LABEL });
+}
+function serialNumberField() {
+  return screen.getByRole<HTMLInputElement>("textbox", {
+    name: SERIAL_NUMBER_LABEL,
+  });
+}
+
+async function fillRequired() {
+  fireEvent.change(nameField(), { target: { value: "Lift A" } });
+  await chooseOption(categoryField(), "Lift");
+  await chooseOption(locationField(), "Blk 101 › Level 1 › Lift lobby");
+}
+
+describe("AssetForm", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    serveLocations();
+  });
+
+  it("labels every field", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    nameField();
+    categoryField();
+    locationField();
+    installedOnField();
+    manufacturerField();
+    modelField();
+    serialNumberField();
+  });
+
+  it("offers every asset category", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    expect(await optionLabels(categoryField())).toEqual([
+      "Lift",
+      "Other",
+      "Pump",
+    ]);
+  });
+
+  it("lists every active location of the estate by its full path", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    expect(api.GET).toHaveBeenCalledWith("/estates/{estateId}/locations", {
+      params: { path: { estateId: "estate-id" } },
+    });
+    expect(await optionLabels(locationField())).toEqual([
+      "Blk 101",
+      "Blk 101 › Level 1",
+      "Blk 101 › Level 1 › Lift lobby",
+      "Blk 101 › Lift",
+      "Blk 102",
+    ]);
+  });
+
+  it("explains which required fields are missing instead of saving", async () => {
+    const onSave = vi.fn();
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
+    await locationsLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    await screen.findByRole("textbox", {
+      name: "Name",
+      description: REQUIRED,
+    });
+    screen.getByRole("combobox", {
+      name: "Category",
+      description: REQUIRED,
+    });
+    screen.getByRole("combobox", {
+      name: "Location",
+      description: REQUIRED,
+    });
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("announces each missing required field as an alert", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    expect(
+      (await screen.findAllByRole("alert")).map((alert) => alert.textContent)
+    ).toEqual([
+      "Name is required.",
+      "Category is required.",
+      "Location is required.",
+    ]);
+  });
+
+  it("submits every entered detail", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
+    await locationsLoaded();
+    await fillRequired();
+    fireEvent.change(installedOnField(), { target: { value: "2020-05-01" } });
+    fireEvent.change(manufacturerField(), { target: { value: "Otis" } });
+    fireEvent.change(modelField(), { target: { value: "Gen2" } });
+    fireEvent.change(serialNumberField(), { target: { value: "SN-123" } });
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith({
+        name: "Lift A",
+        category: "LIFT",
+        locationId: "a2",
+        installedOn: "2020-05-01",
+        manufacturer: "Otis",
+        model: "Gen2",
+        serialNumber: "SN-123",
+      })
+    );
+  });
+
+  it("leaves blank optional details out of the payload", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
+    await locationsLoaded();
+    await fillRequired();
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(onSave.mock.calls[0][0]).toEqual({
+      name: "Lift A",
+      category: "LIFT",
+      locationId: "a2",
+    });
+  });
+
+  it("keeps entered details and explains a failed save", async () => {
+    const onSave = vi
+      .fn()
+      .mockRejectedValue(new Error("This location has been deactivated."));
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
+    await locationsLoaded();
+    await fillRequired();
+    fireEvent.change(manufacturerField(), { target: { value: "Otis" } });
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "deactivated"
+    );
+    expect(nameField().value).toBe("Lift A");
+    within(categoryField()).getByText("Lift");
+    within(locationField()).getByText("Blk 101 › Level 1 › Lift lobby");
+    expect(manufacturerField().value).toBe("Otis");
+    await waitFor(() =>
+      expect(
+        screen.getByRole<HTMLButtonElement>("button", {
+          name: "Register asset",
+        }).disabled
+      ).toBe(false)
+    );
+  });
+
+  it("does not submit twice while a save is pending", async () => {
+    let finish: (value?: unknown) => void = () => undefined;
+    const onSave = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        })
+    );
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={onSave} />);
+    await locationsLoaded();
+    await fillRequired();
+    fireEvent.click(screen.getByRole("button", { name: "Register asset" }));
+    const pending = await screen.findByRole<HTMLButtonElement>("button", {
+      name: "Saving…",
+    });
+    expect(pending.disabled).toBe(true);
+    fireEvent.click(pending);
+    fireEvent.submit(pending.form as HTMLFormElement);
+    finish();
+    await screen.findByRole("button", { name: "Register asset" });
+    expect(onSave).toHaveBeenCalledOnce();
+  });
+
+  it("pre-fills an existing asset and shows its reference read-only", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    renderWithProviders(
+      <AssetForm estateId="estate-id" initialValues={asset} onSave={onSave} />
+    );
+    const reference = screen.getByRole<HTMLInputElement>("textbox", {
+      name: "Reference",
+    });
+    expect(reference.value).toBe("SUNRISE-A0001");
+    expect(reference.readOnly).toBe(true);
+    expect(nameField().value).toBe("Lift A");
+    await waitFor(() => within(categoryField()).getByText("Lift"));
+    await waitFor(() =>
+      within(locationField()).getByText("Blk 101 › Level 1 › Lift lobby")
+    );
+    expect(installedOnField().value).toBe("2020-05-01");
+    expect(manufacturerField().value).toBe("Otis");
+    expect(modelField().value).toBe("Gen2");
+    expect(serialNumberField().value).toBe("SN-123");
+
+    fireEvent.change(nameField(), { target: { value: "Lift B" } });
+    await chooseOption(locationField(), "Blk 101 › Lift");
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith({
+        name: "Lift B",
+        category: "LIFT",
+        locationId: "a1",
+        installedOn: "2020-05-01",
+        manufacturer: "Otis",
+        model: "Gen2",
+        serialNumber: "SN-123",
+      })
+    );
+    expect(onSave.mock.calls[0][0]).not.toHaveProperty("reference");
+  });
+
+  it("has no reference field when registering a new asset", async () => {
+    renderWithProviders(<AssetForm estateId="estate-id" onSave={vi.fn()} />);
+    await locationsLoaded();
+    expect(screen.queryByRole("textbox", { name: "Reference" })).toBeNull();
+  });
+});

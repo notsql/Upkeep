@@ -1,10 +1,10 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { expect, it, vi } from "vitest";
-import {
-  EditAssetPage,
-  NewAssetPage,
-} from "@/routes/_auth/estates/$estateId/assets/-components/asset-editor-page";
+import { NewAssetPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-editor-page";
+import { EditAssetPage } from "@/routes/_auth/estates/$estateId/assets/-components/edit-asset-page";
+
+const BACK_LINK = /^Back to/u;
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children, to, ...props }: { children: ReactNode; to: string }) => (
@@ -23,21 +23,27 @@ vi.mock("@/lib/assets", () => ({
   useUpdateAsset: () => ({ mutateAsync: vi.fn() }),
 }));
 vi.mock(
-  "@/routes/_auth/estates/$estateId/assets/-components/asset-form",
+  "@/routes/_auth/estates/$estateId/assets/-components/asset-form/asset-form",
   () => ({ AssetForm: () => null })
 );
 
 it.each([
-  ["register", <NewAssetPage estateId="estate" key="register" />],
-  ["edit", <EditAssetPage assetId="asset" estateId="estate" key="edit" />],
+  ["register", <NewAssetPage estateId="estate" key="register" />, ["Assets"]],
+  [
+    "edit",
+    <EditAssetPage assetId="asset" estateId="estate" key="edit" />,
+    ["Assets", "Asset"],
+  ],
 ] as const)(
-  "names the estate while opening the %s asset form",
-  async (_, page) => {
+  "starts the %s asset form breadcrumbs at Assets, without back links",
+  (_, page, links) => {
     renderWithProviders(page);
     const breadcrumbs = within(
       screen.getByRole("navigation", { name: "Breadcrumbs" })
     );
-    await breadcrumbs.findByRole("link", { name: "Maple Grove" });
-    expect(breadcrumbs.queryByRole("link", { name: "Estate" })).toBeNull();
+    expect(
+      breadcrumbs.getAllByRole("link").map((link) => link.textContent)
+    ).toEqual([...links]);
+    expect(screen.queryByRole("link", { name: BACK_LINK })).toBeNull();
   }
 );

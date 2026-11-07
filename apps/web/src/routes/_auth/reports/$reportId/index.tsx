@@ -1,9 +1,12 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { buttonVariants } from "@proj/ui/components/button";
-
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { useCallback } from "react";
+import { DetailPageHeader } from "@/components/page/detail-page-header";
+import { PageLayout } from "@/components/page/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
+import { pageHead } from "@/lib/page-title";
 import { useReport } from "@/lib/reports";
 import { PrivateReportImage } from "./-components/private-report-image";
 
@@ -14,31 +17,34 @@ export const Route = createFileRoute("/_auth/reports/$reportId/")({
       : {}),
   }),
   component: ReportDetailPage,
-  head: () => ({ meta: [{ title: "Report details" }] }),
+  head: () => pageHead("Report details"),
 });
 
 function ReportDetailPage() {
   const { reportId } = useParams({ strict: false });
   const { estateId } = useSearch({ strict: false });
   const report = useReport(reportId ?? "");
+  const retry = useCallback(() => {
+    report.refetch();
+  }, [report]);
   return (
-    <main className="page-layout">
-      <a
-        className={buttonVariants({ size: "sm" })}
-        href={
-          estateId
-            ? `/reports?estateId=${encodeURIComponent(estateId)}`
-            : "/reports"
-        }
-      >
-        Return to My Reports
-      </a>
-      <h1 className="my-4 font-semibold text-2xl">Report details</h1>
-      {report.isPending ? <p role="status">Loading report…</p> : null}
+    <PageLayout>
+      <DetailPageHeader
+        breadcrumbs={[
+          {
+            label: "My reports",
+            to: "/reports",
+            search: estateId ? { estateId } : undefined,
+          },
+          { label: report.data?.title ?? "Report" },
+        ]}
+        title="Report details"
+      />
+      {report.isPending ? (
+        <LoadingState label="Loading report…" rows={1} />
+      ) : null}
       {report.isError ? (
-        <Alert role="alert" variant="destructive">
-          <AlertDescription>Report not found or unavailable.</AlertDescription>
-        </Alert>
+        <ErrorState message="Report not found or unavailable" onRetry={retry} />
       ) : null}
       {report.data ? (
         <ReportCard report={report.data}>
@@ -55,6 +61,6 @@ function ReportDetailPage() {
           </ReportDetails>
         </ReportCard>
       ) : null}
-    </main>
+    </PageLayout>
   );
 }

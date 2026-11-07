@@ -1,4 +1,5 @@
 import { ReportImage } from "@/components/reports/report-image";
+import { LoadingState } from "@/components/states/loading-state";
 import { useEstateReportImage } from "@/lib/estate-reports";
 
 export function PrivateReportImage({
@@ -15,7 +16,7 @@ export function PrivateReportImage({
     <ReportImage
       data={image.data}
       isError={image.isError}
-      loading={<p role="status">Loading image…</p>}
+      loading={<LoadingState label="Loading image…" rows={1} />}
     />
   );
 }

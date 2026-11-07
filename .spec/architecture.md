@@ -13,8 +13,8 @@ apps/web            TanStack Start (React 19, Vite) on :3001
    v
 apps/server         Spring Boot 4 (Java 25) on :8080  <-- all business logic
                     (also runs the ONNX anomaly model in process, decision 0028)
-                    (calls Claude to classify fault reports, decision 0041,
-                     and emails contractor work orders over SMTP, 0042)
+                    (calls Claude to classify fault reports, decision 0045,
+                     and emails contractor work orders over SMTP, 0046)
    |
    |  JDBC
    v
@@ -112,7 +112,7 @@ so a blank value builds a `JwtDecoder` against no issuer and fails at startup.
 On the web side, the official AuthKit TanStack Start middleware validates and
 refreshes the session stored in an encrypted HTTP-only cookie. Protected route
 loaders call `getAuth()` before rendering. `AuthProvider`
-(`apps/web/src/components/auth-provider.tsx`) supplies reactive client hooks,
+(`apps/web/src/components/auth/auth-provider.tsx`) supplies reactive client hooks,
 and `AuthTokenBridge` hands a fresh access token resolver to the generated
 client's `getToken` callback. The resolver is installed browser-side only - a
 module-scope resolver on the SSR server would be shared across requests.
@@ -184,7 +184,7 @@ Decision 0029, spec `features/deployment.md`. No custom domain:
 | Piece | Runs as | Config |
 | --- | --- | --- |
 | `apps/web` | Cloudflare Worker `web` on `*.workers.dev` (`@cloudflare/vite-plugin`, `nodejs_compat`), deployed by Workers Builds | `apps/web/wrangler.jsonc` |
-| `apps/server` | Cloud Run service `api` in `asia-southeast1` on `*.run.app`, image from `apps/server/Dockerfile`, deployed by GitHub Actions | `.github/workflows/deploy.yml` |
+| `apps/server` | Cloud Run service `upkeep-server-prd` in `asia-southeast1` on `*.run.app`, image from `apps/server/Dockerfile`, deployed by GitHub Actions | `.github/workflows/deploy.yml` |
 | Postgres | Neon `prd` branch | Infisical `prd`, `/packages/db` |
 
 Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
@@ -193,12 +193,12 @@ Branch flow: `feat/*` -> PR into `dev` -> PR `dev` into `main`.
 | --- | --- |
 | PR into `dev` or `main` | `pr-checks.yml`: no database, no migrations; context tests use Testcontainers (0019) |
 | Push to `dev` | `migrate.yml` migrates Neon `dev` (Infisical `dev`) |
-| Push to `main` | `migrate.yml` migrates Neon `prd` (Infisical `prd`); `deploy.yml` deploys `api` if `apps/server/**` or `pom.xml` changed; Workers Builds deploys `web` if its watch paths changed |
+| Push to `main` | `migrate.yml` migrates Neon `prd` (Infisical `prd`); `deploy.yml` deploys `upkeep-server-prd` if `apps/server/**` or `pom.xml` changed; Workers Builds deploys `web` if its watch paths changed |
 
 Runtime secrets live in Infisical `prd`: `/apps/web` syncs to the `web`
 Worker's secrets, `/apps/server` to GCP Secret Manager, which Cloud Run reads
 at deploy time. `deploy.yml` authenticates to GCP with Workload Identity
-Federation (no key in GitHub). `api` scales to zero (request-based billing,
+Federation (no key in GitHub). `upkeep-server-prd` scales to zero (request-based billing,
 startup CPU boost, startup probe on `GET /health`, JDK AOT cache in the image),
 so the first request after idle waits for Spring to boot. `VITE_API_URL` is a
 Workers Builds build variable.

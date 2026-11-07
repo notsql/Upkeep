@@ -18,6 +18,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /** Filter-chain coverage; estate authorization is exercised by the database tests. */
@@ -40,7 +42,9 @@ class FaultReportSecurityTests {
         "GET, /estates/estate/reports",
         "GET, /estates/estate/reports/report",
         "GET, /estates/estate/reports/report/images/image",
-        "PATCH, /estates/estate/reports/report/location"
+        "PATCH, /estates/estate/reports/report/location",
+        "PATCH, /estates/estate/reports/report/duplicate",
+        "PUT, /estates/estate/reports/report/duplicate"
     })
     void authenticatedIdentityReachesBusinessAuthorizationRegardlessOfWorkosRole(String method, String path)
             throws Exception {
@@ -58,7 +62,9 @@ class FaultReportSecurityTests {
         "GET, /estates/estate/reports",
         "GET, /estates/estate/reports/report",
         "GET, /estates/estate/reports/report/images/image",
-        "PATCH, /estates/estate/reports/report/location"
+        "PATCH, /estates/estate/reports/report/location",
+        "PATCH, /estates/estate/reports/report/duplicate",
+        "PUT, /estates/estate/reports/report/duplicate"
     })
     void reportOperationsRequireAuthentication(String method, String path) throws Exception {
         mvc.perform(request(HttpMethod.valueOf(method), path)).andExpect(status().isUnauthorized());
@@ -75,7 +81,11 @@ class FaultReportSecurityTests {
         "DELETE, /estates/estate/reports/report/images/image",
         "GET, /estates/estate/reports/report/future-action",
         "GET, /estates/estate/reports/report/images/image/future-action",
-        "PATCH, /resident/reports/report/location"
+        "PATCH, /resident/reports/report/location",
+        "POST, /estates/estate/reports/report/duplicate",
+        "DELETE, /estates/estate/reports/report/duplicate",
+        "GET, /estates/estate/reports/report/duplicate",
+        "PATCH, /resident/reports/report/duplicate"
     })
     void unspecifiedReportWritesAndNestedActionsRemainDenied(String method, String path) throws Exception {
         mvc.perform(request(HttpMethod.valueOf(method), path).with(jwt())).andExpect(status().isForbidden());
@@ -94,6 +104,13 @@ class FaultReportSecurityTests {
 
         @PatchMapping("/estates/{estateId}/reports/{reportId}/location")
         String relocate() {
+            return "report business authorization";
+        }
+
+        @RequestMapping(
+                value = "/estates/{estateId}/reports/{reportId}/duplicate",
+                method = {RequestMethod.PATCH, RequestMethod.PUT})
+        String duplicate() {
             return "report business authorization";
         }
     }

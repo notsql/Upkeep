@@ -10,7 +10,8 @@ export type EstateReportFilters = Pick<
   "blockId" | "minLevelPosition" | "maxLevelPosition" | "routingState"
 >;
 
-export type EstateReport = components["schemas"]["EstateReportDetailResponse"];
+export type EstateReport =
+  components["schemas"]["EstateIssueReportDetailResponse"];
 
 /** While the system is still classifying a report, check back for its routing. */
 const CLASSIFYING_POLL_MS = 5000;
@@ -36,6 +37,8 @@ export function useEstateReportAccess(estateId: string) {
     estateName: permission?.estateName,
     canViewManagement: canView && !!permission?.canViewManagement,
     canRelocate: canView && !!permission?.canRelocateFaultReports,
+    canReviewDuplicates:
+      canView && !!permission?.canReviewFaultReportDuplicates,
     pending: !ready || access.isPending,
   };
 }
@@ -198,5 +201,85 @@ export function useRelocateEstateReport(estateId: string, reportId: string) {
         client.invalidateQueries({ queryKey: [userId, "reports"] }),
       ]);
     },
+  });
+}
+
+async function refreshAfterDuplicateChange(
+  client: ReturnType<typeof useQueryClient>,
+  userId: string | undefined,
+  estateId: string,
+  reportId: string,
+  data: EstateReport
+) {
+  // A link changes this report, its original's counts and work-order counts.
+  client.setQueryData(
+    [userId, "estate-reports", estateId, "detail", reportId],
+    data
+  );
+  await Promise.all([
+    client.invalidateQueries({
+      queryKey: [userId, "estate-reports", estateId, "list"],
+    }),
+    client.invalidateQueries({
+      queryKey: [userId, "estate-reports", estateId, "detail"],
+    }),
+    client.invalidateQueries({ queryKey: [userId, "work-orders", estateId] }),
+  ]);
+}
+
+export function useReviewEstateReportDuplicate(
+  estateId: string,
+  reportId: string
+) {
+  // No client-side capability gate: the access hook is not ready on a freshly
+  // mounted component's first render. Callers render the action only for
+  // managers, and the server enforces manager membership.
+  const { userId } = useAuthenticatedSession();
+  const client = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async (
+      body: components["schemas"]["ReviewDuplicateRequest"]
+    ) => {
+      const { data, error, response } = await api.PATCH(
+        "/estates/{estateId}/reports/{reportId}/duplicate",
+        { params: { path: { estateId, reportId } }, body }
+      );
+      if (error || !data) {
+        throw new ReportRequestError(
+          error?.message ?? "Unable to update the duplicate link.",
+          response?.status ?? 500
+        );
+      }
+      return data;
+    },
+    onSuccess: (data) =>
+      refreshAfterDuplicateChange(client, userId, estateId, reportId, data),
+  });
+}
+
+export function useLinkEstateReportDuplicate(
+  estateId: string,
+  reportId: string
+) {
+  const { userId } = useAuthenticatedSession();
+  const client = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async (body: components["schemas"]["LinkDuplicateRequest"]) => {
+      const { data, error, response } = await api.PUT(
+        "/estates/{estateId}/reports/{reportId}/duplicate",
+        { params: { path: { estateId, reportId } }, body }
+      );
+      if (error || !data) {
+        throw new ReportRequestError(
+          error?.message ?? "Unable to link the report.",
+          response?.status ?? 500
+        );
+      }
+      return data;
+    },
+    onSuccess: (data) =>
+      refreshAfterDuplicateChange(client, userId, estateId, reportId, data),
   });
 }

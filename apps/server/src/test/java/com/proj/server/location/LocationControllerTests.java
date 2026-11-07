@@ -241,13 +241,12 @@ class LocationControllerTests {
                 "COMMON_AREA, block, 1",
             })
     void rejectsShapesTheHierarchyDoesNotAllow(String type, String parent, Integer sortOrder) throws Exception {
-        var parentId =
-                switch (parent == null ? "" : parent) {
-                    case "block" -> blockId;
-                    case "level" -> levelId;
-                    case "area" -> areaId;
-                    default -> null;
-                };
+        var parentId = switch (parent == null ? "" : parent) {
+            case "block" -> blockId;
+            case "level" -> levelId;
+            case "area" -> areaId;
+            default -> null;
+        };
         mvc.perform(asOwner(post(base), create(type, parentId, "Node", sortOrder)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").isNotEmpty());

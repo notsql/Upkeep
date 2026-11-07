@@ -13,20 +13,23 @@ export function ReportCard({
   title = report.title,
   locationAction,
   showUpdated = false,
+  badges,
   children,
 }: {
   report: components["schemas"]["IssueReportSummaryResponse"];
   title?: ReactNode;
   locationAction?: ReactNode;
   showUpdated?: boolean;
+  badges?: ReactNode;
   children?: ReactNode;
 }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle>
-          <h2 className="wrap-anywhere font-semibold">{title}</h2>
+          <h2 className="font-semibold wrap-anywhere">{title}</h2>
         </CardTitle>
+        {badges}
       </CardHeader>
       <CardContent className="grid gap-4">
         <ReportMetadata

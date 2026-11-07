@@ -83,6 +83,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/documents",
                                 "/estates/{estateId}/documents/{documentId}/content",
                                 "/estates/{estateId}/documents/{documentId}/work-order",
+                                "/estates/{estateId}/documents/{documentId}/asset",
+                                "/estates/{estateId}/assets/{assetId}/documents",
                                 "/estates/{estateId}/documents/{documentId}/work-order/history",
                                 "/estates/{estateId}/work-orders/{workOrderId}/documents",
                                 "/asset-categories",
@@ -117,8 +119,15 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings",
+                                "/estates/{estateId}/readings",
+                                "/estates/{estateId}/readings/export",
+                                "/estates/{estateId}/readings/assets",
+                                "/estates/{estateId}/readings/metrics",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
+                                "/estates/{estateId}/assets/{assetId}/service-interval",
                                 "/estates/{estateId}/devices",
+                                "/estates/{estateId}/asset-categories",
+                                "/estates/{estateId}/inspection-list",
                                 "/estates/{estateId}/failure-risk",
                                 "/estates/{estateId}/flatline-policies",
                                 "/estates/{estateId}/flatlined-sensors",
@@ -134,8 +143,10 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
                                 "/estates/{estateId}/documents",
+                                "/estates/{estateId}/readings/manual",
                                 "/estates/{estateId}/work-orders",
                                 "/estates/{estateId}/assets/{assetId}/inspections",
+                                "/estates/{estateId}/inspection-list/generate",
                                 "/council-invitations/{invitationId}/accept",
                                 "/estates/{estateId}/roles",
                                 "/estates/{estateId}/ownership-transfer",
@@ -169,11 +180,20 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{id}",
                                 "/estates/{estateId}/assets/{id}/retirement")
                         .authenticated()
-                        .requestMatchers(HttpMethod.PATCH, "/estates/{estateId}/reports/{reportId}/location")
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/estates/{estateId}/reports/{reportId}/location",
+                                "/estates/{estateId}/reports/{reportId}/duplicate")
+                        .authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/reports/{reportId}/duplicate")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
+                                "/estates/{estateId}/documents/{documentId}/asset",
                                 "/estates/{estateId}/documents/{documentId}/work-order",
+                                "/estates/{estateId}/asset-categories/{category}/silent-failure",
+                                "/estates/{estateId}/asset-categories/{category}/service-interval",
+                                "/estates/{estateId}/assets/{assetId}/service-interval",
                                 "/estates/{estateId}/work-orders/{workOrderId}/completion",
                                 "/estates/{estateId}/members/{userId}/invitation-permission",
                                 "/estates/{estateId}/roles/{roleId}",
@@ -215,6 +235,7 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of("Content-Disposition", "X-Export-Row-Count"));
 
         var source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

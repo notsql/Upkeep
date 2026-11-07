@@ -2,6 +2,11 @@
 
 Source of truth: `packages/api/openapi.json`. No database migration is required.
 
+> **Unused by the web app (2026-11-04).** The signed-in portfolio Home was
+> removed by `.spec/features/navigation-rearchitecture.md`; `apps/web` no longer
+> calls `GET /dashboard/summary` (no `useDashboardSummary`, no `dashboard` query
+> key). The endpoint is left in place; removing it is a follow-up.
+
 ## Endpoint and access
 
 `GET /dashboard/summary` takes no path/query parameters or request body.

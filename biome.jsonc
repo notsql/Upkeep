@@ -14,6 +14,11 @@
         "noNamespaceImport": "off",
         "noBarrelFile": "off"
       },
+      "suspicious": {
+        // Biome's type inference reads `useState<T>()` as `T`, not
+        // `T | undefined`, so every guard on such state is reported as dead.
+        "noUnnecessaryConditions": "off"
+      },
       "style": {
         "useConsistentTypeDefinitions": {
           "level": "info",
@@ -24,6 +29,16 @@
       }
     }
   },
+  "overrides": [
+    {
+      // `@tests/*` is a tsconfig path alias, which this rule mistakes for an
+      // undeclared npm scope.
+      "includes": ["apps/web/tests/**"],
+      "linter": {
+        "rules": { "correctness": { "noUndeclaredDependencies": "off" } }
+      }
+    }
+  ],
   "assist": {
     "actions": {
       "source": {

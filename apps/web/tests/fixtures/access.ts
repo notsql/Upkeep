@@ -19,6 +19,8 @@ export const residentEstateAccess = {
   canViewManagement: false,
   canManageEstate: false,
   canViewAssets: false,
+  canViewReadings: false,
+  canRecordReadings: false,
   canViewEstateDetails: false,
   canViewInspectionResults: false,
   canCreateInspectionResults: false,
@@ -38,6 +40,7 @@ export const residentEstateAccess = {
   canDeleteRoles: false,
   canReassignRoles: false,
   canViewEstateInvitations: false,
+  canReviewFaultReportDuplicates: false,
 };
 
 export const councilEstateAccess = {
@@ -59,6 +62,8 @@ export const ownerEstateAccess = {
   canViewManagement: true,
   canManageEstate: true,
   canViewAssets: true,
+  canViewReadings: true,
+  canRecordReadings: true,
   canViewEstateDetails: true,
   canViewInspectionResults: true,
   canCreateInspectionResults: true,
@@ -78,6 +83,7 @@ export const ownerEstateAccess = {
   canDeleteRoles: true,
   canReassignRoles: true,
   canViewEstateInvitations: true,
+  canReviewFaultReportDuplicates: true,
 };
 
 export const crewEstateAccess = {
@@ -86,6 +92,8 @@ export const crewEstateAccess = {
   estateName: "Oak Park",
   role: "CREW",
   canViewEstateDetails: true,
+  canViewReadings: true,
+  canRecordReadings: true,
   canViewInspectionResults: true,
   canCreateInspectionResults: true,
   canCreateWorkOrders: false,

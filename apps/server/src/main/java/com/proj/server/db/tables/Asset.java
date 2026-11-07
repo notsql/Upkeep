@@ -8,6 +8,7 @@ import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Assetcategory.AssetcategoryPath;
+import com.proj.server.db.tables.Assetintervalchange.AssetintervalchangePath;
 import com.proj.server.db.tables.Estate.EstatePath;
 import com.proj.server.db.tables.Manufacturer.ManufacturerPath;
 import com.proj.server.db.tables.records.AssetRecord;
@@ -261,6 +262,19 @@ public class Asset extends TableImpl<AssetRecord> {
             _manufacturer = new ManufacturerPath(this, Keys.ASSET__ASSET_MANUFACTURERID_FKEY, null);
 
         return _manufacturer;
+    }
+
+    private transient AssetintervalchangePath _assetintervalchange;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.AssetIntervalChange</code> table
+     */
+    public AssetintervalchangePath assetintervalchange() {
+        if (_assetintervalchange == null)
+            _assetintervalchange = new AssetintervalchangePath(this, null, Keys.ASSETINTERVALCHANGE__ASSETINTERVALCHANGE_ASSETID_FKEY.getInverseKey());
+
+        return _assetintervalchange;
     }
 
     @Override

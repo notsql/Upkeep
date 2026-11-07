@@ -25,13 +25,13 @@ env:
 
 jobs:
   deploy:
-    name: Deploy api to Cloud Run
+    name: Deploy upkeep-server-prd to Cloud Run
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -55,7 +55,7 @@ jobs:
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v3
         with:
-          service: api
+          service: upkeep-server-prd
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}
           # JAVA_TOOL_OPTIONS is Cloud Run only, so local compose keeps the JVM
@@ -73,12 +73,16 @@ jobs:
             SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI=SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI:latest
             SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES=SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_AUDIENCES:latest
           secrets_update_strategy: overwrite
+          # Public on purpose: the browser calls this service directly and
+          # Spring validates the WorkOS JWT.
           flags: >-
+            --allow-unauthenticated
             --service-account=${{ vars.GCP_API_RUNTIME_SA }}
             --port=8080
             --cpu=1
             --memory=2Gi
             --cpu-boost
+            --timeout=300
             --concurrency=80
             --min-instances=0
             --max-instances=2

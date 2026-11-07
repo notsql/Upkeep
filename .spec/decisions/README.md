@@ -8,6 +8,8 @@ without knowing what it cost.
 
 Decisions are append-only. To reverse one, add a new record that supersedes it.
 
+- [0041 - Asset document associations](0041-asset-document-associations.md)
+
 - [0037 - Audited work-order document associations](0037-audited-work-order-document-associations.md)
 - [0036 - Private estate documents and durable deletion](0036-private-estate-documents-and-durable-deletion.md)
 
@@ -27,5 +29,13 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0038 — Inspection form component boundaries](0038-inspection-form-component-boundaries.md)
 - [0039 — One work-order form for inspection follow-up](0039-unified-work-order-creation.md)
 - [0040 — Crew have read-only work-order access](0040-crew-read-only-work-orders.md)
-- [0041 - Fault report classification runs in Spring](0041-fault-classification-runs-in-spring.md)
-- [0042 - Contractors are reached by email dispatch on ID-36 work orders](0042-contractor-dispatch-on-work-orders.md)
+
+- [0041 — Manual readings and source provenance](0041-manual-readings-and-source-provenance.md)
+
+- [0042 - Filtered reading CSV streams and completion metadata](0042-filtered-reading-csv-streams.md)
+- [0043 - Estate destinations share one predicate for sidebar and route guard](0043-estate-destinations-share-sidebar-and-guard-rules.md)
+
+- [0044 - Duplicate fault reports are rule-based suggestions a manager confirms](0044-duplicate-reports-are-rule-based-suggestions.md)
+- [0045 - Fault report classification runs in Spring](0045-fault-classification-runs-in-spring.md)
+- [0046 - Contractors are reached by email dispatch on ID-36 work orders](0046-contractor-dispatch-on-work-orders.md)
+- [0047 - Fault classification uses a trained lift model ](0047-fault-classification-uses-a-trained-lift-model.md)

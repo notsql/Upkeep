@@ -235,9 +235,9 @@ class WorkOSServiceTests {
                 .run(context -> {
                     assertNull(context.getStartupFailure());
 
-                    var exception =
-                            assertThrows(ResponseStatusException.class, () -> context.getBean(WorkOSService.class)
-                                    .getOrganizations());
+                    var exception = assertThrows(
+                            ResponseStatusException.class,
+                            () -> context.getBean(WorkOSService.class).getOrganizations());
                     assertEquals(HttpStatus.SERVICE_UNAVAILABLE, exception.getStatusCode());
                 });
     }

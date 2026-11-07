@@ -14,6 +14,13 @@ non-owner assignments; report authorization still checks current membership.
 
 ## DTOs
 
+List, detail and relocation return estate-only DTOs (`EstateIssueReportPageResponse`,
+`EstateIssueReportDetailResponse`): the fields below plus duplicate counts,
+`duplicateOf` and, on detail, `duplicates`. See
+[fault-report-duplicates.md](fault-report-duplicates.md), which also covers the
+PATCH and PUT `/estates/{estateId}/reports/{reportId}/duplicate` endpoints.
+Resident endpoints keep the DTOs below unchanged.
+
 | DTO | Fields |
 | --- | --- |
 | `EstateReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `routing: ReportRoutingResponse \| null` (null for reports from before ID-70; see [report-routing.md](report-routing.md)) |

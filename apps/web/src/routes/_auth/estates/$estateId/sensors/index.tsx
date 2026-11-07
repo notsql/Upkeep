@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SensorsPage } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page";
+import { pageHead } from "@/lib/page-title";
+import { SensorsView } from "@/routes/_auth/estates/$estateId/sensors/-components/sensors-page/sensors-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/sensors/")({
-  component: SensorsRoute,
-  head: () => ({ meta: [{ title: "Device monitoring" }] }),
+  component: SensorsReviewRoute,
+  head: () => pageHead("Device monitoring"),
 });
 
-function SensorsRoute() {
+function SensorsReviewRoute() {
   const { estateId } = Route.useParams();
-  return <SensorsPage estateId={estateId} />;
+  return <SensorsView estateId={estateId} view="REVIEW" />;
 }

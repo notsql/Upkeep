@@ -1,9 +1,13 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
-import { PageHeader } from "@/components/page-header";
+import { UserRound } from "lucide-react";
+import { DetailCard } from "@/components/page/detail-card";
+import { PageHeader } from "@/components/page/page-header";
+import { PageLayout } from "@/components/page/page-layout";
+import { pageHead } from "@/lib/page-title";
 
 export const Route = createFileRoute("/_auth/account/")({
   component: AccountPage,
-  head: () => ({ meta: [{ title: "Your account" }] }),
+  head: () => pageHead("Your account"),
 });
 
 const authenticatedRoute = getRouteApi("/_auth");
@@ -12,13 +16,13 @@ function AccountPage() {
   const { user } = authenticatedRoute.useLoaderData();
 
   return (
-    <main className="page-layout">
+    <PageLayout>
       <PageHeader
-        breadcrumbs={[{ label: "Home", to: "/" }, { label: "Account" }]}
-        description="Your profile and sign-in identity."
+        description="Profile and sign-in identity"
+        icon={UserRound}
         title="Your account"
       />
-      <dl className="detail-grid mt-6">
+      <DetailCard className="mt-6">
         <div>
           <dt className="font-medium">Name</dt>
           <dd className="text-muted-foreground">
@@ -30,7 +34,7 @@ function AccountPage() {
           <dt className="font-medium">Email</dt>
           <dd className="text-muted-foreground">{user.email}</dd>
         </div>
-      </dl>
-    </main>
+      </DetailCard>
+    </PageLayout>
   );
 }

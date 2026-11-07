@@ -56,7 +56,8 @@ public class DocumentService {
         }
     }
 
-    public DocumentPageResponse list(UUID estate, String user, String filename, String cursor, Integer limit) {
+    public DocumentPageResponse list(
+            UUID estate, String user, String filename, DocumentType documentType, String cursor, Integer limit) {
         var access = repository.authority(estate, user, VIEW_DOCUMENTS, false);
         String search = filename == null ? "" : filename.trim();
         int size = limit == null ? 25 : limit;
@@ -66,6 +67,7 @@ public class DocumentService {
         String binding = estate + "\n"
                 + Base64.getUrlEncoder().withoutPadding().encodeToString(search.getBytes(StandardCharsets.UTF_8))
                 + "\n";
+        if (documentType != null) binding += documentType.name() + "\n";
         if (cursor != null) {
             try {
                 String decoded = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
@@ -78,7 +80,7 @@ public class DocumentService {
                 throw invalidPage();
             }
         }
-        var rows = repository.list(estate, search, before, beforeId, size + 1);
+        var rows = repository.list(estate, search, documentType, before, beforeId, size + 1);
         boolean more = rows.size() > size;
         var page = rows.stream().limit(size).toList();
         String next = null;

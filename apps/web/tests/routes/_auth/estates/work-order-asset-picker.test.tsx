@@ -1,9 +1,9 @@
 import { fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
-import { WorkOrderAssetPicker } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-asset-picker";
+import { WorkOrderAssetPicker } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-asset-picker";
 
-const PUMP_OPTION = /MP-A0001.*Booster pump/;
+const PUMP_OPTION = /MP-A0001.*Booster pump/u;
 const state = vi.hoisted(() => ({ pending: false, error: false }));
 vi.mock("@/lib/work-orders", () => ({
   useWorkOrderAssets: (_estate: string, query: string) => ({

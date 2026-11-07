@@ -17,11 +17,11 @@ loader data (`getRouteApi("/_auth").useLoaderData().user`) and shows a
 - **Name** - `firstName lastName`, or "Not provided".
 - **Email** - `user.email`.
 
-Read-only. Uses shared `PageHeader` with Home / Account breadcrumbs and the
-`detail-grid` summary surface. No edits or API calls are introduced.
+Read-only. Uses shared `PageHeader` (no breadcrumbs, `icon={UserRound}`, description "Profile and sign-in identity") and the
+`DetailCard` summary surface. No edits or API calls are introduced.
 
-Desktop entry: Settings in the circular top-right profile menu. Mobile entry:
-Settings in the fixed mobile More menu. Settings opens
+Entry: "Account settings" in the circular top-right account menu (the only
+entry; there is no sidebar on `/account`). It opens
 this existing read-only profile screen; it does not introduce editable settings.
 
 ## Endpoints

@@ -7,6 +7,7 @@ import static com.proj.server.db.tables.Issuereportimage.ISSUEREPORTIMAGE;
 import static com.proj.server.db.tables.Location.LOCATION;
 import static com.proj.server.db.tables.Reportrouting.REPORTROUTING;
 import static org.jooq.impl.DSL.concatWs;
+import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
@@ -17,6 +18,7 @@ import static org.jooq.impl.DSL.when;
 import com.proj.server.db.tables.Location;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.jooq.DSLContext;
@@ -180,6 +182,18 @@ public class ResidentReportRepository {
                 .limit(limit)
                 .fetch()
                 .map(ResidentReportRepository::summary);
+    }
+
+    public Map<String, Integer> statusCounts(String userId, UUID estateId) {
+        var condition = ISSUEREPORT.SUBMITTEDBYUSERID.eq(userId);
+        if (estateId != null) {
+            condition = condition.and(ISSUEREPORT.ESTATEID.eq(estateId));
+        }
+        return db.select(ISSUEREPORT.STATUS, count())
+                .from(ISSUEREPORT)
+                .where(condition)
+                .groupBy(ISSUEREPORT.STATUS)
+                .fetchMap(ISSUEREPORT.STATUS, count());
     }
 
     public Optional<StoredImage> image(String userId, UUID reportId, UUID imageId) {

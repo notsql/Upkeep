@@ -83,10 +83,11 @@ public class DocumentStore implements AutoCloseable {
 
     public ListObjectsV2Response list(String cursor) {
         try {
-            return requireClient().listObjectsV2(request -> request.bucket(bucket)
-                    .prefix("documents/")
-                    .continuationToken(cursor)
-                    .maxKeys(100));
+            return requireClient()
+                    .listObjectsV2(request -> request.bucket(bucket)
+                            .prefix("documents/")
+                            .continuationToken(cursor)
+                            .maxKeys(100));
         } catch (SdkException error) {
             throw unavailable();
         }

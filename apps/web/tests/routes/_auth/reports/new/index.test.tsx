@@ -9,10 +9,11 @@ import {
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { Route } from "@/routes/_auth/reports/new";
-import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page";
+import { NewReportPage } from "@/routes/_auth/reports/new/-components/new-report-page/new-report-page";
 
 const { get, post, navigate, auth } = vi.hoisted(() => ({
   get: vi.fn(),
@@ -20,20 +21,33 @@ const { get, post, navigate, auth } = vi.hoisted(() => ({
   navigate: vi.fn(),
   auth: { user: { id: "resident-a" }, role: "user", loading: false },
 }));
-const REPORT_A_FAULT = /Report a fault/i;
-const SUBMIT_REPORT = /Submit report/i;
-const BLOCK = /Block/i;
-const LEVEL = /Level/i;
-const DESCRIPTION = /Description/i;
-const TITLE = /^Title$/;
-const NO_ESTATE_ASSIGNED = /no estate assigned/i;
-const IMAGES = /Images/i;
-const IMAGE_PICKERS = /Images \(optional\)|Take photo/;
-const REMOVE_FAULT_IMAGE = /Remove fault.png/i;
-const ESTATE = /estate/i;
+const REPORT_A_FAULT = /Report a fault/iu;
+const SUBMIT_REPORT = /Submit report/iu;
+const BLOCK = /Block/iu;
+const LEVEL = /Level/iu;
+const DESCRIPTION = /Description/iu;
+const TITLE = /^Title$/u;
+const NO_ESTATE_ASSIGNED = /no estate assigned/iu;
+const IMAGES = /Images/iu;
+const IMAGE_PICKERS = /Images \(optional\)|Take photo/u;
+const REMOVE_FAULT_IMAGE = /Remove fault.png/iu;
+const ESTATE = /estate/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get, POST: post } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
+  Link: ({
+    children,
+    to,
+    search,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    search?: { estateId?: string };
+  }) => (
+    <a href={search?.estateId ? `${to}?estateId=${search.estateId}` : to}>
+      {children}
+    </a>
+  ),
   useNavigate: () => navigate,
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
@@ -122,6 +136,17 @@ it("uses the estate selected through context navigation instead of silently choo
     "/resident/locations",
     expect.objectContaining({ params: { query: { estateId: "other" } } })
   );
+});
+
+it("links back to the selected estate's reports through breadcrumbs", async () => {
+  renderWithProviders(<NewReportPage requestedEstateId={estateId} />);
+  await screen.findByRole("heading", { level: 1, name: REPORT_A_FAULT });
+  const crumbs = within(
+    screen.getByRole("navigation", { name: "Breadcrumbs" })
+  );
+  expect(
+    crumbs.getByRole("link", { name: "My reports" }).getAttribute("href")
+  ).toBe(`/reports?estateId=${estateId}`);
 });
 
 it("explains an unavailable selected estate without falling back to another assignment", async () => {
@@ -360,11 +385,17 @@ it("lets a multi-estate resident choose an estate and clears the old location se
   expect(post).not.toHaveBeenCalled();
 });
 
+it("announces loading the estate with the shared loading state", async () => {
+  renderWithProviders(<NewReportPage />);
+  screen.getByRole("status", { name: "Loading your estate…" });
+  await screen.findByRole("heading", { name: "Report a fault" });
+});
+
 const AI_NOTICE =
-  /text and photos are analysed by an AI service \(Anthropic\) and may be emailed to the estate's contractor/;
+  /text and photos are analysed by an AI service \(Anthropic\) and may be emailed to the estate's contractor/u;
 
 it("tells residents an AI service reads the report and a contractor may receive it", async () => {
-  renderWithProviders(<Page />);
-  await screen.findByRole("heading", { name: REPORT_A_FAULT });
+  renderWithProviders(<NewReportPage />);
+  await screen.findByRole("heading", { name: "Report a fault" });
   await screen.findByText(AI_NOTICE);
 });

@@ -52,12 +52,13 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 const estateId = "00000000-0000-0000-0000-000000000001";
 const path = `/estates/${estateId}/contractors`;
-const LIFT_NAME = /Lift contractor name/;
-const LIFT_EMAIL = /Lift contractor email/;
-const PUMP_NAME = /Pump contractor name/;
-const SAVE_LIFT = /Save lift contractor/;
-const REMOVE_LIFT = /Remove lift contractor/;
-const NO_LONGER_RECEIVES = /Acme Lifts will no longer receive lift work orders/;
+const LIFT_NAME = /Lift contractor name/u;
+const LIFT_EMAIL = /Lift contractor email/u;
+const PUMP_NAME = /Pump contractor name/u;
+const SAVE_LIFT = /Save lift contractor/u;
+const REMOVE_LIFT = /Remove lift contractor/u;
+const NO_LONGER_RECEIVES =
+  /Acme Lifts will no longer receive lift work orders/u;
 
 const lift = {
   equipmentType: "LIFT",

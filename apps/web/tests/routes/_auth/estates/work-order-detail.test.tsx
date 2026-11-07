@@ -7,7 +7,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
-import { WorkOrderDetailPage } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page";
+import { WorkOrderDetailPage } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/work-order-detail-page";
 
 const state = vi.hoisted(() => ({
   access: {
@@ -23,6 +23,7 @@ const state = vi.hoisted(() => ({
   error: false,
   queryError: undefined as Error | undefined,
   creatorName: "Alex Tan" as string | undefined,
+  duplicates: 0,
   status: "OPEN",
   version: 0,
   refetch: vi.fn(),
@@ -67,6 +68,7 @@ vi.mock("@/lib/work-orders", () => ({
       createdAt: "2026-10-22T00:00:00Z",
       createdByUserId: "manager",
       createdByName: state.creatorName,
+      sourceReportConfirmedDuplicateCount: state.duplicates,
     },
   }),
   useWorkOrderStatusHistory: () => ({
@@ -118,6 +120,21 @@ beforeEach(() => {
   state.currentId = "order";
   state.queryError = undefined;
   state.creatorName = "Alex Tan";
+  state.duplicates = 0;
+});
+it("shows how many confirmed duplicates the source report has", () => {
+  state.duplicates = 2;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  screen.getByText("Duplicate reports");
+  screen.getByText("2 confirmed duplicates");
+});
+it("omits the duplicate count when the source report has none", () => {
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  expect(screen.queryByText("Duplicate reports")).toBeNull();
 });
 it("lets Managers explicitly start unassigned work using the observed version", async () => {
   state.access.canUpdate = true;
@@ -601,4 +618,16 @@ it("does not carry a correction draft into another work order", async () => {
     <WorkOrderDetailPage estateId="oak" workOrderId="other-order" />
   );
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+});
+
+it("shows an empty state when a closed order has no outcome corrections", () => {
+  state.status = "CLOSED";
+  state.completion = savedOutcome;
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  const empty = screen
+    .getAllByRole("status")
+    .find((element) => element.textContent?.includes("No corrections yet"));
+  expect(empty).toBeDefined();
 });

@@ -27,13 +27,13 @@
     "test": "nx run-many -t test"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.14",
-    "@nx/maven": "23.2.1",
+    "@biomejs/biome": "2.6.4",
+    "@nx/maven": "24.0.3",
     "@proj/config": "workspace:*",
     "@types/node": "catalog:",
-    "nx": "^23.2.1",
+    "nx": "^24.0.3",
     "typescript": "catalog:",
-    "ultracite": "7.12.2"
+    "ultracite": "8.1.1"
   },
-  "packageManager": "pnpm@12.8.1"
+  "packageManager": "pnpm@12.17.0"
 }

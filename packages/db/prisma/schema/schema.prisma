@@ -9,16 +9,16 @@ datasource db {
 }
 
 model Estate {
-  id                String                  @id @default(uuid()) @db.Uuid
-  ownerUserId       String                  @db.VarChar(255)
-  name              String                  @db.VarChar(200)
-  code              String                  @unique @db.VarChar(50)
-  address           String                  @db.VarChar(500)
-  postalCode        String                  @db.VarChar(20)
-  description       String?                 @db.VarChar(2000)
-  createdAt         DateTime                @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime                @updatedAt @db.Timestamptz(6)
-  deactivatedAt     DateTime?               @db.Timestamptz(6)
+  id                String                        @id @default(uuid()) @db.Uuid
+  ownerUserId       String                        @db.VarChar(255)
+  name              String                        @db.VarChar(200)
+  code              String                        @unique @db.VarChar(50)
+  address           String                        @db.VarChar(500)
+  postalCode        String                        @db.VarChar(20)
+  description       String?                       @db.VarChar(2000)
+  createdAt         DateTime                      @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime                      @updatedAt @db.Timestamptz(6)
+  deactivatedAt     DateTime?                     @db.Timestamptz(6)
   locations         Location[]
   users             EstateUser[]
   assets            Asset[]
@@ -31,6 +31,10 @@ model Estate {
   flatlinePolicies  FlatlinePolicy[]
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
+  categoryFlags     AssetCategoryFlagChange[]
+  categoryIntervals AssetCategoryIntervalChange[]
+  inspectionChecks  InspectionCheck[]
+  inspectionRuns    InspectionListRun[]
   serviceProviders  ServiceProvider[]
   providerRoutes    EquipmentProviderRoute[]
 
@@ -40,27 +44,33 @@ model Estate {
 }
 
 model Document {
-  id                          String    @id @default(uuid()) @db.Uuid
-  estateId                    String    @db.Uuid
-  documentType                String    @db.VarChar(20)
-  originalFilename            String    @db.VarChar(255)
-  contentType                 String    @db.VarChar(50)
-  sizeBytes                   Int
-  storageKey                  String    @unique @db.VarChar(500)
-  uploadedByUserId            String    @db.VarChar(255)
-  createdAt                   DateTime  @default(now()) @db.Timestamptz(6)
-  deletedAt                   DateTime? @db.Timestamptz(6)
-  deletedByUserId             String?   @db.VarChar(255)
-  storageDeletedAt            DateTime? @db.Timestamptz(6)
-  workOrderId                 String?   @db.Uuid
-  workOrderAssociationVersion Int       @default(0)
+  id                              String    @id @default(uuid()) @db.Uuid
+  estateId                        String    @db.Uuid
+  documentType                    String    @db.VarChar(20)
+  originalFilename                String    @db.VarChar(255)
+  contentType                     String    @db.VarChar(50)
+  sizeBytes                       Int
+  storageKey                      String    @unique @db.VarChar(500)
+  uploadedByUserId                String    @db.VarChar(255)
+  createdAt                       DateTime  @default(now()) @db.Timestamptz(6)
+  deletedAt                       DateTime? @db.Timestamptz(6)
+  deletedByUserId                 String?   @db.VarChar(255)
+  storageDeletedAt                DateTime? @db.Timestamptz(6)
+  workOrderId                     String?   @db.Uuid
+  workOrderAssociationVersion     Int       @default(0)
+  assetId                         String?   @db.Uuid
+  assetAssociationVersion         Int       @default(0)
+  assetAssociationChangedByUserId String?   @db.VarChar(255)
+  assetAssociationChangedAt       DateTime? @db.Timestamptz(6)
 
   estate          Estate                   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   workOrder       WorkOrder?               @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  asset           Asset?                   @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   workOrderEvents DocumentWorkOrderEvent[]
 
   @@unique([id, estateId])
   @@index([estateId, workOrderId, createdAt, id])
+  @@index([estateId, assetId, createdAt, id])
   @@index([estateId, createdAt, id])
   @@index([deletedAt, storageDeletedAt])
 }
@@ -148,11 +158,13 @@ model IssueReport {
   createdAt         DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @db.Timestamptz(6)
 
-  estate     Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location   Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  images     IssueReportImage[]
-  workOrders WorkOrder[]
-  routing    ReportRouting?
+  estate          Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location        Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  images          IssueReportImage[]
+  workOrders      WorkOrder[]
+  duplicateOf     IssueReportDuplicate?  @relation("DuplicateReport")
+  duplicates      IssueReportDuplicate[] @relation("DuplicateOriginal")
+  routing         ReportRouting?
   classifications ReportClassification[]
 
   @@unique([id, estateId])
@@ -160,6 +172,31 @@ model IssueReport {
   @@index([estateId])
   @@index([estateId, createdAt, id])
   @@index([estateId, locationId, createdAt, id])
+}
+
+// A link from a fault report to the original it repeats (ID-74, spec
+// fault-report-duplicates.md). One row per linked report; detection saves
+// SUSPECTED links, managers confirm, reject or link by hand. Originals never
+// hold a SUSPECTED/CONFIRMED link themselves, so chains cannot form. The
+// self-link CHECK is hand-written in the migration.
+model IssueReportDuplicate {
+  reportId         String    @id @db.Uuid
+  estateId         String    @db.Uuid
+  originalReportId String    @db.Uuid
+  state            String    @db.VarChar(20)
+  source           String    @db.VarChar(20)
+  locationMatch    String?   @db.VarChar(10)
+  textSimilarity   Decimal?  @db.Decimal(4, 3)
+  repeatCue        Boolean?
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  decidedByUserId  String?   @db.VarChar(255)
+  decidedAt        DateTime? @db.Timestamptz(6)
+
+  report   IssueReport @relation("DuplicateReport", fields: [reportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  original IssueReport @relation("DuplicateOriginal", fields: [originalReportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([reportId, estateId])
+  @@index([estateId, originalReportId, state])
 }
 
 model IssueReportImage {
@@ -206,11 +243,16 @@ model Asset {
   model             AssetModel?             @relation(fields: [modelId, manufacturerId, category], references: [id, manufacturerId, category], onDelete: Restrict, onUpdate: Restrict)
   devices           Device[]
   readings          DeviceReading[]
+  manualReadings    ManualReading[]
   flatlinePauses    DeviceFlatlinePause[]
   assessments       AssetAssessment[]
   events            AssetEvent[]
   workOrders        WorkOrder[]
   inspectionResults AssetInspectionResult[]
+  intervalChanges   AssetIntervalChange[]
+  inspectionChecks  InspectionCheck[]
+
+  documents Document[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -259,6 +301,7 @@ model WorkOrder {
   @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId, createdAt, id])
+  @@index([estateId, sourceReportId])
 }
 
 // Standalone, append-only asset inspection evidence. Follow-up is derived from the work-order link.
@@ -279,6 +322,7 @@ model AssetInspectionResult {
   location         Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   photos           AssetInspectionPhoto[]
   workOrders       WorkOrder[]
+  completedCheck   InspectionCheck?
 
   @@unique([id, estateId])
   @@index([estateId, assetId, inspectedOn, createdAt, id])
@@ -361,10 +405,105 @@ model WorkOrderCompletionRevision {
 // An asset category (decision 0026). `code` is stable and is what assets and
 // catalogue models store. Rows are added only by migrations.
 model AssetCategory {
-  code   String       @id @db.VarChar(30)
-  label  String       @db.VarChar(100)
-  assets Asset[]
-  models AssetModel[]
+  code      String                        @id @db.VarChar(30)
+  label     String                        @db.VarChar(100)
+  assets    Asset[]
+  models    AssetModel[]
+  flags     AssetCategoryFlagChange[]
+  intervals AssetCategoryIntervalChange[]
+}
+
+// Append-only history of an estate's silent-failure flag per asset category (ID-83).
+// The current flag is the latest row; with no rows, LIGHTING defaults to flagged.
+model AssetCategoryFlagChange {
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  category        String   @db.VarChar(30)
+  failsSilently   Boolean
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  estate        Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory AssetCategory @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, category, changedAt])
+}
+
+// Append-only history of an estate's service interval per asset category (ID-81).
+// The current interval is the latest row; a null value and unit clears it. No rows means no interval.
+model AssetCategoryIntervalChange {
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  category        String   @db.VarChar(30)
+  intervalValue   Int?
+  intervalUnit    String?  @db.VarChar(5)
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  estate        Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  assetCategory AssetCategory @relation(fields: [category], references: [code], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, category, changedAt])
+}
+
+// Append-only history of one asset's service-interval override (ID-81).
+// The current override is the latest row; a null value and unit removes it.
+model AssetIntervalChange {
+  id              String   @id @default(uuid()) @db.Uuid
+  assetId         String   @db.Uuid
+  intervalValue   Int?
+  intervalUnit    String?  @db.VarChar(5)
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([assetId, changedAt])
+}
+
+// A spot check due for one asset (ID-84). Open until an inspection result completes
+// it; an open check from an earlier month is overdue (ID-86). One open check per asset.
+model InspectionCheck {
+  id                  String    @id @default(uuid()) @db.Uuid
+  estateId            String    @db.Uuid
+  assetId             String    @db.Uuid
+  month               DateTime  @db.Date
+  dueOn               DateTime  @db.Date
+  dueBasis            String    @db.VarChar(15)
+  intervalValue       Int?
+  intervalUnit        String?   @db.VarChar(5)
+  intervalSource      String?   @db.VarChar(8)
+  generatedByUserId   String    @db.VarChar(255)
+  generatedByName     String?   @db.VarChar(255)
+  generatedAt         DateTime  @default(now()) @db.Timestamptz(6)
+  completedByResultId String?   @unique @db.Uuid
+  completedAt         DateTime? @db.Timestamptz(6)
+
+  estate      Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset       Asset                  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  completedBy AssetInspectionResult? @relation(fields: [completedByResultId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([assetId, month])
+  @@index([estateId, month])
+}
+
+// Append-only record of each generation of an estate's monthly inspection list (ID-84),
+// so a run that added nothing still counts as generated.
+model InspectionListRun {
+  id                String   @id @default(uuid()) @db.Uuid
+  estateId          String   @db.Uuid
+  month             DateTime @db.Date
+  added             Int
+  generatedByUserId String   @db.VarChar(255)
+  generatedByName   String?  @db.VarChar(255)
+  generatedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([estateId, month, generatedAt])
 }
 
 // A manufacturer, shared by all estates (decision 0026). `name` is stored
@@ -419,6 +558,10 @@ model AssetEvent {
   serviceProvider  String?  @db.VarChar(200)
   partsReplaced    String?  @db.VarChar(2500)
   downtimeMinutes  Int?
+  // Optional SGD costs (ID-50); null means not known.
+  labourCost       Decimal? @db.Decimal(14, 2)
+  partsCost        Decimal? @db.Decimal(14, 2)
+  otherCost        Decimal? @db.Decimal(14, 2)
 
   estate       Estate        @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   asset        Asset         @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
@@ -490,6 +633,26 @@ model DeviceReading {
   asset  Asset  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([deviceId, metric, measuredAt])
+  @@index([assetId, metric, measuredAt])
+}
+
+// Human measurements remain separate from device ingestion and monitoring.
+// Source is derived by the unified reading query, never chosen by the caller.
+model ManualReading {
+  id               String   @id @default(uuid()) @db.Uuid
+  estateId         String   @db.Uuid
+  assetId          String   @db.Uuid
+  metric           String   @db.VarChar(30)
+  value            Decimal  @db.Decimal(18, 6)
+  measuredAt       DateTime @db.Timestamptz(6)
+  recordedAt       DateTime @db.Timestamptz(6)
+  recordedByUserId String
+  recordedByName   String?  @db.VarChar(200)
+  submissionId     String   @db.Uuid
+
+  asset Asset @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, recordedByUserId, submissionId])
   @@index([assetId, metric, measuredAt])
 }
 

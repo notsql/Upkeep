@@ -3,6 +3,7 @@ package com.proj.server.event;
 import static com.proj.server.db.tables.Assetevent.ASSETEVENT;
 
 import com.proj.server.db.tables.records.AsseteventRecord;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -35,6 +36,10 @@ public class AssetEventRepository {
                 .fetch();
     }
 
+    private static BigDecimal money(String value) {
+        return value == null ? null : new BigDecimal(value).setScale(2);
+    }
+
     public AsseteventRecord create(
             UUID estateId,
             UUID assetId,
@@ -60,6 +65,9 @@ public class AssetEventRepository {
                 .set(ASSETEVENT.SERVICEPROVIDER, request.serviceProvider())
                 .set(ASSETEVENT.PARTSREPLACED, request.partsReplaced())
                 .set(ASSETEVENT.DOWNTIMEMINUTES, request.downtimeMinutes())
+                .set(ASSETEVENT.LABOURCOST, money(request.labourCost()))
+                .set(ASSETEVENT.PARTSCOST, money(request.partsCost()))
+                .set(ASSETEVENT.OTHERCOST, money(request.otherCost()))
                 .returning()
                 .fetchSingle();
     }
