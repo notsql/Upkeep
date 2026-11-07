@@ -31,6 +31,8 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [asset-history-date-filter.md](features/asset-history-date-filter.md) | - | built; inclusive Singapore date ranges, URL state, range-bound cursors and page-one restart; 1,745 server / 1,168 web tests, contract generation, types, formatting and build pass |
+| [asset-history-timeline.md](features/asset-history-timeline.md) | - | implemented; Council asset browsing/search, read-only history, date ranges and document viewer; real CLOSED work-order completion regression fixed; 1,750 server / 1,168 web tests, types and formatting pass; manual browser review pending |
 | [export-filtered-readings-csv.md](features/export-filtered-readings-csv.md) | ID-61 / ID-64 CSV | implemented and verified; complete filtered CSV v1 with provenance, bounded streaming and cancellation; 1,470 server / 866 web tests, types, formatting/build, live role/mobile QA and million-row HTTP check pass |
 | [mobile-estate-navigation-and-lists.md](features/mobile-estate-navigation-and-lists.md) | readings/mobile QA follow-up | built and verified 2026-10-28; estate-scoped resident reporting, responsive lists and resize recovery; 849 web / 1,449 server tests, types, formatting/build and live Chrome mobile/role checks pass |
 | [manual-readings-and-provenance.md](features/manual-readings-and-provenance.md) | ID-63 / ID-64 | implemented and verified; exact-decimal correction complete; 1,480 server / 880 web tests, types, formatting/build, mobile/role/CSV checks pass |

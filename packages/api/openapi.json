@@ -8080,6 +8080,104 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/history": {
+      "get": {
+        "tags": ["asset-history-controller"],
+        "operationId": "getAssetHistory",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 25 }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "First Singapore calendar day, inclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Last Singapore calendar day, inclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid paths, filters, limit or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Council access required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset inaccessible or missing",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "History unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Combined recorded asset history",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetHistoryPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/failure-risk": {
       "get": {
         "tags": ["failure-risk-controller"],
@@ -8211,6 +8309,100 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/DocumentPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-history": {
+      "get": {
+        "tags": ["asset-history-controller"],
+        "operationId": "listAssetHistoryAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ALL",
+              "enum": ["ACTIVE", "INACTIVE", "ALL"]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 25 }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid paths, filters, limit or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Council access required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset inaccessible or missing",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "History unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Read-only estate asset directory",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetHistoryAssetPageResponse"
                 }
               }
             }
@@ -11556,6 +11748,215 @@
         },
         "required": ["items", "nextCursor"]
       },
+      "AssetHistoryDetails": {
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "MAINTENANCE": "#/components/schemas/HistoryMaintenanceDetails",
+            "COMPLETION": "#/components/schemas/HistoryCompletionDetails",
+            "CONDITION": "#/components/schemas/HistoryConditionDetails",
+            "INSPECTION": "#/components/schemas/HistoryInspectionDetails",
+            "LIFECYCLE": "#/components/schemas/HistoryLifecycleDetails",
+            "DOCUMENT": "#/components/schemas/HistoryDocumentDetails"
+          }
+        },
+        "oneOf": [
+          { "$ref": "#/components/schemas/HistoryMaintenanceDetails" },
+          { "$ref": "#/components/schemas/HistoryCompletionDetails" },
+          { "$ref": "#/components/schemas/HistoryConditionDetails" },
+          { "$ref": "#/components/schemas/HistoryInspectionDetails" },
+          { "$ref": "#/components/schemas/HistoryLifecycleDetails" },
+          { "$ref": "#/components/schemas/HistoryDocumentDetails" }
+        ],
+        "properties": { "kind": { "type": "string" } },
+        "required": ["kind"]
+      },
+      "AssetHistoryEntryResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "sourceId": { "type": "string", "format": "uuid" },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "MAINTENANCE",
+              "WORK_ORDER_COMPLETED",
+              "CONDITION",
+              "INSPECTION",
+              "LIFECYCLE",
+              "INVOICE",
+              "SERVICE_REPORT"
+            ]
+          },
+          "title": { "type": "string" },
+          "summary": { "type": ["string", "null"] },
+          "occurredOn": { "type": ["string", "null"], "format": "date" },
+          "occurredAt": { "type": ["string", "null"], "format": "date-time" },
+          "recordedAt": { "type": "string", "format": "date-time" },
+          "details": { "$ref": "#/components/schemas/AssetHistoryDetails" }
+        },
+        "required": [
+          "details",
+          "id",
+          "kind",
+          "occurredAt",
+          "occurredOn",
+          "recordedAt",
+          "sourceId",
+          "summary",
+          "title"
+        ]
+      },
+      "AssetHistoryPageResponse": {
+        "type": "object",
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetHistorySummaryResponse"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetHistoryEntryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] },
+          "documentsVisible": { "type": "boolean" }
+        },
+        "required": ["asset", "documentsVisible", "items", "nextCursor"]
+      },
+      "AssetHistorySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "locationPath": { "type": "string" },
+          "installedOn": { "type": ["string", "null"], "format": "date" },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "status": { "type": "string", "enum": ["ACTIVE", "RETIRED"] }
+        },
+        "required": [
+          "category",
+          "id",
+          "installedOn",
+          "locationPath",
+          "name",
+          "reference",
+          "retiredOn",
+          "status"
+        ]
+      },
+      "HistoryCompletionDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["COMPLETION"] },
+          "workOrderId": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "findings": { "type": "string" },
+          "workPerformed": { "type": "string" },
+          "partsUsed": { "type": ["string", "null"] },
+          "labourCost": { "type": ["string", "null"] },
+          "partsCost": { "type": ["string", "null"] },
+          "totalCost": { "type": ["string", "null"] },
+          "currency": { "type": "string" },
+          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" },
+          "editedAt": { "type": ["string", "null"], "format": "date-time" },
+          "canViewWorkOrder": { "type": "boolean" }
+        },
+        "required": [
+          "canViewWorkOrder",
+          "currency",
+          "findings",
+          "kind",
+          "reference",
+          "workOrderId",
+          "workPerformed"
+        ]
+      },
+      "HistoryConditionDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["CONDITION"] },
+          "condition": { "type": "string" },
+          "assessedOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string" },
+          "origin": { "type": "string", "enum": ["HUMAN", "ANOMALY_MODEL"] },
+          "sourceLabel": { "type": "string" }
+        },
+        "required": [
+          "assessedOn",
+          "condition",
+          "kind",
+          "notes",
+          "origin",
+          "sourceLabel"
+        ]
+      },
+      "HistoryDocumentDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["DOCUMENT"] },
+          "document": { "$ref": "#/components/schemas/DocumentResponse" }
+        },
+        "required": ["document", "kind"]
+      },
+      "HistoryInspectionDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["INSPECTION"] },
+          "outcome": { "type": "string" },
+          "inspectedOn": { "type": "string", "format": "date" },
+          "notes": { "type": ["string", "null"] },
+          "locationPath": { "type": "string" },
+          "canViewInspection": { "type": "boolean" }
+        },
+        "required": [
+          "canViewInspection",
+          "inspectedOn",
+          "kind",
+          "locationPath",
+          "outcome"
+        ]
+      },
+      "HistoryLifecycleDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["LIFECYCLE"] },
+          "action": { "type": "string" },
+          "previousRetiredOn": { "type": ["string", "null"], "format": "date" },
+          "previousRetirementReason": { "type": ["string", "null"] },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" }
+        },
+        "required": ["action", "kind", "lifecycleVersion"]
+      },
+      "HistoryMaintenanceDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["MAINTENANCE"] },
+          "type": { "type": "string" },
+          "notes": { "type": "string" },
+          "findings": { "type": ["string", "null"] },
+          "workPerformed": { "type": ["string", "null"] },
+          "serviceProvider": { "type": ["string", "null"] },
+          "partsReplaced": { "type": ["string", "null"] },
+          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" },
+          "labourCost": { "type": ["string", "null"] },
+          "partsCost": { "type": ["string", "null"] },
+          "otherCost": { "type": ["string", "null"] },
+          "totalCost": { "type": ["string", "null"] }
+        },
+        "required": ["kind", "notes", "type"]
+      },
+      "AssetHistoryAssetPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetHistorySummaryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
+      },
       "EstateAssetCategoriesResponse": {
         "type": "object",
         "properties": {
@@ -11770,6 +12171,7 @@
           "canViewManagement": { "type": "boolean" },
           "canManageEstate": { "type": "boolean" },
           "canViewAssets": { "type": "boolean" },
+          "canViewAssetHistory": { "type": "boolean" },
           "canViewReadings": { "type": "boolean" },
           "canRecordReadings": { "type": "boolean" },
           "canViewEstateDetails": { "type": "boolean" },
@@ -11813,6 +12215,7 @@
           "canRelocateFaultReports",
           "canUpdateWorkOrders",
           "canUploadDocuments",
+          "canViewAssetHistory",
           "canViewAssets",
           "canViewDocuments",
           "canViewEstateDetails",

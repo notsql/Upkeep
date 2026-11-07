@@ -80,6 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/access/context",
+                                "/estates/{estateId}/asset-history",
+                                "/estates/{estateId}/assets/{assetId}/history",
                                 "/estates/{estateId}/documents",
                                 "/estates/{estateId}/documents/{documentId}/content",
                                 "/estates/{estateId}/documents/{documentId}/work-order",

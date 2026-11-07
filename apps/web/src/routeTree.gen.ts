@@ -60,6 +60,7 @@ import { Route as AuthEstatesEstateIdRolesRoleIdEditIndexRouteImport } from './r
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/costs/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/devices/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/documents/index'
+import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/history/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/inspections/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/_details/maintenance/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/devices/new/index'
@@ -356,6 +357,12 @@ const AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute =
     path: '/documents/',
     getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
   } as any)
+const AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute =
+  AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRouteImport.update({
+    id: '/history/',
+    path: '/history/',
+    getParentRoute: () => AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute,
+  } as any)
 const AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute =
   AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRouteImport.update({
     id: '/inspections/',
@@ -447,6 +454,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/assets/$assetId/costs/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   '/estates/$estateId/assets/$assetId/devices/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
   '/estates/$estateId/assets/$assetId/documents/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  '/estates/$estateId/assets/$assetId/history/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute
   '/estates/$estateId/assets/$assetId/inspections/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
   '/estates/$estateId/assets/$assetId/maintenance/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
@@ -501,6 +509,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets/$assetId/costs': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   '/estates/$estateId/assets/$assetId/devices': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
   '/estates/$estateId/assets/$assetId/documents': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  '/estates/$estateId/assets/$assetId/history': typeof AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute
   '/estates/$estateId/assets/$assetId/inspections': typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
   '/estates/$estateId/assets/$assetId/maintenance': typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
   '/estates/$estateId/assets/$assetId/devices/new': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
@@ -561,6 +570,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/assets/$assetId/_details/costs/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/_details/devices/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/_details/documents/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  '/_auth/estates/$estateId/assets/$assetId/_details/history/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/_details/inspections/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/_details/maintenance/': typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
   '/_auth/estates/$estateId/assets/$assetId/devices/new/': typeof AuthEstatesEstateIdAssetsAssetIdDevicesNewIndexRoute
@@ -620,6 +630,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/costs/'
     | '/estates/$estateId/assets/$assetId/devices/'
     | '/estates/$estateId/assets/$assetId/documents/'
+    | '/estates/$estateId/assets/$assetId/history/'
     | '/estates/$estateId/assets/$assetId/inspections/'
     | '/estates/$estateId/assets/$assetId/maintenance/'
     | '/estates/$estateId/assets/$assetId/devices/new/'
@@ -674,6 +685,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId/costs'
     | '/estates/$estateId/assets/$assetId/devices'
     | '/estates/$estateId/assets/$assetId/documents'
+    | '/estates/$estateId/assets/$assetId/history'
     | '/estates/$estateId/assets/$assetId/inspections'
     | '/estates/$estateId/assets/$assetId/maintenance'
     | '/estates/$estateId/assets/$assetId/devices/new'
@@ -733,6 +745,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/assets/$assetId/_details/costs/'
     | '/_auth/estates/$estateId/assets/$assetId/_details/devices/'
     | '/_auth/estates/$estateId/assets/$assetId/_details/documents/'
+    | '/_auth/estates/$estateId/assets/$assetId/_details/history/'
     | '/_auth/estates/$estateId/assets/$assetId/_details/inspections/'
     | '/_auth/estates/$estateId/assets/$assetId/_details/maintenance/'
     | '/_auth/estates/$estateId/assets/$assetId/devices/new/'
@@ -1111,6 +1124,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRouteImport
       parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
     }
+    '/_auth/estates/$estateId/assets/$assetId/_details/history/': {
+      id: '/_auth/estates/$estateId/assets/$assetId/_details/history/'
+      path: '/history'
+      fullPath: '/estates/$estateId/assets/$assetId/history/'
+      preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRouteImport
+      parentRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsRouteRoute
+    }
     '/_auth/estates/$estateId/assets/$assetId/_details/inspections/': {
       id: '/_auth/estates/$estateId/assets/$assetId/_details/inspections/'
       path: '/inspections'
@@ -1196,6 +1216,7 @@ interface AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteChildren {
   AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsCostsIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute
+  AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute
   AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute: typeof AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute
 }
@@ -1210,6 +1231,8 @@ const AuthEstatesEstateIdAssetsAssetIdDetailsRouteRouteChildren: AuthEstatesEsta
       AuthEstatesEstateIdAssetsAssetIdDetailsDevicesIndexRoute,
     AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute:
       AuthEstatesEstateIdAssetsAssetIdDetailsDocumentsIndexRoute,
+    AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute:
+      AuthEstatesEstateIdAssetsAssetIdDetailsHistoryIndexRoute,
     AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute:
       AuthEstatesEstateIdAssetsAssetIdDetailsInspectionsIndexRoute,
     AuthEstatesEstateIdAssetsAssetIdDetailsMaintenanceIndexRoute:

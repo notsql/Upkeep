@@ -1,5 +1,10 @@
 # Access projection and retired global grants
 
+`EstateAccessResponse.canViewAssetHistory` grants current Owners and same-estate
+Council read-only browsing/profile/history access, including retired assets and
+inactive estates, subject to the Resident override. It does not change
+`canViewAssets` or mutation grants. See [asset-history.md](asset-history.md).
+
 Source of truth: packages/api/openapi.json. JWTs supply identity; current Neon
 membership/ownership supplies authority. WorkOS admin claims grant no application
 platform or general estate powers. Sensor management permits owners and current
@@ -26,7 +31,7 @@ hasResidentMembership/canSubmitReport: boolean; residentEstates: { id: UUID,
 name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is false.
 
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
-CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewReadings/canRecordReadings/canInviteMembers/
+CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewAssetHistory/canViewReadings/canRecordReadings/canInviteMembers/
 canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
 canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments: boolean. Owners project as MANAGER; ownership is
 separate. Managers manage estate-local invitations/roles; inactive estates cannot

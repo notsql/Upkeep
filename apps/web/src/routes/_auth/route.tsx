@@ -128,6 +128,9 @@ function guardInspectionContext(
   path: string,
   estate: components["schemas"]["EstateAccessResponse"] | undefined
 ): boolean {
+  if (guardHistoryContext(path, estate)) {
+    return true;
+  }
   const [, , , feature] = path.split("/");
   if (!feature && estate?.canViewEstateDetails) {
     return true;
@@ -202,6 +205,20 @@ function guardEstatePath(
         throw notFound();
       }
   }
+}
+
+function guardHistoryContext(
+  path: string,
+  estate: EstatePermission | undefined
+): boolean {
+  const segments = path.split("/").filter(Boolean);
+  if (segments[2] !== "assets" || !estate?.canViewAssetHistory) {
+    return false;
+  }
+  return (
+    (segments.length === 4 && segments[3] !== "new") ||
+    (segments.length === 5 && segments[4] === "history")
+  );
 }
 
 /** Section roots (and sub-views) whose rule lives in guardDestination. */
