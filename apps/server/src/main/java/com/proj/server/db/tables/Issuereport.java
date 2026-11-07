@@ -107,6 +107,21 @@ public class Issuereport extends TableImpl<IssuereportRecord> {
      */
     public final TableField<IssuereportRecord, String> TITLE = createField(DSL.name("title"), SQLDataType.VARCHAR(150).nullable(false), this, "");
 
+    /**
+     * The column <code>public.IssueReport.isSafety</code>.
+     */
+    public final TableField<IssuereportRecord, Boolean> ISSAFETY = createField(DSL.name("isSafety"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("false"), SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column <code>public.IssueReport.urgency</code>.
+     */
+    public final TableField<IssuereportRecord, String> URGENCY = createField(DSL.name("urgency"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'MEDIUM'::character varying"), SQLDataType.VARCHAR)), this, "");
+
+    /**
+     * The column <code>public.IssueReport.urgencyVersion</code>.
+     */
+    public final TableField<IssuereportRecord, Integer> URGENCYVERSION = createField(DSL.name("urgencyVersion"), SQLDataType.INTEGER.nullable(false).defaultValue(DSL.field(DSL.raw("0"), SQLDataType.INTEGER)), this, "");
+
     private Issuereport(Name alias, Table<IssuereportRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

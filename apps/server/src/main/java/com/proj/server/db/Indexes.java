@@ -28,6 +28,7 @@ import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
+import com.proj.server.db.tables.Issuereporturgencyevent;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
@@ -113,6 +114,7 @@ public class Indexes {
     public static final Index ISSUEREPORTDUPLICATE_REPORTID_ESTATEID_KEY = Internal.createIndex(DSL.name("IssueReportDuplicate_reportId_estateId_key"), Issuereportduplicate.ISSUEREPORTDUPLICATE, new OrderField[] { Issuereportduplicate.ISSUEREPORTDUPLICATE.REPORTID, Issuereportduplicate.ISSUEREPORTDUPLICATE.ESTATEID }, true);
     public static final Index ISSUEREPORTIMAGE_REPORTID_IDX = Internal.createIndex(DSL.name("IssueReportImage_reportId_idx"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, false);
     public static final Index ISSUEREPORTIMAGE_STORAGEKEY_KEY = Internal.createIndex(DSL.name("IssueReportImage_storageKey_key"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.STORAGEKEY }, true);
+    public static final Index ISSUEREPORTURGENCYEVENT_REPORTID_VERSION_KEY = Internal.createIndex(DSL.name("IssueReportUrgencyEvent_reportId_version_key"), Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT, new OrderField[] { Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT.REPORTID, Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT.VERSION }, true);
     public static final Index LOCATION_ESTATEID_IDX = Internal.createIndex(DSL.name("Location_estateId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.ESTATEID }, false);
     public static final Index LOCATION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_ID_TYPE_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_type_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.TYPE, Location.LOCATION.ESTATEID }, true);

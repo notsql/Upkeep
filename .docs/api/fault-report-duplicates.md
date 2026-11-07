@@ -78,8 +78,8 @@ The threshold and the word lists are untuned first guesses, held as constants in
 | `DuplicateState` | `SUSPECTED` \| `CONFIRMED` \| `REJECTED` |
 | `DuplicateOf` | `reportId: UUID`, `title: string`, `state: DuplicateState` (only active states appear) |
 | `LinkedDuplicate` | `reportId: UUID`, `title: string`, `location: ReportLocation`, `state: DuplicateState`, `createdAt: date-time` |
-| `EstateIssueReportSummaryResponse` | All `IssueReportSummaryResponse` fields, plus `confirmedDuplicateCount: int`, `suspectedDuplicateCount: int`, `duplicateOf: DuplicateOf \| null` |
-| `EstateIssueReportDetailResponse` | The summary fields, `images: ReportImage[]`, and `duplicates: LinkedDuplicate[]` (active links to this report, newest first) |
+| `EstateIssueReportSummaryResponse` | All `IssueReportSummaryResponse` fields, plus `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `urgencyVersion: int`, `confirmedDuplicateCount: int`, `suspectedDuplicateCount: int`, `duplicateOf: DuplicateOf \| null` |
+| `EstateIssueReportDetailResponse` | The summary fields, `images: ReportImage[]`, `lastUrgencyChange: ReportUrgencyChange \| null`, and `duplicates: LinkedDuplicate[]` (active links to this report, newest first) |
 | `EstateIssueReportPageResponse` | `items: EstateIssueReportSummaryResponse[]`, `nextCursor: string \| null` |
 | `ReviewDuplicateRequest` | `state: CONFIRMED \| REJECTED`, `expectedState: SUSPECTED \| CONFIRMED` (both required) |
 | `LinkDuplicateRequest` | `originalReportId: UUID` (required) |

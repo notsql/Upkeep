@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Responder view of a report: the resident summary plus duplicate information (ID-74). */
+/** Responder view of a report: the resident summary plus duplicate and urgency information. */
 @Schema(
         requiredProperties = {
             "id",
@@ -19,7 +19,10 @@ import java.util.UUID;
             "updatedAt",
             "confirmedDuplicateCount",
             "suspectedDuplicateCount",
-            "duplicateOf"
+            "duplicateOf",
+            "urgency",
+            "isSafety",
+            "urgencyVersion"
         })
 public record EstateIssueReportSummaryResponse(
         UUID id,
@@ -32,8 +35,12 @@ public record EstateIssueReportSummaryResponse(
         OffsetDateTime updatedAt,
         int confirmedDuplicateCount,
         int suspectedDuplicateCount,
-        @Schema(nullable = true) DuplicateOf duplicateOf) {
-    static EstateIssueReportSummaryResponse of(IssueReportSummaryResponse report, DuplicateRepository.Summary info) {
+        @Schema(nullable = true) DuplicateOf duplicateOf,
+        ReportUrgency urgency,
+        boolean isSafety,
+        int urgencyVersion) {
+    public static EstateIssueReportSummaryResponse of(
+            IssueReportSummaryResponse report, ReportUrgencyRepository.Values values) {
         return new EstateIssueReportSummaryResponse(
                 report.id(),
                 report.title(),
@@ -43,8 +50,29 @@ public record EstateIssueReportSummaryResponse(
                 report.status(),
                 report.createdAt(),
                 report.updatedAt(),
+                0,
+                0,
+                null,
+                values.urgency(),
+                values.isSafety(),
+                values.version());
+    }
+
+    public EstateIssueReportSummaryResponse withDuplicates(DuplicateRepository.Summary info) {
+        return new EstateIssueReportSummaryResponse(
+                id,
+                title,
+                description,
+                estateName,
+                location,
+                status,
+                createdAt,
+                updatedAt,
                 info.confirmed(),
                 info.suspected(),
-                info.duplicateOf());
+                info.duplicateOf(),
+                urgency,
+                isSafety,
+                urgencyVersion);
     }
 }

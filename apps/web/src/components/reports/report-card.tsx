@@ -14,6 +14,7 @@ export function ReportCard({
   locationAction,
   showUpdated = false,
   badges,
+  urgency,
   children,
 }: {
   report: components["schemas"]["IssueReportSummaryResponse"];
@@ -21,6 +22,7 @@ export function ReportCard({
   locationAction?: ReactNode;
   showUpdated?: boolean;
   badges?: ReactNode;
+  urgency?: ReactNode;
   children?: ReactNode;
 }) {
   return (
@@ -36,6 +38,7 @@ export function ReportCard({
           locationAction={locationAction}
           report={report}
           showUpdated={showUpdated}
+          urgency={urgency}
         />
         {children}
       </CardContent>
