@@ -7,6 +7,9 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
+- [Asset history API](api/asset-history.md): Owner/Council directory, combined recorded timeline and Singapore date ranges.
+- [Asset history frontend](frontend/asset-history.md): Council profiles, History, Apply/Clear date filters, file previews and scoped refresh.
+
 - [Invoices and service reports](api/documents.md): private document upload, filename/type filtering, download, deletion and cleanup.
 - [Asset document association](api/asset-documents.md): owner-authorized link/unlink, retired assets, attachment reads and work-order consistency.
 

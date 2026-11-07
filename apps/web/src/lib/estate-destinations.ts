@@ -34,7 +34,9 @@ export function canOpenInspections(
 
 export function canOpenAssets(permission: Permission): boolean {
   return Boolean(
-    permission?.canViewAssets || permission?.canViewInspectionResults
+    permission?.canViewAssets ||
+      permission?.canViewAssetHistory ||
+      permission?.canViewInspectionResults
   );
 }
 

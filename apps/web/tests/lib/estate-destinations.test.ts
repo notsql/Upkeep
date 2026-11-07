@@ -85,6 +85,11 @@ describe("sensors", () => {
 });
 
 describe("assets", () => {
+  it("opens the read-only asset directory for history-only Council readers", () => {
+    expect(
+      canOpenAssets({ ...managementOnly, canViewAssetHistory: true })
+    ).toBe(true);
+  });
   it("opens for asset readers and inspection-only users", () => {
     expect(canOpenAssets(managementOnly)).toBe(false);
     expect(canOpenAssets({ ...managementOnly, canViewAssets: true })).toBe(

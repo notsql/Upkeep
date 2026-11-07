@@ -81,6 +81,9 @@ function routerFor(path: string) {
     "/estates/$estateId/assets",
     "/estates/$estateId/assets/new",
     "/estates/$estateId/assets/$assetId",
+    "/estates/$estateId/assets/$assetId/history",
+    "/estates/$estateId/assets/$assetId/maintenance",
+    "/estates/$estateId/assets/$assetId/documents",
     "/estates/$estateId/assets/$assetId/edit",
     "/estates/$estateId/assets/$assetId/readings",
     "/estates/$estateId/readings",
@@ -662,6 +665,40 @@ it.each(OWNER_GATED)(
     expect(managementLoader).not.toHaveBeenCalled();
   }
 );
+
+it.each([
+  "/estates/oak/assets",
+  "/estates/oak/assets/pump",
+  "/estates/oak/assets/pump/history",
+])(
+  "opens $path for Council history readers without fetching owner-only context",
+  async (path) => {
+    estateAccess(
+      { ...managementOnly, role: "COUNCIL", canViewAssetHistory: true },
+      false
+    );
+    const router = routerFor(path);
+    await router.load();
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+    expect(get).not.toHaveBeenCalledWith("/estates/{id}", expect.anything());
+  }
+);
+
+it.each([
+  "/estates/oak/assets/new",
+  "/estates/oak/assets/pump/edit",
+  "/estates/oak/assets/pump/maintenance",
+  "/estates/oak/assets/pump/documents",
+])("keeps $path private for Council history readers", async (path) => {
+  estateAccess(
+    { ...managementOnly, role: "COUNCIL", canViewAssetHistory: true },
+    false
+  );
+  const router = routerFor(path);
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
+});
 
 it.each(OWNER_GATED)("404s %s when the owner lookup fails", async (path) => {
   estateAccess(managementOnly, "error");
