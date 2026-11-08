@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -321,8 +322,10 @@ class ReadingImportBatchIntegrationTests extends ReadingImportTestSupport {
         return opts;
     }
 
-    @Test
-    void originalSensorAndManualExportsRoundTripWithoutCreatingImportedCopies() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void originalSensorAndManualExportsRoundTripWithoutCreatingImportedCopies(boolean uppercaseReadingIds)
+            throws Exception {
         var device = data.device(estate, location, asset, null);
         db.execute(
                 "insert into \"DeviceReading\" (id, \"estateId\", \"assetId\", \"deviceId\", metric, value, \"measuredAt\", \"receivedAt\") values (?, ?, ?, ?, 'TEMPERATURE', 21, ?::timestamptz, now())",
@@ -339,6 +342,12 @@ class ReadingImportBatchIntegrationTests extends ReadingImportTestSupport {
                 TIME,
                 UUID.randomUUID());
         var csv = export();
+        if (uppercaseReadingIds) {
+            for (var record : csvRecords(csv).subList(1, 3)) {
+                var readingId = record.getFirst();
+                csv = csv.replace(readingId, readingId.toUpperCase(Locale.ROOT));
+            }
+        }
         var batch = body(submit("import-owner", csv, optionsForExport()).andExpect(status().isCreated()));
         counts(batch, 2, 0, 2, 0, 1);
         assertThat(list().path("totalItems").asInt()).isEqualTo(2);

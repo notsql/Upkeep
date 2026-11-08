@@ -113,6 +113,7 @@ Imported identity is estate/asset/metric/measurement instant. Equal exact values
 are duplicates; different values conflict without overwriting. Within-file rows
 are processed in record order. Export source/reading IDs recognize an existing
 same-estate measurement only after comparing its full normalized contents.
+Exported reading UUIDs match regardless of letter case.
 Unknown exported IDs are hints and never become new reading IDs.
 
 Submission identity is estate/uploader/submission UUID plus identical bytes,

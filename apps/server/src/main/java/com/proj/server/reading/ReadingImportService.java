@@ -117,7 +117,7 @@ public class ReadingImportService {
             ReadingSource source = null;
             if (candidate.valid()) {
                 var origin = origins.get(candidate.row().cells().get("source") + ":"
-                        + candidate.row().cells().get("reading_id"));
+                        + uuid(candidate.row().cells().get("reading_id")));
                 if (origin != null) {
                     if (!origin.asset().equals(candidate.asset().getId())
                             || !origin.metric().equals(candidate.metric().name())
