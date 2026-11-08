@@ -4,6 +4,7 @@ import com.proj.server.workorder.WholeNumberDeserializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import java.time.LocalDate;
 import org.springframework.http.HttpStatus;
 import tools.jackson.databind.annotation.JsonDeserialize;
 
@@ -21,6 +22,15 @@ public record ServiceInterval(
     /** The stored columns as an interval; null when cleared. */
     public static ServiceInterval of(Integer value, String unit) {
         return value == null || unit == null ? null : new ServiceInterval(value, IntervalUnit.valueOf(unit));
+    }
+
+    /** The date one interval after {@code date}, in calendar days, months or years. */
+    public LocalDate after(LocalDate date) {
+        return switch (unit) {
+            case DAY -> date.plusDays(value);
+            case MONTH -> date.plusMonths(value);
+            case YEAR -> date.plusYears(value);
+        };
     }
 
     /** The request's interval, refused when its value is over the unit's limit. */

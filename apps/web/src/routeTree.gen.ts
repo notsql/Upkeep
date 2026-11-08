@@ -17,6 +17,7 @@ import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as AuthAccountIndexRouteImport } from './routes/_auth/account/index'
 import { Route as AuthEstatesIndexRouteImport } from './routes/_auth/estates/index'
 import { Route as AuthInvitationsIndexRouteImport } from './routes/_auth/invitations/index'
+import { Route as AuthNotificationsIndexRouteImport } from './routes/_auth/notifications/index'
 import { Route as AuthReportsIndexRouteImport } from './routes/_auth/reports/index'
 import { Route as AuthAdminUsersIndexRouteImport } from './routes/_auth/admin/users/index'
 import { Route as AuthEstatesEstateIdIndexRouteImport } from './routes/_auth/estates/$estateId/index'
@@ -38,6 +39,7 @@ import { Route as AuthEstatesEstateIdEditIndexRouteImport } from './routes/_auth
 import { Route as AuthEstatesEstateIdFailureRiskIndexRouteImport } from './routes/_auth/estates/$estateId/failure-risk/index'
 import { Route as AuthEstatesEstateIdInspectionsIndexRouteImport } from './routes/_auth/estates/$estateId/inspections/index'
 import { Route as AuthEstatesEstateIdLocationsIndexRouteImport } from './routes/_auth/estates/$estateId/locations/index'
+import { Route as AuthEstatesEstateIdNotificationSettingsIndexRouteImport } from './routes/_auth/estates/$estateId/notification-settings/index'
 import { Route as AuthEstatesEstateIdReadingsIndexRouteImport } from './routes/_auth/estates/$estateId/readings/index'
 import { Route as AuthEstatesEstateIdReportsIndexRouteImport } from './routes/_auth/estates/$estateId/reports/index'
 import { Route as AuthEstatesEstateIdRolesIndexRouteImport } from './routes/_auth/estates/$estateId/roles/index'
@@ -104,6 +106,11 @@ const AuthEstatesIndexRoute = AuthEstatesIndexRouteImport.update({
 const AuthInvitationsIndexRoute = AuthInvitationsIndexRouteImport.update({
   id: '/invitations/',
   path: '/invitations/',
+  getParentRoute: () => AuthRouteRoute,
+} as any)
+const AuthNotificationsIndexRoute = AuthNotificationsIndexRouteImport.update({
+  id: '/notifications/',
+  path: '/notifications/',
   getParentRoute: () => AuthRouteRoute,
 } as any)
 const AuthReportsIndexRoute = AuthReportsIndexRouteImport.update({
@@ -223,6 +230,12 @@ const AuthEstatesEstateIdLocationsIndexRoute =
   AuthEstatesEstateIdLocationsIndexRouteImport.update({
     id: '/estates/$estateId/locations/',
     path: '/estates/$estateId/locations/',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdNotificationSettingsIndexRoute =
+  AuthEstatesEstateIdNotificationSettingsIndexRouteImport.update({
+    id: '/estates/$estateId/notification-settings/',
+    path: '/estates/$estateId/notification-settings/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
 const AuthEstatesEstateIdReadingsIndexRoute =
@@ -405,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/account/': typeof AuthAccountIndexRoute
   '/estates/': typeof AuthEstatesIndexRoute
   '/invitations/': typeof AuthInvitationsIndexRoute
+  '/notifications/': typeof AuthNotificationsIndexRoute
   '/reports/': typeof AuthReportsIndexRoute
   '/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren
   '/estates/$estateId/sensors': typeof AuthEstatesEstateIdSensorsRouteRouteWithChildren
@@ -426,6 +440,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/inspections/': typeof AuthEstatesEstateIdInspectionsIndexRoute
   '/estates/$estateId/locations/': typeof AuthEstatesEstateIdLocationsIndexRoute
+  '/estates/$estateId/notification-settings/': typeof AuthEstatesEstateIdNotificationSettingsIndexRoute
   '/estates/$estateId/readings/': typeof AuthEstatesEstateIdReadingsIndexRoute
   '/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
   '/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
@@ -462,6 +477,7 @@ export interface FileRoutesByTo {
   '/account': typeof AuthAccountIndexRoute
   '/estates': typeof AuthEstatesIndexRoute
   '/invitations': typeof AuthInvitationsIndexRoute
+  '/notifications': typeof AuthNotificationsIndexRoute
   '/reports': typeof AuthReportsIndexRoute
   '/admin/users': typeof AuthAdminUsersIndexRoute
   '/estates/$estateId': typeof AuthEstatesEstateIdIndexRoute
@@ -481,6 +497,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/failure-risk': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/estates/$estateId/inspections': typeof AuthEstatesEstateIdInspectionsIndexRoute
   '/estates/$estateId/locations': typeof AuthEstatesEstateIdLocationsIndexRoute
+  '/estates/$estateId/notification-settings': typeof AuthEstatesEstateIdNotificationSettingsIndexRoute
   '/estates/$estateId/readings': typeof AuthEstatesEstateIdReadingsIndexRoute
   '/estates/$estateId/reports': typeof AuthEstatesEstateIdReportsIndexRoute
   '/estates/$estateId/roles': typeof AuthEstatesEstateIdRolesIndexRoute
@@ -518,6 +535,7 @@ export interface FileRoutesById {
   '/_auth/account/': typeof AuthAccountIndexRoute
   '/_auth/estates/': typeof AuthEstatesIndexRoute
   '/_auth/invitations/': typeof AuthInvitationsIndexRoute
+  '/_auth/notifications/': typeof AuthNotificationsIndexRoute
   '/_auth/reports/': typeof AuthReportsIndexRoute
   '/_auth/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren
   '/_auth/estates/$estateId/sensors': typeof AuthEstatesEstateIdSensorsRouteRouteWithChildren
@@ -539,6 +557,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/failure-risk/': typeof AuthEstatesEstateIdFailureRiskIndexRoute
   '/_auth/estates/$estateId/inspections/': typeof AuthEstatesEstateIdInspectionsIndexRoute
   '/_auth/estates/$estateId/locations/': typeof AuthEstatesEstateIdLocationsIndexRoute
+  '/_auth/estates/$estateId/notification-settings/': typeof AuthEstatesEstateIdNotificationSettingsIndexRoute
   '/_auth/estates/$estateId/readings/': typeof AuthEstatesEstateIdReadingsIndexRoute
   '/_auth/estates/$estateId/reports/': typeof AuthEstatesEstateIdReportsIndexRoute
   '/_auth/estates/$estateId/roles/': typeof AuthEstatesEstateIdRolesIndexRoute
@@ -578,6 +597,7 @@ export interface FileRouteTypes {
     | '/account/'
     | '/estates/'
     | '/invitations/'
+    | '/notifications/'
     | '/reports/'
     | '/estates/$estateId/asset-categories'
     | '/estates/$estateId/sensors'
@@ -599,6 +619,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/failure-risk/'
     | '/estates/$estateId/inspections/'
     | '/estates/$estateId/locations/'
+    | '/estates/$estateId/notification-settings/'
     | '/estates/$estateId/readings/'
     | '/estates/$estateId/reports/'
     | '/estates/$estateId/roles/'
@@ -635,6 +656,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/estates'
     | '/invitations'
+    | '/notifications'
     | '/reports'
     | '/admin/users'
     | '/estates/$estateId'
@@ -654,6 +676,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/failure-risk'
     | '/estates/$estateId/inspections'
     | '/estates/$estateId/locations'
+    | '/estates/$estateId/notification-settings'
     | '/estates/$estateId/readings'
     | '/estates/$estateId/reports'
     | '/estates/$estateId/roles'
@@ -690,6 +713,7 @@ export interface FileRouteTypes {
     | '/_auth/account/'
     | '/_auth/estates/'
     | '/_auth/invitations/'
+    | '/_auth/notifications/'
     | '/_auth/reports/'
     | '/_auth/estates/$estateId/asset-categories'
     | '/_auth/estates/$estateId/sensors'
@@ -711,6 +735,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/failure-risk/'
     | '/_auth/estates/$estateId/inspections/'
     | '/_auth/estates/$estateId/locations/'
+    | '/_auth/estates/$estateId/notification-settings/'
     | '/_auth/estates/$estateId/readings/'
     | '/_auth/estates/$estateId/reports/'
     | '/_auth/estates/$estateId/roles/'
@@ -808,6 +833,13 @@ declare module '@tanstack/react-router' {
       path: '/invitations'
       fullPath: '/invitations/'
       preLoaderRoute: typeof AuthInvitationsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/notifications/': {
+      id: '/_auth/notifications/'
+      path: '/notifications'
+      fullPath: '/notifications/'
+      preLoaderRoute: typeof AuthNotificationsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/reports/': {
@@ -955,6 +987,13 @@ declare module '@tanstack/react-router' {
       path: '/estates/$estateId/locations'
       fullPath: '/estates/$estateId/locations/'
       preLoaderRoute: typeof AuthEstatesEstateIdLocationsIndexRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/notification-settings/': {
+      id: '/_auth/estates/$estateId/notification-settings/'
+      path: '/estates/$estateId/notification-settings'
+      fullPath: '/estates/$estateId/notification-settings/'
+      preLoaderRoute: typeof AuthEstatesEstateIdNotificationSettingsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/estates/$estateId/readings/': {
@@ -1258,6 +1297,7 @@ interface AuthRouteRouteChildren {
   AuthAccountIndexRoute: typeof AuthAccountIndexRoute
   AuthEstatesIndexRoute: typeof AuthEstatesIndexRoute
   AuthInvitationsIndexRoute: typeof AuthInvitationsIndexRoute
+  AuthNotificationsIndexRoute: typeof AuthNotificationsIndexRoute
   AuthReportsIndexRoute: typeof AuthReportsIndexRoute
   AuthEstatesEstateIdAssetCategoriesRouteRoute: typeof AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren
   AuthEstatesEstateIdSensorsRouteRoute: typeof AuthEstatesEstateIdSensorsRouteRouteWithChildren
@@ -1275,6 +1315,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdFailureRiskIndexRoute: typeof AuthEstatesEstateIdFailureRiskIndexRoute
   AuthEstatesEstateIdInspectionsIndexRoute: typeof AuthEstatesEstateIdInspectionsIndexRoute
   AuthEstatesEstateIdLocationsIndexRoute: typeof AuthEstatesEstateIdLocationsIndexRoute
+  AuthEstatesEstateIdNotificationSettingsIndexRoute: typeof AuthEstatesEstateIdNotificationSettingsIndexRoute
   AuthEstatesEstateIdReadingsIndexRoute: typeof AuthEstatesEstateIdReadingsIndexRoute
   AuthEstatesEstateIdReportsIndexRoute: typeof AuthEstatesEstateIdReportsIndexRoute
   AuthEstatesEstateIdRolesIndexRoute: typeof AuthEstatesEstateIdRolesIndexRoute
@@ -1293,6 +1334,7 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthAccountIndexRoute: AuthAccountIndexRoute,
   AuthEstatesIndexRoute: AuthEstatesIndexRoute,
   AuthInvitationsIndexRoute: AuthInvitationsIndexRoute,
+  AuthNotificationsIndexRoute: AuthNotificationsIndexRoute,
   AuthReportsIndexRoute: AuthReportsIndexRoute,
   AuthEstatesEstateIdAssetCategoriesRouteRoute:
     AuthEstatesEstateIdAssetCategoriesRouteRouteWithChildren,
@@ -1317,6 +1359,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
     AuthEstatesEstateIdInspectionsIndexRoute,
   AuthEstatesEstateIdLocationsIndexRoute:
     AuthEstatesEstateIdLocationsIndexRoute,
+  AuthEstatesEstateIdNotificationSettingsIndexRoute:
+    AuthEstatesEstateIdNotificationSettingsIndexRoute,
   AuthEstatesEstateIdReadingsIndexRoute: AuthEstatesEstateIdReadingsIndexRoute,
   AuthEstatesEstateIdReportsIndexRoute: AuthEstatesEstateIdReportsIndexRoute,
   AuthEstatesEstateIdRolesIndexRoute: AuthEstatesEstateIdRolesIndexRoute,

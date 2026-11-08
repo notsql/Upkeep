@@ -12,6 +12,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
+  BellRing,
   Building2,
   ClipboardCheck,
   ClipboardList,
@@ -45,6 +46,7 @@ import {
   canOpenFaultReports,
   canOpenInspections,
   canOpenMembers,
+  canOpenNotificationSettings,
   canOpenOverview,
   canOpenReadings,
   canOpenRoles,
@@ -239,6 +241,12 @@ function estateGroups(
           "/estates/$estateId/asset-categories",
           Tags,
           canOpenAssetCategories(permission, owned)
+        ),
+        ...item(
+          "Notification settings",
+          "/estates/$estateId/notification-settings",
+          BellRing,
+          canOpenNotificationSettings(permission)
         ),
         ...item(
           "Estate settings",
