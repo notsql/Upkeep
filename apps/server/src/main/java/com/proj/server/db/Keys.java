@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
@@ -38,6 +39,7 @@ import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
 import com.proj.server.db.tables.Workorderstatusevent;
+import com.proj.server.db.tables.records.AnomalyscoreRecord;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
@@ -92,6 +94,7 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
+    public static final UniqueKey<AnomalyscoreRecord> ANOMALYSCORE_PKEY = Internal.createUniqueKey(Anomalyscore.ANOMALYSCORE, DSL.name("AnomalyScore_pkey"), new TableField[] { Anomalyscore.ANOMALYSCORE.ID }, true);
     public static final UniqueKey<AssetRecord> ASSET_PKEY = Internal.createUniqueKey(Asset.ASSET, DSL.name("Asset_pkey"), new TableField[] { Asset.ASSET.ID }, true);
     public static final UniqueKey<AssetassessmentRecord> ASSETASSESSMENT_PKEY = Internal.createUniqueKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_pkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ID }, true);
     public static final UniqueKey<AssetcategoryRecord> ASSETCATEGORY_PKEY = Internal.createUniqueKey(Assetcategory.ASSETCATEGORY, DSL.name("AssetCategory_pkey"), new TableField[] { Assetcategory.ASSETCATEGORY.CODE }, true);

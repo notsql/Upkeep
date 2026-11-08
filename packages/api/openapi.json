@@ -4418,6 +4418,56 @@
         }
       }
     },
+    "/device-api/telemetry": {
+      "post": {
+        "tags": ["device-telemetry-controller"],
+        "operationId": "submitTelemetry",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/TelemetryBatchRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Each item decided on its own; one result per item, in request order",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelemetryBatchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Not an object with only readings, an array of 1 to 500 items; nothing stored",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, unknown or replaced device key",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "The estate is inactive; nothing stored",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/device-api/readings": {
       "post": {
         "tags": ["device-reading-controller"],
@@ -6315,7 +6365,12 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+                "enum": [
+                  "GAP",
+                  "DUPLICATE_TIMESTAMP",
+                  "OUT_OF_RANGE",
+                  "ANOMALY"
+                ]
               }
             }
           },
@@ -6493,7 +6548,12 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+                "enum": [
+                  "GAP",
+                  "DUPLICATE_TIMESTAMP",
+                  "OUT_OF_RANGE",
+                  "ANOMALY"
+                ]
               }
             }
           }
@@ -7811,7 +7871,12 @@
               "type": "array",
               "items": {
                 "type": "string",
-                "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+                "enum": [
+                  "GAP",
+                  "DUPLICATE_TIMESTAMP",
+                  "OUT_OF_RANGE",
+                  "ANOMALY"
+                ]
               }
             }
           },
@@ -7868,6 +7933,238 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/AssetReadingPage" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/readings/series": {
+      "get": {
+        "tags": ["asset-reading-controller"],
+        "description": "Readable by Owner, Manager and Crew. Buckets are the smallest of 1 s, 5 s, 10 s, 15 s, 30 s, 1 min, 2 min and 5 min giving at most 300 over the range. Manual readings are not included.",
+        "operationId": "getAssetReadingSeries",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Inclusive",
+            "required": true,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Exclusive; at most 24 hours after from",
+            "required": true,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "description": "Repeatable; omitted means every metric with readings in the range",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "TEMPERATURE",
+                  "HUMIDITY",
+                  "PRESSURE",
+                  "FLOW_RATE",
+                  "VIBRATION",
+                  "VIBRATION_ACCELERATION",
+                  "POWER",
+                  "ENERGY"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Unknown metric or flag, a malformed time, from not before to, or page or size out of range",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The asset's device readings bucketed for a chart",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingSeriesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/readings/grouped": {
+      "get": {
+        "tags": ["asset-reading-controller"],
+        "description": "Readable by Owner, Manager and Crew. A group is the readings at one measuredAt from one device or one manual recorder. limit bounds timestamps, so a page can hold more groups.",
+        "operationId": "getAssetReadingGroups",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Timestamps per page, 1 to 100",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 20 }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "description": "Exclusive; the previous page's nextBefore",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Inclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Exclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date-time" }
+          },
+          {
+            "name": "metric",
+            "in": "query",
+            "description": "Repeatable; limits both the groups and their metrics",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "TEMPERATURE",
+                  "HUMIDITY",
+                  "PRESSURE",
+                  "FLOW_RATE",
+                  "VIBRATION",
+                  "VIBRATION_ACCELERATION",
+                  "POWER",
+                  "ENERGY"
+                ]
+              }
+            }
+          },
+          {
+            "name": "flag",
+            "in": "query",
+            "description": "Repeatable; a group matches when any of its readings carries any of these",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "GAP",
+                  "DUPLICATE_TIMESTAMP",
+                  "OUT_OF_RANGE",
+                  "ANOMALY"
+                ]
+              }
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Unknown metric or flag, a malformed time, from not before to, or page or size out of range",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The asset's latest readings grouped per instant and source",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ReadingGroupPage" }
               }
             }
           }
@@ -10537,6 +10834,19 @@
         },
         "required": ["measuredAt", "metric", "unit", "value"]
       },
+      "TelemetryBatchRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "readings": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/CreateReadingRequest" },
+            "maxItems": 500,
+            "minItems": 1
+          }
+        },
+        "required": ["readings"]
+      },
       "ReadingResponse": {
         "type": "object",
         "properties": {
@@ -10586,6 +10896,40 @@
           "unit",
           "value"
         ]
+      },
+      "TelemetryBatchResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "description": "One result per submitted item, in request order",
+            "items": { "$ref": "#/components/schemas/TelemetryItemResult" }
+          }
+        },
+        "required": ["results"]
+      },
+      "TelemetryItemResult": {
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The item's position in the request, from 0"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["CREATED", "ALREADY_STORED", "INVALID", "CONFLICT"]
+          },
+          "reading": {
+            "$ref": "#/components/schemas/ReadingResponse",
+            "description": "CREATED and ALREADY_STORED only: the stored reading"
+          },
+          "message": {
+            "type": "string",
+            "description": "INVALID and CONFLICT only: why the item was not stored"
+          }
+        },
+        "required": ["index", "status"]
       },
       "AcceptEstateInvitationRequest": {
         "type": "object",
@@ -11016,7 +11360,7 @@
         "properties": {
           "type": {
             "type": "string",
-            "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"]
+            "enum": ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE", "ANOMALY"]
           },
           "gapSeconds": {
             "type": "integer",
@@ -11032,6 +11376,11 @@
             "type": "number",
             "format": "double",
             "description": "OUT_OF_RANGE only: the metric's inclusive maximum"
+          },
+          "anomalyScore": {
+            "type": "number",
+            "format": "double",
+            "description": "ANOMALY only: the stored anomaly score of the reading's sample, at least 0.51"
           }
         },
         "required": ["type"]
@@ -11544,6 +11893,184 @@
           "unit",
           "value"
         ]
+      },
+      "AnomalyBucket": {
+        "type": "object",
+        "properties": {
+          "start": { "type": "string", "format": "date-time" },
+          "maxScore": { "type": "number", "format": "double" },
+          "abnormalCount": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Scores in the bucket at or above anomalyThreshold"
+          }
+        },
+        "required": ["abnormalCount", "maxScore", "start"]
+      },
+      "MetricSeries": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "unit": { "type": "string" },
+          "points": {
+            "type": "array",
+            "description": "Non-empty buckets only, ascending",
+            "items": { "$ref": "#/components/schemas/SeriesPoint" }
+          }
+        },
+        "required": ["metric", "points", "unit"]
+      },
+      "ReadingSeriesResponse": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The requested start, inclusive, in UTC"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The requested end, exclusive, in UTC"
+          },
+          "bucketSeconds": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Width of every bucket; buckets are aligned to the Unix epoch"
+          },
+          "anomalyThreshold": {
+            "type": "number",
+            "format": "double",
+            "description": "Scores at or above this are abnormal"
+          },
+          "metrics": {
+            "type": "array",
+            "description": "Metrics with device readings in the range, in catalogue order",
+            "items": { "$ref": "#/components/schemas/MetricSeries" }
+          },
+          "anomalies": {
+            "type": "array",
+            "description": "Buckets with at least one anomaly score, ascending",
+            "items": { "$ref": "#/components/schemas/AnomalyBucket" }
+          }
+        },
+        "required": [
+          "anomalies",
+          "anomalyThreshold",
+          "bucketSeconds",
+          "from",
+          "metrics",
+          "to"
+        ]
+      },
+      "SeriesPoint": {
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Bucket start; may be before the requested from"
+          },
+          "min": { "type": "number", "format": "double" },
+          "max": { "type": "number", "format": "double" },
+          "avg": { "type": "number", "format": "double" },
+          "count": { "type": "integer", "format": "int32" }
+        },
+        "required": ["avg", "count", "max", "min", "start"]
+      },
+      "GroupedMetricReading": {
+        "type": "object",
+        "properties": {
+          "readingId": { "type": "string", "format": "uuid" },
+          "metric": {
+            "type": "string",
+            "enum": [
+              "TEMPERATURE",
+              "HUMIDITY",
+              "PRESSURE",
+              "FLOW_RATE",
+              "VIBRATION",
+              "VIBRATION_ACCELERATION",
+              "POWER",
+              "ENERGY"
+            ]
+          },
+          "value": { "type": "number", "format": "double" },
+          "valueText": {
+            "type": "string",
+            "description": "MANUAL only: the exact stored decimal"
+          },
+          "unit": { "type": "string" },
+          "flags": {
+            "type": "array",
+            "description": "Empty when nothing is suspect",
+            "items": { "$ref": "#/components/schemas/ReadingFlagResponse" }
+          }
+        },
+        "required": ["flags", "metric", "readingId", "unit", "value"]
+      },
+      "ReadingGroup": {
+        "type": "object",
+        "properties": {
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "In UTC"
+          },
+          "source": { "type": "string", "enum": ["SENSOR", "MANUAL"] },
+          "deviceId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "SENSOR only"
+          },
+          "deviceIdentifier": {
+            "type": "string",
+            "description": "SENSOR only"
+          },
+          "recordedByName": {
+            "type": "string",
+            "description": "MANUAL only, when the recorder had a name"
+          },
+          "anomalyScore": {
+            "type": "number",
+            "format": "double",
+            "description": "SENSOR only: the asset's stored anomaly score at measuredAt, when scored"
+          },
+          "metrics": {
+            "type": "array",
+            "description": "In catalogue order",
+            "items": { "$ref": "#/components/schemas/GroupedMetricReading" }
+          }
+        },
+        "required": ["measuredAt", "metrics", "source"]
+      },
+      "ReadingGroupPage": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "description": "Newest first; every group at one measuredAt is on the same page",
+            "items": { "$ref": "#/components/schemas/ReadingGroup" }
+          },
+          "nextBefore": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Pass as before for the next page; absent when there are no older readings"
+          }
+        },
+        "required": ["groups"]
       },
       "InspectionResultPageResponse": {
         "type": "object",
