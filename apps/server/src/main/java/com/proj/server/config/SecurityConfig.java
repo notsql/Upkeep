@@ -126,6 +126,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/devices",
                                 "/estates/{estateId}/asset-categories",
                                 "/estates/{estateId}/inspection-list",
+                                "/estates/{estateId}/costs/top-assets",
+                                "/estates/{estateId}/costs/forecast",
                                 "/notifications",
                                 "/notifications/unread-count",
                                 "/estates/{estateId}/notification-settings",

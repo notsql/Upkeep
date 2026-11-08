@@ -95,6 +95,25 @@ const dashboardData: Record<string, unknown> = {
     { id: "d-2", status: "OFFLINE" },
     { id: "d-3", status: "OFFLINE" },
   ],
+  "/estates/{estateId}/costs/top-assets": [
+    {
+      assetId: "a-9",
+      assetReference: "LIFT-07",
+      assetName: "Passenger lift",
+      category: "LIFT",
+      categoryLabel: "Lift",
+      totalSpend: "12480.00",
+      entriesWithUnknownCosts: 0,
+    },
+  ],
+  "/estates/{estateId}/costs/forecast": {
+    from: "2026-11-08",
+    to: "2027-11-08",
+    total: "18300.00",
+    scheduledServices: { total: "12000.00", services: 14 },
+    predictedRepairs: { total: "6300.00", expectedRepairs: 1.6 },
+    assetsWithoutCostBasis: 0,
+  },
   "/estates/{estateId}/failure-risk": [
     {
       assetId: "a-1",
@@ -162,6 +181,12 @@ describe("estate overview dashboard", () => {
     await screen.findByRole("link", { name: PUMP });
     screen.getByRole("link", { name: "Estate settings" });
     expect(screen.queryByRole("textbox")).toBeNull();
+    await within(
+      await screen.findByRole("region", { name: "Maintenance budget" })
+    ).findByText("S$18,300.00");
+    await within(
+      await screen.findByRole("region", { name: "Costliest assets" })
+    ).findByText("S$12,480.00");
   });
 
   it("only loads the sections a member may see", async () => {
@@ -179,9 +204,17 @@ describe("estate overview dashboard", () => {
       "/estates/{estateId}/inspection-list",
       "/estates/{estateId}/devices",
       "/estates/{estateId}/failure-risk",
+      "/estates/{estateId}/costs/top-assets",
+      "/estates/{estateId}/costs/forecast",
     ]) {
       expect(paths).not.toContain(path);
     }
+    expect(
+      screen.queryByRole("region", { name: "Maintenance budget" })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("region", { name: "Costliest assets" })
+    ).toBeNull();
     expect(screen.queryByRole("region", { name: "Flagged assets" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Estate settings" })).toBeNull();
   });
