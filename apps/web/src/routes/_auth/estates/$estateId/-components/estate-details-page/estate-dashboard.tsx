@@ -6,6 +6,8 @@ import {
   canOpenInspections,
   canOpenWorkOrders,
 } from "@/lib/estate-destinations";
+import { BudgetForecastCard } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/budget-forecast-card";
+import { CostliestAssets } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/costliest-assets";
 import { DeviceStat } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/device-stat";
 import { FlaggedAssets } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/flagged-assets";
 import { InspectionStat } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/inspection-stat";
@@ -18,6 +20,8 @@ type Permission = components["schemas"]["EstateAccessResponse"];
 
 /** Which dashboard sections a member may see; the rest are never fetched. */
 export interface DashboardAccess {
+  /** ID-33/34 cost widgets: the owner only, like asset costs. */
+  costs: boolean;
   devices: boolean;
   failureRisk: boolean;
   inspections: boolean;
@@ -30,6 +34,7 @@ export function dashboardAccess(
   owned: boolean | undefined
 ): DashboardAccess {
   return {
+    costs: Boolean(permission && owned),
     workOrders: canOpenWorkOrders(permission),
     reports: canOpenFaultReports(permission),
     inspections: canOpenInspections(permission, owned),
@@ -50,7 +55,6 @@ export function EstateDashboard({
     access.inspections ||
     access.devices ||
     access.failureRisk;
-  const anyList = access.workOrders || access.reports || access.failureRisk;
   return (
     <>
       {anyStat ? (
@@ -61,13 +65,30 @@ export function EstateDashboard({
           {access.failureRisk ? <RiskStat estateId={estateId} /> : null}
         </div>
       ) : null}
-      {anyList ? (
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          {access.workOrders ? <RecentWorkOrders estateId={estateId} /> : null}
-          {access.reports ? <RecentReports estateId={estateId} /> : null}
-          {access.failureRisk ? <FlaggedAssets estateId={estateId} /> : null}
-        </div>
-      ) : null}
+      <DashboardLists access={access} estateId={estateId} />
     </>
+  );
+}
+
+function DashboardLists({
+  estateId,
+  access,
+}: {
+  estateId: string;
+  access: DashboardAccess;
+}) {
+  const anyList =
+    access.workOrders || access.reports || access.failureRisk || access.costs;
+  if (!anyList) {
+    return null;
+  }
+  return (
+    <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      {access.workOrders ? <RecentWorkOrders estateId={estateId} /> : null}
+      {access.reports ? <RecentReports estateId={estateId} /> : null}
+      {access.failureRisk ? <FlaggedAssets estateId={estateId} /> : null}
+      {access.costs ? <BudgetForecastCard estateId={estateId} /> : null}
+      {access.costs ? <CostliestAssets estateId={estateId} /> : null}
+    </div>
   );
 }

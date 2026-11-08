@@ -619,6 +619,38 @@ export interface paths {
     patch: operations["correctAssetRetirement"];
     trace?: never;
   };
+  "/estates/{estateId}/costs/forecast": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getBudgetForecast"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/costs/top-assets": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listCostliestAssets"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/council-invitations": {
     parameters: {
       query?: never;
@@ -3182,6 +3214,51 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+    };
+    CostliestAssetResponse: {
+      /** Format: uuid */
+      assetId: string;
+      assetReference: string;
+      assetName: string;
+      category: string;
+      categoryLabel: string;
+      /** @description SGD, two-decimal string */
+      totalSpend: string;
+      /**
+       * Format: int32
+       * @description Entries with at least one unknown cost
+       */
+      entriesWithUnknownCosts: number;
+    };
+    BudgetForecastResponse: {
+      /** Format: date */
+      from: string;
+      /**
+       * Format: date
+       * @description Exclusive
+       */
+      to: string;
+      total: string;
+      scheduledServices: components["schemas"]["ScheduledServicesForecast"];
+      predictedRepairs: components["schemas"]["PredictedRepairsForecast"];
+      /**
+       * Format: int32
+       * @description Assets with a service or repair to project but no cost history to price it
+       */
+      assetsWithoutCostBasis: number;
+    };
+    PredictedRepairsForecast: {
+      total: string;
+      /**
+       * Format: double
+       * @description Sum of 365-day breakdown probabilities, two decimals
+       */
+      expectedRepairs: number;
+    };
+    ScheduledServicesForecast: {
+      total: string;
+      /** Format: int32 */
+      services: number;
     };
     AssetLifecycleEventResponse: {
       /** Format: uuid */
@@ -5939,6 +6016,55 @@ export interface operations {
       };
     };
   };
+  getBudgetForecast: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Projected maintenance cost of the next 12 months */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["BudgetForecastResponse"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not owned by the caller */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getDocumentAsset: {
     parameters: {
       query?: never;
@@ -8144,6 +8270,55 @@ export interface operations {
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listCostliestAssets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Up to five active assets by known maintenance spend */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["CostliestAssetResponse"][];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not owned by the caller */
+      404: {
         headers: {
           [name: string]: unknown;
         };

@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [estate-costs.md](features/estate-costs.md) | ID-34 / ID-33 | built; top 5 costliest assets and 12-month budget forecast on the estate Overview, owner only |
 | [export-filtered-readings-csv.md](features/export-filtered-readings-csv.md) | ID-61 / ID-64 CSV | implemented and verified; complete filtered CSV v1 with provenance, bounded streaming and cancellation; 1,470 server / 866 web tests, types, formatting/build, live role/mobile QA and million-row HTTP check pass |
 | [mobile-estate-navigation-and-lists.md](features/mobile-estate-navigation-and-lists.md) | readings/mobile QA follow-up | built and verified 2026-10-28; estate-scoped resident reporting, responsive lists and resize recovery; 849 web / 1,449 server tests, types, formatting/build and live Chrome mobile/role checks pass |
 | [manual-readings-and-provenance.md](features/manual-readings-and-provenance.md) | ID-63 / ID-64 | implemented and verified; exact-decimal correction complete; 1,480 server / 880 web tests, types, formatting/build, mobile/role/CSV checks pass |

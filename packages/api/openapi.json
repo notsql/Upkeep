@@ -7764,6 +7764,109 @@
         }
       }
     },
+    "/estates/{estateId}/costs/top-assets": {
+      "get": {
+        "tags": ["estate-cost-controller"],
+        "operationId": "listCostliestAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not owned by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Up to five active assets by known maintenance spend",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CostliestAssetResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/costs/forecast": {
+      "get": {
+        "tags": ["estate-cost-controller"],
+        "operationId": "getBudgetForecast",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not owned by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Projected maintenance cost of the next 12 months",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetForecastResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -9333,7 +9436,7 @@
           },
           "tolerance": {
             "type": "number",
-            "maximum": 999999999999.999999,
+            "maximum": 1000000000000.0,
             "minimum": 0
           }
         },
@@ -10264,7 +10367,7 @@
           "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
           },
           "installedOn": { "type": ["string", "null"], "format": "date" },
           "manufacturer": { "type": ["string", "null"] },
@@ -10360,7 +10463,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "°C"
+            "description": "\u00b0C"
           },
           "flowRate": {
             "type": "number",
@@ -10772,7 +10875,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "°C"
+            "example": "\u00b0C"
           },
           "measuredAt": {
             "type": "string",
@@ -11720,6 +11823,85 @@
           "status",
           "updatedAt"
         ]
+      },
+      "CostliestAssetResponse": {
+        "type": "object",
+        "properties": {
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "category": { "type": "string" },
+          "categoryLabel": { "type": "string" },
+          "totalSpend": {
+            "type": "string",
+            "description": "SGD, two-decimal string"
+          },
+          "entriesWithUnknownCosts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Entries with at least one unknown cost"
+          }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "category",
+          "categoryLabel",
+          "entriesWithUnknownCosts",
+          "totalSpend"
+        ]
+      },
+      "BudgetForecastResponse": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string", "format": "date" },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "description": "Exclusive"
+          },
+          "total": { "type": "string" },
+          "scheduledServices": {
+            "$ref": "#/components/schemas/ScheduledServicesForecast"
+          },
+          "predictedRepairs": {
+            "$ref": "#/components/schemas/PredictedRepairsForecast"
+          },
+          "assetsWithoutCostBasis": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Assets with a service or repair to project but no cost history to price it"
+          }
+        },
+        "required": [
+          "assetsWithoutCostBasis",
+          "from",
+          "predictedRepairs",
+          "scheduledServices",
+          "to",
+          "total"
+        ]
+      },
+      "PredictedRepairsForecast": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "string" },
+          "expectedRepairs": {
+            "type": "number",
+            "format": "double",
+            "description": "Sum of 365-day breakdown probabilities, two decimals"
+          }
+        },
+        "required": ["expectedRepairs", "total"]
+      },
+      "ScheduledServicesForecast": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "string" },
+          "services": { "type": "integer", "format": "int32" }
+        },
+        "required": ["services", "total"]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",
