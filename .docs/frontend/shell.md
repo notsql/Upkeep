@@ -1,5 +1,9 @@
 # App shell (frontend)
 
+Assets opens for `canViewAssets || canViewAssetHistory || canViewInspectionResults`.
+The shared `_auth` guard admits Council profile/History deep links independently
+of private asset sections; see [asset-history.md](asset-history.md).
+
 The root layout, header, home page and the conventions every feature file
 below relies on. Paths are relative to `apps/web/src/`.
 
@@ -130,7 +134,7 @@ a group with no visible items is not rendered.
 | Operations | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
 | Operations | Inspections | `/inspections` | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
 | Assets | Locations | `/locations` | `canViewManagement` |
-| Assets | Assets | `/assets` | `canOpenAssets`: `canViewAssets \|\| canViewInspectionResults` |
+| Assets | Assets | `/assets` | `canOpenAssets`: `canViewAssets \|\| canViewAssetHistory \|\| canViewInspectionResults` |
 | Assets | Devices | `/devices` | `canOpenDevices`: `owned \|\| canManageInvitationPermissions` |
 | Assets | Readings | `/readings` | `canOpenReadings`: `canViewReadings` |
 | Assets | Device monitoring | `/sensors` | `canOpenSensors`: `owned`, or `canViewManagement` with role MANAGER/COUNCIL, or MEMBER and platform admin |

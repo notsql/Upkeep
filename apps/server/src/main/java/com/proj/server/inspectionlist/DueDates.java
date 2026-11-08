@@ -51,10 +51,6 @@ final class DueDates {
     }
 
     static LocalDate plus(LocalDate date, ServiceInterval interval) {
-        return switch (interval.unit()) {
-            case DAY -> date.plusDays(interval.value());
-            case MONTH -> date.plusMonths(interval.value());
-            case YEAR -> date.plusYears(interval.value());
-        };
+        return interval.after(date);
     }
 }

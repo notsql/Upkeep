@@ -19,6 +19,7 @@ export const residentEstateAccess = {
   canViewManagement: false,
   canManageEstate: false,
   canViewAssets: false,
+  canViewAssetHistory: false,
   canViewReadings: false,
   canRecordReadings: false,
   canViewEstateDetails: false,

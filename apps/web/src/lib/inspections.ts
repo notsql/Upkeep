@@ -2,6 +2,7 @@ import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 
 export type InspectionResult =
   components["schemas"]["InspectionResultResponse"];
@@ -31,6 +32,7 @@ export function useInspectionAccess(estateId: string) {
     canView: valid && !!permission?.canViewInspectionResults,
     canCreate: valid && !!permission?.canCreateInspectionResults,
     canViewAssets: valid && !!permission?.canViewAssets,
+    canViewAssetHistory: valid && !!permission?.canViewAssetHistory,
     canCreateWorkOrders: valid && !!permission?.canCreateWorkOrders,
     estateName: permission?.estateName,
     pending: !session.ready || access.isPending,
@@ -269,6 +271,7 @@ export function useCreateInspection(estateId: string, assetId: string) {
         data
       );
       await Promise.all([
+        refreshAssetHistory(client, access.userId, estateId),
         client.invalidateQueries({
           queryKey: [
             access.userId,

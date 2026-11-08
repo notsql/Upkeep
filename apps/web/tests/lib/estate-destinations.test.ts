@@ -11,6 +11,7 @@ import {
   canOpenFaultReports,
   canOpenInspections,
   canOpenMembers,
+  canOpenNotificationSettings,
   canOpenOverview,
   canOpenReadings,
   canOpenRoles,
@@ -85,6 +86,11 @@ describe("sensors", () => {
 });
 
 describe("assets", () => {
+  it("opens the read-only asset directory for history-only Council readers", () => {
+    expect(
+      canOpenAssets({ ...managementOnly, canViewAssetHistory: true })
+    ).toBe(true);
+  });
   it("opens for asset readers and inspection-only users", () => {
     expect(canOpenAssets(managementOnly)).toBe(false);
     expect(canOpenAssets({ ...managementOnly, canViewAssets: true })).toBe(
@@ -106,5 +112,16 @@ describe("capability destinations", () => {
     expect(canOpenMembers(crewEstateAccess)).toBe(false);
     expect(canOpenRoles(ownerEstateAccess)).toBe(true);
     expect(canOpenRoles(crewEstateAccess)).toBe(false);
+  });
+});
+
+describe("notification settings", () => {
+  it("is for estate managers, owners included", () => {
+    expect(canOpenNotificationSettings(ownerEstateAccess)).toBe(true);
+    expect(canOpenNotificationSettings(delegate)).toBe(false);
+    expect(canOpenNotificationSettings(councilEstateAccess)).toBe(false);
+    expect(canOpenNotificationSettings(crewEstateAccess)).toBe(false);
+    expect(canOpenNotificationSettings(residentEstateAccess)).toBe(false);
+    expect(canOpenNotificationSettings(undefined)).toBe(false);
   });
 });

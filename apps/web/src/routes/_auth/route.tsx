@@ -19,6 +19,7 @@ import {
   canOpenEstateSettings,
   canOpenFailureRisk,
   canOpenInspections,
+  canOpenNotificationSettings,
   canOpenSensors,
 } from "@/lib/estate-destinations";
 
@@ -37,6 +38,7 @@ const OWNER_GATED: Record<string, DestinationPredicate> = {
   sensors: canOpenSensors,
   "failure-risk": canOpenFailureRisk,
   edit: canOpenEstateSettings,
+  "notification-settings": canOpenNotificationSettings,
 };
 
 // Sections whose sub-views (one segment deeper) share the section's gate.
@@ -128,6 +130,9 @@ function guardInspectionContext(
   path: string,
   estate: components["schemas"]["EstateAccessResponse"] | undefined
 ): boolean {
+  if (guardHistoryContext(path, estate)) {
+    return true;
+  }
   const [, , , feature] = path.split("/");
   if (!feature && estate?.canViewEstateDetails) {
     return true;
@@ -202,6 +207,20 @@ function guardEstatePath(
         throw notFound();
       }
   }
+}
+
+function guardHistoryContext(
+  path: string,
+  estate: EstatePermission | undefined
+): boolean {
+  const segments = path.split("/").filter(Boolean);
+  if (segments[2] !== "assets" || !estate?.canViewAssetHistory) {
+    return false;
+  }
+  return (
+    (segments.length === 4 && segments[3] !== "new") ||
+    (segments.length === 5 && segments[4] === "history")
+  );
 }
 
 /** Section roots (and sub-views) whose rule lives in guardDestination. */
