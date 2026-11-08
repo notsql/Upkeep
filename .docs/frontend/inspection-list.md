@@ -16,7 +16,7 @@ Entry: sidebar Operations › **Inspections**, shown by `canOpenInspections`
 
 | Hook | Call | Query key / effect |
 | --- | --- | --- |
-| `useInspectionList(estateId)` | GET `/estates/{estateId}/inspection-list` | `inspectionListQueryKey(userId, estateId)` = `["estates", userId, "inspection-list", estateId]`; `retry: false` |
+| `useInspectionList(estateId, enabled = true)` | GET `/estates/{estateId}/inspection-list` | `inspectionListQueryKey(userId, estateId)` = `["estates", userId, "inspection-list", estateId]`; `retry: false` |
 | `useGenerateInspectionList(estateId)` | POST `/estates/{estateId}/inspection-list/generate` | on success invalidates the list key |
 
 Both throw `estateError(...)`. Recording permission comes from `useInspectionAccess(estateId).canCreate`

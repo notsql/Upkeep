@@ -28,6 +28,7 @@ same change as the code.
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
+- [Device telemetry](api/device-telemetry.md): devices submitting batches of up to 500 readings, with a per-item result (created, already stored, invalid, conflict); both device paths trigger asynchronous anomaly scoring.
 - [Device status](api/device-status.md): derived Online/Offline/Awaiting first reading status and the Manager's estate-wide device list.
 - [Readings](api/readings.md): Owner/Manager/Crew estate-wide filtering, minimal asset options, pagination and flags; attributed manual entry, Manual/Sensor provenance and filtered CSV export; legacy owner-only asset readings retained; complete filtered CSV v1 exports with provenance.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
@@ -56,16 +57,21 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/account.md](frontend/account.md) | `/account` |
 | [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit` (Estate settings + Danger zone), directory filters and estate deactivation |
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
-| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/maintenance`, `/inspections`, `/documents`, `/costs`, `/devices` sub-pages; legacy `?tab=` redirects), `/…/assets/$assetId/edit`, asset register/search grouped by block and level (By location) with device-summary and risk-flag columns, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card; asset Overview as the monitoring home (devices with flatline state and pauses, latest readings) |
+| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/details`, `/records`, `/costs`, `/devices` sub-pages; `/maintenance`, `/inspections`, `/documents` and legacy `?tab=` redirect), `/…/assets/$assetId/condition` (condition history), `/…/assets/$assetId/edit`, asset register/search grouped by block and level (By location) with device-summary and risk-flag columns, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card; asset Overview as the monitoring home (condition, forecast with risk level, trends, devices-online stat), attention banner on every asset tab |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk` (redirects to `/assets`) and the failure-risk hooks behind By location's risk column, the asset forecast card and the dashboard's at-risk card |
 | [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories` (+ `/$interval` views: days, months, years, not-set): silent-failure flags per asset category with asset counts and last change |
 | [frontend/inspection-list.md](frontend/inspection-list.md) | `/estates/$estateId/inspections`: summary cards, generate/regenerate, checks grouped by block and level with Overdue/Due/Done badges, and unscheduled assets |
 | [frontend/service-intervals.md](frontend/service-intervals.md) | Service interval column with unit-coloured labels, filter by unit or Not set, and dialog on Asset categories; the asset details `AssetServiceIntervalCard` |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/assets/devices` (Assets › All devices: every device ranked by severity with flatline state, pauses and a Metric policies dialog; `/estates/$estateId/devices` redirects there), device list on asset details, dedicated device registration and replacement pages, and device deactivation |
 | [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors` and `/sensors/all` (redirect to `/assets/devices`); shared metric-policy and pause components and the flatline hooks |
+| [frontend/formatting.md](frontend/formatting.md) | `lib/format.ts`: Intl-based dates (date-only without time-zone shift), instants, relative times, per-metric reading values, scores and model assessment notes |
 | [frontend/readings.md](frontend/readings.md) | Estate-wide reading browser (`/…/readings`, linked from Assets as "All readings"), one asset's readings (`/…/readings/$assetId`; `?assetId=` redirects there) and the per-asset readings page (`/…/assets/$assetId/readings`, on the estate endpoint), attributed manual entry (`/…/readings/new`, `/…/readings/$assetId/new`), provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer; pending invitations on /estates (/invitations redirects) |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
 | [frontend/estate-reports.md](frontend/estate-reports.md) | Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |
+
+## Device simulator (`apps/device-simulator`)
+
+- [frontend/device-simulator.md](frontend/device-simulator.md): local-only replay of SKAB test experiments to `POST /device-api/telemetry` (CSV validation, ground-truth windows, backfill/live runs, retry and stop).

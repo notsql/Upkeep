@@ -17,13 +17,8 @@ below relies on. Paths are relative to `apps/web/src/`.
 ID-60 adds `/estates/$estateId/readings`, checked before general management
 fallbacks using `canViewReadings`. Owner/Manager/Crew may browse; unavailable
 estate/role URLs render Page not found. Switching estates preserves Readings
-when permitted. See [readings.md](readings.md). The
-`/estates/$estateId/readings/new` route also requires `canRecordReadings`;
-bookmarked read-only/inactive entry URLs return Page not found before loading
-the form. `/readings/$assetId` (that asset's readings) and
-`/readings/$assetId/new` (manual entry for that asset) share those two gates
-(the guard treats `new` in either position as an entry URL). `?assetId=` on
-`/readings` or `/readings/new` redirects to the path form.
+when permitted. See [readings.md](readings.md). `/readings/$assetId` (that asset's readings) shares that gate. There are no
+manual-entry routes. `?assetId=` on `/readings` redirects to the path form.
 
 Retired pages redirect in their route's `beforeLoad` (`replace: true`), and
 the `_auth` guard then checks the destination: `/devices`, `/sensors`,

@@ -15,7 +15,7 @@ API: [service-intervals.md](../api/service-intervals.md).
 | Hook / helper | Call | Query key / effect |
 | --- | --- | --- |
 | `useSetCategoryServiceInterval(estateId)` | PUT `/estates/{estateId}/asset-categories/{category}/service-interval` with `{ interval }`; takes `{ category, interval }` | on success invalidates `estateAssetCategoriesQueryKey(userId, estateId)` |
-| `useAssetServiceInterval(estateId, assetId)` | GET `/estates/{estateId}/assets/{assetId}/service-interval` | `assetServiceIntervalQueryKey(userId, estateId, assetId)` = `["estates", userId, "assets", estateId, assetId, "service-interval"]`; `retry: false` |
+| `useAssetServiceInterval(estateId, assetId, enabled = true)` | GET `/estates/{estateId}/assets/{assetId}/service-interval` | `assetServiceIntervalQueryKey(userId, estateId, assetId)` = `["estates", userId, "assets", estateId, assetId, "service-interval"]`; `retry: false` |
 | `useSetAssetServiceInterval(estateId, assetId)` | PUT `/estates/{estateId}/assets/{assetId}/service-interval` with `{ interval }`; takes `ServiceInterval \| null` | on success invalidates the asset key |
 | `formatInterval(interval)` | - | "Every 1 day", "Every 14 days", "Every 6 months", "Every 1 year" (singular when the value is 1), or "Not set" for null/undefined |
 | `INTERVAL_UNITS` | - | per unit (`DAY`, `MONTH`, `YEAR`): select label (Days, Months, Years), singular and plural words, and the largest value (3650, 120, 10) |

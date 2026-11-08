@@ -24,7 +24,14 @@ Constants: `timeframeLabel` (`WITHIN_30_DAYS` "Within 30 days", `WITHIN_60_DAYS`
 (`CONDITION` "Condition", `FAILURE_RISK` "Failure risk", `END_OF_LIFE` "End of
 life"). Helpers: `noForecastReason(risk)` ("Not supported" when `basis` is
 `NOT_SUPPORTED`, "Not enough data" when `probability90Days` is null, else null);
-`formatProbability(value)`.
+`formatProbability(value)`. `FlagReason` is exported.
+
+`AssetForecastCard` does not show `flagReasonLabel.CONDITION` directly. It
+reads the current assessment from `useAssessments` and shows
+"Condition: Needs attention · Anomaly detection" (or "· <recorder name>" when
+known), or "Condition needs a check" while assessments load or fail. The
+lead-in is "Flagged for a check because:", and the expected end of life uses
+`formatDate` (or "Not recorded").
 
 Query keys: `estateFailureRiskQueryKey(userId, estateId)` =
 `["estates", userId, "failure-risk", estateId]`;
@@ -35,6 +42,11 @@ Query keys: `estateFailureRiskQueryKey(userId, estateId)` =
 | --- | --- | --- |
 | `useEstateFailureRisk(estateId, enabled = true)` | `GET /estates/{estateId}/failure-risk` | query; also feeds the asset register's owner-only Risk flag column (see assets.md), which passes `enabled = owned` |
 | `useAssetFailureRisk(estateId, assetId, enabled = true)` | `GET /estates/{estateId}/assets/{assetId}/failure-risk` | query (used by `AssetForecastCard`) |
+
+`riskLevel(probability90Days)` maps the 90-day chance to `LOW` / `MODERATE` /
+`HIGH` by `RISK_THRESHOLDS` (`moderate: 0.1`, `high: 0.3`; each bound
+inclusive); `riskLevelLabel` gives "Low risk" / "Moderate risk" / "High risk".
+The asset forecast card leads with it (see [assets.md](assets.md)).
 
 Invalidated by `useRecordAssetEvent` (`lib/asset-events.ts`) and
 `useRecordAssessment` (`lib/assessments.ts`, see [assets.md](assets.md)). Recording

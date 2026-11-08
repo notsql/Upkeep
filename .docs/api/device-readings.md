@@ -74,6 +74,12 @@ Values are never judged for plausibility: 150 °C on a pump is stored.
 
 A 201 or 200 sets `Device.lastSeenAt` to the server's receipt time (never `measuredAt`), and never moves it backwards. 400, 401 and 409 leave it unchanged. It is shown as `lastSeenAt` on `DeviceResponse`, which derives `status` from it ([device-status.md](device-status.md)). `Device.updatedAt` is not touched.
 
+## Anomaly scoring
+
+A 201 (a new reading stored) starts anomaly scoring for the asset after
+commit, asynchronously; a 200 duplicate does not. The response is unaffected.
+See "Anomaly scoring" in [device-telemetry.md](device-telemetry.md).
+
 ## Storage
 
 `DeviceReading` is append-only: `id`, `deviceId`, `estateId`, `assetId`, `metric`, `value numeric(18,6)`, `measuredAt`, `receivedAt` (`timestamptz`). No unit column. Composite foreign keys `(deviceId, estateId)` and `(assetId, estateId)` keep a reading in its device's estate.
