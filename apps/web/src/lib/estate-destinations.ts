@@ -96,6 +96,11 @@ export function canOpenAssetCategories(
   return ownerOrDelegate(permission, owned);
 }
 
+/** Owners and Managers: the people who receive the estate's notifications. */
+export function canOpenNotificationSettings(permission: Permission): boolean {
+  return permission?.role === "MANAGER";
+}
+
 export function canOpenEstateSettings(
   permission: Permission,
   owned?: boolean

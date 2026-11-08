@@ -483,6 +483,130 @@
         }
       }
     },
+    "/estates/{estateId}/notification-settings": {
+      "get": {
+        "tags": ["notification-settings-controller"],
+        "operationId": "getNotificationSettings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The saved settings, or the defaults",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["notification-settings-controller"],
+        "operationId": "saveNotificationSettings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved settings",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A setting is missing or out of range",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}/role": {
       "put": {
         "tags": ["council-controller"],
@@ -1683,6 +1807,199 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/read": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "markNotificationRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Read for the caller" },
+          "404": {
+            "description": "Unknown, or not in an estate the caller manages",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/dismiss": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "dismissAnomalyAlert",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DismissAlertRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The alert after dismissing; read for the caller",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reason missing, blank or over 500 characters",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, or not in an estate the caller manages",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not an anomaly alert, already dismissed, retired asset or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/acknowledge": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "acknowledgeAnomalyAlert",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgeAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The alert after acknowledging; read for the caller",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reason over 500 characters",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, or not in an estate the caller manages",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not an anomaly alert, already dismissed, retired asset or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "markAllNotificationsRead",
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The unread count afterwards",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountResponse"
+                }
               }
             }
           }
@@ -5580,6 +5897,80 @@
         }
       }
     },
+    "/notifications": {
+      "get": {
+        "tags": ["notification-controller"],
+        "operationId": "listNotifications",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad page or size",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": ["notification-controller"],
+        "operationId": "getUnreadNotificationCount",
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Unread notifications in the estates the caller manages",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/manufacturers": {
       "get": {
         "tags": ["catalogue-controller"],
@@ -8380,6 +8771,65 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/anomaly-alerts": {
+      "get": {
+        "tags": ["notification-controller"],
+        "operationId": "listAssetAnomalyAlerts",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The asset's anomaly alerts, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not managed by the caller, or unknown asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/asset-categories": {
       "get": {
         "tags": ["asset-category-settings-controller"],
@@ -9269,6 +9719,51 @@
         },
         "required": ["id", "label"]
       },
+      "NotificationSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "anomalyScoreThreshold": {
+            "type": "number",
+            "description": "0.51 to 1.00, at most two decimal places",
+            "maximum": 1.0,
+            "minimum": 0.51
+          },
+          "serviceLeadDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Whole days, 0 to 365",
+            "maximum": 365,
+            "minimum": 0
+          },
+          "repairLeadDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "30, 60 or 90"
+          }
+        },
+        "required": [
+          "anomalyScoreThreshold",
+          "repairLeadDays",
+          "serviceLeadDays"
+        ]
+      },
+      "NotificationSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "anomalyScoreThreshold": { "type": "number" },
+          "serviceLeadDays": { "type": "integer", "format": "int32" },
+          "repairLeadDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "30, 60 or 90"
+          }
+        },
+        "required": [
+          "anomalyScoreThreshold",
+          "repairLeadDays",
+          "serviceLeadDays"
+        ]
+      },
       "UpdateEstateRoleRequest": {
         "type": "object",
         "properties": {
@@ -9333,7 +9828,7 @@
           },
           "tolerance": {
             "type": "number",
-            "maximum": 999999999999.999999,
+            "maximum": 1000000000000.0,
             "minimum": 0
           }
         },
@@ -9628,6 +10123,161 @@
           "title",
           "updatedAt"
         ]
+      },
+      "DismissAlertRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "1 to 500 characters after trimming"
+          }
+        },
+        "required": ["reason"]
+      },
+      "AnomalyAlertDetails": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "string",
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          },
+          "medianScore": { "type": "number", "format": "double" },
+          "maxScore": { "type": "number", "format": "double" },
+          "firstDetectedAt": { "type": "string", "format": "date-time" },
+          "lastDetectedAt": { "type": "string", "format": "date-time" },
+          "explanation": { "type": "string" },
+          "response": {
+            "type": "string",
+            "enum": ["NONE", "ACKNOWLEDGED", "DISMISSED"]
+          },
+          "respondedByName": { "type": ["string", "null"] },
+          "respondedAt": { "type": ["string", "null"], "format": "date-time" },
+          "responseReason": { "type": ["string", "null"] }
+        },
+        "required": [
+          "condition",
+          "explanation",
+          "firstDetectedAt",
+          "lastDetectedAt",
+          "maxScore",
+          "medianScore",
+          "respondedAt",
+          "respondedByName",
+          "response",
+          "responseReason"
+        ]
+      },
+      "NotificationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "type": "string",
+            "enum": ["ANOMALY", "SERVICE_DUE", "REPAIR_PREDICTED"]
+          },
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "summary": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "resolvedAt": { "type": ["string", "null"], "format": "date-time" },
+          "read": { "type": "boolean" },
+          "anomaly": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/AnomalyAlertDetails" },
+              { "type": "null" }
+            ]
+          },
+          "serviceDue": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceDueDetails" },
+              { "type": "null" }
+            ]
+          },
+          "repairPredicted": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/RepairPredictedDetails" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "anomaly",
+          "assetId",
+          "assetName",
+          "assetReference",
+          "createdAt",
+          "estateId",
+          "estateName",
+          "id",
+          "read",
+          "repairPredicted",
+          "resolvedAt",
+          "serviceDue",
+          "summary",
+          "type",
+          "updatedAt"
+        ]
+      },
+      "RepairPredictedDetails": {
+        "type": "object",
+        "properties": {
+          "recommendedTimeframe": {
+            "type": "string",
+            "enum": [
+              "WITHIN_30_DAYS",
+              "WITHIN_60_DAYS",
+              "WITHIN_90_DAYS",
+              "BEYOND_90_DAYS"
+            ]
+          },
+          "probability": { "type": "number", "format": "double" },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "SERVICE_INTERVAL",
+              "ASSET_HISTORY",
+              "INSUFFICIENT_DATA",
+              "NOT_SUPPORTED"
+            ]
+          },
+          "failuresObserved": { "type": "integer", "format": "int32" }
+        },
+        "required": [
+          "basis",
+          "failuresObserved",
+          "probability",
+          "recommendedTimeframe"
+        ]
+      },
+      "ServiceDueDetails": {
+        "type": "object",
+        "properties": {
+          "dueOn": { "type": "string", "format": "date" },
+          "interval": { "$ref": "#/components/schemas/ServiceInterval" },
+          "intervalSource": {
+            "type": "string",
+            "enum": ["ASSET", "CATEGORY", "NONE"]
+          }
+        },
+        "required": ["dueOn", "interval", "intervalSource"]
+      },
+      "AcknowledgeAlertRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": ["string", "null"],
+            "description": "Optional, at most 500 characters after trimming"
+          }
+        }
+      },
+      "NotificationCountResponse": {
+        "type": "object",
+        "properties": { "unread": { "type": "integer", "format": "int32" } },
+        "required": ["unread"]
       },
       "EstateRequest": {
         "type": "object",
@@ -10264,7 +10914,7 @@
           "locationId": { "type": "string", "format": "uuid" },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
           },
           "installedOn": { "type": ["string", "null"], "format": "date" },
           "manufacturer": { "type": ["string", "null"] },
@@ -10360,7 +11010,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "°C"
+            "description": "\u00b0C"
           },
           "flowRate": {
             "type": "number",
@@ -10772,7 +11422,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "°C"
+            "example": "\u00b0C"
           },
           "measuredAt": {
             "type": "string",
@@ -11056,6 +11706,19 @@
           "canSubmit": { "type": "boolean" }
         },
         "required": ["canSubmit", "estates"]
+      },
+      "NotificationPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NotificationResponse" }
+          },
+          "page": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "total": { "type": "integer", "format": "int64" }
+        },
+        "required": ["items", "page", "size", "total"]
       },
       "ManufacturerResponse": {
         "type": "object",

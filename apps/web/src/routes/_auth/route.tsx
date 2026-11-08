@@ -19,6 +19,7 @@ import {
   canOpenEstateSettings,
   canOpenFailureRisk,
   canOpenInspections,
+  canOpenNotificationSettings,
   canOpenSensors,
 } from "@/lib/estate-destinations";
 
@@ -37,6 +38,7 @@ const OWNER_GATED: Record<string, DestinationPredicate> = {
   sensors: canOpenSensors,
   "failure-risk": canOpenFailureRisk,
   edit: canOpenEstateSettings,
+  "notification-settings": canOpenNotificationSettings,
 };
 
 // Sections whose sub-views (one segment deeper) share the section's gate.

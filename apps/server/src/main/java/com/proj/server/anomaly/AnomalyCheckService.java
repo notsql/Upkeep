@@ -5,7 +5,10 @@ import com.proj.server.asset.AssetCondition;
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.asset.CreateAssetAssessmentRequest;
 import com.proj.server.catalogue.AssetCategoryCodes;
+import com.proj.server.device.DeviceMetric;
 import com.proj.server.estate.EstateRepository;
+import com.proj.server.notification.AbnormalRun;
+import com.proj.server.notification.AnomalyAlerts;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -18,10 +21,12 @@ import java.util.UUID;
 import java.util.stream.Stream;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Scores a batch of readings with the anomaly model and records a condition assessment for a long enough abnormal run
- * (decision 0021). Readings are scored, not stored. No row is locked while the model runs.
+ * (decision 0021), and raises, updates or resolves the pump's anomaly alert (ID-105, ID-106). Readings are scored,
+ * not stored. No row is locked while the model runs.
  */
 @Service
 public class AnomalyCheckService {
@@ -30,20 +35,24 @@ public class AnomalyCheckService {
     private final EstateRepository estates;
     private final AssetRepository assets;
     private final AssetAssessmentRepository assessments;
+    private final AnomalyAlerts alerts;
 
     public AnomalyCheckService(
             AnomalyFeatureBuilder features,
             AnomalyScorer ml,
             EstateRepository estates,
             AssetRepository assets,
-            AssetAssessmentRepository assessments) {
+            AssetAssessmentRepository assessments,
+            AnomalyAlerts alerts) {
         this.features = features;
         this.ml = ml;
         this.estates = estates;
         this.assets = assets;
         this.assessments = assessments;
+        this.alerts = alerts;
     }
 
+    @Transactional
     public AnomalyCheckResponse check(UUID estateId, UUID assetId, AnomalyCheckRequest request, String owner) {
         var estate = estates.findOwned(estateId, owner, false).orElseThrow(() -> notFound("Estate not found."));
         var asset = assets.find(assetId, estateId, false).orElseThrow(() -> notFound("Asset not found."));
@@ -79,23 +88,26 @@ public class AnomalyCheckService {
         double maxScore = Arrays.stream(scores).max().orElse(0);
 
         AssetCondition recorded = null;
-        if (longest >= AnomalyModel.MIN_ABNORMAL_RUN) {
+        if (longest < AnomalyModel.MIN_ABNORMAL_RUN) {
+            alerts.normal(assetId);
+        } else {
             int start = longestEnd - longest + 1;
             double[] runScores = Arrays.copyOfRange(scores, start, longestEnd + 1);
             double median = median(runScores);
+            double runMax = Arrays.stream(runScores).max().orElse(0);
             var condition =
                     median >= AnomalyModel.FAULTY_THRESHOLD ? AssetCondition.FAULTY : AssetCondition.NEEDS_ATTENTION;
+            Instant from = readings.get(start).timestamp();
+            Instant to = readings.get(longestEnd).timestamp();
+            var notes = String.format(
+                    Locale.ROOT,
+                    "%d consecutive abnormal readings from %s to %s. Median score %.2f, maximum %.2f.",
+                    longest,
+                    from,
+                    to,
+                    median,
+                    runMax);
             if (assets.currentCondition(assetId) != condition) {
-                Instant from = readings.get(start).timestamp();
-                Instant to = readings.get(longestEnd).timestamp();
-                var notes = String.format(
-                        Locale.ROOT,
-                        "%d consecutive abnormal readings from %s to %s. Median score %.2f, maximum %.2f.",
-                        longest,
-                        from,
-                        to,
-                        median,
-                        Arrays.stream(runScores).max().orElse(0));
                 assessments.create(
                         estateId,
                         assetId,
@@ -104,6 +116,9 @@ public class AnomalyCheckService {
                         AnomalyModel.SYSTEM_NAME);
                 recorded = condition;
             }
+            boolean suspect =
+                    readings.subList(start, longestEnd + 1).stream().anyMatch(AnomalyCheckService::outOfRange);
+            alerts.abnormal(estateId, assetId, new AbnormalRun(condition, median, runMax, from, to, notes, suspect));
         }
         return new AnomalyCheckResponse(readings.size(), abnormal, longest, maxScore, recorded);
     }
@@ -145,6 +160,19 @@ public class AnomalyCheckService {
                         reading.flowRate(),
                         reading.power())
                 .allMatch(value -> value != null && Double.isFinite(value));
+    }
+
+    /** True when a value is outside its metric's valid range: the suspect-reading OUT_OF_RANGE rule. */
+    private static boolean outOfRange(AnomalyCheckRequest.Reading reading) {
+        return outside(DeviceMetric.VIBRATION_ACCELERATION, reading.vibrationAcceleration())
+                || outside(DeviceMetric.PRESSURE, reading.pressure())
+                || outside(DeviceMetric.TEMPERATURE, reading.temperature())
+                || outside(DeviceMetric.FLOW_RATE, reading.flowRate())
+                || outside(DeviceMetric.POWER, reading.power());
+    }
+
+    private static boolean outside(DeviceMetric metric, double value) {
+        return value < metric.validMin() || value > metric.validMax();
     }
 
     private static double median(double[] values) {
