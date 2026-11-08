@@ -9,32 +9,35 @@ datasource db {
 }
 
 model Estate {
-  id                String                        @id @default(uuid()) @db.Uuid
-  ownerUserId       String                        @db.VarChar(255)
-  name              String                        @db.VarChar(200)
-  code              String                        @unique @db.VarChar(50)
-  address           String                        @db.VarChar(500)
-  postalCode        String                        @db.VarChar(20)
-  description       String?                       @db.VarChar(2000)
-  createdAt         DateTime                      @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime                      @updatedAt @db.Timestamptz(6)
-  deactivatedAt     DateTime?                     @db.Timestamptz(6)
-  locations         Location[]
-  users             EstateUser[]
-  assets            Asset[]
-  devices           Device[]
-  assessments       AssetAssessment[]
-  invitations       EstateInvitation[]
-  issueReports      IssueReport[]
-  documents         Document[]
-  events            AssetEvent[]
-  flatlinePolicies  FlatlinePolicy[]
-  workOrders        WorkOrder[]
-  inspectionResults AssetInspectionResult[]
-  categoryFlags     AssetCategoryFlagChange[]
-  categoryIntervals AssetCategoryIntervalChange[]
-  inspectionChecks  InspectionCheck[]
-  inspectionRuns    InspectionListRun[]
+  id                   String                        @id @default(uuid()) @db.Uuid
+  ownerUserId          String                        @db.VarChar(255)
+  name                 String                        @db.VarChar(200)
+  code                 String                        @unique @db.VarChar(50)
+  address              String                        @db.VarChar(500)
+  postalCode           String                        @db.VarChar(20)
+  description          String?                       @db.VarChar(2000)
+  createdAt            DateTime                      @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime                      @updatedAt @db.Timestamptz(6)
+  deactivatedAt        DateTime?                     @db.Timestamptz(6)
+  locations            Location[]
+  users                EstateUser[]
+  assets               Asset[]
+  devices              Device[]
+  assessments          AssetAssessment[]
+  invitations          EstateInvitation[]
+  issueReports         IssueReport[]
+  documents            Document[]
+  events               AssetEvent[]
+  flatlinePolicies     FlatlinePolicy[]
+  workOrders           WorkOrder[]
+  inspectionResults    AssetInspectionResult[]
+  categoryFlags        AssetCategoryFlagChange[]
+  categoryIntervals    AssetCategoryIntervalChange[]
+  inspectionChecks     InspectionCheck[]
+  inspectionRuns       InspectionListRun[]
+  notifications        Notification[]
+  notificationSettings EstateNotificationSettings?
+  notificationSweeps   NotificationSweep[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -247,6 +250,7 @@ model Asset {
   inspectionResults AssetInspectionResult[]
   intervalChanges   AssetIntervalChange[]
   inspectionChecks  InspectionCheck[]
+  notifications     Notification[]
 
   documents Document[]
 
@@ -501,6 +505,83 @@ model InspectionListRun {
 
 // A manufacturer, shared by all estates (decision 0026). `name` is stored
 // normalised: trimmed, inner whitespace collapsed, uppercased. Rows never change.
+/// An in-app notification about one asset, visible to the estate's managers (spec notifications.md).
+/// At most one open (unresolved) notification per asset and type; type-specific columns are checked in SQL.
+model Notification {
+  id         String    @id @default(uuid()) @db.Uuid
+  estateId   String    @db.Uuid
+  assetId    String    @db.Uuid
+  type       String    @db.VarChar(16)
+  summary    String    @db.VarChar(300)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @db.Timestamptz(6)
+  resolvedAt DateTime? @db.Timestamptz(6)
+
+  condition         String?   @db.VarChar(15)
+  medianScore       Decimal?  @db.Decimal(5, 4)
+  maxScore          Decimal?  @db.Decimal(5, 4)
+  firstDetectedAt   DateTime? @db.Timestamptz(6)
+  lastDetectedAt    DateTime? @db.Timestamptz(6)
+  explanation       String?   @db.VarChar(500)
+  response          String?   @db.VarChar(12)
+  respondedByUserId String?   @db.VarChar(255)
+  respondedByName   String?   @db.VarChar(255)
+  respondedAt       DateTime? @db.Timestamptz(6)
+  responseReason    String?   @db.VarChar(500)
+
+  dueOn          DateTime? @db.Date
+  intervalValue  Int?
+  intervalUnit   String?   @db.VarChar(5)
+  intervalSource String?   @db.VarChar(8)
+
+  recommendedTimeframe String?  @db.VarChar(14)
+  probability          Decimal? @db.Decimal(5, 4)
+  basis                String?  @db.VarChar(17)
+  failuresObserved     Int?
+
+  estate Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset  Asset              @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  reads  NotificationRead[]
+
+  @@index([estateId, createdAt(sort: Desc), id])
+  @@index([assetId, type, createdAt])
+}
+
+/// One user's read receipt for a notification.
+model NotificationRead {
+  notificationId String   @db.Uuid
+  userId         String   @db.VarChar(255)
+  readAt         DateTime @default(now()) @db.Timestamptz(6)
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([notificationId, userId])
+  @@index([userId])
+}
+
+/// Per-estate notification thresholds; an estate without a row uses the defaults.
+model EstateNotificationSettings {
+  estateId              String   @id @db.Uuid
+  anomalyScoreThreshold Decimal  @db.Decimal(3, 2)
+  serviceLeadDays       Int
+  repairLeadDays        Int
+  updatedAt             DateTime @default(now()) @db.Timestamptz(6)
+  updatedByUserId       String   @db.VarChar(255)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+}
+
+/// Marks that an estate's due notifications were swept for one Singapore day.
+model NotificationSweep {
+  estateId String   @db.Uuid
+  day      DateTime @db.Date
+  sweptAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([estateId, day])
+}
+
 model Manufacturer {
   id        String       @id @default(uuid()) @db.Uuid
   name      String       @unique @db.VarChar(200)
