@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 import { estateError, useEstateSession } from "@/lib/estates";
 
 export type Asset = components["schemas"]["AssetResponse"];
@@ -48,6 +49,7 @@ export function useCreateAsset(estateId: string) {
       return data;
     },
     onSuccess: async (data) => {
+      await refreshAssetHistory(queryClient, userId, estateId);
       queryClient.setQueryData(assetQueryKey(userId, estateId, data.id), data);
       await Promise.all([
         queryClient.invalidateQueries({
@@ -73,6 +75,7 @@ export function useUpdateAsset(estateId: string, assetId: string) {
       return data;
     },
     onSuccess: async (data) => {
+      await refreshAssetHistory(queryClient, userId, estateId);
       queryClient.setQueryData(assetQueryKey(userId, estateId, assetId), data);
       await queryClient.invalidateQueries({
         queryKey: ["estates", userId, "assets", estateId],
@@ -98,6 +101,7 @@ export function useDeactivateAsset(estateId: string, assetId: string) {
       return data;
     },
     onSuccess: async (data) => {
+      await refreshAssetHistory(queryClient, userId, estateId);
       queryClient.setQueryData(assetQueryKey(userId, estateId, assetId), data);
       await Promise.all([
         queryClient.invalidateQueries({
@@ -165,6 +169,7 @@ export function useRestoreAsset(estateId: string, assetId: string) {
       return data;
     },
     onSuccess: async (data) => {
+      await refreshAssetHistory(client, userId, estateId);
       client.setQueryData(assetQueryKey(userId, estateId, assetId), data);
       await Promise.all([
         client.invalidateQueries({
@@ -192,6 +197,7 @@ export function useCorrectAssetRetirement(estateId: string, assetId: string) {
       return data;
     },
     onSuccess: async (data) => {
+      await refreshAssetHistory(client, userId, estateId);
       client.setQueryData(assetQueryKey(userId, estateId, assetId), data);
       await client.invalidateQueries({
         queryKey: ["estates", userId, "assets", estateId],

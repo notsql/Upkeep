@@ -31,6 +31,8 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [asset-history-date-filter.md](features/asset-history-date-filter.md) | - | built; inclusive Singapore date ranges, URL state, range-bound cursors and page-one restart; 1,745 server / 1,168 web tests, contract generation, types, formatting and build pass |
+| [asset-history-timeline.md](features/asset-history-timeline.md) | - | implemented; Council asset browsing/search, read-only history, date ranges and document viewer; real CLOSED work-order completion regression fixed; 1,750 server / 1,168 web tests, types and formatting pass; manual browser review pending |
 | [estate-costs.md](features/estate-costs.md) | ID-34 / ID-33 | built; top 5 costliest assets and 12-month budget forecast on the estate Overview, owner only |
 | [notifications.md](features/notifications.md) | ID-100 / 101 / 103 / 105 / 106 / 107 | built; in-app inbox, per-estate settings, anomaly alerts with acknowledge/dismiss, daily sweep for service-due and predicted-repair |
 | [export-filtered-readings-csv.md](features/export-filtered-readings-csv.md) | ID-61 / ID-64 CSV | implemented and verified; complete filtered CSV v1 with provenance, bounded streaming and cancellation; 1,470 server / 866 web tests, types, formatting/build, live role/mobile QA and million-row HTTP check pass |

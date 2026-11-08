@@ -2,6 +2,7 @@ import type { components, paths } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 
 export type WorkOrder = components["schemas"]["WorkOrderResponse"];
 export type WorkOrderInput = components["schemas"]["CreateWorkOrderRequest"];
@@ -194,6 +195,7 @@ export function useCreateWorkOrder(estateId: string) {
       return data;
     },
     onSuccess: async (data) => {
+      await refreshAssetHistory(client, userId, estateId);
       client.setQueryData(
         [userId, "work-orders", estateId, "detail", data.id],
         data
@@ -287,6 +289,7 @@ function useProgressSuccess(estateId: string) {
   const { userId } = useWorkOrderAccess(estateId);
   const client = useQueryClient();
   return async (data: WorkOrder) => {
+    await refreshAssetHistory(client, userId, estateId);
     client.setQueryData(
       [userId, "work-orders", estateId, "detail", data.id],
       data

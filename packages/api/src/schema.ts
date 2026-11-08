@@ -282,6 +282,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/asset-history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listAssetHistoryAssets"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets": {
     parameters: {
       query?: never;
@@ -434,6 +450,22 @@ export interface paths {
       cookie?: never;
     };
     get: operations["getAssetFailureRisk"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["getAssetHistory"];
     put?: never;
     post?: never;
     delete?: never;
@@ -3579,6 +3611,137 @@ export interface components {
       items: components["schemas"]["InspectionResultResponse"][];
       nextCursor: string | null;
     };
+    AssetHistoryDetails: {
+      kind: string;
+    } & (
+      | components["schemas"]["HistoryMaintenanceDetails"]
+      | components["schemas"]["HistoryCompletionDetails"]
+      | components["schemas"]["HistoryConditionDetails"]
+      | components["schemas"]["HistoryInspectionDetails"]
+      | components["schemas"]["HistoryLifecycleDetails"]
+      | components["schemas"]["HistoryDocumentDetails"]
+    );
+    AssetHistoryEntryResponse: {
+      id: string;
+      /** Format: uuid */
+      sourceId: string;
+      /** @enum {string} */
+      kind:
+        | "MAINTENANCE"
+        | "WORK_ORDER_COMPLETED"
+        | "CONDITION"
+        | "INSPECTION"
+        | "LIFECYCLE"
+        | "INVOICE"
+        | "SERVICE_REPORT";
+      title: string;
+      summary: string | null;
+      /** Format: date */
+      occurredOn: string | null;
+      /** Format: date-time */
+      occurredAt: string | null;
+      /** Format: date-time */
+      recordedAt: string;
+      details: components["schemas"]["AssetHistoryDetails"];
+    };
+    AssetHistoryPageResponse: {
+      asset: components["schemas"]["AssetHistorySummaryResponse"];
+      items: components["schemas"]["AssetHistoryEntryResponse"][];
+      nextCursor: string | null;
+      documentsVisible: boolean;
+    };
+    AssetHistorySummaryResponse: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
+      name: string;
+      category: string;
+      locationPath: string;
+      /** Format: date */
+      installedOn: string | null;
+      /** Format: date */
+      retiredOn: string | null;
+      /** @enum {string} */
+      status: "ACTIVE" | "RETIRED";
+    };
+    HistoryCompletionDetails: {
+      /** @enum {string} */
+      kind: "COMPLETION";
+      /** Format: uuid */
+      workOrderId: string;
+      reference: string;
+      findings: string;
+      workPerformed: string;
+      partsUsed?: string | null;
+      labourCost?: string | null;
+      partsCost?: string | null;
+      totalCost?: string | null;
+      currency: string;
+      /** Format: int32 */
+      downtimeMinutes?: number | null;
+      /** Format: date-time */
+      editedAt?: string | null;
+      canViewWorkOrder: boolean;
+    };
+    HistoryConditionDetails: {
+      /** @enum {string} */
+      kind: "CONDITION";
+      condition: string;
+      /** Format: date */
+      assessedOn: string;
+      notes: string;
+      /** @enum {string} */
+      origin: "HUMAN" | "ANOMALY_MODEL";
+      sourceLabel: string;
+    };
+    HistoryDocumentDetails: {
+      /** @enum {string} */
+      kind: "DOCUMENT";
+      document: components["schemas"]["DocumentResponse"];
+    };
+    HistoryInspectionDetails: {
+      /** @enum {string} */
+      kind: "INSPECTION";
+      outcome: string;
+      /** Format: date */
+      inspectedOn: string;
+      notes?: string | null;
+      locationPath: string;
+      canViewInspection: boolean;
+    };
+    HistoryLifecycleDetails: {
+      /** @enum {string} */
+      kind: "LIFECYCLE";
+      action: string;
+      /** Format: date */
+      previousRetiredOn?: string | null;
+      previousRetirementReason?: string | null;
+      /** Format: date */
+      retiredOn?: string | null;
+      retirementReason?: string | null;
+      /** Format: int32 */
+      lifecycleVersion: number;
+    };
+    HistoryMaintenanceDetails: {
+      /** @enum {string} */
+      kind: "MAINTENANCE";
+      type: string;
+      notes: string;
+      findings?: string | null;
+      workPerformed?: string | null;
+      serviceProvider?: string | null;
+      partsReplaced?: string | null;
+      /** Format: int32 */
+      downtimeMinutes?: number | null;
+      labourCost?: string | null;
+      partsCost?: string | null;
+      otherCost?: string | null;
+      totalCost?: string | null;
+    };
+    AssetHistoryAssetPageResponse: {
+      items: components["schemas"]["AssetHistorySummaryResponse"][];
+      nextCursor: string | null;
+    };
     EstateAssetCategoriesResponse: {
       estateActive: boolean;
       /** @description Flagged categories first, then the rest, each by label */
@@ -3696,6 +3859,7 @@ export interface components {
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
+      canViewAssetHistory: boolean;
       canViewReadings: boolean;
       canRecordReadings: boolean;
       canViewEstateDetails: boolean;
@@ -6331,6 +6495,81 @@ export interface operations {
       };
     };
   };
+  getAssetHistory: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+        /** @description First Singapore calendar day, inclusive */
+        from?: string;
+        /** @description Last Singapore calendar day, inclusive */
+        to?: string;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Combined recorded asset history */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetHistoryPageResponse"];
+        };
+      };
+      /** @description Invalid paths, filters, limit or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Council access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset inaccessible or missing */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description History unavailable */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getAssetServiceInterval: {
     parameters: {
       query?: never;
@@ -8423,6 +8662,78 @@ export interface operations {
       };
       /** @description Inactive estate or deactivated asset */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  listAssetHistoryAssets: {
+    parameters: {
+      query?: {
+        q?: string;
+        status?: "ACTIVE" | "INACTIVE" | "ALL";
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Read-only estate asset directory */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssetHistoryAssetPageResponse"];
+        };
+      };
+      /** @description Invalid paths, filters, limit or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Council access required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset inaccessible or missing */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description History unavailable */
+      500: {
         headers: {
           [name: string]: unknown;
         };

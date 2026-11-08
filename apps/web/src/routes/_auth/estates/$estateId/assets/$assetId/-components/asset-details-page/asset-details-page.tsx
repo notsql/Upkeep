@@ -10,6 +10,7 @@ import { useAssetDetailsLayout } from "@/routes/_auth/estates/$estateId/assets/$
 
 /** The asset's sub-pages; the old `?tab=` values map onto these paths. */
 export const ASSET_SECTIONS = [
+  "history",
   "maintenance",
   "inspections",
   "documents",
