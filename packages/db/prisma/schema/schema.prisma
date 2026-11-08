@@ -220,6 +220,7 @@ model Asset {
   inspectionResults AssetInspectionResult[]
   intervalChanges   AssetIntervalChange[]
   inspectionChecks  InspectionCheck[]
+  anomalyScores     AnomalyScore[]
 
   documents Document[]
 
@@ -674,6 +675,20 @@ model AssetAssessment {
 
   @@index([estateId])
   @@index([assetId, assessedOn, createdAt])
+}
+
+// Append-only model scores, one per reading sample.
+model AnomalyScore {
+  id         String   @id @default(uuid()) @db.Uuid
+  estateId   String   @db.Uuid
+  assetId    String   @db.Uuid
+  measuredAt DateTime @db.Timestamptz(6)
+  score      Float
+  scoredAt   DateTime @db.Timestamptz(6)
+
+  asset Asset @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([assetId, measuredAt])
 }
 
 model AssetLifecycleEvent {
