@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
@@ -69,6 +70,11 @@ public class Public extends SchemaImpl {
      * The reference instance of <code>public</code>
      */
     public static final Public PUBLIC = new Public();
+
+    /**
+     * The table <code>public.AnomalyScore</code>.
+     */
+    public final Anomalyscore ANOMALYSCORE = Anomalyscore.ANOMALYSCORE;
 
     /**
      * The table <code>public.Asset</code>.
@@ -301,6 +307,7 @@ public class Public extends SchemaImpl {
     @Override
     public final List<Table<?>> getTables() {
         return Arrays.asList(
+            Anomalyscore.ANOMALYSCORE,
             Asset.ASSET,
             Assetassessment.ASSETASSESSMENT,
             Assetcategory.ASSETCATEGORY,

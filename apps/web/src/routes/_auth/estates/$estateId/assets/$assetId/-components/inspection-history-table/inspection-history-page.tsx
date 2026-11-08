@@ -1,5 +1,9 @@
-import { ListChecks } from "lucide-react";
-import { SectionCard } from "@/components/page/section-card";
+import { Link } from "@tanstack/react-router";
+import { ListChecks, Plus } from "lucide-react";
+import {
+  SectionCard,
+  sectionActionClassName,
+} from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -10,9 +14,12 @@ import { useInspectionHistoryPage } from "@/routes/_auth/estates/$estateId/asset
 export function InspectionHistoryPage({
   estateId,
   assetId,
+  canCreate,
 }: {
   estateId: string;
   assetId: string;
+  /** The viewer may file inspections; shown only while everything is active. */
+  canCreate: boolean;
 }) {
   const {
     active,
@@ -28,6 +35,18 @@ export function InspectionHistoryPage({
 
   return (
     <SectionCard
+      actions={
+        canCreate && active ? (
+          <Link
+            className={sectionActionClassName}
+            params={{ estateId, assetId }}
+            to="/estates/$estateId/assets/$assetId/inspections/new"
+          >
+            <Plus aria-hidden="true" />
+            New inspection
+          </Link>
+        ) : undefined
+      }
       className="max-w-full min-w-0"
       icon={ListChecks}
       title="Inspection records"

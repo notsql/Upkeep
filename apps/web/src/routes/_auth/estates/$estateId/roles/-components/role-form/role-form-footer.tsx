@@ -1,8 +1,8 @@
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Spinner } from "@proj/ui/components/spinner";
-import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 
+/** FormActions' layout, with Cancel as the page's link rather than a button. */
 export function RoleFormFooter({
   action,
   cancel,
@@ -16,26 +16,19 @@ export function RoleFormFooter({
   message: string | undefined;
   pending: boolean;
 }) {
+  const label = pending ? "Saving role…" : action;
   return (
     <>
       {message ? (
-        <p className="text-destructive text-sm" role="alert">
-          {message}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       ) : null}
-      <div className="flex justify-end gap-2">
-        {cancel ?? null}
+      <div className="flex flex-wrap items-center gap-3 border-t pt-5">
         <Button disabled={disabled} type="submit">
-          {pending ? (
-            <>
-              <Spinner /> Saving role…
-            </>
-          ) : (
-            <>
-              <Check aria-hidden="true" /> {action}
-            </>
-          )}
+          {label}
         </Button>
+        {cancel}
       </div>
     </>
   );

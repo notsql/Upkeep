@@ -20,11 +20,11 @@ export function assetFailureRiskQueryKey(
   return [...estateFailureRiskQueryKey(userId, estateId), assetId] as const;
 }
 
-export function useEstateFailureRisk(estateId: string) {
+export function useEstateFailureRisk(estateId: string, enabled = true) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: estateFailureRiskQueryKey(userId, estateId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(
@@ -63,7 +63,7 @@ export function useAssetFailureRisk(
 }
 
 type Timeframe = NonNullable<FailureRisk["recommendedTimeframe"]>;
-type FlagReason = FailureRisk["flagReasons"][number];
+export type FlagReason = FailureRisk["flagReasons"][number];
 
 export const timeframeLabel: Record<Timeframe, string> = {
   WITHIN_30_DAYS: "Within 30 days",
@@ -91,4 +91,29 @@ export function noForecastReason(risk: FailureRisk): string | null {
 
 export function formatProbability(value: number | null | undefined): string {
   return (value ?? null) === null ? "—" : `${Math.round((value ?? 0) * 100)}%`;
+}
+
+/**
+ * 90-day breakdown chance at which the forecast reads Moderate, then High.
+ * Below `moderate` it reads Low.
+ */
+export const RISK_THRESHOLDS = { moderate: 0.1, high: 0.3 } as const;
+
+export type RiskLevel = "LOW" | "MODERATE" | "HIGH";
+
+export const riskLevelLabel: Record<RiskLevel, string> = {
+  LOW: "Low risk",
+  MODERATE: "Moderate risk",
+  HIGH: "High risk",
+};
+
+/** The 90-day chance as a risk level, by RISK_THRESHOLDS. */
+export function riskLevel(probability90Days: number): RiskLevel {
+  if (probability90Days >= RISK_THRESHOLDS.high) {
+    return "HIGH";
+  }
+  if (probability90Days >= RISK_THRESHOLDS.moderate) {
+    return "MODERATE";
+  }
+  return "LOW";
 }

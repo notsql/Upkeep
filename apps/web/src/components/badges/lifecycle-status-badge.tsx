@@ -1,4 +1,5 @@
 import { Badge } from "@proj/ui/components/badge";
+import { statusToneClassName } from "@/lib/status-tone";
 
 export function LifecycleStatusBadge({
   inactive,
@@ -8,7 +9,11 @@ export function LifecycleStatusBadge({
   inactiveLabel: "Inactive" | "Retired";
 }) {
   return (
-    <Badge role="status" variant={inactive ? "destructive" : "default"}>
+    <Badge
+      className={statusToneClassName[inactive ? "danger" : "success"]}
+      role="status"
+      variant="outline"
+    >
       {inactive ? inactiveLabel : "Active"}
     </Badge>
   );

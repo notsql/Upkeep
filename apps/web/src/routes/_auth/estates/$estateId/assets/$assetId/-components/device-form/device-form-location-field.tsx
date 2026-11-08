@@ -1,4 +1,9 @@
-import { Label } from "@proj/ui/components/label";
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -32,10 +37,10 @@ export function DeviceFormLocationField({
   locationsError: Error | null;
 }) {
   return (
-    <fieldset className="grid gap-3" disabled={pending}>
-      <legend className="mb-3 font-semibold">Location</legend>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-location`}>Location</Label>
+    <FieldSet disabled={pending}>
+      <FieldLegend>Location</FieldLegend>
+      <Field>
+        <FieldLabel htmlFor={`${id}-location`}>Location</FieldLabel>
         <Select
           items={locationItems}
           onValueChange={handleLocationChange}
@@ -67,7 +72,7 @@ export function DeviceFormLocationField({
             {locationsError.message}
           </p>
         ) : null}
-      </div>
-    </fieldset>
+      </Field>
+    </FieldSet>
   );
 }

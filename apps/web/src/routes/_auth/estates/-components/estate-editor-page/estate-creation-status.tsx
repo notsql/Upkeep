@@ -17,17 +17,15 @@ export function EstateCreationStatus({
   }
   if (isError) {
     return (
-      <div className="mt-6">
-        <ErrorState
-          message="Estate created, but we could not refresh your access or open the estate. Try again to continue."
-          onRetry={retry}
-          retryLabel="Retry access"
-        />
-      </div>
+      <ErrorState
+        message="Estate created, but we could not refresh your access or open the estate. Try again to continue."
+        onRetry={retry}
+        retryLabel="Retry access"
+      />
     );
   }
   return (
-    <p aria-live="polite" className="mt-6" role="status">
+    <p aria-live="polite" role="status">
       Estate created. Refreshing your access…
     </p>
   );

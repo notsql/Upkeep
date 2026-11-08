@@ -2,6 +2,8 @@ import type { components } from "@proj/api/schema";
 import * as fixtures from "@tests/fixtures/access";
 import { describe, expect, it } from "vitest";
 import {
+  assetsEntry,
+  canOpenAllReadings,
   canOpenAssetCategories,
   canOpenAssets,
   canOpenDevices,
@@ -112,6 +114,48 @@ describe("capability destinations", () => {
     expect(canOpenMembers(crewEstateAccess)).toBe(false);
     expect(canOpenRoles(ownerEstateAccess)).toBe(true);
     expect(canOpenRoles(crewEstateAccess)).toBe(false);
+  });
+});
+
+describe("assets entry", () => {
+  it("lands asset readers on By location", () => {
+    expect(assetsEntry(crewEstateAccess, false)).toBe(
+      "/estates/$estateId/assets"
+    );
+    expect(assetsEntry({ ...managementOnly, canViewAssets: true }, false)).toBe(
+      "/estates/$estateId/assets"
+    );
+  });
+  it("lands device viewers without asset access on All devices", () => {
+    expect(assetsEntry({ ...managementOnly, role: "COUNCIL" }, false)).toBe(
+      "/estates/$estateId/assets/devices"
+    );
+    expect(assetsEntry({ ...managementOnly, role: "MANAGER" }, false)).toBe(
+      "/estates/$estateId/assets/devices"
+    );
+    expect(assetsEntry(managementOnly, true)).toBe(
+      "/estates/$estateId/assets/devices"
+    );
+  });
+  it("is absent for everyone else", () => {
+    expect(assetsEntry(managementOnly, false)).toBeUndefined();
+    expect(assetsEntry(residentEstateAccess, false)).toBeUndefined();
+    expect(assetsEntry(undefined, false)).toBeUndefined();
+  });
+});
+
+describe("all readings", () => {
+  it("is linked for readings viewers other than Crew", () => {
+    expect(canOpenAllReadings(ownerEstateAccess)).toBe(true);
+    expect(
+      canOpenAllReadings({
+        ...managementOnly,
+        role: "MANAGER",
+        canViewReadings: true,
+      })
+    ).toBe(true);
+    expect(canOpenAllReadings(crewEstateAccess)).toBe(false);
+    expect(canOpenAllReadings(councilEstateAccess)).toBe(false);
   });
 });
 

@@ -216,6 +216,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/device-api/telemetry": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["submitTelemetry"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates": {
     parameters: {
       query?: never;
@@ -548,6 +564,40 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations["checkAssetReadings"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/readings/grouped": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Readable by Owner, Manager and Crew. A group is the readings at one measuredAt from one device or one manual recorder. limit bounds timestamps, so a page can hold more groups. */
+    get: operations["getAssetReadingGroups"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/readings/series": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description Readable by Owner, Manager and Crew. Buckets are the smallest of 1 s, 5 s, 10 s, 15 s, 30 s, 1 min, 2 min and 5 min giving at most 300 over the range. Manual readings are not included. */
+    get: operations["getAssetReadingSeries"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2081,6 +2131,21 @@ export interface components {
       id: string;
       label: string;
     };
+    ReportUrgencyChange: {
+      /** Format: uuid */
+      id: string;
+      /** Format: int32 */
+      version: number;
+      /** @enum {string} */
+      fromUrgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      /** @enum {string} */
+      toUrgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      fromIsSafety: boolean;
+      toIsSafety: boolean;
+      changedByName: string | null;
+      /** Format: date-time */
+      changedAt: string;
+    };
     NotificationSettingsRequest: {
       /** @description 0.51 to 1.00, at most two decimal places */
       anomalyScoreThreshold: number;
@@ -3109,6 +3174,9 @@ export interface components {
        */
       measuredAt: string;
     };
+    TelemetryBatchRequest: {
+      readings: components["schemas"]["CreateReadingRequest"][];
+    };
     ReadingResponse: {
       /** Format: uuid */
       id: string;
@@ -3143,6 +3211,23 @@ export interface components {
        */
       receivedAt: string;
     };
+    TelemetryBatchResponse: {
+      /** @description One result per submitted item, in request order */
+      results: components["schemas"]["TelemetryItemResult"][];
+    };
+    TelemetryItemResult: {
+      /**
+       * Format: int32
+       * @description The item's position in the request, from 0
+       */
+      index: number;
+      /** @enum {string} */
+      status: "CREATED" | "ALREADY_STORED" | "INVALID" | "CONFLICT";
+      /** @description CREATED and ALREADY_STORED only: the stored reading */
+      reading?: components["schemas"]["ReadingResponse"];
+      /** @description INVALID and CONFLICT only: why the item was not stored */
+      message?: string;
+    };
     AcceptEstateInvitationRequest: {
       /** Format: int32 */
       expectedRoleVersion: number;
@@ -3173,6 +3258,13 @@ export interface components {
        * @description Omit or send null to mark unknown
        */
       downtimeMinutes?: number | null;
+    };
+    ChangeReportUrgencyRequest: {
+      /** @enum {string} */
+      urgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+      isSafety: boolean;
+      /** Format: int32 */
+      expectedVersion: number;
     };
     RelocateReportRequest: {
       /** Format: uuid */
@@ -3415,7 +3507,7 @@ export interface components {
     };
     ReadingFlagResponse: {
       /** @enum {string} */
-      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE";
+      type: "GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE" | "ANOMALY";
       /**
        * Format: int64
        * @description GAP only: whole seconds since the previous reading of this metric on the asset
@@ -3431,6 +3523,11 @@ export interface components {
        * @description OUT_OF_RANGE only: the metric's inclusive maximum
        */
       validMax?: number;
+      /**
+       * Format: double
+       * @description ANOMALY only: the stored anomaly score of the reading's sample, at least 0.51
+       */
+      anomalyScore?: number;
     };
     ReadingMetricOption: {
       /** @enum {string} */
@@ -3822,6 +3919,128 @@ export interface components {
       /** @description Exact stored decimal for display without binary floating-point conversion */
       valueText?: string;
     };
+    AnomalyBucket: {
+      /** Format: date-time */
+      start: string;
+      /** Format: double */
+      maxScore: number;
+      /**
+       * Format: int32
+       * @description Scores in the bucket at or above anomalyThreshold
+       */
+      abnormalCount: number;
+    };
+    MetricSeries: {
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      unit: string;
+      /** @description Non-empty buckets only, ascending */
+      points: components["schemas"]["SeriesPoint"][];
+    };
+    ReadingSeriesResponse: {
+      /**
+       * Format: date-time
+       * @description The requested start, inclusive, in UTC
+       */
+      from: string;
+      /**
+       * Format: date-time
+       * @description The requested end, exclusive, in UTC
+       */
+      to: string;
+      /**
+       * Format: int32
+       * @description Width of every bucket; buckets are aligned to the Unix epoch
+       */
+      bucketSeconds: number;
+      /**
+       * Format: double
+       * @description Scores at or above this are abnormal
+       */
+      anomalyThreshold: number;
+      /** @description Metrics with device readings in the range, in catalogue order */
+      metrics: components["schemas"]["MetricSeries"][];
+      /** @description Buckets with at least one anomaly score, ascending */
+      anomalies: components["schemas"]["AnomalyBucket"][];
+    };
+    SeriesPoint: {
+      /**
+       * Format: date-time
+       * @description Bucket start; may be before the requested from
+       */
+      start: string;
+      /** Format: double */
+      min: number;
+      /** Format: double */
+      max: number;
+      /** Format: double */
+      avg: number;
+      /** Format: int32 */
+      count: number;
+    };
+    GroupedMetricReading: {
+      /** Format: uuid */
+      readingId: string;
+      /** @enum {string} */
+      metric:
+        | "TEMPERATURE"
+        | "HUMIDITY"
+        | "PRESSURE"
+        | "FLOW_RATE"
+        | "VIBRATION"
+        | "VIBRATION_ACCELERATION"
+        | "POWER"
+        | "ENERGY";
+      /** Format: double */
+      value: number;
+      /** @description MANUAL only: the exact stored decimal */
+      valueText?: string;
+      unit: string;
+      /** @description Empty when nothing is suspect */
+      flags: components["schemas"]["ReadingFlagResponse"][];
+    };
+    ReadingGroup: {
+      /**
+       * Format: date-time
+       * @description In UTC
+       */
+      measuredAt: string;
+      /** @enum {string} */
+      source: "SENSOR" | "IMPORT" | "MANUAL";
+      /**
+       * Format: uuid
+       * @description SENSOR only
+       */
+      deviceId?: string;
+      /** @description SENSOR only */
+      deviceIdentifier?: string;
+      /** @description MANUAL only, when the recorder had a name */
+      recordedByName?: string;
+      /**
+       * Format: double
+       * @description SENSOR only: the asset's stored anomaly score at measuredAt, when scored
+       */
+      anomalyScore?: number;
+      /** @description In catalogue order */
+      metrics: components["schemas"]["GroupedMetricReading"][];
+    };
+    ReadingGroupPage: {
+      /** @description Newest first; every group at one measuredAt is on the same page */
+      groups: components["schemas"]["ReadingGroup"][];
+      /**
+       * Format: date-time
+       * @description Pass as before for the next page; absent when there are no older readings
+       */
+      nextBefore?: string;
+    };
     InspectionResultPageResponse: {
       items: components["schemas"]["InspectionResultResponse"][];
       nextCursor: string | null;
@@ -4105,28 +4324,6 @@ export interface components {
       canRevertReadingImports?: boolean;
       canReviewFaultReportDuplicates: boolean;
       canChangeFaultReportUrgency: boolean;
-    };
-    ReportUrgencyChange: {
-      /** Format: uuid */
-      id: string;
-      /** Format: int32 */
-      version: number;
-      /** @enum {string} */
-      fromUrgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-      /** @enum {string} */
-      toUrgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-      fromIsSafety: boolean;
-      toIsSafety: boolean;
-      changedByName: string | null;
-      /** Format: date-time */
-      changedAt: string;
-    };
-    ChangeReportUrgencyRequest: {
-      /** @enum {string} */
-      urgency: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-      isSafety: boolean;
-      /** Format: int32 */
-      expectedVersion: number;
     };
   };
 }
@@ -6480,7 +6677,7 @@ export interface operations {
           | "ENERGY";
         from?: string;
         to?: string;
-        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE" | "ANOMALY")[];
       };
       header?: never;
       path: {
@@ -6968,6 +7165,162 @@ export interface operations {
       };
       /** @description History unavailable */
       500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getAssetReadingGroups: {
+    parameters: {
+      query?: {
+        /** @description Timestamps per page, 1 to 100 */
+        limit?: number;
+        /** @description Exclusive; the previous page's nextBefore */
+        before?: string;
+        /** @description Inclusive */
+        from?: string;
+        /** @description Exclusive */
+        to?: string;
+        /** @description Repeatable; limits both the groups and their metrics */
+        metric?: (
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY"
+        )[];
+        /** @description Repeatable; a group matches when any of its readings carries any of these */
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE" | "ANOMALY")[];
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's latest readings grouped per instant and source */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingGroupPage"];
+        };
+      };
+      /** @description Unknown metric or flag, a malformed time, from not before to, or page or size out of range */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  getAssetReadingSeries: {
+    parameters: {
+      query: {
+        /** @description Inclusive */
+        from: string;
+        /** @description Exclusive; at most 24 hours after from */
+        to: string;
+        /** @description Repeatable; omitted means every metric with readings in the range */
+        metric?: (
+          | "TEMPERATURE"
+          | "HUMIDITY"
+          | "PRESSURE"
+          | "FLOW_RATE"
+          | "VIBRATION"
+          | "VIBRATION_ACCELERATION"
+          | "POWER"
+          | "ENERGY"
+        )[];
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The asset's device readings bucketed for a chart */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ReadingSeriesResponse"];
+        };
+      };
+      /** @description Unknown metric or flag, a malformed time, from not before to, or page or size out of range */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or asset not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -9493,7 +9846,7 @@ export interface operations {
         /** @description Exclusive */
         to?: string;
         /** @description Repeatable; lists readings carrying any of them */
-        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE" | "ANOMALY")[];
         /** @description Starts at 0 */
         page?: number;
         /** @description 1 to 200 */
@@ -10049,7 +10402,7 @@ export interface operations {
         from?: string;
         /** @description Exclusive */
         to?: string;
-        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE")[];
+        flag?: ("GAP" | "DUPLICATE_TIMESTAMP" | "OUT_OF_RANGE" | "ANOMALY")[];
         page?: number;
         size?: number;
       };
@@ -13047,6 +13400,57 @@ export interface operations {
         };
       };
       /** @description A different value is already stored for this metric and time, or the estate is inactive */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  submitTelemetry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TelemetryBatchRequest"];
+      };
+    };
+    responses: {
+      /** @description Each item decided on its own; one result per item, in request order */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["TelemetryBatchResponse"];
+        };
+      };
+      /** @description Not an object with only readings, an array of 1 to 500 items; nothing stored */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing, malformed, unknown or replaced device key */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description The estate is inactive; nothing stored */
       409: {
         headers: {
           [name: string]: unknown;

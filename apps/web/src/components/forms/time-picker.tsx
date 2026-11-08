@@ -71,7 +71,7 @@ export function TimePicker({
     // biome-ignore lint/a11y/useSemanticElements: a fieldset would add a border and legend; this is one compound control.
     <div
       aria-label={ariaLabel}
-      className={`flex items-center gap-1 ${className ?? ""}`}
+      className={`flex shrink-0 items-center gap-1 ${className ?? ""}`}
       role="group"
     >
       <Clock aria-hidden="true" className="text-muted-foreground size-4" />
@@ -84,7 +84,7 @@ export function TimePicker({
           aria-describedby={describedBy}
           aria-invalid={invalid}
           aria-label={`${partLabel} hour`}
-          className="w-16"
+          className="w-20"
           id={id}
         >
           <SelectValue placeholder="HH" />
@@ -107,7 +107,7 @@ export function TimePicker({
           aria-describedby={describedBy}
           aria-invalid={invalid}
           aria-label={`${partLabel} minute`}
-          className="w-16"
+          className="w-20"
           id={id ? `${id}-minute` : undefined}
         >
           <SelectValue placeholder="mm" />

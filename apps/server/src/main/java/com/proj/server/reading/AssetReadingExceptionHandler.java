@@ -29,6 +29,11 @@ public class AssetReadingExceptionHandler {
                 .body(new EstateError(error.getMessage()));
     }
 
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    ResponseEntity<EstateError> missing(org.springframework.web.bind.MissingServletRequestParameterException error) {
+        return ResponseEntity.badRequest().body(new EstateError(error.getParameterName() + ": is required."));
+    }
+
     // An unknown metric, a malformed time or a non-numeric page or size.
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     ResponseEntity<EstateError> mismatch(MethodArgumentTypeMismatchException error) {

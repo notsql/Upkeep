@@ -54,19 +54,21 @@ export function WorkOrderFormDetailsFields({
           pending={form.locations.isPending}
         />
       )}
-      <WorkOrderSelect
-        label="Category"
-        onChange={form.categoryChanged}
-        options={categories}
-        value={form.category}
-      />
-      <WorkOrderSelect
-        disabled={form.category === "SAFETY"}
-        label="Priority"
-        onChange={form.setPriority}
-        options={priorities}
-        value={form.priority}
-      />
+      <div className="grid gap-5 sm:grid-cols-2">
+        <WorkOrderSelect
+          label="Category"
+          onChange={form.categoryChanged}
+          options={categories}
+          value={form.category}
+        />
+        <WorkOrderSelect
+          disabled={form.category === "SAFETY"}
+          label="Priority"
+          onChange={form.setPriority}
+          options={priorities}
+          value={form.priority}
+        />
+      </div>
     </>
   );
 }

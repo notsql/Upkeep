@@ -10,7 +10,7 @@ export function EditRolePage({
   roleId: string;
 }) {
   return (
-    <RoleAccessGate estateId={estateId}>
+    <RoleAccessGate className="max-w-3xl" estateId={estateId}>
       {(estate) => (
         <EditRoleWorkspace
           estate={estate}

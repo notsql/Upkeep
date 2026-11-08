@@ -10,6 +10,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { ReadingSearch } from "@/lib/reading-filters";
+import type { ReadingFlag } from "@/lib/readings";
 import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/estate-readings-page";
 
 const { get, permission } = vi.hoisted(() => ({
@@ -63,7 +64,9 @@ const reading = {
   recordedAt: "2026-10-01T08:00:01Z",
   recordedByUserId: null,
   recordedByName: null,
-  flags: [{ type: "OUT_OF_RANGE", validMin: -40, validMax: 150 }],
+  flags: [
+    { type: "OUT_OF_RANGE", validMin: -40, validMax: 150 },
+  ] as ReadingFlag[],
 };
 let page: {
   items: (Omit<
@@ -132,7 +135,7 @@ beforeEach(() => {
 });
 
 describe("estate reading browser", () => {
-  it("shows manual provenance and the entry action without inventing a device", async () => {
+  it("shows manual provenance without inventing a device or offering entry", async () => {
     page.items = [
       {
         ...reading,
@@ -149,11 +152,11 @@ describe("estate reading browser", () => {
     within(table).getByText("Manual");
     within(table).getByText("Alex Technician");
     expect(within(table).queryByText("SENSOR-001")).toBeNull();
-    screen.getByRole("link", { name: "Create" });
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
     expect(screen.queryByText("Maple Estate")).toBeNull();
   });
 
-  it("shows Sensor labels and hides recording when only historical reads are allowed", async () => {
+  it("shows Sensor labels", async () => {
     permission.canRecord = false;
     show();
     const table = await screen.findByRole("table", { name: "Readings" });
@@ -220,6 +223,43 @@ describe("estate reading browser", () => {
         },
       },
     });
+  });
+
+  it.each([
+    {
+      name: "anomalous only sends just ANOMALY",
+      filters: { anomalous: true },
+      flag: ["ANOMALY"],
+    },
+    {
+      name: "both kinds match either",
+      filters: { suspect: true, anomalous: true },
+      flag: ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE", "ANOMALY"],
+    },
+    {
+      name: "suspect only never sends ANOMALY",
+      filters: { suspect: true },
+      flag: ["GAP", "DUPLICATE_TIMESTAMP", "OUT_OF_RANGE"],
+    },
+  ])("flag filters: $name", async ({ filters, flag }) => {
+    show(filters);
+    await screen.findByRole("table", { name: "Readings" });
+    expect(api.GET).toHaveBeenCalledWith(READINGS, {
+      params: {
+        path: { estateId: "estate" },
+        query: { page: 0, size: 50, flag },
+      },
+    });
+  });
+
+  it("shows an anomaly flag as a destructive badge with its score", async () => {
+    page.items = [
+      { ...reading, flags: [{ type: "ANOMALY", anomalyScore: 0.8734 }] },
+    ];
+    show();
+    const table = await screen.findByRole("table", { name: "Readings" });
+    const badge = within(table).getByText("Anomaly 0.87");
+    expect(badge.getAttribute("data-variant")).toBe("destructive");
   });
 
   it("selects a searched retired asset and resets pagination", async () => {
@@ -421,6 +461,11 @@ describe("estate reading browser", () => {
       assets: 1,
       message: "No matching suspect readings",
     },
+    {
+      filters: { anomalous: true },
+      assets: 1,
+      message: "No anomalous readings match these filters",
+    },
   ])(
     "distinguishes empty states: $message",
     async ({ filters, assets, message }) => {
@@ -436,8 +481,7 @@ describe("estate reading browser", () => {
       expect(
         screen.queryAllByRole("button", { name: "Clear filters" })
       ).toHaveLength(filtered ? 2 : 0);
-      // Only the header's Create; empty states carry no create action.
-      expect(screen.getAllByRole("link", { name: "Create" })).toHaveLength(1);
+      expect(screen.queryAllByRole("link", { name: "Create" })).toHaveLength(0);
     }
   );
 
@@ -449,6 +493,19 @@ describe("estate reading browser", () => {
       screen.queryByRole("search", { name: "Reading filters" })
     ).toBeNull();
     fireEvent.click(toggle);
+    await screen.findByRole("search", { name: "Reading filters" });
+  });
+
+  it("puts Filters and Export CSV in one toolbar, expanded when filtered", async () => {
+    show({ metric: "TEMPERATURE" });
+    const toolbar = await screen.findByRole("toolbar", {
+      name: "Reading tools",
+    });
+    const toggle = within(toolbar).getByRole("button", {
+      name: "Filters, 1 active",
+    });
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    within(toolbar).getByRole("button", { name: "Export CSV" });
     await screen.findByRole("search", { name: "Reading filters" });
   });
 

@@ -13,6 +13,7 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { Pagination } from "@/components/table/pagination";
 import { useInspectionAccess, useInspectionAssets } from "@/lib/inspections";
+import { AssetViewsNav } from "@/routes/_auth/estates/$estateId/assets/-components/asset-views-nav";
 
 export function InspectionAssetList({ estateId }: { estateId: string }) {
   const access = useInspectionAccess(estateId);
@@ -62,6 +63,7 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
         icon={Layers}
         title="Assets"
       />
+      <AssetViewsNav estateId={estateId} />
       <FilterBar
         activeCount={query ? 1 : 0}
         label="Search assets"

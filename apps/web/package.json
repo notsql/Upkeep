@@ -26,6 +26,7 @@
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-zoom-pan-pinch": "catalog:",
     "sonner": "catalog:",
     "tailwindcss": "catalog:"
   },

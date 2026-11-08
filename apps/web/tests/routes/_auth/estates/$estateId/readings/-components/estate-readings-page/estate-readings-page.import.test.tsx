@@ -110,13 +110,13 @@ beforeEach(() => {
 });
 
 describe("historical import on the Readings page", () => {
-  it("offers Import CSV alongside the existing Create and Export CSV actions", async () => {
+  it("offers Import CSV alongside Export CSV without restoring manual entry", async () => {
     show();
     await screen.findByRole("table", { name: "Readings" });
     expect(
       screen.getByRole("link", { name: "Import CSV" }).getAttribute("href")
     ).toBe("/estates/$estateId/readings/imports");
-    screen.getByRole("link", { name: "Create" });
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
     screen.getByRole("button", { name: "Export CSV" });
   });
 
@@ -132,7 +132,7 @@ describe("historical import on the Readings page", () => {
     context.canImport = false;
     show();
     await screen.findByRole("table", { name: "Readings" });
-    screen.getByRole("link", { name: "Create" });
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Import CSV" })).toBeNull();
   });
 

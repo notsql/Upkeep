@@ -20,9 +20,9 @@ export function FlaggedAssets({ estateId }: { estateId: string }) {
         <Link
           className={footerLink}
           params={{ estateId }}
-          to="/estates/$estateId/failure-risk"
+          to="/estates/$estateId/assets"
         >
-          Failure risk
+          Risk by location
         </Link>
       }
       icon={Flag}

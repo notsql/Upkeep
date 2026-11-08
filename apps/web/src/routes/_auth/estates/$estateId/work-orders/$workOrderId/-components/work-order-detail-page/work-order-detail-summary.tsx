@@ -1,3 +1,4 @@
+import { buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import type { WorkOrder } from "@/lib/work-orders";
@@ -5,11 +6,13 @@ import type { WorkOrder } from "@/lib/work-orders";
 export function WorkOrderDetailSummary({
   canReadReports,
   canViewAssets,
+  canViewReadings,
   data,
   estateId,
 }: {
   canReadReports: boolean;
   canViewAssets: boolean;
+  canViewReadings: boolean;
   data: WorkOrder;
   estateId: string;
 }) {
@@ -76,6 +79,17 @@ export function WorkOrderDetailSummary({
             </div>
           ) : null}
         </dl>
+        {data.assetId && canViewReadings ? (
+          <div className="flex flex-wrap gap-2">
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              params={{ estateId, assetId: data.assetId }}
+              to="/estates/$estateId/readings/$assetId"
+            >
+              View readings
+            </Link>
+          </div>
+        ) : null}
         <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-sm">
           <p>
             Created by{" "}

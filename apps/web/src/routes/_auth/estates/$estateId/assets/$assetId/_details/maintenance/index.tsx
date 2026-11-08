@@ -1,15 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { pageHead } from "@/lib/page-title";
-import { AssetMaintenance } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/** This section moved into Records; old links still land there. */
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/_details/maintenance/"
 )({
-  component: AssetMaintenanceRoute,
-  head: () => pageHead("Asset maintenance"),
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      params,
+      replace: true,
+      to: "/estates/$estateId/assets/$assetId/records",
+    });
+  },
 });
-
-function AssetMaintenanceRoute() {
-  const { estateId, assetId } = Route.useParams();
-  return <AssetMaintenance assetId={assetId} estateId={estateId} />;
-}

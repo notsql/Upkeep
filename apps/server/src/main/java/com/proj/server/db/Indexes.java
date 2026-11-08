@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategoryflagchange;
@@ -58,6 +59,7 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index ANOMALYSCORE_ASSETID_MEASUREDAT_KEY = Internal.createIndex(DSL.name("AnomalyScore_assetId_measuredAt_key"), Anomalyscore.ANOMALYSCORE, new OrderField[] { Anomalyscore.ANOMALYSCORE.ASSETID, Anomalyscore.ANOMALYSCORE.MEASUREDAT }, true);
     public static final Index ASSET_ESTATEID_IDX = Internal.createIndex(DSL.name("Asset_estateId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID }, false);
     public static final Index ASSET_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("Asset_estateId_reference_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID, Asset.ASSET.REFERENCE }, true);
     public static final Index ASSET_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Asset_id_estateId_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ID, Asset.ASSET.ESTATEID }, true);

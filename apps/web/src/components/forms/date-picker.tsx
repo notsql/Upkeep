@@ -103,7 +103,7 @@ export function DatePicker({
         }
       >
         <CalendarIcon aria-hidden="true" />
-        <span className={label ? undefined : "text-muted-foreground"}>
+        <span className={`truncate ${label ? "" : "text-muted-foreground"}`}>
           {label ?? placeholder}
         </span>
       </PopoverTrigger>

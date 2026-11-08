@@ -16,17 +16,24 @@ public record ReadingFlagResponse(
         Double validMin,
 
         @Schema(description = "OUT_OF_RANGE only: the metric's inclusive maximum")
-        Double validMax) {
+        Double validMax,
+
+        @Schema(description = "ANOMALY only: the stored anomaly score of the reading's sample, at least 0.51")
+        Double anomalyScore) {
 
     static ReadingFlagResponse gap(long seconds) {
-        return new ReadingFlagResponse(ReadingFlagType.GAP, seconds, null, null);
+        return new ReadingFlagResponse(ReadingFlagType.GAP, seconds, null, null, null);
     }
 
     static ReadingFlagResponse duplicate() {
-        return new ReadingFlagResponse(ReadingFlagType.DUPLICATE_TIMESTAMP, null, null, null);
+        return new ReadingFlagResponse(ReadingFlagType.DUPLICATE_TIMESTAMP, null, null, null, null);
     }
 
     static ReadingFlagResponse outOfRange(double min, double max) {
-        return new ReadingFlagResponse(ReadingFlagType.OUT_OF_RANGE, null, min, max);
+        return new ReadingFlagResponse(ReadingFlagType.OUT_OF_RANGE, null, min, max, null);
+    }
+
+    static ReadingFlagResponse anomaly(double score) {
+        return new ReadingFlagResponse(ReadingFlagType.ANOMALY, null, null, null, score);
     }
 }

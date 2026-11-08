@@ -1,5 +1,10 @@
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import type { ChangeEvent } from "react";
 import { DeviceFormFieldError } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form-field-error";
 import type {
@@ -23,38 +28,44 @@ export function DeviceFormIdentityFields({
   values: { identifier: string; model: string };
 }) {
   return (
-    <fieldset className="grid gap-5" disabled={pending}>
-      <legend className="mb-3 font-semibold">Device identity</legend>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-identifier`}>Identifier</Label>
-        <Input
-          {...errorProps("identifier")}
-          id={`${id}-identifier`}
-          maxLength={100}
-          name="identifier"
-          onChange={handleChange}
-          required
-          value={values.identifier}
-        />
-        <DeviceFormFieldError
-          field="identifier"
-          fieldErrors={fieldErrors}
-          id={id}
-        />
+    <FieldSet disabled={pending}>
+      <FieldLegend>Device identity</FieldLegend>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor={`${id}-identifier`}>Identifier</FieldLabel>
+          <Input
+            {...errorProps("identifier")}
+            id={`${id}-identifier`}
+            maxLength={100}
+            name="identifier"
+            onChange={handleChange}
+            required
+            value={values.identifier}
+          />
+          <DeviceFormFieldError
+            field="identifier"
+            fieldErrors={fieldErrors}
+            id={id}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-model`}>Model</FieldLabel>
+          <Input
+            {...errorProps("model")}
+            id={`${id}-model`}
+            maxLength={200}
+            name="model"
+            onChange={handleChange}
+            required
+            value={values.model}
+          />
+          <DeviceFormFieldError
+            field="model"
+            fieldErrors={fieldErrors}
+            id={id}
+          />
+        </Field>
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-model`}>Model</Label>
-        <Input
-          {...errorProps("model")}
-          id={`${id}-model`}
-          maxLength={200}
-          name="model"
-          onChange={handleChange}
-          required
-          value={values.model}
-        />
-        <DeviceFormFieldError field="model" fieldErrors={fieldErrors} id={id} />
-      </div>
-    </fieldset>
+    </FieldSet>
   );
 }

@@ -3,6 +3,7 @@ import { createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import {
+  flagLabel,
   formatGap,
   type ReadingFilters,
   readingsQueryKey,
@@ -133,5 +134,22 @@ describe("formatGap", () => {
     expect(formatGap(90)).toBe("1m 30s");
     expect(formatGap(90_000)).toBe("1d 1h");
     expect(formatGap(45)).toBe("45s");
+  });
+});
+
+describe("flagLabel", () => {
+  it.each([
+    [0.8734, "Anomaly 0.87"],
+    [0.875, "Anomaly 0.88"],
+    [0.51, "Anomaly 0.51"],
+    [1, "Anomaly 1.00"],
+  ])("labels an anomaly scored %s as %s", (anomalyScore, label) => {
+    expect(flagLabel({ type: "ANOMALY", anomalyScore }, "bar")).toBe(label);
+  });
+
+  it("labels out-of-range limits with grouped numbers", () => {
+    expect(
+      flagLabel({ type: "OUT_OF_RANGE", validMin: -1, validMax: 1500.5 }, "bar")
+    ).toBe("Out of range (valid -1 to 1,500.5 bar)");
   });
 });

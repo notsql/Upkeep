@@ -68,6 +68,44 @@ export function canOpenSensors(
   );
 }
 
+/** Assets > All devices: everyone who could open Devices or Device monitoring. */
+export function canOpenAllDevices(
+  permission: Permission,
+  owned?: boolean,
+  platformAdmin?: boolean
+): boolean {
+  return (
+    canOpenDevices(permission, owned) ||
+    canOpenSensors(permission, owned, platformAdmin)
+  );
+}
+
+/**
+ * Where the sidebar's Assets entry lands: By location for asset readers,
+ * else All devices for the Devices / Device monitoring audience it replaced.
+ */
+export function assetsEntry(
+  permission: Permission,
+  owned?: boolean,
+  platformAdmin?: boolean
+):
+  | "/estates/$estateId/assets"
+  | "/estates/$estateId/assets/devices"
+  | undefined {
+  if (canOpenAssets(permission)) {
+    return "/estates/$estateId/assets";
+  }
+  if (canOpenAllDevices(permission, owned, platformAdmin)) {
+    return "/estates/$estateId/assets/devices";
+  }
+  return undefined;
+}
+
+/** The "All readings" link on the Assets views; Crew use work-order links. */
+export function canOpenAllReadings(permission: Permission): boolean {
+  return canOpenReadings(permission) && permission?.role !== "CREW";
+}
+
 export function canOpenFailureRisk(
   permission: Permission,
   owned?: boolean

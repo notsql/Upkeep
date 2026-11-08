@@ -10,20 +10,24 @@ Routes (folder-based, under `apps/web/src/routes/_auth/estates/$estateId/roles/`
 
 Shared `roles/-components/`:
 
-- `role-access-gate.tsx` - `RoleAccessGate` render-prop: PageLayout, then
+- `role-access-gate.tsx` - `RoleAccessGate` render-prop: PageLayout (the
+  new/edit pages pass `className="max-w-3xl"`, the form page width), then
   LoadingState / `ErrorState` "Retry access" / "Estate roles unavailable",
   else the page.
 - `role-form.tsx` composes `role-form-details-fields.tsx`,
   `role-form-permissions.tsx` and `role-form-footer.tsx`; `use-role-form.ts`
   holds state, `AREA_OF` and validation.
 - `role-form.tsx` - `RoleForm({ catalogue, initial?, pending, error, onSave,
-  cancel? })`. Card "Details" (Role name, Description) and Card "Permissions"
-  with one `fieldset` per area (legend = group name: Estate, Fault reports,
+  cancel? })`. `FormCard` "Details" (Role name, Description (optional)) and
+  `FormCard` "Permissions" (description "Choose at least one. Some need a
+  prerequisite chosen too.") with one `FieldSet` + label-style `FieldLegend` per area (legend = group name: Estate, Fault reports,
   Members and roles, Locations, Documents). The area map is client-side
   (`AREA_OF`) because `EstatePermissionResponse` carries no area. Each permission
   is a bordered Checkbox + label + server description + "Prerequisite: ...".
-  Submit is primary with `Check` icon ("Create role" / "Save role", "Saving
-  role…" with Spinner); `cancel` is the page's outline Cancel link.
+  The footer (`role-form-footer.tsx`) closes the Permissions card and copies
+  `FormActions`' layout (`border-t pt-5`, primary submit then Cancel): submit
+  "Create role" / "Save role", "Saving role…" while pending; `cancel` is the
+  page's outline Cancel link. Validation messages are a destructive `Alert`.
 - `role-row.tsx` - table row: name, description, "Own role · read-only",
   "In use · reassign members to delete"; first three permission Badges + "+N
   more"; outline Edit link (`Pencil`, to the edit route, only when
@@ -43,7 +47,8 @@ create; no action) -> "No matching roles" EmptyState (outline Clear filters) or 
 (Role, Permissions, Actions). Inactive estate: Alert "Estate inactive · roles
 read-only".
 
-New-role page: `FormPageHeader` "Create role" with breadcrumbs `Roles ›
+New-role page: `FormPageHeader` "Create role" (description "Name the role and
+choose what it can do") with breadcrumbs `Roles ›
 Create role` (`Members › Create role` when opened from the invite dialog), then
 RoleForm; its outline Cancel link returns to the roles list or the council.
 The parent crumb is a link to `/estates/$estateId/roles` (or
@@ -66,7 +71,7 @@ the permission list is long, and the URL is linkable.
 There are no Tabs (the endpoint returns only custom roles) and no member count
 (the DTO has none). UI copy is short labels, not sentences. shadcn components:
 Alert, Badge, Button/buttonVariants, Card, Checkbox, Dialog, Field, Input, Label,
-Spinner, Table, Textarea. DTOs come from generated `@proj/api/schema`; API calls
+Table, Textarea; `FormCard` from `components/page/form-page.tsx`. DTOs come from generated `@proj/api/schema`; API calls
 live in `lib/estate-roles.ts`.
 
 The server route guard and mounted page independently require the target estate's

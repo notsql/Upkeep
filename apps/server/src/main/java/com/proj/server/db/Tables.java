@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
@@ -54,6 +55,11 @@ import com.proj.server.db.tables.Workorderstatusevent;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
+
+    /**
+     * The table <code>public.AnomalyScore</code>.
+     */
+    public static final Anomalyscore ANOMALYSCORE = Anomalyscore.ANOMALYSCORE;
 
     /**
      * The table <code>public.Asset</code>.

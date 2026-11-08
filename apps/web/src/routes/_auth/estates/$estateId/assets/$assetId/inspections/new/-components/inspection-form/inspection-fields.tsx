@@ -1,4 +1,9 @@
-import { Field, FieldLabel } from "@proj/ui/components/field";
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -34,37 +39,40 @@ export function InspectionFields({
   onNotesChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
 }) {
   return (
-    <>
-      <Field>
-        <FieldLabel htmlFor="inspection-outcome">Outcome</FieldLabel>
-        <Select
-          items={OUTCOMES}
-          onValueChange={onOutcomeChange}
-          required
-          value={outcome || null}
-        >
-          <SelectTrigger className="w-full" id="inspection-outcome">
-            <SelectValue placeholder="Choose Pass or Fail" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="PASS">Pass</SelectItem>
-            <SelectItem value="FAIL">Fail</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field>
-        <FieldLabel htmlFor="inspection-date">Inspection date</FieldLabel>
-        <DatePicker
-          clearable={false}
-          id="inspection-date"
-          max={new Intl.DateTimeFormat("en-CA", {
-            timeZone: "Asia/Singapore",
-          }).format(new Date())}
-          min={installedOn ?? undefined}
-          onChange={onDateChange}
-          value={date}
-        />
-      </Field>
+    <FieldSet>
+      <FieldLegend>Result</FieldLegend>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor="inspection-outcome">Outcome</FieldLabel>
+          <Select
+            items={OUTCOMES}
+            onValueChange={onOutcomeChange}
+            required
+            value={outcome || null}
+          >
+            <SelectTrigger className="w-full" id="inspection-outcome">
+              <SelectValue placeholder="Choose Pass or Fail" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PASS">Pass</SelectItem>
+              <SelectItem value="FAIL">Fail</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="inspection-date">Inspection date</FieldLabel>
+          <DatePicker
+            clearable={false}
+            id="inspection-date"
+            max={new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Singapore",
+            }).format(new Date())}
+            min={installedOn ?? undefined}
+            onChange={onDateChange}
+            value={date}
+          />
+        </Field>
+      </div>
       <Field>
         <FieldLabel htmlFor="inspection-notes">Notes (optional)</FieldLabel>
         <Textarea
@@ -74,6 +82,6 @@ export function InspectionFields({
           value={notes}
         />
       </Field>
-    </>
+    </FieldSet>
   );
 }

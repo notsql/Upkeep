@@ -10,6 +10,7 @@ import type { ReadingSearch } from "@/lib/reading-filters";
 import { ReadingExport } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-export";
 import { ReadingFilterControls } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-filter-controls";
 import { ReadingResults } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-results";
+import { ReadingToolbar } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-toolbar";
 import { useEstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/use-estate-readings-page";
 
 export function EstateReadingsPage({
@@ -33,7 +34,6 @@ export function EstateReadingsPage({
     activeCount,
     assets,
     chooseAsset,
-    create,
     error,
     forbidden,
     label,
@@ -69,8 +69,6 @@ export function EstateReadingsPage({
             </Button>
           ) : undefined
         }
-        create={create}
-        filters={{ activeCount, ...panel.toggleProps }}
         icon={Activity}
         title="Readings"
       />
@@ -81,25 +79,33 @@ export function EstateReadingsPage({
           </AlertDescription>
         </Alert>
       ) : null}
-      <ReadingExport
-        disabled={
-          !!error ||
-          readings.isFetching ||
-          readings.isPending ||
-          readings.isError
-        }
-        estateId={estateId}
-        filters={filters}
-      />
-      <ReadingFilterControls
-        assetLabel={label}
-        error={error}
-        estateId={estateId}
-        filters={filters}
-        onChoose={chooseAsset}
-        onFiltersChange={onFiltersChange}
-        {...panel.barProps}
-      />
+      <div className="space-y-3">
+        <ReadingToolbar
+          activeCount={activeCount}
+          exportAction={
+            <ReadingExport
+              disabled={
+                !!error ||
+                readings.isFetching ||
+                readings.isPending ||
+                readings.isError
+              }
+              estateId={estateId}
+              filters={filters}
+            />
+          }
+          {...panel.toggleProps}
+        />
+        <ReadingFilterControls
+          assetLabel={label}
+          error={error}
+          estateId={estateId}
+          filters={filters}
+          onChoose={chooseAsset}
+          onFiltersChange={onFiltersChange}
+          {...panel.barProps}
+        />
+      </div>
       {assets.error ? (
         <ErrorState
           message={assets.error.message}

@@ -10,15 +10,11 @@ import {
 } from "@proj/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  Activity,
-  AlertTriangle,
   BellRing,
   Building2,
   ClipboardCheck,
   ClipboardList,
-  Cpu,
   Files,
-  Gauge,
   Layers,
   LayoutDashboard,
   type LucideIcon,
@@ -37,20 +33,16 @@ import type {
 import { residentNavigation } from "@/components/shell/resident-navigation";
 import { useAppAccess } from "@/lib/access";
 import {
+  assetsEntry,
   canOpenAssetCategories,
-  canOpenAssets,
-  canOpenDevices,
   canOpenDocuments,
   canOpenEstateSettings,
-  canOpenFailureRisk,
   canOpenFaultReports,
   canOpenInspections,
   canOpenMembers,
   canOpenNotificationSettings,
   canOpenOverview,
-  canOpenReadings,
   canOpenRoles,
-  canOpenSensors,
   canOpenWorkOrders,
 } from "@/lib/estate-destinations";
 import { useEstate } from "@/lib/estates";
@@ -116,6 +108,7 @@ function estateGroups(
   pathname: string
 ): NavigationGroup[] {
   const base = `/estates/${estateId}`;
+  const assets = assetsEntry(permission, owned, platformAdmin);
   const item = (
     label: string,
     to: Destination,
@@ -182,33 +175,9 @@ function estateGroups(
         ),
         ...item(
           "Assets",
-          "/estates/$estateId/assets",
+          assets ?? "/estates/$estateId/assets",
           Layers,
-          canOpenAssets(permission)
-        ),
-        ...item(
-          "Devices",
-          "/estates/$estateId/devices",
-          Cpu,
-          canOpenDevices(permission, owned)
-        ),
-        ...item(
-          "Readings",
-          "/estates/$estateId/readings",
-          Activity,
-          canOpenReadings(permission)
-        ),
-        ...item(
-          "Device monitoring",
-          "/estates/$estateId/sensors",
-          Gauge,
-          canOpenSensors(permission, owned, platformAdmin)
-        ),
-        ...item(
-          "Failure risk",
-          "/estates/$estateId/failure-risk",
-          AlertTriangle,
-          canOpenFailureRisk(permission, owned)
+          assets !== undefined
         ),
       ],
     },

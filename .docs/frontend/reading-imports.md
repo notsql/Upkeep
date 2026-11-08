@@ -1,7 +1,7 @@
 # Historical reading import screens
 
 Entry: an outline **Import CSV** link with Upload icon in the estate Readings
-header, between Filters and Create. Owner/Manager import capability controls it;
+header; filters and export live in the readings toolbar. Owner/Manager import capability controls it;
 manual-entry permission alone does not grant import. Inactive-estate reading
 browsers explain that import and rollback are unavailable.
 

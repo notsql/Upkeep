@@ -19,8 +19,8 @@ All routes nest under `apps/web/src/routes/_auth/reports/`. The `_auth` `beforeL
 
 | Route folder | Screen and shadcn components | API calls |
 | --- | --- | --- |
-| `reports/new/index.tsx` → `/reports/new` | Assigned estate label or Estate Select; block, level and optional common-area `Select`; Title `Input`, Description `Textarea`, file `Input`, `Label`, `Button`, `Card`, `Alert`. Requires a nonblank trimmed title of up to 50 characters, description and block plus level/common area. Selected photos can be removed. Preserves title and other input on submit errors and opens detail on success. | `GET /resident/context`, `GET /resident/locations`, `POST /resident/reports` |
-| `reports/index.tsx` → `/reports` or `/reports?estateId=...`; `-components/my-reports-page/my-reports-page.tsx` owns the screen | Own-report `Card`s linked by their saved titles, with labelled Estate name, Location, Status and Submission time in a description list. Location and status `Badge` share a vertically aligned flex row that wraps on narrow screens. `ListPageHeader` "My reports" (`icon={ClipboardList}`, description "Reports for this estate" / "Reports across all estates", no estate name) with `CreateButton` "Create" (to `/reports/new`, keeping `estateId`). A failed load is `ErrorState` "Unable to load reports" + Retry; paging is the shared `Pagination` (nav "Report pages", "Previous page" / "Next page", disabled at the ends); loading is `LoadingState` "Loading reports…" and empty is `EmptyState` "No reports yet" / "No reports for this estate yet" (description "Use Create to report the first fault"; no action - the header Create is the entry point). Report details uses `DetailPageHeader` (no icon) and New report `FormPageHeader` (no icon). | `GET /resident/reports` with optional estateId/cursor |
+| `reports/new/index.tsx` → `/reports/new` | Assigned estate label or Estate Select; block, level and optional common-area `Select`; Title `Input`, Description `Textarea`, file `Input`, `Field`/`FieldLabel`/`FieldDescription`/`FieldSet`/`FieldLegend`/`FieldSeparator`, `FormCard`, `FormActions`, `Alert`. Cancel returns to My reports. Requires a nonblank trimmed title of up to 50 characters, description and block plus level/common area. Selected photos can be removed. Preserves title and other input on submit errors and opens detail on success. | `GET /resident/context`, `GET /resident/locations`, `POST /resident/reports` |
+| `reports/index.tsx` → `/reports` or `/reports?estateId=...`; `-components/my-reports-page/my-reports-page.tsx` owns the screen | Own-report `Card`s linked by their saved titles, with labelled Estate name, Location, Status and Submission time in a description list. Location and status `Badge` share a vertically aligned flex row that wraps on narrow screens. `ListPageHeader` "My reports" (`icon={ClipboardList}`, description "Reports for this estate" / "Reports across all estates", no estate name) with `CreateButton` "Create" (to `/reports/new`, keeping `estateId`). A failed load is `ErrorState` "Unable to load reports" + Retry; paging is the shared `Pagination` (nav "Report pages", "Previous page" / "Next page", disabled at the ends); loading is `LoadingState` "Loading reports…" and empty is `EmptyState` "No reports yet" / "No reports for this estate yet" (description "Use Create to report the first fault"; no action - the header Create is the entry point). Report details uses `DetailPageHeader` (no icon) and New report `FormPage` (no icon). | `GET /resident/reports` with optional estateId/cursor |
 | `reports/$reportId/index.tsx` → `/reports/{reportId}` | Matches the history card heading and labelled metadata, including the aligned location/status row. Labelled Description and Images sections display complete multiline text with long-word wrapping and every private image at full available width with its natural aspect ratio and automatic height. No image height cap or cropping. Empty images show No images submitted; image failures remain visible. Loading is `LoadingState` "Loading report…". Uses `Card`/`Badge`; missing/forbidden reports show a generic unavailable alert. | `GET /resident/reports/{reportId}`, `GET /resident/reports/{reportId}/images/{imageId}` |
 
 `apps/web/src/lib/reports.ts` owns all generated-client React Query hooks. Per-user query keys start with the current user ID: `[userId, "resident-context"]`, `[userId, "resident-locations", estateId]`, `[userId, "reports", "list", estateId, cursor]`, `[userId, "reports", reportId]`, `[userId, "reports", reportId, "image", imageId]`. Queries are enabled only after mounting with a resolved authenticated identity. Server membership checks control location/submission access; history stays readable by its owner after membership deletion, while its navigation link is hidden. Submission has no automatic retry and invalidates that user's report lists. Detail refetches on window focus. The image hook requests a blob with the authenticated API client; the component creates a local object URL and revokes it when the image or identity changes.
@@ -104,10 +104,18 @@ membership removal; navigation does not fabricate a new membership.
 ## Page headers
 
 `/reports` (`my-reports-page.tsx`) uses `ListPageHeader` "My reports" (no
-breadcrumbs, Create action). `/reports/new` (`new-report-page.tsx`) uses
-`FormPageHeader` "Report a fault" with breadcrumbs `My reports › Report a
-fault` (search keeps `estateId`); a failed resident-context load is
-`ErrorState` + Retry. `/reports/$reportId` uses `DetailPageHeader` with
+breadcrumbs, Create action). `/reports/new` (`new-report-page.tsx`) is a
+`FormPage` "Report a fault" (description "Tell your estate team what needs
+fixing and where") with breadcrumbs `My reports › Report a fault` (search keeps
+`estateId`). Until the resident context loads, the page keeps the same
+`max-w-3xl` column but shows only `LoadingState` or, on failure, `ErrorState` +
+Retry; the header appears once the context is known. `NewReportForm` is a
+`FormCard` titled with the estate name: `FieldSet` "Where is the fault?"
+(Estate select when several, Block and Level side by side from `sm`, Common area
+(optional)), `FieldSeparator`, `FieldSet` "What is wrong?" (Title, Description,
+Images (optional)), then `FormActions` "Submit report" ("Submitting…" while
+pending; submit disabled until an estate and its locations load) with Cancel,
+which navigates to `/reports` keeping `estateId` and sends nothing. `/reports/$reportId` uses `DetailPageHeader` with
 breadcrumbs `My reports › <report title>` (search keeps `estateId`) and the
 heading "Report details"; a failed load is `ErrorState` "Report not found or
 unavailable" + Retry. There is no back link.

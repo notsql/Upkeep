@@ -7,7 +7,8 @@ Routes use folder-based files under
 | --- | --- |
 | `index.tsx` | Existing owner asset register, or `-components/inspection-asset-list.tsx` for permitted Managers/Crew |
 | `$assetId/_details/route.tsx` | Layout: owner asset frame (`AssetDetailsLayout`) or, for inspection-only viewers, `$assetId/-components/inspection-asset-page.tsx` (`DetailPageHeader`, limited context, `ErrorState` on failure) |
-| `$assetId/_details/inspections/index.tsx` | The asset's Inspections sub-page: `-components/inspection-history-table/inspection-history-table.tsx` (the inspection-only page also mounts it) |
+| `$assetId/_details/records/index.tsx` | The asset's Records sub-page: Inspections first (`-components/inspection-history-table/inspection-history-table.tsx`, mounted with `offerCreate`, so its "Inspection records" `SectionCard` header carries a `sectionActionClassName` "New inspection" link (`Plus`) to `inspections/new` when `useInspectionAccess().canCreate` and the estate, asset and location are all active), then Maintenance and Documents. With the asset header's actions removed, this "New inspection" link and the layout's attention banner ("File an inspection") are where owners/managers create one. The inspection-only page also mounts the table, without `offerCreate` (its header already has Create inspection record) |
+| `$assetId/_details/inspections/index.tsx` | Redirect (replace) to `…/records`; the guard admits both paths for inspection viewers |
 | `$assetId/inspections/new/index.tsx` | `-components/inspection-form/inspection-form.tsx`: required explicit outcome/date, optional notes and private photos |
 | `$assetId/inspections/$inspectionId/index.tsx` | `-components/inspection-detail/inspection-detail.tsx`: immutable result, evidence and follow-up |
 
@@ -188,8 +189,19 @@ does not turn the saved Fail into Pass.
 
 ## Shared page components
 
-The create page (`inspection-form.tsx`) uses `FormPageHeader` (breadcrumbs,
-description "<reference> · <name>", no icon) and the record page
+The create page (`inspection-form.tsx`) is a `FormPage` "Create inspection
+record" (breadcrumbs `<asset name> › Create inspection record`, "Asset" while
+loading; description "<reference> · <name>", no icon). Access loading, the
+not-allowed alert, asset errors and asset loading all render inside it. Then a
+`FormCard` "Asset" (`inspection-form-asset-summary.tsx`: Asset and Location,
+plus a destructive `Alert` when the estate, asset or location is inactive), and
+the form in a `FormCard`: `FieldSet` "Result" (Outcome and Inspection date side
+by side from `sm`, then Notes (optional)), `FieldSeparator`, `FieldSet`
+"Evidence" (Photos (optional)), feedback, and `FormActions` "Save inspection
+record" ("Saving…" while pending; submit also disabled while inactive or a
+location review is open; Cancel navigates to the asset). After saving,
+`saved-inspection-notice.tsx` is a `FormPage` "Inspection saved" with a
+`FormCard` holding the "View saved inspection" link, and the record page
 (`inspection-detail.tsx`) uses `DetailPageHeader` with the Pass/Fail `Badge` as
 `status` and "<reference> · <name>" as `meta` (no estate-name fallback). Asset
 and record load failures use `ErrorState` ("Retry asset", "Retry inspection").
