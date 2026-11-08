@@ -6,13 +6,16 @@ import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ReportCard } from "@/components/reports/report-card";
 import { ReportDetails } from "@/components/reports/report-details";
+import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
 import { pageHead } from "@/lib/page-title";
 import { useWorkOrderAccess } from "@/lib/work-orders";
 import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog/change-location-dialog";
+import { ChangeUrgencyDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-urgency-dialog/change-urgency-dialog";
 import { DuplicateSection } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/duplicate-section/duplicate-section";
+import { LatestUrgencyChange } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/latest-urgency-change";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
 
 export const Route = createFileRoute(
@@ -78,17 +81,35 @@ function EstateReportDetailPage() {
       {report.data && !report.isError ? (
         <ReportCard
           locationAction={
-            access.canRelocate ? (
-              <ChangeLocationDialog
-                estateId={estateId}
-                reload={reload}
-                report={report.data}
-              />
+            access.canRelocate || access.canChangeUrgency ? (
+              <div className="flex flex-wrap items-center gap-3">
+                {access.canRelocate ? (
+                  <ChangeLocationDialog
+                    estateId={estateId}
+                    reload={reload}
+                    report={report.data}
+                  />
+                ) : null}
+                {access.canChangeUrgency ? (
+                  <ChangeUrgencyDialog
+                    estateId={estateId}
+                    reload={reload}
+                    report={report.data}
+                  />
+                ) : null}
+              </div>
             ) : null
           }
           report={report.data}
           showUpdated
+          urgency={
+            <ReportUrgencyBadges
+              isSafety={report.data.isSafety}
+              urgency={report.data.urgency}
+            />
+          }
         >
+          <LatestUrgencyChange change={report.data.lastUrgencyChange} />
           <ReportDetails report={report.data}>
             {report.data.images.map((image) => (
               <PrivateReportImage

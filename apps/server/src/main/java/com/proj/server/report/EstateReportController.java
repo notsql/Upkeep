@@ -70,9 +70,24 @@ public class EstateReportController {
                     @RequestParam(required = false)
                     Integer maxLevelPosition,
             @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(defaultValue = "false") boolean openOnly,
+            @Parameter(
+                            description =
+                                    "URGENCY: Safety and urgency first; NEWEST/OLDEST: submission time descending/ascending")
+                    @RequestParam(defaultValue = "URGENCY")
+                    ReportSort sort) {
         return privateResponse(reports.list(
-                estateId, subject(principal), locationId, blockId, minLevelPosition, maxLevelPosition, cursor, limit));
+                estateId,
+                subject(principal),
+                locationId,
+                blockId,
+                minLevelPosition,
+                maxLevelPosition,
+                cursor,
+                limit,
+                openOnly,
+                sort));
     }
 
     @GetMapping("/{reportId}")

@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [fault-report-urgency.md](features/fault-report-urgency.md) | ID-72 | implemented; manager-controlled urgency, manual Safety marking, Open/All views, urgency/newest/oldest sorting and latest-change display; duplicate-report integration complete |
 | [asset-history-date-filter.md](features/asset-history-date-filter.md) | - | built; inclusive Singapore date ranges, URL state, range-bound cursors and page-one restart; 1,745 server / 1,168 web tests, contract generation, types, formatting and build pass |
 | [asset-history-timeline.md](features/asset-history-timeline.md) | - | implemented; Council asset browsing/search, read-only history, date ranges and document viewer; real CLOSED work-order completion regression fixed; 1,750 server / 1,168 web tests, types and formatting pass; manual browser review pending |
 | [estate-costs.md](features/estate-costs.md) | ID-34 / ID-33 | built; top 5 costliest assets and 12-month budget forecast on the estate Overview, owner only |

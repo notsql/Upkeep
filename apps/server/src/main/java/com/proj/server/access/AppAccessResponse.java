@@ -57,7 +57,8 @@ public record AppAccessResponse(
                 "canViewEstateInvitations",
                 "canViewDocuments",
                 "canUploadDocuments",
-                "canReviewFaultReportDuplicates"
+                "canReviewFaultReportDuplicates",
+                "canChangeFaultReportUrgency"
             })
     public record EstateAccessResponse(
             UUID estateId,
@@ -95,5 +96,6 @@ public record AppAccessResponse(
             boolean canViewEstateInvitations,
             boolean canViewDocuments,
             boolean canUploadDocuments,
-            boolean canReviewFaultReportDuplicates) {}
+            boolean canReviewFaultReportDuplicates,
+            boolean canChangeFaultReportUrgency) {}
 }

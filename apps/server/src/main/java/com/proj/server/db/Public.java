@@ -32,6 +32,7 @@ import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
 import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
+import com.proj.server.db.tables.Issuereporturgencyevent;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
@@ -207,6 +208,11 @@ public class Public extends SchemaImpl {
     public final Issuereportimage ISSUEREPORTIMAGE = Issuereportimage.ISSUEREPORTIMAGE;
 
     /**
+     * The table <code>public.IssueReportUrgencyEvent</code>.
+     */
+    public final Issuereporturgencyevent ISSUEREPORTURGENCYEVENT = Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT;
+
+    /**
      * The table <code>public.Location</code>.
      */
     public final Location LOCATION = Location.LOCATION;
@@ -305,6 +311,7 @@ public class Public extends SchemaImpl {
             Issuereport.ISSUEREPORT,
             Issuereportduplicate.ISSUEREPORTDUPLICATE,
             Issuereportimage.ISSUEREPORTIMAGE,
+            Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT,
             Location.LOCATION,
             Manualreading.MANUALREADING,
             Manufacturer.MANUFACTURER,

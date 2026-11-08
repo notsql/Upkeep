@@ -5,9 +5,6 @@ import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.resident.ResidentReportRepository;
 import com.proj.server.resident.ResidentReportService.ImageBytes;
-import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -22,16 +19,19 @@ public class EstateReportService {
     private final ResidentReportRepository reports;
     private final ResidentImageStore images;
     private final DuplicateRepository duplicates;
+    private final ReportUrgencyRepository urgency;
 
     public EstateReportService(
             EstateReportRepository repository,
             ResidentReportRepository reports,
             ResidentImageStore images,
-            DuplicateRepository duplicates) {
+            DuplicateRepository duplicates,
+            ReportUrgencyRepository urgency) {
         this.repository = repository;
         this.reports = reports;
         this.images = images;
         this.duplicates = duplicates;
+        this.urgency = urgency;
     }
 
     public Record authorize(UUID estateId, String user, EstatePermissionCode permission, boolean lock) {
@@ -58,7 +58,9 @@ public class EstateReportService {
             Integer minLevelPosition,
             Integer maxLevelPosition,
             String cursor,
-            Integer requestedLimit) {
+            Integer requestedLimit,
+            boolean openOnly,
+            ReportSort sort) {
         authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         if (locationId != null && repository.location(estateId, locationId) == null)
             throw error(HttpStatus.NOT_FOUND, "Location not found.");
@@ -72,33 +74,22 @@ public class EstateReportService {
             throw error(HttpStatus.BAD_REQUEST, "Minimum position must not exceed maximum position.");
         int limit = requestedLimit == null ? 20 : requestedLimit;
         if (limit < 1 || limit > 50) throw error(HttpStatus.BAD_REQUEST, "Limit must be between 1 and 50.");
-        OffsetDateTime time = null;
-        UUID id = null;
-        if (cursor != null) {
-            try {
-                var decoded = new String(Base64.getUrlDecoder().decode(cursor), StandardCharsets.UTF_8);
-                var separator = decoded.lastIndexOf('|');
-                time = OffsetDateTime.parse(decoded.substring(0, separator));
-                id = UUID.fromString(decoded.substring(separator + 1));
-            } catch (RuntimeException invalid) {
-                throw error(HttpStatus.BAD_REQUEST, "Invalid report cursor.");
-            }
-        }
+        var scope = ReportQueueCursor.scope(
+                estateId, locationId, blockId, minLevelPosition, maxLevelPosition, openOnly, sort);
+        var before = ReportQueueCursor.decode(cursor, scope);
         var found = reports.estateList(
-                estateId, locationId, blockId, minLevelPosition, maxLevelPosition, time, id, limit + 1);
+                estateId, locationId, blockId, minLevelPosition, maxLevelPosition, before, openOnly, sort, limit + 1);
         var page = found.size() > limit ? found.subList(0, limit) : found;
         String next = null;
         if (found.size() > limit) {
             var last = page.getLast();
-            next = Base64.getUrlEncoder()
-                    .withoutPadding()
-                    .encodeToString((last.createdAt() + "|" + last.id()).getBytes(StandardCharsets.UTF_8));
+            next = new ReportQueueCursor(last.isSafety(), last.urgency().rank(), last.createdAt(), last.id())
+                    .encode(scope);
         }
         var info = duplicates.summaries(
                 estateId, page.stream().map(report -> report.id()).toList());
         var items = page.stream()
-                .map(report -> EstateIssueReportSummaryResponse.of(
-                        report, info.getOrDefault(report.id(), DuplicateRepository.NONE)))
+                .map(report -> report.withDuplicates(info.getOrDefault(report.id(), DuplicateRepository.NONE)))
                 .toList();
         return new EstateIssueReportPageResponse(items, next);
     }
@@ -191,7 +182,12 @@ public class EstateReportService {
         var report = reports.estateDetail(estateId, reportId)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Report not found."));
         var info = duplicates.summaries(estateId, List.of(reportId)).getOrDefault(reportId, DuplicateRepository.NONE);
-        return EstateIssueReportDetailResponse.of(report, info, duplicates.linked(estateId, reportId));
+        return EstateIssueReportDetailResponse.of(
+                report,
+                info,
+                duplicates.linked(estateId, reportId),
+                urgency.values(estateId, reportId),
+                urgency.latest(estateId, reportId));
     }
 
     private static ResidentReportException error(HttpStatus status, String message) {

@@ -11,10 +11,23 @@ import { countReportFilters } from "@/routes/_auth/estates/$estateId/reports/-co
 
 export function useEstateReportsPage(
   estateId: string,
-  { blockId, minLevelPosition, maxLevelPosition, cursor }: EstateReportsSearch,
+  {
+    blockId,
+    minLevelPosition,
+    maxLevelPosition,
+    cursor,
+    openOnly = true,
+    sort = "URGENCY",
+  }: EstateReportsSearch,
   onSearch: (search: EstateReportsSearch) => void
 ) {
-  const filters = { blockId, minLevelPosition, maxLevelPosition };
+  const filters = {
+    blockId,
+    minLevelPosition,
+    maxLevelPosition,
+    openOnly,
+    sort,
+  };
   const activeCount = countReportFilters(filters);
   const filtered = activeCount > 0;
   const panel = useFilterPanel(activeCount);
@@ -37,17 +50,22 @@ export function useEstateReportsPage(
       minLevelPosition,
       maxLevelPosition,
       cursor: reports.data?.nextCursor ?? undefined,
+      openOnly,
+      sort,
     });
   }, [
     blockId,
     minLevelPosition,
     maxLevelPosition,
     onSearch,
+    openOnly,
+    sort,
     reports.data?.nextCursor,
   ]);
   const first = useCallback(
-    () => onSearch({ blockId, minLevelPosition, maxLevelPosition }),
-    [blockId, minLevelPosition, maxLevelPosition, onSearch]
+    () =>
+      onSearch({ blockId, minLevelPosition, maxLevelPosition, openOnly, sort }),
+    [blockId, minLevelPosition, maxLevelPosition, openOnly, sort, onSearch]
   );
 
   return {

@@ -56,11 +56,21 @@ corners and card background; popups have rounded corners. The shared filter also
 uses this presentation in the work-order resident-report selector. Search,
 typed integer bounds and application behavior remain unchanged.
 
-URL search fields are `blockId`, `minLevelPosition`, `maxLevelPosition`, `cursor`.
+URL search fields are `blockId`, `minLevelPosition`, `maxLevelPosition`, `cursor`,
+`openOnly` and `sort`. Open is the default (omitted from the URL); All uses
+`openOnly=false`. The Reports shadcn Select lives in the existing FilterBar and
+changing it clears the cursor. The adjacent Sort by shadcn Select defaults to
+Safety and urgency (`URGENCY`, omitted from the URL) and offers Newest first
+(`sort=NEWEST`) and Oldest first (`sort=OLDEST`). Changing sort preserves
+location/Open/All filters and clears the cursor. Clear filters restores Open, default sorting and clears location filters.
+The work-order source picker omits both queue selectors and retains all reports.
 Invalid URL bounds fail route validation before report queries mount. Changing
 or clearing a filter removes the cursor in the same navigation; refresh and back
 restore controls. The shared `Pagination` ("Report pages"): "Previous page"
-(enabled on a cursor page) clears only the cursor; "Next page" retains both filters.
+(enabled on a cursor page) clears only the cursor; "Next page" retains filters and sorting.
+A failed cursor page with HTTP 400 offers Return to first page instead of Retry.
+It removes only the cursor, retaining Open/All, block/range and sort. Transient
+errors retain Retry on the same page; first-page errors also retain Retry.
 Controls wait for location labels rather than briefly showing UUIDs. A valid
 empty filtered result shows the "No matching reports" `EmptyState` with a Clear filters action; an empty estate shows "No reports yet". Position filtering uses the
 backend's level `sortOrder` and includes common areas beneath matching levels.
@@ -87,7 +97,7 @@ from the accessibility tree while preserving the rendered report underneath.
 `apps/web/src/lib/estate-reports.ts` contains generated-client hooks. Keys begin
 with authenticated user ID:
 
-- `[userId, "estate-reports", estateId, "list", { blockId, minLevelPosition, maxLevelPosition }, cursor, 20]`
+- `[userId, "estate-reports", estateId, "list", { blockId, minLevelPosition, maxLevelPosition, openOnly, sort }, cursor, 20]`
 - `[userId, "estate-reports", estateId, "detail", reportId]`
 - `[userId, "estate-reports", estateId, "locations"]`
 - `[userId, "estate-reports", estateId, "image", reportId, imageId]`
@@ -112,7 +122,7 @@ header switcher, without management estate queries for Crew. There is no
 global Respond to faults entry.
 
 The detail screen offers Create work order only with both report-read and
-work-order creation capabilities. It links to the creation route with a validated
+work-order creation capabilities and no active duplicate link. It links to the creation route with a validated
 sourceReportId. Reports remain selectable after conversion; creating work does
 not alter or invalidate report data. See [work-orders.md](work-orders.md).
 
@@ -138,7 +148,7 @@ and the API independently rejects stale UI authority with the same token.
 
 `report-filters.tsx` renders a `FilterBar` (`search` landmark "Filter reports")
 with the Block combobox and the Level position fieldset as fields, an outline
-Apply filters action, and `activeCount` (block, minimum, maximum) / `onClear` for
+Apply filters action, and `activeCount` (block, minimum, maximum, All view, non-default sorting) / `onClear` for
 the header badge and ghost Clear filters; the same toolbar appears inside the work-order report picker
 dialog. List, detail, image and correction-location loads use `LoadingState`.
 
@@ -150,8 +160,55 @@ The list uses `ListPageHeader` (`icon={ClipboardList}`, `filters` =
 until toggled (open on load when the URL has filters). The detail uses
 `DetailPageHeader` (breadcrumbs, no icon) whose Create work order link has a
 leading `Plus`. Load errors (reports, locations, detail, correction locations)
-use `ErrorState`. The change-location dialog stays a hand-built Dialog because
-its Save is disabled until a valid destination is chosen and it adds a Reload
-action on 409, which `FormDialog` does not support. Empty states: "No reports
+use `ErrorState`. Both report edit dialogs use the shared `FormDialog`, which supports disabled
+submission and a Reload secondary action on conflicts. Empty states: "No reports
 yet" (default `Inbox`, "Resident reports appear here") and "No matching reports" (`SearchX`, "Try other
 filters", outline Clear filters).
+
+## Urgency queue and editing
+
+The estate queue requests `openOnly=true` initially. The API orders Safety first,
+then Urgent/High/Medium/Low and newest submission by default. Newest first
+ignores urgency/Safety and uses submission time with ID as a stable tie-breaker.
+Oldest first uses submission time/ID ascending, also ignoring urgency/Safety.
+All three orderings run in the API before pagination. All preserves resolved
+history.
+Existing block/range filters and pagination retain the selected Open/All view and
+sort; refresh and browser navigation restore both controls. The estate overview preview is
+labelled “Fault reports by urgency” to match the same API order.
+
+Shared `report-urgency-badges.tsx` renders stock shadcn Badges with text labels
+(Urgent uses destructive; other levels use outline) and a separate Safety Badge.
+Estate cards/detail pass this optional metadata into shared report presentation;
+resident cards/detail do not. Existing theme tokens and wrapping layouts apply.
+
+New reports automatically start at Medium with Safety off. Managers review the
+queue and manually change values where needed; report text/images are not
+classified automatically. Medium can be the untouched default or a Manager's
+choice. There is no separate reviewed/unreviewed marker.
+
+Detail reads `canChangeFaultReportUrgency` and offers Change urgency only for
+active-estate Managers. Adjacent folder
+`reports/$reportId/-components/change-urgency-dialog/` contains the action and
+`UrgencyEditor`, using existing FormDialog, Select, Checkbox, Field, Button and
+Alert. Checking Safety selects/locks Urgent; unchecking retains Urgent until the
+manager chooses another value. Save sends the observed `urgencyVersion` as
+`expectedVersion`. Pending requests lock repeat submission and cancellation;
+failures retain the draft. A 409 disables Save and offers Reload. Reload adopts
+the latest values/version for review without automatically resubmitting.
+
+`useChangeEstateReportUrgency` in `lib/estate-reports.ts` calls PATCH
+`/estates/{estateId}/reports/{reportId}/urgency` through the generated client.
+Success updates detail and invalidates `[userId, "estate-reports", estateId,
+"list"]`; 401/403/404 refresh current-user access context. No optimistic queue
+reordering occurs. Other sessions refresh through existing focus refetching.
+
+Adjacent `latest-urgency-change.tsx` displays only the latest previous/new urgency,
+Safety changes when present, available actor name (otherwise “Name unavailable”)
+and time as compact metadata. A null latest change renders nothing. All recorded
+events remain private in storage; no full history screen is provided.
+
+Urgency and duplicate information share the generated `EstateIssueReport*` DTOs.
+Cards retain both badge groups; detail retains duplicate review/link controls
+and urgency editing. Both mutations cache the combined response, so saving either
+feature preserves the other feature’s displayed data.

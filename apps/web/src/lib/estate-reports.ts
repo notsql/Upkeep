@@ -7,7 +7,7 @@ export type EstateReportFilters = Pick<
   NonNullable<
     paths["/estates/{estateId}/reports"]["get"]["parameters"]["query"]
   >,
-  "blockId" | "minLevelPosition" | "maxLevelPosition"
+  "blockId" | "minLevelPosition" | "maxLevelPosition" | "openOnly" | "sort"
 >;
 
 export type EstateReport =
@@ -34,6 +34,7 @@ export function useEstateReportAccess(estateId: string) {
     estateName: permission?.estateName,
     canViewManagement: canView && !!permission?.canViewManagement,
     canRelocate: canView && !!permission?.canRelocateFaultReports,
+    canChangeUrgency: canView && !!permission?.canChangeFaultReportUrgency,
     canReviewDuplicates:
       canView && !!permission?.canReviewFaultReportDuplicates,
     pending: !ready || access.isPending,
@@ -274,5 +275,51 @@ export function useLinkEstateReportDuplicate(
     },
     onSuccess: (data) =>
       refreshAfterDuplicateChange(client, userId, estateId, reportId, data),
+  });
+}
+
+export function useChangeEstateReportUrgency(
+  estateId: string,
+  reportId: string
+) {
+  const { userId, canChangeUrgency } = useEstateReportAccess(estateId);
+  const client = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async (
+      body: components["schemas"]["ChangeReportUrgencyRequest"]
+    ) => {
+      if (!canChangeUrgency) {
+        throw new ReportRequestError("Urgency editing is unavailable.", 403);
+      }
+      const { data, error, response } = await api.PATCH(
+        "/estates/{estateId}/reports/{reportId}/urgency",
+        { params: { path: { estateId, reportId } }, body }
+      );
+      if (error || !data) {
+        throw new ReportRequestError(
+          error?.message ?? "Unable to change urgency.",
+          response?.status ?? 500
+        );
+      }
+      return data;
+    },
+    onSuccess: async (data) => {
+      client.setQueryData(
+        [userId, "estate-reports", estateId, "detail", reportId],
+        data
+      );
+      await client.invalidateQueries({
+        queryKey: [userId, "estate-reports", estateId, "list"],
+      });
+    },
+    onError: (error) => {
+      if (
+        error instanceof ReportRequestError &&
+        [401, 403, 404].includes(error.status)
+      ) {
+        client.invalidateQueries({ queryKey: [userId, "app-access"] });
+      }
+    },
   });
 }

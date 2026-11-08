@@ -41,7 +41,7 @@ same change as the code.
   historical reads, independent custom creation/editing and owner-only deactivation.
 - [Access projection and retired global grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
 - [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
-- [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, block/level-position and subtree filtering, private images and location correction.
+- [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, urgency/Safety ordering, Manager urgency edits, latest-change metadata, location filters and correction.
 - [Duplicate fault reports](api/fault-report-duplicates.md): suggested duplicate links on submission, manager confirm/reject and manual linking, counts on reports and work orders.
 
 Inspections: [API](api/inspections.md) · [Frontend](frontend/inspections.md).
@@ -76,5 +76,5 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer; pending invitations on /estates (/invitations redirects) |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
-| [frontend/estate-reports.md](frontend/estate-reports.md) | Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |
+| [frontend/estate-reports.md](frontend/estate-reports.md) | Open/All queue with urgency/newest/oldest sorting and shadcn urgency editing; Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |
 | [frontend/fault-report-duplicates.md](frontend/fault-report-duplicates.md) | Duplicate badges on the report list, the detail duplicate section (review, linked list, Mark as duplicate) and work-order duplicate counts |

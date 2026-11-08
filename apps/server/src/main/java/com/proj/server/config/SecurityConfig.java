@@ -189,7 +189,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/estates/{estateId}/reports/{reportId}/location",
-                                "/estates/{estateId}/reports/{reportId}/duplicate")
+                                "/estates/{estateId}/reports/{reportId}/duplicate",
+                                "/estates/{estateId}/reports/{reportId}/urgency")
                         .authenticated()
                         .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/reports/{reportId}/duplicate")
                         .authenticated()

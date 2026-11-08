@@ -74,3 +74,8 @@ Tests:
 - `tests/routes/_auth/estates/$estateId/reports/index.test.tsx` (list badges);
 - `tests/routes/_auth/estates/work-order-list.test.tsx` and
   `work-order-detail.test.tsx` (work-order counts).
+
+The combined estate DTOs also carry urgency/Safety/version and latest-change
+metadata. Duplicate mutations retain these fields when updating detail caches;
+urgency saves retain duplicate counts, links and controls. Queue sorting and
+urgency editing are documented in [estate-reports.md](estate-reports.md).

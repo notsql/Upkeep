@@ -164,3 +164,12 @@ Residents override ownership; independent ownership survives other memberships.
 Owner/Manager authority. Crew have `canViewWorkOrders: true` and both write
 capabilities false. `canViewAssets` stays owner-only. See
 [inspections](inspections.md) for limited asset APIs, evidence and source lookup.
+
+## Fault report urgency capability
+
+`EstateAccessResponse.canChangeFaultReportUrgency: boolean` is required and true
+only for a current MANAGER membership in an active estate. Ownership qualifies
+through its MANAGER membership; Crew and custom report grants remain read-only
+for urgency. Inactive-estate report reads retain their existing permissions.
+The PATCH endpoint independently rechecks current authority under the estate
+lock. See [estate-reports.md](estate-reports.md).
