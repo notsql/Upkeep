@@ -146,7 +146,9 @@ public class AccessService {
                     canReassignRoles,
                     canViewEstateInvitations,
                     canViewDocuments,
-                    canUploadDocuments);
+                    canUploadDocuments,
+                    // Matches EstateReportService: current MANAGER membership in an active estate.
+                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)

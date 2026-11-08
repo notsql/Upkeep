@@ -24,7 +24,8 @@ class ResidentReportServiceTests {
     private final ResidentImageValidator validator = mock(ResidentImageValidator.class);
     private final ResidentImageStore images = mock(ResidentImageStore.class);
     private final TransactionTemplate transactions = mock(TransactionTemplate.class);
-    private final ResidentReportService service = new ResidentReportService(reports, validator, images, transactions);
+    private final ResidentReportService service = new ResidentReportService(
+            reports, validator, images, transactions, mock(com.proj.server.report.DuplicateService.class));
 
     @Test
     void rejectsAFiftyOneCharacterTitleBeforeLookingUpTheEstate() {

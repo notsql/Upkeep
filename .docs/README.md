@@ -38,6 +38,7 @@ same change as the code.
 - [Access projection and retired global grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
 - [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
 - [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, block/level-position and subtree filtering, private images and location correction.
+- [Duplicate fault reports](api/fault-report-duplicates.md): suggested duplicate links on submission, manager confirm/reject and manual linking, counts on reports and work orders.
 
 Inspections: [API](api/inspections.md) · [Frontend](frontend/inspections.md).
 
@@ -75,3 +76,4 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 ## Device simulator (`apps/device-simulator`)
 
 - [frontend/device-simulator.md](frontend/device-simulator.md): local-only replay of SKAB test experiments to `POST /device-api/telemetry` (CSV validation, ground-truth windows, backfill/live runs, retry and stop).
+| [frontend/fault-report-duplicates.md](frontend/fault-report-duplicates.md) | Duplicate badges on the report list, the detail duplicate section (review, linked list, Mark as duplicate) and work-order duplicate counts |

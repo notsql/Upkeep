@@ -77,6 +77,13 @@ Unavailable account names do not prevent creation or history reads.
 createdAt/updatedAt: date-time. Optional nullable values follow the generated
 contract's optional field representation.
 
+Creation returns 409 when sourceReportId is linked as a SUSPECTED or CONFIRMED
+duplicate ([fault-report-duplicates.md](fault-report-duplicates.md)).
+
+sourceReportConfirmedDuplicateCount: integer, the CONFIRMED duplicates of the
+source report (0 without one), on list and detail; see
+[fault-report-duplicates.md](fault-report-duplicates.md).
+
 WorkOrderPageResponse: items: WorkOrderResponse[]; nextCursor: string or null.
 Default ordering is createdAt then ID, both descending. Optional ordering uses
 the numeric W reference sequence, category, priority rank (Low < Medium < High <

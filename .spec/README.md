@@ -57,6 +57,7 @@ code, it belongs here.
 | [manager-account-authorization.md](features/manager-account-authorization.md) | ID-21 | invitations verified; broader estate roles are follow-up |
 | [estate-role-invitations.md](features/estate-role-invitations.md) | - | implemented and verified; role invitations, owner preservation, no Manager self-removal/demotion and multi-estate residents; account migration and asset editing excluded; staff editing limited to location under fault-report-locations |
 | [fault-report-locations.md](features/fault-report-locations.md) | - | draft; location display, hierarchy filters and location-only editing for Manager/Admin and Crew; other report information/images retained |
+| [fault-report-duplicates.md](features/fault-report-duplicates.md) | ID-74 | built 2026-11-05; suggested links on submission, manager confirm/reject and manual linking, counts on reports and work orders, no work orders from linked reports; priority change deferred; 1,726 server / 1,049 web tests, types and formatting pass; manual browser check pending |
 | [fault-report-block-level-filters.md](features/fault-report-block-level-filters.md) | - | built and verified; searchable block and numeric level-position range |
 | [neon-role-management.md](features/neon-role-management.md) | - | invitation/member Neon authority implemented and verified; unified Manager/Admin; existing-account migration deferred |
 | `estate-management.md` | - | built |

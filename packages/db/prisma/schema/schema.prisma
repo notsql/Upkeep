@@ -156,16 +156,43 @@ model IssueReport {
   createdAt         DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @db.Timestamptz(6)
 
-  estate     Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location   Location           @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  images     IssueReportImage[]
-  workOrders WorkOrder[]
+  estate      Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location    Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  images      IssueReportImage[]
+  workOrders  WorkOrder[]
+  duplicateOf IssueReportDuplicate?  @relation("DuplicateReport")
+  duplicates  IssueReportDuplicate[] @relation("DuplicateOriginal")
 
   @@unique([id, estateId])
   @@index([submittedByUserId, createdAt, id])
   @@index([estateId])
   @@index([estateId, createdAt, id])
   @@index([estateId, locationId, createdAt, id])
+}
+
+// A link from a fault report to the original it repeats (ID-74, spec
+// fault-report-duplicates.md). One row per linked report; detection saves
+// SUSPECTED links, managers confirm, reject or link by hand. Originals never
+// hold a SUSPECTED/CONFIRMED link themselves, so chains cannot form. The
+// self-link CHECK is hand-written in the migration.
+model IssueReportDuplicate {
+  reportId         String    @id @db.Uuid
+  estateId         String    @db.Uuid
+  originalReportId String    @db.Uuid
+  state            String    @db.VarChar(20)
+  source           String    @db.VarChar(20)
+  locationMatch    String?   @db.VarChar(10)
+  textSimilarity   Decimal?  @db.Decimal(4, 3)
+  repeatCue        Boolean?
+  createdAt        DateTime  @default(now()) @db.Timestamptz(6)
+  decidedByUserId  String?   @db.VarChar(255)
+  decidedAt        DateTime? @db.Timestamptz(6)
+
+  report   IssueReport @relation("DuplicateReport", fields: [reportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  original IssueReport @relation("DuplicateOriginal", fields: [originalReportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([reportId, estateId])
+  @@index([estateId, originalReportId, state])
 }
 
 model IssueReportImage {
@@ -268,6 +295,7 @@ model WorkOrder {
   @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId, createdAt, id])
+  @@index([estateId, sourceReportId])
 }
 
 // Standalone, append-only asset inspection evidence. Follow-up is derived from the work-order link.
