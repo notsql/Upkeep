@@ -9,10 +9,16 @@ import { AssetDetailsNav } from "@/routes/_auth/estates/$estateId/assets/$assetI
 import { useAssetDetailsLayout } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/use-asset-details-layout";
 
 /** The asset's sub-pages. */
-export type AssetSection = "details" | "records" | "costs" | "devices";
+export type AssetSection =
+  | "history"
+  | "details"
+  | "records"
+  | "costs"
+  | "devices";
 
 /** Old `?tab=` values and the sub-page each now lives on. */
 export const LEGACY_TABS: Record<string, AssetSection> = {
+  history: "history",
   details: "details",
   maintenance: "records",
   inspections: "records",

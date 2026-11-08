@@ -6,10 +6,12 @@ export function ReportMetadata({
   report,
   locationAction,
   showUpdated = false,
+  urgency,
 }: {
   report: components["schemas"]["IssueReportSummaryResponse"];
   locationAction?: ReactNode;
   showUpdated?: boolean;
+  urgency?: ReactNode;
 }) {
   return (
     <div className="grid gap-2">
@@ -29,6 +31,7 @@ export function ReportMetadata({
           </dd>
         </div>
       </dl>
+      {urgency}
       {locationAction}
       <dl className="flex flex-wrap gap-x-1">
         <dt className="font-semibold">Submission time:</dt>

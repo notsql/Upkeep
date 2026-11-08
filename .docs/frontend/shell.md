@@ -1,5 +1,9 @@
 # App shell (frontend)
 
+Assets opens for `canViewAssets || canViewAssetHistory || canViewInspectionResults`.
+The shared `_auth` guard admits Council profile/History deep links independently
+of private asset sections; see [asset-history.md](asset-history.md).
+
 The root layout, header, home page and the conventions every feature file
 below relies on. Paths are relative to `apps/web/src/`.
 
@@ -132,7 +136,7 @@ a group with no visible items is not rendered.
 | Operations | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
 | Operations | Inspections | `/inspections` | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
 | Assets | Locations | `/locations` | `canViewManagement` |
-| Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |
+| Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewAssetHistory \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |
 | Records | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
 | Administration | Members | `/council` | `canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions` |
 | Administration | Roles | `/roles` | `canOpenRoles`: `canViewEstateRoles` |

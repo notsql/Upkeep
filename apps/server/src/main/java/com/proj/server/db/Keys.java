@@ -4,7 +4,6 @@
 package com.proj.server.db;
 
 
-import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
@@ -30,7 +29,6 @@ import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
-import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
@@ -40,7 +38,6 @@ import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
 import com.proj.server.db.tables.Workorderstatusevent;
-import com.proj.server.db.tables.records.AnomalyscoreRecord;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
@@ -66,7 +63,6 @@ import com.proj.server.db.tables.records.FlatlinepolicyRecord;
 import com.proj.server.db.tables.records.InspectioncheckRecord;
 import com.proj.server.db.tables.records.InspectionlistrunRecord;
 import com.proj.server.db.tables.records.IssuereportRecord;
-import com.proj.server.db.tables.records.IssuereportduplicateRecord;
 import com.proj.server.db.tables.records.IssuereportimageRecord;
 import com.proj.server.db.tables.records.LocationRecord;
 import com.proj.server.db.tables.records.ManualreadingRecord;
@@ -96,7 +92,6 @@ public class Keys {
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<AnomalyscoreRecord> ANOMALYSCORE_PKEY = Internal.createUniqueKey(Anomalyscore.ANOMALYSCORE, DSL.name("AnomalyScore_pkey"), new TableField[] { Anomalyscore.ANOMALYSCORE.ID }, true);
     public static final UniqueKey<AssetRecord> ASSET_PKEY = Internal.createUniqueKey(Asset.ASSET, DSL.name("Asset_pkey"), new TableField[] { Asset.ASSET.ID }, true);
     public static final UniqueKey<AssetassessmentRecord> ASSETASSESSMENT_PKEY = Internal.createUniqueKey(Assetassessment.ASSETASSESSMENT, DSL.name("AssetAssessment_pkey"), new TableField[] { Assetassessment.ASSETASSESSMENT.ID }, true);
     public static final UniqueKey<AssetcategoryRecord> ASSETCATEGORY_PKEY = Internal.createUniqueKey(Assetcategory.ASSETCATEGORY, DSL.name("AssetCategory_pkey"), new TableField[] { Assetcategory.ASSETCATEGORY.CODE }, true);
@@ -122,7 +117,6 @@ public class Keys {
     public static final UniqueKey<InspectioncheckRecord> INSPECTIONCHECK_PKEY = Internal.createUniqueKey(Inspectioncheck.INSPECTIONCHECK, DSL.name("InspectionCheck_pkey"), new TableField[] { Inspectioncheck.INSPECTIONCHECK.ID }, true);
     public static final UniqueKey<InspectionlistrunRecord> INSPECTIONLISTRUN_PKEY = Internal.createUniqueKey(Inspectionlistrun.INSPECTIONLISTRUN, DSL.name("InspectionListRun_pkey"), new TableField[] { Inspectionlistrun.INSPECTIONLISTRUN.ID }, true);
     public static final UniqueKey<IssuereportRecord> ISSUEREPORT_PKEY = Internal.createUniqueKey(Issuereport.ISSUEREPORT, DSL.name("IssueReport_pkey"), new TableField[] { Issuereport.ISSUEREPORT.ID }, true);
-    public static final UniqueKey<IssuereportduplicateRecord> ISSUEREPORTDUPLICATE_PKEY = Internal.createUniqueKey(Issuereportduplicate.ISSUEREPORTDUPLICATE, DSL.name("IssueReportDuplicate_pkey"), new TableField[] { Issuereportduplicate.ISSUEREPORTDUPLICATE.REPORTID }, true);
     public static final UniqueKey<IssuereportimageRecord> ISSUEREPORTIMAGE_PKEY = Internal.createUniqueKey(Issuereportimage.ISSUEREPORTIMAGE, DSL.name("IssueReportImage_pkey"), new TableField[] { Issuereportimage.ISSUEREPORTIMAGE.ID }, true);
     public static final UniqueKey<LocationRecord> LOCATION_PKEY = Internal.createUniqueKey(Location.LOCATION, DSL.name("Location_pkey"), new TableField[] { Location.LOCATION.ID }, true);
     public static final UniqueKey<ManualreadingRecord> MANUALREADING_PKEY = Internal.createUniqueKey(Manualreading.MANUALREADING, DSL.name("ManualReading_pkey"), new TableField[] { Manualreading.MANUALREADING.ID }, true);

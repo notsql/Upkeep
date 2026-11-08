@@ -1,5 +1,10 @@
 # Access projection and retired global grants
 
+`EstateAccessResponse.canViewAssetHistory` grants current Owners and same-estate
+Council read-only browsing/profile/history access, including retired assets and
+inactive estates, subject to the Resident override. It does not change
+`canViewAssets` or mutation grants. See [asset-history.md](asset-history.md).
+
 Source of truth: packages/api/openapi.json. JWTs supply identity; current Neon
 membership/ownership supplies authority. WorkOS admin claims grant no application
 platform or general estate powers. Sensor management permits owners and current
@@ -26,7 +31,7 @@ hasResidentMembership/canSubmitReport: boolean; residentEstates: { id: UUID,
 name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is false.
 
 EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
-CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewReadings/canRecordReadings/canInviteMembers/
+CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewAssetHistory/canViewReadings/canRecordReadings/canInviteMembers/
 canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
 canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments/
 canReviewFaultReportDuplicates: boolean. canReviewFaultReportDuplicates is true only for current MANAGER
@@ -159,3 +164,12 @@ Residents override ownership; independent ownership survives other memberships.
 Owner/Manager authority. Crew have `canViewWorkOrders: true` and both write
 capabilities false. `canViewAssets` stays owner-only. See
 [inspections](inspections.md) for limited asset APIs, evidence and source lookup.
+
+## Fault report urgency capability
+
+`EstateAccessResponse.canChangeFaultReportUrgency: boolean` is required and true
+only for a current MANAGER membership in an active estate. Ownership qualifies
+through its MANAGER membership; Crew and custom report grants remain read-only
+for urgency. Inactive-estate report reads retain their existing permissions.
+The PATCH endpoint independently rechecks current authority under the estate
+lock. See [estate-reports.md](estate-reports.md).

@@ -2,12 +2,26 @@ import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { canOpenInspections } from "@/lib/estate-destinations";
 import { useEstate } from "@/lib/estates";
+import { AnomalyAlertsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/anomaly-alerts-section/anomaly-alerts-section";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
 import { AssetSummary } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-summary";
 import { AssetUpcoming } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-upcoming/asset-upcoming";
 import { DevicesOnlineStat } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/devices-online-stat";
 import { TrendsCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/trends-card/trends-card";
+
+/** Why anomaly alerts are read-only, if they are. */
+function alertLock(
+  estateInactive: boolean,
+  assetRetired: boolean
+): string | undefined {
+  if (estateInactive) {
+    return "This estate is inactive, so its alerts cannot be changed.";
+  }
+  if (assetRetired) {
+    return "This asset is retired, so its alerts cannot be changed.";
+  }
+}
 
 export function AssetOverview({
   estateId,
@@ -70,6 +84,16 @@ export function AssetOverview({
           />
         ) : null}
       </div>
+      {asset.data.category === "PUMP" && canSeeService ? (
+        <AnomalyAlertsSection
+          assetId={assetId}
+          estateId={estateId}
+          locked={alertLock(
+            Boolean(estate.data?.deactivatedAt),
+            Boolean(asset.data.deactivatedAt)
+          )}
+        />
+      ) : null}
       {permission?.canViewReadings ? (
         <TrendsCard assetId={assetId} estateId={estateId} />
       ) : null}

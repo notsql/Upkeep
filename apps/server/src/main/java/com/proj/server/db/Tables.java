@@ -4,7 +4,6 @@
 package com.proj.server.db;
 
 
-import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
@@ -30,7 +29,6 @@ import com.proj.server.db.tables.Flatlinepolicy;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
-import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
@@ -47,11 +45,6 @@ import com.proj.server.db.tables.Workorderstatusevent;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
-
-    /**
-     * The table <code>public.AnomalyScore</code>.
-     */
-    public static final Anomalyscore ANOMALYSCORE = Anomalyscore.ANOMALYSCORE;
 
     /**
      * The table <code>public.Asset</code>.
@@ -177,11 +170,6 @@ public class Tables {
      * The table <code>public.IssueReport</code>.
      */
     public static final Issuereport ISSUEREPORT = Issuereport.ISSUEREPORT;
-
-    /**
-     * The table <code>public.IssueReportDuplicate</code>.
-     */
-    public static final Issuereportduplicate ISSUEREPORTDUPLICATE = Issuereportduplicate.ISSUEREPORTDUPLICATE;
 
     /**
      * The table <code>public.IssueReportImage</code>.

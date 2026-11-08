@@ -4,6 +4,10 @@ Contract: `packages/api/openapi.json`. Requires bearer JWT and estate ownership.
 
 A same-estate RESIDENT membership takes precedence over conflicting ownership and returns 403 before inference. Residency in another estate does not block an owner. MEMBER/COUNCIL membership or platform-admin authority alone does not grant access. Spring Security explicitly admits this POST operation; unlisted actions remain denied.
 
+Since ID-105/106 a successful check also raises, updates or resolves the pump's anomaly alert in the
+same transaction; the request and response are unchanged. See
+[notifications.md](notifications.md#anomaly-alerts-id-105-id-106).
+
 ## POST `/estates/{estateId}/assets/{assetId}/readings/anomaly-check`
 
 - path `estateId`: uuid (required)

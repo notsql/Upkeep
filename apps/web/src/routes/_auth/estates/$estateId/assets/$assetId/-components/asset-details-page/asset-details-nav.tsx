@@ -18,6 +18,11 @@ export function AssetDetailsNav({
     <SubNav
       items={[
         {
+          label: "History",
+          params,
+          to: "/estates/$estateId/assets/$assetId/history",
+        },
+        {
           exact: true,
           label: "Overview",
           params,

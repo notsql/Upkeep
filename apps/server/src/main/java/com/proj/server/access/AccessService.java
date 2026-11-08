@@ -122,6 +122,7 @@ public class AccessService {
                     canViewManagement,
                     canManageEstate,
                     canViewAssets,
+                    !resident && (owner || "COUNCIL".equals(row.get(ESTATEUSER.ROLE))),
                     manager || "CREW".equals(row.get(ESTATEUSER.ROLE)),
                     active && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
                     canViewManagement || responder,
@@ -148,6 +149,7 @@ public class AccessService {
                     canViewDocuments,
                     canUploadDocuments,
                     // Matches EstateReportService: current MANAGER membership in an active estate.
+                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)),
                     active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
         });
         var assigned = rows.stream()

@@ -103,12 +103,17 @@ function overview() {
 }
 
 describe("AssetOverview layout", () => {
-  it("orders Condition, forecast, Upcoming and Trends with no Details or Devices card", async () => {
+  it("orders Condition, forecast, Upcoming, Anomaly alerts and Trends with no Details or Devices card", async () => {
     overview();
     await screen.findByRole("region", { name: "Trends" });
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)
-    ).toEqual(["Condition", "Breakdown forecast", "Upcoming"]);
+    ).toEqual([
+      "Condition",
+      "Breakdown forecast",
+      "Upcoming",
+      "Anomaly alerts",
+    ]);
     expect(screen.queryByRole("region", { name: "Details" })).toBeNull();
   });
 

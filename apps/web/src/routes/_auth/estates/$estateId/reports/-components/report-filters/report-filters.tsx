@@ -9,6 +9,13 @@ import {
   ComboboxList,
 } from "@proj/ui/components/combobox";
 import { Label } from "@proj/ui/components/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@proj/ui/components/select";
 import { type FormEvent, useCallback, useId, useMemo, useState } from "react";
 import { FilterBar } from "@/components/filters/filter-bar";
 import type { EstateReportFilters } from "@/lib/estate-reports";
@@ -21,11 +28,19 @@ interface BlockChoice {
   value: string;
 }
 
+const sortLabels: Record<NonNullable<EstateReportFilters["sort"]>, string> = {
+  URGENCY: "Safety and urgency",
+  NEWEST: "Newest first",
+  OLDEST: "Oldest first",
+};
+
 export function countReportFilters(filters: EstateReportFilters): number {
   return [
     filters.blockId,
     filters.minLevelPosition,
     filters.maxLevelPosition,
+    filters.openOnly === false ? false : undefined,
+    filters.sort !== undefined && filters.sort !== "URGENCY" ? true : undefined,
   ].filter((value) => value !== undefined).length;
 }
 
@@ -35,6 +50,7 @@ export function ReportFilters({
   onChange,
   id: panelId,
   open,
+  showQueueView = false,
 }: {
   filters: EstateReportFilters;
   locations: Location[];
@@ -42,6 +58,7 @@ export function ReportFilters({
   /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
   id?: string;
   open?: boolean;
+  showQueueView?: boolean;
 }) {
   const id = useId();
   const [minimum, setMinimum] = useState(
@@ -100,6 +117,22 @@ export function ReportFilters({
     },
     [filters, onChange]
   );
+  const selectView = useCallback(
+    (value: string | null) => {
+      if (value === "open" || value === "all") {
+        onChange({ ...filters, openOnly: value === "open" });
+      }
+    },
+    [filters, onChange]
+  );
+  const selectSort = useCallback(
+    (value: string | null) => {
+      if (value === "URGENCY" || value === "NEWEST" || value === "OLDEST") {
+        onChange({ ...filters, sort: value });
+      }
+    },
+    [filters, onChange]
+  );
   const clear = useCallback(() => onChange({}), [onChange]);
 
   const apply = useCallback(
@@ -125,12 +158,23 @@ export function ReportFilters({
       }
       setError(false);
       onChange({
+        ...(filters.sort === undefined ? {} : { sort: filters.sort }),
+        ...(filters.openOnly === undefined
+          ? {}
+          : { openOnly: filters.openOnly }),
         ...(filters.blockId ? { blockId: filters.blockId } : {}),
         ...(minLevelPosition === undefined ? {} : { minLevelPosition }),
         ...(maxLevelPosition === undefined ? {} : { maxLevelPosition }),
       });
     },
-    [minimum, maximum, filters.blockId, onChange]
+    [
+      minimum,
+      maximum,
+      filters.blockId,
+      filters.openOnly,
+      filters.sort,
+      onChange,
+    ]
   );
 
   return (
@@ -147,6 +191,47 @@ export function ReportFilters({
         onClear={clear}
         open={open}
       >
+        {showQueueView ? (
+          <div className="w-full space-y-2 sm:w-48">
+            <Label htmlFor={`${id}-view`}>Reports</Label>
+            <Select
+              onValueChange={selectView}
+              value={filters.openOnly === false ? "all" : "open"}
+            >
+              <SelectTrigger className="w-full" id={`${id}-view`}>
+                <SelectValue>
+                  {filters.openOnly === false ? "All reports" : "Open reports"}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="open">Open reports</SelectItem>
+                <SelectItem value="all">All reports</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
+        {showQueueView ? (
+          <div className="w-full space-y-2 sm:w-48">
+            <Label htmlFor={`${id}-sort`}>Sort by</Label>
+            <Select
+              onValueChange={selectSort}
+              value={filters.sort ?? "URGENCY"}
+            >
+              <SelectTrigger className="w-full" id={`${id}-sort`}>
+                <SelectValue>
+                  {sortLabels[filters.sort ?? "URGENCY"]}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(sortLabels).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : null}
         <div className="w-full space-y-2 sm:w-48">
           <Label htmlFor={`${id}-block`}>Block</Label>
           <Combobox

@@ -73,6 +73,9 @@ const oldBlock = "00000000-0000-0000-0000-000000000012";
 const imageId = "00000000-0000-0000-0000-000000000011";
 const basePath = `/estates/${estateId}/reports`;
 const timestamp = "2026-10-01T00:00:00Z";
+const FILTERS_BUTTON = /Filters/iu;
+const URGENCY_MEDIUM_HIGH = /Medium → High/u;
+const CHANGE_AUTHOR = /Alex Tan/u;
 const CHANGE_LOCATION = /Change location/iu;
 const SAVE = /^Save/iu;
 const NEXT = /^Next/iu;
@@ -545,6 +548,82 @@ it("preserves the selected filter while retrying a failed list request", async (
   expect(router.state.location.search).toMatchObject({ blockId: blockA });
 });
 
+it.each(["URGENCY", "NEWEST", "OLDEST"])(
+  "offers first-page recovery for an outdated cursor in %s order",
+  async (sort) => {
+    get.mockImplementation((path: string) =>
+      path.endsWith("/reports")
+        ? Promise.resolve({
+            error: {
+              message:
+                "Invalid or mismatched report cursor. Reload the first page.",
+            },
+            response: new Response(null, { status: 400 }),
+          })
+        : serve(path)
+    );
+    const { router } = await setup(
+      `${basePath}?sort=${sort}&openOnly=false&blockId=${blockA}&minLevelPosition=-1&maxLevelPosition=4&cursor=outdated-page`
+    );
+    const recover = await screen.findByRole("button", {
+      name: "Return to first page",
+    });
+    get.mockImplementation(serve);
+    fireEvent.click(recover);
+    await screen.findByRole("link", { name: report.title });
+    expect(router.state.location.search).toEqual({
+      blockId: blockA,
+      minLevelPosition: -1,
+      maxLevelPosition: 4,
+      openOnly: false,
+      ...(sort === "URGENCY" ? {} : { sort }),
+    });
+    expect(screen.queryByRole("alert")).toBeNull();
+  }
+);
+
+it("keeps Retry for a transient page failure during recovery", async () => {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({
+          error: { message: "Unavailable" },
+          response: new Response(null, { status: 503 }),
+        })
+      : serve(path)
+  );
+  const { router } = await setup(
+    `${basePath}?sort=OLDEST&blockId=${blockA}&cursor=current-page`
+  );
+  await screen.findByRole("alert");
+  expect(
+    screen.queryByRole("button", { name: "Return to first page" })
+  ).toBeNull();
+  get.mockImplementation(serve);
+  fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+  await screen.findByRole("link", { name: report.title });
+  expect(router.state.location.search).toMatchObject({
+    sort: "OLDEST",
+    blockId: blockA,
+    cursor: "current-page",
+  });
+});
+
+it("keeps Retry when no page cursor needs recovery", async () => {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({
+          error: { message: "Invalid request" },
+          response: new Response(null, { status: 400 }),
+        })
+      : serve(path)
+  );
+  await setup();
+  await screen.findByRole("button", { name: "Retry" });
+  expect(
+    screen.queryByRole("button", { name: "Return to first page" })
+  ).toBeNull();
+});
+
 it("loads detail and private images through responder endpoints and revokes image URLs on unmount", async () => {
   const { unmount } = await setup(`${basePath}/${reportId}`);
   await screen.findByRole("heading", { name: report.title });
@@ -932,6 +1011,288 @@ it("does not mount responder queries when access capability lookup fails", async
       path.startsWith("/estates/{estateId}/reports")
     )
   ).toBe(false);
+});
+
+it("shows urgency and safety labels in the existing estate report cards", async () => {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({
+          data: {
+            items: [
+              {
+                ...report,
+                urgency: "URGENT",
+                isSafety: true,
+                urgencyVersion: 0,
+              },
+            ],
+            nextCursor: null,
+          },
+        })
+      : serve(path)
+  );
+  await setup();
+  await screen.findByRole("link", { name: report.title });
+  screen.getByText("Urgent");
+  screen.getByText("Safety");
+});
+
+it("opens the estate queue with open reports and lets staff include all reports", async () => {
+  const { router } = await setup();
+  fireEvent.click(await screen.findByRole("button", { name: FILTERS_BUTTON }));
+  const view = await screen.findByRole("combobox", { name: "Reports" });
+  expect(get).toHaveBeenCalledWith(
+    "/estates/{estateId}/reports",
+    expect.objectContaining({
+      params: expect.objectContaining({
+        query: expect.objectContaining({ openOnly: true }),
+      }),
+    })
+  );
+  await chooseOption(view, "All reports");
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({ openOnly: false })
+  );
+  expect(get).toHaveBeenCalledWith(
+    "/estates/{estateId}/reports",
+    expect.objectContaining({
+      params: expect.objectContaining({
+        query: expect.objectContaining({ openOnly: false }),
+      }),
+    })
+  );
+});
+
+function managerUrgencyAccess() {
+  const current = access();
+  return {
+    ...current,
+    estates: current.estates.map((estate) => ({
+      ...estate,
+      role: "MANAGER",
+      canChangeFaultReportUrgency: true,
+    })),
+  };
+}
+
+it("changes sorting while keeping filters and resets the page cursor", async () => {
+  const { router } = await setup(
+    `${basePath}?openOnly=false&blockId=${blockA}&cursor=old-page`
+  );
+  const sort = await screen.findByRole("combobox", { name: "Sort by" });
+  await chooseOption(sort, "Newest first");
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      sort: "NEWEST",
+      openOnly: false,
+      blockId: blockA,
+    })
+  );
+  expect(router.state.location.search.cursor).toBeUndefined();
+  expect(get).toHaveBeenCalledWith(
+    "/estates/{estateId}/reports",
+    expect.objectContaining({
+      params: expect.objectContaining({
+        query: expect.objectContaining({
+          sort: "NEWEST",
+          openOnly: false,
+          blockId: blockA,
+        }),
+      }),
+    })
+  );
+  await chooseOption(sort, "Safety and urgency");
+  await waitFor(() =>
+    expect(router.state.location.search.sort).toBeUndefined()
+  );
+});
+
+it("restores newest sorting from the URL and retains it across pagination", async () => {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({ data: { items: [report], nextCursor: "next-page" } })
+      : serve(path)
+  );
+  const { router } = await setup(`${basePath}?sort=NEWEST`);
+  const sort = await screen.findByRole("combobox", { name: "Sort by" });
+  expect(sort.textContent).toContain("Newest first");
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      sort: "NEWEST",
+      cursor: "next-page",
+    })
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
+  await waitFor(() =>
+    expect(router.state.location.search.cursor).toBeUndefined()
+  );
+  expect(router.state.location.search.sort).toBe("NEWEST");
+});
+
+it("selects oldest sorting while preserving filters and resetting pagination", async () => {
+  const { router } = await setup(
+    `${basePath}?openOnly=false&blockId=${blockA}&cursor=old-page`
+  );
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Sort by" }),
+    "Oldest first"
+  );
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      sort: "OLDEST",
+      openOnly: false,
+      blockId: blockA,
+    })
+  );
+  expect(router.state.location.search.cursor).toBeUndefined();
+  expect(get).toHaveBeenCalledWith(
+    "/estates/{estateId}/reports",
+    expect.objectContaining({
+      params: expect.objectContaining({
+        query: expect.objectContaining({
+          sort: "OLDEST",
+          openOnly: false,
+          blockId: blockA,
+        }),
+      }),
+    })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await waitFor(() => expect(router.state.location.search).toEqual({}));
+});
+
+it("restores oldest sorting from the URL and preserves it across pages", async () => {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({ data: { items: [report], nextCursor: "next-page" } })
+      : serve(path)
+  );
+  const { router } = await setup(`${basePath}?sort=OLDEST`);
+  expect(
+    (await screen.findByRole("combobox", { name: "Sort by" })).textContent
+  ).toContain("Oldest first");
+  fireEvent.click(await screen.findByRole("button", { name: "Next page" }));
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({
+      sort: "OLDEST",
+      cursor: "next-page",
+    })
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Previous page" }));
+  await waitFor(() =>
+    expect(router.state.location.search.cursor).toBeUndefined()
+  );
+  expect(router.state.location.search.sort).toBe("OLDEST");
+});
+
+function serveUrgencyManager(path: string) {
+  if (path === "/access/context") {
+    return Promise.resolve({ data: managerUrgencyAccess() });
+  }
+  if (path.endsWith("/reports/{reportId}")) {
+    return Promise.resolve({
+      data: {
+        ...report,
+        urgency: "MEDIUM",
+        isSafety: false,
+        urgencyVersion: 0,
+        lastUrgencyChange: null,
+      },
+    });
+  }
+  return serve(path);
+}
+
+it("lets a Manager mark Safety and saves Urgent using the observed version", async () => {
+  get.mockImplementation(serveUrgencyManager);
+  patch.mockResolvedValue({
+    data: {
+      ...report,
+      urgency: "URGENT",
+      isSafety: true,
+      urgencyVersion: 1,
+      lastUrgencyChange: null,
+    },
+  });
+  await setup(`${basePath}/${reportId}`);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Change urgency" })
+  );
+  const dialog = within(
+    await screen.findByRole("dialog", { name: "Change urgency" })
+  );
+  fireEvent.click(dialog.getByRole("checkbox", { name: "Safety report" }));
+  expect(
+    dialog.getByRole("combobox", { name: "Urgency" }).hasAttribute("disabled")
+  ).toBe(true);
+  fireEvent.click(dialog.getByRole("button", { name: "Save urgency" }));
+  await waitFor(() =>
+    expect(patch).toHaveBeenCalledWith(
+      "/estates/{estateId}/reports/{reportId}/urgency",
+      expect.objectContaining({
+        body: { urgency: "URGENT", isSafety: true, expectedVersion: 0 },
+      })
+    )
+  );
+});
+
+it("requires a reload after an urgency conflict and preserves the failed draft", async () => {
+  get.mockImplementation(serveUrgencyManager);
+  patch.mockResolvedValue({
+    error: {
+      message: "The report urgency changed. Reload and review before saving.",
+    },
+    response: new Response(null, { status: 409 }),
+  });
+  await setup(`${basePath}/${reportId}`);
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Change urgency" })
+  );
+  const dialog = within(
+    await screen.findByRole("dialog", { name: "Change urgency" })
+  );
+  await chooseOption(dialog.getByRole("combobox", { name: "Urgency" }), "High");
+  fireEvent.click(dialog.getByRole("button", { name: "Save urgency" }));
+  await dialog.findByRole("alert");
+  expect(
+    dialog.getByRole("combobox", { name: "Urgency" }).textContent
+  ).toContain("High");
+  expect(
+    dialog
+      .getByRole("button", { name: "Save urgency" })
+      .hasAttribute("disabled")
+  ).toBe(true);
+  dialog.getByRole("button", { name: "Reload" });
+});
+
+it("shows the latest urgency change without exposing a full history interface", async () => {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports/{reportId}")
+      ? Promise.resolve({
+          data: {
+            ...report,
+            urgency: "HIGH",
+            isSafety: false,
+            urgencyVersion: 1,
+            lastUrgencyChange: {
+              id: reportId,
+              version: 1,
+              fromUrgency: "MEDIUM",
+              toUrgency: "HIGH",
+              fromIsSafety: false,
+              toIsSafety: false,
+              changedByName: "Alex Tan",
+              changedAt: timestamp,
+            },
+          },
+        })
+      : serve(path)
+  );
+  await setup(`${basePath}/${reportId}`);
+  await screen.findByText(URGENCY_MEDIUM_HIGH);
+  screen.getByText(CHANGE_AUTHOR);
+  expect(screen.queryByRole("button", { name: "Change urgency" })).toBeNull();
 });
 
 it("badges originals with duplicate counts and linked reports with their state", async () => {

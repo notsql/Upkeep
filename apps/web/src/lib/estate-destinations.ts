@@ -34,7 +34,9 @@ export function canOpenInspections(
 
 export function canOpenAssets(permission: Permission): boolean {
   return Boolean(
-    permission?.canViewAssets || permission?.canViewInspectionResults
+    permission?.canViewAssets ||
+      permission?.canViewAssetHistory ||
+      permission?.canViewInspectionResults
   );
 }
 
@@ -132,6 +134,11 @@ export function canOpenAssetCategories(
   owned?: boolean
 ): boolean {
   return ownerOrDelegate(permission, owned);
+}
+
+/** Owners and Managers: the people who receive the estate's notifications. */
+export function canOpenNotificationSettings(permission: Permission): boolean {
+  return permission?.role === "MANAGER";
 }
 
 export function canOpenEstateSettings(

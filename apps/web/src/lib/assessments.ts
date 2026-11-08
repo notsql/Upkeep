@@ -7,6 +7,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 import { estateError, useEstateSession } from "@/lib/estates";
 import { estateFailureRiskQueryKey } from "@/lib/failure-risk";
 
@@ -133,6 +134,7 @@ export function useRecordAssessment(estateId: string, assetId: string) {
     },
     onSuccess: () =>
       Promise.all([
+        refreshAssetHistory(queryClient, userId, estateId),
         queryClient.invalidateQueries({
           queryKey: estateFailureRiskQueryKey(userId, estateId),
         }),

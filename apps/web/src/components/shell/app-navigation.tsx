@@ -10,6 +10,7 @@ import {
 } from "@proj/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
+  BellRing,
   Building2,
   ClipboardCheck,
   ClipboardList,
@@ -39,6 +40,7 @@ import {
   canOpenFaultReports,
   canOpenInspections,
   canOpenMembers,
+  canOpenNotificationSettings,
   canOpenOverview,
   canOpenRoles,
   canOpenWorkOrders,
@@ -208,6 +210,12 @@ function estateGroups(
           "/estates/$estateId/asset-categories",
           Tags,
           canOpenAssetCategories(permission, owned)
+        ),
+        ...item(
+          "Notification settings",
+          "/estates/$estateId/notification-settings",
+          BellRing,
+          canOpenNotificationSettings(permission)
         ),
         ...item(
           "Estate settings",

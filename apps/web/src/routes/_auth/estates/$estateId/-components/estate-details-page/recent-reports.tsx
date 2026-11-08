@@ -14,7 +14,7 @@ export function RecentReports({ estateId }: { estateId: string }) {
   const items = (list.data?.items ?? []).slice(0, RECENT);
   return (
     <ListCard
-      description="Latest resident issues"
+      description="Highest urgency first"
       empty={items.length === 0}
       footer={
         <Link
@@ -26,7 +26,7 @@ export function RecentReports({ estateId }: { estateId: string }) {
         </Link>
       }
       icon={ClipboardList}
-      title="Recent fault reports"
+      title="Fault reports by urgency"
     >
       {items.map((report) => (
         <li className="py-2 first:pt-0" key={report.id}>

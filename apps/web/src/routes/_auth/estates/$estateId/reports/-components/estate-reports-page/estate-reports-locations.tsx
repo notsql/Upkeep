@@ -28,6 +28,7 @@ export function EstateReportsLocations({
           key={`${blockId ?? "all"}:${minLevelPosition ?? ""}:${maxLevelPosition ?? ""}`}
           locations={locations.data}
           onChange={onChange}
+          showQueueView
           {...barProps}
         />
       ) : null}
