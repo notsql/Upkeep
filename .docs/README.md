@@ -27,6 +27,8 @@ same change as the code.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
 - [Estate asset categories](api/asset-categories.md): per-estate silent-failure flags (LIGHTING by default), service intervals, active-asset counts and append-only change history.
 - [Service intervals](api/service-intervals.md): manufacturer service intervals (days, months or years) per estate category, per-asset overrides, the effective interval and append-only change history (ID-81).
+- [Estate costs](api/estate-costs.md): the owner's five costliest assets and the 12-month maintenance budget forecast (ID-34, ID-33).
+- [Notifications](api/notifications.md): the in-app inbox - unread count, newest-first list, read and read-all, per-user read state across managed estates (ID-100); per-estate settings; anomaly alerts with acknowledge/dismiss (ID-105-107); daily sweep for service-due and predicted-repair notifications (ID-103, ID-101).
 - [Monthly inspection list](api/inspection-list.md): due spot checks for silent-failure assets, generation without duplicates, completion by inspection results, and overdue carry-over (ID-84, ID-86).
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
@@ -63,6 +65,8 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/maintenance`, `/inspections`, `/documents`, `/costs`, `/devices` sub-pages; legacy `?tab=` redirects), `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
 | [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
 | [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories` (+ `/$interval` views: days, months, years, not-set): silent-failure flags per asset category with asset counts and last change |
+| [frontend/estate-costs.md](frontend/estate-costs.md) | Overview widgets: Maintenance budget (12-month projection) and Costliest assets (top five, linking to asset costs), owner only |
+| [frontend/notifications.md](frontend/notifications.md) | Header notification bell with unread count and `/notifications`: newest-first rows that open the asset and mark read, mark all as read, paging; `/estates/$estateId/notification-settings` form |
 | [frontend/inspection-list.md](frontend/inspection-list.md) | `/estates/$estateId/inspections`: summary cards, generate/regenerate, checks grouped by block and level with Overdue/Due/Done badges, and unscheduled assets |
 | [frontend/service-intervals.md](frontend/service-intervals.md) | Service interval column with unit-coloured labels, filter by unit or Not set, and dialog on Asset categories; the asset details `AssetServiceIntervalCard` |
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
