@@ -171,3 +171,12 @@ EstateAccessResponse additionally includes optional boolean `canImportReadings`
 and `canRevertReadingImports`. Both project current Owner/Manager authority on
 an active estate. Crew and other roles receive false. Inactive Managers retain
 read access to batch history/reports; see [reading imports](reading-imports.md).
+
+## Fault report urgency capability
+
+`EstateAccessResponse.canChangeFaultReportUrgency: boolean` is required and true
+only for a current MANAGER membership in an active estate. Ownership qualifies
+through its MANAGER membership; Crew and custom report grants remain read-only
+for urgency. Inactive-estate report reads retain their existing permissions.
+The PATCH endpoint independently rechecks current authority under the estate
+lock. See [estate-reports.md](estate-reports.md).

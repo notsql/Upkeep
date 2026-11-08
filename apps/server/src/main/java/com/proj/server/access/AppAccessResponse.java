@@ -57,7 +57,8 @@ public record AppAccessResponse(
                 "canViewEstateInvitations",
                 "canViewDocuments",
                 "canUploadDocuments",
-                "canReviewFaultReportDuplicates"
+                "canReviewFaultReportDuplicates",
+                "canChangeFaultReportUrgency"
             })
     public record EstateAccessResponse(
             UUID estateId,
@@ -102,5 +103,6 @@ public record AppAccessResponse(
             @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
             boolean canRevertReadingImports,
 
-            boolean canReviewFaultReportDuplicates) {}
+            boolean canReviewFaultReportDuplicates,
+            boolean canChangeFaultReportUrgency) {}
 }

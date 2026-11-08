@@ -151,6 +151,7 @@ public class AccessService {
                     manager && active,
                     manager && active,
                     // Matches EstateReportService: current MANAGER membership in an active estate.
+                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)),
                     active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
         });
         var assigned = rows.stream()

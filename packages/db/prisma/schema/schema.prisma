@@ -158,6 +158,9 @@ model IssueReport {
   title             String   @db.VarChar(150)
   description       String   @db.VarChar(2500)
   status            String   @default("SUBMITTED") @db.VarChar(20)
+  urgency           String   @default("MEDIUM") @db.VarChar(20)
+  isSafety          Boolean  @default(false)
+  urgencyVersion    Int      @default(0)
   createdAt         DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @db.Timestamptz(6)
 
@@ -165,6 +168,7 @@ model IssueReport {
   location    Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   images      IssueReportImage[]
   workOrders  WorkOrder[]
+  urgencyEvents IssueReportUrgencyEvent[]
   duplicateOf IssueReportDuplicate?  @relation("DuplicateReport")
   duplicates  IssueReportDuplicate[] @relation("DuplicateOriginal")
 
@@ -198,6 +202,24 @@ model IssueReportDuplicate {
 
   @@unique([reportId, estateId])
   @@index([estateId, originalReportId, state])
+}
+
+model IssueReportUrgencyEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  reportId        String   @db.Uuid
+  version         Int
+  fromUrgency     String   @db.VarChar(20)
+  toUrgency       String   @db.VarChar(20)
+  fromIsSafety    Boolean
+  toIsSafety      Boolean
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  report IssueReport @relation(fields: [reportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([reportId, version])
 }
 
 model IssueReportImage {

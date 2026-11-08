@@ -37,3 +37,5 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0044 — Audited historical imports with separate storage](0044-imported-reading-batches.md)
 - [0044 - Asset history is a live read projection](0044-asset-history-is-a-live-read-projection.md)
 - [0044 - Duplicate fault reports are rule-based suggestions a manager confirms](0044-duplicate-reports-are-rule-based-suggestions.md)
+
+- [0045 - Report urgency and Safety classification](0045-report-urgency-and-safety.md)

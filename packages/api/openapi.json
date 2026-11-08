@@ -8463,6 +8463,26 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "openOnly",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "URGENCY: Safety and urgency first; NEWEST/OLDEST: submission time descending/ascending",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "URGENCY",
+              "enum": ["URGENCY", "NEWEST", "OLDEST"]
+            }
           }
         ],
         "responses": {
@@ -12659,6 +12679,105 @@
           }
         }
       }
+    },
+    "/estates/{estateId}/reports/{reportId}/urgency": {
+      "patch": {
+        "tags": ["report-urgency-controller"],
+        "summary": "Change report urgency and Safety marking (Managers only)",
+        "operationId": "changeEstateReportUrgency",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeReportUrgencyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Updated report and its latest change",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateIssueReportDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or Safety below Urgent",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Manager membership required",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or report not found",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Stale version or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -13080,6 +13199,27 @@
             "items": {
               "$ref": "#/components/schemas/LinkedDuplicate"
             }
+          },
+          "urgency": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          },
+          "isSafety": {
+            "type": "boolean"
+          },
+          "urgencyVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastUrgencyChange": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportUrgencyChange"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -13091,11 +13231,15 @@
           "estateName",
           "id",
           "images",
+          "isSafety",
+          "lastUrgencyChange",
           "location",
           "status",
           "suspectedDuplicateCount",
           "title",
-          "updatedAt"
+          "updatedAt",
+          "urgency",
+          "urgencyVersion"
         ]
       },
       "LinkedDuplicate": {
@@ -15056,7 +15200,7 @@
           },
           "locationPath": {
             "type": "string",
-            "description": "The location's names from its block down, e.g. \"Blk 101 › Level 1 › Lift lobby\""
+            "description": "The location's names from its block down, e.g. \"Blk 101 \u203a Level 1 \u203a Lift lobby\""
           },
           "installedOn": {
             "type": ["string", "null"],
@@ -15191,7 +15335,7 @@
           "temperature": {
             "type": "number",
             "format": "double",
-            "description": "°C"
+            "description": "\u00b0C"
           },
           "flowRate": {
             "type": "number",
@@ -15800,7 +15944,7 @@
           "unit": {
             "type": "string",
             "description": "Exactly the catalogue unit for the metric",
-            "example": "°C"
+            "example": "\u00b0C"
           },
           "measuredAt": {
             "type": "string",
@@ -16489,6 +16633,17 @@
                 "type": "null"
               }
             ]
+          },
+          "urgency": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          },
+          "isSafety": {
+            "type": "boolean"
+          },
+          "urgencyVersion": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "required": [
@@ -16498,11 +16653,14 @@
           "duplicateOf",
           "estateName",
           "id",
+          "isSafety",
           "location",
           "status",
           "suspectedDuplicateCount",
           "title",
-          "updatedAt"
+          "updatedAt",
+          "urgency",
+          "urgencyVersion"
         ]
       },
       "EstateReadingPage": {
@@ -18504,9 +18662,13 @@
           },
           "canReviewFaultReportDuplicates": {
             "type": "boolean"
+          },
+          "canChangeFaultReportUrgency": {
+            "type": "boolean"
           }
         },
         "required": [
+          "canChangeFaultReportUrgency",
           "canCreateFloors",
           "canCreateInspectionResults",
           "canCreateLocations",
@@ -18541,6 +18703,68 @@
           "estateName",
           "role"
         ]
+      },
+      "ReportUrgencyChange": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "fromUrgency": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          },
+          "toUrgency": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          },
+          "fromIsSafety": {
+            "type": "boolean"
+          },
+          "toIsSafety": {
+            "type": "boolean"
+          },
+          "changedByName": {
+            "type": ["string", "null"]
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "changedAt",
+          "changedByName",
+          "fromIsSafety",
+          "fromUrgency",
+          "id",
+          "toIsSafety",
+          "toUrgency",
+          "version"
+        ]
+      },
+      "ChangeReportUrgencyRequest": {
+        "type": "object",
+        "properties": {
+          "urgency": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          },
+          "isSafety": {
+            "type": "boolean"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        },
+        "required": ["expectedVersion", "isSafety", "urgency"]
       }
     },
     "securitySchemes": {
