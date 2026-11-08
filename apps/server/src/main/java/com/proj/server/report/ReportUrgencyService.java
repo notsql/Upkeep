@@ -1,5 +1,6 @@
 package com.proj.server.report;
 
+import com.proj.server.estate.EstateRole;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.workos.WorkOSService;
 import java.util.UUID;
@@ -46,7 +47,7 @@ public class ReportUrgencyService {
         var row = estates.estate(estate, lock);
         if (row == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = estates.role(estate, user, lock);
-        if (!"MANAGER".equals(role)) {
+        if (!EstateRole.MANAGER.name().equals(role)) {
             boolean known = role != null || user.equals(row.get("ownerUserId", String.class));
             throw error(
                     known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,

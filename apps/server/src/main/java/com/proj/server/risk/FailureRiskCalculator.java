@@ -82,6 +82,25 @@ public class FailureRiskCalculator {
                 nearingEndOfLife);
     }
 
+    /**
+     * The probability of the next breakdown within {@code days} of {@code today}, from the same model as
+     * {@link #forecast}; null when the asset has no forecast (not a pump, or no installation date or counting
+     * events). Used by the budget forecast (ID-33).
+     */
+    public Double probabilityWithin(RiskAsset asset, List<RiskEvent> events, LocalDate today, int days) {
+        if (!AssetCategoryCodes.PUMP.equals(asset.category())) {
+            return null;
+        }
+        var counting = counting(asset, events);
+        LocalDate since =
+                counting.isEmpty() ? asset.installedOn() : counting.getLast().occurredOn();
+        if (since == null) {
+            return null;
+        }
+        int u = (int) Math.max(0, ChronoUnit.DAYS.between(since, today));
+        return probability(posterior(asset, events), u, days);
+    }
+
     private List<RiskEvent> counting(RiskAsset asset, List<RiskEvent> events) {
         return events.stream()
                 .filter(event -> counts(asset, event))

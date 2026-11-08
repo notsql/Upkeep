@@ -1,10 +1,25 @@
 import { DetailCard } from "@/components/page/detail-card";
 import { useAsset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
+import { useEstate } from "@/lib/estates";
+import { AnomalyAlertsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/anomaly-alerts-section/anomaly-alerts-section";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
 
 const NOT_RECORDED = "Not recorded";
+
+/** Why anomaly alerts are read-only, if they are. */
+function alertLock(
+  estateInactive: boolean,
+  assetRetired: boolean
+): string | undefined {
+  if (estateInactive) {
+    return "This estate is inactive, so its alerts cannot be changed.";
+  }
+  if (assetRetired) {
+    return "This asset is retired, so its alerts cannot be changed.";
+  }
+}
 
 export function AssetOverview({
   estateId,
@@ -15,6 +30,10 @@ export function AssetOverview({
 }) {
   const asset = useAsset(estateId, assetId);
   const categories = useAssetCategories();
+  const estate = useEstate(estateId);
+  const manages = Boolean(
+    estate.data?.owned || estate.data?.canManageInvitationPermissions
+  );
   if (!asset.data) {
     return null;
   }
@@ -59,6 +78,16 @@ export function AssetOverview({
         canRecord={!asset.data.deactivatedAt}
         estateId={estateId}
       />
+      {asset.data.category === "PUMP" && manages ? (
+        <AnomalyAlertsSection
+          assetId={assetId}
+          estateId={estateId}
+          locked={alertLock(
+            Boolean(estate.data?.deactivatedAt),
+            Boolean(asset.data.deactivatedAt)
+          )}
+        />
+      ) : null}
       {asset.data.category === "PUMP" ? (
         <AssetForecastCard assetId={assetId} estateId={estateId} />
       ) : null}

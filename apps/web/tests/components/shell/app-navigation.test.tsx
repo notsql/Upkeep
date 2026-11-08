@@ -130,6 +130,7 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
     "Members",
     "Roles",
     "Asset categories",
+    "Notification settings",
     "Estate settings",
   ]);
   for (const label of ["Operations", "Assets", "Records", "Administration"]) {
@@ -150,6 +151,11 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   expect(
     nav.getByRole("link", { name: "Locations" }).getAttribute("href")
   ).toBe("/estates/pine/locations");
+  expect(
+    nav
+      .getByRole("link", { name: "Notification settings" })
+      .getAttribute("href")
+  ).toBe("/estates/pine/notification-settings");
 });
 
 it("keeps the section active on nested pages and matches Overview exactly", async () => {
@@ -179,6 +185,7 @@ it("hides owner-only items for a management-only non-owner", async () => {
     "Inspections",
     "Devices",
     "Asset categories",
+    "Notification settings",
     "Failure risk",
     "Estate settings",
     "Assets",

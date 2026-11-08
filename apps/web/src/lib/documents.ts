@@ -2,6 +2,7 @@ import type { components, paths } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 
 export type EstateDocument = components["schemas"]["DocumentResponse"];
 export type DocumentType = EstateDocument["documentType"];
@@ -88,7 +89,8 @@ export function useUploadDocument(estateId: string) {
       }
       return result.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshAssetHistory(client, userId, estateId);
       client.invalidateQueries(
         { queryKey: [userId, "documents", estateId] },
         { throwOnError: false }
@@ -113,7 +115,8 @@ export function useDeleteDocument(estateId: string) {
         throw documentError(error, "Unable to remove the file. Please retry.");
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await refreshAssetHistory(client, userId, estateId);
       client.invalidateQueries(
         { queryKey: [userId, "documents", estateId] },
         { throwOnError: false }

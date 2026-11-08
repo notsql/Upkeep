@@ -157,9 +157,10 @@ rows. Location corrections and work-order priorities remain independent.
 
 `openOnly=true` includes reports with no same-estate source work orders or at
 least one source work order whose status is not CLOSED. All-closed reports are
-excluded. The API defaults to all reports so existing source pickers retain
-history; the estate queue UI explicitly requests Open. No report lifecycle or
-routing/dismissal schema is introduced by this feature.
+excluded. The query uses `WorkOrderStatus.CLOSED`, and urgency write authorization
+uses `EstateRole.MANAGER`. The API defaults to all reports so existing source
+pickers retain history; the estate queue UI explicitly requests Open. No report
+lifecycle or routing/dismissal schema is introduced by this feature.
 
 Example:
 

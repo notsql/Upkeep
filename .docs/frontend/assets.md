@@ -1,5 +1,11 @@
 # Assets and condition assessments (frontend)
 
+The asset profile includes History at `$assetId/_details/history/index.tsx`.
+Council readers use a read-only directory/frame and redirect from the profile root
+to History, without mounting owner-only queries/actions. The parent guard and
+Assets navigation recognize `canViewAssetHistory`. Owner sections remain.
+See [asset-history.md](asset-history.md) for routes, date filters, viewer, cache keys and refresh.
+
 The asset detail page now includes the route-local `AssetDocumentsSection` before
 inspection history. It uses a shadcn Card/Table to show authorized linked files
 with type, size, upload date and Download. Owners can Unlink even when the asset
@@ -15,11 +21,12 @@ are relative to `apps/web/src/`; route folders below are under
 
 | File | URL | Params | Title | Renders |
 | --- | --- | --- | --- | --- |
-| `index.tsx` | `/estates/$estateId/assets` | `estateId`; validated URL filters | "Assets" | `AssetRegisterPage` |
+| `index.tsx` | `/estates/$estateId/assets` | `estateId`; validated URL filters | "Assets" | `AssetRegisterPage`, Council `HistoryAssetList`, or `InspectionAssetList` |
 | `new/index.tsx` | `/estates/$estateId/assets/new` | `estateId` | "Register asset" | `NewAssetPage` |
 | `$assetId/route.tsx` | - | - | - | Plain `Outlet` parent, so `_details` below is pathless and does not swallow `edit`, `inspections/new`, `devices/new` and the rest |
-| `$assetId/_details/route.tsx` | (pathless layout) | `estateId`, `assetId` | - | `AssetDetailsLayout` around an `Outlet`; `InspectionAssetPage` instead for inspection-only viewers (`!canViewAssets`) |
-| `$assetId/_details/index.tsx` | `/estates/$estateId/assets/$assetId` | `estateId`, `assetId`; legacy `?tab=` (`maintenance`, `inspections`, `documents`, `costs`, `devices`) redirects (replace) to the matching sub-page | "Asset details" | `AssetOverview` |
+| `$assetId/_details/route.tsx` | (pathless layout) | `estateId`, `assetId` | - | Owner `AssetDetailsLayout`; Council profile root redirects to History and its History branch renders an `Outlet`; otherwise `InspectionAssetPage` for inspection-only viewers |
+| `$assetId/_details/index.tsx` | `/estates/$estateId/assets/$assetId` | `estateId`, `assetId`; legacy `?tab=` (`history`, `maintenance`, `inspections`, `documents`, `costs`, `devices`) redirects (replace) to the matching sub-page | "Asset details" | `AssetOverview` |
+| `$assetId/_details/history/index.tsx` | `…/assets/$assetId/history` | `estateId`, `assetId`; optional validated `from`/`to` URL dates | "Asset history" | `HistoryDateFilter` and `AssetHistoryPage`, wrapped in `HistoryAssetFrame` for Council after date validation |
 | `$assetId/_details/maintenance/index.tsx` | `…/assets/$assetId/maintenance` | `estateId`, `assetId` | "Asset maintenance" | `AssetMaintenance` |
 | `$assetId/_details/inspections/index.tsx` | `…/assets/$assetId/inspections` | `estateId`, `assetId` | "Asset inspections" | `InspectionHistoryTable` |
 | `$assetId/_details/documents/index.tsx` | `…/assets/$assetId/documents` | `estateId`, `assetId` | "Asset documents" | `AssetDocumentsSection` |
@@ -27,7 +34,7 @@ are relative to `apps/web/src/`; route folders below are under
 | `$assetId/_details/devices/index.tsx` | `…/assets/$assetId/devices` | `estateId`, `assetId` | "Asset devices" | `AssetDevices` |
 | `$assetId/edit/index.tsx` | `/estates/$estateId/assets/$assetId/edit` | `estateId`, `assetId` | "Edit asset" | `EditAssetPage` |
 
-Entry point: sidebar Assets › Assets (`canOpenAssets`: `canViewAssets || canViewInspectionResults`); the register's `ListPageHeader` "Create" (`CreateButton`) opens Register asset. The `_auth` guard lets inspection-only viewers (`canViewInspectionResults`) open `/assets/$assetId` and `/assets/$assetId/inspections`; the other sub-pages need `canViewManagement && canViewAssets`. The register has no breadcrumbs; deeper pages use section-first breadcrumbs (`Assets › <asset name>`, `Assets › Register asset`, `Assets › <asset name> › Edit`). No back links; see the page header convention in [design-system.md](design-system.md).
+Entry point: sidebar Assets › Assets (`canOpenAssets`: `canViewAssets || canViewAssetHistory || canViewInspectionResults`); the register's `ListPageHeader` "Create" (`CreateButton`) opens Register asset. The `_auth` guard lets inspection-only viewers (`canViewInspectionResults`) open `/assets/$assetId` and `/assets/$assetId/inspections`; Council history readers can open the profile and History; other private sub-pages need `canViewManagement && canViewAssets`. The register has no breadcrumbs; deeper pages use section-first breadcrumbs (`Assets › <asset name>`, `Assets › Register asset`, `Assets › <asset name> › Edit`). No back links; see the page header convention in [design-system.md](design-system.md).
 
 ## Screens and components
 

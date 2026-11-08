@@ -22,6 +22,7 @@ import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Documentworkorderevent;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estatenotificationsettings;
 import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
@@ -35,6 +36,9 @@ import com.proj.server.db.tables.Issuereporturgencyevent;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Notification;
+import com.proj.server.db.tables.Notificationread;
+import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
@@ -139,6 +143,11 @@ public class Tables {
     public static final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
 
     /**
+     * The table <code>public.EstateNotificationSettings</code>.
+     */
+    public static final Estatenotificationsettings ESTATENOTIFICATIONSETTINGS = Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS;
+
+    /**
      * The table <code>public.EstateRoleDefinition</code>.
      */
     public static final Estateroledefinition ESTATEROLEDEFINITION = Estateroledefinition.ESTATEROLEDEFINITION;
@@ -202,6 +211,21 @@ public class Tables {
      * The table <code>public.Manufacturer</code>.
      */
     public static final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
+
+    /**
+     * The table <code>public.Notification</code>.
+     */
+    public static final Notification NOTIFICATION = Notification.NOTIFICATION;
+
+    /**
+     * The table <code>public.NotificationRead</code>.
+     */
+    public static final Notificationread NOTIFICATIONREAD = Notificationread.NOTIFICATIONREAD;
+
+    /**
+     * The table <code>public.NotificationSweep</code>.
+     */
+    public static final Notificationsweep NOTIFICATIONSWEEP = Notificationsweep.NOTIFICATIONSWEEP;
 
     /**
      * The table <code>public.Permission</code>.

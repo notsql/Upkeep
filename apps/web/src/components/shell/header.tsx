@@ -3,6 +3,7 @@ import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import type { ReactNode } from "react";
 import { AuthButton } from "@/components/auth/auth-button";
 import { HeaderEstateSwitcher } from "@/components/shell/header-estate-switcher";
+import { NotificationBell } from "@/components/shell/notification-bell";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 
 export default function Header({
@@ -40,6 +41,7 @@ export default function Header({
         ) : null}
       </div>
       <div className="flex min-w-0 items-center gap-2">
+        {user && !loading ? <NotificationBell /> : null}
         <ThemeToggle />
         <AuthButton />
       </div>

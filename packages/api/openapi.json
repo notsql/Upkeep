@@ -483,6 +483,130 @@
         }
       }
     },
+    "/estates/{estateId}/notification-settings": {
+      "get": {
+        "tags": ["notification-settings-controller"],
+        "operationId": "getNotificationSettings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The saved settings, or the defaults",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["notification-settings-controller"],
+        "operationId": "saveNotificationSettings",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved settings",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "A setting is missing or out of range",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not managed by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/members/{userId}/role": {
       "put": {
         "tags": ["council-controller"],
@@ -1683,6 +1807,199 @@
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/read": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "markNotificationRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Read for the caller" },
+          "404": {
+            "description": "Unknown, or not in an estate the caller manages",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/dismiss": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "dismissAnomalyAlert",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DismissAlertRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The alert after dismissing; read for the caller",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reason missing, blank or over 500 characters",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, or not in an estate the caller manages",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not an anomaly alert, already dismissed, retired asset or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/{notificationId}/acknowledge": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "acknowledgeAnomalyAlert",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcknowledgeAlertRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The alert after acknowledging; read for the caller",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Reason over 500 characters",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown, or not in an estate the caller manages",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not an anomaly alert, already dismissed, retired asset or inactive estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "post": {
+        "tags": ["notification-controller"],
+        "operationId": "markAllNotificationsRead",
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The unread count afterwards",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountResponse"
+                }
               }
             }
           }
@@ -5663,6 +5980,80 @@
         }
       }
     },
+    "/notifications": {
+      "get": {
+        "tags": ["notification-controller"],
+        "operationId": "listNotifications",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 0 }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad page or size",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": ["notification-controller"],
+        "operationId": "getUnreadNotificationCount",
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Unread notifications in the estates the caller manages",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCountResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/manufacturers": {
       "get": {
         "tags": ["catalogue-controller"],
@@ -7864,6 +8255,109 @@
         }
       }
     },
+    "/estates/{estateId}/costs/top-assets": {
+      "get": {
+        "tags": ["estate-cost-controller"],
+        "operationId": "listCostliestAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not owned by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Up to five active assets by known maintenance spend",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CostliestAssetResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/costs/forecast": {
+      "get": {
+        "tags": ["estate-cost-controller"],
+        "operationId": "getBudgetForecast",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not found or not owned by the caller",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Projected maintenance cost of the next 12 months",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetForecastResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -8342,6 +8836,104 @@
         }
       }
     },
+    "/estates/{estateId}/assets/{assetId}/history": {
+      "get": {
+        "tags": ["asset-history-controller"],
+        "operationId": "getAssetHistory",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 25 }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "First Singapore calendar day, inclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Last Singapore calendar day, inclusive",
+            "required": false,
+            "schema": { "type": "string", "format": "date" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid paths, filters, limit or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Council access required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset inaccessible or missing",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "History unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Combined recorded asset history",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetHistoryPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/failure-risk": {
       "get": {
         "tags": ["failure-risk-controller"],
@@ -8473,6 +9065,159 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/DocumentPageResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/anomaly-alerts": {
+      "get": {
+        "tags": ["notification-controller"],
+        "operationId": "listAssetAnomalyAlerts",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The asset's anomaly alerts, newest first",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Resident membership does not grant management access",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate not managed by the caller, or unknown asset",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/asset-history": {
+      "get": {
+        "tags": ["asset-history-controller"],
+        "operationId": "listAssetHistoryAssets",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ALL",
+              "enum": ["ACTIVE", "INACTIVE", "ALL"]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "format": "int32", "default": 25 }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid paths, filters, limit or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Council access required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or asset inaccessible or missing",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "History unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Read-only estate asset directory",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetHistoryAssetPageResponse"
                 }
               }
             }
@@ -9414,6 +10159,51 @@
           "version"
         ]
       },
+      "NotificationSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "anomalyScoreThreshold": {
+            "type": "number",
+            "description": "0.51 to 1.00, at most two decimal places",
+            "maximum": 1.0,
+            "minimum": 0.51
+          },
+          "serviceLeadDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Whole days, 0 to 365",
+            "maximum": 365,
+            "minimum": 0
+          },
+          "repairLeadDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "30, 60 or 90"
+          }
+        },
+        "required": [
+          "anomalyScoreThreshold",
+          "repairLeadDays",
+          "serviceLeadDays"
+        ]
+      },
+      "NotificationSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "anomalyScoreThreshold": { "type": "number" },
+          "serviceLeadDays": { "type": "integer", "format": "int32" },
+          "repairLeadDays": {
+            "type": "integer",
+            "format": "int32",
+            "description": "30, 60 or 90"
+          }
+        },
+        "required": [
+          "anomalyScoreThreshold",
+          "repairLeadDays",
+          "serviceLeadDays"
+        ]
+      },
       "UpdateEstateRoleRequest": {
         "type": "object",
         "properties": {
@@ -9773,6 +10563,161 @@
           "title",
           "updatedAt"
         ]
+      },
+      "DismissAlertRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "1 to 500 characters after trimming"
+          }
+        },
+        "required": ["reason"]
+      },
+      "AnomalyAlertDetails": {
+        "type": "object",
+        "properties": {
+          "condition": {
+            "type": "string",
+            "enum": ["GOOD", "NEEDS_ATTENTION", "FAULTY"]
+          },
+          "medianScore": { "type": "number", "format": "double" },
+          "maxScore": { "type": "number", "format": "double" },
+          "firstDetectedAt": { "type": "string", "format": "date-time" },
+          "lastDetectedAt": { "type": "string", "format": "date-time" },
+          "explanation": { "type": "string" },
+          "response": {
+            "type": "string",
+            "enum": ["NONE", "ACKNOWLEDGED", "DISMISSED"]
+          },
+          "respondedByName": { "type": ["string", "null"] },
+          "respondedAt": { "type": ["string", "null"], "format": "date-time" },
+          "responseReason": { "type": ["string", "null"] }
+        },
+        "required": [
+          "condition",
+          "explanation",
+          "firstDetectedAt",
+          "lastDetectedAt",
+          "maxScore",
+          "medianScore",
+          "respondedAt",
+          "respondedByName",
+          "response",
+          "responseReason"
+        ]
+      },
+      "NotificationResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "type": {
+            "type": "string",
+            "enum": ["ANOMALY", "SERVICE_DUE", "REPAIR_PREDICTED"]
+          },
+          "estateId": { "type": "string", "format": "uuid" },
+          "estateName": { "type": "string" },
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "summary": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "resolvedAt": { "type": ["string", "null"], "format": "date-time" },
+          "read": { "type": "boolean" },
+          "anomaly": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/AnomalyAlertDetails" },
+              { "type": "null" }
+            ]
+          },
+          "serviceDue": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/ServiceDueDetails" },
+              { "type": "null" }
+            ]
+          },
+          "repairPredicted": {
+            "oneOf": [
+              { "$ref": "#/components/schemas/RepairPredictedDetails" },
+              { "type": "null" }
+            ]
+          }
+        },
+        "required": [
+          "anomaly",
+          "assetId",
+          "assetName",
+          "assetReference",
+          "createdAt",
+          "estateId",
+          "estateName",
+          "id",
+          "read",
+          "repairPredicted",
+          "resolvedAt",
+          "serviceDue",
+          "summary",
+          "type",
+          "updatedAt"
+        ]
+      },
+      "RepairPredictedDetails": {
+        "type": "object",
+        "properties": {
+          "recommendedTimeframe": {
+            "type": "string",
+            "enum": [
+              "WITHIN_30_DAYS",
+              "WITHIN_60_DAYS",
+              "WITHIN_90_DAYS",
+              "BEYOND_90_DAYS"
+            ]
+          },
+          "probability": { "type": "number", "format": "double" },
+          "basis": {
+            "type": "string",
+            "enum": [
+              "SERVICE_INTERVAL",
+              "ASSET_HISTORY",
+              "INSUFFICIENT_DATA",
+              "NOT_SUPPORTED"
+            ]
+          },
+          "failuresObserved": { "type": "integer", "format": "int32" }
+        },
+        "required": [
+          "basis",
+          "failuresObserved",
+          "probability",
+          "recommendedTimeframe"
+        ]
+      },
+      "ServiceDueDetails": {
+        "type": "object",
+        "properties": {
+          "dueOn": { "type": "string", "format": "date" },
+          "interval": { "$ref": "#/components/schemas/ServiceInterval" },
+          "intervalSource": {
+            "type": "string",
+            "enum": ["ASSET", "CATEGORY", "NONE"]
+          }
+        },
+        "required": ["dueOn", "interval", "intervalSource"]
+      },
+      "AcknowledgeAlertRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": ["string", "null"],
+            "description": "Optional, at most 500 characters after trimming"
+          }
+        }
+      },
+      "NotificationCountResponse": {
+        "type": "object",
+        "properties": { "unread": { "type": "integer", "format": "int32" } },
+        "required": ["unread"]
       },
       "EstateRequest": {
         "type": "object",
@@ -11218,6 +12163,19 @@
         },
         "required": ["canSubmit", "estates"]
       },
+      "NotificationPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/NotificationResponse" }
+          },
+          "page": { "type": "integer", "format": "int32" },
+          "size": { "type": "integer", "format": "int32" },
+          "total": { "type": "integer", "format": "int64" }
+        },
+        "required": ["items", "page", "size", "total"]
+      },
       "ManufacturerResponse": {
         "type": "object",
         "properties": {
@@ -11891,6 +12849,85 @@
           "updatedAt"
         ]
       },
+      "CostliestAssetResponse": {
+        "type": "object",
+        "properties": {
+          "assetId": { "type": "string", "format": "uuid" },
+          "assetReference": { "type": "string" },
+          "assetName": { "type": "string" },
+          "category": { "type": "string" },
+          "categoryLabel": { "type": "string" },
+          "totalSpend": {
+            "type": "string",
+            "description": "SGD, two-decimal string"
+          },
+          "entriesWithUnknownCosts": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Entries with at least one unknown cost"
+          }
+        },
+        "required": [
+          "assetId",
+          "assetName",
+          "assetReference",
+          "category",
+          "categoryLabel",
+          "entriesWithUnknownCosts",
+          "totalSpend"
+        ]
+      },
+      "BudgetForecastResponse": {
+        "type": "object",
+        "properties": {
+          "from": { "type": "string", "format": "date" },
+          "to": {
+            "type": "string",
+            "format": "date",
+            "description": "Exclusive"
+          },
+          "total": { "type": "string" },
+          "scheduledServices": {
+            "$ref": "#/components/schemas/ScheduledServicesForecast"
+          },
+          "predictedRepairs": {
+            "$ref": "#/components/schemas/PredictedRepairsForecast"
+          },
+          "assetsWithoutCostBasis": {
+            "type": "integer",
+            "format": "int32",
+            "description": "Assets with a service or repair to project but no cost history to price it"
+          }
+        },
+        "required": [
+          "assetsWithoutCostBasis",
+          "from",
+          "predictedRepairs",
+          "scheduledServices",
+          "to",
+          "total"
+        ]
+      },
+      "PredictedRepairsForecast": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "string" },
+          "expectedRepairs": {
+            "type": "number",
+            "format": "double",
+            "description": "Sum of 365-day breakdown probabilities, two decimals"
+          }
+        },
+        "required": ["expectedRepairs", "total"]
+      },
+      "ScheduledServicesForecast": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "string" },
+          "services": { "type": "integer", "format": "int32" }
+        },
+        "required": ["services", "total"]
+      },
       "AssetLifecycleEventResponse": {
         "type": "object",
         "properties": {
@@ -12013,6 +13050,215 @@
           "items": {
             "type": "array",
             "items": { "$ref": "#/components/schemas/InspectionResultResponse" }
+          },
+          "nextCursor": { "type": ["string", "null"] }
+        },
+        "required": ["items", "nextCursor"]
+      },
+      "AssetHistoryDetails": {
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "MAINTENANCE": "#/components/schemas/HistoryMaintenanceDetails",
+            "COMPLETION": "#/components/schemas/HistoryCompletionDetails",
+            "CONDITION": "#/components/schemas/HistoryConditionDetails",
+            "INSPECTION": "#/components/schemas/HistoryInspectionDetails",
+            "LIFECYCLE": "#/components/schemas/HistoryLifecycleDetails",
+            "DOCUMENT": "#/components/schemas/HistoryDocumentDetails"
+          }
+        },
+        "oneOf": [
+          { "$ref": "#/components/schemas/HistoryMaintenanceDetails" },
+          { "$ref": "#/components/schemas/HistoryCompletionDetails" },
+          { "$ref": "#/components/schemas/HistoryConditionDetails" },
+          { "$ref": "#/components/schemas/HistoryInspectionDetails" },
+          { "$ref": "#/components/schemas/HistoryLifecycleDetails" },
+          { "$ref": "#/components/schemas/HistoryDocumentDetails" }
+        ],
+        "properties": { "kind": { "type": "string" } },
+        "required": ["kind"]
+      },
+      "AssetHistoryEntryResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "sourceId": { "type": "string", "format": "uuid" },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "MAINTENANCE",
+              "WORK_ORDER_COMPLETED",
+              "CONDITION",
+              "INSPECTION",
+              "LIFECYCLE",
+              "INVOICE",
+              "SERVICE_REPORT"
+            ]
+          },
+          "title": { "type": "string" },
+          "summary": { "type": ["string", "null"] },
+          "occurredOn": { "type": ["string", "null"], "format": "date" },
+          "occurredAt": { "type": ["string", "null"], "format": "date-time" },
+          "recordedAt": { "type": "string", "format": "date-time" },
+          "details": { "$ref": "#/components/schemas/AssetHistoryDetails" }
+        },
+        "required": [
+          "details",
+          "id",
+          "kind",
+          "occurredAt",
+          "occurredOn",
+          "recordedAt",
+          "sourceId",
+          "summary",
+          "title"
+        ]
+      },
+      "AssetHistoryPageResponse": {
+        "type": "object",
+        "properties": {
+          "asset": {
+            "$ref": "#/components/schemas/AssetHistorySummaryResponse"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetHistoryEntryResponse"
+            }
+          },
+          "nextCursor": { "type": ["string", "null"] },
+          "documentsVisible": { "type": "boolean" }
+        },
+        "required": ["asset", "documentsVisible", "items", "nextCursor"]
+      },
+      "AssetHistorySummaryResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "name": { "type": "string" },
+          "category": { "type": "string" },
+          "locationPath": { "type": "string" },
+          "installedOn": { "type": ["string", "null"], "format": "date" },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "status": { "type": "string", "enum": ["ACTIVE", "RETIRED"] }
+        },
+        "required": [
+          "category",
+          "id",
+          "installedOn",
+          "locationPath",
+          "name",
+          "reference",
+          "retiredOn",
+          "status"
+        ]
+      },
+      "HistoryCompletionDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["COMPLETION"] },
+          "workOrderId": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "findings": { "type": "string" },
+          "workPerformed": { "type": "string" },
+          "partsUsed": { "type": ["string", "null"] },
+          "labourCost": { "type": ["string", "null"] },
+          "partsCost": { "type": ["string", "null"] },
+          "totalCost": { "type": ["string", "null"] },
+          "currency": { "type": "string" },
+          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" },
+          "editedAt": { "type": ["string", "null"], "format": "date-time" },
+          "canViewWorkOrder": { "type": "boolean" }
+        },
+        "required": [
+          "canViewWorkOrder",
+          "currency",
+          "findings",
+          "kind",
+          "reference",
+          "workOrderId",
+          "workPerformed"
+        ]
+      },
+      "HistoryConditionDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["CONDITION"] },
+          "condition": { "type": "string" },
+          "assessedOn": { "type": "string", "format": "date" },
+          "notes": { "type": "string" },
+          "origin": { "type": "string", "enum": ["HUMAN", "ANOMALY_MODEL"] },
+          "sourceLabel": { "type": "string" }
+        },
+        "required": [
+          "assessedOn",
+          "condition",
+          "kind",
+          "notes",
+          "origin",
+          "sourceLabel"
+        ]
+      },
+      "HistoryDocumentDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["DOCUMENT"] },
+          "document": { "$ref": "#/components/schemas/DocumentResponse" }
+        },
+        "required": ["document", "kind"]
+      },
+      "HistoryInspectionDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["INSPECTION"] },
+          "outcome": { "type": "string" },
+          "inspectedOn": { "type": "string", "format": "date" },
+          "notes": { "type": ["string", "null"] },
+          "locationPath": { "type": "string" },
+          "canViewInspection": { "type": "boolean" }
+        },
+        "required": [
+          "canViewInspection",
+          "inspectedOn",
+          "kind",
+          "locationPath",
+          "outcome"
+        ]
+      },
+      "HistoryLifecycleDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["LIFECYCLE"] },
+          "action": { "type": "string" },
+          "previousRetiredOn": { "type": ["string", "null"], "format": "date" },
+          "previousRetirementReason": { "type": ["string", "null"] },
+          "retiredOn": { "type": ["string", "null"], "format": "date" },
+          "retirementReason": { "type": ["string", "null"] },
+          "lifecycleVersion": { "type": "integer", "format": "int32" }
+        },
+        "required": ["action", "kind", "lifecycleVersion"]
+      },
+      "HistoryMaintenanceDetails": {
+        "properties": {
+          "kind": { "type": "string", "enum": ["MAINTENANCE"] },
+          "type": { "type": "string" },
+          "notes": { "type": "string" },
+          "findings": { "type": ["string", "null"] },
+          "workPerformed": { "type": ["string", "null"] },
+          "serviceProvider": { "type": ["string", "null"] },
+          "partsReplaced": { "type": ["string", "null"] },
+          "downtimeMinutes": { "type": ["integer", "null"], "format": "int32" },
+          "labourCost": { "type": ["string", "null"] },
+          "partsCost": { "type": ["string", "null"] },
+          "otherCost": { "type": ["string", "null"] },
+          "totalCost": { "type": ["string", "null"] }
+        },
+        "required": ["kind", "notes", "type"]
+      },
+      "AssetHistoryAssetPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetHistorySummaryResponse"
+            }
           },
           "nextCursor": { "type": ["string", "null"] }
         },
@@ -12232,6 +13478,7 @@
           "canViewManagement": { "type": "boolean" },
           "canManageEstate": { "type": "boolean" },
           "canViewAssets": { "type": "boolean" },
+          "canViewAssetHistory": { "type": "boolean" },
           "canViewReadings": { "type": "boolean" },
           "canRecordReadings": { "type": "boolean" },
           "canViewEstateDetails": { "type": "boolean" },
@@ -12279,6 +13526,7 @@
           "canReviewFaultReportDuplicates",
           "canUpdateWorkOrders",
           "canUploadDocuments",
+          "canViewAssetHistory",
           "canViewAssets",
           "canViewDocuments",
           "canViewEstateDetails",

@@ -545,3 +545,47 @@ passes 1,153 tests; workspace type checks, frontend lint/format and production
 build pass. Backend sources and contract are unchanged from the previous full
 1,760-test backend pass. No extra browser check was claimed. Logs are under
 `/tmp/urgency-pagination-fix/`; changes remain uncommitted.
+
+### PR #57 review and current-main integration — 2026-11-08
+
+The user requested integration of current main and review-comment fixes. Main
+`2b65ed8` adds notifications and estate costs. Resolve the spec index by keeping
+all three features, and regenerate the combined API contract from Spring rather
+than choosing one side's generated files. Every endpoint and schema from both
+parents remains present. Use the existing `EstateRole.MANAGER` and
+`WorkOrderStatus.CLOSED` enums in the two reviewed urgency paths; this refactor
+does not change permissions or queue behaviour.
+
+Prisma migrations were applied only to disposable loopback Postgres for jOOQ
+regeneration and the live OpenAPI export. Regenerated jOOQ exactly matched the
+automatically combined generated sources. No Neon database or Infisical setting
+was changed. The merge remains uncommitted for the human to finish.
+
+Validation: all 1,896 backend tests and 1,217 frontend tests pass through the
+full Nx test run, including the 23 urgency integration cases for Manager
+authorization, queue inclusion, sorting and duplicate actions. Workspace type
+checks, lint, required formatters and the production web build also pass. No new
+browser check is claimed for this code-preserving integration. Logs and the
+disposable-database generation helper are in `/tmp/urgency-main-integration/`.
+
+### Asset-history merge refresh — 2026-11-08
+
+Main advanced to `a8d030b` with asset history (PR #56). The prior staged merge
+was saved as a complete tree/archive and patch before refreshing its target.
+Preserve the two enum review fixes and all urgency changes. Keep both
+`canViewAssetHistory` and `canChangeFaultReportUrgency` in access responses, and
+regenerate the combined contract from Spring using disposable loopback Postgres.
+The exported contract retains every path/schema from main and the urgency branch.
+Prisma schema, migration files and generated jOOQ sources are unchanged from the
+previous integration; no Neon or Infisical change is involved. Against this main,
+the feature diff still contains exactly the original 61 feature paths.
+
+The recovery snapshot, export helper and validation logs are under
+`/tmp/urgency-latest-main-integration/`. The merge remains uncommitted.
+
+Validation of the refreshed merge: 2,017 backend tests and 1,265 frontend tests
+pass, along with workspace type checks, lint, required formatting and the
+production web build. The generated JSON matches the raw Spring export exactly
+when parsed with exact decimals. Remote main still matches the pending merge
+target `a8d030b`. All conflicts are resolved locally; commit and push remain the
+human's steps.

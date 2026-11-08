@@ -289,4 +289,24 @@ class FailureRiskCalculatorTests {
         var twelveYearsTomorrow = calculator.forecast(pump(TODAY.minusYears(12).plusDays(1)), List.of(), TODAY);
         assertFalse(twelveYearsTomorrow.nearingEndOfLife());
     }
+
+    // --- Probability over any horizon (ID-33 budget forecast) ---
+
+    @Test
+    void theProbabilityWithinAHorizonMatchesTheForecastAndGrowsWithIt() {
+        var history = List.of(event(BREAKDOWN_REPAIR, daysAgo(270)), event(BREAKDOWN_REPAIR, daysAgo(90)));
+        var pump = pump(daysAgo(400));
+        var forecast = calculator.forecast(pump, history, TODAY);
+        assertEquals(forecast.probability90Days(), calculator.probabilityWithin(pump, history, TODAY, 90), 1e-12);
+        var year = calculator.probabilityWithin(pump, history, TODAY, 365);
+        assertTrue(year > forecast.probability90Days());
+        assertTrue(year < 1);
+    }
+
+    @Test
+    void thereIsNoProbabilityWithoutAForecast() {
+        assertNull(calculator.probabilityWithin(pump(null), List.of(), TODAY, 365));
+        assertNull(
+                calculator.probabilityWithin(new RiskAsset("LIFT", daysAgo(100), null, null), List.of(), TODAY, 365));
+    }
 }

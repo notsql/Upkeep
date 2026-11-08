@@ -24,6 +24,7 @@ import com.proj.server.report.ReportQueueCursor;
 import com.proj.server.report.ReportSort;
 import com.proj.server.report.ReportUrgency;
 import com.proj.server.report.ReportUrgencyRepository;
+import com.proj.server.workorder.WorkOrderStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -260,7 +261,10 @@ public class ResidentReportRepository {
         if (openOnly) {
             var sourced = WORKORDER.SOURCEREPORTID.eq(ISSUEREPORT.ID).and(WORKORDER.ESTATEID.eq(estateId));
             condition = condition.and(notExists(selectOne().from(WORKORDER).where(sourced))
-                    .or(exists(selectOne().from(WORKORDER).where(sourced).and(WORKORDER.STATUS.ne("CLOSED")))));
+                    .or(exists(selectOne()
+                            .from(WORKORDER)
+                            .where(sourced)
+                            .and(WORKORDER.STATUS.ne(WorkOrderStatus.CLOSED.name())))));
         }
         if (before != null) {
             condition = condition.and(
