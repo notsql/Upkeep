@@ -1,4 +1,6 @@
-import { Button } from "@proj/ui/components/button";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { FieldSeparator } from "@proj/ui/components/field";
+import { FormActions } from "@/components/forms/form-actions";
 import type { DeviceInput } from "@/lib/devices";
 import { DeviceFormIdentityFields } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form-identity-fields";
 import { DeviceFormLocationField } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form-location-field";
@@ -45,12 +47,13 @@ export function DeviceForm({
 
   const buttonLabel = pending ? pendingLabel : submitLabel;
   return (
-    <form className="mt-4 grid gap-5" noValidate onSubmit={handleSubmit}>
+    <form className="grid gap-5" noValidate onSubmit={handleSubmit}>
       <DeviceFormIdentityFields
         {...fieldProps}
         handleChange={handleChange}
         values={values}
       />
+      <FieldSeparator />
       <DeviceFormLocationField
         {...fieldProps}
         handleLocationChange={handleLocationChange}
@@ -58,36 +61,24 @@ export function DeviceForm({
         locationItems={locationItems}
         locationsError={locationsError}
       />
+      <FieldSeparator />
       <DeviceFormMetricsFields
         {...fieldProps}
         handleMetricChange={handleMetricChange}
         metrics={metrics}
       />
+      <FieldSeparator />
       <DeviceFormReportingField
         {...fieldProps}
         handleChange={handleChange}
         interval={values.interval}
       />
       {error ? (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       ) : null}
-      <div className="flex flex-wrap justify-end gap-2">
-        {onCancel ? (
-          <Button
-            disabled={pending}
-            onClick={onCancel}
-            type="button"
-            variant="outline"
-          >
-            Cancel
-          </Button>
-        ) : null}
-        <Button disabled={pending} type="submit">
-          {buttonLabel}
-        </Button>
-      </div>
+      <FormActions label={buttonLabel} onCancel={onCancel} pending={pending} />
     </form>
   );
 }

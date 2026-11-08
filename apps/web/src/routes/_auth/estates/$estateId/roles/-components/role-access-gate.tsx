@@ -11,9 +11,12 @@ type EstateAccess = components["schemas"]["EstateAccessResponse"];
 /** Shared access check for the roles list, new-role and edit-role pages. */
 export function RoleAccessGate({
   estateId,
+  className,
   children,
 }: {
   estateId: string;
+  /** Narrows the page; create/edit pages pass FormPage's `max-w-3xl`. */
+  className?: string;
   children: (estate: EstateAccess) => ReactNode;
 }) {
   const { access, estate, ready, allowed } = useEstateRoleAccess(estateId);
@@ -40,5 +43,5 @@ export function RoleAccessGate({
       </Alert>
     );
   }
-  return <PageLayout>{content}</PageLayout>;
+  return <PageLayout className={className}>{content}</PageLayout>;
 }

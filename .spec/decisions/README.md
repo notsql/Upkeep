@@ -34,6 +34,9 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 
 - [0042 - Filtered reading CSV streams and completion metadata](0042-filtered-reading-csv-streams.md)
 - [0043 - Estate destinations share one predicate for sidebar and route guard](0043-estate-destinations-share-sidebar-and-guard-rules.md)
+- [0044 - Anomaly scoring runs on ingested readings](0044-anomaly-scoring-runs-on-ingested-readings.md)
+- [0045 - Reading charts use shadcn Chart, over bucketed server series](0045-reading-charts-use-shadcn-chart.md)
+
 - [0044 - Asset history is a live read projection](0044-asset-history-is-a-live-read-projection.md)
 - [0044 - Duplicate fault reports are rule-based suggestions a manager confirms](0044-duplicate-reports-are-rule-based-suggestions.md)
 

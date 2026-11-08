@@ -80,24 +80,22 @@ function routerFor(path: string) {
     "/estates/$estateId",
     "/estates/$estateId/assets",
     "/estates/$estateId/assets/new",
+    "/estates/$estateId/assets/devices",
     "/estates/$estateId/assets/$assetId",
     "/estates/$estateId/assets/$assetId/history",
     "/estates/$estateId/assets/$assetId/maintenance",
     "/estates/$estateId/assets/$assetId/documents",
     "/estates/$estateId/assets/$assetId/edit",
     "/estates/$estateId/assets/$assetId/readings",
+    "/estates/$estateId/assets/$assetId/records",
     "/estates/$estateId/readings",
-    "/estates/$estateId/readings/new",
+    "/estates/$estateId/readings/$assetId",
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
     "/estates/$estateId/edit",
-    "/estates/$estateId/devices",
     "/estates/$estateId/asset-categories",
     "/estates/$estateId/asset-categories/$interval",
     "/estates/$estateId/inspections",
-    "/estates/$estateId/sensors",
-    "/estates/$estateId/sensors/all",
-    "/estates/$estateId/failure-risk",
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
@@ -147,24 +145,35 @@ beforeEach(() => {
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
 });
 
-it("denies a bookmarked manual-entry route when write capability is unavailable", async () => {
+const ASSET_READINGS =
+  "/estates/oak/readings/7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f";
+
+it("opens an asset's readings to a viewer with readings access", async () => {
   get.mockResolvedValue({
     data: {
       ...unassignedAccess,
       canEnterWorkspace: true,
-      estates: [
-        {
-          ...crewEstateAccess,
-          canViewReadings: true,
-          canRecordReadings: false,
-        },
-      ],
+      estates: [crewEstateAccess],
     },
     response: new Response(),
   });
-  const router = routerFor(
-    `/estates/${crewEstateAccess.estateId}/readings/new`
-  );
+  const router = routerFor(ASSET_READINGS);
+  await router.load();
+  expect(
+    router.state.matches.some((match) => match.status === "notFound")
+  ).toBe(false);
+});
+
+it("hides an asset's readings from a viewer without readings access", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...unassignedAccess,
+      canEnterWorkspace: true,
+      estates: [councilEstateAccess],
+    },
+    response: new Response(),
+  });
+  const router = routerFor(ASSET_READINGS);
   await router.load();
   expect(
     router.state.matches.some((match) => match.status === "notFound")
@@ -274,6 +283,7 @@ it.each([
   "/estates/oak",
   "/estates/oak/assets",
   "/estates/oak/assets/pump",
+  "/estates/oak/assets/pump/records",
   "/estates/oak/assets/pump/inspections/new",
   "/estates/oak/assets/pump/inspections/saved",
 ])(
@@ -609,13 +619,9 @@ it("does not let a WorkOS admin claim bypass a missing report capability", async
 });
 
 const OWNER_GATED = [
-  "/estates/oak/devices",
   "/estates/oak/asset-categories",
   "/estates/oak/inspections",
-  "/estates/oak/sensors",
-  "/estates/oak/sensors/all",
   "/estates/oak/asset-categories/months",
-  "/estates/oak/failure-risk",
   "/estates/oak/edit",
   "/estates/oak/assets",
 ];
@@ -713,20 +719,13 @@ it.each([
     estate: managementOnly,
     owned: true,
   })),
-  ...[
-    "/estates/oak/devices",
-    "/estates/oak/asset-categories",
-    "/estates/oak/inspections",
-  ].map((path) => ({
-    path,
-    estate: { ...managementOnly, canManageInvitationPermissions: true },
-    owned: false,
-  })),
-  {
-    path: "/estates/oak/sensors",
-    estate: { ...managementOnly, role: "COUNCIL" },
-    owned: false,
-  },
+  ...["/estates/oak/asset-categories", "/estates/oak/inspections"].map(
+    (path) => ({
+      path,
+      estate: { ...managementOnly, canManageInvitationPermissions: true },
+      owned: false,
+    })
+  ),
   {
     path: "/estates/oak/edit",
     estate: { ...managementOnly, canManageEstate: true },
@@ -747,3 +746,47 @@ it.each([
     await screen.findByRole("heading", { name: "Management page" });
   }
 );
+
+const ALL_DEVICES = "/estates/oak/assets/devices";
+
+it.each([
+  { name: "owner", estate: managementOnly, owned: true },
+  {
+    name: "Manager",
+    estate: { ...managementOnly, role: "MANAGER" },
+    owned: false,
+  },
+  {
+    name: "Council",
+    estate: { ...managementOnly, role: "COUNCIL" },
+    owned: false,
+  },
+])(
+  "opens All devices for a $name without asset register access",
+  async ({ estate, owned }) => {
+    estateAccess(estate, owned);
+    const router = routerFor(ALL_DEVICES);
+    await router.load();
+    renderWithProviders(<RouterProvider router={router} />);
+    await screen.findByRole("heading", { name: "Management page" });
+  }
+);
+
+it.each([
+  { name: "Crew", estate: { ...managementOnly, ...crewEstateAccess } },
+  { name: "management-only member", estate: managementOnly },
+])("404s All devices for a $name", async ({ estate }) => {
+  estateAccess(estate);
+  const router = routerFor(ALL_DEVICES);
+  await router.load();
+  expect(
+    router.state.matches.some((match) => match.status === "notFound")
+  ).toBe(true);
+  expect(managementLoader).not.toHaveBeenCalled();
+});
+
+it("keeps a resident out of All devices", async () => {
+  const router = routerFor("/estates/maple/assets/devices");
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
+});

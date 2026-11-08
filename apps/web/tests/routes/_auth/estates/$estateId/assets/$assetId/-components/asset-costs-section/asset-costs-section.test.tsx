@@ -181,3 +181,14 @@ it("explains an empty period and clears it from the filter bar", () => {
   fireEvent.click(filters.getByRole("button", { name: "Clear filters" }));
   section.getByRole("table");
 });
+
+it("sits on the page without a card and summarises the totals", () => {
+  const section = renderSection();
+  const region = screen.getByRole("region", { name: "Maintenance costs" });
+  expect(region.closest("[data-slot='card']")).toBeNull();
+  const summary = within(section.getByRole("region", { name: "Cost summary" }));
+  expect(summary.getByText("Labour").nextSibling?.textContent).toBe("100.10");
+  expect(summary.getByText("Parts").nextSibling?.textContent).toBe("50.20");
+  expect(summary.getByText("Other").nextSibling?.textContent).toBe("0.00");
+  expect(summary.getByText("Total").nextSibling?.textContent).toBe("150.30");
+});

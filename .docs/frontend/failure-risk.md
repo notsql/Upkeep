@@ -1,25 +1,19 @@
 # Failure risk (frontend)
 
 Breakdown forecasts for an estate's assets. Paths are relative to
-`apps/web/src/`; the route folder is `routes/_auth/estates/$estateId/failure-risk/`.
-Requires sign-in. The asset-level forecast card and maintenance section on
-asset details are documented in [assets.md](assets.md).
+`apps/web/src/`. There is no failure-risk page: forecasts show as the
+owner-only Risk flag column on Assets › By location and the forecast card on
+the asset Overview (both in [assets.md](assets.md)), and the estate
+dashboard's "At-risk assets" card (footer link "Risk by location" to
+`/estates/$estateId/assets`).
 
 ## Routes
 
-| File | URL | Params | Title | Renders |
-| --- | --- | --- | --- | --- |
-| `index.tsx` | `/estates/$estateId/failure-risk` | `estateId` | "Failure risk" | `FailureRiskPage` (keyed by `estateId`) |
-
-Entry point: sidebar Assets › "Failure risk", shown by `canOpenFailureRisk`
-(owners only); the `_auth` guard loads ownership and 404s otherwise.
-
-## Screens and components
-
-| Component (file) | Does | shadcn |
+| File | URL | Does |
 | --- | --- | --- |
-| `FailureRiskPage` (`-components/failure-risk-page/failure-risk-page.tsx`) | `ListPageHeader` (no breadcrumbs, filters or create) with `icon={AlertTriangle}` and description "Breakdown odds over 30, 60 and 90 days". States: `LoadingState` "Loading forecasts…" (table skeleton), `ErrorState` (message + outline Retry, refetches), `EmptyState` "No assets to forecast yet" ("Forecasts appear once assets are added"). Otherwise a table: Asset, Reference, 30 days, 60 days, 90 days, Check, End of life, Flags. | `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `Badge`; `ListPageHeader`, `EmptyState`, `ErrorState`, `LoadingState` |
-| `RiskRow` (`-components/failure-risk-page/risk-row.tsx`) | Asset name links to `/estates/$estateId/assets/$assetId`. When `noForecastReason` returns text ("Not supported" or "Not enough data") it spans the four forecast columns, muted; otherwise probabilities via `formatProbability` (rounded %, "—" when null) and `timeframeLabel` ("—" when null). End of life is `expectedEndOfLife` or "Not recorded". Each flag reason is a destructive `Badge` labelled by `flagReasonLabel`. | `TableRow`, `TableCell`, `Badge` |
+| `routes/_auth/estates/$estateId/failure-risk/index.tsx` | `/estates/$estateId/failure-risk` | Retired. `beforeLoad` redirects (`replace: true`) to `/estates/$estateId/assets` (By location, which shows risk flags). No component. |
+
+No sidebar item (removed in asset-centric navigation phase 4).
 
 ## Data (`lib/failure-risk.ts`)
 
@@ -30,7 +24,14 @@ Constants: `timeframeLabel` (`WITHIN_30_DAYS` "Within 30 days", `WITHIN_60_DAYS`
 (`CONDITION` "Condition", `FAILURE_RISK` "Failure risk", `END_OF_LIFE` "End of
 life"). Helpers: `noForecastReason(risk)` ("Not supported" when `basis` is
 `NOT_SUPPORTED`, "Not enough data" when `probability90Days` is null, else null);
-`formatProbability(value)`.
+`formatProbability(value)`. `FlagReason` is exported.
+
+`AssetForecastCard` does not show `flagReasonLabel.CONDITION` directly. It
+reads the current assessment from `useAssessments` and shows
+"Condition: Needs attention · Anomaly detection" (or "· <recorder name>" when
+known), or "Condition needs a check" while assessments load or fail. The
+lead-in is "Flagged for a check because:", and the expected end of life uses
+`formatDate` (or "Not recorded").
 
 Query keys: `estateFailureRiskQueryKey(userId, estateId)` =
 `["estates", userId, "failure-risk", estateId]`;
@@ -39,14 +40,18 @@ Query keys: `estateFailureRiskQueryKey(userId, estateId)` =
 
 | Hook | Endpoint | On success |
 | --- | --- | --- |
-| `useEstateFailureRisk(estateId)` | `GET /estates/{estateId}/failure-risk` | query |
+| `useEstateFailureRisk(estateId, enabled = true)` | `GET /estates/{estateId}/failure-risk` | query; also feeds the asset register's owner-only Risk flag column (see assets.md), which passes `enabled = owned` |
 | `useAssetFailureRisk(estateId, assetId, enabled = true)` | `GET /estates/{estateId}/assets/{assetId}/failure-risk` | query (used by `AssetForecastCard`) |
+
+`riskLevel(probability90Days)` maps the 90-day chance to `LOW` / `MODERATE` /
+`HIGH` by `RISK_THRESHOLDS` (`moderate: 0.1`, `high: 0.3`; each bound
+inclusive); `riskLevelLabel` gives "Low risk" / "Moderate risk" / "High risk".
+The asset forecast card leads with it (see [assets.md](assets.md)).
 
 Invalidated by `useRecordAssetEvent` (`lib/asset-events.ts`) and
 `useRecordAssessment` (`lib/assessments.ts`, see [assets.md](assets.md)). Recording
 an assessment refreshes both the asset card and estate list so their Condition
-flags reflect the latest assessment without a page reload. The page also reads `useEstate(estateId)` (key
-`["estates", userId, "details", estateId]`) for the breadcrumb. All queries:
+flags reflect the latest assessment without a page reload. All queries:
 `enabled: ready`, `retry: false`, errors via `estateError`.
 
 API: [api/failure-risk.md](../api/failure-risk.md).

@@ -1,4 +1,10 @@
-import { Field, FieldLabel } from "@proj/ui/components/field";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { type ChangeEvent, useCallback } from "react";
 import { PhotoPreview } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/new/-components/inspection-form/photo-preview";
@@ -43,7 +49,8 @@ export function InspectionPhotoField({
     [photos.length, onSelect, onError]
   );
   return (
-    <>
+    <FieldSet>
+      <FieldLegend>Evidence</FieldLegend>
       <Field>
         <FieldLabel htmlFor="inspection-photos">Photos (optional)</FieldLabel>
         <Input
@@ -53,20 +60,22 @@ export function InspectionPhotoField({
           onChange={selectPhotos}
           type="file"
         />
-        <p className="text-muted-foreground text-sm">
+        <FieldDescription>
           Up to 3 JPEG/PNG photos, 5 MB each, maximum 4,032 × 3,024 pixels.
-        </p>
+        </FieldDescription>
       </Field>
-      <ul className="grid gap-3 sm:grid-cols-3">
-        {photos.map((photo) => (
-          <PhotoPreview
-            file={photo.file}
-            id={photo.id}
-            key={photo.id}
-            onRemove={onRemove}
-          />
-        ))}
-      </ul>
-    </>
+      {photos.length > 0 ? (
+        <ul className="grid gap-3 sm:grid-cols-3">
+          {photos.map((photo) => (
+            <PhotoPreview
+              file={photo.file}
+              id={photo.id}
+              key={photo.id}
+              onRemove={onRemove}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </FieldSet>
   );
 }

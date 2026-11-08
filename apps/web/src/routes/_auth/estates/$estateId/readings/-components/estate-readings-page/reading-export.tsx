@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Spinner } from "@proj/ui/components/spinner";
+import { Download } from "lucide-react";
 import type { ReadingSearch } from "@/lib/reading-filters";
 import { useReadingExport } from "@/lib/use-reading-export";
 
@@ -18,32 +19,42 @@ export function ReadingExport({
     return null;
   }
   return (
-    <div className="min-w-0 space-y-2">
-      <div className="flex flex-wrap items-center gap-2">
+    <>
+      <Button
+        disabled={disabled || download.isPending}
+        onClick={download.start}
+        size="sm"
+        title="Exports all matching readings, across every page."
+        type="button"
+        variant="outline"
+      >
+        {download.isPending ? (
+          <Spinner aria-hidden="true" />
+        ) : (
+          <Download aria-hidden="true" />
+        )}
+        {download.isPending ? "Exporting CSV…" : "Export CSV"}
+      </Button>
+      {download.isPending ? (
         <Button
-          disabled={disabled || download.isPending}
-          onClick={download.start}
+          onClick={download.cancel}
+          size="sm"
           type="button"
           variant="outline"
         >
-          {download.isPending ? <Spinner aria-hidden="true" /> : null}{" "}
-          {download.isPending ? "Exporting CSV…" : "Export CSV"}
+          Cancel export
         </Button>
-        {download.isPending ? (
-          <Button onClick={download.cancel} type="button" variant="outline">
-            Cancel export
-          </Button>
-        ) : null}
-      </div>
-      <p className="text-muted-foreground text-xs">
-        Exports all matching readings, across every page.
-      </p>
+      ) : null}
       {download.isError ? (
-        <Alert variant="destructive">
+        <Alert className="basis-full" variant="destructive">
           <AlertDescription>{download.error.message}</AlertDescription>
         </Alert>
       ) : null}
-      {download.cancelled ? <p role="status">Export cancelled.</p> : null}
-    </div>
+      {download.cancelled ? (
+        <p className="basis-full text-sm" role="status">
+          Export cancelled.
+        </p>
+      ) : null}
+    </>
   );
 }

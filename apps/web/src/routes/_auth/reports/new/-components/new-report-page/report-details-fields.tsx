@@ -1,5 +1,5 @@
+import { Field, FieldDescription, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import { Textarea } from "@proj/ui/components/textarea";
 import type { ChangeEvent } from "react";
 
@@ -18,8 +18,8 @@ export function ReportDetailsFields({
 }) {
   return (
     <>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-title`}>Title</Label>
+      <Field>
+        <FieldLabel htmlFor={`${id}-title`}>Title</FieldLabel>
         <Input
           aria-describedby={`${id}-title-help`}
           id={`${id}-title`}
@@ -27,22 +27,22 @@ export function ReportDetailsFields({
           onChange={onTitleChange}
           value={title}
         />
-        <p className="text-muted-foreground text-sm" id={`${id}-title-help`}>
+        <FieldDescription id={`${id}-title-help`}>
           Give the fault a short title in up to 50 characters.
-        </p>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-description`}>Description</Label>
+        </FieldDescription>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
         <Textarea
           id={`${id}-description`}
           maxLength={2500}
           onChange={onDescriptionChange}
           value={description}
         />
-        <p className="text-muted-foreground text-sm">
+        <FieldDescription>
           Describe the fault in up to 2,500 characters.
-        </p>
-      </div>
+        </FieldDescription>
+      </Field>
     </>
   );
 }

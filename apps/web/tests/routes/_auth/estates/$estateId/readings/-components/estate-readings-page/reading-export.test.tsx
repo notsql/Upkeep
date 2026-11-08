@@ -150,6 +150,13 @@ it("exports all applied filters without page/size and saves only a completed CSV
   expect(HTMLAnchorElement.prototype.click).toHaveBeenCalledTimes(1);
   expect(revokeUrl).toHaveBeenCalledWith("blob:qa-export");
 });
+it("exports anomalous-only filters as flag=ANOMALY", async () => {
+  renderWithProviders(page("estate", { anomalous: true }));
+  await start();
+  await waitFor(() => expect(createUrl).toHaveBeenCalledTimes(1));
+  const call = state.get.mock.calls.find(([path]) => path === EXPORT);
+  expect(call?.[1]?.params?.query?.flag).toEqual(["ANOMALY"]);
+});
 it("downloads a header-only CSV for zero matching rows", async () => {
   total = 0;
   renderWithProviders(page());

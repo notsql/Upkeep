@@ -147,48 +147,6 @@ public class IssuereportRecord extends UpdatableRecordImpl<IssuereportRecord> {
         return (String) get(8);
     }
 
-    /**
-     * Setter for <code>public.IssueReport.isSafety</code>.
-     */
-    public void setIssafety(Boolean value) {
-        set(9, value);
-    }
-
-    /**
-     * Getter for <code>public.IssueReport.isSafety</code>.
-     */
-    public Boolean getIssafety() {
-        return (Boolean) get(9);
-    }
-
-    /**
-     * Setter for <code>public.IssueReport.urgency</code>.
-     */
-    public void setUrgency(String value) {
-        set(10, value);
-    }
-
-    /**
-     * Getter for <code>public.IssueReport.urgency</code>.
-     */
-    public String getUrgency() {
-        return (String) get(10);
-    }
-
-    /**
-     * Setter for <code>public.IssueReport.urgencyVersion</code>.
-     */
-    public void setUrgencyversion(Integer value) {
-        set(11, value);
-    }
-
-    /**
-     * Getter for <code>public.IssueReport.urgencyVersion</code>.
-     */
-    public Integer getUrgencyversion() {
-        return (Integer) get(11);
-    }
-
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -212,7 +170,7 @@ public class IssuereportRecord extends UpdatableRecordImpl<IssuereportRecord> {
     /**
      * Create a detached, initialised IssuereportRecord
      */
-    public IssuereportRecord(UUID id, String submittedbyuserid, UUID estateid, UUID locationid, String description, String status, OffsetDateTime createdat, OffsetDateTime updatedat, String title, Boolean issafety, String urgency, Integer urgencyversion) {
+    public IssuereportRecord(UUID id, String submittedbyuserid, UUID estateid, UUID locationid, String description, String status, OffsetDateTime createdat, OffsetDateTime updatedat, String title) {
         super(Issuereport.ISSUEREPORT);
 
         setId(id);
@@ -224,9 +182,6 @@ public class IssuereportRecord extends UpdatableRecordImpl<IssuereportRecord> {
         setCreatedat(createdat);
         setUpdatedat(updatedat);
         setTitle(title);
-        setIssafety(issafety);
-        setUrgency(urgency);
-        setUrgencyversion(urgencyversion);
         resetTouchedOnNotNull();
     }
 }

@@ -1,5 +1,15 @@
+import { Button } from "@proj/ui/components/button";
 import { Checkbox } from "@proj/ui/components/checkbox";
-import { Field, FieldLabel } from "@proj/ui/components/field";
+import {
+  Collapsible,
+  CollapsibleContent,
+} from "@proj/ui/components/collapsible";
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Label } from "@proj/ui/components/label";
 import {
   Select,
@@ -8,8 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
-import { useCallback } from "react";
-import { FilterBar } from "@/components/filters/filter-bar";
+import { X } from "lucide-react";
+import { type ReactNode, useCallback } from "react";
 import { DateTimePicker } from "@/components/forms/date-time-picker";
 import { deviceMetrics } from "@/lib/devices";
 import type { ReadingSearch } from "@/lib/reading-filters";
@@ -23,7 +33,57 @@ export function countReadingFilters(filters: ReadingSearch): number {
     filters.from,
     filters.to,
     filters.suspect,
+    filters.anomalous,
   ].filter(Boolean).length;
+}
+
+/**
+ * The filter fields as a light panel. The ReadingToolbar's Filters button
+ * names it, so it has no heading of its own; Clear filters ends the row.
+ */
+function ReadingFilterPanel({
+  id,
+  open,
+  onClear,
+  children,
+}: {
+  id?: string;
+  open?: boolean;
+  onClear?: () => void;
+  children: ReactNode;
+}) {
+  const panel = (
+    <search
+      aria-label="Reading filters"
+      className="rounded-lg border p-3"
+      // biome-ignore lint/a11y/noRedundantRoles: jsdom does not yet map <search> to the search role.
+      role="search"
+    >
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        {children}
+        {onClear ? (
+          <Button
+            className="sm:ml-auto"
+            onClick={onClear}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            <X aria-hidden="true" />
+            Clear filters
+          </Button>
+        ) : null}
+      </div>
+    </search>
+  );
+  if (open === undefined) {
+    return id ? <div id={id}>{panel}</div> : panel;
+  }
+  return (
+    <Collapsible open={open}>
+      <CollapsibleContent id={id}>{panel}</CollapsibleContent>
+    </Collapsible>
+  );
 }
 
 export function ReadingFilterControls({
@@ -36,13 +96,14 @@ export function ReadingFilterControls({
   id,
   open,
 }: {
-  estateId: string;
-  assetLabel: string;
   filters: ReadingSearch;
   error?: string;
-  onChoose: (asset: ReadingAsset | undefined) => void;
+  /** Omit with `onChoose` where the asset is fixed (an asset's own readings). */
+  estateId?: string;
+  assetLabel?: string;
+  onChoose?: (asset: ReadingAsset | undefined) => void;
   onFiltersChange: (filters: ReadingSearch) => void;
-  /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
+  /** From `useFilterPanel(...).barProps`; omit to always show the panel. */
   id?: string;
   open?: boolean;
 }) {
@@ -67,24 +128,28 @@ export function ReadingFilterControls({
     (checked: boolean) => change({ suspect: checked || undefined }),
     [change]
   );
+  const anomalousChange = useCallback(
+    (checked: boolean) => change({ anomalous: checked || undefined }),
+    [change]
+  );
   const clear = useCallback(() => onFiltersChange({}), [onFiltersChange]);
   const activeCount = countReadingFilters(filters);
   return (
-    <FilterBar
-      activeCount={activeCount}
+    <ReadingFilterPanel
       id={id}
-      label="Reading filters"
-      onClear={clear}
+      onClear={activeCount > 0 ? clear : undefined}
       open={open}
     >
-      <Field className="w-full sm:w-48">
-        <FieldLabel>Asset</FieldLabel>
-        <ReadingAssetPicker
-          estateId={estateId}
-          label={assetLabel}
-          onChoose={onChoose}
-        />
-      </Field>
+      {estateId && onChoose ? (
+        <Field className="w-full sm:w-48">
+          <FieldLabel>Asset</FieldLabel>
+          <ReadingAssetPicker
+            estateId={estateId}
+            label={assetLabel ?? "All assets"}
+            onChoose={onChoose}
+          />
+        </Field>
+      ) : null}
       <Field className="w-full sm:w-48">
         <FieldLabel>Metric</FieldLabel>
         <Select onValueChange={metricChange} value={filters.metric ?? ""}>
@@ -106,7 +171,7 @@ export function ReadingFilterControls({
           </SelectContent>
         </Select>
       </Field>
-      <Field className="w-full sm:w-48">
+      <Field className="w-full sm:w-auto">
         <FieldLabel htmlFor="estate-readings-from">From</FieldLabel>
         <DateTimePicker
           aria-describedby={error ? "reading-filter-error" : undefined}
@@ -116,7 +181,7 @@ export function ReadingFilterControls({
           value={filters.from ?? ""}
         />
       </Field>
-      <Field className="w-full sm:w-48">
+      <Field className="w-full sm:w-auto">
         <FieldLabel htmlFor="estate-readings-to">To (exclusive)</FieldLabel>
         <DateTimePicker
           aria-describedby={error ? "reading-filter-error" : undefined}
@@ -126,14 +191,29 @@ export function ReadingFilterControls({
           value={filters.to ?? ""}
         />
       </Field>
-      <div className="flex h-9 items-center gap-2">
-        <Checkbox
-          checked={!!filters.suspect}
-          id="estate-readings-suspect"
-          onCheckedChange={suspectChange}
-        />
-        <Label htmlFor="estate-readings-suspect">Suspect only</Label>
-      </div>
-    </FilterBar>
+      <FieldSet className="w-full gap-0 sm:w-auto">
+        <FieldLegend className="mb-3" variant="label">
+          Flags
+        </FieldLegend>
+        <div className="flex min-h-9 flex-wrap items-center gap-x-4 gap-y-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={!!filters.suspect}
+              id="estate-readings-suspect"
+              onCheckedChange={suspectChange}
+            />
+            <Label htmlFor="estate-readings-suspect">Suspect only</Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={!!filters.anomalous}
+              id="estate-readings-anomalous"
+              onCheckedChange={anomalousChange}
+            />
+            <Label htmlFor="estate-readings-anomalous">Anomalous only</Label>
+          </div>
+        </div>
+      </FieldSet>
+    </ReadingFilterPanel>
   );
 }

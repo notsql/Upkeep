@@ -1,4 +1,4 @@
-import { Button } from "@proj/ui/components/button";
+import { Button, buttonVariants } from "@proj/ui/components/button";
 import {
   Dialog,
   DialogContent,
@@ -7,14 +7,61 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@proj/ui/components/dialog";
-import { HeartPulse } from "lucide-react";
-import { SectionCard } from "@/components/page/section-card";
+import { cn } from "@proj/ui/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, ClipboardCheck, HeartPulse } from "lucide-react";
+import { SECTION_ACTION, SectionCard } from "@/components/page/section-card";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
-import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
+import {
+  type Assessment,
+  conditionLabel,
+  conditionStyle,
+  recorderName,
+} from "@/lib/assessments";
+import { formatAssessmentNotes, formatDate } from "@/lib/format";
 import { AssessmentForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/assessment-form";
-import { AssetConditionHistory } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-history";
 import { useAssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/use-asset-condition-section";
+
+/** Headline (icon + label in the condition's tone), one meta line, the note. */
+function CurrentCondition({ current }: { current: Assessment | undefined }) {
+  if (!current) {
+    return (
+      <div
+        aria-label="Current condition"
+        className="text-muted-foreground text-sm"
+        role="status"
+      >
+        Not assessed yet
+      </div>
+    );
+  }
+  const style = conditionStyle[current.condition];
+  const Icon = style.icon;
+  const notes = formatAssessmentNotes(current);
+  return (
+    <div aria-label="Current condition" className="grid gap-2" role="status">
+      <p
+        className={cn(
+          "flex items-center gap-2 text-2xl font-semibold",
+          style.text
+        )}
+        data-tone={style.tone}
+      >
+        <Icon aria-hidden="true" className="size-6 shrink-0" />
+        <span>{conditionLabel[current.condition]}</span>
+      </p>
+      <p className="text-muted-foreground text-xs">
+        {`Assessed ${formatDate(current.assessedOn)} · ${recorderName(current)}`}
+      </p>
+      {notes ? (
+        <p className="line-clamp-3 text-sm whitespace-pre-wrap" title={notes}>
+          {notes}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export function AssetConditionSection({
   assetId,
@@ -41,57 +88,52 @@ export function AssetConditionSection({
       <SectionCard
         actions={
           canRecord && !recording ? (
-            <DialogTrigger render={<Button variant="outline" />}>
+            <DialogTrigger render={<Button {...SECTION_ACTION} />}>
+              <ClipboardCheck aria-hidden="true" />
               Record assessment
             </DialogTrigger>
           ) : undefined
         }
+        className="h-full"
+        contentClassName="flex flex-1 flex-col gap-4"
         icon={HeartPulse}
         title="Condition"
       >
-        <div>
-          {assessments.isPending ? (
-            <LoadingState label="Loading condition…" rows={2} />
-          ) : null}
-          {assessments.error ? (
-            <ErrorState message={assessments.error.message} onRetry={retry} />
-          ) : null}
-          {assessments.data ? (
-            <p
-              aria-label="Current condition"
-              className="flex flex-wrap items-center gap-2 text-sm"
-              role="status"
-            >
-              {current ? (
-                <>
-                  <ConditionBadge condition={current.condition} />{" "}
-                  <span className="text-muted-foreground text-sm">
-                    assessed {current.assessedOn}
-                  </span>
-                </>
-              ) : (
-                "Not assessed yet"
-              )}
-            </p>
-          ) : null}
-          {recording && canRecord ? (
-            <DialogContent
-              className="sm:max-w-lg"
-              showCloseButton={!recordAssessment.isPending}
-            >
-              <DialogHeader>
-                <DialogTitle>Record assessment</DialogTitle>
-                <DialogDescription>
-                  Record the condition, assessment date and notes.
-                </DialogDescription>
-              </DialogHeader>
-              <AssessmentForm onCancel={cancel} onSave={save} />
-            </DialogContent>
-          ) : null}
-          {assessments.data?.length ? (
-            <AssetConditionHistory assessments={assessments.data} />
-          ) : null}
-        </div>
+        {assessments.isPending ? (
+          <LoadingState label="Loading condition…" rows={2} />
+        ) : null}
+        {assessments.error ? (
+          <ErrorState message={assessments.error.message} onRetry={retry} />
+        ) : null}
+        {assessments.data ? <CurrentCondition current={current} /> : null}
+        {recording && canRecord ? (
+          <DialogContent
+            className="sm:max-w-lg"
+            showCloseButton={!recordAssessment.isPending}
+          >
+            <DialogHeader>
+              <DialogTitle>Record assessment</DialogTitle>
+              <DialogDescription>
+                Record the condition, assessment date and notes.
+              </DialogDescription>
+            </DialogHeader>
+            <AssessmentForm onCancel={cancel} onSave={save} />
+          </DialogContent>
+        ) : null}
+        {assessments.data && assessments.data.length > 1 ? (
+          <Link
+            className={buttonVariants({
+              className: "mt-auto -ml-2.5 self-start",
+              size: "sm",
+              variant: "link",
+            })}
+            params={{ estateId, assetId }}
+            to="/estates/$estateId/assets/$assetId/condition"
+          >
+            View history ({assessments.data.length})
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        ) : null}
       </SectionCard>
     </Dialog>
   );

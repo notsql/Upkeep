@@ -16,6 +16,11 @@ vi.mock("@/lib/access", () => ({
   }),
 }));
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
+// AssetDetailsNav reads ownership for the Devices badge; History readers have none.
+vi.mock("@/lib/estates", () => ({
+  useEstate: () => ({ data: undefined }),
+  useEstateSession: () => ({ userId: "council", ready: true }),
+}));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
     to,
@@ -167,5 +172,5 @@ it("adds History alongside existing owner sections", () => {
   expect(
     screen.getByRole("link", { name: "History" }).getAttribute("href")
   ).toBe("/estates/estate/assets/pump/history");
-  screen.getByRole("link", { name: "Maintenance" });
+  screen.getByRole("link", { name: "Records" });
 });

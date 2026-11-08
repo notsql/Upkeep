@@ -76,6 +76,7 @@ export function WorkOrderDetailPage({
       <WorkOrderDetailSummary
         canReadReports={access.canReadReports}
         canViewAssets={access.canViewAssets}
+        canViewReadings={access.canViewReadings}
         data={data}
         estateId={estateId}
       />

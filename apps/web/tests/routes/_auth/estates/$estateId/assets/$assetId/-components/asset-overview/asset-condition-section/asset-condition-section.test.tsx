@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { expectLeadingIcon } from "@tests/section-action";
 import {
   chooseOption,
   renderWithProviders,
@@ -6,9 +7,11 @@ import {
   waitFor,
   within,
 } from "@tests/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { Assessment } from "@/lib/assessments";
+import { formatAssessmentNotes, formatDate } from "@/lib/format";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 
 vi.mock(
@@ -20,6 +23,28 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn() } }));
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({
+    children,
+    to,
+    params: linkParams,
+    className,
+  }: {
+    children: ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    className?: string;
+  }) => (
+    <a
+      className={className}
+      href={to
+        .replace("$estateId", linkParams?.estateId ?? "")
+        .replace("$assetId", linkParams?.assetId ?? "")}
+    >
+      {children}
+    </a>
+  ),
+}));
 
 const PATH = "/estates/{estateId}/assets/{assetId}/assessments";
 const params = { path: { estateId: "estate-id", assetId: "asset-id" } };
@@ -60,6 +85,8 @@ function renderSection(canRecord = true) {
   );
 }
 
+const HISTORY_LINK = /^View history/u;
+
 describe("AssetConditionSection", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -77,20 +104,71 @@ describe("AssetConditionSection", () => {
       name: "Current condition",
     });
     expect(current.textContent).toContain("Faulty");
-    expect(current.textContent).toContain("2026-09-20");
+    expect(current.textContent).toContain(
+      `Assessed ${formatDate("2026-09-20")}`
+    );
+    expect(current.textContent).not.toContain("2026-09-20");
     expect(api.GET).toHaveBeenCalledWith(PATH, { params });
   });
 
-  it("keeps every assessment with who recorded it and when", async () => {
+  it("shows the latest note and who recorded it with the current condition", async () => {
     renderSection();
-    const items = await screen.findAllByRole("listitem");
-    expect(items).toHaveLength(2);
-    const [latest, earlier] = items.map((item) => within(item));
-    latest.getByText("Motor seized.");
-    expect(items[0]?.textContent).toContain("Recorded by Casey Doe");
-    earlier.getByText("Annual service.");
-    expect(items[1]?.textContent).toContain("Recorded by Unknown user");
-    expect(items[1]?.textContent).toContain("Good");
+    const current = await screen.findByRole("status", {
+      name: "Current condition",
+    });
+    within(current).getByText("Motor seized.");
+    expect(current.textContent).toContain("Casey Doe");
+  });
+
+  it("headlines the condition in its tone, with date and recorder on one meta line", async () => {
+    renderSection();
+    const current = await screen.findByRole("status", {
+      name: "Current condition",
+    });
+    const headline = within(current).getByText("Faulty");
+    expect(headline.closest("[data-tone]")?.getAttribute("data-tone")).toBe(
+      "faulty"
+    );
+    within(current).getByText(
+      `Assessed ${formatDate("2026-09-20")} · Casey Doe`
+    );
+    expect(current.querySelector("[data-slot=badge]")).toBeNull();
+  });
+
+  it("leads Record assessment with an icon", async () => {
+    renderSection();
+    expectLeadingIcon(
+      await screen.findByRole("button", { name: "Record assessment" })
+    );
+  });
+
+  it("links to the full history page instead of a disclosure", async () => {
+    renderSection();
+    const link = await screen.findByRole("link", { name: "View history (2)" });
+    expect(link.getAttribute("href")).toBe(
+      "/estates/estate-id/assets/asset-id/condition"
+    );
+    expect(screen.queryByRole("button", { name: HISTORY_LINK })).toBeNull();
+    expect(
+      screen.queryByRole("list", { name: "Condition history" })
+    ).toBeNull();
+    expect(screen.queryByText("Annual service.")).toBeNull();
+  });
+
+  it("links to no history when there is only the current assessment", async () => {
+    history = [assessment("a1", "GOOD", "2026-03-01", "Annual service.")];
+    renderSection();
+    await screen.findByRole("status", { name: "Current condition" });
+    expect(screen.queryByRole("link", { name: HISTORY_LINK })).toBeNull();
+  });
+
+  it("leaves filing an inspection to the page-level alert", async () => {
+    renderSection();
+    await screen.findByRole("status", { name: "Current condition" });
+    expect(
+      screen.queryByRole("link", { name: "File an inspection" })
+    ).toBeNull();
+    expect(screen.queryByText("This asset needs a closer look")).toBeNull();
   });
 
   it("says when an asset has never been assessed, and closes recording on a deactivated asset", async () => {
@@ -150,7 +228,7 @@ describe("AssetConditionSection", () => {
         screen.getByRole("status", { name: "Current condition" }).textContent
       ).toContain("Needs attention")
     );
-    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    await screen.findByRole("link", { name: "View history (3)" });
   });
 });
 
@@ -170,4 +248,61 @@ it("opens assessment in a dialog and cancels without recording", async () => {
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(api.POST).not.toHaveBeenCalled();
+});
+
+const MODEL = "system:anomaly-model";
+const MODEL_NOTES =
+  "11 consecutive abnormal samples in device readings from 2026-09-28T01:59:15.862Z to 2026-09-28T01:59:25.862Z. Median score 0.82, maximum 0.88.";
+const PERSON_NOTES = "Checked at 2026-09-28T01:59:15Z, seal looks fine.";
+
+describe("AssetConditionSection formatting", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-09-28T02:02:00Z"));
+    history = [
+      {
+        ...assessment("m1", "NEEDS_ATTENTION", "2026-09-28", MODEL_NOTES),
+        recordedByUserId: MODEL,
+      },
+      {
+        ...assessment("p1", "GOOD", "2026-03-01", PERSON_NOTES, "Casey Doe"),
+        recordedAt: "2026-03-01T02:00:00Z",
+      },
+    ];
+    serve();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("shows assessment dates as formatted dates", async () => {
+    renderSection();
+    const current = await screen.findByRole("status", {
+      name: "Current condition",
+    });
+    expect(current.textContent).toContain(
+      `Assessed ${formatDate("2026-09-28")}`
+    );
+  });
+
+  it("names Anomaly detection as the source of a model assessment", async () => {
+    renderSection();
+    const current = await screen.findByRole("status", {
+      name: "Current condition",
+    });
+    expect(current.textContent).toContain("Anomaly detection");
+  });
+
+  it("formats model notes and keeps a person's notes verbatim", async () => {
+    renderSection();
+    const current = await screen.findByRole("status", {
+      name: "Current condition",
+    });
+    within(current).getByText(
+      formatAssessmentNotes({ notes: MODEL_NOTES, recordedByUserId: MODEL })
+    );
+    expect(current.textContent).not.toContain("2026-09-28T01:59:15.862Z");
+  });
 });

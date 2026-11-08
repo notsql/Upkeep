@@ -8,7 +8,9 @@ import { TimePicker } from "@/components/forms/time-picker";
 
 /**
  * A DatePicker plus a TimePicker (shadcn Selects, not the browser widget). Value and onChange use the native
- * `datetime-local` string, `YYYY-MM-DDTHH:mm` ("" when empty).
+ * `datetime-local` string, `YYYY-MM-DDTHH:mm` ("" when empty). The date
+ * trigger keeps room for "Pick a date" and the time sits beside it, wrapping
+ * underneath rather than squeezing the date when the container is narrow.
  */
 export function DateTimePicker({
   value,
@@ -38,9 +40,9 @@ export function DateTimePicker({
   );
 
   return (
-    <div className={`flex gap-2 ${className ?? ""}`}>
+    <div className={`flex flex-wrap items-center gap-2 ${className ?? ""}`}>
       <DatePicker
-        className="min-w-0 flex-1"
+        className="min-w-36 flex-1"
         onChange={dateChange}
         placeholder={placeholder}
         value={date}

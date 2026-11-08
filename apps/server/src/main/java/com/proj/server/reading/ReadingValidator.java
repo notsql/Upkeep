@@ -29,6 +29,7 @@ final class ReadingValidator {
     private static final int SCALE = 6;
     private static final int MAX_INTEGER_DIGITS = 12;
     private static final long MAX_FUTURE_MINUTES = 5;
+    private static final int MAX_BATCH = 500;
 
     // Floats as BigDecimal, so a value is never routed through a double.
     private static final JsonMapper JSON = JsonMapper.builder()
@@ -41,8 +42,39 @@ final class ReadingValidator {
 
     /** {@code registered} is the device's metrics; {@code receivedAt} is the server's time. */
     static CreateReadingRequest parse(byte[] body, Set<DeviceMetric> registered, OffsetDateTime receivedAt) {
-        var node = object(body);
+        return item(object(body), registered, receivedAt);
+    }
 
+    /**
+     * A telemetry batch's items, checked for shape only: an object with exactly
+     * {@code readings}, an array of 1 to {@value #MAX_BATCH} items. Each item is
+     * then read with {@link #item(JsonNode, Set, OffsetDateTime)}.
+     */
+    static List<JsonNode> batch(byte[] body) {
+        var node = object(body);
+        var readings = node.get("readings");
+        if (readings == null || readings.isNull()) {
+            throw invalid("readings is required.");
+        }
+        for (var field : node.propertyNames()) {
+            if (!field.equals("readings")) {
+                throw invalid(field + " is not accepted. A batch has only readings.");
+            }
+        }
+        if (!readings.isArray()) {
+            throw invalid("readings must be an array.");
+        }
+        if (readings.isEmpty() || readings.size() > MAX_BATCH) {
+            throw invalid("readings must have 1 to %d items; got %d.".formatted(MAX_BATCH, readings.size()));
+        }
+        return readings.valueStream().toList();
+    }
+
+    /** One reading already read as JSON: rules 1 to 10 of ID-43. */
+    static CreateReadingRequest item(JsonNode node, Set<DeviceMetric> registered, OffsetDateTime receivedAt) {
+        if (!node.isObject()) {
+            throw invalid("A reading must be a JSON object.");
+        }
         for (var field : FIELDS) {
             var value = node.get(field);
             if (value == null || value.isNull()) {

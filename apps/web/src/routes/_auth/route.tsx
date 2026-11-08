@@ -13,14 +13,12 @@ import {
 
 import { buildSignInPath } from "@/lib/auth-redirect";
 import {
+  canOpenAllDevices,
   canOpenAssetCategories,
   canOpenAssets,
-  canOpenDevices,
   canOpenEstateSettings,
-  canOpenFailureRisk,
   canOpenInspections,
   canOpenNotificationSettings,
-  canOpenSensors,
 } from "@/lib/estate-destinations";
 
 type EstatePermission = components["schemas"]["EstateAccessResponse"];
@@ -32,17 +30,23 @@ type DestinationPredicate = (
 
 // Sections the sidebar gates on ownership; the guard uses the same predicates.
 const OWNER_GATED: Record<string, DestinationPredicate> = {
-  devices: canOpenDevices,
   "asset-categories": canOpenAssetCategories,
   inspections: canOpenInspections,
-  sensors: canOpenSensors,
-  "failure-risk": canOpenFailureRisk,
   edit: canOpenEstateSettings,
   "notification-settings": canOpenNotificationSettings,
 };
 
 // Sections whose sub-views (one segment deeper) share the section's gate.
-const SUB_VIEW_SECTIONS = new Set(["sensors", "asset-categories"]);
+const SUB_VIEW_SECTIONS = new Set(["asset-categories"]);
+
+/** Assets > All devices, which is gated like Devices and Device monitoring. */
+function isAllDevicesPath(segments: string[]) {
+  return (
+    segments.length === 4 &&
+    segments[2] === "assets" &&
+    segments[3] === "devices"
+  );
+}
 
 /** True for a section root (/estates/:id/:feature) or one of its sub-views. */
 function isSectionPath(segments: string[], feature: string | undefined) {
@@ -151,11 +155,13 @@ function guardInspectionContext(
     }
     return true;
   }
-  // The asset page and its Inspections sub-page are open to inspection viewers.
+  // The asset page and its Records (formerly Inspections) sub-page are open
+  // to inspection viewers.
   const context =
     segments.length === 0 ||
     (segments.length === 1 && segments[0] !== "new") ||
-    (segments.length === 2 && segments[1] === "inspections");
+    (segments.length === 2 &&
+      (segments[1] === "records" || segments[1] === "inspections"));
   return context && !!estate?.canViewInspectionResults;
 }
 
@@ -170,6 +176,10 @@ function guardEstatePath(
   const estate = access.estates.find((item) => item.estateId === estateId);
   if (estate?.role === "RESIDENT") {
     throw redirect({ href: "/reports/new" });
+  }
+  // Checked in guardDestination; "devices" here is not an asset ID.
+  if (isAllDevicesPath(path.split("/").filter(Boolean))) {
+    return;
   }
   if (guardInspectionContext(path, estate)) {
     return;
@@ -242,17 +252,20 @@ async function guardDestination(
 ) {
   const segments = path.split("/").filter(Boolean);
   const [, estateId, feature] = segments;
-  if (!(estateId && feature && isSectionPath(segments, feature))) {
+  const allDevices = isAllDevicesPath(segments);
+  if (
+    !(estateId && feature && (allDevices || isSectionPath(segments, feature)))
+  ) {
     return;
   }
   const estate = access.estates.find((item) => item.estateId === estateId);
-  if (feature === "assets") {
+  if (feature === "assets" && !allDevices) {
     if (!canOpenAssets(estate)) {
       throw notFound();
     }
     return;
   }
-  const open = OWNER_GATED[feature];
+  const open = allDevices ? canOpenAllDevices : OWNER_GATED[feature];
   if (!open) {
     return;
   }
@@ -306,10 +319,7 @@ function guardFeaturePath(
       guardDocuments(path, access);
       return true;
     case "readings":
-      if (
-        !estate?.canViewReadings ||
-        (path.split("/")[4] === "new" && !estate.canRecordReadings)
-      ) {
+      if (!estate?.canViewReadings) {
         throw notFound();
       }
       return true;

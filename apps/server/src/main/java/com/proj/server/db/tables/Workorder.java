@@ -215,7 +215,7 @@ public class Workorder extends TableImpl<WorkorderRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.WORKORDER_ESTATEID_CREATEDAT_ID_IDX, Indexes.WORKORDER_ESTATEID_REFERENCE_KEY, Indexes.WORKORDER_ESTATEID_SOURCEREPORTID_IDX, Indexes.WORKORDER_ID_ESTATEID_KEY, Indexes.WORKORDER_SOURCEINSPECTIONID_KEY);
+        return Arrays.asList(Indexes.WORKORDER_ESTATEID_CREATEDAT_ID_IDX, Indexes.WORKORDER_ESTATEID_REFERENCE_KEY, Indexes.WORKORDER_ID_ESTATEID_KEY, Indexes.WORKORDER_SOURCEINSPECTIONID_KEY);
     }
 
     @Override

@@ -1,13 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { pageHead } from "@/lib/page-title";
-import { FailureRiskPage } from "@/routes/_auth/estates/$estateId/failure-risk/-components/failure-risk-page/failure-risk-page";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+// Retired page: its bookmarks land on the Assets view that replaced it.
 export const Route = createFileRoute("/_auth/estates/$estateId/failure-risk/")({
-  component: FailureRiskRoute,
-  head: () => pageHead("Failure risk"),
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: "/estates/$estateId/assets",
+      params: { estateId: params.estateId },
+      replace: true,
+    });
+  },
 });
-
-function FailureRiskRoute() {
-  const { estateId } = Route.useParams();
-  return <FailureRiskPage estateId={estateId} key={estateId} />;
-}

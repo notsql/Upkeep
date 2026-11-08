@@ -9,17 +9,24 @@ import type { useEstateReadings } from "@/lib/readings";
 import { ReadingPagination } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-pagination";
 import { ReadingTable } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-table";
 
-function isFiltered(filters: ReadingSearch): boolean {
+export function isFiltered(filters: ReadingSearch): boolean {
   return !!(
     filters.assetId ||
     filters.metric ||
     filters.from ||
     filters.to ||
-    filters.suspect
+    filters.suspect ||
+    filters.anomalous
   );
 }
 
-function emptyMessage(filters: ReadingSearch, assetTotal?: number): string {
+export function emptyMessage(
+  filters: ReadingSearch,
+  assetTotal?: number
+): string {
+  if (filters.anomalous) {
+    return "No anomalous readings match these filters";
+  }
   if (filters.suspect) {
     return "No matching suspect readings";
   }

@@ -20,9 +20,7 @@ export function ReadingAssetPicker({
   estateId,
   label,
   onChoose,
-  mode = "filter",
 }: {
-  mode?: "filter" | "record";
   estateId: string;
   label: string;
   onChoose: (asset: ReadingAsset | undefined) => void;
@@ -51,7 +49,7 @@ export function ReadingAssetPicker({
       <DialogTrigger
         render={
           <Button
-            aria-label={`${mode === "record" ? "Choose asset" : "Filter by asset"}: ${label}`}
+            aria-label={`Filter by asset: ${label}`}
             className="h-auto min-h-11 w-full justify-start text-left [overflow-wrap:anywhere] whitespace-normal"
             variant="outline"
           />
@@ -61,13 +59,9 @@ export function ReadingAssetPicker({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {mode === "record" ? "Choose asset" : "Filter by asset"}
-          </DialogTitle>
+          <DialogTitle>Filter by asset</DialogTitle>
           <DialogDescription>
-            {mode === "record"
-              ? "Choose an active asset to record a manual reading."
-              : "Choose an asset in this estate, including retired equipment."}
+            Choose an asset in this estate, including retired equipment.
           </DialogDescription>
         </DialogHeader>
         <Label htmlFor="reading-asset-search">Search assets</Label>
@@ -77,11 +71,9 @@ export function ReadingAssetPicker({
           placeholder="Name or reference"
           value={search}
         />
-        {mode === "filter" ? (
-          <Button onClick={clear} variant="outline">
-            All assets
-          </Button>
-        ) : null}
+        <Button onClick={clear} variant="outline">
+          All assets
+        </Button>
         {assets.isPending ? (
           <LoadingState label="Loading assets…" rows={2} />
         ) : null}
@@ -98,7 +90,6 @@ export function ReadingAssetPicker({
         <div className="grid max-h-64 gap-2 overflow-y-auto">
           {assets.data?.items.map((asset) => (
             <ReadingAssetChoice
-              activeOnly={mode === "record"}
               asset={asset}
               key={asset.id}
               onChoose={choose}

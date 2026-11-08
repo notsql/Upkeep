@@ -1,8 +1,8 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { pageHead } from "@/lib/page-title";
 import {
-  ASSET_SECTIONS,
   type AssetSection,
+  LEGACY_TABS,
 } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-details-page";
 import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-overview";
 
@@ -10,7 +10,10 @@ import { AssetOverview } from "@/routes/_auth/estates/$estateId/assets/$assetId/
 function validateSearch(search: Record<string, unknown>): {
   tab?: AssetSection;
 } {
-  const tab = ASSET_SECTIONS.find((section) => section === search.tab);
+  const tab =
+    typeof search.tab === "string" && Object.hasOwn(LEGACY_TABS, search.tab)
+      ? LEGACY_TABS[search.tab]
+      : undefined;
   return tab ? { tab } : {};
 }
 

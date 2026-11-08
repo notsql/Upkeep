@@ -14,6 +14,14 @@ vi.mock("@tanstack/react-router", () => ({
     <a href={to}>{children}</a>
   ),
 }));
+vi.mock("@/lib/devices", () => ({
+  useAssetViewsAccess: () => ({
+    pending: false,
+    assetPages: true,
+    allDevices: true,
+    allReadings: false,
+  }),
+}));
 vi.mock("@/lib/inspections", () => ({
   useInspectionAccess: () => ({ pending: false, canView: true }),
   useInspectionAssets: (_estate: string, _query: string, cursor?: string) => {
@@ -65,4 +73,10 @@ it("pages with Previous page and Next page", () => {
   fireEvent.click(previous);
   expect(state.cursors.at(-1)).toBeUndefined();
   expect(nav).toBeTruthy();
+});
+
+it("tabs to All devices for an inspection reader who can open it", () => {
+  renderWithProviders(<InspectionAssetList estateId="estate" />);
+  screen.getByRole("navigation", { name: "Asset views" });
+  screen.getByRole("link", { name: "All devices" });
 });

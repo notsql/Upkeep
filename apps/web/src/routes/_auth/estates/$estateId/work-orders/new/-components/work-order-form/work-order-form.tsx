@@ -1,10 +1,15 @@
-import { FormPageHeader } from "@/components/page/form-page-header";
-import { PageLayout } from "@/components/page/page-layout";
+import {
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+} from "@proj/ui/components/field";
+import type { ReactNode } from "react";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormCard, FormPage } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { useWorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-form";
 import { WorkOrderFormAssetFields } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-asset-fields";
 import { WorkOrderFormDetailsFields } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-details-fields";
-import { WorkOrderFormFooter } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-footer";
 import { WorkOrderFormSourceStatus } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-source-status";
 import {
   renderInspectionWorkOrderStatus,
@@ -23,6 +28,31 @@ export function WorkOrderForm({
   sourceInspectionId?: string;
 }) {
   const form = useWorkOrderForm(estateId, sourceReportId, sourceInspectionId);
+  return (
+    <FormPage
+      breadcrumbs={[
+        {
+          label: "Work orders",
+          to: "/estates/$estateId/work-orders",
+          params: { estateId },
+        },
+        { label: "Create" },
+      ]}
+      description="Describe the work, where it is and how urgent it is"
+      title="Create work order"
+    >
+      <WorkOrderFormBody estateId={estateId} form={form} />
+    </FormPage>
+  );
+}
+
+function WorkOrderFormBody({
+  estateId,
+  form,
+}: {
+  estateId: string;
+  form: ReturnType<typeof useWorkOrderForm>;
+}): ReactNode {
   if (form.access.pending) {
     return <LoadingState label="Loading access…" rows={2} />;
   }
@@ -36,35 +66,42 @@ export function WorkOrderForm({
     return inspectionStatus;
   }
   return (
-    <PageLayout className="space-y-6">
-      <FormPageHeader
-        breadcrumbs={[
-          {
-            label: "Work orders",
-            to: "/estates/$estateId/work-orders",
-            params: { estateId },
-          },
-          { label: "Create" },
-        ]}
-        title="Create work order"
-      />
-      <WorkOrderSourceFields estateId={estateId} form={form} />
-      {form.inspectionSource ? (
-        <WorkOrderInspectionContext inspection={form.inspection} />
-      ) : null}
-      <form className="form-layout grid max-w-3xl gap-5" onSubmit={form.submit}>
-        <WorkOrderFormSourceStatus form={form} />
-        <WorkOrderFormDetailsFields estateId={estateId} form={form} />
-        <WorkOrderFormAssetFields estateId={estateId} form={form} />
-        <WorkOrderSaveError
-          error={form.error}
-          estateId={estateId}
-          inspectionSource={form.inspectionSource}
-          reloadSource={form.reloadSource}
-          reportSource={form.reportSource}
-        />
-        <WorkOrderFormFooter form={form} />
-      </form>
-    </PageLayout>
+    <>
+      <FormCard description="Where this work came from" title="Source">
+        <div className="grid gap-5">
+          <WorkOrderSourceFields estateId={estateId} form={form} />
+          {form.inspectionSource ? (
+            <WorkOrderInspectionContext inspection={form.inspection} />
+          ) : null}
+        </div>
+      </FormCard>
+      <FormCard>
+        <form className="grid gap-5" onSubmit={form.submit}>
+          <FieldSet>
+            <FieldLegend>Work details</FieldLegend>
+            <WorkOrderFormSourceStatus form={form} />
+            <WorkOrderFormDetailsFields estateId={estateId} form={form} />
+          </FieldSet>
+          <FieldSeparator />
+          <FieldSet>
+            <FieldLegend>Asset</FieldLegend>
+            <WorkOrderFormAssetFields estateId={estateId} form={form} />
+          </FieldSet>
+          <WorkOrderSaveError
+            error={form.error}
+            estateId={estateId}
+            inspectionSource={form.inspectionSource}
+            reloadSource={form.reloadSource}
+            reportSource={form.reportSource}
+          />
+          <FormActions
+            disabled={form.blocked}
+            label="Create work order"
+            onCancel={form.inspectionSource ? form.cancel : undefined}
+            pending={form.pending}
+          />
+        </form>
+      </FormCard>
+    </>
   );
 }

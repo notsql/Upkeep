@@ -70,8 +70,9 @@ Shared app pieces live in `apps/web/src/components/`:
   `/estates/$estateId/{assets,readings,work-orders,reports,roles,council,locations,devices,sensors,documents,inspections,failure-risk,asset-categories}` and
   `/estates/$estateId/assets/$assetId` (no `/`), with optional `params` and
   `search` (`{ estateId? }`, used by resident crumbs).
-- `FormActions`: submit label/pending state and optional Cancel callback; disables
-  both while pending. Cancel is `type="button"`. Estate creation returns to
+- `FormActions`: submit label/pending state, optional `disabled` (submit only)
+  and optional Cancel callback; disables both while pending. Cancel is
+  `type="button"`. See [Forms](#forms-formpage-formcard-formactions). Estate creation returns to
   Estates; asset creation to the register; editing returns to the details page.
 - `ThemeToggle`, `AppShell`, `AppNavigation` and `NotFoundPage`: shared composition,
   not a configurable component framework.
@@ -96,7 +97,7 @@ Shared app pieces live in `apps/web/src/components/`:
 - Pages two or more levels deep render breadcrumbs that start at the section
   and use loaded names, never "Estate": `Assets › Pump A › Edit`,
   `Work orders › WO-12`, `Fault reports › <report title>`,
-  `Readings › Record manual reading`. While loading, the record crumb shows a stable
+  `Assets › Pump A › Readings`. While loading, the record crumb shows a stable
   fallback ("Asset", "Work order").
 - Outside an estate: `/estates/new` shows `Estates › Create estate`;
   `/estates`, `/account` and `/admin/users` show none. Resident report detail
@@ -105,31 +106,61 @@ Shared app pieces live in `apps/web/src/components/`:
   a work order; inspection did not fail) show an outline "View inspection" link
   to the source inspection instead of a back link.
 
-Independent sections and forms sit in `Card` > `CardContent` (outer margins on the
-Card, the section/form element and its heading inside). Avoid wrapping every
-field in a card. Action groups use `flex flex-wrap items-center gap-3`.
+Independent sections on detail pages sit in `SectionCard`; forms follow
+[Forms](#forms-formpage-formcard-formactions). Avoid wrapping every field in a
+card. Action groups use `flex flex-wrap items-center gap-3`.
 
-Example:
+### Forms: `FormPage`, `FormCard`, `FormActions`
+
+Every full-page create/edit screen uses the same three pieces, so all forms
+share one width, one header and one footer:
+
+- `FormPage` (`components/page/form-page.tsx`): `breadcrumbs`, `title`,
+  `description?`, `children`. A `PageLayout className="max-w-3xl"` with
+  `FormPageHeader`, then its children stacked in `grid gap-6`. Loading, error
+  and not-allowed states render **inside** `FormPage` too, so the column does
+  not jump when data arrives. (Exceptions that keep the width but not the
+  header: resident "Report a fault" while its context loads, and the roles
+  pages, whose `RoleAccessGate` owns the `<main>` and takes
+  `className="max-w-3xl"`.)
+- `FormCard` (same file): a shadcn `Card` > `CardContent`. Every `<form>` sits in
+  one. With a `title` it becomes a labelled `section` with a bordered header
+  (`h2`); use that for read-only context shown above the form (the asset an
+  inspection is for, a work order's source, a role's Details/Permissions).
+- `FormActions` (`components/forms/form-actions.tsx`): `label`, `pending`,
+  `disabled?`, `onCancel?`. The footer - `border-t pt-5`, primary submit then
+  outline Cancel. `pending` disables both; `disabled` blocks only the submit
+  (e.g. an inactive asset or an unresolved location review). Pass a pending
+  label ("Saving…", "Submitting…") where the form shows one. Role forms keep
+  Cancel as a `Link` but copy this layout (`RoleFormFooter`).
+
+Inside the form (`grid gap-5`): group fields with shadcn `FieldSet` +
+`FieldLegend`, separate groups with `FieldSeparator`, and use `Field` /
+`FieldLabel` / `FieldDescription` / `FieldError` for each field. Label optional
+fields "… (optional)". Pair short fields in `grid gap-5 sm:grid-cols-2` only
+when they belong together (outcome + date, category + priority, block +
+level, identifier + model). Form-level errors are a destructive `Alert`.
 
 ```tsx
-import { Card, CardContent } from "@proj/ui/components/card";
+import { FieldLegend, FieldSet } from "@proj/ui/components/field";
 import { FormActions } from "@/components/forms/form-actions";
-import { PageHeader } from "@/components/page/page-header";
-import { PageLayout } from "@/components/page/page-layout";
+import { FormCard, FormPage } from "@/components/page/form-page";
 
-<PageLayout className="max-w-3xl">
-  <PageHeader title="Create estate" breadcrumbs={[
-    { label: "Estates", to: "/estates" }, { label: "Create estate" },
-  ]} />
-  <Card className="mt-6">
-    <CardContent>
-      <form className="grid gap-5" onSubmit={handleSubmit}>
-        {/* shadcn labelled fields and validation */}
-        <FormActions label="Save changes" pending={pending} onCancel={cancel} />
-      </form>
-    </CardContent>
-  </Card>
-</PageLayout>
+<FormPage
+  breadcrumbs={[{ label: "Estates", to: "/estates" }, { label: "Create estate" }]}
+  description="Identity and address"
+  title="Create estate"
+>
+  <FormCard>
+    <form className="grid gap-5" onSubmit={handleSubmit}>
+      <FieldSet disabled={pending}>
+        <FieldLegend>Identity</FieldLegend>
+        {/* Field > FieldLabel + input */}
+      </FieldSet>
+      <FormActions label="Create estate" onCancel={cancel} pending={pending} />
+    </form>
+  </FormCard>
+</FormPage>
 ```
 
 Use shadcn Input/Select/Textarea/Checkbox and their labels; retain feature
@@ -158,10 +189,17 @@ Apply commits, Cancel/X/Escape discard, Clear secondary filters resets the draft
 and retains search. Page-level Clear filters clears everything. Desktop filters
 apply immediately. Existing URL/back navigation and order by reference remain.
 
-`LifecycleStatusBadge` and `ConditionBadge` use stock `Badge` variants only, with
-the state in visible text: Active `default`, Inactive/Retired `destructive`;
-Good `default`, Needs attention `secondary`, Faulty `destructive`, Not assessed yet
-`outline`. `DeviceStatusBadge` already used stock variants.
+Status tones come from one mapping, `lib/status-tone.ts`: `statusToneClassName`
+(badge classes) and `statusDotClassName` (dot classes) keyed by `success` (emerald
+green), `danger` (`destructive` token), `neutral` (outline) and `muted`
+(secondary). `LifecycleStatusBadge` (asset register table and cards, asset
+header, estate cards, document asset picker) shows Active in `success` and
+Inactive/Retired in `danger`, on the `outline` Badge variant with the state in
+visible text. `DeviceStatusBadge` maps through `deviceStatusTone`: Online
+`success` (the same green as Active), Offline `danger`, Awaiting first reading
+`neutral`, Deactivated `muted`. `ConditionBadge` uses stock variants: Good
+`default`, Needs attention `secondary`, Faulty `destructive`, Not assessed yet
+`outline`.
 Details sections retain meaningful headings and history dates. Loading and empty
 results follow [Screen states](#screen-states-empty-loading-filters-tabs) below.
 Failures use Alert + Retry. Other
@@ -419,14 +457,19 @@ the native inputs used, so they drop into existing state and API mapping.
   trigger props. A DatePicker plus a `TimePicker` (group named
   "<aria-label> time", Selects "<aria-label> hour"/"<aria-label> minute"; id
   `<id>-time`). Picking a day keeps the time (00:00 if none); changing the
-  time keeps the date (today if none).
+  time keeps the date (today if none). Layout: a wrapping flex row; the date
+  trigger is `min-w-36 flex-1` (its label truncates rather than overflowing)
+  and the time group never shrinks, so in a narrow container the time drops
+  under the date instead of squashing it. Give its `Field` `w-auto` (not a
+  fixed `w-48`) inside a `FilterBar`.
 - `TimePicker` (`components/forms/time-picker.tsx`): `value: string` (`HH:mm`, `""`
   empty), `onChange(value: string)`, `minuteStep?` (default 5; an off-step
   current minute stays listed), `partLabel?` (prefix for the hour/minute
   names, defaults to `aria-label`), plus `id` (on the hour Select; minute gets
   `<id>-minute`), `aria-label` (default "Time"), `aria-describedby`,
-  `aria-invalid`, `disabled`, `className`. A `role="group"` with a `Clock`
-  icon and two shadcn `Select`s (hour 00-23, minute). Picking one part
+  `aria-invalid`, `disabled`, `className`. A `role="group"` (`shrink-0`) with a `Clock`
+  icon and two `w-20` shadcn `Select`s (hour 00-23, minute), wide enough for
+  the "HH"/"mm" placeholders beside the chevron. Picking one part
   defaults the other to 00. shadcn has no TimePicker component - its "date
   and time picker" calendar blocks use a native `Input type="time"`, which is
   the browser widget - so this is built from `Select`. **Never use
@@ -546,9 +589,16 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
   `ReadingPagination`.
 - **`SectionCard`** (`components/page/section-card.tsx`): `title`, `icon?`,
   `level?` (2), `description?`, `actions?` (header top right), `className?`,
-  `children`. A `Card` holding a `section` labelled by its `SectionHeading`.
+  `contentClassName?`, `children`. Header actions use the exported
+  `SECTION_ACTION` (`{ size: "sm", variant: "outline" }`, spread on `Button`) or
+  `sectionActionClassName` (on a `Link`), and lead with an `aria-hidden` lucide icon. A `Card` holding a `section` labelled by its `SectionHeading`.
   Use for every titled card section on detail pages instead of `Card` +
   `CardHeader` + `SectionHeading` by hand. `icon` must not repeat the page icon.
+- **`PageSection`** (same file): `title`, `icon?`, `level?`, `description?`,
+  `actions?`, `children`. The same header as `SectionCard` (labelled `section`,
+  actions top right) with no card: content sits straight on the page. Use when a
+  tab's only content is one list or table (asset Devices and Costs tabs), so it
+  never becomes card-in-card.
 - **`ConfirmDialog`** (`components/dialogs/confirm-dialog.tsx`): `open`, `title`,
   `description?` (the effect), `children?` (identify the target),
   `confirmLabel`, `pendingLabel?`, `cancelLabel?` ("Cancel"; e.g. "Keep
@@ -582,7 +632,7 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
 
 <Pagination canNext={!!data.nextCursor} canPrevious={index > 0} label="Work order pages" onNext={next} onPrevious={previous} />
 
-<SectionCard actions={<Button variant="outline">Upload</Button>} title="Documents">…</SectionCard>
+<SectionCard actions={<Button {...SECTION_ACTION}><Upload aria-hidden="true" />Upload</Button>} title="Documents">…</SectionCard>
 
 <ConfirmDialog
   cancelLabel="Keep role" confirmIcon={Trash2} confirmLabel="Delete role"
@@ -594,9 +644,23 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
 </ConfirmDialog>
 ```
 
+### Charts and toggles (`Chart`, `Switch`)
+
+`@proj/ui/components/chart` (shadcn Chart over recharts 3.8.0) draws
+time-series charts; series colours come from `ChartConfig` set to
+`var(--chart-N)` and highlights from `var(--destructive)`, so charts follow the
+theme. Wrap each chart in a `figure` with a `figcaption`, mark the chart
+`aria-hidden`, and give it an `sr-only` summary plus a table alternative.
+Used by the asset overview's Trends card ([assets.md](assets.md)); see
+decision 0045.
+
+`@proj/ui/components/switch` (shadcn Switch, `role="switch"`) is an on/off
+setting with a visible `Label` (`htmlFor` the switch's `id`), such as the
+Trends card's Live toggle.
+
 Not built (too varied to share yet): a list wrapper - keep the state order
-`LoadingState` -> `ErrorState` -> `EmptyState` -> results by hand; a form page
-layout - use `PageLayout className="max-w-3xl"` + `Card` + `FormActions`.
+`LoadingState` -> `ErrorState` -> `EmptyState` -> results by hand; (the form
+page layout is built: see [Forms](#forms-formpage-formcard-formactions)).
 
 ### Sub-views: separate routes + `SubNav` (`components/page/sub-nav.tsx`)
 
@@ -608,8 +672,10 @@ views; keep shadcn `Tabs` only for small in-card toggles that are not
 destinations. Filters that narrow one list stay in the FilterBar.
 
 Props: `label: string` (the `nav`'s accessible name), `items: { label;
-to; params?; search?; exact? }[]` (`to` typed against the route tree; set
-`exact: true` on the section's index route so it is not active on children).
+to; params?; search?; exact?; badge? }[]` (`to` typed against the route tree; set
+`exact: true` on the section's index route so it is not active on children;
+`badge` is a small node after the label, e.g. a secondary `Badge` count -
+the asset Devices tab uses it).
 Renders `<nav aria-label>` > `<ul>` styled as the shadcn Tabs `line`
 variant (`tabsListVariants({ variant: "line" })` plus `h-10 w-full
 justify-start border-b`): a full-width row with a bottom border, not the

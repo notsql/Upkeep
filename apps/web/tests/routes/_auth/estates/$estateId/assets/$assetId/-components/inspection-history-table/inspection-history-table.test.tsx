@@ -689,3 +689,53 @@ it("provides a named focusable scroll region and native links for keyboard users
   expect(link.tagName).toBe("A");
   expect(link.tabIndex).toBe(0);
 });
+
+it.each([
+  `${assetPath}?tab=inspections`,
+  `${assetPath}/inspections`,
+  `${assetPath}/maintenance`,
+  `${assetPath}/documents`,
+])("redirects the old section link %s to Records", async (path) => {
+  state.role = "OWNER";
+  const { router } = await setup(path);
+  await waitFor(() =>
+    expect(router.state.location.pathname).toBe(`${assetPath}/records`)
+  );
+  await screen.findByRole("table", { name: "Inspection records" });
+});
+
+it("offers New inspection in the Records inspections section", async () => {
+  state.role = "OWNER";
+  await setup(`${assetPath}/records`);
+  const heading = await screen.findByRole("heading", {
+    name: "Inspection records",
+  });
+  const section = heading.closest("section");
+  if (!section) {
+    throw new Error("No inspections section");
+  }
+  const link = await within(section).findByRole("link", {
+    name: "New inspection",
+  });
+  expect(link.getAttribute("href")).toBe(`${assetPath}/inspections/new`);
+});
+
+it("hides New inspection from a viewer who cannot see inspections", async () => {
+  state.role = "OWNER";
+  state.canView = false;
+  await setup(`${assetPath}/records`);
+  await screen.findByRole("heading", { name: "Maintenance" });
+  expect(screen.queryByRole("link", { name: "New inspection" })).toBeNull();
+});
+
+it.each([
+  ["the asset is retired", { assetActive: false }],
+  ["the estate is inactive", { estateActive: false }],
+  ["the location is inactive", { locationActive: false }],
+])("hides New inspection when %s", async (_, change) => {
+  state.role = "OWNER";
+  Object.assign(state, change);
+  await setup(`${assetPath}/records`);
+  await screen.findByText("New work orders are unavailable", { exact: false });
+  expect(screen.queryByRole("link", { name: "New inspection" })).toBeNull();
+});

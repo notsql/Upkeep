@@ -1,15 +1,25 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { pageHead } from "@/lib/page-title";
 import {
   mergeReadingSearch,
   parseReadingSearch,
   type ReadingSearch,
+  readingsLocation,
 } from "@/lib/reading-filters";
 import { EstateReadingsPage } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/estate-readings-page";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/readings/")({
   validateSearch: parseReadingSearch,
+  // An asset filter lives in the path (`/readings/$assetId`).
+  beforeLoad: ({ params, search }) => {
+    if (search.assetId) {
+      throw redirect({
+        ...readingsLocation(params.estateId, search),
+        replace: true,
+      });
+    }
+  },
   component: ReadingsRoute,
   head: () => pageHead("Readings"),
 });

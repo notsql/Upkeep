@@ -26,7 +26,7 @@ Operation `listEstateReadings`. Required path `estateId: UUID`; query:
 | metric | DeviceMetric, optional | Catalogue metric |
 | from | date-time, optional | Inclusive measured time |
 | to | date-time, optional | Exclusive measured time; after `from` if both are supplied |
-| flag | ReadingFlagType[], optional, repeated | Match any selected GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE flag |
+| flag | ReadingFlagType[], optional, repeated | Match any selected GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE / ANOMALY flag |
 | page | int32, default 0 | Non-negative offset page |
 | size | int32, default 50 | 1–200 |
 
@@ -133,6 +133,156 @@ Example body (use real UUIDs):
 ID-61 now exports source and recorder metadata through the endpoint below,
 completing ID-64's CSV provenance criterion.
 
+## Asset charts (spec asset-readings-charts)
+
+Both endpoints are read-only and use the estate browser's policy: Owner,
+Manager and Crew may read (`EstateReadingService.authorize`); Resident and
+other memberships are 403; a missing estate, an unknown asset or an asset in
+another estate is 404; no sign-in is 401. A retired asset is readable. Errors
+are `EstateError { message: string }`. Both paths are explicit SecurityConfig
+entries.
+
+### GET `/estates/{estateId}/assets/{assetId}/readings/series`
+
+Operation `getAssetReadingSeries` (`AssetReadingController` ->
+`ReadingSeriesService` -> `AssetReadingRepository.series` /
+`anomalyBuckets`). Device readings bucketed for a chart; manual readings are
+not included.
+
+| Query | Type | Meaning |
+| --- | --- | --- |
+| from | date-time, required | Inclusive |
+| to | date-time, required | Exclusive; after `from`, at most 24 hours after it |
+| metric | DeviceMetric[], optional, repeated | Only these metrics; omitted means every metric |
+
+400 when `from` or `to` is missing or malformed, `from >= to`, the span is over
+24 hours, or a metric is unknown.
+
+**Buckets.** `bucketSeconds` is the smallest of 1, 5, 10, 15, 30, 60, 120 and
+300 with `bucketSeconds x 300 >= to - from`, so there are never more than 300
+buckets: 1 min -> 1 s, 15 min -> 5 s, 1 h -> 15 s, 24 h -> 300 s. Buckets are
+aligned to the Unix epoch (`date_bin(bucket, measuredAt, 1970-01-01Z)`), so a
+bucket's `start` may be before `from`; only readings in `[from, to)` count.
+
+Response 200 `ReadingSeriesResponse` (every field required):
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| from, to | date-time | The request's range, in UTC |
+| bucketSeconds | int32 | Bucket width |
+| anomalyThreshold | double | 0.51; a score at or above it is abnormal |
+| metrics | MetricSeries[] | Metrics with readings in the range, in catalogue order; a requested metric with none is left out |
+| anomalies | AnomalyBucket[] | Buckets with at least one anomaly score, ascending |
+
+- `MetricSeries { metric: DeviceMetric, unit: string, points: SeriesPoint[] }`
+- `SeriesPoint { start: date-time, min: double, max: double, avg: double, count: int32 }`
+  - non-empty buckets only, ascending; several devices on one metric are aggregated together.
+- `AnomalyBucket { start: date-time, maxScore: double, abnormalCount: int32 }`
+  - `abnormalCount` counts scores `>= anomalyThreshold`; a bucket of only normal scores has 0.
+
+Example: `GET .../readings/series?from=2026-11-07T12:00:00Z&to=2026-11-07T12:01:00Z`
+
+```json
+{ "from": "2026-11-07T12:00:00Z", "to": "2026-11-07T12:01:00Z", "bucketSeconds": 1,
+  "anomalyThreshold": 0.51,
+  "metrics": [{ "metric": "TEMPERATURE", "unit": "°C",
+    "points": [{ "start": "2026-11-07T12:00:00Z", "min": 1, "max": 6, "avg": 3, "count": 3 }] }],
+  "anomalies": [{ "start": "2026-11-07T12:00:00Z", "maxScore": 0.8, "abnormalCount": 1 }] }
+```
+
+Queries: one grouped scan of `DeviceReading (assetId, metric, measuredAt)` and
+one of `AnomalyScore (assetId, measuredAt)`. The opt-in
+`ReadingSeriesBenchmark` (24 h of one pump at 1 Hz) measured warm p95
+171-336 ms for 24 h.
+
+### GET `/estates/{estateId}/assets/{assetId}/readings/grouped`
+
+Operation `getAssetReadingGroups` (`AssetReadingController` ->
+`ReadingGroupService` -> `AssetReadingRepository.groupInstants` / `groupsAt`).
+The asset's latest readings, one group per `measuredAt` and source: one device
+(device readings) or one recorder (manual readings, keyed by
+`recordedByUserId`).
+
+| Query | Type | Meaning |
+| --- | --- | --- |
+| limit | int32, default 20 | 1-100; distinct timestamps per page |
+| before | date-time, optional | Exclusive; the previous page's `nextBefore` |
+| from | date-time, optional | Inclusive, on the group's `measuredAt` |
+| to | date-time, optional | Exclusive; the upper bound is the earlier of `before` and `to` |
+| metric | DeviceMetric, repeatable, optional | Only groups with a reading of these metrics, and each group's `metrics` holds only them. Omitted = every metric |
+| flag | ReadingFlagType, repeatable, optional | Match-any: a group is kept when any of its readings (after the metric filter) carries any listed flag. The whole group is returned, with every reading's flags |
+
+Filters apply per group, so at a shared instant only the matching source's
+group is returned. Flags are always computed over every stored reading, so a
+metric or time filter never changes a flag (a GAP's predecessor may lie before
+`from`). With no new params the response is unchanged.
+
+400 when `limit` is outside 1-100 or not a number, `before`/`from`/`to` is
+malformed, `from` is not before `to`, or a `metric` or `flag` is unknown.
+
+Response 200 `ReadingGroupPage`:
+
+- `groups: ReadingGroup[]` (required) - newest first; within one instant,
+  SENSOR before MANUAL, then by device identifier or recorder name.
+- `nextBefore?: date-time` - the oldest returned `measuredAt`, present only
+  when older readings exist. Every group at that instant is on this page, so
+  the cursor never splits a timestamp; a page can hold more groups than `limit`.
+
+`ReadingGroup` (absent fields are omitted, not null):
+
+| Field | Type | Meaning |
+| --- | --- | --- |
+| measuredAt | date-time, required | UTC |
+| source | ReadingSource, required | SENSOR or MANUAL |
+| deviceId | uuid, optional | SENSOR only |
+| deviceIdentifier | string, optional | SENSOR only |
+| recordedByName | string, optional | MANUAL only, when stored |
+| anomalyScore | double, optional | SENSOR only: the stored `AnomalyScore.score` at that instant, when scored |
+| metrics | GroupedMetricReading[], required | Catalogue order; only the metrics present |
+
+`GroupedMetricReading { readingId: uuid, metric: DeviceMetric, value: double,
+valueText?: string, unit: string, flags: ReadingFlagResponse[] }` - all
+required except `valueText`, the exact stored decimal on MANUAL readings
+only. `flags` are computed exactly as `listAssetReadings` computes them (see
+"Flag rules"), including mixed-source DUPLICATE_TIMESTAMP.
+
+Example: `GET .../readings/grouped?limit=1` (filtered:
+`GET .../readings/grouped?limit=50&flag=ANOMALY&from=2026-11-07T00:00:00Z`
+returns the latest 50 anomalous timestamps since midnight UTC, with
+`nextBefore` set to the 50th)
+
+```json
+{ "groups": [{ "measuredAt": "2026-11-07T12:00:00Z", "source": "SENSOR",
+    "deviceId": "…", "deviceIdentifier": "PUMP-1", "anomalyScore": 0.8,
+    "metrics": [{ "readingId": "…", "metric": "TEMPERATURE", "value": 151, "unit": "°C",
+      "flags": [{ "type": "OUT_OF_RANGE", "validMin": -40, "validMax": 150 },
+                { "type": "ANOMALY", "anomalyScore": 0.8 }] }] }],
+  "nextBefore": "2026-11-07T12:00:00Z" }
+```
+
+Queries (keyset, no OFFSET). (1) The latest `limit + 1` distinct instants in
+`[from, min(before, to))`:
+
+- no `flag`: a union of per-metric `SELECT DISTINCT measuredAt ... ORDER BY
+  measuredAt DESC LIMIT limit + 1` walks of the `(assetId, metric,
+  measuredAt)` index on DeviceReading and ManualReading, over the requested
+  metrics only;
+- `flag=ANOMALY` alone: a backward walk of AnomalyScore's unique `(assetId,
+  measuredAt)` index for `score >= threshold`, kept where a device reading of
+  a requested metric exists at that instant;
+- any other flag set: `SELECT DISTINCT measuredAt` from the shared flagged
+  reading query with the metric, window and flag conditions.
+
+(2) The shared flagged reading query filtered to `measuredAt IN (...)` and the
+requested metrics, which joins AnomalyScore on its unique `(assetId,
+measuredAt)`; with `flag`, groups with no matching reading are dropped.
+
+Benchmark (`ReadingSeriesBenchmark`, 24 h at 1 Hz, warm p95): 15 ms default
+page, 26 ms `limit=100`, 11 ms `metric=TEMPERATURE`, 17 ms `from`/`to`, 19 ms
+`flag=ANOMALY` (limit 50). Suspect flags (`GAP`, `DUPLICATE_TIMESTAMP`,
+`OUT_OF_RANGE`) with no dates scan the flagged query over the whole asset:
+about 1.5 s median and 3 s p95 when nothing matches.
+
 ## Legacy owner-only per-asset browser (ID-67)
 
 Contract: `packages/api/openapi.json` (operationId `listAssetReadings`). Read-only:
@@ -157,7 +307,7 @@ A same-estate RESIDENT membership returns 403 (`findOwned`'s resident check).
 - query `metric`: DeviceMetric (optional) - one metric only
 - query `from`: date-time (optional) - inclusive, `measuredAt >= from`
 - query `to`: date-time (optional) - exclusive, `measuredAt < to`
-- query `flag`: array of GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE (optional) - repeatable (`?flag=GAP&flag=OUT_OF_RANGE`); lists readings carrying **any** of them. Omitted: every reading, flagged or not
+- query `flag`: array of GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE / ANOMALY (optional) - repeatable (`?flag=GAP&flag=OUT_OF_RANGE`); lists readings carrying **any** of them. Omitted: every reading, flagged or not
 - query `page`: int32 (optional, default 0) - starts at 0
 - query `size`: int32 (optional, default 50) - 1 to 200
 - 400: Unknown metric or flag, a malformed time, from not before to, or page or size out of range - EstateError
@@ -204,7 +354,7 @@ Checked in that order (page, size, from/to), then estate, then asset.
 | valueText | string | no | Exact stored decimal in plain notation; prefer for display, numeric value is the older-server fallback |
 | deviceId | uuid or null | yes | Device for SENSOR; null for MANUAL |
 | deviceIdentifier | string or null | yes | Device identifier for SENSOR; null for MANUAL |
-| flags | ReadingFlagResponse[] | yes | Empty when nothing is suspect; order GAP, DUPLICATE_TIMESTAMP, OUT_OF_RANGE |
+| flags | ReadingFlagResponse[] | yes | Empty when nothing is flagged; order GAP, DUPLICATE_TIMESTAMP, OUT_OF_RANGE, ANOMALY |
 | source | SENSOR / MANUAL | yes | Derived from the stored table, never client-assigned |
 | recordedByUserId | string or null | yes | Authenticated recorder subject for MANUAL; null for SENSOR |
 | recordedByName | string or null | yes | Recorder display-name snapshot; nullable when unavailable |
@@ -216,10 +366,11 @@ Fields not applicable to the type are omitted from the JSON (not `null`).
 
 | Field | Type | Required | Constraints |
 | --- | --- | --- | --- |
-| type | GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE | yes |  |
+| type | GAP / DUPLICATE_TIMESTAMP / OUT_OF_RANGE / ANOMALY | yes |  |
 | gapSeconds | int64 | no | GAP only: whole seconds since the previous reading of this metric on the asset |
 | validMin | double | no | OUT_OF_RANGE only: the metric's inclusive minimum |
 | validMax | double | no | OUT_OF_RANGE only: the metric's inclusive maximum |
+| anomalyScore | double | no | ANOMALY only: the stored anomaly score of the reading's sample, at least 0.51 |
 
 ## EstateError
 
@@ -253,6 +404,15 @@ are all flagged.
   an instant never precede each other, so duplicates ending a gap all carry it.
   A late sensor reading stored inside a gap clears the flag on the next request.
   Manual entries do not fill sensor gaps and never receive GAP themselves.
+- **ANOMALY**: a model finding, not suspect data (spec
+  streaming-anomaly-detection). Applies only to SENSOR rows. Flagged when the
+  asset has a stored `AnomalyScore` for the reading's `measuredAt` with
+  `score >= 0.51` (`AnomalyModel.DECISION_THRESHOLD`), so all five readings of an
+  abnormal sample carry it. Carries `anomalyScore`. Below 0.51, unscored, and
+  manual readings never carry it. Looked up by a left join on the unique
+  `(assetId, measuredAt)` index. The web "Suspect only" filter sends only GAP,
+  DUPLICATE_TIMESTAMP and OUT_OF_RANGE, so it never matches ANOMALY; the server
+  has no notion of "suspect only".
 
 ## Valid ranges
 
@@ -346,7 +506,7 @@ fields are doubled. Embedded commas/newlines and Unicode remain valid CSV.
 | recorded_by_user_id | Stored authenticated manual recorder subject, empty for sensor |
 | recorded_by_name | Stored manual display-name snapshot, empty when unavailable or sensor |
 | recorded_at | Sensor receipt/manual recording instant, same UTC format |
-| flags | Semicolon-separated GAP;DUPLICATE_TIMESTAMP;OUT_OF_RANGE in that order, empty if none |
+| flags | Semicolon-separated GAP;DUPLICATE_TIMESTAMP;OUT_OF_RANGE;ANOMALY in that order, empty if none (the score is not exported) |
 
 For values beyond 15 significant digits, Excel imports must treat value as Text
 to preserve all digits; decimal-aware pipeline readers should use Decimal as in
