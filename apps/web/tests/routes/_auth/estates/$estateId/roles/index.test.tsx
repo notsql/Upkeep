@@ -367,7 +367,7 @@ it("shows the new-role page with details and permissions grouped by area", async
   expect(screen.queryByText("Maple Estate")).toBeNull();
   await screen.findByRole("heading", { name: "Details" });
   screen.getByRole("textbox", { name: "Role name" });
-  screen.getByRole("textbox", { name: "Description" });
+  screen.getByRole("textbox", { name: "Description (optional)" });
   screen.getByRole("heading", { name: "Permissions" });
   within(screen.getByRole("group", { name: "Estate" })).getByRole("checkbox", {
     name: "Edit estate",

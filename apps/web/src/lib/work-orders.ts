@@ -45,7 +45,6 @@ export function useWorkOrderAccess(estateId: string) {
     canViewAssets: valid && !!permission?.canViewAssets,
     canViewDocuments: valid && !!permission?.canViewDocuments,
     canViewReadings: valid && !!permission?.canViewReadings,
-    canRecordReadings: valid && !!permission?.canRecordReadings,
     canViewManagement: valid && !!permission?.canViewManagement,
     canViewEstateDetails:
       valid &&

@@ -10,6 +10,10 @@ const BACK_LINK = /^Back to/u;
 const page = vi.hoisted(() => ({
   estate: {} as Record<string, unknown>,
   asset: {} as Record<string, unknown>,
+  role: "MANAGER",
+  canCreateInspectionResults: true,
+  devices: [] as { id: string; status: string; deactivatedAt?: string }[],
+  devicesEnabled: [] as boolean[],
 }));
 
 beforeEach(() => {
@@ -21,6 +25,14 @@ beforeEach(() => {
     category: "PUMP",
     lifecycleVersion: 0,
   };
+  page.role = "MANAGER";
+  page.canCreateInspectionResults = true;
+  page.devices = [
+    { id: "d1", status: "ONLINE" },
+    { id: "d2", status: "OFFLINE" },
+    { id: "d3", status: "DEACTIVATED", deactivatedAt: "2026-10-01T00:00:00Z" },
+  ];
+  page.devicesEnabled = [];
 });
 
 // Sections that fetch their own data stay pending: this test is about breadcrumbs.
@@ -75,12 +87,46 @@ vi.mock("@/lib/assets", async (importOriginal) => ({
   useAsset: () => ({ data: page.asset }),
   useDeactivateAsset: () => ({ mutateAsync: vi.fn() }),
 }));
+vi.mock("@/lib/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/access")>()),
+  useAppAccess: () => ({
+    isPending: false,
+    isError: false,
+    data: {
+      estates: [
+        {
+          estateId: "estate",
+          role: page.role,
+          canViewAssets: true,
+          canCreateInspectionResults: page.canCreateInspectionResults,
+        },
+      ],
+    },
+  }),
+}));
+vi.mock("@/lib/devices", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/devices")>()),
+  useDevices: (_estateId: string, _assetId: string, enabled = true) => {
+    page.devicesEnabled.push(enabled);
+    return { data: enabled ? page.devices : undefined };
+  },
+}));
+vi.mock(
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-attention-alert",
+  () => ({
+    AssetAttentionAlert: ({ canInspect }: { canInspect: boolean }) => (
+      <p>
+        {canInspect ? "Attention banner (can inspect)" : "Attention banner"}
+      </p>
+    ),
+  })
+);
 vi.mock("@/lib/catalogue", () => ({
   useAssetCategories: () => ({ data: [{ code: "PUMP", label: "Pump" }] }),
 }));
 vi.mock(
-  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-retirement-panel/asset-retirement-panel",
-  () => ({ AssetRetirementPanel: () => null })
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/asset-retirement-panel",
+  () => ({ AssetRetirementPanel: () => <h2>Lifecycle history</h2> })
 );
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section",
@@ -131,19 +177,90 @@ it("links each asset section as its own page under one header", () => {
       .map((link) => [link.textContent, link.getAttribute("href")])
   ).toEqual([
     ["Overview", "/estates/estate/assets/asset"],
-    ["Maintenance", "/estates/estate/assets/asset/maintenance"],
-    ["Inspections", "/estates/estate/assets/asset/inspections"],
-    ["Documents", "/estates/estate/assets/asset/documents"],
+    ["Details", "/estates/estate/assets/asset/details"],
+    ["Records", "/estates/estate/assets/asset/records"],
     ["Costs", "/estates/estate/assets/asset/costs"],
-    ["Devices", "/estates/estate/assets/asset/devices"],
+    ["Devices 2", "/estates/estate/assets/asset/devices"],
   ]);
   screen.getByText("Section content");
   expect(screen.queryByRole("tablist")).toBeNull();
 });
 
+it("counts the asset's active devices on the Devices tab", () => {
+  renderLayout();
+  const nav = within(
+    screen.getByRole("navigation", { name: "Asset sections" })
+  );
+  const devices = nav.getByRole("link", { name: "Devices 2" });
+  within(devices).getByText("2");
+});
+
+it("hides the device count when the asset has no active devices", () => {
+  page.devices = [];
+  renderLayout();
+  const nav = within(
+    screen.getByRole("navigation", { name: "Asset sections" })
+  );
+  nav.getByRole("link", { name: "Devices" });
+});
+
+it("neither counts nor requests devices for a viewer who cannot see them", () => {
+  page.role = "CREW";
+  renderLayout();
+  const nav = within(
+    screen.getByRole("navigation", { name: "Asset sections" })
+  );
+  nav.getByRole("link", { name: "Devices" });
+  expect(page.devicesEnabled.every((enabled) => !enabled)).toBe(true);
+});
+
+it("keeps only the title, status and reference in the header", () => {
+  renderLayout();
+  screen.getByRole("heading", { level: 1, name: "Water pump" });
+  screen.getByText("MG-A0001");
+  expect(screen.queryByRole("link", { name: "Edit" })).toBeNull();
+  expect(
+    screen.queryByRole("link", { name: "Create inspection record" })
+  ).toBeNull();
+  expect(screen.queryByRole("button", { name: "Retire asset" })).toBeNull();
+});
+
+it("shows the attention banner under the header, above the tabs", () => {
+  renderLayout();
+  const title = screen.getByRole("heading", { level: 1, name: "Water pump" });
+  const banner = screen.getByText("Attention banner (can inspect)");
+  const nav = screen.getByRole("navigation", { name: "Asset sections" });
+  const all = [...document.body.querySelectorAll("*")];
+  const order = [title, banner, nav].map((el) => all.indexOf(el));
+  expect(order).toEqual([...order].sort((a, b) => a - b));
+});
+
+it.each([
+  ["a retired asset", { deactivatedAt: "2026-10-01T00:00:00Z" }, {}, true],
+  ["an inactive estate", {}, { deactivatedAt: "2026-10-01T00:00:00Z" }, true],
+  ["a viewer who cannot create inspections", {}, {}, false],
+])(
+  "offers no inspection from the banner on %s",
+  (_name, asset, estate, can) => {
+    page.asset = { ...page.asset, ...asset };
+    page.estate = { ...page.estate, ...estate };
+    page.canCreateInspectionResults = can;
+    renderLayout();
+    screen.getByText("Attention banner");
+  }
+);
+
+it("no longer shows lifecycle history under Records", () => {
+  renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
+  expect(
+    screen.queryByRole("heading", { name: "Lifecycle history" })
+  ).toBeNull();
+});
+
 it("shows the asset's details on the overview", () => {
   renderWithProviders(<AssetOverview assetId="asset" estateId="estate" />);
-  screen.getByText("Serial number");
+  screen.getByRole("list", { name: "Asset details" });
+  expect(screen.queryByRole("region", { name: "Details" })).toBeNull();
 });
 
 it.each([

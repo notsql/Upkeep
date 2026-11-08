@@ -1,8 +1,10 @@
-import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
-import { RadioTower } from "lucide-react";
+import { Activity, Plus, RadioTower } from "lucide-react";
 import { useCallback, useMemo } from "react";
-import { SectionCard } from "@/components/page/section-card";
+import {
+  PageSection,
+  sectionActionClassName,
+} from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -38,22 +40,24 @@ export function AssetDevicesSection({
   );
   const retry = useCallback(() => devices.refetch(), [devices.refetch]);
   return (
-    <SectionCard
+    <PageSection
       actions={
         <>
           <Link
-            className={buttonVariants({ variant: "outline" })}
+            className={sectionActionClassName}
             params={{ estateId, assetId }}
             to="/estates/$estateId/readings/$assetId"
           >
+            <Activity aria-hidden="true" />
             Readings
           </Link>
           {canRegister ? (
             <Link
-              className={buttonVariants({ variant: "outline" })}
+              className={sectionActionClassName}
               params={{ estateId, assetId }}
               to="/estates/$estateId/assets/$assetId/devices/new"
             >
+              <Plus aria-hidden="true" />
               Register device
             </Link>
           ) : null}
@@ -81,7 +85,7 @@ export function AssetDevicesSection({
             />
           </div>
         ) : null}
-        <ul aria-label="Devices" className="grid gap-3">
+        <ul aria-label="Devices" className="divide-y">
           {devices.data?.map((device) => (
             <DeviceItem
               assetId={assetId}
@@ -95,6 +99,6 @@ export function AssetDevicesSection({
           ))}
         </ul>
       </div>
-    </SectionCard>
+    </PageSection>
   );
 }

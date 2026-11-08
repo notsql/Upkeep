@@ -1,50 +1,36 @@
-import { DetailCard } from "@/components/page/detail-card";
-import { FormPageHeader } from "@/components/page/form-page-header";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { FormCard } from "@/components/page/form-page";
 import type { InspectionAsset } from "@/lib/inspections";
 
 export function InspectionFormAssetSummary({
   active,
-  assetId,
-  estateId,
   observed,
 }: {
   active: boolean;
-  assetId: string;
-  estateId: string;
   observed: InspectionAsset;
 }) {
   return (
-    <>
-      <FormPageHeader
-        breadcrumbs={[
-          {
-            label: observed.name,
-            to: "/estates/$estateId/assets/$assetId",
-            params: { estateId, assetId },
-          },
-          { label: "Create inspection record" },
-        ]}
-        description={`${observed.reference} · ${observed.name}`}
-        title="Create inspection record"
-      />
-      <DetailCard>
-        <div>
-          <dt>Asset</dt>
+    <FormCard title="Asset">
+      <dl className="grid gap-4 text-sm sm:grid-cols-2">
+        <div className="grid gap-1">
+          <dt className="text-muted-foreground">Asset</dt>
           <dd>
             {observed.reference} · {observed.name}
           </dd>
         </div>
-        <div>
-          <dt>Location</dt>
+        <div className="grid gap-1">
+          <dt className="text-muted-foreground">Location</dt>
           <dd>{observed.locationPath}</dd>
         </div>
-      </DetailCard>
+      </dl>
       {active ? null : (
-        <p role="alert">
-          This estate, asset or location is inactive or retired. Existing
-          records remain available.
-        </p>
+        <Alert className="mt-4" variant="destructive">
+          <AlertDescription>
+            This estate, asset or location is inactive or retired. Existing
+            records remain available.
+          </AlertDescription>
+        </Alert>
       )}
-    </>
+    </FormCard>
   );
 }

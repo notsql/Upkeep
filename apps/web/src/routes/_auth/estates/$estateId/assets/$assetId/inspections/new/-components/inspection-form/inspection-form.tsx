@@ -1,6 +1,8 @@
-import { Button, buttonVariants } from "@proj/ui/components/button";
-import { Link } from "@tanstack/react-router";
-import { PageLayout } from "@/components/page/page-layout";
+import { FieldSeparator } from "@proj/ui/components/field";
+import { useNavigate } from "@tanstack/react-router";
+import { type ReactNode, useCallback } from "react";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormCard, FormPage } from "@/components/page/form-page";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { InspectionFields } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/new/-components/inspection-form/inspection-fields";
@@ -9,6 +11,39 @@ import { InspectionFormFeedback } from "@/routes/_auth/estates/$estateId/assets/
 import { InspectionPhotoField } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/new/-components/inspection-form/inspection-photo-field";
 import { SavedInspectionNotice } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/new/-components/inspection-form/saved-inspection-notice";
 import { useInspectionForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/inspections/new/-components/inspection-form/use-inspection-form";
+
+const TITLE = "Create inspection record";
+
+function InspectionFormPage({
+  estateId,
+  assetId,
+  assetName,
+  description,
+  children,
+}: {
+  estateId: string;
+  assetId: string;
+  assetName?: string;
+  description?: string;
+  children: ReactNode;
+}) {
+  return (
+    <FormPage
+      breadcrumbs={[
+        {
+          label: assetName ?? "Asset",
+          to: "/estates/$estateId/assets/$assetId",
+          params: { estateId, assetId },
+        },
+        { label: TITLE },
+      ]}
+      description={description}
+      title={TITLE}
+    >
+      {children}
+    </FormPage>
+  );
+}
 
 export function InspectionForm({
   estateId,
@@ -40,13 +75,19 @@ export function InspectionForm({
     setError,
     submit,
   } = useInspectionForm(estateId, assetId);
+  const navigate = useNavigate();
+  const cancel = useCallback(() => {
+    navigate({
+      to: "/estates/$estateId/assets/$assetId",
+      params: { estateId, assetId },
+    });
+  }, [navigate, estateId, assetId]);
+  let state: ReactNode = null;
   if (access.pending) {
-    return <LoadingState label="Loading access…" rows={2} />;
-  }
-  if (!access.canCreate) {
-    return <p role="alert">Inspection recording is unavailable.</p>;
-  }
-  if (saved) {
+    state = <LoadingState label="Loading access…" rows={2} />;
+  } else if (!access.canCreate) {
+    state = <p role="alert">Inspection recording is unavailable.</p>;
+  } else if (saved) {
     return (
       <SavedInspectionNotice
         assetId={assetId}
@@ -55,72 +96,69 @@ export function InspectionForm({
         saved={saved}
       />
     );
-  }
-  if (asset.isError) {
-    return (
-      <PageLayout>
-        <ErrorState
-          message={asset.error.message}
-          onRetry={retryAsset}
-          retryLabel="Retry asset"
-        />
-      </PageLayout>
+  } else if (asset.isError) {
+    state = (
+      <ErrorState
+        message={asset.error.message}
+        onRetry={retryAsset}
+        retryLabel="Retry asset"
+      />
     );
+  } else if (!observed) {
+    state = <LoadingState label="Loading asset…" rows={2} />;
   }
-  if (!observed) {
-    return <LoadingState label="Loading asset…" rows={2} />;
+  if (state || !observed) {
+    return (
+      <InspectionFormPage assetId={assetId} estateId={estateId}>
+        {state}
+      </InspectionFormPage>
+    );
   }
   const active =
     observed.estateActive && observed.assetActive && observed.locationActive;
   return (
-    <PageLayout className="space-y-6">
-      <InspectionFormAssetSummary
-        active={active}
-        assetId={assetId}
-        estateId={estateId}
-        observed={observed}
-      />
-      <form className="form-layout grid max-w-3xl gap-5" onSubmit={submit}>
-        <InspectionFields
-          date={date}
-          installedOn={observed.installedOn}
-          notes={notes}
-          onDateChange={setDate}
-          onNotesChange={changeNotes}
-          onOutcomeChange={changeOutcome}
-          outcome={outcome}
-        />
-        <InspectionPhotoField
-          onError={setError}
-          onRemove={removePhoto}
-          onSelect={addPhotos}
-          photos={photos}
-        />
-        <InspectionFormFeedback
-          assetId={assetId}
-          error={error}
-          estateId={estateId}
-          observedLocationPath={observed.locationPath}
-          onConfirmLocation={confirmLocation}
-          onRefreshLocation={refreshLocation}
-          reviewLocationPath={review?.locationPath}
-        />
-        <div className="flex flex-wrap gap-3">
-          <Button
-            disabled={save.isPending || !active || !!review}
-            type="submit"
-          >
-            {save.isPending ? "Saving…" : "Save inspection record"}
-          </Button>
-          <Link
-            className={buttonVariants({ variant: "outline" })}
-            params={{ estateId, assetId }}
-            to="/estates/$estateId/assets/$assetId"
-          >
-            Cancel
-          </Link>
-        </div>
-      </form>
-    </PageLayout>
+    <InspectionFormPage
+      assetId={assetId}
+      assetName={observed.name}
+      description={`${observed.reference} · ${observed.name}`}
+      estateId={estateId}
+    >
+      <InspectionFormAssetSummary active={active} observed={observed} />
+      <FormCard>
+        <form className="grid gap-5" onSubmit={submit}>
+          <InspectionFields
+            date={date}
+            installedOn={observed.installedOn}
+            notes={notes}
+            onDateChange={setDate}
+            onNotesChange={changeNotes}
+            onOutcomeChange={changeOutcome}
+            outcome={outcome}
+          />
+          <FieldSeparator />
+          <InspectionPhotoField
+            onError={setError}
+            onRemove={removePhoto}
+            onSelect={addPhotos}
+            photos={photos}
+          />
+          <InspectionFormFeedback
+            assetId={assetId}
+            error={error}
+            estateId={estateId}
+            observedLocationPath={observed.locationPath}
+            onConfirmLocation={confirmLocation}
+            onRefreshLocation={refreshLocation}
+            reviewLocationPath={review?.locationPath}
+          />
+          <FormActions
+            disabled={!active || !!review}
+            label={save.isPending ? "Saving…" : "Save inspection record"}
+            onCancel={cancel}
+            pending={save.isPending}
+          />
+        </form>
+      </FormCard>
+    </InspectionFormPage>
   );
 }

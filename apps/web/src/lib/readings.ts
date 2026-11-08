@@ -1,15 +1,15 @@
 import type { components } from "@proj/api/schema";
 import {
   keepPreviousData,
-  useMutation,
+  useInfiniteQuery,
   useQuery,
-  useQueryClient,
 } from "@tanstack/react-query";
 import { useAppAccess } from "@/lib/access";
 import { api } from "@/lib/api";
 import { assetQueryKey } from "@/lib/assets";
 import type { DeviceMetric } from "@/lib/devices";
 import { estateError, useEstateSession } from "@/lib/estates";
+import { formatNumber, formatScore } from "@/lib/format";
 import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
 
 export type AssetReadingPage = components["schemas"]["AssetReadingPage"];
@@ -17,6 +17,8 @@ export type AssetReading = components["schemas"]["AssetReadingResponse"];
 export type ReadingFlag = components["schemas"]["ReadingFlagResponse"];
 export type EstateReading = components["schemas"]["EstateReadingResponse"];
 export type ReadingAsset = components["schemas"]["ReadingAssetOption"];
+export type ReadingGroup = components["schemas"]["ReadingGroup"];
+export type ReadingGroupPage = components["schemas"]["ReadingGroupPage"];
 
 /** The list's filters as they live in the URL. Times are `datetime-local` values. */
 export interface ReadingFilters {
@@ -56,6 +58,22 @@ export function formatGap(seconds: number): string {
   return parts.join(" ") || "0s";
 }
 
+/** Anomalies are findings, not suspect data, so they stand out. */
+export function flagVariant(flag: ReadingFlag): "destructive" | "outline" {
+  return flag.type === "ANOMALY" ? "destructive" : "outline";
+}
+
+/** "Match any" of the chosen flag kinds; undefined when neither is chosen. */
+function flagQuery(
+  filters: Pick<ReadingSearch, "suspect" | "anomalous">
+): ReadingFlag["type"][] | undefined {
+  const flags: ReadingFlag["type"][] = [
+    ...(filters.suspect ? SUSPECT_FLAGS : []),
+    ...(filters.anomalous ? (["ANOMALY"] as const) : []),
+  ];
+  return flags.length ? flags : undefined;
+}
+
 /** Badge text for a flag; the range comes from the server, never from here. */
 export function flagLabel(flag: ReadingFlag, unit: string): string {
   if (flag.type === "GAP") {
@@ -64,7 +82,10 @@ export function flagLabel(flag: ReadingFlag, unit: string): string {
   if (flag.type === "DUPLICATE_TIMESTAMP") {
     return "Duplicate timestamp";
   }
-  return `Out of range (valid ${flag.validMin?.toLocaleString()} to ${flag.validMax?.toLocaleString()} ${unit})`;
+  if (flag.type === "ANOMALY") {
+    return `Anomaly ${formatScore(flag.anomalyScore ?? 0)}`;
+  }
+  return `Out of range (valid ${formatNumber(flag.validMin ?? 0)} to ${formatNumber(flag.validMax ?? 0)} ${unit})`;
 }
 
 export function readingsQueryKey(
@@ -123,13 +144,116 @@ export function useReadings(
   });
 }
 
+const LIVE_REFETCH_MS = 1000;
+const BACKGROUND_REFETCH_MS = 60_000;
+
+export const READING_GROUPS_PAGE_SIZE = 50;
+
+/**
+ * The asset readings page: grouped readings under the URL filters, appended
+ * through `nextBefore`. Suspect-flag filters with no dates can take seconds on
+ * a 1 Hz asset, so nothing refetches in the background or on focus.
+ */
+export function useAssetReadingGroupPages(
+  estateId: string,
+  assetId: string,
+  filters: ReadingSearch
+) {
+  const { userId, ready } = useEstateSession();
+  const { metric, from, to, suspect, anomalous } = filters;
+  const key = { metric, from, to, suspect, anomalous };
+  return useInfiniteQuery({
+    queryKey: [userId, "reading-groups", estateId, assetId, "pages", key],
+    enabled: ready && !readingFilterError(filters),
+    retry: false,
+    staleTime: Number.POSITIVE_INFINITY,
+    refetchOnWindowFocus: false,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (page: ReadingGroupPage) => page.nextBefore,
+    queryFn: async ({ pageParam }): Promise<ReadingGroupPage> => {
+      const query = {
+        limit: READING_GROUPS_PAGE_SIZE,
+        before: pageParam,
+        from: instant(from),
+        to: instant(to),
+        metric: metric ? [metric as DeviceMetric] : undefined,
+        flag: flagQuery(filters),
+      };
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/assets/{assetId}/readings/grouped",
+        {
+          params: {
+            path: { estateId, assetId },
+            query: Object.fromEntries(
+              Object.entries(query).filter(([, value]) => value !== undefined)
+            ) as typeof query,
+          },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+  });
+}
+
+export type ReadingSeries = components["schemas"]["ReadingSeriesResponse"];
+export type MetricSeries = components["schemas"]["MetricSeries"];
+
+/** The Trends card's ranges; each ends at "now" when the query runs. */
+export const READING_RANGES = {
+  "1m": { label: "1 min", phrase: "last 1 minute", ms: 60_000 },
+  "15m": { label: "15 min", phrase: "last 15 minutes", ms: 900_000 },
+  "1h": { label: "1 h", phrase: "last 1 hour", ms: 3_600_000 },
+  "24h": { label: "24 h", phrase: "last 24 hours", ms: 86_400_000 },
+} as const;
+
+export type ReadingRange = keyof typeof READING_RANGES;
+
+/** Bucketed device readings for the chart; the key names the range, not instants. */
+export function useAssetReadingSeries(
+  estateId: string,
+  assetId: string,
+  range: ReadingRange,
+  live: boolean
+) {
+  const { userId, ready } = useEstateSession();
+  return useQuery({
+    queryKey: [userId, "reading-series", estateId, assetId, range],
+    enabled: ready,
+    retry: false,
+    placeholderData: keepPreviousData,
+    refetchInterval: live ? LIVE_REFETCH_MS : BACKGROUND_REFETCH_MS,
+    queryFn: async () => {
+      const to = Date.now();
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/assets/{assetId}/readings/series",
+        {
+          params: {
+            path: { estateId, assetId },
+            query: {
+              from: new Date(to - READING_RANGES[range].ms).toISOString(),
+              to: new Date(to).toISOString(),
+            },
+          },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+  });
+}
+
 export function readingFilterQuery(filters: ReadingSearch) {
   return {
     assetId: filters.assetId,
     metric: filters.metric as DeviceMetric | undefined,
     from: instant(filters.from),
     to: instant(filters.to),
-    flag: filters.suspect ? SUSPECT_FLAGS : undefined,
+    flag: flagQuery(filters),
   };
 }
 
@@ -198,90 +322,6 @@ export function useReadingAssets(
         throw estateError(error, response.status);
       }
       return data;
-    },
-  });
-}
-
-export type ManualReading = components["schemas"]["ManualReadingResponse"];
-export type CreateManualReading =
-  components["schemas"]["CreateManualReadingRequest"];
-export type ReadingMetricOption = components["schemas"]["ReadingMetricOption"];
-
-export function useReadingMetrics(estateId: string) {
-  const { userId, ready } = useEstateSession();
-  const access = useAppAccess();
-  const allowed = access.data?.estates.some(
-    (estate) => estate.estateId === estateId && estate.canViewReadings
-  );
-  return useQuery({
-    queryKey: [userId, "reading-metrics", estateId],
-    enabled: ready && !!allowed,
-    retry: false,
-    queryFn: async () => {
-      const { data, error, response } = await api.GET(
-        "/estates/{estateId}/readings/metrics",
-        { params: { path: { estateId } } }
-      );
-      if (error || !data) {
-        throw estateError(error, response.status);
-      }
-      return data;
-    },
-  });
-}
-
-export function useCreateManualReading(estateId: string) {
-  const { userId, ready } = useEstateSession();
-  const access = useAppAccess();
-  const client = useQueryClient();
-  const allowed = access.data?.estates.some(
-    (estate) => estate.estateId === estateId && estate.canRecordReadings
-  );
-  return useMutation({
-    mutationFn: async (body: CreateManualReading) => {
-      if (!(ready && allowed)) {
-        throw new Error(
-          "Manual reading entry is not available for this estate."
-        );
-      }
-      const { data, error, response } = await api
-        .POST("/estates/{estateId}/readings/manual", {
-          params: { path: { estateId } },
-          body,
-        })
-        .catch((failure: unknown) => {
-          if (failure instanceof TypeError) {
-            throw new Error(
-              "Could not save the reading. Check your connection and try again. Your entries have been kept."
-            );
-          }
-          throw failure;
-        });
-      if (error || !data) {
-        if ([403, 404, 409].includes(response.status)) {
-          await Promise.all([
-            client.invalidateQueries({ queryKey: [userId, "app-access"] }),
-            client.invalidateQueries({
-              queryKey: [userId, "reading-assets", estateId],
-            }),
-          ]);
-        }
-        throw estateError(error, response.status);
-      }
-      return data;
-    },
-    onSuccess: async (reading) => {
-      await Promise.all([
-        client.invalidateQueries({
-          queryKey: [userId, "estate-readings", estateId],
-        }),
-        client.invalidateQueries({
-          queryKey: [
-            ...assetQueryKey(userId, estateId, reading.assetId),
-            "readings",
-          ],
-        }),
-      ]);
     },
   });
 }

@@ -75,7 +75,6 @@ export function WorkOrderDetailPage({
       ) : null}
       <WorkOrderDetailSummary
         canReadReports={access.canReadReports}
-        canRecordReadings={access.canRecordReadings}
         canViewAssets={access.canViewAssets}
         canViewReadings={access.canViewReadings}
         data={data}

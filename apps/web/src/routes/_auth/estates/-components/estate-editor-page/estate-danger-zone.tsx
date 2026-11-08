@@ -53,7 +53,7 @@ export function EstateDangerZone({
     return null;
   }
   return (
-    <Card className="border-destructive/50 mt-6">
+    <Card className="border-destructive/50">
       <CardHeader>
         <CardTitle>
           <h2 className="flex items-center gap-2">

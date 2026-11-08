@@ -19,21 +19,16 @@ import {
 } from "@/lib/devices";
 
 /**
- * A device's credential status and, while the asset is active, Generate or
- * Replace credential. A new key is held only in this component's state until
- * its dialog closes; it is never cached (decision 0025).
+ * Generate or Replace credential for one device. A new key is held only in
+ * this hook's state until its dialog closes; it is never cached (decision
+ * 0025). The row's action menu calls `start`; `DeviceCredentialDialogs`
+ * renders the confirmation and the one-time key reveal.
  */
-export function DeviceCredential({
-  assetId,
-  canManage,
-  device,
-  estateId,
-}: {
-  assetId: string;
-  canManage: boolean;
-  device: Device;
-  estateId: string;
-}) {
+export function useDeviceCredential(
+  estateId: string,
+  assetId: string,
+  device: Device
+) {
   const issue = useIssueDeviceCredential(estateId, assetId);
   const [confirming, setConfirming] = useState(false);
   const [issued, setIssued] = useState<IssuedCredential>();
@@ -62,11 +57,6 @@ export function DeviceCredential({
   }, [hasCredential, generate]);
   const cancel = useCallback(() => setConfirming(false), []);
   const done = useCallback(() => setIssued(undefined), []);
-  const doneOnClose = useCallback((open: boolean) => {
-    if (!open) {
-      setIssued(undefined);
-    }
-  }, []);
   const copy = useCallback(async () => {
     if (!issued) {
       return;
@@ -79,25 +69,43 @@ export function DeviceCredential({
     }
   }, [issued]);
 
+  return {
+    actionLabel: hasCredential ? "Replace credential" : "Generate credential",
+    cancel,
+    confirming,
+    copy,
+    done,
+    error,
+    generate,
+    issued,
+    pending: issue.isPending,
+    start,
+  };
+}
+
+export type DeviceCredentialState = ReturnType<typeof useDeviceCredential>;
+
+export function DeviceCredentialDialogs({
+  credential,
+  device,
+}: {
+  credential: DeviceCredentialState;
+  device: Device;
+}) {
+  const { cancel, confirming, copy, done, error, generate, issued } =
+    credential;
+  const doneOnClose = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        done();
+      }
+    },
+    [done]
+  );
   return (
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm">
-      <span>
-        {device.credentialIssuedAt
-          ? `Credential issued ${new Date(device.credentialIssuedAt).toLocaleString()}`
-          : "No credential"}
-      </span>
-      {canManage ? (
-        <Button
-          disabled={issue.isPending}
-          onClick={start}
-          size="sm"
-          variant="outline"
-        >
-          {hasCredential ? "Replace credential" : "Generate credential"}
-        </Button>
-      ) : null}
+    <>
       {error && !issued ? (
-        <p className="text-destructive w-full" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           {error}
         </p>
       ) : null}
@@ -147,6 +155,6 @@ export function DeviceCredential({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,6 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { expect, it } from "vitest";
-import { SectionCard } from "@/components/page/section-card";
+import { PageSection, SectionCard } from "@/components/page/section-card";
 
 it("labels the section by its heading and holds actions and content", () => {
   renderWithProviders(
@@ -26,4 +26,17 @@ it("respects the heading level", () => {
   expect(
     screen.getByRole("heading", { level: 3, name: "History" })
   ).toBeTruthy();
+});
+
+it("renders a page section without a card around it", () => {
+  renderWithProviders(
+    <PageSection actions={<button type="button">Add</button>} title="Devices">
+      <p>Rows</p>
+    </PageSection>
+  );
+  const section = screen.getByRole("region", { name: "Devices" });
+  within(section).getByRole("heading", { level: 2, name: "Devices" });
+  within(section).getByRole("button", { name: "Add" });
+  within(section).getByText("Rows");
+  expect(section.closest("[data-slot='card']")).toBeNull();
 });

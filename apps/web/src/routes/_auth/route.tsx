@@ -150,11 +150,13 @@ function guardInspectionContext(
     }
     return true;
   }
-  // The asset page and its Inspections sub-page are open to inspection viewers.
+  // The asset page and its Records (formerly Inspections) sub-page are open
+  // to inspection viewers.
   const context =
     segments.length === 0 ||
     (segments.length === 1 && segments[0] !== "new") ||
-    (segments.length === 2 && segments[1] === "inspections");
+    (segments.length === 2 &&
+      (segments[1] === "records" || segments[1] === "inspections"));
   return context && !!estate?.canViewInspectionResults;
 }
 
@@ -298,12 +300,7 @@ function guardFeaturePath(
       guardDocuments(path, access);
       return true;
     case "readings":
-      // `/readings/new` and `/readings/$assetId/new` both record a reading.
-      if (
-        !estate?.canViewReadings ||
-        (path.split("/").slice(4, 6).includes("new") &&
-          !estate.canRecordReadings)
-      ) {
+      if (!estate?.canViewReadings) {
         throw notFound();
       }
       return true;

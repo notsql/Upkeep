@@ -1,13 +1,14 @@
-import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
-import { Hammer } from "lucide-react";
-import { SectionCard } from "@/components/page/section-card";
+import { Link } from "@tanstack/react-router";
+import { Hammer, Wrench } from "lucide-react";
+import {
+  SectionCard,
+  sectionActionClassName,
+} from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { AssetMaintenanceManualEntry } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-manual-entry";
 import { AssetMaintenanceWorkEntry } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-work-entry";
-import { RecordEventDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/record-event-dialog";
 import { useAssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/use-asset-maintenance-section";
 
 export function AssetMaintenanceSection({
@@ -21,24 +22,25 @@ export function AssetMaintenanceSection({
 }) {
   const {
     access,
-    cancel,
     completions,
     entries,
     events,
-    open,
-    recording,
     retryCompletions,
     retryEvents,
-    save,
   } = useAssetMaintenanceSection(estateId, assetId);
 
   return (
     <SectionCard
       actions={
         canRecord ? (
-          <Button onClick={open} variant="outline">
+          <Link
+            className={sectionActionClassName}
+            params={{ assetId, estateId }}
+            to="/estates/$estateId/assets/$assetId/maintenance/new"
+          >
+            <Wrench aria-hidden="true" />
             Record repair
-          </Button>
+          </Link>
         ) : undefined
       }
       icon={Hammer}
@@ -69,32 +71,24 @@ export function AssetMaintenanceSection({
           />
         ) : null}
         {entries.length ? (
-          <ul className="grid gap-3">
+          <ul className="divide-y">
             {entries.map((entry) => (
-              <li key={`${entry.kind}-${entry.id}`}>
-                <Card size="sm">
-                  <CardContent>
-                    {entry.kind === "manual" ? (
-                      <AssetMaintenanceManualEntry event={entry.event} />
-                    ) : (
-                      <AssetMaintenanceWorkEntry
-                        canView={access.canView}
-                        estateId={estateId}
-                        work={entry.work}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
+              <li
+                className="py-3 first:pt-0 last:pb-0"
+                key={`${entry.kind}-${entry.id}`}
+              >
+                {entry.kind === "manual" ? (
+                  <AssetMaintenanceManualEntry event={entry.event} />
+                ) : (
+                  <AssetMaintenanceWorkEntry
+                    canView={access.canView}
+                    estateId={estateId}
+                    work={entry.work}
+                  />
+                )}
               </li>
             ))}
           </ul>
-        ) : null}
-        {recording && canRecord ? (
-          <RecordEventDialog
-            defaultType="BREAKDOWN_REPAIR"
-            onCancel={cancel}
-            onSave={save}
-          />
         ) : null}
       </div>
     </SectionCard>

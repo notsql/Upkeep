@@ -1,14 +1,13 @@
-import { DetailCard } from "@/components/page/detail-card";
 import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
-import { useAssetCategories } from "@/lib/catalogue";
+import { canOpenInspections } from "@/lib/estate-destinations";
 import { useEstate } from "@/lib/estates";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
-import { OverviewDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/overview-devices-section";
-import { OverviewReadingsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/overview-readings-section";
-
-const NOT_RECORDED = "Not recorded";
+import { AssetSummary } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-summary";
+import { AssetUpcoming } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-upcoming/asset-upcoming";
+import { DevicesOnlineStat } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/devices-online-stat";
+import { TrendsCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/trends-card/trends-card";
 
 export function AssetOverview({
   estateId,
@@ -18,7 +17,6 @@ export function AssetOverview({
   assetId: string;
 }) {
   const asset = useAsset(estateId, assetId);
-  const categories = useAssetCategories();
   const estate = useEstate(estateId);
   const access = useAppAccess();
   if (!asset.data) {
@@ -31,63 +29,49 @@ export function AssetOverview({
   );
   const assetActive = !asset.data.deactivatedAt;
   const canSeeDevices = owned || permission?.role === "MANAGER";
+  const showForecast = owned && asset.data.category === "PUMP";
+  // The inspection list and service interval serve owners and delegates.
+  const canSeeInspections = canOpenInspections(permission, owned);
+  const canSeeService =
+    owned || Boolean(estate.data?.canManageInvitationPermissions);
+  const showUpcoming = canSeeInspections || canSeeService;
   return (
     <>
-      <DetailCard>
-        <div>
-          <dt className="font-medium">Reference</dt>
-          <dd>{asset.data.reference}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Category</dt>
-          <dd>
-            {categories.data?.find(
-              (category) => category.code === asset.data.category
-            )?.label ?? asset.data.category}
-          </dd>
-        </div>
-        <div>
-          <dt className="font-medium">Location</dt>
-          <dd>{asset.data.locationPath}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Installation date</dt>
-          <dd>{asset.data.installedOn ?? NOT_RECORDED}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Manufacturer</dt>
-          <dd>{asset.data.manufacturer ?? NOT_RECORDED}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Model</dt>
-          <dd>{asset.data.model ?? NOT_RECORDED}</dd>
-        </div>
-        <div>
-          <dt className="font-medium">Serial number</dt>
-          <dd>{asset.data.serialNumber ?? NOT_RECORDED}</dd>
-        </div>
-      </DetailCard>
-      <AssetConditionSection
-        assetId={assetId}
-        canRecord={assetActive}
-        estateId={estateId}
-      />
-      {owned && asset.data.category === "PUMP" ? (
-        <AssetForecastCard assetId={assetId} estateId={estateId} />
-      ) : null}
-      {canSeeDevices ? (
-        <OverviewDevicesSection
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <AssetSummary asset={asset.data} />
+        {canSeeDevices ? (
+          <DevicesOnlineStat assetId={assetId} estateId={estateId} />
+        ) : null}
+      </div>
+      <div
+        className={
+          showForecast || showUpcoming
+            ? "grid items-stretch gap-6 lg:grid-cols-2"
+            : "grid"
+        }
+      >
+        <AssetConditionSection
           assetId={assetId}
-          canRegister={owned && assetActive && !estate.data?.deactivatedAt}
+          canRecord={assetActive}
           estateId={estateId}
         />
-      ) : null}
+        {showForecast ? (
+          <AssetForecastCard assetId={assetId} estateId={estateId} />
+        ) : null}
+        {showUpcoming ? (
+          <AssetUpcoming
+            assetId={assetId}
+            canSeeInspections={canSeeInspections}
+            canSeeService={canSeeService}
+            // Beside Condition, or a full-width row under Condition and forecast.
+            className={showForecast ? "lg:col-span-2" : undefined}
+            estateId={estateId}
+            installedOn={asset.data.installedOn}
+          />
+        ) : null}
+      </div>
       {permission?.canViewReadings ? (
-        <OverviewReadingsSection
-          assetId={assetId}
-          canRecord={permission.canRecordReadings}
-          estateId={estateId}
-        />
+        <TrendsCard assetId={assetId} estateId={estateId} />
       ) : null}
     </>
   );

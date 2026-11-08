@@ -1,3 +1,4 @@
+import { expectLeadingIcon } from "@tests/section-action";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-section";
@@ -57,8 +58,18 @@ vi.mock("@/lib/work-orders", () => ({
   }),
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children, to }: { children: React.ReactNode; to: string }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    children,
+    className,
+    to,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+    to: string;
+  }) => (
+    <a className={className} href={to}>
+      {children}
+    </a>
   ),
 }));
 it("shows each canonical completion once, newest first alongside manual maintenance, preserving unknown costs", () => {
@@ -72,7 +83,7 @@ it("shows each canonical completion once, newest first alongside manual maintena
   expect(within(entries[0]).getAllByText("Unknown")).toHaveLength(2);
   within(entries[1]).getByText("Routine check");
   expect(screen.getAllByRole("link", { name: "OAK-W0001" })).toHaveLength(1);
-  expect(screen.queryByRole("button", { name: "Record repair" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "Record repair" })).toBeNull();
 });
 
 it("labels manual entries apart from work-order entries", () => {
@@ -116,4 +127,20 @@ it("shows a manual entry's known maintenance details and omits unknown ones", ()
   expect(details.queryByText("Parts replaced")).toBeNull();
   expect(within(check).queryByText("Findings")).toBeNull();
   expect(within(check).queryByText("Downtime (minutes)")).toBeNull();
+});
+
+it("leads Record repair with an icon", () => {
+  renderWithProviders(
+    <AssetMaintenanceSection assetId="pump" canRecord estateId="oak" />
+  );
+  expectLeadingIcon(screen.getByRole("link", { name: "Record repair" }));
+});
+
+it("links Record repair to its own page", () => {
+  renderWithProviders(
+    <AssetMaintenanceSection assetId="pump" canRecord estateId="oak" />
+  );
+  expect(
+    screen.getByRole("link", { name: "Record repair" }).getAttribute("href")
+  ).toBe("/estates/$estateId/assets/$assetId/maintenance/new");
 });

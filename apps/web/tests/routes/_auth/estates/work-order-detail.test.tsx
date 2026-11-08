@@ -282,7 +282,7 @@ it("shows Crew the saved asset reference without an owner-only asset link", () =
   expect(screen.queryByRole("link", { name: "OAK-A0001" })).toBeNull();
   expect(screen.queryByRole("link", { name: "View source report" })).toBeNull();
 });
-it("links Crew to the linked asset's readings and manual entry", () => {
+it("links Crew to the linked asset's readings but never to manual entry", () => {
   state.access.canViewReadings = true;
   state.access.canRecordReadings = true;
   renderWithProviders(
@@ -291,9 +291,7 @@ it("links Crew to the linked asset's readings and manual entry", () => {
   expect(
     screen.getByRole("link", { name: "View readings" }).getAttribute("href")
   ).toBe(`/estates/oak/readings/${ASSET}`);
-  expect(
-    screen.getByRole("link", { name: "Record reading" }).getAttribute("href")
-  ).toBe(`/estates/oak/readings/${ASSET}/new`);
+  expect(screen.queryByRole("link", { name: "Record reading" })).toBeNull();
 });
 it("offers each readings link only with its permission", () => {
   state.access.canViewReadings = true;

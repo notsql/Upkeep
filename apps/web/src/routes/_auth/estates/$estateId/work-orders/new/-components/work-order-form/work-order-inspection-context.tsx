@@ -3,8 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { DetailCard } from "@/components/page/detail-card";
-import { PageHeader } from "@/components/page/page-header";
-import { PageLayout } from "@/components/page/page-layout";
+import { FormCard } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { InspectionSourceLink } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/inspection-source-link";
 import type { useWorkOrderInspection } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-inspection";
@@ -15,12 +14,14 @@ export function renderInspectionWorkOrderStatus(
 ): ReactNode {
   if (inspection.failed) {
     return (
-      <PageLayout className="space-y-4">
-        <p role="alert">Source inspection or asset context is unavailable.</p>
-        <Button onClick={reloadSource} variant="outline">
-          Retry source
-        </Button>
-      </PageLayout>
+      <FormCard>
+        <div className="grid justify-items-start gap-4">
+          <p role="alert">Source inspection or asset context is unavailable.</p>
+          <Button onClick={reloadSource} variant="outline">
+            Retry source
+          </Button>
+        </div>
+      </FormCard>
     );
   }
   if (inspection.pending) {
@@ -29,30 +30,33 @@ export function renderInspectionWorkOrderStatus(
   const { record } = inspection;
   if (record?.workOrder) {
     return (
-      <PageLayout className="space-y-4">
-        <PageHeader title="Work order already raised" />
-        <Link
-          className="underline"
-          params={{
-            estateId: record.estateId,
-            workOrderId: record.workOrder.id,
-          }}
-          to="/estates/$estateId/work-orders/$workOrderId"
-        >
-          {record.workOrder.reference}
-        </Link>
-        <InspectionSourceLink record={record} />
-      </PageLayout>
+      <FormCard title="Work order already raised">
+        <div className="grid justify-items-start gap-3">
+          <Link
+            className="underline"
+            params={{
+              estateId: record.estateId,
+              workOrderId: record.workOrder.id,
+            }}
+            to="/estates/$estateId/work-orders/$workOrderId"
+          >
+            {record.workOrder.reference}
+          </Link>
+          <InspectionSourceLink record={record} />
+        </div>
+      </FormCard>
     );
   }
   if (record && record.outcome !== "FAIL") {
     return (
-      <PageLayout className="space-y-4">
-        <p role="alert">
-          Only a failed inspection can be converted to a work order.
-        </p>
-        <InspectionSourceLink record={record} />
-      </PageLayout>
+      <FormCard>
+        <div className="grid justify-items-start gap-3">
+          <p role="alert">
+            Only a failed inspection can be converted to a work order.
+          </p>
+          <InspectionSourceLink record={record} />
+        </div>
+      </FormCard>
     );
   }
   return null;

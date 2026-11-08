@@ -1,3 +1,4 @@
+import { FieldLegend, FieldSet } from "@proj/ui/components/field";
 import type { DeviceMetric } from "@/lib/devices";
 import { DeviceFormFieldError } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form-field-error";
 import { MetricOption } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/metric-option";
@@ -23,25 +24,23 @@ export function DeviceFormMetricsFields({
   metrics: Set<DeviceMetric>;
 }) {
   return (
-    <fieldset
-      disabled={pending}
-      {...errorProps("metrics")}
-      className="grid gap-2 sm:grid-cols-2"
-    >
-      <legend className="mb-2 text-sm font-medium">Supported metrics</legend>
-      {catalogue.map(([metric, { name, unit }]) => (
-        <MetricOption
-          checked={metrics.has(metric)}
-          // A fieldset does not disable the non-native checkbox.
-          disabled={pending}
-          id={`${id}-metric-${metric}`}
-          key={metric}
-          label={`${name} (${unit})`}
-          metric={metric}
-          onChange={handleMetricChange}
-        />
-      ))}
+    <FieldSet disabled={pending} {...errorProps("metrics")}>
+      <FieldLegend>Supported metrics</FieldLegend>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {catalogue.map(([metric, { name, unit }]) => (
+          <MetricOption
+            checked={metrics.has(metric)}
+            // A fieldset does not disable the non-native checkbox.
+            disabled={pending}
+            id={`${id}-metric-${metric}`}
+            key={metric}
+            label={`${name} (${unit})`}
+            metric={metric}
+            onChange={handleMetricChange}
+          />
+        ))}
+      </div>
       <DeviceFormFieldError field="metrics" fieldErrors={fieldErrors} id={id} />
-    </fieldset>
+    </FieldSet>
   );
 }

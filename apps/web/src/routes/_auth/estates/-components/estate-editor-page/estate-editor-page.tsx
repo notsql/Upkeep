@@ -2,14 +2,36 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { PageLayout } from "@/components/page/page-layout";
+import { FormPage } from "@/components/page/form-page";
+import type { Breadcrumb } from "@/components/page/page-header";
 import { LoadingState } from "@/components/states/loading-state";
 import { useAppAccess } from "@/lib/access";
 import { useEstate, useSaveEstate } from "@/lib/estates";
 import { EstateCreationStatus } from "@/routes/_auth/estates/-components/estate-editor-page/estate-creation-status";
 import { EstateDangerZone } from "@/routes/_auth/estates/-components/estate-editor-page/estate-danger-zone";
-import { EstateEditorHeader } from "@/routes/_auth/estates/-components/estate-editor-page/estate-editor-header";
 import { EstateForm } from "@/routes/_auth/estates/-components/estate-editor-page/estate-form/estate-form";
+
+/** Estate settings is a top-level estate section, so it has no breadcrumbs. */
+function heading(editing: boolean): {
+  breadcrumbs: Breadcrumb[];
+  description: string;
+  title: string;
+} {
+  return editing
+    ? {
+        breadcrumbs: [],
+        description: "Identity and address",
+        title: "Estate settings",
+      }
+    : {
+        breadcrumbs: [
+          { label: "Estates", to: "/estates" },
+          { label: "Create estate" },
+        ],
+        description: "Identity and address",
+        title: "Create estate",
+      };
+}
 
 export function EstateEditorPage({ estateId }: { estateId?: string }) {
   const estate = useEstate(estateId);
@@ -42,20 +64,17 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
     );
   }, [navigate, estateId]);
   return (
-    <PageLayout className="max-w-3xl">
-      <EstateEditorHeader editing={Boolean(estateId)} />
+    <FormPage {...heading(Boolean(estateId))}>
       {estateId && (estate.isPending || waitingForPermissions) ? (
-        <div className="mt-6">
-          <LoadingState label="Loading estate…" rows={2} />
-        </div>
+        <LoadingState label="Loading estate…" rows={2} />
       ) : null}
       {estateId && estate.error ? (
-        <Alert className="mt-6" variant="destructive">
+        <Alert variant="destructive">
           <AlertDescription>{estate.error.message}</AlertDescription>
         </Alert>
       ) : null}
       {showPermissionError ? (
-        <Alert className="mt-6" variant="destructive">
+        <Alert variant="destructive">
           <AlertDescription>
             {access.error?.message ??
               "Only the owner or an assigned Manager can edit estate details."}
@@ -63,7 +82,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
         </Alert>
       ) : null}
       {estate.data?.deactivatedAt ? (
-        <p className="text-muted-foreground mt-4">
+        <p className="text-muted-foreground text-sm">
           This estate is inactive. Editing its details will not reactivate it.
         </p>
       ) : null}
@@ -80,6 +99,6 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
         />
       ) : null}
       {save.createdEstate ? null : <EstateDangerZone estate={estate.data} />}
-    </PageLayout>
+    </FormPage>
   );
 }

@@ -2,10 +2,12 @@ import { Badge } from "@proj/ui/components/badge";
 import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
 import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { deviceMetrics } from "@/lib/devices";
+import { formatDateTime } from "@/lib/format";
 import {
   type AssetReading,
   type EstateReading,
   flagLabel,
+  flagVariant,
 } from "@/lib/readings";
 
 export function ReadingCards({
@@ -54,7 +56,7 @@ export function ReadingCards({
                   <dt className="text-muted-foreground">Measured</dt>
                   <dd>
                     <time dateTime={reading.measuredAt}>
-                      {new Date(reading.measuredAt).toLocaleString()}
+                      {formatDateTime(reading.measuredAt)}
                     </time>
                   </dd>
                 </div>
@@ -71,7 +73,7 @@ export function ReadingCards({
                     <Badge
                       className="h-auto max-w-full py-0.5 text-left leading-snug whitespace-normal"
                       key={flag.type}
-                      variant="outline"
+                      variant={flagVariant(flag)}
                     >
                       {flagLabel(flag, reading.unit)}
                     </Badge>

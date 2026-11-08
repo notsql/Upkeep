@@ -60,39 +60,42 @@ export function NewRoleWorkspace({
               },
           { label: "Create role" },
         ]}
+        description="Name the role and choose what it can do"
         title="Create role"
       />
-      {catalogue.isPending ? (
-        <LoadingState label="Loading permissions…" rows={2} />
-      ) : null}
-      {catalogue.error ? (
-        <ErrorState
-          message={catalogue.error.message}
-          onRetry={retry}
-          retryLabel="Retry permissions"
-        />
-      ) : null}
-      {catalogue.data ? (
-        <RoleForm
-          cancel={
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              params={{ estateId }}
-              to={
-                back === "council"
-                  ? "/estates/$estateId/council"
-                  : "/estates/$estateId/roles"
-              }
-            >
-              Cancel
-            </Link>
-          }
-          catalogue={catalogue.data}
-          error={create.error}
-          onSave={save}
-          pending={create.isPending}
-        />
-      ) : null}
+      <div className="grid gap-6">
+        {catalogue.isPending ? (
+          <LoadingState label="Loading permissions…" rows={2} />
+        ) : null}
+        {catalogue.error ? (
+          <ErrorState
+            message={catalogue.error.message}
+            onRetry={retry}
+            retryLabel="Retry permissions"
+          />
+        ) : null}
+        {catalogue.data ? (
+          <RoleForm
+            cancel={
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                params={{ estateId }}
+                to={
+                  back === "council"
+                    ? "/estates/$estateId/council"
+                    : "/estates/$estateId/roles"
+                }
+              >
+                Cancel
+              </Link>
+            }
+            catalogue={catalogue.data}
+            error={create.error}
+            onSave={save}
+            pending={create.isPending}
+          />
+        ) : null}
+      </div>
     </>
   );
 }

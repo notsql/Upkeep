@@ -71,11 +71,15 @@ export function useSetCategoryServiceInterval(estateId: string) {
   });
 }
 
-export function useAssetServiceInterval(estateId: string, assetId: string) {
+export function useAssetServiceInterval(
+  estateId: string,
+  assetId: string,
+  enabled = true
+) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: assetServiceIntervalQueryKey(userId, estateId, assetId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(

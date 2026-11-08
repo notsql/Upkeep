@@ -1,9 +1,7 @@
-import { Card, CardContent } from "@proj/ui/components/card";
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { FormPageHeader } from "@/components/page/form-page-header";
-import { PageLayout } from "@/components/page/page-layout";
+import { FormCard, FormPage } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useRegisterDevice } from "@/lib/devices";
@@ -45,24 +43,23 @@ export function NewDevicePage({
     asset.data &&
     !asset.data.deactivatedAt;
   return (
-    <PageLayout className="max-w-3xl">
-      <FormPageHeader
-        breadcrumbs={[
-          {
-            label: "Assets",
-            to: "/estates/$estateId/assets",
-            params: { estateId },
-          },
-          {
-            label: asset.data?.name ?? "Asset",
-            to: "/estates/$estateId/assets/$assetId",
-            params: { estateId, assetId },
-          },
-          { label: "Register device" },
-        ]}
-        description="Measurements and reporting interval"
-        title="Register device"
-      />
+    <FormPage
+      breadcrumbs={[
+        {
+          label: "Assets",
+          to: "/estates/$estateId/assets",
+          params: { estateId },
+        },
+        {
+          label: asset.data?.name ?? "Asset",
+          to: "/estates/$estateId/assets/$assetId",
+          params: { estateId, assetId },
+        },
+        { label: "Register device" },
+      ]}
+      description="Measurements and reporting interval"
+      title="Register device"
+    >
       {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}
       {loading || error || allowed ? null : (
@@ -72,19 +69,15 @@ export function NewDevicePage({
         </p>
       )}
       {allowed && asset.data ? (
-        <Card>
-          <CardContent>
-            <div>
-              <DeviceForm
-                defaultLocationId={asset.data.locationId}
-                estateId={estateId}
-                onCancel={cancel}
-                onSave={save}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        <FormCard>
+          <DeviceForm
+            defaultLocationId={asset.data.locationId}
+            estateId={estateId}
+            onCancel={cancel}
+            onSave={save}
+          />
+        </FormCard>
       ) : null}
-    </PageLayout>
+    </FormPage>
   );
 }

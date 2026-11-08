@@ -1,15 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { pageHead } from "@/lib/page-title";
-import { InspectionHistoryTable } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-table";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/** This section moved into Records; old links still land there. */
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/_details/inspections/"
 )({
-  component: AssetInspectionsRoute,
-  head: () => pageHead("Asset inspections"),
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      params,
+      replace: true,
+      to: "/estates/$estateId/assets/$assetId/records",
+    });
+  },
 });
-
-function AssetInspectionsRoute() {
-  const { estateId, assetId } = Route.useParams();
-  return <InspectionHistoryTable assetId={assetId} estateId={estateId} />;
-}

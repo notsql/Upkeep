@@ -5,6 +5,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 
 /** URL/form state deliberately retains invalid input so it can be explained before a request. */
 export interface ReadingSearch {
+  anomalous?: boolean;
   assetId?: string;
   from?: string;
   metric?: string;
@@ -29,6 +30,7 @@ export function mergeReadingSearch(
     "from",
     "to",
     "suspect",
+    "anomalous",
     "page",
   ] as const) {
     if (
@@ -58,26 +60,6 @@ export function readingsLocation(estateId: string, search: ReadingSearch) {
   } as const;
 }
 
-/** Manual entry, preselected to an asset by path when one is given. */
-export function manualReadingLocation(
-  estateId: string,
-  search: Pick<ReadingSearch, "assetId" | "metric">
-) {
-  const { assetId, ...rest } = search;
-  if (assetId) {
-    return {
-      to: "/estates/$estateId/readings/$assetId/new",
-      params: { estateId, assetId },
-      search: rest,
-    } as const;
-  }
-  return {
-    to: "/estates/$estateId/readings/new",
-    params: { estateId },
-    search: rest,
-  } as const;
-}
-
 function text(value: unknown): string | undefined {
   return value === undefined || value === null || value === ""
     ? undefined
@@ -96,6 +78,10 @@ export function parseReadingSearch(
     page: Number.isSafeInteger(page) && page > 0 ? page : undefined,
     suspect:
       search.suspect === true || search.suspect === "true" ? true : undefined,
+    anomalous:
+      search.anomalous === true || search.anomalous === "true"
+        ? true
+        : undefined,
   };
 }
 

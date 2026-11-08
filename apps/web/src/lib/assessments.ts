@@ -1,5 +1,11 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CircleCheck,
+  type LucideIcon,
+  OctagonX,
+  TriangleAlert,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import { estateError, useEstateSession } from "@/lib/estates";
 import { estateFailureRiskQueryKey } from "@/lib/failure-risk";
@@ -15,6 +21,65 @@ export const conditionLabel: Record<AssetCondition, string> = {
   NEEDS_ATTENTION: "Needs attention",
   FAULTY: "Faulty",
 };
+
+/**
+ * Each condition's icon and colours, shared by the attention banner, the
+ * Condition card and the history timeline. `tone` is the data-tone value.
+ */
+export const conditionStyle: Record<
+  AssetCondition,
+  {
+    tone: string;
+    icon: LucideIcon;
+    /** Text colour for the condition label and icon. */
+    text: string;
+    /** Border and background for a banner. */
+    surface: string;
+    /** Background and ring for a timeline node. */
+    node: string;
+  }
+> = {
+  GOOD: {
+    tone: "good",
+    icon: CircleCheck,
+    text: "text-emerald-700 dark:text-emerald-300",
+    surface:
+      "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
+    node: "bg-emerald-50 ring-emerald-300 dark:bg-emerald-950 dark:ring-emerald-800",
+  },
+  NEEDS_ATTENTION: {
+    tone: "needs-attention",
+    icon: TriangleAlert,
+    text: "text-amber-700 dark:text-amber-300",
+    surface:
+      "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100",
+    node: "bg-amber-50 ring-amber-300 dark:bg-amber-950 dark:ring-amber-800",
+  },
+  FAULTY: {
+    tone: "faulty",
+    icon: OctagonX,
+    text: "text-destructive",
+    surface:
+      "border-destructive/40 bg-destructive/10 text-destructive dark:bg-destructive/20",
+    node: "bg-destructive/10 ring-destructive/40 dark:bg-destructive/20",
+  },
+};
+
+/** The identity the server records anomaly-detection assessments under. */
+export const ANOMALY_MODEL_USER_ID = "system:anomaly-model";
+
+/** Who recorded an assessment, as shown to people. */
+export function recorderName(assessment: Assessment): string {
+  if (assessment.recordedByUserId === ANOMALY_MODEL_USER_ID) {
+    return "Anomaly detection";
+  }
+  return assessment.recordedByName ?? "Unknown user";
+}
+
+/** Whether anomaly detection, not a person, recorded the assessment. */
+export function recordedByModel(assessment: Assessment): boolean {
+  return assessment.recordedByUserId === ANOMALY_MODEL_USER_ID;
+}
 
 /** Today in the browser's time zone, as the YYYY-MM-DD a date input uses. */
 export function localToday(): string {

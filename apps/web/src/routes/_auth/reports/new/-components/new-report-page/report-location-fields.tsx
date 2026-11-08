@@ -1,4 +1,4 @@
-import { Label } from "@proj/ui/components/label";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -39,54 +39,58 @@ export function ReportLocationFields({
   );
   return (
     <>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-block`}>Block</Label>
-        <Select
-          items={blocks.map((block) => ({
-            value: block.id ?? "",
-            label: block.name ?? "",
-          }))}
-          onValueChange={onBlockChange}
-          value={blockId}
-        >
-          <SelectTrigger className="w-full" id={`${id}-block`}>
-            <SelectValue placeholder="Choose block" />
-          </SelectTrigger>
-          <SelectContent>
-            {blocks.map((block) => (
-              <SelectItem key={block.id} value={block.id ?? ""}>
-                {block.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-level`}>Level</Label>
-        <Select
-          disabled={!blockId}
-          items={levels.map((level) => ({
-            value: level.id ?? "",
-            label: level.name ?? "",
-          }))}
-          onValueChange={onLevelChange}
-          value={levelId}
-        >
-          <SelectTrigger className="w-full" id={`${id}-level`}>
-            <SelectValue placeholder="Choose level" />
-          </SelectTrigger>
-          <SelectContent>
-            {levels.map((level) => (
-              <SelectItem key={level.id} value={level.id ?? ""}>
-                {level.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field>
+          <FieldLabel htmlFor={`${id}-block`}>Block</FieldLabel>
+          <Select
+            items={blocks.map((block) => ({
+              value: block.id ?? "",
+              label: block.name ?? "",
+            }))}
+            onValueChange={onBlockChange}
+            value={blockId}
+          >
+            <SelectTrigger className="w-full" id={`${id}-block`}>
+              <SelectValue placeholder="Choose block" />
+            </SelectTrigger>
+            <SelectContent>
+              {blocks.map((block) => (
+                <SelectItem key={block.id} value={block.id ?? ""}>
+                  {block.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-level`}>Level</FieldLabel>
+          <Select
+            disabled={!blockId}
+            items={levels.map((level) => ({
+              value: level.id ?? "",
+              label: level.name ?? "",
+            }))}
+            onValueChange={onLevelChange}
+            value={levelId}
+          >
+            <SelectTrigger className="w-full" id={`${id}-level`}>
+              <SelectValue placeholder="Choose level" />
+            </SelectTrigger>
+            <SelectContent>
+              {levels.map((level) => (
+                <SelectItem key={level.id} value={level.id ?? ""}>
+                  {level.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
       </div>
       {commonAreas.length > 0 ? (
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-common`}>Common area (optional)</Label>
+        <Field>
+          <FieldLabel htmlFor={`${id}-common`}>
+            Common area (optional)
+          </FieldLabel>
           <Select
             items={commonAreas.map((area) => ({
               value: area.id ?? "",
@@ -106,7 +110,7 @@ export function ReportLocationFields({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
       ) : null}
     </>
   );

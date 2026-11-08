@@ -50,11 +50,11 @@ export function devicesQueryKey(
   return ["estates", userId, "devices", estateId, assetId] as const;
 }
 
-export function useDevices(estateId: string, assetId: string) {
+export function useDevices(estateId: string, assetId: string, enabled = true) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: devicesQueryKey(userId, estateId, assetId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(
@@ -229,4 +229,11 @@ export function useReplaceDevice(
         queryKey: devicesQueryKey(userId, estateId, assetId),
       }),
   });
+}
+
+/** Devices still in service: deactivated ones no longer report. */
+export function activeDevices(devices: Device[]): Device[] {
+  return devices.filter(
+    (device) => !device.deactivatedAt && device.status !== "DEACTIVATED"
+  );
 }

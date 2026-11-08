@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import {
   assetFailureRiskQueryKey,
   estateFailureRiskQueryKey,
+  RISK_THRESHOLDS,
+  riskLevel,
   useAssetFailureRisk,
   useEstateFailureRisk,
 } from "@/lib/failure-risk";
@@ -142,5 +144,24 @@ describe("useEstateFailureRisk", () => {
     expect((await screen.findByRole("alert")).textContent).toBe(
       "Estate not found."
     );
+  });
+});
+
+describe("riskLevel", () => {
+  it("is High at or above the high threshold", () => {
+    expect(RISK_THRESHOLDS.high).toBe(0.3);
+    expect(riskLevel(0.3)).toBe("HIGH");
+    expect(riskLevel(0.9)).toBe("HIGH");
+  });
+
+  it("is Moderate from the moderate threshold up to High", () => {
+    expect(RISK_THRESHOLDS.moderate).toBe(0.1);
+    expect(riskLevel(0.1)).toBe("MODERATE");
+    expect(riskLevel(0.29)).toBe("MODERATE");
+  });
+
+  it("is Low below the moderate threshold", () => {
+    expect(riskLevel(0)).toBe("LOW");
+    expect(riskLevel(0.09)).toBe("LOW");
   });
 });

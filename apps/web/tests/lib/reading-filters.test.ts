@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  manualReadingLocation,
   mergeReadingSearch,
   parseReadingSearch,
   readingFilterError,
@@ -98,21 +97,6 @@ describe("reading locations", () => {
       to: "/estates/$estateId/readings",
       params: { estateId },
       search: { suspect: true },
-    });
-  });
-
-  it("opens manual entry for an asset by path", () => {
-    expect(
-      manualReadingLocation(estateId, { assetId, metric: "TEMPERATURE" })
-    ).toEqual({
-      to: "/estates/$estateId/readings/$assetId/new",
-      params: { estateId, assetId },
-      search: { metric: "TEMPERATURE" },
-    });
-    expect(manualReadingLocation(estateId, {})).toEqual({
-      to: "/estates/$estateId/readings/new",
-      params: { estateId },
-      search: {},
     });
   });
 });

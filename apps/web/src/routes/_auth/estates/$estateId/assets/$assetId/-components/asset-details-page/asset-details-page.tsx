@@ -3,25 +3,27 @@ import type { ReactNode } from "react";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { AssetAttentionAlert } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-attention-alert";
 import { AssetDetailsHeader } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-details-header";
 import { AssetDetailsNav } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-details-nav";
-import { DeactivateAssetDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/deactivate-asset-dialog";
 import { useAssetDetailsLayout } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/use-asset-details-layout";
 
-/** The asset's sub-pages; the old `?tab=` values map onto these paths. */
-export const ASSET_SECTIONS = [
-  "maintenance",
-  "inspections",
-  "documents",
-  "costs",
-  "devices",
-] as const;
+/** The asset's sub-pages. */
+export type AssetSection = "details" | "records" | "costs" | "devices";
 
-export type AssetSection = (typeof ASSET_SECTIONS)[number];
+/** Old `?tab=` values and the sub-page each now lives on. */
+export const LEGACY_TABS: Record<string, AssetSection> = {
+  details: "details",
+  maintenance: "records",
+  inspections: "records",
+  documents: "records",
+  costs: "costs",
+  devices: "devices",
+};
 
 /**
- * The shared frame of every asset sub-page: header, retired note and the
- * section SubNav. `children` (the current sub-page) renders once the asset
+ * The shared frame of every asset sub-page: header, attention banner,
+ * retired note and the section SubNav. `children` (the current sub-page) renders once the asset
  * has loaded.
  */
 export function AssetDetailsLayout({
@@ -33,15 +35,7 @@ export function AssetDetailsLayout({
   assetId: string;
   children: ReactNode;
 }) {
-  const {
-    asset,
-    closeConfirmation,
-    confirm,
-    confirming,
-    estate,
-    openConfirmation,
-    retry,
-  } = useAssetDetailsLayout(estateId, assetId);
+  const { asset, canInspect, retry } = useAssetDetailsLayout(estateId, assetId);
   return (
     <PageLayout>
       {asset.isPending ? (
@@ -52,12 +46,11 @@ export function AssetDetailsLayout({
       ) : null}
       {asset.data ? (
         <>
-          <AssetDetailsHeader
-            asset={asset.data}
+          <AssetDetailsHeader asset={asset.data} estateId={estateId} />
+          <AssetAttentionAlert
             assetId={assetId}
-            estateActive={!estate.data?.deactivatedAt}
+            canInspect={canInspect}
             estateId={estateId}
-            onRetire={openConfirmation}
           />
           {asset.data.deactivatedAt ? (
             <Alert className="mb-5" role="note">
@@ -69,16 +62,6 @@ export function AssetDetailsLayout({
           ) : null}
           <AssetDetailsNav assetId={assetId} estateId={estateId} />
           <div className="grid gap-6">{children}</div>
-          {confirming ? (
-            <DeactivateAssetDialog
-              installedOn={asset.data.installedOn}
-              lifecycleVersion={asset.data.lifecycleVersion}
-              name={asset.data.name}
-              onCancel={closeConfirmation}
-              onConfirm={confirm}
-              reference={asset.data.reference}
-            />
-          ) : null}
         </>
       ) : null}
     </PageLayout>

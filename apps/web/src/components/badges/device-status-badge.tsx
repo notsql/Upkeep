@@ -1,5 +1,7 @@
 import { Badge } from "@proj/ui/components/badge";
+import { cn } from "@proj/ui/lib/utils";
 import type { DeviceStatus } from "@/lib/devices";
+import { type StatusTone, statusToneClassName } from "@/lib/status-tone";
 
 const labels: Record<DeviceStatus, string> = {
   ONLINE: "Online",
@@ -8,16 +10,22 @@ const labels: Record<DeviceStatus, string> = {
   DEACTIVATED: "Deactivated",
 };
 
-const variants = {
-  ONLINE: "secondary",
-  OFFLINE: "destructive",
-  AWAITING_FIRST_READING: "outline",
-  DEACTIVATED: "secondary",
-} as const satisfies Record<DeviceStatus, string>;
+export const deviceStatusTone = {
+  ONLINE: "success",
+  OFFLINE: "danger",
+  AWAITING_FIRST_READING: "neutral",
+  DEACTIVATED: "muted",
+} as const satisfies Record<DeviceStatus, StatusTone>;
 
 export function DeviceStatusBadge({ status }: { status: DeviceStatus }) {
   return (
-    <Badge className="whitespace-normal" variant={variants[status]}>
+    <Badge
+      className={cn(
+        "whitespace-normal",
+        statusToneClassName[deviceStatusTone[status]]
+      )}
+      variant="outline"
+    >
       {labels[status]}
     </Badge>
   );

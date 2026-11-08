@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { expectLeadingIcon } from "@tests/section-action";
 import {
   renderWithProviders,
   screen,
@@ -8,6 +9,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { Device } from "@/lib/devices";
+import { formatDateTime } from "@/lib/format";
 import type { Location } from "@/lib/locations";
 import { AssetDevicesSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices/asset-devices-section";
 
@@ -23,16 +25,16 @@ vi.mock("@tanstack/react-router", () => ({
     to,
     params,
     search,
-    "aria-label": ariaLabel,
+    ...rest
   }: {
     children: React.ReactNode;
     to: string;
     params?: { estateId: string; assetId?: string; deviceId?: string };
     search?: { assetId?: string };
-    "aria-label"?: string;
+    [key: string]: unknown;
   }) => (
     <a
-      aria-label={ariaLabel}
+      {...rest}
       href={
         to
           .replace("$estateId", params?.estateId ?? "")
@@ -46,6 +48,8 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+const LAST_SEEN = /^Last seen /u;
+const ACTIONS_FOR = /^Actions for/u;
 const NOT_SHOWN_AGAIN = /won't be shown again/u;
 const STOPS_WORKING = /current key stops working immediately/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
@@ -91,6 +95,13 @@ function serve() {
   }) as never);
 }
 
+async function openActions(name = "PUMP-01") {
+  fireEvent.click(
+    await screen.findByRole("button", { name: `Actions for ${name}` })
+  );
+  return within(await screen.findByRole("menu"));
+}
+
 function renderSection(canRegister = true) {
   renderWithProviders(
     <AssetDevicesSection
@@ -124,8 +135,9 @@ describe("AssetDevicesSection", () => {
     item.getByText("Awaiting first reading");
     item.getByText("PT-100");
     item.getByText("Blk 101 › Plant room");
-    item.getByText("Temperature (°C), Pressure (bar)");
-    item.getByText("Every 60 seconds");
+    item.getByText("Temperature (°C)");
+    item.getByText("Pressure (bar)");
+    item.getByText("Reports every 60 seconds");
     expect(api.GET).toHaveBeenCalledWith(DEVICES_PATH, {
       params: { path: { estateId: "estate-id", assetId: "asset-id" } },
     });
@@ -142,7 +154,8 @@ describe("AssetDevicesSection", () => {
       renderSection();
       const item = within(await screen.findByRole("listitem"));
       item.getByText(label);
-      item.getByText(`Last seen ${new Date(lastSeenAt).toLocaleString()}`);
+      const lastSeen = item.getByText(LAST_SEEN);
+      expect(lastSeen.getAttribute("title")).toBe(formatDateTime(lastSeenAt));
     }
   );
 
@@ -152,6 +165,19 @@ describe("AssetDevicesSection", () => {
     await screen.findByText("No devices yet");
     expect(screen.queryByRole("link", { name: "Register device" })).toBeNull();
   });
+
+  it("lists devices on the page, not in a card", async () => {
+    renderSection();
+    const item = await screen.findByRole("listitem");
+    expect(item.closest("[data-slot='card']")).toBeNull();
+  });
+});
+
+it("leads each header action with an icon", () => {
+  serve();
+  renderSection();
+  expectLeadingIcon(screen.getByRole("link", { name: "Register device" }));
+  expectLeadingIcon(screen.getByRole("link", { name: "Readings" }));
 });
 
 it("links to a dedicated device form from the asset", () => {
@@ -201,15 +227,17 @@ describe("AssetDevicesSection credentials", () => {
     renderSection();
     const item = within(await screen.findByRole("listitem"));
     item.getByText("No credential");
-    item.getByRole("button", { name: "Generate credential" });
+    (await openActions()).getByRole("menuitem", {
+      name: "Generate credential",
+    });
   });
 
   it("shows when a device's credential was issued", async () => {
     devices = [{ ...device, credentialIssuedAt: issuedAt }];
     renderSection();
     const item = within(await screen.findByRole("listitem"));
-    item.getByText(`Credential issued ${new Date(issuedAt).toLocaleString()}`);
-    item.getByRole("button", { name: "Replace credential" });
+    item.getByText(`Credential issued ${formatDateTime(issuedAt)}`);
+    (await openActions()).getByRole("menuitem", { name: "Replace credential" });
   });
 
   it("hides credential actions on a retired asset", async () => {
@@ -219,18 +247,15 @@ describe("AssetDevicesSection credentials", () => {
     ];
     renderSection(false);
     await screen.findByRole("heading", { name: "PUMP-02" });
-    expect(
-      screen.queryByRole("button", { name: "Replace credential" })
-    ).toBeNull();
-    expect(
-      screen.queryByRole("button", { name: "Generate credential" })
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: ACTIONS_FOR })).toBeNull();
   });
 
   it("generates a key and shows it once with a copy button and a warning", async () => {
     renderSection();
     fireEvent.click(
-      await screen.findByRole("button", { name: "Generate credential" })
+      (await openActions()).getByRole("menuitem", {
+        name: "Generate credential",
+      })
     );
 
     const dialog = within(await screen.findByRole("dialog"));
@@ -255,16 +280,16 @@ describe("AssetDevicesSection credentials", () => {
     fireEvent.click(dialog.getByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(screen.queryByDisplayValue(apiKey)).toBeNull();
-    await screen.findByText(
-      `Credential issued ${new Date(issuedAt).toLocaleString()}`
-    );
+    await screen.findByText(`Credential issued ${formatDateTime(issuedAt)}`);
   });
 
   it("asks before replacing a key, warning that the current one stops working", async () => {
     devices = [{ ...device, credentialIssuedAt: issuedAt }];
     renderSection();
     fireEvent.click(
-      await screen.findByRole("button", { name: "Replace credential" })
+      (await openActions()).getByRole("menuitem", {
+        name: "Replace credential",
+      })
     );
 
     const confirm = within(await screen.findByRole("dialog"));
@@ -275,7 +300,11 @@ describe("AssetDevicesSection credentials", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(api.POST).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole("button", { name: "Replace credential" }));
+    fireEvent.click(
+      (await openActions()).getByRole("menuitem", {
+        name: "Replace credential",
+      })
+    );
     fireEvent.click(
       within(await screen.findByRole("dialog")).getByRole("button", {
         name: "Replace credential",
@@ -306,14 +335,10 @@ describe("device deactivation and replacement (ID-45)", () => {
     devices = [{ ...device, deactivatedAt }];
     renderSection();
     const item = within(await screen.findByRole("listitem"));
-    item.getByText(`Deactivated ${new Date(deactivatedAt).toLocaleString()}`);
+    item.getByText(`Deactivated ${formatDateTime(deactivatedAt)}`);
     expect(item.queryByText("Awaiting first reading")).toBeNull();
     expect(
-      item.queryByRole("button", { name: "Generate credential" })
-    ).toBeNull();
-    expect(item.queryByRole("link", { name: "Replace PUMP-01" })).toBeNull();
-    expect(
-      item.queryByRole("button", { name: "Deactivate PUMP-01" })
+      item.queryByRole("button", { name: "Actions for PUMP-01" })
     ).toBeNull();
   });
 
@@ -330,21 +355,25 @@ describe("device deactivation and replacement (ID-45)", () => {
 
   it("offers replacing and deactivating an active device", async () => {
     renderSection();
-    const item = within(await screen.findByRole("listitem"));
+    const menu = await openActions();
     expect(
-      item
-        .getByRole<HTMLAnchorElement>("link", { name: "Replace PUMP-01" })
+      menu
+        .getByRole("menuitem", { name: "Replace device" })
         .getAttribute("href")
     ).toBe("/estates/estate-id/assets/asset-id/devices/device-id/replace");
-    item.getByRole("button", { name: "Deactivate PUMP-01" });
+    menu.getByRole("menuitem", { name: "Deactivate device" });
+    expect(
+      menu
+        .getByRole("menuitem", { name: "Deactivate device" })
+        .getAttribute("data-variant")
+    ).toBe("destructive");
   });
 
   it("hides device actions on a retired asset", async () => {
     renderSection(false);
     const item = within(await screen.findByRole("listitem"));
-    expect(item.queryByRole("link", { name: "Replace PUMP-01" })).toBeNull();
     expect(
-      item.queryByRole("button", { name: "Deactivate PUMP-01" })
+      item.queryByRole("button", { name: "Actions for PUMP-01" })
     ).toBeNull();
   });
 
@@ -358,7 +387,9 @@ describe("device deactivation and replacement (ID-45)", () => {
     }) as never);
     renderSection();
     fireEvent.click(
-      await screen.findByRole("button", { name: "Deactivate PUMP-01" })
+      (await openActions()).getByRole("menuitem", {
+        name: "Deactivate device",
+      })
     );
     const dialog = within(
       await screen.findByRole("dialog", { name: "Deactivate PUMP-01?" })
@@ -395,9 +426,7 @@ describe("device deactivation and replacement (ID-45)", () => {
         }
       )
     );
-    await screen.findByText(
-      `Deactivated ${new Date(deactivatedAt).toLocaleString()}`
-    );
+    await screen.findByText(`Deactivated ${formatDateTime(deactivatedAt)}`);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

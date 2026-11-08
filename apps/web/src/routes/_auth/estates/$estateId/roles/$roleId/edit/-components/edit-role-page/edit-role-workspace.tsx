@@ -81,7 +81,7 @@ export function EditRoleWorkspace({
         ]}
         title={role ? `Edit ${role.name}` : "Edit role"}
       />
-      {content}
+      <div className="grid gap-6">{content}</div>
     </>
   );
 }

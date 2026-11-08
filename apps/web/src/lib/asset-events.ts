@@ -22,11 +22,15 @@ export function assetEventsQueryKey(
   return [...assetQueryKey(userId, estateId, assetId), "events"] as const;
 }
 
-export function useAssetEvents(estateId: string, assetId: string) {
+export function useAssetEvents(
+  estateId: string,
+  assetId: string,
+  enabled = true
+) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: assetEventsQueryKey(userId, estateId, assetId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(

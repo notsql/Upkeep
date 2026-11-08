@@ -84,10 +84,9 @@ function routerFor(path: string) {
     "/estates/$estateId/assets/$assetId",
     "/estates/$estateId/assets/$assetId/edit",
     "/estates/$estateId/assets/$assetId/readings",
+    "/estates/$estateId/assets/$assetId/records",
     "/estates/$estateId/readings",
-    "/estates/$estateId/readings/new",
     "/estates/$estateId/readings/$assetId",
-    "/estates/$estateId/readings/$assetId/new",
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
     "/estates/$estateId/edit",
@@ -143,56 +142,24 @@ beforeEach(() => {
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
 });
 
-it("denies a bookmarked manual-entry route when write capability is unavailable", async () => {
+const ASSET_READINGS =
+  "/estates/oak/readings/7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f";
+
+it("opens an asset's readings to a viewer with readings access", async () => {
   get.mockResolvedValue({
     data: {
       ...unassignedAccess,
       canEnterWorkspace: true,
-      estates: [
-        {
-          ...crewEstateAccess,
-          canViewReadings: true,
-          canRecordReadings: false,
-        },
-      ],
+      estates: [crewEstateAccess],
     },
     response: new Response(),
   });
-  const router = routerFor(
-    `/estates/${crewEstateAccess.estateId}/readings/new`
-  );
+  const router = routerFor(ASSET_READINGS);
   await router.load();
   expect(
     router.state.matches.some((match) => match.status === "notFound")
-  ).toBe(true);
-  expect(managementLoader).not.toHaveBeenCalled();
+  ).toBe(false);
 });
-
-const ASSET_READINGS =
-  "/estates/oak/readings/7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f";
-
-it.each([
-  { path: ASSET_READINGS, record: false, open: true },
-  { path: `${ASSET_READINGS}/new`, record: true, open: true },
-  { path: `${ASSET_READINGS}/new`, record: false, open: false },
-])(
-  "gates $path like the estate readings pages (record: $record)",
-  async ({ path, record, open }) => {
-    get.mockResolvedValue({
-      data: {
-        ...unassignedAccess,
-        canEnterWorkspace: true,
-        estates: [{ ...crewEstateAccess, canRecordReadings: record }],
-      },
-      response: new Response(),
-    });
-    const router = routerFor(path);
-    await router.load();
-    expect(
-      router.state.matches.some((match) => match.status === "notFound")
-    ).toBe(!open);
-  }
-);
 
 it("hides an asset's readings from a viewer without readings access", async () => {
   get.mockResolvedValue({
@@ -313,6 +280,7 @@ it.each([
   "/estates/oak",
   "/estates/oak/assets",
   "/estates/oak/assets/pump",
+  "/estates/oak/assets/pump/records",
   "/estates/oak/assets/pump/inspections/new",
   "/estates/oak/assets/pump/inspections/saved",
 ])(
