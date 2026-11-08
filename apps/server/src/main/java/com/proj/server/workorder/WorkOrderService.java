@@ -68,6 +68,12 @@ public class WorkOrderService {
             if (sourceLocation == null) throw error(HttpStatus.NOT_FOUND, "Report not found.");
             if (!sourceLocation.equals(request.expectedSourceLocationId()))
                 throw error(HttpStatus.CONFLICT, "The report location changed. Reload the source before saving.");
+            // One fault, one work order (ID-74): linked duplicates are handled through their original.
+            if (repository.hasActiveDuplicateLink(estateId, request.sourceReportId()))
+                throw error(
+                        HttpStatus.CONFLICT,
+                        "This report is linked as a duplicate. Create the work order from the original report, "
+                                + "or reject the link first.");
         }
         requireActiveLocation(estateId, request.locationId());
         if (inspection && request.assetId() == null)

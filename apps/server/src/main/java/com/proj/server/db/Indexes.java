@@ -27,6 +27,7 @@ import com.proj.server.db.tables.Importedreading;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
@@ -114,6 +115,8 @@ public class Indexes {
     public static final Index ISSUEREPORT_ESTATEID_LOCATIONID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_locationId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID, Issuereport.ISSUEREPORT.LOCATIONID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
     public static final Index ISSUEREPORT_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("IssueReport_id_estateId_key"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ID, Issuereport.ISSUEREPORT.ESTATEID }, true);
     public static final Index ISSUEREPORT_SUBMITTEDBYUSERID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_submittedByUserId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.SUBMITTEDBYUSERID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
+    public static final Index ISSUEREPORTDUPLICATE_ESTATEID_ORIGINALREPORTID_STATE_IDX = Internal.createIndex(DSL.name("IssueReportDuplicate_estateId_originalReportId_state_idx"), Issuereportduplicate.ISSUEREPORTDUPLICATE, new OrderField[] { Issuereportduplicate.ISSUEREPORTDUPLICATE.ESTATEID, Issuereportduplicate.ISSUEREPORTDUPLICATE.ORIGINALREPORTID, Issuereportduplicate.ISSUEREPORTDUPLICATE.STATE }, false);
+    public static final Index ISSUEREPORTDUPLICATE_REPORTID_ESTATEID_KEY = Internal.createIndex(DSL.name("IssueReportDuplicate_reportId_estateId_key"), Issuereportduplicate.ISSUEREPORTDUPLICATE, new OrderField[] { Issuereportduplicate.ISSUEREPORTDUPLICATE.REPORTID, Issuereportduplicate.ISSUEREPORTDUPLICATE.ESTATEID }, true);
     public static final Index ISSUEREPORTIMAGE_REPORTID_IDX = Internal.createIndex(DSL.name("IssueReportImage_reportId_idx"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, false);
     public static final Index ISSUEREPORTIMAGE_STORAGEKEY_KEY = Internal.createIndex(DSL.name("IssueReportImage_storageKey_key"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.STORAGEKEY }, true);
     public static final Index LOCATION_ESTATEID_IDX = Internal.createIndex(DSL.name("Location_estateId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.ESTATEID }, false);
@@ -129,6 +132,7 @@ public class Indexes {
     public static final Index READINGIMPORTROW_BATCHID_OUTCOME_RECORDNUMBER_IDX = Internal.createIndex(DSL.name("ReadingImportRow_batchId_outcome_recordNumber_idx"), Readingimportrow.READINGIMPORTROW, new OrderField[] { Readingimportrow.READINGIMPORTROW.BATCHID, Readingimportrow.READINGIMPORTROW.OUTCOME, Readingimportrow.READINGIMPORTROW.RECORDNUMBER }, false);
     public static final Index WORKORDER_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrder_estateId_createdAt_id_idx"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.CREATEDAT, Workorder.WORKORDER.ID }, false);
     public static final Index WORKORDER_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("WorkOrder_estateId_reference_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.REFERENCE }, true);
+    public static final Index WORKORDER_ESTATEID_SOURCEREPORTID_IDX = Internal.createIndex(DSL.name("WorkOrder_estateId_sourceReportId_idx"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.SOURCEREPORTID }, false);
     public static final Index WORKORDER_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("WorkOrder_id_estateId_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ID, Workorder.WORKORDER.ESTATEID }, true);
     public static final Index WORKORDER_SOURCEINSPECTIONID_KEY = Internal.createIndex(DSL.name("WorkOrder_sourceInspectionId_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.SOURCEINSPECTIONID }, true);
     public static final Index WORKORDERCOMPLETION_ESTATEID_COMPLETEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrderCompletion_estateId_completedAt_id_idx"), Workordercompletion.WORKORDERCOMPLETION, new OrderField[] { Workordercompletion.WORKORDERCOMPLETION.ESTATEID, Workordercompletion.WORKORDERCOMPLETION.COMPLETEDAT, Workordercompletion.WORKORDERCOMPLETION.ID }, false);

@@ -11,6 +11,7 @@ import { Link } from "@tanstack/react-router";
 import { SortableTableHead } from "@/components/table/sortable-table-head";
 import { useMobile } from "@/lib/use-mobile";
 import type { WorkOrder, WorkOrderListSearch } from "@/lib/work-orders";
+import { DuplicateCountBadge } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/duplicate-count-badge";
 import { WorkOrderCards } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-cards";
 import { WorkOrderSortControls } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-sort-controls";
 
@@ -87,13 +88,18 @@ export function WorkOrderTable({
             </TableCell>
             <TableCell>{order.category.replaceAll("_", " ")}</TableCell>
             <TableCell>
-              <Badge
-                variant={
-                  order.priority === "URGENT" ? "destructive" : "outline"
-                }
-              >
-                {order.priority}
-              </Badge>
+              <div className="flex flex-wrap gap-1">
+                <Badge
+                  variant={
+                    order.priority === "URGENT" ? "destructive" : "outline"
+                  }
+                >
+                  {order.priority}
+                </Badge>
+                <DuplicateCountBadge
+                  count={order.sourceReportConfirmedDuplicateCount}
+                />
+              </div>
             </TableCell>
             <TableCell>{order.status}</TableCell>
             <TableCell>

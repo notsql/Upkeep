@@ -30,6 +30,7 @@ export function WorkOrderDetailSummary({
             <dt>Priority</dt>
             <dd>{data.priority}</dd>
           </div>
+          <DuplicateReports count={data.sourceReportConfirmedDuplicateCount} />
           <div>
             <dt>Source</dt>
             <dd>{data.source.replaceAll("_", " ")}</dd>
@@ -88,5 +89,20 @@ export function WorkOrderDetailSummary({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/** Confirmed duplicates of the source report, shown to signal urgency (ID-74). */
+function DuplicateReports({ count }: { count: number }) {
+  if (count <= 0) {
+    return null;
+  }
+  return (
+    <div>
+      <dt>Duplicate reports</dt>
+      <dd>
+        {count} confirmed {count === 1 ? "duplicate" : "duplicates"}
+      </dd>
+    </div>
   );
 }

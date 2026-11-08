@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportCard } from "@/components/reports/report-card";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -38,6 +39,7 @@ export function EstateReportsResults({
         ? null
         : reports.data?.items.map((report) => (
             <ReportCard
+              badges={<DuplicateBadges report={report} />}
               key={report.id}
               report={report}
               title={

@@ -1281,6 +1281,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/reports/{reportId}/duplicate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Link a report to an original by hand (managers only) */
+    put: operations["linkEstateReportDuplicate"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Confirm or reject a report's duplicate link (managers only) */
+    patch: operations["reviewEstateReportDuplicate"];
+    trace?: never;
+  };
   "/estates/{estateId}/reports/{reportId}/images/{imageId}": {
     parameters: {
       query?: never;
@@ -1739,6 +1757,11 @@ export interface components {
       createdAt: string;
       /** Format: date-time */
       updatedAt: string;
+      /**
+       * Format: int32
+       * @description CONFIRMED duplicates of the source report; 0 without a source report.
+       */
+      sourceReportConfirmedDuplicateCount: number;
     };
     EstateError: {
       message: string;
@@ -1790,6 +1813,58 @@ export interface components {
       version: number;
       canEdit: boolean;
       canDelete: boolean;
+    };
+    LinkDuplicateRequest: {
+      /** Format: uuid */
+      originalReportId: string;
+    };
+    DuplicateOf: {
+      /** Format: uuid */
+      reportId: string;
+      title: string;
+      /** @enum {string} */
+      state: "SUSPECTED" | "CONFIRMED" | "REJECTED";
+    };
+    EstateIssueReportDetailResponse: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      estateName: string;
+      location: components["schemas"]["ReportLocation"];
+      status: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: int32 */
+      confirmedDuplicateCount: number;
+      /** Format: int32 */
+      suspectedDuplicateCount: number;
+      duplicateOf: components["schemas"]["DuplicateOf"] | null;
+      images: components["schemas"]["ReportImage"][];
+      /** @description SUSPECTED and CONFIRMED duplicates of this report, newest first */
+      duplicates: components["schemas"]["LinkedDuplicate"][];
+    };
+    LinkedDuplicate: {
+      /** Format: uuid */
+      reportId: string;
+      title: string;
+      location: components["schemas"]["ReportLocation"];
+      /** @enum {string} */
+      state: "SUSPECTED" | "CONFIRMED" | "REJECTED";
+      /** Format: date-time */
+      createdAt: string;
+    };
+    ReportImage: {
+      /** Format: uuid */
+      id: string;
+      contentType: string;
+    };
+    ReportLocation: {
+      /** Format: uuid */
+      id: string;
+      label: string;
     };
     UpdateEstateRoleRequest: {
       /** @enum {string} */
@@ -1963,16 +2038,6 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
       images: components["schemas"]["ReportImage"][];
-    };
-    ReportImage: {
-      /** Format: uuid */
-      id: string;
-      contentType: string;
-    };
-    ReportLocation: {
-      /** Format: uuid */
-      id: string;
-      label: string;
     };
     EstateRequest: {
       name: string;
@@ -2796,6 +2861,15 @@ export interface components {
       /** Format: uuid */
       expectedLocationId: string;
     };
+    ReviewDuplicateRequest: {
+      /** @enum {string} */
+      state: "CONFIRMED" | "REJECTED";
+      /**
+       * @description The link state the caller saw
+       * @enum {string}
+       */
+      expectedState: "SUSPECTED" | "CONFIRMED";
+    };
     UpdateLocationRequest: {
       /** Format: uuid */
       parentId?: string;
@@ -2935,9 +3009,27 @@ export interface components {
       items: components["schemas"]["WorkOrderAssetOptionResponse"][];
       nextCursor?: string;
     };
-    IssueReportPageResponse: {
-      items: components["schemas"]["IssueReportSummaryResponse"][];
+    EstateIssueReportPageResponse: {
+      items: components["schemas"]["EstateIssueReportSummaryResponse"][];
       nextCursor: string | null;
+    };
+    EstateIssueReportSummaryResponse: {
+      /** Format: uuid */
+      id: string;
+      title: string;
+      description: string;
+      estateName: string;
+      location: components["schemas"]["ReportLocation"];
+      status: string;
+      /** Format: date-time */
+      createdAt: string;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: int32 */
+      confirmedDuplicateCount: number;
+      /** Format: int32 */
+      suspectedDuplicateCount: number;
+      duplicateOf: components["schemas"]["DuplicateOf"] | null;
     };
     EstateReadingPage: {
       items: components["schemas"]["EstateReadingResponse"][];
@@ -3501,6 +3593,7 @@ export interface components {
       canUploadDocuments: boolean;
       canImportReadings?: boolean;
       canRevertReadingImports?: boolean;
+      canReviewFaultReportDuplicates: boolean;
     };
   };
 }
@@ -6382,7 +6475,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportDetailResponse"];
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -6403,7 +6496,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -6466,7 +6559,7 @@ export interface operations {
           "image/png": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -7841,6 +7934,78 @@ export interface operations {
       };
     };
   };
+  linkEstateReportDuplicate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LinkDuplicateRequest"];
+      };
+    };
+    responses: {
+      /** @description The report with its CONFIRMED manual link */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required (manager membership to review or link duplicates) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description The report already has a SUSPECTED or CONFIRMED link, or the estate is inactive */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   list: {
     parameters: {
       query?: {
@@ -8868,7 +9033,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportPageResponse"];
+          "*/*": components["schemas"]["EstateIssueReportPageResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -8889,7 +9054,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -10501,7 +10666,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "*/*": components["schemas"]["IssueReportDetailResponse"];
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -10522,7 +10687,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Responder membership required */
+      /** @description Responder membership required (manager membership to review or link duplicates) */
       403: {
         headers: {
           [name: string]: unknown;
@@ -11081,6 +11246,78 @@ export interface operations {
       };
       /** @description Sensor data is unavailable */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  reviewEstateReportDuplicate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        reportId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReviewDuplicateRequest"];
+      };
+    };
+    responses: {
+      /** @description The report with its updated link */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateIssueReportDetailResponse"];
+        };
+      };
+      /** @description Invalid UUID, request or pagination */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Responder membership required (manager membership to review or link duplicates) */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate, report, location or image */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Stale expected state or inactive estate */
+      409: {
         headers: {
           [name: string]: unknown;
         };

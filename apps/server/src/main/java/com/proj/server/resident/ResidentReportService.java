@@ -1,5 +1,6 @@
 package com.proj.server.resident;
 
+import com.proj.server.report.DuplicateService;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -17,16 +18,19 @@ public class ResidentReportService {
     private final ResidentImageValidator validator;
     private final ResidentImageStore images;
     private final TransactionTemplate transactions;
+    private final DuplicateService duplicates;
 
     public ResidentReportService(
             ResidentReportRepository reports,
             ResidentImageValidator validator,
             ResidentImageStore images,
-            TransactionTemplate transactions) {
+            TransactionTemplate transactions,
+            DuplicateService duplicates) {
         this.reports = reports;
         this.validator = validator;
         this.images = images;
         this.transactions = transactions;
+        this.duplicates = duplicates;
     }
 
     public ResidentContextResponse context(String userId) {
@@ -88,10 +92,12 @@ public class ResidentReportService {
                     throw new ResidentReportException(
                             HttpStatus.BAD_REQUEST, "The assignment or location changed. Reload and try again.");
                 }
-                reports.create(reportId, userId, current.id(), locationId, reportTitle, description.trim());
+                var reportDescription = description.trim();
+                reports.create(reportId, userId, current.id(), locationId, reportTitle, reportDescription);
                 for (var image : uploaded) {
                     reports.addImage(image.id(), reportId, image.key(), image.contentType(), image.size());
                 }
+                duplicates.detect(current.id(), reportId, locationId, reportTitle, reportDescription);
                 return reports.detail(userId, reportId).orElseThrow();
             });
             return created;

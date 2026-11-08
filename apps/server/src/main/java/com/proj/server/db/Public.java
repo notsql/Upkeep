@@ -30,6 +30,7 @@ import com.proj.server.db.tables.Importedreading;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
@@ -195,6 +196,11 @@ public class Public extends SchemaImpl {
     public final Issuereport ISSUEREPORT = Issuereport.ISSUEREPORT;
 
     /**
+     * The table <code>public.IssueReportDuplicate</code>.
+     */
+    public final Issuereportduplicate ISSUEREPORTDUPLICATE = Issuereportduplicate.ISSUEREPORTDUPLICATE;
+
+    /**
      * The table <code>public.IssueReportImage</code>.
      */
     public final Issuereportimage ISSUEREPORTIMAGE = Issuereportimage.ISSUEREPORTIMAGE;
@@ -291,6 +297,7 @@ public class Public extends SchemaImpl {
             Inspectioncheck.INSPECTIONCHECK,
             Inspectionlistrun.INSPECTIONLISTRUN,
             Issuereport.ISSUEREPORT,
+            Issuereportduplicate.ISSUEREPORTDUPLICATE,
             Issuereportimage.ISSUEREPORTIMAGE,
             Location.LOCATION,
             Manualreading.MANUALREADING,
