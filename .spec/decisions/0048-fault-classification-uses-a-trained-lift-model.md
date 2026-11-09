@@ -21,16 +21,18 @@ producing it.
 - Scope it to lifts: five lift fault classes (`DOOR`, `STALLED`,
   `CONTROLS`, `RIDE`, `OTHER_LIFT`) plus `NOT_LIFT`. Reports about other
   equipment go to the managing agent.
-- The model is a fine-tuned MiniLM-L6, calibrated with temperature scaling,
-  quantised to int8, with the tokenizer built into the graph
-  (`onnxruntime-extensions`), so the `.onnx` file remains the whole
-  interface, as in 0028.
+- The model is a fine-tuned MiniLM-L6, calibrated with temperature scaling
+  and quantised to int8. The `.onnx` file plus its `tokenizer.json` are the
+  interface from `ml-research/` to Spring, which tokenizes with
+  `ai.djl.huggingface:tokenizers`.
 - Text only. Photos are not classified.
 - Quality is measured on a hand-written test set, frozen before any
   training data is generated, and kept in step by a parity fixture in the
   server's tests.
 
-Rejected: keeping Claude (does not meet the brief); TF-IDF with logistic
+Rejected: building the tokenizer into the graph with `onnxruntime-extensions` (its
+newest Java jar, 0.13.0, has no Apple Silicon or Linux arm64 library); keeping
+Claude (does not meet the brief); TF-IDF with logistic
 regression (simpler to serve, but the team chose one model and wanted the
 stronger one); an image model (no labelled lift photos to train on); covering
 all four equipment types at once (four times the data work for the same
@@ -41,7 +43,7 @@ demo).
 - No report text or photo leaves Upkeep for classification.
   `ANTHROPIC_API_KEY` is no longer needed, and the resident notice changes.
 - Pumps, gates and lights are no longer routed automatically.
-- The server gains `onnxruntime-extensions`, a model of about 23 MB in the
+- The server gains the DJL tokenizer library, a model of about 23 MB in the
   jar, and roughly 100 MB more memory.
 - Classification quality is now owned by the team. A model change means
   retraining, re-evaluating on the frozen test set, and updating the parity

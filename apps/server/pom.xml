@@ -104,6 +104,15 @@
 			<artifactId>onnxruntime</artifactId>
 			<version>1.31.1</version>
 		</dependency>
+		<!--
+			Tokenizes report text for the lift fault model (decision 0048). The jar
+			bundles the native libraries, including osx-aarch64 and linux-x86_64.
+		-->
+		<dependency>
+			<groupId>ai.djl.huggingface</groupId>
+			<artifactId>tokenizers</artifactId>
+			<version>0.40.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

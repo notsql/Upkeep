@@ -207,9 +207,8 @@ Notebook `04-lift-fault-classifier.ipynb`, with reusable code promoted to
      *failure types* (not the test reports), and iterate again. After a
      second look at the test set it is no longer clean, so add fresh
      hand-written reports to it before the next look.
-5. **Export.** ONNX with the tokenizer built into the graph (see Server
-   design), quantised to int8 (about 23 MB, against about 90 MB at full
-   precision). The quantised model is evaluated again, and its metrics are
+5. **Export.** ONNX plus its `tokenizer.json` (see Server design), quantised
+   to int8 (about 23 MB, against about 90 MB at full precision). The quantised model is evaluated again, and its metrics are
    the ones reported.
 6. **Parity fixture.** About 20 reports with their expected probabilities
    from the exported model, written to `parity-fixture.json`. They include the
@@ -218,7 +217,7 @@ Notebook `04-lift-fault-classifier.ipynb`, with reusable code promoted to
    parameters, seed, and test metrics.
 
 New Python dependencies go in `ml-research/pyproject.toml`: `torch`,
-`transformers`, `datasets`, `onnxruntime-extensions`. A human runs `uv sync`.
+`transformers`, `datasets`, `accelerate`. A human runs `uv sync`.
 
 ## Server design
 
@@ -229,16 +228,14 @@ New Python dependencies go in `ml-research/pyproject.toml`: `torch`,
     string, runs the model, and maps probabilities to a `Classification` as
     described above. The mapping is a pure function, unit tested without the
     model.
-- **Tokenizer in the graph.** The tokenizer is built into the ONNX file with
-  `onnxruntime-extensions`, so the model still takes a string and the `.onnx`
-  file stays the whole interface between `ml-research` and Spring
-  (decision 0028). Spring registers the extensions' custom-op library on the
-  session. This needs
-  `com.microsoft.onnxruntime:onnxruntime-extensions` in `apps/server/pom.xml`,
-  added by a human. Phase 1 checks that it runs with onnxruntime 1.22 on
-  macOS arm64 and the Cloud Run image. If it does not, the fallback is the
-  DJL Hugging Face tokenizer in Java, with the tokenizer's files shipped next
-  to the model. The parity fixture catches any tokenizer mismatch either way.
+- **Tokenizer in Java.** `ai.djl.huggingface:tokenizers` tokenizes the input
+  from a `tokenizer.json` shipped beside the model as
+  `routing/lift-fault-tokenizer.json`, and Spring feeds the model's token
+  tensors to onnxruntime. Building the tokenizer into the graph with
+  `onnxruntime-extensions` was the first choice but is not possible: its
+  newest Java jar (0.13.0, October 2024) has no `osx-arm64` or `linux-arm64`
+  library, so the server could not start on the team's Macs. The parity
+  fixture catches any tokenizer mismatch.
 - **`Classification` gains `faultCategory`** (`DOOR`, `STALLED`, `CONTROLS`,
   `RIDE`, `OTHER_LIFT` or null), as a new `LiftFaultCategory` enum.
 - `FaultClassifier.Report` loses `images`. `FaultClassifier.Image` is
@@ -325,8 +322,8 @@ make the model look good or bad:
 ## Implementation phases
 
 - [x] Agree this spec.
-- [ ] Spike: a tokenizer-in-graph MiniLM runs from onnxruntime Java 1.22,
-  locally and in the Docker image. Decide the tokenizer approach.
+- [x] Spike: DJL tokenizes as Python does and MiniLM runs from onnxruntime
+  Java 1.31.1, locally and in a `linux/amd64` container (see Spike result).
 - [ ] Write and cross-check the hand-written reports; split into dev and
   test; freeze the test set.
 - [ ] Generator script and training data.
@@ -340,6 +337,35 @@ make the model look good or bad:
 - [ ] Migration for `faultCategory`, `pnpm db:generate`, `pnpm api:generate`,
   the routing card and the notice.
 - [ ] Decision 0048, `.docs`, and full checks.
+
+## Spike result (2026-11-09)
+
+Passed. `ai.djl.huggingface:tokenizers` 0.40.0 and onnxruntime Java 1.31.1 ran
+the public `all-MiniLM-L6-v2` (full precision), against Python `tokenizers`
+0.23.3 and `onnxruntime` 1.30.0, on 10 cases: plain, Singlish, typos, Chinese
+and emoji, empty, single word, punctuation, literal special tokens, odd
+whitespace, and text past the 128-token limit.
+
+| Platform | Token IDs, mask, type IDs | Largest output difference | Time per report (25 / 128 tokens) |
+| --- | --- | --- | --- |
+| macOS arm64, Java 25 | Identical on all 10 | 0 | 1.1 / 3.6 ms |
+| Linux amd64 under emulation, Java 25, `spring` user | Identical on all 10 | 4.4e-6 | 7.8 / 24.6 ms |
+
+Altering one expected output and one expected token ID made the check fail,
+so a mismatch is detected. What this means for the build:
+
+- **No padding at inference.** DJL keeps the truncation in `tokenizer.json`
+  but not its padding, and one report at a time needs none. Padding is only
+  for training batches, where the attention mask covers it.
+- **Native library.** DJL extracts it to `~/.djl.ai` on first use, so the
+  runtime user needs a writable home. The image's `spring` user has one.
+- **Resident text can contain special tokens.** A typed `[SEP]` or `[CLS]`
+  is read as the real token, in Python and Java alike. It can only make that
+  one report classify worse, and the test set should include a case.
+
+Not covered: the team's own int8 model (the parity fixture checks it in
+commit 4) and the real server image with its AOT cache (checked when the
+model is wired in).
 
 ## Answers to the first draft's questions (2026-11-08)
 
