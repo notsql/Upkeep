@@ -44,4 +44,4 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0045 - Report urgency and Safety classification](0045-report-urgency-and-safety.md)
 - [0046 - Fault report classification runs in Spring](0046-fault-classification-runs-in-spring.md)
 - [0047 - Contractors are reached by email dispatch on ID-36 work orders](0047-contractor-dispatch-on-work-orders.md)
-- [0048 - Fault classification uses a trained lift model](0048-fault-classification-uses-a-trained-lift-model.md)
+- [0048 - Fault classification uses a trained water leak model](0048-fault-classification-uses-a-trained-water-leak-model.md)

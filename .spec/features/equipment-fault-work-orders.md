@@ -85,9 +85,9 @@ The screen is unchanged: one name and email per equipment type. Underneath:
 
 ### Classification
 
-> **Agreed revision (2026-11-08):** the model call below is replaced by a
-> classifier the team trains, scoped to lifts and reading text only. See
-> [lift-fault-classifier.md](lift-fault-classifier.md) and decision 0048.
+> **Agreed revision (2026-11-09):** the model call below is replaced by a
+> classifier the team trains, scoped to water leaks and reading text only. See
+> [water-leak-classifier.md](water-leak-classifier.md) and decision 0048.
 
 Unchanged. Submission queues the report in `ReportRouting` (`CLASSIFYING`).
 Reports from before routing are never classified. A scheduled job sends the
