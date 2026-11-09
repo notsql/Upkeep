@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Activity } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -91,11 +92,14 @@ export function ReadingResults({
               Clear filters
             </Button>
           }
+          icon={Activity}
           title={emptyMessage(filters, assetTotal)}
         />
       );
     }
-    return <EmptyState title={emptyMessage(filters, assetTotal)} />;
+    return (
+      <EmptyState icon={Activity} title={emptyMessage(filters, assetTotal)} />
+    );
   }
   if (data.items.length === 0) {
     return (
@@ -105,6 +109,7 @@ export function ReadingResults({
             Go to first page
           </Button>
         }
+        icon={Activity}
         title="No readings on this page"
       />
     );

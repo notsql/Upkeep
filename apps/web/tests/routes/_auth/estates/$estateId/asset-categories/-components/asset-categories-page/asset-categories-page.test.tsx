@@ -96,12 +96,14 @@ vi.mock("@tanstack/react-router", () => ({
     children,
     to,
     params,
+    ...rest
   }: {
     children: React.ReactNode;
     to: string;
     params?: Record<string, string>;
-  }) => (
+  } & React.ComponentProps<"a">) => (
     <a
+      {...rest}
       href={Object.entries(params ?? {}).reduce(
         (path, [key, value]) => path.replace(`$${key}`, value),
         to
@@ -304,6 +306,14 @@ it("links to the categories missing an interval from their card", () => {
   ).toBe("/estates/oak/asset-categories/not-set");
 });
 
+it("renders the missing-interval link as an outline shadcn Button", () => {
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
+  const link = card("Missing service interval").getByRole("link", {
+    name: "Show these categories",
+  });
+  expect(link.dataset.slot).toBe("button");
+});
+
 it("reassures when every category has an interval", () => {
   state.data = { estateActive: true, categories: [lighting, pump] };
   renderWithProviders(<AssetCategoriesPage estateId="oak" />);
@@ -405,5 +415,16 @@ it("locks the intervals of an inactive estate", () => {
     name: EDIT_INTERVAL,
   })) {
     expect(button.hasAttribute("disabled")).toBe(true);
+  }
+});
+
+it("marks a silently failing category with a warning badge", () => {
+  renderWithProviders(<AssetCategoriesPage estateId="oak" />);
+  const badges = screen
+    .getAllByText("Fails silently")
+    .filter((element) => element.dataset.slot === "badge");
+  expect(badges.length).toBeGreaterThan(0);
+  for (const badge of badges) {
+    expect(badge.dataset.variant).toBe("warning");
   }
 });

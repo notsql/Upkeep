@@ -8,6 +8,7 @@ import {
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { AssetServiceIntervalCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-service-interval-card";
+import { SourceBadge } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/source-badge";
 
 const CASEY = /Casey Doe/u;
 
@@ -171,4 +172,9 @@ it("shows a load error", () => {
   state.error = new Error("Asset not found.");
   renderWithProviders(<AssetServiceIntervalCard assetId="a" estateId="e" />);
   expect(card().getByRole("alert").textContent).toContain("Asset not found.");
+});
+
+it("marks an override with the warning badge", () => {
+  renderWithProviders(<SourceBadge interval={overridden as never} />);
+  expect(screen.getByText("Override").dataset.variant).toBe("warning");
 });

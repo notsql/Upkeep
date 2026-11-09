@@ -7,20 +7,45 @@ Tailwind and next-themes. No new package or database setting is needed.
 
 ## Themes and tokens
 
-The look comes only from shadcn: preset `b1Z5bafVC` (style `base-vega`, base
-colour `neutral`, lucide icons, menu colour `default-translucent`), installed into
-`packages/ui`. Its tokens (light `:root` and `.dark`) live in
-`packages/ui/src/styles/globals.css`. `apps/web/src/index.css` is exactly
-`@import "@proj/ui/globals.css";` - no custom tokens, no `[data-slot]` overrides,
-no `@layer components` classes, no media queries. Re-theme by re-running the preset
-(see `.spec/features/shadcn-only-ui.md`), never by editing `index.css`.
+The base comes from shadcn: preset `b1Z5bafVC` (style `base-vega`, lucide
+icons, menu colour `default-translucent`), installed into `packages/ui`. Its
+tokens (light `:root` and `.dark`) live in `packages/ui/src/styles/globals.css`,
+retuned to a **tinted blue** palette, beside a small set of project tokens
+(decision 0046, spec `.spec/features/colour-visual-pass.md`).
+`apps/web/src/index.css` stays exactly `@import "@proj/ui/globals.css";` - no
+tokens, no `[data-slot]` overrides, no `@layer components` classes there.
+
+- **Surfaces** are near-neutral. Light `background`, `card`, `popover` are pure
+  white; light `muted`, `secondary`, `accent`, `sidebar`, `border`, `input`
+  are grey with chroma at most 0.004 (hue ~255). Dark surfaces have chroma at
+  most 0.006. Colour comes from the brand blues, status tokens, icons and
+  icon tiles - never the page ground. No gradients anywhere. `ring` is blue; `sidebar-accent`
+  (active row) is a light blue.
+- **No side-border accents.** No `border-l-*` / `border-s-*` (or any
+  single-side border) accent on cards or rows, and no tinted card fills. Use
+  icon tiles (`size-9 rounded-lg`, e.g. `bg-warning/10 text-warning`) and
+  Badges for emphasis. `SummaryCard`'s `warning` only switches its icon tile
+  from `bg-brand-1/15 text-brand-3` to `bg-warning/10 text-warning`.
+- **Brand scale** for decoration only: `brand-1` (sky), `brand-2`
+  (brand blue, equals `primary`), `brand-3` (indigo), each with a
+  `-foreground`. Classes: `bg-brand-2/10 text-brand-2` (icon tiles).
+- **Status** tokens: `success`, `warning`, `info`, `destructive`, each with a
+  `-foreground` (`destructive-foreground` is new). Use `bg-success`,
+  `text-warning`, `border-info/30` etc. `info` appears only
+  on status; `brand-1` only on decoration.
+- **Charts**: `chart-1..5` are sky, blue, indigo, violet, slate.
+
+No raw Tailwind palette colours (`emerald-`, `amber-`, `blue-`, `red-`,
+`green-`, `yellow-`, `orange-`, `sky-`, `teal-`, `indigo-`) in `apps/web/src`;
+colour comes only from tokens. Add a token to `globals.css` (both themes plus an
+`@theme inline` mapping), never to `index.css`.
 
 The root ThemeProvider defaults to light; next-themes stores explicit light/dark
 selection under its `theme` storage key and toggles the preset's `.dark` tokens.
 `ThemeToggle` names the next mode and waits for mount before enabling itself.
 
 Style screens with shadcn components from `packages/ui` plus Tailwind utility
-classes on them. No custom CSS and no custom colour tokens. Component sizes, radii
+classes on them. No custom CSS; colour only from the tokens above. Component sizes, radii
 and touch targets are the preset's (the old forced 44px minimum heights were
 dropped). The old global `prefers-reduced-motion` override was dropped with the
 custom CSS. Do not rely on colour alone for status or selected navigation.
@@ -117,7 +142,7 @@ share one width, one header and one footer:
 
 - `FormPage` (`components/page/form-page.tsx`): `breadcrumbs`, `title`,
   `description?`, `children`. A `PageLayout className="max-w-3xl"` with
-  `FormPageHeader`, then its children stacked in `grid gap-6`. Loading, error
+  `FormPageHeader` (`icon?` passes through), then its children stacked in `grid gap-6`. Loading, error
   and not-allowed states render **inside** `FormPage` too, so the column does
   not jump when data arrives. (Exceptions that keep the width but not the
   header: resident "Report a fault" while its context loads, and the roles
@@ -189,17 +214,49 @@ Apply commits, Cancel/X/Escape discard, Clear secondary filters resets the draft
 and retains search. Page-level Clear filters clears everything. Desktop filters
 apply immediately. Existing URL/back navigation and order by reference remain.
 
-Status tones come from one mapping, `lib/status-tone.ts`: `statusToneClassName`
-(badge classes) and `statusDotClassName` (dot classes) keyed by `success` (emerald
-green), `danger` (`destructive` token), `neutral` (outline) and `muted`
-(secondary). `LifecycleStatusBadge` (asset register table and cards, asset
-header, estate cards, document asset picker) shows Active in `success` and
-Inactive/Retired in `danger`, on the `outline` Badge variant with the state in
-visible text. `DeviceStatusBadge` maps through `deviceStatusTone`: Online
-`success` (the same green as Active), Offline `danger`, Awaiting first reading
-`neutral`, Deactivated `muted`. `ConditionBadge` uses stock variants: Good
-`default`, Needs attention `secondary`, Faulty `destructive`, Not assessed yet
-`outline`.
+Status tones come from one module, `lib/status-tone.ts`. Tones are `success`,
+`warning`, `info`, `danger`, `neutral`, `muted`. Render a status as
+`<Badge variant={badgeVariantFor(tone)}>` with the label as visible text - no
+call site picks colour classes itself. `statusToneBadgeVariant` maps
+success->`success`, warning->`warning`, info->`info`, danger->`destructive`,
+neutral->`outline`, muted->`secondary`; `badgeVariantFor` falls back to
+`outline` for an unknown tone. `statusDotClassName` gives the dot colour
+(`bg-success`, `bg-warning`, `bg-info`, `bg-destructive`, muted-foreground for
+neutral/muted). Each mapping is a `Record<Enum, StatusTone>` with `satisfies`,
+so a new contract enum value breaks `check-types`:
+
+| Export | Mapping |
+| --- | --- |
+| `reportUrgencyTone` | LOW neutral, MEDIUM info, HIGH warning, URGENT danger (`isSafety` stays destructive) |
+| `workOrderStatusTone` / `workOrderStatusLabel` | OPEN neutral "Open", ASSIGNED info "Assigned", IN_PROGRESS warning "In progress", CLOSED success "Closed" (reports and work orders) |
+| `assetConditionTone` | GOOD success, NEEDS_ATTENTION warning, FAULTY danger, UNASSESSED/null neutral |
+| `deviceStatusTone` | ONLINE success, OFFLINE danger, AWAITING_FIRST_READING info, DEACTIVATED muted |
+| `lifecycleTone` | ACTIVE success, RETIRED muted, INACTIVE muted |
+| `inspectionCheckTone(status, outcome)` | OVERDUE danger, DUE info, DONE+PASS success, DONE+FAIL warning |
+| `inspectionOutcomeTone` | PASS success, FAIL danger |
+| `notificationTypeTone` | ANOMALY danger, SERVICE_DUE info, REPAIR_PREDICTED warning |
+| `alertResponseTone` | NONE warning ("Needs response"), ACKNOWLEDGED success, DISMISSED muted |
+| `duplicateReportTone` | SUSPECTED warning, CONFIRMED muted (REJECTED shows no badge) |
+| `readingImportOutcomeTone` | IMPORTED success, DUPLICATE muted, INVALID danger |
+| `telemetryItemStatusTone` | CREATED success, ALREADY_STORED muted, INVALID danger, CONFLICT warning |
+| `readingFlagTone` | ANOMALY, OUT_OF_RANGE danger; GAP, DUPLICATE_TIMESTAMP warning |
+| `readingSuspicionTone` | SUSPECTED warning, CONFIRMED danger, REJECTED muted |
+| `serviceDueTone` | OVERDUE danger, DUE warning, NEVER_INSPECTED info |
+| `invitationTone` | PENDING info, ACTIVE success (role badges stay `secondary`) |
+| `workOrderTypeTone` | BREAKDOWN_REPAIR warning, PREVENTIVE info |
+
+`LifecycleStatusBadge` (asset register, asset header, estate cards, document
+asset picker) shows Active as `success` and Inactive/Retired as `secondary`.
+`DeviceStatusBadge` maps through `deviceStatusTone`. The inspections list
+`StatusBadge` maps through `inspectionCheckTone`.
+
+**Badge variants** (`packages/ui/src/components/badge.tsx`): stock `default`,
+`secondary`, `destructive`, `outline`, `ghost`, `link`, plus `success`,
+`warning`, `info` (`border-<x>/30 bg-<x>/10 text-<x> dark:bg-<x>/20`). The
+variant is exposed as `data-variant`, which tests assert on (never class
+strings). **Alert variants** (`alert.tsx`): `default`, `destructive`, plus
+`success`, `warning`, `info` for system-status, notice and danger-zone panels.
+
 Details sections retain meaningful headings and history dates. Loading and empty
 results follow [Screen states](#screen-states-empty-loading-filters-tabs) below.
 Failures use Alert + Retry. Other
@@ -219,7 +276,9 @@ markup or bespoke filter rows.
 
 `PageHeader` is the only page header. Each screen renders exactly one, first
 inside `PageLayout`. Pass `icon` (a `LucideIcon`, the same one the sidebar uses
-for that section) to show it in a muted tile beside the `h1`. Sections inside a
+for that section) to show it in a `size-9 rounded-lg bg-brand-1/15 text-brand-3`
+tile beside the `h1` (the icon is `aria-hidden`). Headers have no background
+band or gradient. Never use a side border for emphasis. Sections inside a
 page use `Card` + `CardHeader`/`CardTitle` with an `h2`, never a second `h1`.
 
 **Subtitle rule:** `description` never repeats the estate name (the header
@@ -237,8 +296,8 @@ line under the title.
 | Variant | Use for | Props |
 | --- | --- | --- |
 | `ListPageHeader` | Top-level list pages (work orders, assets, roles, documents…) | `title`, `icon?`, `description?`, `filters?: FilterToggleProps`, `create?: CreateButtonProps`, `actions?` (extras, e.g. Export; rendered between Filters and Create) |
-| `DetailPageHeader` | One record (work order, asset, report, inspection) | `breadcrumbs`, `title`, `status?` (badge), `meta?` (e.g. "Opened 3 Mar 2026 · Pump A"), `actions?` (outline Edit first, destructive last) |
-| `FormPageHeader` | Create/edit pages | `breadcrumbs`, `title`, `description?`; no actions (the form footer submits) |
+| `DetailPageHeader` | One record (work order, asset, report, inspection) | `breadcrumbs`, `title`, `icon?`, `status?` (badge), `meta?` (e.g. "Opened 3 Mar 2026 · Pump A"), `actions?` (outline Edit first, destructive last) |
+| `FormPageHeader` | Create/edit pages | `breadcrumbs`, `title`, `icon?`, `description?`; no actions (the form footer submits) |
 
 The "back link" on detail and form pages is the breadcrumb trail (the parent
 crumb is a link); there is still no `BackLink` component (see Page header
@@ -319,21 +378,27 @@ const panel = useFilterPanel(activeCount);
 
 Props: `children: ReactNode`, `icon?: LucideIcon`, `level?: 2 | 3 | 4`
 (default 2), `id?: string` (for `aria-labelledby`), `className?: string`.
-Renders `h{level}` (`text-lg font-semibold`) with the icon decorative
+Renders `h{level}` (`text-lg font-semibold`) with the icon (`text-brand-2`) decorative
 (`aria-hidden`) and muted. Use it for card and section titles, or put the same
 icon + text inside `CardTitle`.
 
 ### Empty: `EmptyState` (`components/states/empty-state.tsx`)
 
-Props: `title: string`, `description?: ReactNode`, `action?: ReactNode`.
-Renders shadcn `Empty` (`EmptyHeader` > `EmptyTitle` + muted
+Props: `title: string`, `icon?: LucideIcon`, `description?: ReactNode`,
+`action?: ReactNode`.
+Renders shadcn `Empty` (`EmptyHeader` > optional `EmptyMedia variant="icon"`
++ `EmptyTitle` + muted
 `EmptyDescription`, then `EmptyContent` for the action) with `role="status"`
 as a quiet panel: solid `rounded-lg border`, `px-6 py-10`, no background
 change. Inside a Card's content (`data-slot="card-content"`, e.g. every
 `SectionCard`) it drops the border and uses `py-6`, so it never reads as a
 card-in-a-card. There is no option for this; it is automatic.
 
-- **No icon.** EmptyState draws none and takes no `icon` prop.
+- **Optional icon.** Pass `icon` to draw it decoratively (`aria-hidden`) in an
+  `EmptyMedia variant="icon"` tile tinted `bg-brand-1/15 text-brand-2`; the
+  status text stays the title. Without `icon` none is drawn. Never
+  reuse the section's own icon (it already shows in the header): use
+  `Inbox` for "nothing yet" and `SearchX` for "No matching …".
 - **No create button.** The page header's `CreateButton` (or the section's
   header action) is the single create entry point. When the user can create,
   the description may point at it, worded "Use Create to add the first …"
@@ -534,14 +599,15 @@ explains a rule.
 
 Icons come from `lucide-react` only, are decorative (`aria-hidden="true"`) and
 never replace a visible label (icon-only buttons need `aria-label`). Default
-size is the component's (`size-4` in buttons); do not set colours except
-`text-muted-foreground` for section/filter icons.
+size is the component's (`size-4` in buttons). Icon colour comes from tokens
+only: `text-muted-foreground` for filter icons, `text-brand-2` for section and
+page-header icons, status tokens when an icon sits beside a status label.
 
 Use one per:
 
 **Never show the same icon twice on one screen.** The section's icon appears
-only in the sidebar and the `PageHeader`; empty states use the neutral
-`Inbox` default (or `SearchX` for no matches); section titles use a distinct
+only in the sidebar and the `PageHeader`; empty states use `Inbox` (or
+`SearchX` for no matches); section titles use a distinct
 icon or none; the filter `ListFilter` lives only on the `FilterToggle`.
 
 - **Nav items and page headers**: the same icon for a section in the sidebar
@@ -556,7 +622,7 @@ icon or none; the filter `ListFilter` lives only on the `FilterToggle`.
   `components/shell/app-navigation.tsx` and reuse what it uses.
 - **Primary actions**: leading icon - `Plus` create, `Save`/none for submit,
   `Upload`, `Download`, `Send`, `UserPlus`.
-- **Empty states**: no `icon` prop (neutral `Inbox` default); `SearchX` for
+- **Empty states**: `icon={Inbox}` for "nothing yet", `icon={SearchX}` for
   "No matching …".
 - **Section / card titles**: `SectionHeading icon` or an icon inside
   `CardTitle`.

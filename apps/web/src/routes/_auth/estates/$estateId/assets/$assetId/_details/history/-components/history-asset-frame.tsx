@@ -1,4 +1,5 @@
 import { Badge } from "@proj/ui/components/badge";
+import { History } from "lucide-react";
 import { type ReactNode, useCallback } from "react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -42,6 +43,7 @@ export function HistoryAssetFrame({
               },
               { label: asset.reference },
             ]}
+            icon={History}
             meta={`${asset.reference} · ${asset.category} · ${asset.locationPath}`}
             status={
               <Badge variant="secondary">

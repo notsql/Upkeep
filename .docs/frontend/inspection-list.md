@@ -63,8 +63,8 @@ shadcn: `Card` (via `SummaryCard`), `Badge`, `Button`, `buttonVariants`, `Table`
 
 ## Design-system pass
 
-ListPageHeader `icon={ClipboardCheck}`; "No checks this month" uses the default
-`Inbox` icon; Generate/Regenerate list has a leading
+ListPageHeader `icon={ClipboardCheck}`; "No checks this month" uses the
+`ClipboardCheck` icon; Generate/Regenerate list has a leading
 `ListPlus`. "No checks this month" descriptions: "Nothing due this month" /
 "Generate the list to see due checks". Row View result / Record inspection links
 are `ghost`.

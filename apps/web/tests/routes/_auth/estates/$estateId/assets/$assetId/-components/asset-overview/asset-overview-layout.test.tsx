@@ -1,3 +1,4 @@
+import { anomalyAlert } from "@tests/fixtures/notifications";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -66,36 +67,49 @@ vi.mock("@/lib/catalogue", () => ({
 // The cards below have their own tests; here they only mark their place.
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section",
-  () => ({ AssetConditionSection: () => <h2>Condition</h2> })
+  () => ({
+    AssetConditionSection: ({ upcoming }: { upcoming?: ReactNode }) => (
+      <section aria-label="Condition">
+        <h2>Condition</h2>
+        {upcoming}
+      </section>
+    ),
+  })
 );
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card",
   () => ({ AssetForecastCard: () => <h2>Breakdown forecast</h2> })
 );
 const SERIES_PATH = "/estates/{estateId}/assets/{assetId}/readings/series";
+const ALERTS_PATH = "/estates/{estateId}/assets/{assetId}/anomaly-alerts";
+let alerts: unknown[] = [];
 
 beforeEach(() => {
   vi.mocked(api.GET).mockReset();
+  alerts = [];
   viewer.canViewReadings = true;
   viewer.installedOn = "2026-11-07";
   viewer.manufacturer = "Grundfos";
   viewer.model = "CR 10";
   viewer.canCreateInspectionResults = true;
-  vi.mocked(api.GET).mockImplementation(((path: string) =>
-    Promise.resolve({
-      data:
-        path === SERIES_PATH
-          ? {
-              from: "2026-11-07T12:58:12Z",
-              to: "2026-11-07T12:59:12Z",
-              bucketSeconds: 1,
-              anomalyThreshold: 0.51,
-              metrics: [],
-              anomalies: [],
-            }
-          : [],
+  const series = {
+    from: "2026-11-07T12:58:12Z",
+    to: "2026-11-07T12:59:12Z",
+    bucketSeconds: 1,
+    anomalyThreshold: 0.51,
+    metrics: [],
+    anomalies: [],
+  };
+  vi.mocked(api.GET).mockImplementation(((path: string) => {
+    const data: Record<string, unknown> = {
+      [SERIES_PATH]: series,
+      [ALERTS_PATH]: alerts,
+    };
+    return Promise.resolve({
+      data: data[path] ?? [],
       response: new Response(),
-    })) as never);
+    });
+  }) as never);
 });
 
 function overview() {
@@ -103,18 +117,31 @@ function overview() {
 }
 
 describe("AssetOverview layout", () => {
-  it("orders Condition, forecast, Upcoming, Anomaly alerts and Trends with no Details or Devices card", async () => {
+  it("orders Condition (with Upcoming inside), forecast and Trends with no Details or Devices card", async () => {
     overview();
     await screen.findByRole("region", { name: "Trends" });
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)
-    ).toEqual([
-      "Condition",
-      "Breakdown forecast",
-      "Upcoming",
-      "Anomaly alerts",
-    ]);
+    ).toEqual(["Condition", "Breakdown forecast"]);
+    const condition = screen.getByRole("region", { name: "Condition" });
+    within(condition).getByRole("heading", { level: 3, name: "Upcoming" });
+    expect(screen.queryByRole("region", { name: "Upcoming" })).toBeNull();
     expect(screen.queryByRole("region", { name: "Details" })).toBeNull();
+  });
+
+  it("hides Anomaly alerts when the asset has none", async () => {
+    overview();
+    await screen.findByRole("region", { name: "Trends" });
+    expect(screen.queryByRole("region", { name: "Anomaly alerts" })).toBeNull();
+  });
+
+  it("shows Anomaly alerts between Condition and Trends when there is one", async () => {
+    alerts = [anomalyAlert];
+    overview();
+    await screen.findByRole("region", { name: "Anomaly alerts" });
+    expect(
+      screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)
+    ).toEqual(["Condition", "Breakdown forecast", "Anomaly alerts"]);
   });
 
   it("summarises the asset inline without repeating the reference", () => {

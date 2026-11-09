@@ -98,6 +98,26 @@ describe("AssetConditionSection", () => {
     serve();
   });
 
+  it("shows the upcoming work inside the Condition card, under a separator", () => {
+    renderWithProviders(
+      <AssetConditionSection
+        assetId="asset-id"
+        canRecord
+        estateId="estate-id"
+        upcoming={<h3>Upcoming</h3>}
+      />
+    );
+    const card = screen.getByRole("region", { name: "Condition" });
+    within(card).getByRole("heading", { level: 3, name: "Upcoming" });
+    within(card).getByRole("separator");
+  });
+
+  it("shows no separator without upcoming work", async () => {
+    renderSection();
+    await screen.findByRole("status", { name: "Current condition" });
+    expect(screen.queryByRole("separator")).toBeNull();
+  });
+
   it("shows the latest assessment as the current condition", async () => {
     renderSection();
     const current = await screen.findByRole("status", {

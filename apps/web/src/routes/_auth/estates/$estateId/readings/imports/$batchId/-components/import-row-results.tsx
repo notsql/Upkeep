@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import type { ReadingImportRow } from "@/lib/reading-imports";
+import { badgeVariantFor, readingImportOutcomeTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
 
 function RowIssues({ row }: { row: ReadingImportRow }) {
@@ -49,7 +50,13 @@ export function ImportRowResults({ items }: { items: ReadingImportRow[] }) {
                   <dd>{row.startingLineNumber}</dd>
                   <dt>Outcome</dt>
                   <dd>
-                    <Badge variant="outline">{row.outcome}</Badge>
+                    <Badge
+                      variant={badgeVariantFor(
+                        readingImportOutcomeTone[row.outcome]
+                      )}
+                    >
+                      {row.outcome}
+                    </Badge>
                   </dd>
                 </dl>
                 <RowIssues row={row} />
@@ -81,7 +88,13 @@ export function ImportRowResults({ items }: { items: ReadingImportRow[] }) {
               <TableCell>{row.recordNumber}</TableCell>
               <TableCell>{row.startingLineNumber}</TableCell>
               <TableCell>
-                <Badge variant="outline">{row.outcome}</Badge>
+                <Badge
+                  variant={badgeVariantFor(
+                    readingImportOutcomeTone[row.outcome]
+                  )}
+                >
+                  {row.outcome}
+                </Badge>
               </TableCell>
               <TableCell>
                 <RowIssues row={row} />

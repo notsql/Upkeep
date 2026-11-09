@@ -3,6 +3,7 @@ import {
   FieldSeparator,
   FieldSet,
 } from "@proj/ui/components/field";
+import { Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormCard, FormPage } from "@/components/page/form-page";
@@ -39,6 +40,7 @@ export function WorkOrderForm({
         { label: "Create" },
       ]}
       description="Describe the work, where it is and how urgent it is"
+      icon={Wrench}
       title="Create work order"
     >
       <WorkOrderFormBody estateId={estateId} form={form} />

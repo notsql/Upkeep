@@ -1,6 +1,12 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
-import { ClipboardList, LayoutDashboard } from "lucide-react";
+import {
+  CircleCheck,
+  CircleDot,
+  ClipboardList,
+  Hammer,
+  LayoutDashboard,
+} from "lucide-react";
 import { useCallback } from "react";
 import { PageHeader } from "@/components/page/page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -36,12 +42,21 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
       {reports.data ? (
         <div className="grid gap-8">
           <div className="grid gap-4 sm:grid-cols-3">
-            <CountCard label="Open" value={reports.data.counts.open} />
             <CountCard
+              icon={CircleDot}
+              label="Open"
+              value={reports.data.counts.open}
+            />
+            <CountCard
+              icon={Hammer}
               label="In progress"
               value={reports.data.counts.inProgress}
             />
-            <CountCard label="Resolved" value={reports.data.counts.resolved} />
+            <CountCard
+              icon={CircleCheck}
+              label="Resolved"
+              value={reports.data.counts.resolved}
+            />
           </div>
           <section aria-labelledby="recent-reports" className="grid gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -61,6 +76,7 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
             {items.length === 0 ? (
               <EmptyState
                 description="Use Report a fault to send the first one"
+                icon={ClipboardList}
                 title="No reports yet"
               />
             ) : (

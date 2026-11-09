@@ -1,6 +1,8 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
+import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import type { WorkOrder } from "@/lib/work-orders";
 import { DuplicateCountBadge } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/duplicate-count-badge";
 
@@ -43,9 +45,9 @@ export function WorkOrderCards({
                   <dt className="text-muted-foreground mb-1">Priority</dt>
                   <dd className="flex flex-wrap gap-1">
                     <Badge
-                      variant={
-                        order.priority === "URGENT" ? "destructive" : "outline"
-                      }
+                      variant={badgeVariantFor(
+                        reportUrgencyTone[order.priority]
+                      )}
                     >
                       {order.priority}
                     </Badge>
@@ -56,7 +58,9 @@ export function WorkOrderCards({
                 </div>
                 <div>
                   <dt className="text-muted-foreground mb-1">Status</dt>
-                  <dd>{order.status.replaceAll("_", " ")}</dd>
+                  <dd>
+                    <WorkOrderStatusBadge status={order.status} />
+                  </dd>
                 </div>
                 <div className="col-span-2">
                   <dt className="text-muted-foreground">Category</dt>

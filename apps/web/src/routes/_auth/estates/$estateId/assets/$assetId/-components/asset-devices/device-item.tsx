@@ -12,10 +12,7 @@ import { Link } from "@tanstack/react-router";
 import { KeyRound, MoreHorizontal, PowerOff, Replace } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import {
-  DeviceStatusBadge,
-  deviceStatusTone,
-} from "@/components/badges/device-status-badge";
+import { DeviceStatusBadge } from "@/components/badges/device-status-badge";
 import {
   type Device,
   deviceMetrics,
@@ -23,7 +20,7 @@ import {
   useDeactivateDevice,
 } from "@/lib/devices";
 import { formatDateTime, formatRelative } from "@/lib/format";
-import { statusDotClassName } from "@/lib/status-tone";
+import { deviceStatusTone, statusDotClassName } from "@/lib/status-tone";
 import { DeactivateDeviceDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices/deactivate-device-dialog";
 import {
   DeviceCredentialDialogs,

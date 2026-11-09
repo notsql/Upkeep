@@ -1,4 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { ClipboardPenLine } from "lucide-react";
 import { useCallback } from "react";
 import { FormPage } from "@/components/page/form-page";
 import { PageLayout } from "@/components/page/page-layout";
@@ -48,6 +49,7 @@ export function NewReportPage({
         { label: "Report a fault" },
       ]}
       description="Tell your estate team what needs fixing and where"
+      icon={ClipboardPenLine}
       title="Report a fault"
     >
       {unavailable ? (

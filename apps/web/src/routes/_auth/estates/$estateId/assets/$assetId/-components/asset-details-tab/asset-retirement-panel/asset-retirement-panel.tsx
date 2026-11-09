@@ -1,5 +1,5 @@
 import { Button } from "@proj/ui/components/button";
-import { ScrollText } from "lucide-react";
+import { Archive, ScrollText } from "lucide-react";
 import { useCallback, useState } from "react";
 import { SectionCard } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
@@ -54,7 +54,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
           />
         ) : null}
         {history.data?.length === 0 ? (
-          <EmptyState title="No lifecycle events yet" />
+          <EmptyState icon={Archive} title="No lifecycle events yet" />
         ) : null}
         <ol aria-label="Lifecycle events" className="divide-y">
           {history.data?.map((event) => (

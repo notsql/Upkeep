@@ -36,7 +36,7 @@ Both throw `estateError(...)` on failure.
 - when `estateActive` is false, a `role="note"` paragraph "This estate is inactive, so its asset
   categories cannot be changed." and every row action disabled;
 - a `Table` with no inline form controls: Category (row header), Assets (`activeAssetCount`),
-  Fails silently (a "Fails silently" `Badge`, or "No"), Service interval, Last changed ("Default"
+  Fails silently (a `warning` "Fails silently" `Badge`, or "No"), Service interval, Last changed ("Default"
   when neither `lastChange` nor `lastIntervalChange` is set, else "<name or Unknown user> · <local
   date-time>" of the more recent one) and right-aligned actions: **Edit interval** (aria-label
   "Edit service interval for <Label>") and **Flag** / **Stop flagging** (aria-label
@@ -51,7 +51,7 @@ Flag / Stop flagging opens `-components/asset-categories-page/silent-failure-dia
 locks while pending. Success closes the dialog and toasts "Asset category updated."; a failure
 keeps the dialog open with the error as its `role="alert"` line. Nothing is
 optimistic. Loading is `LoadingState` "Loading asset categories…" (`table`); a load error is an `ErrorState` (Retry).
-The Missing service interval card's "Show these categories" is a link to `/asset-categories/not-set`. When a view matches nothing the table is
+The Missing service interval card's "Show these categories" is an outline sm shadcn `Button` rendering a router `Link` to `/asset-categories/not-set`. When a view matches nothing the table is
 replaced by `EmptyState` "No matching categories" ("No category uses this interval") with an outline "Clear filters" link back to All.
 
 shadcn components: `Table`, `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`,

@@ -51,6 +51,7 @@ function AllDevicesResults({
       {page.rows?.length === 0 && !(page.devicesError && page.reviewError) ? (
         <EmptyState
           description="Register devices from an asset's Devices page"
+          icon={Cpu}
           title="No devices yet"
         />
       ) : null}
@@ -106,6 +107,7 @@ export function AllDevicesPage({ estateId }: { estateId: string }) {
       {access.pending || access.review ? null : (
         <EmptyState
           description="Device monitoring is not available for your role"
+          icon={Cpu}
           title="No device view"
         />
       )}

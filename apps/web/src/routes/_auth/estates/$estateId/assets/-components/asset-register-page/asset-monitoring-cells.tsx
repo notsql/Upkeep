@@ -1,10 +1,14 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Skeleton } from "@proj/ui/components/skeleton";
+import { cn } from "@proj/ui/lib/utils";
+import { type StatusTone, statusDotClassName } from "@/lib/status-tone";
 
 /** One secondary source (devices or failure risk) as the rows see it. */
 export interface MonitoringSource {
   failed: boolean;
   pending: boolean;
+  /** The tone for an asset's value, shown as a dot beside the text. */
+  toneFor?: (assetId: string) => StatusTone;
   /** The cell text for an asset, or null for nothing to show. */
   valueFor: (assetId: string) => string | null;
 }
@@ -34,7 +38,21 @@ export function DeviceSummary({
   if (source.failed) {
     return <span className="text-muted-foreground">Unavailable</span>;
   }
-  return <span>{source.valueFor(assetId)}</span>;
+  const tone = source.toneFor?.(assetId) ?? "neutral";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5",
+        tone === "muted" && "text-muted-foreground"
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn("size-2 shrink-0 rounded-full", statusDotClassName[tone])}
+      />
+      {source.valueFor(assetId)}
+    </span>
+  );
 }
 
 export function RiskFlag({
@@ -57,5 +75,13 @@ export function RiskFlag({
     return <span className="text-muted-foreground">Unavailable</span>;
   }
   const flag = source.valueFor(assetId);
-  return flag ? <Badge variant="destructive">{flag}</Badge> : null;
+  if (flag) {
+    return <Badge variant="destructive">{flag}</Badge>;
+  }
+  return (
+    <span className="text-muted-foreground">
+      <span aria-hidden="true">—</span>
+      <span className="sr-only">No risk data</span>
+    </span>
+  );
 }

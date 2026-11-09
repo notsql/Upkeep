@@ -43,22 +43,14 @@ it("tabs between the asset views for any asset-page viewer", () => {
   within(nav).getByRole("link", { name: "All devices" });
 });
 
-it("links All readings for owners and Managers", () => {
+it("offers no All readings link, even for owners and Managers", () => {
   renderWithProviders(<AssetViewsNav estateId={ESTATE} />);
-  expect(
-    screen.getByRole("link", { name: "All readings" }).getAttribute("href")
-  ).toBe(`/estates/${ESTATE}/readings`);
+  expect(screen.queryByRole("link", { name: "All readings" })).toBeNull();
 });
 
-it("links All readings even when there is only one asset view", () => {
+it("renders nothing when there is only one asset view", () => {
   access.allDevices = false;
   renderWithProviders(<AssetViewsNav estateId={ESTATE} />);
   expect(screen.queryByRole("navigation", { name: "Asset views" })).toBeNull();
-  screen.getByRole("link", { name: "All readings" });
-});
-
-it("offers no All readings link without that access", () => {
-  access.allReadings = false;
-  renderWithProviders(<AssetViewsNav estateId={ESTATE} />);
-  expect(screen.queryByRole("link", { name: "All readings" })).toBeNull();
+  expect(screen.queryByRole("link")).toBeNull();
 });

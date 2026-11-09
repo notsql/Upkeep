@@ -176,6 +176,32 @@ describe("assets by location", () => {
     expect(assetOrder()).toEqual(["Exhaust fan", "Water pump"]);
   });
 
+  it("labels each location group header row with its asset count", async () => {
+    mockApi();
+    renderRegister();
+    const block = (
+      await screen.findByRole("heading", { level: 2, name: "Block A" })
+    ).closest("th") as HTMLElement;
+    expect(block.getAttribute("scope")).toBe("colgroup");
+    within(block).getByText("2 assets");
+    const level = screen
+      .getByRole("heading", { level: 3, name: "L1" })
+      .closest("th") as HTMLElement;
+    expect(level.getAttribute("scope")).toBe("colgroup");
+    within(level).getByText("1 asset");
+  });
+
+  it("links each row once, by name, and shows a no-risk placeholder", async () => {
+    mockApi();
+    renderRegister();
+    const pumpRow = (
+      await screen.findByRole("link", { name: "Water pump" })
+    ).closest("tr") as HTMLElement;
+    expect(within(pumpRow).getAllByRole("link")).toHaveLength(1);
+    within(pumpRow).getByText("E-A0001");
+    await within(pumpRow).findByText("No risk data");
+  });
+
   it("groups the mobile cards the same way", async () => {
     const resize = mockMobileViewport();
     mockApi();

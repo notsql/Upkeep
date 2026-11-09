@@ -53,7 +53,7 @@ only): PageHeader "Report a fault" (`icon={LayoutDashboard}`, so the button's Cl
 or accept an invitation"), a primary "Report a fault" and, with
 `canCreateEstate`, an outline "Create estate" (Plus). The public home header
 uses `icon={LayoutDashboard}` ("Estates, equipment and council access"); the
-System status title has a HeartPulse icon. A failed access lookup on home is `ErrorState` + Retry. There is
+System status title has a HeartPulse icon (`text-brand-2`). the feature cards show their icons in `bg-brand-1/15 text-brand-3` tiles. The active sidebar item uses `sidebar-accent` with its icon in `text-sidebar-primary` (`DestinationLink`). A failed access lookup on home is `ErrorState` + Retry. There is
 no portfolio dashboard; `/estates` is the single "All estates" landing
 (directory + pending invitations, see [estates.md](estates.md)).
 
@@ -145,8 +145,8 @@ a group with no visible items is not rendered.
 
 There is no Devices, Readings, Device monitoring or Failure risk item: those
 pages live under Assets (All devices, the asset Overview, By location's risk
-column). Owners and Managers reach `/readings` through the "All readings" link
-on the Assets views (`canOpenAllReadings`: `canViewReadings` and not CREW);
+column). No screen links to `/readings` any more (the "All readings" link was
+removed from the Assets views); it is reachable by URL only;
 Crew reach an asset's readings from a work order's "View readings" / "Record
 reading" links (see [work-orders.md](work-orders.md)).
 

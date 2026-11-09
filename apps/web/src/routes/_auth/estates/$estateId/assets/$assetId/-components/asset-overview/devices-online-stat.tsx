@@ -1,11 +1,12 @@
 import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { activeDevices, useDevices } from "@/lib/devices";
+import { statusDotClassName } from "@/lib/status-tone";
 
 const DOTS = {
-  all: "bg-emerald-500",
-  some: "bg-amber-500",
-  none: "bg-muted-foreground/50",
+  all: statusDotClassName.success,
+  some: statusDotClassName.warning,
+  none: statusDotClassName.neutral,
 } as const;
 
 /** "N of M devices online", linking to the Devices tab; hidden with no devices. */

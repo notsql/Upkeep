@@ -1,6 +1,6 @@
 import type { components } from "@proj/api/schema";
-import { Badge } from "@proj/ui/components/badge";
 import type { ReactNode } from "react";
+import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
 
 export function ReportMetadata({
   report,
@@ -27,7 +27,7 @@ export function ReportMetadata({
         <div className="flex items-center gap-2">
           <dt className="font-semibold">Status:</dt>
           <dd>
-            <Badge className="w-fit">{report.status}</Badge>
+            <WorkOrderStatusBadge status={report.status} />
           </dd>
         </div>
       </dl>

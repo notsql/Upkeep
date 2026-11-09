@@ -10,7 +10,8 @@ import {
 import { ReadingCards } from "@/components/readings/reading-cards";
 import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { deviceMetrics } from "@/lib/devices";
-import { type EstateReading, flagLabel, flagVariant } from "@/lib/readings";
+import { type EstateReading, flagLabel } from "@/lib/readings";
+import { badgeVariantFor, readingFlagTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
 
 export function ReadingTable({
@@ -71,7 +72,7 @@ export function ReadingTable({
                     <Badge
                       className="h-auto max-w-full py-0.5 text-left leading-snug [overflow-wrap:anywhere] whitespace-normal"
                       key={flag.type}
-                      variant={flagVariant(flag)}
+                      variant={badgeVariantFor(readingFlagTone[flag.type])}
                     >
                       {flagLabel(flag, reading.unit)}
                     </Badge>

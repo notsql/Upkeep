@@ -561,7 +561,7 @@ it("shows mobile work-order summaries with sorting, filtering and paging intact"
   list.getByRole("link", { name: "TEST-W0001" });
   list.getByText("Leaking pipe");
   list.getByText("HIGH");
-  list.getByText("OPEN");
+  expect(list.getByText("Open").dataset.variant).toBe("outline");
   list.getByText("CLEANLINESS");
   expect(screen.queryByRole("table", { name: "Work orders" })).toBeNull();
   expect(screen.queryByRole("link", { name: "Create" })).toBeNull();

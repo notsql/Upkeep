@@ -1,34 +1,19 @@
 import { renderWithProviders, screen } from "@tests/test-utils";
 import { expect, it } from "vitest";
 import { LifecycleStatusBadge } from "@/components/badges/lifecycle-status-badge";
-import { statusToneClassName } from "@/lib/status-tone";
 
 it.each([
-  [false, "Inactive", "Active"],
-  [true, "Inactive", "Inactive"],
-  [true, "Retired", "Retired"],
+  [false, "Inactive", "Active", "success"],
+  [true, "Inactive", "Inactive", "secondary"],
+  [true, "Retired", "Retired", "secondary"],
 ] as const)(
   "announces lifecycle status for inactive=%s, %s",
-  (inactive, inactiveLabel, expected) => {
+  (inactive, inactiveLabel, expected, variant) => {
     renderWithProviders(
       <LifecycleStatusBadge inactive={inactive} inactiveLabel={inactiveLabel} />
     );
-    expect(screen.getByRole("status").textContent).toBe(expected);
+    const badge = screen.getByRole("status");
+    expect(badge.textContent).toBe(expected);
+    expect(badge.dataset.variant).toBe(variant);
   }
 );
-
-it("shows Active in the success tone and inactive in the danger tone", () => {
-  const { unmount } = renderWithProviders(
-    <LifecycleStatusBadge inactive={false} inactiveLabel="Retired" />
-  );
-  expect(screen.getByRole("status").className).toContain(
-    statusToneClassName.success
-  );
-  unmount();
-  renderWithProviders(
-    <LifecycleStatusBadge inactive inactiveLabel="Retired" />
-  );
-  expect(screen.getByRole("status").className).toContain(
-    statusToneClassName.danger
-  );
-});

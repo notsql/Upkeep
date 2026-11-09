@@ -72,6 +72,14 @@ beforeEach(() => {
 });
 
 describe("AssetForecastCard", () => {
+  it("shows the title without a description", async () => {
+    card();
+    await screen.findByText("Breakdown forecast");
+    expect(
+      screen.queryByText("Chance this unit breaks down soon", { exact: false })
+    ).toBeNull();
+  });
+
   it("names the condition and that anomaly detection recorded it", async () => {
     card();
     await screen.findByText("Condition: Needs attention · Anomaly detection");

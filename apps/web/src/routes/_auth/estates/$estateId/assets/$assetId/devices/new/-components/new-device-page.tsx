@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Cpu } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormCard, FormPage } from "@/components/page/form-page";
@@ -58,6 +59,7 @@ export function NewDevicePage({
         { label: "Register device" },
       ]}
       description="Measurements and reporting interval"
+      icon={Cpu}
       title="Register device"
     >
       {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}

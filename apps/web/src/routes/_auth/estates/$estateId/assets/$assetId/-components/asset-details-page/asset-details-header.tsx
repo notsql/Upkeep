@@ -1,3 +1,4 @@
+import { Package } from "lucide-react";
 import { LifecycleStatusBadge } from "@/components/badges/lifecycle-status-badge";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import type { Asset } from "@/lib/assets";
@@ -20,6 +21,7 @@ export function AssetDetailsHeader({
         },
         { label: asset.name },
       ]}
+      icon={Package}
       meta={asset.reference}
       status={
         <LifecycleStatusBadge

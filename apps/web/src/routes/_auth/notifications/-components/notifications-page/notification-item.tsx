@@ -10,6 +10,7 @@ import {
   type Notification,
 } from "@/lib/notifications";
 import { formatInterval } from "@/lib/service-intervals";
+import { badgeVariantFor, notificationTypeTone } from "@/lib/status-tone";
 
 const INTERVAL_SOURCES = {
   ASSET: "Set on this asset",
@@ -84,7 +85,9 @@ export function NotificationItem({
         to="/estates/$estateId/assets/$assetId"
       >
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Badge variant={read ? "outline" : "default"}>
+          <Badge
+            variant={badgeVariantFor(notificationTypeTone[notification.type])}
+          >
             {NOTIFICATION_TYPE_LABELS[notification.type]}
           </Badge>
           {read ? null : (

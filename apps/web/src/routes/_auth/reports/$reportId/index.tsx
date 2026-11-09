@@ -1,4 +1,5 @@
 import { createFileRoute, useParams, useSearch } from "@tanstack/react-router";
+import { ClipboardList } from "lucide-react";
 import { useCallback } from "react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -38,6 +39,7 @@ function ReportDetailPage() {
           },
           { label: report.data?.title ?? "Report" },
         ]}
+        icon={ClipboardList}
         title="Report details"
       />
       {report.isPending ? (

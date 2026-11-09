@@ -3,6 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
+import { Upload } from "lucide-react";
 import {
   type FormEvent,
   useCallback,
@@ -264,6 +265,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
           },
           { label: "Import CSV" },
         ]}
+        icon={Upload}
         title="Import CSV"
       />
       {allowed ? (
@@ -332,7 +334,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
           <ErrorState message={history.error.message} onRetry={retryHistory} />
         ) : null}
         {history.data?.items.length === 0 ? (
-          <EmptyState title="No import batches yet" />
+          <EmptyState icon={Upload} title="No import batches yet" />
         ) : null}
         <ImportHistory estateId={estateId} items={history.data?.items ?? []} />
         {history.data ? (

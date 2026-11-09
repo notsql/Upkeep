@@ -98,6 +98,7 @@ export function RoleWorkspace({
             ? "Use Create to add the first custom role"
             : "Custom permission sets for members"
         }
+        icon={ShieldCheck}
         title="No custom roles yet"
       />
     );

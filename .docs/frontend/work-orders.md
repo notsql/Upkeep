@@ -406,7 +406,7 @@ first work order" when the user can create, else "Saved work orders appear
 here"; no action - the header Create is the entry point); "No matching work orders" offers Clear filters, which keeps the sort.
 Detail: status history/corrections/documents load with `LoadingState`; "No
 corrections yet" and "No documents yet" (under a `SectionHeading` "Documents")
-are `EmptyState`s (no icon). Only the list header shows `icon={Wrench}`; Retry
+are `EmptyState`s (`FilePenLine`, `FileText`). List and detail headers show `icon={Wrench}`; Retry
 locations / Retry source are `outline`. New: access/source/location loads use `LoadingState`; the
 "Work order already raised" screen uses `PageHeader`.
 
@@ -423,7 +423,7 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   Load failure: `ErrorState` "Unable to load work orders".
 - Detail (`work-order-detail-page.tsx`; the description/details card is
   `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
-  status `Badge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
+  `icon={Wrench}`, status `WorkOrderStatusBadge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
   `work-order-progress.tsx` and `work-order-documents.tsx` use `ErrorState`
   ("Retry history", "Retry corrections", "Retry documents"). The completion
   dialog is the shared `FormDialog` ("Saving…" while pending): `submitDisabled`
@@ -431,8 +431,8 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   Refresh-work-order recovery `Alert` and review notice sit in `children`;
   `onSubmit` reads the uncontrolled fields from the form via `FormData`.
 - Create (`work-order-form.tsx`): `FormPage` "Create work order" (description
-  "Describe the work, where it is and how urgent it is") with breadcrumbs, no
-  icon. Access loading, "Work-order creation is unavailable" and the
+  "Describe the work, where it is and how urgent it is") with breadcrumbs and
+  `icon={Wrench}`. Access loading, "Work-order creation is unavailable" and the
   inspection-source dead ends (`renderInspectionWorkOrderStatus`: retry, "Work
   order already raised" as a titled `FormCard`, "Only a failed inspection…")
   render inside it. Then a `FormCard` "Source" ("Where this work came from":
@@ -442,3 +442,23 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   `FieldSet` "Asset", save errors, and `FormActions` "Create work order"
   (`disabled` = the form's `blocked` guard; Cancel only for an inspection
   source).
+
+## Colour
+
+Tones come from `lib/status-tone.ts` (decision 0046).
+
+- Status: `components/work-orders/work-order-status-badge.tsx`
+  (`WorkOrderStatusBadge`) renders the `workOrderStatusLabel`, so "Open"
+  instead of `OPEN`. Variants: Open is outline, Assigned is info, In progress
+  is warning and Closed is success. The list table, the mobile cards and the
+  detail header all use it. Status history keeps its plain text.
+- Priority: the list table, the mobile cards and the detail summary show a
+  Badge with the raw enum text, toned by `reportUrgencyTone`. LOW is outline,
+  MEDIUM is info, HIGH is warning and URGENT is destructive.
+- Empty states: "No work orders yet" uses `Wrench` and "No matching work
+  orders" uses `SearchX`.
+- Detail cards use `SectionHeading` icons: Completion outcome
+  (`CircleCheck`), Status history (`History`) and Outcome corrections
+  (`FilePenLine`).
+- The stale-data "Refresh work order" and "Unable to refresh" Alerts use
+  `variant="warning"`.

@@ -84,7 +84,7 @@ export function PageHeader({
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
           {Icon ? (
-            <span className="bg-muted text-foreground flex size-10 shrink-0 items-center justify-center rounded-lg">
+            <span className="bg-brand-1/15 text-brand-3 flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Icon aria-hidden="true" className="size-5" />
             </span>
           ) : null}

@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
+import { FileSpreadsheet } from "lucide-react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
@@ -43,6 +44,7 @@ export function ReadingImportBatchPage({
           },
           { label: "Import batch" },
         ]}
+        icon={FileSpreadsheet}
         meta={
           batch
             ? `${batch.originalFilename} · ${new Date(batch.createdAt).toLocaleString()}`

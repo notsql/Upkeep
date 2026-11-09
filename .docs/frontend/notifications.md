@@ -17,7 +17,7 @@ users before the theme toggle. Shown only when `useAppAccess()` lists an estate 
 - `PageLayout` + `PageHeader` with a **Mark all as read** outline `Button`, disabled when the unread
   count is 0 or while saving; a failure shows a destructive `Alert`.
 - A `ul` named "Notifications" of `notification-item.tsx` rows: type `Badge` ("Anomaly",
-  "Service due", "Repair predicted"), "Unread" text for unread rows, relative time in a `time`
+  "Service due", "Repair predicted"; variant from `notificationTypeTone`: destructive, info, warning), "Unread" text for unread rows, relative time in a `time`
   element (absolute time on hover), the summary, then "Asset name (reference) · Estate name".
   Each row is a `Link` to `/estates/$estateId/assets/$assetId`; opening an unread row marks it read.
   Date-driven rows add a basis line under the summary:
@@ -25,7 +25,7 @@ users before the theme toggle. Shown only when `useAppAccess()` lists an estate 
     category" (or "Set on this asset" for an override).
   - Repair predicted: "Prediction · 42% chance within 30 days · based on 3 recorded repairs" (or
     "based on typical pumps; no repairs recorded yet").
-- `EmptyState` "No notifications yet", `ErrorState` with Retry, `LoadingState` while pending.
+- `EmptyState` "No notifications yet" (`Bell` icon), `ErrorState` with Retry, `LoadingState` while pending.
 - `Pagination` ("Notification pages", "Page N of M") when there are more than 20.
 
 ## Acknowledge and dismiss (ID-107)
@@ -48,8 +48,9 @@ Used by:
   `SectionCard` "Anomaly alerts" on pumps for owners and Managers (`estate.owned ||
   canManageInvitationPermissions`), placed after the condition section. Each alert is a `Card`
   with `ConditionBadge`, an Open/Resolved `Badge`, scores, explanation, detected times, the
-  summary and the actions. Actions are locked on an inactive estate or retired asset. Empty: "No
-  anomaly alerts for this asset."
+  summary and the actions. Actions are locked on an inactive estate or retired asset. The card
+  renders only with at least one alert or on a load error (`ErrorState`); while loading or with
+  no alerts it renders nothing.
 
 ## Notification settings
 
@@ -65,7 +66,7 @@ renders `-components/notification-settings-page/notification-settings-page.tsx` 
   lead time (days)" number input (0-365), "Repair prediction lead time" `Select` (30/60/90 days),
   each with a `FieldDescription`; invalid values show a `FieldError` and set `aria-invalid`.
   **Save settings** shows "Settings saved." (`role="status"`); a refused save shows a destructive
-  `Alert`. An inactive estate shows a notice and disables the form.
+  `Alert`. An inactive estate shows a warning `Alert` and disables the form.
 
 ## Data (`src/lib/notifications.ts`)
 

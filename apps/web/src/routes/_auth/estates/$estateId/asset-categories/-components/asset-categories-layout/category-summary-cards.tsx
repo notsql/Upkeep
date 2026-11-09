@@ -1,4 +1,4 @@
-import { buttonVariants } from "@proj/ui/components/button";
+import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import {
   CalendarClock,
@@ -50,17 +50,19 @@ export function CategorySummaryCards({
             <p className="text-muted-foreground text-sm">
               {`${missing.length} of ${categories.length} categories need an interval`}
             </p>
-            <Link
-              className={buttonVariants({
-                className: "justify-self-start",
-                size: "sm",
-                variant: "outline",
-              })}
-              params={{ estateId, interval: "not-set" }}
-              to="/estates/$estateId/asset-categories/$interval"
+            <Button
+              className="justify-self-start"
+              render={
+                <Link
+                  params={{ estateId, interval: "not-set" }}
+                  to="/estates/$estateId/asset-categories/$interval"
+                />
+              }
+              size="sm"
+              variant="outline"
             >
               Show these categories
-            </Link>
+            </Button>
           </>
         ) : (
           <p className="text-muted-foreground text-sm">

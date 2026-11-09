@@ -2,7 +2,6 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
@@ -58,13 +57,13 @@ const HORIZONS = [
 const TONES: Record<RiskLevel, { tone: string; text: string; bar: string }> = {
   LOW: {
     tone: "low",
-    text: "text-emerald-700 dark:text-emerald-300",
-    bar: "[&_[data-slot=progress-indicator]]:bg-emerald-500",
+    text: "text-success",
+    bar: "[&_[data-slot=progress-indicator]]:bg-success",
   },
   MODERATE: {
     tone: "moderate",
-    text: "text-amber-700 dark:text-amber-300",
-    bar: "[&_[data-slot=progress-indicator]]:bg-amber-500",
+    text: "text-warning",
+    bar: "[&_[data-slot=progress-indicator]]:bg-warning",
   },
   HIGH: {
     tone: "high",
@@ -150,9 +149,6 @@ export function AssetForecastCard({
             Breakdown forecast
           </SectionHeading>
         </CardTitle>
-        <CardDescription>
-          Chance this unit breaks down soon, from its maintenance history.
-        </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 text-sm">
         {risk.isPending ? (
@@ -174,7 +170,7 @@ export function AssetForecastCard({
               <p className="text-muted-foreground flex items-start gap-1.5">
                 <TriangleAlert
                   aria-hidden="true"
-                  className="mt-0.5 size-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                  className="text-warning mt-0.5 size-3.5 shrink-0"
                 />
                 <span>
                   Flagged for a check because{" "}

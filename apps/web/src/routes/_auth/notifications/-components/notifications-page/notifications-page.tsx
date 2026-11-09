@@ -101,6 +101,7 @@ function NotificationList({
     return (
       <EmptyState
         description="You'll be told here when an asset needs attention."
+        icon={Bell}
         title="No notifications yet"
       />
     );

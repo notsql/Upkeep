@@ -11,9 +11,9 @@ management/resident fallbacks, rendering Page not found for unavailable features
 Owner, Manager and Crew receive this read capability without asset-register
 access. Header labels come from access context; no owner-only queries are made.
 
-There is no Readings sidebar item. Owners and Managers reach this page from
-the "All readings" link on the Assets views (`AssetViewsNav`,
-`canOpenAllReadings`: `canViewReadings` and not CREW); Crew reach one asset's
+There is no Readings sidebar item, and the Assets views no longer link here:
+owners and Managers (`canOpenAllReadings`: `canViewReadings` and not CREW)
+open `/estates/$estateId/readings` directly; Crew reach one asset's
 readings from a work order (see [work-orders.md](work-orders.md)). Estate
 switching preserves Readings for permitted destinations and retains the
 Resident fallback to estate-filtered My reports.
@@ -48,7 +48,7 @@ All new components are in the route's `-components/` folder:
 | `reading-asset-picker.tsx` | Button/Dialog picker, name/reference search, retired labels, All assets and option pagination |
 | `reading-results.tsx` | Loading, validation, errors/Retry, empty states and page recovery |
 | `reading-pagination.tsx` | Previous/Next, current-page indicator, numbered page jumps and ellipses |
-| `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, source/recorder, device and flag Badges (`flagVariant`: `destructive` for ANOMALY, `outline` otherwise; also in `components/readings/reading-cards.tsx`) |
+| `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, source/recorder, device and flag Badges (`badgeVariantFor(readingFlagTone[type])` from `lib/status-tone.ts`: ANOMALY and OUT_OF_RANGE `destructive`, GAP and DUPLICATE_TIMESTAMP `warning`; also in `components/readings/reading-cards.tsx`) |
 
 Filters stack on mobile; long labels wrap without widening the page. Both estate-wide and legacy tables use auto-height, width-bounded flag badges with wrapping, left-aligned text and a readable line height; long flag labels stay inside their borders. Device columns reserve a readable minimum width rather than wrapping identifiers into tall strips. Both Flags columns reserve a minimum width so labels remain readable on mobile; the table scrolls within its own region. Browser checks cover 1280, 375 and 320 px. Crew rows
 do not link to owner-only asset pages. Manual entry is unavailable in

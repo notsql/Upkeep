@@ -1,23 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { DeviceStatusBadge } from "@/components/badges/device-status-badge";
-import { statusToneClassName } from "@/lib/status-tone";
 
 describe("DeviceStatusBadge", () => {
   it.each([
-    ["ONLINE", "Online"],
-    ["OFFLINE", "Offline"],
-    ["AWAITING_FIRST_READING", "Awaiting first reading"],
-    ["DEACTIVATED", "Deactivated"],
-  ] as const)("labels %s as %s", (status, label) => {
+    ["ONLINE", "Online", "success"],
+    ["OFFLINE", "Offline", "destructive"],
+    ["AWAITING_FIRST_READING", "Awaiting first reading", "info"],
+    ["DEACTIVATED", "Deactivated", "secondary"],
+  ] as const)("labels %s as %s in the %s variant", (status, label, variant) => {
     render(<DeviceStatusBadge status={status} />);
-    screen.getByText(label);
-  });
-
-  it("shows Online in the same success tone as an active asset", () => {
-    render(<DeviceStatusBadge status="ONLINE" />);
-    expect(screen.getByText("Online").className).toContain(
-      statusToneClassName.success
-    );
+    expect(screen.getByText(label).dataset.variant).toBe(variant);
   });
 });

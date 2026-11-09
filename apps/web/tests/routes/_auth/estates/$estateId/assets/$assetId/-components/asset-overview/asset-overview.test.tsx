@@ -89,7 +89,14 @@ vi.mock("@/lib/catalogue", () => ({
 }));
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section",
-  () => ({ AssetConditionSection: () => <h2>Condition</h2> })
+  () => ({
+    AssetConditionSection: ({ upcoming }: { upcoming?: ReactNode }) => (
+      <section aria-label="Condition">
+        <h2>Condition</h2>
+        {upcoming}
+      </section>
+    ),
+  })
 );
 
 const ASSET = "11111111-1111-4111-8111-111111111111";
@@ -331,7 +338,12 @@ describe("AssetOverview access", () => {
 
   it("shows the owner what is coming up, from the inspection list", async () => {
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
-    await screen.findByRole("region", { name: "Upcoming" });
+    const condition = screen.getByRole("region", { name: "Condition" });
+    await within(condition).findByRole("heading", {
+      level: 3,
+      name: "Upcoming",
+    });
+    expect(screen.queryByRole("region", { name: "Upcoming" })).toBeNull();
     await waitFor(() =>
       expect(requested("/estates/{estateId}/inspection-list")).toBe(true)
     );
@@ -342,7 +354,7 @@ describe("AssetOverview access", () => {
     viewer.role = "CREW";
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("region", { name: "Trends" });
-    expect(screen.queryByRole("region", { name: "Upcoming" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Upcoming" })).toBeNull();
     expect(requested("/estates/{estateId}/inspection-list")).toBe(false);
     expect(
       requested("/estates/{estateId}/assets/{assetId}/service-interval")

@@ -82,10 +82,16 @@ it("disables the actions with the lock reason", () => {
   ).toBe(true);
 });
 
-it("says when there are no alerts", () => {
+it("renders nothing when there are no alerts", () => {
   state.data = [];
   renderWithProviders(<AnomalyAlertsSection assetId="a-1" estateId="e-1" />);
-  section().getByText("No anomaly alerts for this asset.");
+  expect(screen.queryByRole("region", { name: "Anomaly alerts" })).toBeNull();
+});
+
+it("renders nothing while loading", () => {
+  state.data = undefined;
+  renderWithProviders(<AnomalyAlertsSection assetId="a-1" estateId="e-1" />);
+  expect(screen.queryByRole("region", { name: "Anomaly alerts" })).toBeNull();
 });
 
 it("shows a load error", () => {

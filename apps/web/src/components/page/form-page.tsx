@@ -6,6 +6,7 @@ import {
   CardTitle,
 } from "@proj/ui/components/card";
 import { cn } from "@proj/ui/lib/utils";
+import type { LucideIcon } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { FormPageHeader } from "@/components/page/form-page-header";
 import type { Breadcrumb } from "@/components/page/page-header";
@@ -16,11 +17,13 @@ import { PageLayout } from "@/components/page/page-layout";
  * form page header, then the page's FormCards stacked with even spacing.
  */
 export function FormPage({
+  icon,
   breadcrumbs,
   title,
   description,
   children,
 }: {
+  icon?: LucideIcon;
   breadcrumbs: Breadcrumb[];
   title: string;
   description?: string;
@@ -31,6 +34,7 @@ export function FormPage({
       <FormPageHeader
         breadcrumbs={breadcrumbs}
         description={description}
+        icon={icon}
         title={title}
       />
       <div className="grid gap-6">{children}</div>

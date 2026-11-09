@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/format";
-import { AssetUpcoming } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-upcoming/asset-upcoming";
+import { AssetUpcomingList } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-upcoming/asset-upcoming";
 
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
@@ -60,7 +60,7 @@ function render({
   installedOn = "2026-01-10" as string | null,
 } = {}) {
   renderWithProviders(
-    <AssetUpcoming
+    <AssetUpcomingList
       assetId="asset"
       canSeeInspections={inspections}
       canSeeService={service}
@@ -76,7 +76,7 @@ function requested(path: string): boolean {
   );
 }
 
-describe("AssetUpcoming", () => {
+describe("AssetUpcomingList", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -146,6 +146,13 @@ describe("AssetUpcoming", () => {
       .getAllByRole("listitem")
       .map((row) => row.querySelector("[data-title]")?.textContent);
     expect(titles).toEqual(["Service due", "Inspection due"]);
+  });
+
+  it("is a small h3 sub-section, not a card of its own", async () => {
+    render();
+    await screen.findByText("Nothing scheduled");
+    screen.getByRole("heading", { level: 3, name: "Upcoming" });
+    expect(screen.queryByRole("region", { name: "Upcoming" })).toBeNull();
   });
 
   it("says nothing is scheduled when there is nothing due", async () => {

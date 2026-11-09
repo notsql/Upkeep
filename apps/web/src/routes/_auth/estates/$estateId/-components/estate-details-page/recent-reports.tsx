@@ -3,11 +3,33 @@ import { Link } from "@tanstack/react-router";
 import { ClipboardList } from "lucide-react";
 import { useEstateReportList } from "@/lib/estate-reports";
 import {
+  badgeVariantFor,
+  type WorkOrderStatus,
+  workOrderStatusLabel,
+  workOrderStatusTone,
+} from "@/lib/status-tone";
+import {
   footerLink,
   NO_FILTERS,
   RECENT,
 } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/dashboard-lists";
 import { ListCard } from "@/routes/_auth/estates/$estateId/-components/estate-details-page/list-card";
+
+/** The list contract types status as a plain string. */
+function isKnownStatus(status: string): status is WorkOrderStatus {
+  return Object.hasOwn(workOrderStatusLabel, status);
+}
+
+function StatusBadge({ status }: { status: string }) {
+  if (!isKnownStatus(status)) {
+    return <Badge variant="outline">{status}</Badge>;
+  }
+  return (
+    <Badge variant={badgeVariantFor(workOrderStatusTone[status])}>
+      {workOrderStatusLabel[status]}
+    </Badge>
+  );
+}
 
 export function RecentReports({ estateId }: { estateId: string }) {
   const list = useEstateReportList(estateId, NO_FILTERS);
@@ -41,9 +63,7 @@ export function RecentReports({ estateId }: { estateId: string }) {
                 {report.location.label}
               </span>
             </span>
-            <Badge variant="outline">
-              {report.status.toLowerCase().replaceAll("_", " ")}
-            </Badge>
+            <StatusBadge status={report.status} />
           </Link>
         </li>
       ))}

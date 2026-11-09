@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { badgeVariantFor, invitationTone } from "@/lib/status-tone";
 
 export function MembersHeader({ count }: { count: number | undefined }) {
   return (
@@ -11,7 +12,9 @@ export function MembersHeader({ count }: { count: number | undefined }) {
       <CardTitle className="flex items-center gap-2">
         <h2>Members</h2>
         {count === undefined ? null : (
-          <Badge variant="outline">{count} active</Badge>
+          <Badge variant={badgeVariantFor(invitationTone.ACTIVE)}>
+            {count} active
+          </Badge>
         )}
       </CardTitle>
       <CardDescription>

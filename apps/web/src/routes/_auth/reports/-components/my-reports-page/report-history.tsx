@@ -49,6 +49,7 @@ export function ReportHistory({ estateId }: HistoryProps) {
       {reports.data && (reports.data.items?.length ?? 0) === 0 ? (
         <EmptyState
           description="Use Create to report the first fault"
+          icon={ClipboardList}
           title={estateId ? "No reports for this estate yet" : "No reports yet"}
         />
       ) : null}

@@ -1,12 +1,9 @@
 import { Alert, AlertDescription, AlertTitle } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
+import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
+import { CircleCheck } from "lucide-react";
 import { useCallback, useState } from "react";
+import { SectionHeading } from "@/components/page/section-heading";
 import { CompletionOutcome } from "@/components/work-orders/work-order-completion";
 import {
   useChangeWorkOrderStatus,
@@ -98,7 +95,7 @@ export function WorkOrderProgress({
         </div>
       ) : null}
       {error ? (
-        <Alert className="rounded-xl">
+        <Alert className="rounded-xl" variant="warning">
           <AlertTitle>Review the latest work order</AlertTitle>
           <AlertDescription className="mt-2 flex flex-col items-start gap-3">
             <p>{error}</p>
@@ -111,9 +108,9 @@ export function WorkOrderProgress({
       {order.completion ? (
         <Card>
           <CardHeader>
-            <CardTitle>
-              <h2>Completion outcome</h2>
-            </CardTitle>
+            <SectionHeading icon={CircleCheck}>
+              Completion outcome
+            </SectionHeading>
             {canUpdate ? (
               <Button
                 className="w-fit"

@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import { type Breadcrumb, PageHeader } from "@/components/page/page-header";
 
 /**
@@ -5,10 +6,12 @@ import { type Breadcrumb, PageHeader } from "@/components/page/page-header";
  * optional description. No actions - the form's own footer submits.
  */
 export function FormPageHeader({
+  icon,
   breadcrumbs,
   title,
   description,
 }: {
+  icon?: LucideIcon;
   breadcrumbs: Breadcrumb[];
   title: string;
   description?: string;
@@ -17,6 +20,7 @@ export function FormPageHeader({
     <PageHeader
       breadcrumbs={breadcrumbs}
       description={description}
+      icon={icon}
       title={title}
     />
   );

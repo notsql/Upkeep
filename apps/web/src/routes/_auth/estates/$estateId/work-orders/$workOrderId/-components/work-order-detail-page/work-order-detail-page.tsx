@@ -1,11 +1,12 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { Wrench } from "lucide-react";
 import { useCallback } from "react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
 import { isTransientFailure } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/is-transient-failure";
 import { WorkOrderDetailSummary } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/work-order-detail-summary";
@@ -56,12 +57,13 @@ export function WorkOrderDetailPage({
           },
           { label: data.reference },
         ]}
+        icon={Wrench}
         meta={`Opened ${new Date(data.createdAt).toLocaleDateString()}`}
-        status={<Badge variant="outline">{data.status}</Badge>}
+        status={<WorkOrderStatusBadge status={data.status} />}
         title={data.reference}
       />
       {order.isError ? (
-        <Alert className="rounded-xl">
+        <Alert className="rounded-xl" variant="warning">
           <AlertDescription className="flex flex-col items-start gap-3">
             <p>
               Unable to refresh. Showing the last loaded work order; your draft

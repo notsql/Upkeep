@@ -7,8 +7,8 @@ import {
   type AssetReading,
   type EstateReading,
   flagLabel,
-  flagVariant,
 } from "@/lib/readings";
+import { badgeVariantFor, readingFlagTone } from "@/lib/status-tone";
 
 export function ReadingCards({
   items,
@@ -73,7 +73,7 @@ export function ReadingCards({
                     <Badge
                       className="h-auto max-w-full py-0.5 text-left leading-snug whitespace-normal"
                       key={flag.type}
-                      variant={flagVariant(flag)}
+                      variant={badgeVariantFor(readingFlagTone[flag.type])}
                     >
                       {flagLabel(flag, reading.unit)}
                     </Badge>

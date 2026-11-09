@@ -9,6 +9,8 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import { SortableTableHead } from "@/components/table/sortable-table-head";
+import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
+import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
 import type { WorkOrder, WorkOrderListSearch } from "@/lib/work-orders";
 import { DuplicateCountBadge } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/duplicate-count-badge";
@@ -90,9 +92,7 @@ export function WorkOrderTable({
             <TableCell>
               <div className="flex flex-wrap gap-1">
                 <Badge
-                  variant={
-                    order.priority === "URGENT" ? "destructive" : "outline"
-                  }
+                  variant={badgeVariantFor(reportUrgencyTone[order.priority])}
                 >
                   {order.priority}
                 </Badge>
@@ -101,7 +101,9 @@ export function WorkOrderTable({
                 />
               </div>
             </TableCell>
-            <TableCell>{order.status}</TableCell>
+            <TableCell>
+              <WorkOrderStatusBadge status={order.status} />
+            </TableCell>
             <TableCell>
               <time dateTime={order.createdAt}>
                 {new Date(order.createdAt).toLocaleString()}

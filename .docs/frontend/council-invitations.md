@@ -34,17 +34,17 @@ Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
   trigger `w-full`). Filtering is client-side; it applies to whichever view is
   shown. Filter state is per page mount (switching views resets it); the API
   has no server-side filters.
-- Members view: card "Members" with an "N active" Badge (no icon - the header
+- Members view: card "Members" with an "N active" success Badge (no icon - the header
   has Users), then the paged Table (Name, Email, Role, Status, Actions). Role
   shows exactly one Badge: "Owner" (hint "Full Manager access plus
   ownership") for the estate owner, otherwise the preset label or custom role
   name. Loading is `LoadingState` "Loading members…" (table); a failed roster
   or estate read is `ErrorState` + Retry; no roster is `EmptyState` "No members
-  yet" (default Inbox); filters with no result show `EmptyState` "No matching
+  yet" (`Users` icon); filters with no result show `EmptyState` "No matching
   members" (SearchX) with an outline "Clear filters" action, alongside the
   FilterBar's own ghost Clear filters.
 - Pending invitations view (and the whole page body for delegated inviters):
-  card "Pending invitations" (`Mail` icon) with an "N pending" Badge; each row
+  card "Pending invitations" (`Mail` icon) with an "N pending" info Badge; each row
   shows email, role Badge, delivery and expiry, and a ghost **Revoke** button
   (accessible name "Cancel invitation for <email>") that confirms in a
   `ConfirmDialog` ("Cancel invitation?", destructive "Cancel invitation",
@@ -204,3 +204,8 @@ invitations · <estate>". Members CardTitle has a Users icon, Pending
 invitations a Mail icon (description "Not yet accepted"). Empty: "No members
 yet" ("Invited members appear here"), "No pending invitations" ("Sent
 invitations appear here"). The access-error "Retry access" is `outline`.
+
+Colour: the tones come from `invitationTone`. Pending counts are info, and
+"Active" (the member count and the Status column) is success. Role-name Badges
+stay secondary. "No pending invitations" uses the `Mail` icon, and both "No
+matching …" empty states use `SearchX`.

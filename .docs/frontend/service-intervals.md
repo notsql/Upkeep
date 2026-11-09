@@ -40,8 +40,8 @@ shadcn: `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescrip
 
 ## `IntervalBadge` (`src/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/interval-badge.tsx`)
 
-An outline `Badge` with `formatInterval(interval)` as its text, coloured by unit: `DAY` blue,
-`MONTH` emerald (green), `YEAR` violet (purple), each with dark-mode shades. A null interval is a
+An outline `Badge` with `formatInterval(interval)` as its text, tinted by unit on the brand
+scale tokens: `DAY` brand-1 (sky), `MONTH` brand-2 (blue), `YEAR` brand-3 (indigo). A null interval is a
 plain outline "Not set" in the muted text colour. The text always names the unit, so colour is
 never the only signal.
 
@@ -75,7 +75,7 @@ never the only signal.
 A `section` labelled by its "Service interval" heading, in a `Card`:
 
 - the effective interval as the headline (`formatInterval(effective)` in large semibold text, a
-  `<p>`), next to a source `Badge`: amber outline **Override** (`ASSET`), `secondary` **From
+  `<p>`), next to a source `Badge`: `warning` **Override** (`ASSET`, via `badgeVariantFor("warning")`), `secondary` **From
   category** (`CATEGORY`) or muted outline **No interval** (`NONE`);
 - an explanation in muted text: "Replaces the <categoryLabel> interval (every N <unit>)." or "The
   <categoryLabel> category has no interval." (`ASSET`), "Inherited from the <categoryLabel>

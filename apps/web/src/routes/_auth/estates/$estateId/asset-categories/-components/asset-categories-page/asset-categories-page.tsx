@@ -1,5 +1,6 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { Tags } from "lucide-react";
 import { ServiceIntervalDialog } from "@/components/service-intervals/service-interval-dialog";
 import { EmptyState } from "@/components/states/empty-state";
 import { AssetCategoriesTable } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/asset-categories-table";
@@ -49,6 +50,7 @@ export function AssetCategoriesList({
             </Link>
           }
           description="No category uses this interval"
+          icon={Tags}
           title="No matching categories"
         />
       ) : (

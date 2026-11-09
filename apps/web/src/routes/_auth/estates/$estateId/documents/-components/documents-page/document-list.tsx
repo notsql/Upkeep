@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import type { DocumentFilters, EstateDocument } from "@/lib/documents";
@@ -55,12 +56,17 @@ export function DocumentList({
             ) : undefined
           }
           description="Try other filters"
+          icon={FileText}
           title="No matching documents"
         />
       );
     }
     return (
-      <EmptyState description="Uploads appear here" title="No documents yet" />
+      <EmptyState
+        description="Uploads appear here"
+        icon={FileText}
+        title="No documents yet"
+      />
     );
   }
   if (mobile) {

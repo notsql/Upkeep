@@ -7,9 +7,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@proj/ui/components/dialog";
+import { Separator } from "@proj/ui/components/separator";
 import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, ClipboardCheck, HeartPulse } from "lucide-react";
+import type { ReactNode } from "react";
 import { SECTION_ACTION, SectionCard } from "@/components/page/section-card";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -67,10 +69,13 @@ export function AssetConditionSection({
   assetId,
   canRecord,
   estateId,
+  upcoming,
 }: {
   assetId: string;
   canRecord: boolean;
   estateId: string;
+  /** Work coming up, shown under the condition as a sub-section. */
+  upcoming?: ReactNode;
 }) {
   const {
     assessments,
@@ -133,6 +138,12 @@ export function AssetConditionSection({
             View history ({assessments.data.length})
             <ArrowRight aria-hidden="true" />
           </Link>
+        ) : null}
+        {upcoming ? (
+          <>
+            <Separator />
+            {upcoming}
+          </>
         ) : null}
       </SectionCard>
     </Dialog>

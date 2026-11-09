@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { Package } from "lucide-react";
 import { EmptyState } from "@/components/states/empty-state";
 
 export function AssetsEmpty({
@@ -19,6 +20,7 @@ export function AssetsEmpty({
           </Button>
         }
         description="Try fewer filters"
+        icon={Package}
         title="No matching assets"
       />
     );
@@ -30,6 +32,7 @@ export function AssetsEmpty({
           ? "Use Create to add the first asset, or set Status to All to include retired assets"
           : "Set Status to All to include retired assets"
       }
+      icon={Package}
       title="No assets yet"
     />
   );

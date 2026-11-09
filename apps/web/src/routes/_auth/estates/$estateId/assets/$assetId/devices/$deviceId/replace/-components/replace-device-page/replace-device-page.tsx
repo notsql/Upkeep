@@ -1,3 +1,4 @@
+import { RefreshCw } from "lucide-react";
 import { FormPage } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { ReplaceDeviceFormCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/-components/replace-device-page/replace-device-form-card";
@@ -34,6 +35,7 @@ export function ReplaceDevicePage({
         { label: "Replace device" },
       ]}
       description="New hardware; readings stay with the old device"
+      icon={RefreshCw}
       title={title}
     >
       {loading ? <LoadingState label="Loading device…" rows={2} /> : null}

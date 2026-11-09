@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, Plus, RadioTower } from "lucide-react";
+import { Activity, Cpu, Plus, RadioTower } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import {
   PageSection,
@@ -81,6 +81,7 @@ export function AssetDevicesSection({
                   ? "Use Register device to add the first sensor"
                   : "Registered sensors appear here"
               }
+              icon={Cpu}
               title="No devices yet"
             />
           </div>

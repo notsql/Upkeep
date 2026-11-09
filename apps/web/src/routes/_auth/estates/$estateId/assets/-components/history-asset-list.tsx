@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { History } from "lucide-react";
 import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -87,6 +88,7 @@ export function HistoryAssetList({
     <PageLayout className="space-y-5">
       <ListPageHeader
         description="Browse assets and their recorded history, including retired equipment."
+        icon={History}
         title="Assets"
       />
       <Card>
@@ -134,6 +136,7 @@ export function HistoryAssetList({
               </Button>
             ) : undefined
           }
+          icon={History}
           title={
             filters.q ||
             filters.status === "ACTIVE" ||

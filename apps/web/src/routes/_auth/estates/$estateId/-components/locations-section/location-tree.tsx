@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { MapPin, SearchX } from "lucide-react";
 import { EmptyState } from "@/components/states/empty-state";
 import type { LocationNode } from "@/lib/locations";
 import { LocationItem } from "@/routes/_auth/estates/$estateId/-components/locations-section/location-item";
@@ -70,6 +71,7 @@ export function LocationTree({
               </Button>
             }
             description={`Nothing matches “${query.trim()}”`}
+            icon={SearchX}
             title="No matching locations"
           />
         ) : (
@@ -79,6 +81,7 @@ export function LocationTree({
                 ? "Use Create to add the first block"
                 : "Added blocks and levels appear here"
             }
+            icon={MapPin}
             title="No locations yet"
           />
         )}

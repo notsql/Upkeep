@@ -140,7 +140,7 @@ export function NotificationSettingsForm({
       <CardContent>
         <form className="grid gap-6" noValidate onSubmit={submit}>
           {inactive ? (
-            <Alert>
+            <Alert variant="warning">
               <AlertDescription>
                 This estate is inactive, so its notification settings cannot be
                 changed.

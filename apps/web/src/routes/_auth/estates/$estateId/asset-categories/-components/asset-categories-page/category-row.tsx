@@ -49,7 +49,7 @@ export function CategoryRow({
       </TableCell>
       <TableCell>
         {category.failsSilently ? (
-          <Badge variant="secondary">Fails silently</Badge>
+          <Badge variant="warning">Fails silently</Badge>
         ) : (
           <span className="text-muted-foreground">No</span>
         )}

@@ -7,10 +7,9 @@ import {
 
 // Colour only reinforces the unit, which the text always says.
 const colours: Record<IntervalUnit, string> = {
-  DAY: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  MONTH:
-    "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-  YEAR: "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-200",
+  DAY: "border-brand-1/40 bg-brand-1/15 text-brand-3",
+  MONTH: "border-brand-2/30 bg-brand-2/10 text-brand-2",
+  YEAR: "border-brand-3/30 bg-brand-3/10 text-brand-3",
 };
 
 /** A service interval as a label coloured by its unit; "Not set" stays plain (ID-81). */

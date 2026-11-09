@@ -7,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
-import { Files } from "lucide-react";
+import { Files, FileText } from "lucide-react";
 import { useCallback, useState } from "react";
 import { SectionHeading } from "@/components/page/section-heading";
 import { EmptyState } from "@/components/states/empty-state";
@@ -63,6 +63,7 @@ export function WorkOrderDocuments({
         {!documents.isError && documents.data?.items.length === 0 ? (
           <EmptyState
             description="Linked documents appear here"
+            icon={FileText}
             title="No documents yet"
           />
         ) : null}

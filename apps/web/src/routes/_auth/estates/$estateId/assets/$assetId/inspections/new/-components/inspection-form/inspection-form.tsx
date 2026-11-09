@@ -1,5 +1,6 @@
 import { FieldSeparator } from "@proj/ui/components/field";
 import { useNavigate } from "@tanstack/react-router";
+import { ClipboardCheck } from "lucide-react";
 import { type ReactNode, useCallback } from "react";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormCard, FormPage } from "@/components/page/form-page";
@@ -38,6 +39,7 @@ function InspectionFormPage({
         { label: TITLE },
       ]}
       description={description}
+      icon={ClipboardCheck}
       title={TITLE}
     >
       {children}

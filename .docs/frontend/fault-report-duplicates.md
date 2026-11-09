@@ -29,7 +29,9 @@ server enforces it.
   - `DuplicateBadges` shows shadcn Badges for "N duplicate(s)" (confirmed),
     "N to review" (suspected), and "Possible duplicate" or "Duplicate" for the
     report's own link.
-  - `DuplicateStateBadge` is the single state badge.
+  - `DuplicateStateBadge` is the single state badge. Tones come from
+    `duplicateReportTone`: suspected ("Possible duplicate", "N to review") is
+    warning, and confirmed ("Duplicate", "N duplicate(s)") is secondary (muted).
 - `report-card.tsx` has an optional `badges` slot in the card header.
 - `report-source-picker.tsx` (`ReportSourcePicker`) moved here from
   `work-orders/new/-components/work-order-form/` because two routes use it. It gained optional
@@ -59,7 +61,7 @@ shadcn Card:
     an Alert with Reload, which resets the mutation and refetches. Other errors
     show the server's message.
 - **Duplicates** (the report is an original):
-  - "N confirmed" and "N to review" Badges;
+  - "N confirmed" (muted) and "N to review" (warning) Badges;
   - a list of linked reports, each a Link, a `DuplicateStateBadge` and its
     location label.
 - **Mark as duplicate** (`canReviewDuplicates`, no active link and no
@@ -79,3 +81,6 @@ The combined estate DTOs also carry urgency/Safety/version and latest-change
 metadata. Duplicate mutations retain these fields when updating detail caches;
 urgency saves retain duplicate counts, links and controls. Queue sorting and
 urgency editing are documented in [estate-reports.md](estate-reports.md).
+
+The detail page's Duplicate, Duplicates and Mark as duplicate cards title
+with `SectionHeading` and the `Copy` icon.

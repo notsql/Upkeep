@@ -125,5 +125,5 @@ types independently of general management or fault-report access. Existing
 bounded delegation and explicit prerequisite validation apply. See
 [documents.md](documents.md) for the document screen and deletion authority.
 
-The Roles list header uses `icon={ShieldCheck}` (sidebar Roles); the form
-headers carry no icon. No header repeats the estate name. Row Edit and Delete are `ghost` (Delete opens the destructive confirm).
+The Roles list header uses `icon={ShieldCheck}` (sidebar Roles); the new-role
+form header uses `ShieldPlus` and the edit form `ShieldCheck`. The "No custom roles" empty state uses `ShieldCheck` and "No matching roles" uses `SearchX`. No header repeats the estate name. Row Edit and Delete are `ghost` (Delete opens the destructive confirm).

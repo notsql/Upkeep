@@ -148,7 +148,7 @@ describe("AssetConditionHistoryPage", () => {
       HTMLElement,
       HTMLElement,
     ];
-    within(latest).getByText("Current");
+    expect(within(latest).getByText("Current").dataset.variant).toBe("info");
     expect(within(middle).queryByText("Current")).toBeNull();
   });
 

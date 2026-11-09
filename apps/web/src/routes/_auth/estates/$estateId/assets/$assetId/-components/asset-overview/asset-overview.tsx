@@ -6,7 +6,7 @@ import { AnomalyAlertsSection } from "@/routes/_auth/estates/$estateId/assets/$a
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
 import { AssetSummary } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-summary";
-import { AssetUpcoming } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-upcoming/asset-upcoming";
+import { AssetUpcomingList } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-upcoming/asset-upcoming";
 import { DevicesOnlineStat } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/devices-online-stat";
 import { TrendsCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/trends-card/trends-card";
 
@@ -59,29 +59,27 @@ export function AssetOverview({
       </div>
       <div
         className={
-          showForecast || showUpcoming
-            ? "grid items-stretch gap-6 lg:grid-cols-2"
-            : "grid"
+          showForecast ? "grid items-stretch gap-6 lg:grid-cols-2" : "grid"
         }
       >
         <AssetConditionSection
           assetId={assetId}
           canRecord={assetActive}
           estateId={estateId}
+          upcoming={
+            showUpcoming ? (
+              <AssetUpcomingList
+                assetId={assetId}
+                canSeeInspections={canSeeInspections}
+                canSeeService={canSeeService}
+                estateId={estateId}
+                installedOn={asset.data.installedOn}
+              />
+            ) : undefined
+          }
         />
         {showForecast ? (
           <AssetForecastCard assetId={assetId} estateId={estateId} />
-        ) : null}
-        {showUpcoming ? (
-          <AssetUpcoming
-            assetId={assetId}
-            canSeeInspections={canSeeInspections}
-            canSeeService={canSeeService}
-            // Beside Condition, or a full-width row under Condition and forecast.
-            className={showForecast ? "lg:col-span-2" : undefined}
-            estateId={estateId}
-            installedOn={asset.data.installedOn}
-          />
         ) : null}
       </div>
       {asset.data.category === "PUMP" && canSeeService ? (

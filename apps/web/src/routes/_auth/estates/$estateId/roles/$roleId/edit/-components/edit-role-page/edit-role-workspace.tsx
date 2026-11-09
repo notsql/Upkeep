@@ -1,5 +1,6 @@
 import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { ShieldCheck } from "lucide-react";
 import { type ReactNode, useCallback } from "react";
 import { FormPageHeader } from "@/components/page/form-page-header";
 import { ErrorState } from "@/components/states/error-state";
@@ -79,6 +80,7 @@ export function EditRoleWorkspace({
           },
           { label: "Edit role" },
         ]}
+        icon={ShieldCheck}
         title={role ? `Edit ${role.name}` : "Edit role"}
       />
       <div className="grid gap-6">{content}</div>
