@@ -24,6 +24,7 @@ import { locationSummaries } from "@/routes/_auth/estates/$estateId/-components/
 
 const EMPTY: Location[] = [];
 export const EMPTY_EXPANSION: string[] = [];
+export type LocationsView = "building" | "tree";
 
 function locationPermissions(
   estate: ReturnType<typeof useEstate>["data"],
@@ -57,6 +58,7 @@ export function useLocationsSection(estateId: string) {
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [panel, setPanel] = useState<Panel>();
+  const [chosenView, setView] = useState<LocationsView>("building");
   const id = useId();
 
   const permission = access.data?.estates.find(
@@ -73,6 +75,8 @@ export function useLocationsSection(estateId: string) {
   const items = locations.data ?? EMPTY;
   const tree = useMemo(() => buildLocationTree(items), [items]);
   const searching = query.trim() !== "";
+  // Search results are tree-shaped, so searching shows the tree.
+  const view: LocationsView = searching ? "tree" : chosenView;
   const filters = useFilterPanel(searching ? 1 : 0);
   const summaries = useMemo(() => locationSummaries(tree), [tree]);
   const visibleTree = useMemo(
@@ -234,9 +238,11 @@ export function useLocationsSection(estateId: string) {
     searching,
     setBusy,
     setPanel,
+    setView,
     summaries,
     toggleLocation,
     update,
+    view,
     visibleTree,
   };
 }

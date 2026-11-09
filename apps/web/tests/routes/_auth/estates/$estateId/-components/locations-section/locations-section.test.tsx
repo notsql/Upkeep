@@ -142,6 +142,7 @@ describe("locations section", () => {
       serve({ owned: false, role: "MANAGER" });
       succeed("POST");
       renderWithProviders(<LocationsSection estateId={estate.id} />);
+      await showTree();
       if (parent) {
         await selectAction(parent, action);
       } else {
@@ -198,6 +199,7 @@ describe("locations section", () => {
       deactivatedAt: role === "inactive Manager" ? at : undefined,
     });
     renderWithProviders(<LocationsSection estateId={estate.id} />);
+    await showTree();
     await screen.findByRole("listitem", { name: "Blk 101" });
     expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
     expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
@@ -221,6 +223,7 @@ describe("locations section", () => {
     async (accessState) => {
       serve({ owned: false, role: "MANAGER", accessState });
       renderWithProviders(<LocationsSection estateId={estate.id} />);
+      await showTree();
       await screen.findByRole("listitem", { name: "Blk 101" });
       expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
       expect(screen.queryByRole("button", { name: ACTIONS_LABEL })).toBeNull();
@@ -230,6 +233,7 @@ describe("locations section", () => {
   it("lets shared members browse and search without location write controls", async () => {
     serve({ owned: false });
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     await screen.findByRole("listitem", { name: "Blk 101" });
     expect(screen.queryByRole("button", { name: "Create" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Edit Blk 101" })).toBeNull();
@@ -253,6 +257,7 @@ describe("locations section", () => {
 
   it("shows levels and common areas nested under their parents", async () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     const block = await screen.findByRole("listitem", { name: "Blk 101" });
     fireEvent.click(
       within(block).getByRole("button", { name: "Expand Blk 101" })
@@ -282,6 +287,7 @@ describe("locations section", () => {
 
   it("searches by name and shows where each match sits", async () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     await screen.findByRole("listitem", { name: "Blk 101" });
     fireEvent.click(screen.getByRole("button", { name: "Filters" }));
     fireEvent.change(
@@ -397,6 +403,7 @@ describe("locations section", () => {
 
   it("offers one Add levels action, on blocks only", async () => {
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     fireEvent.click(
       await screen.findByRole("button", { name: "Actions for Blk 101" })
     );
@@ -443,6 +450,7 @@ describe("locations section", () => {
   it("adds a common area to a level", async () => {
     succeed("POST");
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     await selectAction("Level 2", "Add common area to Level 2");
     const form = screen.getByRole("form", {
       name: "Add common area to Level 2",
@@ -477,6 +485,7 @@ describe("locations section", () => {
   it("moves a level to another block", async () => {
     succeed("PATCH");
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     await selectAction("Level 2", "Edit Level 2");
     const form = screen.getByRole("form", { name: "Edit Level 2" });
     const inside = within(form).getByRole("combobox", { name: "Inside" });
@@ -529,6 +538,7 @@ describe("locations section", () => {
   it("is browse-only for an inactive estate", async () => {
     serve({ deactivatedAt: at });
     renderWithProviders(<LocationsSection estateId="estate-id" />);
+    await showTree();
     await screen.findByRole("listitem", { name: "Blk 101" });
     await waitFor(() =>
       expect(screen.queryByRole("button", { name: "Create" })).toBeNull()
@@ -538,6 +548,11 @@ describe("locations section", () => {
     screen.getByRole("searchbox", { name: "Search locations" });
   });
 });
+
+/** The page opens on the building view; these tests exercise the tree. */
+async function showTree() {
+  fireEvent.click(await screen.findByRole("button", { name: "Tree" }));
+}
 
 async function selectAction(node: string, action: string) {
   if (node.startsWith("Level")) {
@@ -554,6 +569,7 @@ async function selectAction(node: string, action: string) {
 it("can collapse location children and cancel a location dialog without saving", async () => {
   serve();
   renderWithProviders(<LocationsSection estateId="estate-id" />);
+  await showTree();
   fireEvent.click(
     await screen.findByRole("button", { name: "Expand Blk 101" })
   );
@@ -611,6 +627,7 @@ it("starts collapsed and shows counts across the entire block, with the name ins
     ],
   });
   renderWithProviders(<LocationsSection estateId="estate-id" />);
+  await showTree();
   const block = await screen.findByRole("listitem", { name: "Blk 101" });
   within(block).getByText("2 levels · 3 common areas");
   expect(screen.queryByRole("listitem", { name: "Level 1" })).toBeNull();
@@ -632,6 +649,7 @@ it("starts collapsed and shows counts across the entire block, with the name ins
 it("reveals matches with parent context and restores the manual view after clearing search", async () => {
   serve();
   renderWithProviders(<LocationsSection estateId="estate-id" />);
+  await showTree();
   await screen.findByRole("listitem", { name: "Blk 101" });
   fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   const search = screen.getByRole("searchbox", { name: "Search locations" });
@@ -650,6 +668,7 @@ it("reveals matches with parent context and restores the manual view after clear
 it("keeps the actions menu independent from expansion", async () => {
   serve();
   renderWithProviders(<LocationsSection estateId="estate-id" />);
+  await showTree();
   await screen.findByRole("button", { name: "Expand Blk 101" });
   fireEvent.click(screen.getByRole("button", { name: "Actions for Blk 101" }));
   await screen.findByRole("menuitem", { name: "Edit Blk 101" });
@@ -666,6 +685,7 @@ it("restores manual expansion after leaving the screen and isolates other estate
   const rendered = renderWithProviders(
     <LocationsSection estateId="estate-id" />
   );
+  await showTree();
   fireEvent.click(
     await screen.findByRole("button", { name: "Expand Blk 101" })
   );
@@ -675,6 +695,7 @@ it("restores manual expansion after leaving the screen and isolates other estate
   await screen.findByRole("listitem", { name: "Lift lobby" });
   rendered.rerender(<p>Asset page</p>);
   rendered.rerender(<LocationsSection estateId="estate-id" />);
+  await showTree();
   await screen.findByRole("listitem", { name: "Lift lobby" });
   rendered.rerender(<LocationsSection estateId="another-estate" />);
   await screen.findByRole("button", { name: "Expand Blk 101" });
