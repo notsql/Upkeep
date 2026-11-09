@@ -55,7 +55,7 @@ vi.mock("@/lib/catalogue", () => ({
   }),
 }));
 vi.mock(
-  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-retirement-panel/asset-retirement-panel",
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/asset-retirement-panel",
   () => ({ AssetRetirementPanel: () => null })
 );
 vi.mock(

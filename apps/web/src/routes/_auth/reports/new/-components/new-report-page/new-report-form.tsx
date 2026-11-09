@@ -1,12 +1,14 @@
 import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Button } from "@proj/ui/components/button";
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+} from "@proj/ui/components/field";
+import { useNavigate } from "@tanstack/react-router";
+import { useCallback } from "react";
+import { FormActions } from "@/components/forms/form-actions";
+import { FormCard } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { ReportDetailsFields } from "@/routes/_auth/reports/new/-components/new-report-page/report-details-fields";
 import { ReportImagesField } from "@/routes/_auth/reports/new/-components/new-report-page/report-images-field";
@@ -22,24 +24,29 @@ export function NewReportForm({
   initialEstateId?: string;
 }) {
   const form = useNewReportForm(estates, initialEstateId);
+  const navigate = useNavigate();
+  const cancel = useCallback(() => {
+    navigate({
+      to: "/reports",
+      search: { estateId: form.estateId ?? undefined },
+    });
+  }, [navigate, form.estateId]);
 
   return (
-    <Card className="max-w-2xl">
-      <CardHeader>
-        <CardTitle>{form.estateName}</CardTitle>
-      </CardHeader>
-      <CardContent>
+    <FormCard title={form.estateName}>
+      <form className="grid gap-5" onSubmit={form.submit}>
         {form.locations.isLoading ? (
           <LoadingState label="Loading locations…" rows={1} />
         ) : null}
         {form.locations.isError ? (
-          <Alert role="alert" variant="destructive">
+          <Alert variant="destructive">
             <AlertDescription>
               Unable to load locations. Please try again.
             </AlertDescription>
           </Alert>
         ) : null}
-        <form className="grid gap-4" onSubmit={form.submit}>
+        <FieldSet>
+          <FieldLegend>Where is the fault?</FieldLegend>
           <ResidentEstateSelector
             estateId={form.estateId}
             estates={estates}
@@ -56,6 +63,10 @@ export function NewReportForm({
             onCommonChange={form.setCommonId}
             onLevelChange={form.changeLevel}
           />
+        </FieldSet>
+        <FieldSeparator />
+        <FieldSet>
+          <FieldLegend>What is wrong?</FieldLegend>
           <ReportDetailsFields
             description={form.description}
             id={form.id}
@@ -69,30 +80,27 @@ export function NewReportForm({
             onChange={form.changeImages}
             onRemove={form.removeImage}
           />
-          {form.error ? (
-            <Alert role="alert" variant="destructive">
-              <AlertDescription>{form.error}</AlertDescription>
-            </Alert>
-          ) : null}
-          <p className="text-muted-foreground text-sm">
-            To get your report to the right people quickly, its text and photos
-            are analysed by an AI service (Anthropic) and may be emailed to the
-            estate's contractor. Please don't include personal details you don't
-            want shared.
-          </p>
-          <Button
-            disabled={
-              form.create.isPending ||
-              !form.estateId ||
-              form.locations.isPending ||
-              form.locations.isError
-            }
-            type="submit"
-          >
-            {form.create.isPending ? "Submitting…" : "Submit report"}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        </FieldSet>
+        {form.error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{form.error}</AlertDescription>
+          </Alert>
+        ) : null}
+        <p className="text-muted-foreground text-sm">
+          To get your report to the right people quickly, its text and photos
+          are analysed by an AI service (Anthropic) and may be emailed to the
+          estate's contractor. Please don't include personal details you don't
+          want shared.
+        </p>
+        <FormActions
+          disabled={
+            !form.estateId || form.locations.isPending || form.locations.isError
+          }
+          label={form.create.isPending ? "Submitting…" : "Submit report"}
+          onCancel={cancel}
+          pending={form.create.isPending}
+        />
+      </form>
+    </FormCard>
   );
 }

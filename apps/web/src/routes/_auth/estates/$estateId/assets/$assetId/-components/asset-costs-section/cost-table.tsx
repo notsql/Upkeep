@@ -60,8 +60,27 @@ export function CostTable({
   const labour = sum(rows.map((row) => row.labour));
   const parts = sum(rows.map((row) => row.parts));
   const other = sum(rows.map((row) => row.other));
+  const summary = [
+    { label: "Labour", value: labour },
+    { label: "Parts", value: parts },
+    { label: "Other", value: other },
+    { label: unknown ? "Known total" : "Total", value: labour + parts + other },
+  ];
   return (
     <>
+      <section aria-label="Cost summary">
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+          {summary.map((item) => (
+            <div className="grid gap-0.5" key={item.label}>
+              <dt className="text-muted-foreground text-xs">{item.label}</dt>
+              <dd className="text-lg font-semibold tabular-nums">
+                {formatCents(item.value)}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-muted-foreground mt-1 text-xs">Amounts in SGD</p>
+      </section>
       <Table>
         <TableHeader>
           <TableRow>

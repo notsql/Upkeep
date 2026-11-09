@@ -1,5 +1,10 @@
+import {
+  Field,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 import type { ChangeEvent } from "react";
 import { MAX_REPORTING_INTERVAL_SECONDS } from "@/lib/devices";
 import { DeviceFormFieldError } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form-field-error";
@@ -24,12 +29,12 @@ export function DeviceFormReportingField({
   interval: string;
 }) {
   return (
-    <fieldset className="grid gap-3" disabled={pending}>
-      <legend className="mb-3 font-semibold">Reporting</legend>
-      <div className="grid gap-2">
-        <Label htmlFor={`${id}-interval`}>
+    <FieldSet disabled={pending}>
+      <FieldLegend>Reporting</FieldLegend>
+      <Field>
+        <FieldLabel htmlFor={`${id}-interval`}>
           Expected reporting interval (seconds)
-        </Label>
+        </FieldLabel>
         <Input
           {...errorProps("interval")}
           id={`${id}-interval`}
@@ -47,7 +52,7 @@ export function DeviceFormReportingField({
           fieldErrors={fieldErrors}
           id={id}
         />
-      </div>
-    </fieldset>
+      </Field>
+    </FieldSet>
   );
 }

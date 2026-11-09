@@ -5,9 +5,7 @@ import type { ReadingAsset } from "@/lib/readings";
 export function ReadingAssetChoice({
   asset,
   onChoose,
-  activeOnly,
 }: {
-  activeOnly: boolean;
   asset: ReadingAsset;
   onChoose: (asset: ReadingAsset) => void;
 }) {
@@ -15,7 +13,6 @@ export function ReadingAssetChoice({
   return (
     <Button
       className="h-auto min-h-11 justify-start text-left [overflow-wrap:anywhere] whitespace-normal"
-      disabled={activeOnly && asset.retired}
       onClick={choose}
       variant="outline"
     >

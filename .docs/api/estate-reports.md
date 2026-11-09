@@ -19,16 +19,18 @@ List, detail and relocation return estate-only DTOs (`EstateIssueReportPageRespo
 `duplicateOf` and, on detail, `duplicates`. See
 [fault-report-duplicates.md](fault-report-duplicates.md), which also covers the
 PATCH and PUT `/estates/{estateId}/reports/{reportId}/duplicate` endpoints.
-Resident endpoints keep the DTOs below unchanged.
+Resident endpoints keep their original report DTOs unchanged.
 
 | DTO | Fields |
 | --- | --- |
-| `EstateReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `routing: ReportRoutingResponse \| null` (null for reports from before ID-70; see [report-routing.md](report-routing.md)) |
+| `EstateIssueReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `urgencyVersion: integer`, `confirmedDuplicateCount: integer`, `suspectedDuplicateCount: integer`, `duplicateOf: DuplicateOf \| null`, `routing: ReportRoutingResponse \| null` (null for reports submitted before automatic routing) |
 | `ReportLocation` | `id: UUID`, `label: string` (full current path, e.g. `Block A › Level 4 › Lift lobby`) |
-| `EstateReportDetailResponse` | Summary fields (including `routing`) plus `images: ReportImage[]` |
+| `EstateIssueReportDetailResponse` | Summary fields (including `routing`) plus `images: ReportImage[]`, `duplicates: LinkedDuplicate[]`, `lastUrgencyChange: ReportUrgencyChange \| null` |
 | `ReportImage` | `id: UUID`, `contentType: string` (`image/jpeg` or `image/png`) |
-| `EstateReportPageResponse` | `items: EstateReportSummaryResponse[]`, `nextCursor: string \| null` |
+| `EstateIssueReportPageResponse` | `items: EstateIssueReportSummaryResponse[]`, `nextCursor: string \| null` |
 | `RelocateReportRequest` | Required, non-null `locationId: UUID`, `expectedLocationId: UUID` |
+| `ChangeReportUrgencyRequest` | Required, non-null `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `expectedVersion: integer >= 0` |
+| `ReportUrgencyChange` | `id: UUID`, `version: integer`, `fromUrgency/toUrgency: LOW \| MEDIUM \| HIGH \| URGENT`, `fromIsSafety/toIsSafety: boolean`, `changedByName: string \| null`, `changedAt: date-time` |
 | `EstateError` | `message: string` |
 
 Responses exclude submitter profiles, contact information, storage keys and
@@ -39,9 +41,10 @@ new submission constraints are documented in [resident-reports.md](resident-repo
 
 | Method/path | Request | Success | Other statuses |
 | --- | --- | --- | --- |
-| GET `/estates/{estateId}/reports` | Optional `locationId: UUID`, `blockId: UUID`, `minLevelPosition: int32`, `maxLevelPosition: int32`, `routingState: CLASSIFYING \| NEEDS_REVIEW \| WORK_ORDER \| DISMISSED`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `EstateReportPageResponse` | 400 invalid UUID/cursor/limit/range/routing state or non-block blockId; 401; 403; 404 |
-| GET `/estates/{estateId}/reports/{reportId}` | UUID paths | 200 `EstateReportDetailResponse` | 400; 401; 403; 404 |
-| PATCH `/estates/{estateId}/reports/{reportId}/location` | JSON `RelocateReportRequest` | 200 updated `EstateReportDetailResponse` (unchanged on a valid no-op) | 400 invalid UUID/body or block-only destination; 401; 403; 404; 409 |
+| GET `/estates/{estateId}/reports` | Optional `openOnly: boolean` (default false), `sort: URGENCY \| NEWEST \| OLDEST` (default URGENCY), `locationId: UUID`, `blockId: UUID`, `minLevelPosition: int32`, `maxLevelPosition: int32`, `routingState: CLASSIFYING \| NEEDS_REVIEW \| WORK_ORDER \| DISMISSED`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `EstateIssueReportPageResponse` | 400 invalid UUID/cursor/limit/range/sort or non-block blockId; 401; 403; 404 |
+| GET `/estates/{estateId}/reports/{reportId}` | UUID paths | 200 `EstateIssueReportDetailResponse` | 400; 401; 403; 404 |
+| PATCH `/estates/{estateId}/reports/{reportId}/location` | JSON `RelocateReportRequest` | 200 updated `EstateIssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid UUID/body or block-only destination; 401; 403; 404; 409 |
+| PATCH `/estates/{estateId}/reports/{reportId}/urgency` | JSON `ChangeReportUrgencyRequest` | 200 updated `EstateIssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid body or Safety below Urgent; 401; 403; 404; 409 stale version or inactive estate |
 | GET `/estates/{estateId}/reports/{reportId}/images/{imageId}` | UUID paths | 200 private JPEG/PNG bytes with the stored content type | 400; 401; 403; 404; 503 storage unavailable |
 
 403 means known estate access without responder authority, including conflicting
@@ -54,7 +57,14 @@ no-store`; images remain in private storage and provider details are not exposed
 Filtering includes the selected node and every descendant by ID/parent edges,
 including inactive nodes. All locations means no filter. A valid empty subtree
 returns an empty 200 page. Filtering executes before pagination, ordered by
-`createdAt DESC, id DESC`; cursors are opaque. Equal timestamps use ID order.
+`isSafety DESC`, numeric urgency rank descending (Urgent, High, Medium, Low),
+then `createdAt DESC, id DESC`. Filtering and ordering run in PostgreSQL before
+pagination. `sort=NEWEST` instead orders solely by `createdAt DESC, id DESC`,
+ignoring urgency and Safety. `sort=OLDEST` uses `createdAt ASC, id ASC` with an
+ascending cursor comparison, also ignoring urgency/Safety. Opaque cursors include the ordering tuple and are
+scoped to estate, filters and sort; old or mismatched cursors return 400 with a first-page
+reload instruction. Equal timestamps use ID order. Concurrent changes can move
+reports between pages; refresh from the first page for the current queue.
 Current names/parents determine paths and filter ancestry, without snapshots.
 
 Block filtering selects a same-estate BLOCK by ID and includes its levels and
@@ -83,7 +93,7 @@ inactive estate/destination/ancestor returns 409 and leaves the report unchanged
 If expected and destination IDs equal the valid current placement, `updatedAt`
 does not change. Otherwise only `locationId` and `updatedAt` change: title,
 description, status, submitter, creation time and all image metadata/bytes remain.
-There is no correction reason, audit timeline, transfer or other report editing.
+Location correction has no reason or timeline and does not change urgency/version.
 
 `EstateReportRepository` uses generated jOOQ tables for estate/membership lookups,
 estate-scoped hierarchy joins and relocation updates. Optional `FOR UPDATE` locks
@@ -121,9 +131,58 @@ relocation permissions are independently projected by access context and checked
 on each request; editing a definition or reassigning a member takes effect with
 the same token. No custom grant expands other report CRUD or Resident submissions.
 
+## Urgency and Safety
+
+Migration `20261106163436_report_urgency` adds Medium/non-Safety/version-zero
+defaults to existing and new reports. Resident response DTOs and chronological
+history are unchanged. Estate-only DTOs expose urgency; list responses omit audit
+metadata, and detail exposes the latest change or explicit null.
+
+Only a current same-estate MANAGER can change urgency in an active estate.
+Ownership relies on the MANAGER membership invariant. CREW and custom
+VIEW_FAULT_REPORTS readers see urgency and the latest change without edit rights.
+`canChangeFaultReportUrgency` reflects this policy; no new custom grant is added.
+
+Safety requires Urgent. Removing Safety leaves urgency unchanged unless the
+request explicitly changes it. The service resolves an optional actor-name
+snapshot before taking locks, then locks estate before membership and rechecks
+activity/authority. Each real edit updates urgency, Safety, version and updatedAt
+and appends an `IssueReportUrgencyEvent` in one Spring transaction using typed
+jOOQ. Every event retains the authenticated subject privately. An unavailable
+name does not block a change; the public change DTO never exposes account IDs.
+
+`expectedVersion` must match even for a no-op. A stale/changed-back version
+returns 409 without writes. A valid no-op preserves version, updatedAt and audit
+rows. Location corrections and work-order priorities remain independent.
+
+`openOnly=true` includes reports with no same-estate source work orders or at
+least one source work order whose status is not CLOSED. All-closed reports are
+excluded. The query uses `WorkOrderStatus.CLOSED`, and urgency write authorization
+uses `EstateRole.MANAGER`. The API defaults to all reports so existing source
+pickers retain history; the estate queue UI explicitly requests Open. No report
+lifecycle or routing/dismissal schema is introduced by this feature.
+
+Example:
+
+```text
+PATCH /estates/<estate-uuid>/reports/<report-uuid>/urgency
+Content-Type: application/json
+
+{"urgency":"URGENT","isSafety":true,"expectedVersion":0}
+```
+
+The response has `urgencyVersion: 1` and `lastUrgencyChange` with previous/new
+values, actor name (or null) and server time. Subsequent detail reads expose only
+the latest event; all events remain stored. There is no history endpoint.
+
+Urgency updates return the combined estate detail, preserving duplicate links and
+counts. Duplicate decisions, manual links and relocation return the same DTO
+with current urgency/version/latest-change metadata. Sorting never changes saved
+urgency or work-order priority.
+
 ## Routing (ID-70)
 
 The estate DTOs are separate from the resident `IssueReport*Response` types, so
-`routing` never reaches residents. `routingState` filters before pagination,
+`routing` never reaches residents. `routingState` filters before pagination and is part of the cursor scope,
 and reports without routing never match it. Relocation does not reclassify a
 report or change its work order. See [report-routing.md](report-routing.md).

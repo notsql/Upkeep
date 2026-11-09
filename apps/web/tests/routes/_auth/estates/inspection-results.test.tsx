@@ -875,3 +875,18 @@ it.each([
     screen.queryByRole("button", { name: "Create work order" })
   ).toBeNull();
 });
+
+it("keeps the form page header when the asset context fails to load", async () => {
+  const get = state.get.getMockImplementation();
+  state.get.mockImplementation((path: string, options?: unknown) =>
+    path === "/estates/{estateId}/inspection-assets/{assetId}"
+      ? Promise.resolve({
+          error: { message: "Asset context is unavailable." },
+          response: new Response(null, { status: 500 }),
+        })
+      : get?.(path, options)
+  );
+  await setup();
+  await screen.findByRole("button", { name: "Retry asset" });
+  screen.getByRole("heading", { level: 1, name: "Create inspection record" });
+});

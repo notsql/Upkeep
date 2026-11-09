@@ -1,6 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { useCallback } from "react";
-import { FormPageHeader } from "@/components/page/form-page-header";
+import { FormPage } from "@/components/page/form-page";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -13,62 +13,65 @@ export function NewReportPage({
   requestedEstateId?: string;
 } = {}) {
   const context = useResidentContext();
-  const unavailable =
-    !!context.data &&
-    !!requestedEstateId &&
-    !context.data.estates.some((estate) => estate.id === requestedEstateId);
   const retry = useCallback(() => {
     context.refetch();
   }, [context]);
 
+  if (!context.data) {
+    // Same column as FormPage; the header appears once the estate is known.
+    return (
+      <PageLayout className="max-w-3xl">
+        {context.isError ? (
+          <ErrorState
+            message="Unable to load your estate assignment. Please try again."
+            onRetry={retry}
+          />
+        ) : (
+          <LoadingState label="Loading your estate…" rows={1} />
+        )}
+      </PageLayout>
+    );
+  }
+  const unavailable =
+    !!requestedEstateId &&
+    !context.data.estates.some((estate) => estate.id === requestedEstateId);
   return (
-    <PageLayout>
-      {context.data ? (
-        <FormPageHeader
-          breadcrumbs={[
-            {
-              label: "My reports",
-              search: requestedEstateId
-                ? { estateId: requestedEstateId }
-                : undefined,
-              to: "/reports",
-            },
-            { label: "Report a fault" },
-          ]}
-          title="Report a fault"
-        />
-      ) : null}
-      {context.isPending ? (
-        <LoadingState label="Loading your estate…" rows={1} />
-      ) : null}
-      {context.isError ? (
-        <ErrorState
-          message="Unable to load your estate assignment. Please try again."
-          onRetry={retry}
-        />
-      ) : null}
+    <FormPage
+      breadcrumbs={[
+        {
+          label: "My reports",
+          search: requestedEstateId
+            ? { estateId: requestedEstateId }
+            : undefined,
+          to: "/reports",
+        },
+        { label: "Report a fault" },
+      ]}
+      description="Tell your estate team what needs fixing and where"
+      title="Report a fault"
+    >
       {unavailable ? (
-        <Alert role="alert">
+        <Alert>
           <AlertDescription>
             Reporting is unavailable for the selected estate. Choose an active
             Resident estate from the estate menu.
           </AlertDescription>
         </Alert>
       ) : null}
-      {context.data && !context.data.canSubmit && !unavailable ? (
-        <Alert role="alert">
+      {context.data.canSubmit || unavailable ? null : (
+        <Alert>
           <AlertDescription>
             You have no estate assigned. Contact your estate manager before
             reporting a fault.
           </AlertDescription>
         </Alert>
-      ) : null}
-      {context.data?.canSubmit && !unavailable ? (
+      )}
+      {context.data.canSubmit && !unavailable ? (
         <NewReportForm
           estates={context.data.estates}
           initialEstateId={requestedEstateId}
         />
       ) : null}
-    </PageLayout>
+    </FormPage>
   );
 }

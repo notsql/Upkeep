@@ -1,4 +1,5 @@
-import { Card, CardContent } from "@proj/ui/components/card";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { FormCard } from "@/components/page/form-page";
 import type { Device, DeviceInput } from "@/lib/devices";
 import { DeviceForm } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/device-form/device-form";
 
@@ -14,29 +15,29 @@ export function ReplaceDeviceFormCard({
   onSave: (values: DeviceInput) => Promise<void>;
 }) {
   return (
-    <Card>
-      <CardContent>
-        <div>
-          <p className="mb-4 text-sm">
+    <FormCard>
+      <div className="grid gap-5">
+        <Alert>
+          <AlertDescription>
             {device.identifier} will be deactivated and its key will stop
             working. The new device needs its own identifier and credential.
-          </p>
-          <DeviceForm
-            defaultLocationId={device.locationId}
-            estateId={estateId}
-            initialDevice={{
-              model: device.model,
-              locationId: device.locationId,
-              metrics: device.metrics.map(({ metric }) => metric),
-              reportingIntervalSeconds: device.reportingIntervalSeconds,
-            }}
-            onCancel={onCancel}
-            onSave={onSave}
-            pendingLabel="Replacing…"
-            submitLabel="Replace device"
-          />
-        </div>
-      </CardContent>
-    </Card>
+          </AlertDescription>
+        </Alert>
+        <DeviceForm
+          defaultLocationId={device.locationId}
+          estateId={estateId}
+          initialDevice={{
+            model: device.model,
+            locationId: device.locationId,
+            metrics: device.metrics.map(({ metric }) => metric),
+            reportingIntervalSeconds: device.reportingIntervalSeconds,
+          }}
+          onCancel={onCancel}
+          onSave={onSave}
+          pendingLabel="Replacing…"
+          submitLabel="Replace device"
+        />
+      </div>
+    </FormCard>
   );
 }

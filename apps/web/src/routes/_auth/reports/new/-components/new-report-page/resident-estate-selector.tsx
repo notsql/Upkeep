@@ -1,5 +1,5 @@
 import type { components } from "@proj/api/schema";
-import { Label } from "@proj/ui/components/label";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
@@ -21,10 +21,9 @@ export function ResidentEstateSelector({
 }) {
   return (
     <>
-      {" "}
       {assignedEstates.length > 1 ? (
-        <div className="grid gap-2">
-          <Label htmlFor={`${id}-estate`}>Estate</Label>
+        <Field>
+          <FieldLabel htmlFor={`${id}-estate`}>Estate</FieldLabel>
           <Select
             items={assignedEstates.map((estate) => ({
               value: estate.id,
@@ -33,7 +32,7 @@ export function ResidentEstateSelector({
             onValueChange={changeEstate}
             value={estateId ?? null}
           >
-            <SelectTrigger id={`${id}-estate`}>
+            <SelectTrigger className="w-full" id={`${id}-estate`}>
               <SelectValue placeholder="Choose estate" />
             </SelectTrigger>
             <SelectContent>
@@ -44,7 +43,7 @@ export function ResidentEstateSelector({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
       ) : null}
     </>
   );

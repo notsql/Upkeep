@@ -11,14 +11,12 @@ export type Destination =
   | "/estates/$estateId/inspections"
   | "/estates/$estateId/locations"
   | "/estates/$estateId/assets"
-  | "/estates/$estateId/devices"
-  | "/estates/$estateId/readings"
-  | "/estates/$estateId/sensors"
-  | "/estates/$estateId/failure-risk"
+  | "/estates/$estateId/assets/devices"
   | "/estates/$estateId/documents"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles"
   | "/estates/$estateId/asset-categories"
+  | "/estates/$estateId/notification-settings"
   | "/estates/$estateId/edit";
 
 export interface NavigationItem {

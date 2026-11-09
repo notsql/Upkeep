@@ -34,8 +34,14 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 
 - [0042 - Filtered reading CSV streams and completion metadata](0042-filtered-reading-csv-streams.md)
 - [0043 - Estate destinations share one predicate for sidebar and route guard](0043-estate-destinations-share-sidebar-and-guard-rules.md)
+- [0044 — Audited historical imports with separate storage](0044-imported-reading-batches.md)
+- [0044 - Anomaly scoring runs on ingested readings](0044-anomaly-scoring-runs-on-ingested-readings.md)
+- [0045 - Reading charts use shadcn Chart, over bucketed server series](0045-reading-charts-use-shadcn-chart.md)
 
+- [0044 - Asset history is a live read projection](0044-asset-history-is-a-live-read-projection.md)
 - [0044 - Duplicate fault reports are rule-based suggestions a manager confirms](0044-duplicate-reports-are-rule-based-suggestions.md)
-- [0045 - Fault report classification runs in Spring](0045-fault-classification-runs-in-spring.md)
-- [0046 - Contractors are reached by email dispatch on ID-36 work orders](0046-contractor-dispatch-on-work-orders.md)
-- [0047 - Fault classification uses a trained lift model ](0047-fault-classification-uses-a-trained-lift-model.md)
+
+- [0045 - Report urgency and Safety classification](0045-report-urgency-and-safety.md)
+- [0046 - Fault report classification runs in Spring](0046-fault-classification-runs-in-spring.md)
+- [0047 - Contractors are reached by email dispatch on ID-36 work orders](0047-contractor-dispatch-on-work-orders.md)
+- [0048 - Fault classification uses a trained lift model](0048-fault-classification-uses-a-trained-lift-model.md)

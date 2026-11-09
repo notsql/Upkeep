@@ -1,18 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useMemo } from "react";
 import { LoadingState } from "@/components/states/loading-state";
+import type { HistoryAssetFilters } from "@/lib/asset-history";
 import { type AssetSort, assetSortOptions } from "@/lib/asset-sorting";
 import type { AssetFilters } from "@/lib/assets";
 import { useInspectionAccess } from "@/lib/inspections";
 import { pageHead } from "@/lib/page-title";
 import { AssetRegisterPage } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-register-page";
+import { HistoryAssetList } from "./-components/history-asset-list";
 import { InspectionAssetList } from "./-components/inspection-asset-list";
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
 function validateSearch(
   search: Record<string, unknown>
-): AssetFilters & AssetSort {
+): AssetFilters & AssetSort & { cursor?: string } {
   if (
     search.sortBy !== undefined &&
     !assetSortOptions.some((option) => option.value === search.sortBy)
@@ -27,6 +29,7 @@ function validateSearch(
     throw new Error("Choose a valid sort direction.");
   }
   return {
+    cursor: typeof search.cursor === "string" ? search.cursor : undefined,
     ...(search.sortBy ? { sortBy: search.sortBy as AssetSort["sortBy"] } : {}),
     ...(search.direction
       ? { direction: search.direction as AssetSort["direction"] }
@@ -93,11 +96,28 @@ function AssetRegisterRoute() {
       navigate({ search: { ...filters, ...sort }, resetScroll: false }),
     [filters, navigate]
   );
+  const changeHistory = useCallback(
+    (values: HistoryAssetFilters) => navigate({ search: values }),
+    [navigate]
+  );
   const access = useInspectionAccess(estateId);
   if (access.pending) {
     return <LoadingState label="Loading access…" rows={2} />;
   }
   if (!access.canViewAssets) {
+    if (access.canViewAssetHistory) {
+      return (
+        <HistoryAssetList
+          estateId={estateId}
+          filters={{
+            q: search.q,
+            status: search.status,
+            cursor: search.cursor,
+          }}
+          onFiltersChange={changeHistory}
+        />
+      );
+    }
     return <InspectionAssetList estateId={estateId} />;
   }
   return (

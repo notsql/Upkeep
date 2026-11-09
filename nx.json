@@ -11,6 +11,10 @@
       "!{workspaceRoot}/packages/db/dist/**",
       "!{workspaceRoot}/packages/db/prisma/generated/**",
       "!{workspaceRoot}/apps/web/tests/**",
+      "!{workspaceRoot}/apps/device-simulator/dist/**",
+      "!{workspaceRoot}/apps/device-simulator/.tanstack/**",
+      "!{workspaceRoot}/apps/device-simulator/src/routeTree.gen.ts",
+      "!{workspaceRoot}/apps/device-simulator/tests/**",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
       "!{projectRoot}/tsconfig.spec.json"
     ],

@@ -1,7 +1,6 @@
 import { useAsset } from "@/lib/assets";
 import { useEstate } from "@/lib/estates";
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-section";
-import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-retirement-panel/asset-retirement-panel";
 import { AssetServiceIntervalCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-service-interval-card";
 
 /** Why the service-interval override is read-only, if it is. */
@@ -46,7 +45,6 @@ export function AssetMaintenance({
           )}
         />
       ) : null}
-      <AssetRetirementPanel asset={asset.data} />
     </>
   );
 }

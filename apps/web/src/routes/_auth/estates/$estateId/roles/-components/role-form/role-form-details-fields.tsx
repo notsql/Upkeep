@@ -1,13 +1,8 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Textarea } from "@proj/ui/components/textarea";
 import type { ChangeEvent } from "react";
+import { FormCard } from "@/components/page/form-page";
 
 export function RoleFormDetailsFields({
   description,
@@ -25,13 +20,8 @@ export function RoleFormDetailsFields({
   pending: boolean;
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <h2>Details</h2>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="grid gap-4">
+    <FormCard title="Details">
+      <div className="grid gap-5">
         <Field>
           <FieldLabel htmlFor={`${id}-name`}>Role name</FieldLabel>
           <Input
@@ -44,7 +34,9 @@ export function RoleFormDetailsFields({
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={`${id}-description`}>Description</FieldLabel>
+          <FieldLabel htmlFor={`${id}-description`}>
+            Description (optional)
+          </FieldLabel>
           <Textarea
             disabled={pending}
             id={`${id}-description`}
@@ -53,7 +45,7 @@ export function RoleFormDetailsFields({
             value={description}
           />
         </Field>
-      </CardContent>
-    </Card>
+      </div>
+    </FormCard>
   );
 }

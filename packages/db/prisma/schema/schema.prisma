@@ -9,34 +9,39 @@ datasource db {
 }
 
 model Estate {
-  id                String                        @id @default(uuid()) @db.Uuid
-  ownerUserId       String                        @db.VarChar(255)
-  name              String                        @db.VarChar(200)
-  code              String                        @unique @db.VarChar(50)
-  address           String                        @db.VarChar(500)
-  postalCode        String                        @db.VarChar(20)
-  description       String?                       @db.VarChar(2000)
-  createdAt         DateTime                      @default(now()) @db.Timestamptz(6)
-  updatedAt         DateTime                      @updatedAt @db.Timestamptz(6)
-  deactivatedAt     DateTime?                     @db.Timestamptz(6)
-  locations         Location[]
-  users             EstateUser[]
-  assets            Asset[]
-  devices           Device[]
-  assessments       AssetAssessment[]
-  invitations       EstateInvitation[]
-  issueReports      IssueReport[]
-  documents         Document[]
-  events            AssetEvent[]
-  flatlinePolicies  FlatlinePolicy[]
-  workOrders        WorkOrder[]
-  inspectionResults AssetInspectionResult[]
-  categoryFlags     AssetCategoryFlagChange[]
-  categoryIntervals AssetCategoryIntervalChange[]
-  inspectionChecks  InspectionCheck[]
-  inspectionRuns    InspectionListRun[]
-  serviceProviders  ServiceProvider[]
-  providerRoutes    EquipmentProviderRoute[]
+  id                   String                        @id @default(uuid()) @db.Uuid
+  ownerUserId          String                        @db.VarChar(255)
+  name                 String                        @db.VarChar(200)
+  code                 String                        @unique @db.VarChar(50)
+  address              String                        @db.VarChar(500)
+  postalCode           String                        @db.VarChar(20)
+  description          String?                       @db.VarChar(2000)
+  createdAt            DateTime                      @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime                      @updatedAt @db.Timestamptz(6)
+  deactivatedAt        DateTime?                     @db.Timestamptz(6)
+  locations            Location[]
+  users                EstateUser[]
+  assets               Asset[]
+  devices              Device[]
+  assessments          AssetAssessment[]
+  invitations          EstateInvitation[]
+  issueReports         IssueReport[]
+  documents            Document[]
+  events               AssetEvent[]
+  flatlinePolicies     FlatlinePolicy[]
+  workOrders           WorkOrder[]
+  inspectionResults    AssetInspectionResult[]
+  categoryFlags        AssetCategoryFlagChange[]
+  categoryIntervals    AssetCategoryIntervalChange[]
+  inspectionChecks     InspectionCheck[]
+  inspectionRuns       InspectionListRun[]
+  notifications        Notification[]
+  notificationSettings EstateNotificationSettings?
+  notificationSweeps   NotificationSweep[]
+
+  readingImportBatches ReadingImportBatch[]
+  serviceProviders     ServiceProvider[]
+  providerRoutes       EquipmentProviderRoute[]
 
   roleDefinitions EstateRoleDefinition[]
 
@@ -155,15 +160,19 @@ model IssueReport {
   title             String   @db.VarChar(150)
   description       String   @db.VarChar(2500)
   status            String   @default("SUBMITTED") @db.VarChar(20)
+  urgency           String   @default("MEDIUM") @db.VarChar(20)
+  isSafety          Boolean  @default(false)
+  urgencyVersion    Int      @default(0)
   createdAt         DateTime @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime @updatedAt @db.Timestamptz(6)
 
-  estate          Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  location        Location               @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  estate          Estate                    @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  location        Location                  @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   images          IssueReportImage[]
   workOrders      WorkOrder[]
-  duplicateOf     IssueReportDuplicate?  @relation("DuplicateReport")
-  duplicates      IssueReportDuplicate[] @relation("DuplicateOriginal")
+  urgencyEvents   IssueReportUrgencyEvent[]
+  duplicateOf     IssueReportDuplicate?     @relation("DuplicateReport")
+  duplicates      IssueReportDuplicate[]    @relation("DuplicateOriginal")
   routing         ReportRouting?
   classifications ReportClassification[]
 
@@ -197,6 +206,24 @@ model IssueReportDuplicate {
 
   @@unique([reportId, estateId])
   @@index([estateId, originalReportId, state])
+}
+
+model IssueReportUrgencyEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  estateId        String   @db.Uuid
+  reportId        String   @db.Uuid
+  version         Int
+  fromUrgency     String   @db.VarChar(20)
+  toUrgency       String   @db.VarChar(20)
+  fromIsSafety    Boolean
+  toIsSafety      Boolean
+  changedByUserId String   @db.VarChar(255)
+  changedByName   String?  @db.VarChar(255)
+  changedAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  report IssueReport @relation(fields: [reportId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([reportId, version])
 }
 
 model IssueReportImage {
@@ -251,8 +278,11 @@ model Asset {
   inspectionResults AssetInspectionResult[]
   intervalChanges   AssetIntervalChange[]
   inspectionChecks  InspectionCheck[]
+  anomalyScores     AnomalyScore[]
+  notifications     Notification[]
 
-  documents Document[]
+  documents        Document[]
+  importedReadings ImportedReading[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -508,6 +538,83 @@ model InspectionListRun {
 
 // A manufacturer, shared by all estates (decision 0026). `name` is stored
 // normalised: trimmed, inner whitespace collapsed, uppercased. Rows never change.
+/// An in-app notification about one asset, visible to the estate's managers (spec notifications.md).
+/// At most one open (unresolved) notification per asset and type; type-specific columns are checked in SQL.
+model Notification {
+  id         String    @id @default(uuid()) @db.Uuid
+  estateId   String    @db.Uuid
+  assetId    String    @db.Uuid
+  type       String    @db.VarChar(16)
+  summary    String    @db.VarChar(300)
+  createdAt  DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt  DateTime  @default(now()) @db.Timestamptz(6)
+  resolvedAt DateTime? @db.Timestamptz(6)
+
+  condition         String?   @db.VarChar(15)
+  medianScore       Decimal?  @db.Decimal(5, 4)
+  maxScore          Decimal?  @db.Decimal(5, 4)
+  firstDetectedAt   DateTime? @db.Timestamptz(6)
+  lastDetectedAt    DateTime? @db.Timestamptz(6)
+  explanation       String?   @db.VarChar(500)
+  response          String?   @db.VarChar(12)
+  respondedByUserId String?   @db.VarChar(255)
+  respondedByName   String?   @db.VarChar(255)
+  respondedAt       DateTime? @db.Timestamptz(6)
+  responseReason    String?   @db.VarChar(500)
+
+  dueOn          DateTime? @db.Date
+  intervalValue  Int?
+  intervalUnit   String?   @db.VarChar(5)
+  intervalSource String?   @db.VarChar(8)
+
+  recommendedTimeframe String?  @db.VarChar(14)
+  probability          Decimal? @db.Decimal(5, 4)
+  basis                String?  @db.VarChar(17)
+  failuresObserved     Int?
+
+  estate Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset  Asset              @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  reads  NotificationRead[]
+
+  @@index([estateId, createdAt(sort: Desc), id])
+  @@index([assetId, type, createdAt])
+}
+
+/// One user's read receipt for a notification.
+model NotificationRead {
+  notificationId String   @db.Uuid
+  userId         String   @db.VarChar(255)
+  readAt         DateTime @default(now()) @db.Timestamptz(6)
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@id([notificationId, userId])
+  @@index([userId])
+}
+
+/// Per-estate notification thresholds; an estate without a row uses the defaults.
+model EstateNotificationSettings {
+  estateId              String   @id @db.Uuid
+  anomalyScoreThreshold Decimal  @db.Decimal(3, 2)
+  serviceLeadDays       Int
+  repairLeadDays        Int
+  updatedAt             DateTime @default(now()) @db.Timestamptz(6)
+  updatedByUserId       String   @db.VarChar(255)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+}
+
+/// Marks that an estate's due notifications were swept for one Singapore day.
+model NotificationSweep {
+  estateId String   @db.Uuid
+  day      DateTime @db.Date
+  sweptAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([estateId, day])
+}
+
 model Manufacturer {
   id        String       @id @default(uuid()) @db.Uuid
   name      String       @unique @db.VarChar(200)
@@ -711,6 +818,20 @@ model AssetAssessment {
   @@index([assetId, assessedOn, createdAt])
 }
 
+// Append-only model scores, one per reading sample.
+model AnomalyScore {
+  id         String   @id @default(uuid()) @db.Uuid
+  estateId   String   @db.Uuid
+  assetId    String   @db.Uuid
+  measuredAt DateTime @db.Timestamptz(6)
+  score      Float
+  scoredAt   DateTime @db.Timestamptz(6)
+
+  asset Asset @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([assetId, measuredAt])
+}
+
 model AssetLifecycleEvent {
   id                       String    @id @default(uuid()) @db.Uuid
   estateId                 String    @db.Uuid
@@ -787,6 +908,79 @@ model EstateRolePermission {
   catalogue  Permission           @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
 
   @@id([roleId, permission])
+}
+
+// Vendor history is isolated from device/manual ingestion and live monitoring.
+model ReadingImportBatch {
+  id               String    @id @default(uuid()) @db.Uuid
+  estateId         String    @db.Uuid
+  submissionId     String    @db.Uuid
+  sourceLabel      String    @db.VarChar(200)
+  originalFilename String    @db.VarChar(255)
+  fileHash         String    @db.VarChar(64)
+  sizeBytes        Int
+  mapping          Json
+  parserVersion    String    @db.VarChar(30)
+  uploaderUserId   String    @db.VarChar(255)
+  uploaderName     String?   @db.VarChar(200)
+  createdAt        DateTime  @db.Timestamptz(6)
+  status           String    @default("COMPLETED") @db.VarChar(20)
+  totalRows        Int
+  importedRows     Int
+  duplicateRows    Int
+  invalidRows      Int
+  warningRows      Int
+  rollbackUserId   String?   @db.VarChar(255)
+  rollbackAt       DateTime? @db.Timestamptz(6)
+  rollbackReason   String?   @db.VarChar(2000)
+  removedCount     Int?
+
+  estate   Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  readings ImportedReading[]
+  rows     ReadingImportRow[]
+
+  @@unique([id, estateId])
+  @@unique([estateId, uploaderUserId, submissionId])
+  @@index([estateId, createdAt])
+}
+
+model ImportedReading {
+  id         String   @id @default(uuid()) @db.Uuid
+  estateId   String   @db.Uuid
+  assetId    String   @db.Uuid
+  batchId    String   @db.Uuid
+  metric     String   @db.VarChar(30)
+  value      Decimal  @db.Decimal(18, 6)
+  measuredAt DateTime @db.Timestamptz(6)
+  recordedAt DateTime @db.Timestamptz(6)
+
+  asset Asset              @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  batch ReadingImportBatch @relation(fields: [batchId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, assetId, metric, measuredAt])
+  @@index([assetId, metric, measuredAt])
+  @@index([batchId])
+}
+
+// Reading IDs remain audit values after a rollback; no restrictive reading FK.
+model ReadingImportRow {
+  batchId            String    @db.Uuid
+  recordNumber       Int
+  startingLineNumber Int
+  outcome            String    @db.VarChar(20)
+  readingId          String?   @db.Uuid
+  source             String?   @db.VarChar(20)
+  assetId            String?   @db.Uuid
+  metric             String?   @db.VarChar(30)
+  measuredAt         DateTime? @db.Timestamptz(6)
+  valueText          String?   @db.VarChar(32)
+  origin             Json?
+  issues             Json
+
+  batch ReadingImportBatch @relation(fields: [batchId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([batchId, recordNumber])
+  @@index([batchId, outcome, recordNumber])
 }
 
 // An external contractor of an estate, reached by email (ID-70). ID-37 extends

@@ -18,16 +18,14 @@ export interface Breadcrumb {
     | "/reports"
     | "/estates/$estateId/assets"
     | "/estates/$estateId/readings"
+    | "/estates/$estateId/readings/imports"
     | "/estates/$estateId/work-orders"
     | "/estates/$estateId/reports"
     | "/estates/$estateId/roles"
     | "/estates/$estateId/council"
     | "/estates/$estateId/locations"
-    | "/estates/$estateId/devices"
-    | "/estates/$estateId/sensors"
     | "/estates/$estateId/documents"
     | "/estates/$estateId/inspections"
-    | "/estates/$estateId/failure-risk"
     | "/estates/$estateId/asset-categories"
     | "/estates/$estateId/assets/$assetId";
 }

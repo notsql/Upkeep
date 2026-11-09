@@ -17,7 +17,7 @@ export function WorkOrderSourceFields({
   form: ReturnType<typeof useWorkOrderForm>;
 }) {
   return (
-    <section aria-label="Work-order source" className="grid max-w-3xl gap-5">
+    <div className="grid gap-5">
       <WorkOrderSelect
         disabled={form.inspectionSource}
         label="Source"
@@ -36,6 +36,6 @@ export function WorkOrderSourceFields({
           value={form.reportId}
         />
       ) : null}
-    </section>
+    </div>
   );
 }

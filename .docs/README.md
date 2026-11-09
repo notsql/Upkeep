@@ -7,6 +7,9 @@ same change as the code.
 
 **API:** `packages/api/openapi.json` remains the source of truth.
 
+- [Asset history API](api/asset-history.md): Owner/Council directory, combined recorded timeline and Singapore date ranges.
+- [Asset history frontend](frontend/asset-history.md): Council profiles, History, Apply/Clear date filters, file previews and scoped refresh.
+
 - [Invoices and service reports](api/documents.md): private document upload, filename/type filtering, download, deletion and cleanup.
 - [Asset document association](api/asset-documents.md): owner-authorized link/unlink, retired assets, attachment reads and work-order consistency.
 
@@ -24,11 +27,15 @@ same change as the code.
 - [Asset catalogue](api/catalogue.md): asset categories, manufacturers and models.
 - [Estate asset categories](api/asset-categories.md): per-estate silent-failure flags (LIGHTING by default), service intervals, active-asset counts and append-only change history.
 - [Service intervals](api/service-intervals.md): manufacturer service intervals (days, months or years) per estate category, per-asset overrides, the effective interval and append-only change history (ID-81).
+- [Estate costs](api/estate-costs.md): the owner's five costliest assets and the 12-month maintenance budget forecast (ID-34, ID-33).
+- [Notifications](api/notifications.md): the in-app inbox - unread count, newest-first list, read and read-all, per-user read state across managed estates (ID-100); per-estate settings; anomaly alerts with acknowledge/dismiss (ID-105-107); daily sweep for service-due and predicted-repair notifications (ID-103, ID-101).
 - [Monthly inspection list](api/inspection-list.md): due spot checks for silent-failure assets, generation without duplicates, completion by inspection results, and overdue carry-over (ID-84, ID-86).
 - [Asset events](api/asset-events.md): recording and listing maintenance and repair events.
 - [Failure risk](api/failure-risk.md): estate and per-asset breakdown forecasts.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
+- [Device telemetry](api/device-telemetry.md): devices submitting batches of up to 500 readings, with a per-item result (created, already stored, invalid, conflict); both device paths trigger asynchronous anomaly scoring.
 - [Device status](api/device-status.md): derived Online/Offline/Awaiting first reading status and the Manager's estate-wide device list.
+- [Historical reading imports](api/reading-imports.md): CSV mapping, partial acceptance, idempotent batches, per-row reports and rollback.
 - [Readings](api/readings.md): Owner/Manager/Crew estate-wide filtering, minimal asset options, pagination and flags; attributed manual entry, Manual/Sensor provenance and filtered CSV export; legacy owner-only asset readings retained; complete filtered CSV v1 exports with provenance.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
@@ -36,7 +43,7 @@ same change as the code.
   historical reads, independent custom creation/editing and owner-only deactivation.
 - [Access projection and retired global grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
 - [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
-- [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, block/level-position, subtree and routing-state filtering, private images and location correction.
+- [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, urgency/Safety ordering, Manager urgency edits, latest-change metadata, location and routing-state filters, and correction.
 - [Duplicate fault reports](api/fault-report-duplicates.md): suggested duplicate links on submission, manager confirm/reject and manual linking, counts on reports and work orders.
 - [Report routing and contractor email](api/report-routing.md): ID-70 classification, automatic work orders, service-provider routes, Manager send/dismiss and work-order dispatch email.
 
@@ -52,24 +59,32 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/work-order-documents.md](frontend/work-order-documents.md) | Document/work-order association dialog, correction history and work-order attachments |
 | [frontend/documents.md](frontend/documents.md) | Estate Documents screen, responsive table/cards, asset links, permitted actions, upload/download/deletion and filename/type filtering |
 | [frontend/design-system.md](frontend/design-system.md) | Light/dark tokens, shared components, header/sidebar navigation, page-header/breadcrumb convention and conventions for future screens |
-| [frontend/shell.md](frontend/shell.md) | Root layout, providers, header (estate switcher, account menu), grouped estate sidebar, shared destination predicates and route guards, resident sidebar, `/` redirects, and shared API/session/query/error conventions |
+| [frontend/shell.md](frontend/shell.md) | Root layout, providers, header (estate switcher, account menu), grouped estate sidebar (Assets group: Locations, Assets only), redirects for retired pages, shared destination predicates and route guards, resident sidebar, `/` redirects, and shared API/session/query/error conventions |
 | [frontend/resident-dashboard.md](frontend/resident-dashboard.md) | Resident-only `/`: Open/In progress/Resolved count cards, five recent reports, Report a fault / View all |
 | [frontend/auth.md](frontend/auth.md) | `/login`, `/register`, `/logout`, `/api/auth/*` handlers, `_auth` guard, idle sign-out, `AuthButton`, token bridge |
 | [frontend/account.md](frontend/account.md) | `/account` |
 | [frontend/estates.md](frontend/estates.md) | `/estates`, `/estates/new`, `/estates/$estateId`, `/estates/$estateId/edit` (Estate settings + Danger zone), directory filters and estate deactivation |
 | [frontend/locations.md](frontend/locations.md) | Location hierarchy section on the estate details page |
-| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/maintenance`, `/inspections`, `/documents`, `/costs`, `/devices` sub-pages; legacy `?tab=` redirects), `/…/assets/$assetId/edit`, asset register/search, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card |
-| [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk`: estate failure-risk table (asset forecast card and maintenance live in assets.md) |
+| [frontend/assets.md](frontend/assets.md) | `/estates/$estateId/assets`, `/estates/$estateId/assets/new`, `/…/assets/$assetId` (+ `/details`, `/records`, `/costs`, `/devices` sub-pages; `/maintenance`, `/inspections`, `/documents` and legacy `?tab=` redirect), `/…/assets/$assetId/condition` (condition history), `/…/assets/$assetId/edit`, asset register/search grouped by block and level (By location) with device-summary and risk-flag columns, retirement/restoration, lifecycle history, condition assessments, catalogue comboboxes, maintenance events, maintenance costs, pump forecast card; asset Overview as the monitoring home (condition, forecast with risk level, trends, devices-online stat), attention banner on every asset tab |
+| [frontend/failure-risk.md](frontend/failure-risk.md) | `/estates/$estateId/failure-risk` (redirects to `/assets`) and the failure-risk hooks behind By location's risk column, the asset forecast card and the dashboard's at-risk card |
 | [frontend/asset-categories.md](frontend/asset-categories.md) | `/estates/$estateId/asset-categories` (+ `/$interval` views: days, months, years, not-set): silent-failure flags per asset category with asset counts and last change |
+| [frontend/estate-costs.md](frontend/estate-costs.md) | Overview widgets: Maintenance budget (12-month projection) and Costliest assets (top five, linking to asset costs), owner only |
+| [frontend/notifications.md](frontend/notifications.md) | Header notification bell with unread count and `/notifications`: newest-first rows that open the asset and mark read, mark all as read, paging; `/estates/$estateId/notification-settings` form |
 | [frontend/inspection-list.md](frontend/inspection-list.md) | `/estates/$estateId/inspections`: summary cards, generate/regenerate, checks grouped by block and level with Overdue/Due/Done badges, and unscheduled assets |
 | [frontend/service-intervals.md](frontend/service-intervals.md) | Service interval column with unit-coloured labels, filter by unit or Not set, and dialog on Asset categories; the asset details `AssetServiceIntervalCard` |
-| [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/devices` status list, device list on asset details, dedicated device registration and replacement pages, and device deactivation |
-| [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors` (Needs review) and `/estates/$estateId/sensors/all`: device monitoring, flatline review, metric policies and maintenance pauses |
-| [frontend/readings.md](frontend/readings.md) | Estate-wide/legacy reading browsers, attributed manual entry, provenance, filters, pagination and month-sized performance evidence |
+| [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/assets/devices` (Assets › All devices: every device ranked by severity with flatline state, pauses and a Metric policies dialog; `/estates/$estateId/devices` redirects there), device list on asset details, dedicated device registration and replacement pages, and device deactivation |
+| [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors` and `/sensors/all` (redirect to `/assets/devices`); shared metric-policy and pause components and the flatline hooks |
+| [frontend/formatting.md](frontend/formatting.md) | `lib/format.ts`: Intl-based dates (date-only without time-zone shift), instants, relative times, per-metric reading values, scores and model assessment notes |
+| [frontend/reading-imports.md](frontend/reading-imports.md) | Upload/mapping, batch history, desktop/mobile reports, uncertain retries and rollback |
+| [frontend/readings.md](frontend/readings.md) | Estate-wide reading browser (`/…/readings`, linked from Assets as "All readings"), one asset's readings (`/…/readings/$assetId`; `?assetId=` redirects there) and the per-asset readings page (`/…/assets/$assetId/readings`, on the estate endpoint), historical CSV imports, provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer; pending invitations on /estates (/invitations redirects) |
 | [frontend/resident-reports.md](frontend/resident-reports.md) | `/reports/new`, `/reports`, `/reports/$reportId`, resident navigation and per-user query hooks |
-| [frontend/estate-reports.md](frontend/estate-reports.md) | Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |
+| [frontend/estate-reports.md](frontend/estate-reports.md) | Open/All queue with urgency/newest/oldest sorting and shadcn urgency editing; Estate report list/detail, searchable block and numeric level-position filters, private images, location correction and Crew entry/navigation |
 | [frontend/fault-report-duplicates.md](frontend/fault-report-duplicates.md) | Duplicate badges on the report list, the detail duplicate section (review, linked list, Mark as duplicate) and work-order duplicate counts |
 | [frontend/report-routing.md](frontend/report-routing.md) | `/estates/$estateId/contractors`, routing badge/filter and card on reports, contractor email on work-order detail, resident AI notice |
+
+## Device simulator (`apps/device-simulator`)
+
+- [frontend/device-simulator.md](frontend/device-simulator.md): local-only replay of SKAB test experiments to `POST /device-api/telemetry` (CSV validation, ground-truth windows, backfill/live runs, retry and stop).

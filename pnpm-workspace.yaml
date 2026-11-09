@@ -33,6 +33,7 @@ catalog:
   wrangler: ^4.156.2
   react-day-picker: ^9.11.1
   date-fns: ^4.1.0
+  react-zoom-pan-pinch: ^4.2.0
 minimumReleaseAgeExclude:
   - '@tanstack/history@1.162.2'
   - '@tanstack/router-core@1.171.28'

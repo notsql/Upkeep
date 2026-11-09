@@ -17,6 +17,7 @@ import com.proj.server.db.tables.Device.DevicePath;
 import com.proj.server.db.tables.Document.DocumentPath;
 import com.proj.server.db.tables.Equipmentproviderroute.EquipmentproviderroutePath;
 import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
+import com.proj.server.db.tables.Estatenotificationsettings.EstatenotificationsettingsPath;
 import com.proj.server.db.tables.Estateroledefinition.EstateroledefinitionPath;
 import com.proj.server.db.tables.Estateuser.EstateuserPath;
 import com.proj.server.db.tables.Flatlinepolicy.FlatlinepolicyPath;
@@ -24,6 +25,9 @@ import com.proj.server.db.tables.Inspectioncheck.InspectioncheckPath;
 import com.proj.server.db.tables.Inspectionlistrun.InspectionlistrunPath;
 import com.proj.server.db.tables.Issuereport.IssuereportPath;
 import com.proj.server.db.tables.Location.LocationPath;
+import com.proj.server.db.tables.Notification.NotificationPath;
+import com.proj.server.db.tables.Notificationsweep.NotificationsweepPath;
+import com.proj.server.db.tables.Readingimportbatch.ReadingimportbatchPath;
 import com.proj.server.db.tables.Serviceprovider.ServiceproviderPath;
 import com.proj.server.db.tables.Workorder.WorkorderPath;
 import com.proj.server.db.tables.records.EstateRecord;
@@ -335,6 +339,19 @@ public class Estate extends TableImpl<EstateRecord> {
         return _estateinvitation;
     }
 
+    private transient EstatenotificationsettingsPath _estatenotificationsettings;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.EstateNotificationSettings</code> table
+     */
+    public EstatenotificationsettingsPath estatenotificationsettings() {
+        if (_estatenotificationsettings == null)
+            _estatenotificationsettings = new EstatenotificationsettingsPath(this, null, Keys.ESTATENOTIFICATIONSETTINGS__ESTATENOTIFICATIONSETTINGS_ESTATEID_FKEY.getInverseKey());
+
+        return _estatenotificationsettings;
+    }
+
     private transient EstateroledefinitionPath _estateroledefinition;
 
     /**
@@ -424,6 +441,45 @@ public class Estate extends TableImpl<EstateRecord> {
             _location = new LocationPath(this, null, Keys.LOCATION__LOCATION_ESTATEID_FKEY.getInverseKey());
 
         return _location;
+    }
+
+    private transient NotificationPath _notification;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.Notification</code> table
+     */
+    public NotificationPath notification() {
+        if (_notification == null)
+            _notification = new NotificationPath(this, null, Keys.NOTIFICATION__NOTIFICATION_ESTATEID_FKEY.getInverseKey());
+
+        return _notification;
+    }
+
+    private transient NotificationsweepPath _notificationsweep;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.NotificationSweep</code> table
+     */
+    public NotificationsweepPath notificationsweep() {
+        if (_notificationsweep == null)
+            _notificationsweep = new NotificationsweepPath(this, null, Keys.NOTIFICATIONSWEEP__NOTIFICATIONSWEEP_ESTATEID_FKEY.getInverseKey());
+
+        return _notificationsweep;
+    }
+
+    private transient ReadingimportbatchPath _readingimportbatch;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.ReadingImportBatch</code> table
+     */
+    public ReadingimportbatchPath readingimportbatch() {
+        if (_readingimportbatch == null)
+            _readingimportbatch = new ReadingimportbatchPath(this, null, Keys.READINGIMPORTBATCH__READINGIMPORTBATCH_ESTATEID_FKEY.getInverseKey());
+
+        return _readingimportbatch;
     }
 
     private transient ServiceproviderPath _serviceprovider;

@@ -11,7 +11,7 @@ export function NewRolePage({
   returnTo?: "council";
 }) {
   return (
-    <RoleAccessGate estateId={estateId}>
+    <RoleAccessGate className="max-w-3xl" estateId={estateId}>
       {(estate) =>
         estate.canCreateRoles ? (
           <NewRoleWorkspace estateId={estateId} returnTo={returnTo} />

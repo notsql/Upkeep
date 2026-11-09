@@ -6,16 +6,26 @@ import static com.proj.server.db.tables.Issuereport.ISSUEREPORT;
 import static com.proj.server.db.tables.Issuereportimage.ISSUEREPORTIMAGE;
 import static com.proj.server.db.tables.Location.LOCATION;
 import static com.proj.server.db.tables.Reportrouting.REPORTROUTING;
+import static com.proj.server.db.tables.Workorder.WORKORDER;
 import static org.jooq.impl.DSL.concatWs;
 import static org.jooq.impl.DSL.count;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.exists;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.notExists;
 import static org.jooq.impl.DSL.row;
+import static org.jooq.impl.DSL.selectOne;
 import static org.jooq.impl.DSL.table;
 import static org.jooq.impl.DSL.when;
 
 import com.proj.server.db.tables.Location;
+import com.proj.server.report.EstateIssueReportSummaryResponse;
+import com.proj.server.report.ReportQueueCursor;
+import com.proj.server.report.ReportSort;
+import com.proj.server.report.ReportUrgency;
+import com.proj.server.report.ReportUrgencyRepository;
+import com.proj.server.workorder.WorkOrderStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -210,15 +220,16 @@ public class ResidentReportRepository {
                 .map(record -> new StoredImage(record.value1(), record.value2()));
     }
 
-    public List<IssueReportSummaryResponse> estateList(
+    public List<EstateIssueReportSummaryResponse> estateList(
             UUID estateId,
             UUID locationId,
             UUID blockId,
             Integer minLevelPosition,
             Integer maxLevelPosition,
             String routingState,
-            OffsetDateTime beforeTime,
-            UUID beforeId,
+            ReportQueueCursor before,
+            boolean openOnly,
+            ReportSort sort,
             int limit) {
         var condition = ISSUEREPORT.ESTATEID.eq(estateId);
         if (routingState != null) {
@@ -249,15 +260,48 @@ public class ResidentReportRepository {
                 when(LOCATION.TYPE.eq("LEVEL"), LOCATION.SORTORDER).when(PARENT.TYPE.eq("LEVEL"), PARENT.SORTORDER);
         if (minLevelPosition != null) condition = condition.and(levelPosition.ge(minLevelPosition));
         if (maxLevelPosition != null) condition = condition.and(levelPosition.le(maxLevelPosition));
-        if (beforeTime != null) {
-            condition = condition.and(row(ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID).lt(beforeTime, beforeId));
+        var rank = when(ISSUEREPORT.URGENCY.eq(ReportUrgency.URGENT.name()), ReportUrgency.URGENT.rank())
+                .when(ISSUEREPORT.URGENCY.eq(ReportUrgency.HIGH.name()), ReportUrgency.HIGH.rank())
+                .when(ISSUEREPORT.URGENCY.eq(ReportUrgency.MEDIUM.name()), ReportUrgency.MEDIUM.rank())
+                .otherwise(ReportUrgency.LOW.rank());
+        if (openOnly) {
+            var sourced = WORKORDER.SOURCEREPORTID.eq(ISSUEREPORT.ID).and(WORKORDER.ESTATEID.eq(estateId));
+            condition = condition.and(notExists(selectOne().from(WORKORDER).where(sourced))
+                    .or(exists(selectOne()
+                            .from(WORKORDER)
+                            .where(sourced)
+                            .and(WORKORDER.STATUS.ne(WorkOrderStatus.CLOSED.name())))));
         }
+        if (before != null) {
+            condition = condition.and(
+                    switch (sort) {
+                        case OLDEST ->
+                            row(ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID).gt(before.createdAt(), before.id());
+                        case NEWEST ->
+                            row(ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID).lt(before.createdAt(), before.id());
+                        case URGENCY ->
+                            row(ISSUEREPORT.ISSAFETY, rank, ISSUEREPORT.CREATEDAT, ISSUEREPORT.ID)
+                                    .lt(before.isSafety(), before.rank(), before.createdAt(), before.id());
+                    });
+        }
+        var ordering = new java.util.ArrayList<org.jooq.SortField<?>>();
+        if (sort == ReportSort.URGENCY) {
+            ordering.add(ISSUEREPORT.ISSAFETY.desc());
+            ordering.add(rank.desc());
+        }
+        ordering.add(sort == ReportSort.OLDEST ? ISSUEREPORT.CREATEDAT.asc() : ISSUEREPORT.CREATEDAT.desc());
+        ordering.add(sort == ReportSort.OLDEST ? ISSUEREPORT.ID.asc() : ISSUEREPORT.ID.desc());
         return reportSelect()
                 .where(condition)
-                .orderBy(ISSUEREPORT.CREATEDAT.desc(), ISSUEREPORT.ID.desc())
+                .orderBy(ordering)
                 .limit(limit)
                 .fetch()
-                .map(ResidentReportRepository::summary);
+                .map(record -> EstateIssueReportSummaryResponse.of(
+                        summary(record),
+                        new ReportUrgencyRepository.Values(
+                                ReportUrgency.valueOf(record.get(ISSUEREPORT.URGENCY)),
+                                record.get(ISSUEREPORT.ISSAFETY),
+                                record.get(ISSUEREPORT.URGENCYVERSION))));
     }
 
     public Optional<StoredImage> estateImage(UUID estateId, UUID reportId, UUID imageId) {
@@ -287,6 +331,9 @@ public class ResidentReportRepository {
                         ISSUEREPORT.CREATEDAT,
                         ISSUEREPORT.UPDATEDAT,
                         ISSUEREPORT.LOCATIONID,
+                        ISSUEREPORT.URGENCY,
+                        ISSUEREPORT.ISSAFETY,
+                        ISSUEREPORT.URGENCYVERSION,
                         ESTATE.NAME,
                         LOCATION_LABEL)
                 .from(ISSUEREPORT)

@@ -13,8 +13,8 @@ apps/web            TanStack Start (React 19, Vite) on :3001
    v
 apps/server         Spring Boot 4 (Java 25) on :8080  <-- all business logic
                     (also runs the ONNX anomaly model in process, decision 0028)
-                    (calls Claude to classify fault reports, decision 0045,
-                     and emails contractor work orders over SMTP, 0046)
+                    (calls Claude to classify fault reports, decision 0046,
+                     and emails contractor work orders over SMTP, 0047)
    |
    |  JDBC
    v

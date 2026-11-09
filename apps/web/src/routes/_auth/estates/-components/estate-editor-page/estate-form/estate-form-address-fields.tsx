@@ -1,5 +1,5 @@
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 
 export function EstateFormAddressFields({
   address,
@@ -10,8 +10,8 @@ export function EstateFormAddressFields({
 }) {
   return (
     <>
-      <div className="grid gap-2">
-        <Label htmlFor="estate-address">Address</Label>
+      <Field>
+        <FieldLabel htmlFor="estate-address">Address</FieldLabel>
         <Input
           defaultValue={address}
           id="estate-address"
@@ -19,9 +19,9 @@ export function EstateFormAddressFields({
           name="address"
           required
         />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="estate-postal-code">Postal code</Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="estate-postal-code">Postal code</FieldLabel>
         <Input
           defaultValue={postalCode}
           id="estate-postal-code"
@@ -29,7 +29,7 @@ export function EstateFormAddressFields({
           name="postalCode"
           required
         />
-      </div>
+      </Field>
     </>
   );
 }

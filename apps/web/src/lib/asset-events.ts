@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 import { assetQueryKey } from "@/lib/assets";
 import { estateError, useEstateSession } from "@/lib/estates";
 import { estateFailureRiskQueryKey } from "@/lib/failure-risk";
@@ -22,11 +23,15 @@ export function assetEventsQueryKey(
   return [...assetQueryKey(userId, estateId, assetId), "events"] as const;
 }
 
-export function useAssetEvents(estateId: string, assetId: string) {
+export function useAssetEvents(
+  estateId: string,
+  assetId: string,
+  enabled = true
+) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: assetEventsQueryKey(userId, estateId, assetId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(
@@ -57,6 +62,7 @@ export function useRecordAssetEvent(estateId: string, assetId: string) {
     },
     onSuccess: async () => {
       await Promise.all([
+        refreshAssetHistory(queryClient, userId, estateId),
         queryClient.invalidateQueries({
           queryKey: assetEventsQueryKey(userId, estateId, assetId),
         }),

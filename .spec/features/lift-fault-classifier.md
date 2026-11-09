@@ -257,7 +257,7 @@ New Python dependencies go in `ml-research/pyproject.toml`: `torch`,
 ## Database
 
 One expand-only migration, after the branch's
-`20261108090000_report_routing_and_dispatch`:
+`20261109090000_report_routing_and_dispatch`:
 
 | Model | Change |
 | --- | --- |
@@ -339,7 +339,7 @@ make the model look good or bad:
   classifier.
 - [ ] Migration for `faultCategory`, `pnpm db:generate`, `pnpm api:generate`,
   the routing card and the notice.
-- [ ] Decision 0047, `.docs`, and full checks.
+- [ ] Decision 0048, `.docs`, and full checks.
 
 ## Answers to the first draft's questions (2026-11-08)
 
@@ -352,6 +352,6 @@ make the model look good or bad:
 3. **Targets** stand. Iterate until they are met, on a dev set split from
    the hand-written reports, so the test set stays clean.
 4. **Datasets:** the project owner assembles them.
-5. **Decision numbering:** `main` uses up to 0044, so this branch's records
-   were renumbered: 0041 became 0045 (classification in Spring), 0042 became
-   0046 (contractor dispatch), and this revision is 0047.
+5. **Decision numbering:** `main` uses up to 0045, so this branch's records
+   are 0046 (classification in Spring), 0047 (contractor dispatch) and 0048
+   (this revision).

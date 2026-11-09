@@ -1,5 +1,5 @@
+import { Field, FieldDescription, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
-import { Label } from "@proj/ui/components/label";
 
 export function EstateFormIdentityFields({
   name,
@@ -10,8 +10,8 @@ export function EstateFormIdentityFields({
 }) {
   return (
     <>
-      <div className="grid gap-2">
-        <Label htmlFor="estate-name">Name</Label>
+      <Field>
+        <FieldLabel htmlFor="estate-name">Name</FieldLabel>
         <Input
           defaultValue={name}
           id="estate-name"
@@ -19,9 +19,9 @@ export function EstateFormIdentityFields({
           name="name"
           required
         />
-      </div>
-      <div className="grid gap-2">
-        <Label htmlFor="estate-code">MCST number</Label>
+      </Field>
+      <Field>
+        <FieldLabel htmlFor="estate-code">MCST number</FieldLabel>
         <Input
           aria-describedby="estate-code-help"
           defaultValue={code}
@@ -32,11 +32,11 @@ export function EstateFormIdentityFields({
           placeholder="e.g. 1234"
           required
         />
-        <p className="text-muted-foreground text-sm" id="estate-code-help">
+        <FieldDescription id="estate-code-help">
           The Management Corporation Strata Title number. Enter the number only,
           without "MCST".
-        </p>
-      </div>
+        </FieldDescription>
+      </Field>
     </>
   );
 }

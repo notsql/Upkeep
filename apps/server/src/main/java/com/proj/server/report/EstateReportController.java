@@ -74,7 +74,13 @@ public class EstateReportController {
                     @RequestParam(required = false)
                     RoutingState routingState,
             @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam(required = false) Integer limit,
+            @RequestParam(defaultValue = "false") boolean openOnly,
+            @Parameter(
+                            description =
+                                    "URGENCY: Safety and urgency first; NEWEST/OLDEST: submission time descending/ascending")
+                    @RequestParam(defaultValue = "URGENCY")
+                    ReportSort sort) {
         return privateResponse(reports.list(
                 estateId,
                 subject(principal),
@@ -84,7 +90,9 @@ public class EstateReportController {
                 maxLevelPosition,
                 routingState,
                 cursor,
-                limit));
+                limit,
+                openOnly,
+                sort));
     }
 
     @GetMapping("/{reportId}")

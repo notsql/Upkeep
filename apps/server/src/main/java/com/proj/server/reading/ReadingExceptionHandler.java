@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = DeviceReadingController.class)
+@RestControllerAdvice(assignableTypes = {DeviceReadingController.class, DeviceTelemetryController.class})
 public class ReadingExceptionHandler {
     @ExceptionHandler(ReadingException.class)
     ResponseEntity<EstateError> reading(ReadingException error) {

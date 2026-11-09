@@ -43,7 +43,7 @@ feedback and save errors. The existing ReportFilters is reused outside the
 creation form, so its filter form is never nested inside another form.
 `new/-components/work-order-form/work-order-form.tsx` composes the creation screen from
 `work-order-form-source-status.tsx`, `work-order-form-details-fields.tsx`,
-`work-order-form-asset-fields.tsx` and `work-order-form-footer.tsx`;
+`work-order-form-asset-fields.tsx` and the shared `FormActions`;
 `use-work-order-form.ts` owns its state, prefill, source-conflict choices and
 submission guard. `work-order-source-fields.tsx` renders the source selector,
 report picker and manual source reference. These share the existing feature
@@ -68,6 +68,12 @@ Work-order estate label. There is no global Work orders entry or estate chooser
 dialog; users pick an estate in the header switcher.
 Crew details render returned asset reference/location, linking assets only with
 canViewAssets and source reports only with canViewFaultReports.
+With a linked asset, `WorkOrderDetailSummary` also shows outline
+(`buttonVariants`) link "View readings" to
+`/estates/$estateId/readings/$assetId` (with canViewReadings, exposed by
+`useWorkOrderAccess`); there is no manual reading entry. This is how Crew
+reach readings, since the sidebar has no Readings item (see
+[readings.md](readings.md)).
 
 The existing estate-report detail screen adds Create work order only when both
 creation and report-read capabilities are present. It passes sourceReportId to
@@ -424,8 +430,18 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   while refreshing, conflicted or the status no longer matches; its
   Refresh-work-order recovery `Alert` and review notice sit in `children`;
   `onSubmit` reads the uncontrolled fields from the form via `FormData`.
-- Create (`work-order-form.tsx`): `FormPageHeader` "Create work order" with
-  breadcrumbs, no icon or estate-name description.
+- Create (`work-order-form.tsx`): `FormPage` "Create work order" (description
+  "Describe the work, where it is and how urgent it is") with breadcrumbs, no
+  icon. Access loading, "Work-order creation is unavailable" and the
+  inspection-source dead ends (`renderInspectionWorkOrderStatus`: retry, "Work
+  order already raised" as a titled `FormCard`, "Only a failed inspection…")
+  render inside it. Then a `FormCard` "Source" ("Where this work came from":
+  Source select, report picker, inspection location review) and the form in a
+  `FormCard`: `FieldSet` "Work details" (source reference, Description,
+  Location, Category and Priority side by side from `sm`), `FieldSeparator`,
+  `FieldSet` "Asset", save errors, and `FormActions` "Create work order"
+  (`disabled` = the form's `blocked` guard; Cancel only for an inspection
+  source).
 
 ## Contractor email (ID-70)
 

@@ -32,7 +32,7 @@ export function RoleForm({
   return (
     <form
       aria-label={initial ? `Edit ${initial.name}` : "New role"}
-      className="grid gap-5"
+      className="grid gap-6"
       onSubmit={form.submit}
     >
       <RoleFormDetailsFields
@@ -50,14 +50,15 @@ export function RoleForm({
         onToggle={form.toggle}
         pending={pending}
         selected={form.selected}
-      />
-      <RoleFormFooter
-        action={form.action}
-        cancel={cancel}
-        disabled={pending || !catalogue.length}
-        message={form.message}
-        pending={pending}
-      />
+      >
+        <RoleFormFooter
+          action={form.action}
+          cancel={cancel}
+          disabled={pending || !catalogue.length}
+          message={form.message}
+          pending={pending}
+        />
+      </RoleFormPermissions>
     </form>
   );
 }

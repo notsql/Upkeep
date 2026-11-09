@@ -21,3 +21,22 @@ it("offers cancellation without submitting and blocks actions during a save", ()
     screen.getByRole<HTMLButtonElement>("button", { name: "Cancel" }).disabled
   ).toBe(true);
 });
+
+it("blocks only the submit when the form cannot be submitted yet", () => {
+  renderWithProviders(
+    <FormActions
+      disabled
+      label="Create work order"
+      onCancel={vi.fn()}
+      pending={false}
+    />
+  );
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", {
+      name: "Create work order",
+    }).disabled
+  ).toBe(true);
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Cancel" }).disabled
+  ).toBe(false);
+});

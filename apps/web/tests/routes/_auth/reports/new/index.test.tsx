@@ -391,6 +391,16 @@ it("announces loading the estate with the shared loading state", async () => {
   await screen.findByRole("heading", { name: "Report a fault" });
 });
 
+it("cancels back to the selected estate's reports without submitting", async () => {
+  renderWithProviders(<NewReportPage requestedEstateId={estateId} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Cancel" }));
+  expect(navigate).toHaveBeenCalledWith({
+    to: "/reports",
+    search: { estateId },
+  });
+  expect(post).not.toHaveBeenCalled();
+});
+
 const AI_NOTICE =
   /text and photos are analysed by an AI service \(Anthropic\) and may be emailed to the estate's contractor/u;
 

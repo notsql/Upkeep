@@ -13,11 +13,11 @@ export function inspectionListQueryKey(
   return ["estates", userId, "inspection-list", estateId] as const;
 }
 
-export function useInspectionList(estateId: string) {
+export function useInspectionList(estateId: string, enabled = true) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: inspectionListQueryKey(userId, estateId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(

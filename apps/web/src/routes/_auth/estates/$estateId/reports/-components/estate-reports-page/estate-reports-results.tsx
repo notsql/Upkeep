@@ -2,10 +2,14 @@ import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
 import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportCard } from "@/components/reports/report-card";
+import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { Pagination } from "@/components/table/pagination";
-import type { useEstateReportList } from "@/lib/estate-reports";
+import {
+  ReportRequestError,
+  type useEstateReportList,
+} from "@/lib/estate-reports";
 import { routingStateLabel } from "@/lib/report-routing";
 import { ReportsEmpty } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/reports-empty";
 
@@ -28,11 +32,23 @@ export function EstateReportsResults({
   onNext: () => void;
   onFirst: () => void;
 }) {
+  const rejectedPage =
+    !!cursor &&
+    reports.error instanceof ReportRequestError &&
+    reports.error.status === 400;
   return (
     <>
       {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
-        <ErrorState message="Unable to load reports" onRetry={onRetry} />
+        <ErrorState
+          message={
+            rejectedPage
+              ? "Unable to load this report page. Return to the first page."
+              : "Unable to load reports"
+          }
+          onRetry={rejectedPage ? onFirst : onRetry}
+          retryLabel={rejectedPage ? "Return to first page" : "Retry"}
+        />
       ) : null}
       {reports.data?.items.length === 0 ? (
         <ReportsEmpty filtered={filtered} onClear={onClear} />
@@ -51,6 +67,12 @@ export function EstateReportsResults({
                 >
                   {report.title}
                 </Link>
+              }
+              urgency={
+                <ReportUrgencyBadges
+                  isSafety={report.isSafety}
+                  urgency={report.urgency}
+                />
               }
             >
               {report.routing ? (

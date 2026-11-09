@@ -113,7 +113,7 @@ function estate(
 it("groups an owner's destinations with no Workspace group or switcher", async () => {
   estate({ canViewDocuments: true });
   const nav = await setup("/estates/pine/assets");
-  await nav.findByRole("link", { name: "Failure risk" });
+  await nav.findByRole("link", { name: "Estate settings" });
   const names = nav.getAllByRole("link").map((link) => link.textContent);
   expect(names).toEqual([
     "Overview",
@@ -123,14 +123,11 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
     "Inspections",
     "Locations",
     "Assets",
-    "Devices",
-    "Readings",
-    "Device monitoring",
-    "Failure risk",
     "Documents",
     "Members",
     "Roles",
     "Asset categories",
+    "Notification settings",
     "Estate settings",
   ]);
   for (const label of ["Operations", "Assets", "Records", "Administration"]) {
@@ -145,17 +142,22 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   expect(
     nav.getByRole("link", { name: "Estate settings" }).getAttribute("href")
   ).toBe("/estates/pine/edit");
-  expect(
-    nav.getByRole("link", { name: "Device monitoring" }).getAttribute("href")
-  ).toBe("/estates/pine/sensors");
+  expect(nav.getByRole("link", { name: "Assets" }).getAttribute("href")).toBe(
+    "/estates/pine/assets"
+  );
   expect(
     nav.getByRole("link", { name: "Locations" }).getAttribute("href")
   ).toBe("/estates/pine/locations");
+  expect(
+    nav
+      .getByRole("link", { name: "Notification settings" })
+      .getAttribute("href")
+  ).toBe("/estates/pine/notification-settings");
 });
 
 it("keeps the section active on nested pages and matches Overview exactly", async () => {
   const nav = await setup("/estates/pine/assets/pump");
-  await nav.findByRole("link", { name: "Failure risk" });
+  await nav.findByRole("link", { name: "Estate settings" });
   expect(
     nav.getByRole("link", { name: "Assets" }).getAttribute("aria-current")
   ).toBe("page");
@@ -180,6 +182,7 @@ it("hides owner-only items for a management-only non-owner", async () => {
     "Inspections",
     "Devices",
     "Asset categories",
+    "Notification settings",
     "Failure risk",
     "Estate settings",
     "Assets",
@@ -193,8 +196,8 @@ it("shows delegate destinations to a non-owner who manages invitation permission
   state.owned = false;
   estate({ role: "MEMBER", canManageEstate: false });
   const nav = await setup("/estates/pine");
-  await nav.findByRole("link", { name: "Devices" });
-  nav.getByRole("link", { name: "Inspections" });
+  await nav.findByRole("link", { name: "Inspections" });
+  nav.getByRole("link", { name: "Assets" });
   nav.getByRole("link", { name: "Asset categories" });
   expect(nav.queryByRole("link", { name: "Failure risk" })).toBeNull();
   expect(nav.queryByRole("link", { name: "Estate settings" })).toBeNull();
@@ -241,10 +244,19 @@ it("shows Crew only their permitted sections", async () => {
     "Work orders",
     "Fault reports",
     "Assets",
-    "Readings",
   ]);
   expect(nav.queryByRole("group", { name: "Records" })).toBeNull();
   expect(requestedPaths()).not.toContain("/estates/{id}");
+});
+
+it("points Council, who cannot open the register, at All devices", async () => {
+  state.owned = false;
+  state.access = { ...workspaceAccess, estates: [councilEstateAccess] };
+  const nav = await setup("/estates/oak/assets/devices");
+  const assets = await nav.findByRole("link", { name: "Assets" });
+  expect(assets.getAttribute("href")).toBe("/estates/oak/assets/devices");
+  expect(assets.getAttribute("aria-current")).toBe("page");
+  expect(nav.queryByRole("link", { name: "Readings" })).toBeNull();
 });
 
 it("shows resident reporting links on /reports", async () => {

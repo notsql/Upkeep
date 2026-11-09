@@ -78,7 +78,7 @@ export function AssetServiceIntervalCard({
   const overridden = Boolean(data?.override);
 
   return (
-    <section aria-labelledby={headingId} className="my-6">
+    <section aria-labelledby={headingId}>
       <Card>
         <CardHeader>
           <CardTitle>

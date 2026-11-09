@@ -1,7 +1,7 @@
 # Report routing and contractor email API (ID-70)
 
 Source of truth: `packages/api/openapi.json`. Spec:
-`.spec/features/equipment-fault-work-orders.md`. Decisions 0045 and 0046.
+`.spec/features/equipment-fault-work-orders.md`. Decisions 0046 and 0047.
 Implementation: `com.proj.server.routing`, plus hooks in
 `com.proj.server.workorder` (see [work-orders.md](work-orders.md)).
 
@@ -109,7 +109,7 @@ the resident's identity, the model's judgement or storage keys.
 
 ## Data
 
-Migration `20261108090000_report_routing_and_dispatch` only adds tables:
+Migration `20261109090000_report_routing_and_dispatch` only adds tables:
 
 - `ServiceProvider`: unique `(estateId, email)`. ID-37 extends it.
 - `EquipmentProviderRoute`: primary key `(estateId, equipmentType)`.

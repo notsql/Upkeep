@@ -38,7 +38,7 @@ export function EditForm({
     update.reset();
   }, [role, update]);
   return (
-    <>
+    <div className="grid justify-items-stretch gap-3">
       <RoleForm
         cancel={
           <Link
@@ -57,10 +57,14 @@ export function EditForm({
         pending={update.isPending}
       />
       {update.error ? (
-        <Button className="mt-3" onClick={reload} variant="outline">
+        <Button
+          className="justify-self-start"
+          onClick={reload}
+          variant="outline"
+        >
           <RotateCw aria-hidden="true" /> Reload role
         </Button>
       ) : null}
-    </>
+    </div>
   );
 }

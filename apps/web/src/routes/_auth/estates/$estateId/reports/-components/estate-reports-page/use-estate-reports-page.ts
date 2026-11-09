@@ -18,10 +18,18 @@ export function useEstateReportsPage(
     maxLevelPosition,
     routingState,
     cursor,
+    openOnly = true,
+    sort = "URGENCY",
   }: EstateReportsSearch,
   onSearch: (search: EstateReportsSearch) => void
 ) {
-  const filters = { blockId, minLevelPosition, maxLevelPosition };
+  const filters = {
+    blockId,
+    minLevelPosition,
+    maxLevelPosition,
+    openOnly,
+    sort,
+  };
   const activeCount = countReportFilters(filters) + (routingState ? 1 : 0);
   const filtered = activeCount > 0;
   const panel = useFilterPanel(activeCount);
@@ -43,8 +51,10 @@ export function useEstateReportsPage(
         minLevelPosition,
         maxLevelPosition,
         routingState: value,
+        openOnly,
+        sort,
       }),
-    [blockId, minLevelPosition, maxLevelPosition, onSearch]
+    [blockId, minLevelPosition, maxLevelPosition, openOnly, sort, onSearch]
   );
   const clearFilters = useCallback(() => onSearch({}), [onSearch]);
   const retry = useCallback(() => reports.refetch(), [reports.refetch]);
@@ -59,6 +69,8 @@ export function useEstateReportsPage(
       maxLevelPosition,
       routingState,
       cursor: reports.data?.nextCursor ?? undefined,
+      openOnly,
+      sort,
     });
   }, [
     blockId,
@@ -66,12 +78,29 @@ export function useEstateReportsPage(
     maxLevelPosition,
     routingState,
     onSearch,
+    openOnly,
+    sort,
     reports.data?.nextCursor,
   ]);
   const first = useCallback(
     () =>
-      onSearch({ blockId, minLevelPosition, maxLevelPosition, routingState }),
-    [blockId, minLevelPosition, maxLevelPosition, routingState, onSearch]
+      onSearch({
+        blockId,
+        minLevelPosition,
+        maxLevelPosition,
+        routingState,
+        openOnly,
+        sort,
+      }),
+    [
+      blockId,
+      minLevelPosition,
+      maxLevelPosition,
+      routingState,
+      openOnly,
+      sort,
+      onSearch,
+    ]
   );
 
   return {

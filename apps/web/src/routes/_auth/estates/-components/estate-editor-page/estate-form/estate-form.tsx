@@ -1,9 +1,17 @@
 import type { components } from "@proj/api/schema";
-import { Card, CardContent } from "@proj/ui/components/card";
-import { Label } from "@proj/ui/components/label";
+import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import {
+  Field,
+  FieldDescription,
+  FieldLabel,
+  FieldLegend,
+  FieldSeparator,
+  FieldSet,
+} from "@proj/ui/components/field";
 import { Textarea } from "@proj/ui/components/textarea";
 import { type SubmitEvent, useCallback, useState } from "react";
 import { FormActions } from "@/components/forms/form-actions";
+import { FormCard } from "@/components/page/form-page";
 import { EstateFormAddressFields } from "@/routes/_auth/estates/-components/estate-editor-page/estate-form/estate-form-address-fields";
 import { EstateFormIdentityFields } from "@/routes/_auth/estates/-components/estate-editor-page/estate-form/estate-form-identity-fields";
 
@@ -52,44 +60,48 @@ export function EstateForm({
   const submitLabel = initialValues ? "Save changes" : "Create estate";
   const buttonLabel = pending ? "Saving…" : submitLabel;
   return (
-    <Card className="mt-6">
-      <CardContent>
-        <form className="grid gap-5" onSubmit={handleSubmit}>
-          <p className="text-muted-foreground text-sm">
-            All fields are required unless marked optional.
-          </p>
-          <fieldset className="grid gap-5" disabled={pending}>
-            <legend className="sr-only">Estate details</legend>
-            <EstateFormIdentityFields
-              code={initialValues?.code}
-              name={initialValues?.name}
-            />
-            <EstateFormAddressFields
-              address={initialValues?.address}
-              postalCode={initialValues?.postalCode}
-            />
-            <div className="grid gap-2">
-              <Label htmlFor="estate-description">Description (optional)</Label>
-              <Textarea
-                defaultValue={initialValues?.description ?? ""}
-                id="estate-description"
-                maxLength={2000}
-                name="description"
-              />
-            </div>
-          </fieldset>
-          {error ? (
-            <p className="text-destructive text-sm" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <FormActions
-            label={buttonLabel}
-            onCancel={onCancel}
-            pending={pending}
+    <FormCard>
+      <form className="grid gap-5" onSubmit={handleSubmit}>
+        <FieldDescription>
+          All fields are required unless marked optional.
+        </FieldDescription>
+        <FieldSet disabled={pending}>
+          <FieldLegend>Identity</FieldLegend>
+          <EstateFormIdentityFields
+            code={initialValues?.code}
+            name={initialValues?.name}
           />
-        </form>
-      </CardContent>
-    </Card>
+        </FieldSet>
+        <FieldSeparator />
+        <FieldSet disabled={pending}>
+          <FieldLegend>Address</FieldLegend>
+          <EstateFormAddressFields
+            address={initialValues?.address}
+            postalCode={initialValues?.postalCode}
+          />
+          <Field>
+            <FieldLabel htmlFor="estate-description">
+              Description (optional)
+            </FieldLabel>
+            <Textarea
+              defaultValue={initialValues?.description ?? ""}
+              id="estate-description"
+              maxLength={2000}
+              name="description"
+            />
+          </Field>
+        </FieldSet>
+        {error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        ) : null}
+        <FormActions
+          label={buttonLabel}
+          onCancel={onCancel}
+          pending={pending}
+        />
+      </form>
+    </FormCard>
   );
 }

@@ -1,4 +1,6 @@
+import { Badge } from "@proj/ui/components/badge";
 import { SubNav } from "@/components/page/sub-nav";
+import { activeDevices, useAssetViewsAccess, useDevices } from "@/lib/devices";
 
 export function AssetDetailsNav({
   assetId,
@@ -8,9 +10,18 @@ export function AssetDetailsNav({
   estateId: string;
 }) {
   const params = { estateId, assetId };
+  const access = useAssetViewsAccess(estateId);
+  // Only owners and Managers may list devices, so no one else requests them.
+  const devices = useDevices(estateId, assetId, access.devices);
+  const count = devices.data ? activeDevices(devices.data).length : 0;
   return (
     <SubNav
       items={[
+        {
+          label: "History",
+          params,
+          to: "/estates/$estateId/assets/$assetId/history",
+        },
         {
           exact: true,
           label: "Overview",
@@ -18,19 +29,14 @@ export function AssetDetailsNav({
           to: "/estates/$estateId/assets/$assetId",
         },
         {
-          label: "Maintenance",
+          label: "Details",
           params,
-          to: "/estates/$estateId/assets/$assetId/maintenance",
+          to: "/estates/$estateId/assets/$assetId/details",
         },
         {
-          label: "Inspections",
+          label: "Records",
           params,
-          to: "/estates/$estateId/assets/$assetId/inspections",
-        },
-        {
-          label: "Documents",
-          params,
-          to: "/estates/$estateId/assets/$assetId/documents",
+          to: "/estates/$estateId/assets/$assetId/records",
         },
         {
           label: "Costs",
@@ -38,6 +44,12 @@ export function AssetDetailsNav({
           to: "/estates/$estateId/assets/$assetId/costs",
         },
         {
+          badge:
+            access.devices && count ? (
+              <Badge className="tabular-nums" variant="secondary">
+                {count}
+              </Badge>
+            ) : undefined,
           label: "Devices",
           params,
           to: "/estates/$estateId/assets/$assetId/devices",

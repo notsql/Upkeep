@@ -2,6 +2,8 @@ import type { components } from "@proj/api/schema";
 import * as fixtures from "@tests/fixtures/access";
 import { describe, expect, it } from "vitest";
 import {
+  assetsEntry,
+  canOpenAllReadings,
   canOpenAssetCategories,
   canOpenAssets,
   canOpenContractors,
@@ -12,6 +14,7 @@ import {
   canOpenFaultReports,
   canOpenInspections,
   canOpenMembers,
+  canOpenNotificationSettings,
   canOpenOverview,
   canOpenReadings,
   canOpenRoles,
@@ -86,6 +89,11 @@ describe("sensors", () => {
 });
 
 describe("assets", () => {
+  it("opens the read-only asset directory for history-only Council readers", () => {
+    expect(
+      canOpenAssets({ ...managementOnly, canViewAssetHistory: true })
+    ).toBe(true);
+  });
   it("opens for asset readers and inspection-only users", () => {
     expect(canOpenAssets(managementOnly)).toBe(false);
     expect(canOpenAssets({ ...managementOnly, canViewAssets: true })).toBe(
@@ -110,5 +118,58 @@ describe("capability destinations", () => {
     expect(canOpenContractors(ownerEstateAccess)).toBe(true);
     expect(canOpenContractors(crewEstateAccess)).toBe(false);
     expect(canOpenContractors(undefined)).toBe(false);
+  });
+});
+
+describe("assets entry", () => {
+  it("lands asset readers on By location", () => {
+    expect(assetsEntry(crewEstateAccess, false)).toBe(
+      "/estates/$estateId/assets"
+    );
+    expect(assetsEntry({ ...managementOnly, canViewAssets: true }, false)).toBe(
+      "/estates/$estateId/assets"
+    );
+  });
+  it("lands device viewers without asset access on All devices", () => {
+    expect(assetsEntry({ ...managementOnly, role: "COUNCIL" }, false)).toBe(
+      "/estates/$estateId/assets/devices"
+    );
+    expect(assetsEntry({ ...managementOnly, role: "MANAGER" }, false)).toBe(
+      "/estates/$estateId/assets/devices"
+    );
+    expect(assetsEntry(managementOnly, true)).toBe(
+      "/estates/$estateId/assets/devices"
+    );
+  });
+  it("is absent for everyone else", () => {
+    expect(assetsEntry(managementOnly, false)).toBeUndefined();
+    expect(assetsEntry(residentEstateAccess, false)).toBeUndefined();
+    expect(assetsEntry(undefined, false)).toBeUndefined();
+  });
+});
+
+describe("all readings", () => {
+  it("is linked for readings viewers other than Crew", () => {
+    expect(canOpenAllReadings(ownerEstateAccess)).toBe(true);
+    expect(
+      canOpenAllReadings({
+        ...managementOnly,
+        role: "MANAGER",
+        canViewReadings: true,
+      })
+    ).toBe(true);
+    expect(canOpenAllReadings(crewEstateAccess)).toBe(false);
+    expect(canOpenAllReadings(councilEstateAccess)).toBe(false);
+  });
+});
+
+describe("notification settings", () => {
+  it("is for estate managers, owners included", () => {
+    expect(canOpenNotificationSettings(ownerEstateAccess)).toBe(true);
+    expect(canOpenNotificationSettings(delegate)).toBe(false);
+    expect(canOpenNotificationSettings(councilEstateAccess)).toBe(false);
+    expect(canOpenNotificationSettings(crewEstateAccess)).toBe(false);
+    expect(canOpenNotificationSettings(residentEstateAccess)).toBe(false);
+    expect(canOpenNotificationSettings(undefined)).toBe(false);
   });
 });

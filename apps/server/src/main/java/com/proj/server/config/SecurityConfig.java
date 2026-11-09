@@ -80,6 +80,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/access/context",
+                                "/estates/{estateId}/asset-history",
+                                "/estates/{estateId}/assets/{assetId}/history",
                                 "/estates/{estateId}/documents",
                                 "/estates/{estateId}/documents/{documentId}/content",
                                 "/estates/{estateId}/documents/{documentId}/work-order",
@@ -119,8 +121,14 @@ public class SecurityConfig {
                                 "/estates/{estateId}/assets/{assetId}/assessments",
                                 "/estates/{estateId}/assets/{assetId}/events",
                                 "/estates/{estateId}/assets/{assetId}/readings",
+                                "/estates/{estateId}/assets/{assetId}/readings/series",
+                                "/estates/{estateId}/assets/{assetId}/readings/grouped",
                                 "/estates/{estateId}/readings",
                                 "/estates/{estateId}/readings/export",
+                                "/estates/{estateId}/readings/imports",
+                                "/estates/{estateId}/readings/imports/{batchId}",
+                                "/estates/{estateId}/readings/imports/{batchId}/rows",
+                                "/estates/{estateId}/readings/imports/{batchId}/report",
                                 "/estates/{estateId}/readings/assets",
                                 "/estates/{estateId}/readings/metrics",
                                 "/estates/{estateId}/assets/{assetId}/failure-risk",
@@ -128,6 +136,12 @@ public class SecurityConfig {
                                 "/estates/{estateId}/devices",
                                 "/estates/{estateId}/asset-categories",
                                 "/estates/{estateId}/inspection-list",
+                                "/estates/{estateId}/costs/top-assets",
+                                "/estates/{estateId}/costs/forecast",
+                                "/notifications",
+                                "/notifications/unread-count",
+                                "/estates/{estateId}/notification-settings",
+                                "/estates/{estateId}/assets/{assetId}/anomaly-alerts",
                                 "/estates/{estateId}/failure-risk",
                                 "/estates/{estateId}/flatline-policies",
                                 "/estates/{estateId}/flatlined-sensors",
@@ -144,9 +158,15 @@ public class SecurityConfig {
                                 "/council-invitations/accept",
                                 "/estates/{estateId}/documents",
                                 "/estates/{estateId}/readings/manual",
+                                "/estates/{estateId}/readings/imports",
+                                "/estates/{estateId}/readings/imports/{batchId}/revert",
                                 "/estates/{estateId}/work-orders",
                                 "/estates/{estateId}/assets/{assetId}/inspections",
                                 "/estates/{estateId}/inspection-list/generate",
+                                "/notifications/{notificationId}/read",
+                                "/notifications/read-all",
+                                "/notifications/{notificationId}/acknowledge",
+                                "/notifications/{notificationId}/dismiss",
                                 "/council-invitations/{invitationId}/accept",
                                 "/estates/{estateId}/roles",
                                 "/estates/{estateId}/ownership-transfer",
@@ -183,12 +203,14 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.PATCH,
                                 "/estates/{estateId}/reports/{reportId}/location",
-                                "/estates/{estateId}/reports/{reportId}/duplicate")
+                                "/estates/{estateId}/reports/{reportId}/duplicate",
+                                "/estates/{estateId}/reports/{reportId}/urgency")
                         .authenticated()
                         .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/reports/{reportId}/duplicate")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,
+                                "/estates/{estateId}/notification-settings",
                                 "/estates/{estateId}/documents/{documentId}/asset",
                                 "/estates/{estateId}/documents/{documentId}/work-order",
                                 "/estates/{estateId}/asset-categories/{category}/silent-failure",

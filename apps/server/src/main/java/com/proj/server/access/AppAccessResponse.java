@@ -31,6 +31,7 @@ public record AppAccessResponse(
                 "canViewManagement",
                 "canManageEstate",
                 "canViewAssets",
+                "canViewAssetHistory",
                 "canViewReadings",
                 "canRecordReadings",
                 "canViewEstateDetails",
@@ -56,7 +57,8 @@ public record AppAccessResponse(
                 "canViewEstateInvitations",
                 "canViewDocuments",
                 "canUploadDocuments",
-                "canReviewFaultReportDuplicates"
+                "canReviewFaultReportDuplicates",
+                "canChangeFaultReportUrgency"
             })
     public record EstateAccessResponse(
             UUID estateId,
@@ -68,6 +70,7 @@ public record AppAccessResponse(
             boolean canViewManagement,
             boolean canManageEstate,
             boolean canViewAssets,
+            boolean canViewAssetHistory,
             boolean canViewReadings,
             boolean canRecordReadings,
             boolean canViewEstateDetails,
@@ -93,5 +96,13 @@ public record AppAccessResponse(
             boolean canViewEstateInvitations,
             boolean canViewDocuments,
             boolean canUploadDocuments,
-            boolean canReviewFaultReportDuplicates) {}
+
+            @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            boolean canImportReadings,
+
+            @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            boolean canRevertReadingImports,
+
+            boolean canReviewFaultReportDuplicates,
+            boolean canChangeFaultReportUrgency) {}
 }

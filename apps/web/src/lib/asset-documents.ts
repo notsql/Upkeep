@@ -2,6 +2,7 @@ import type { components } from "@proj/api/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
+import { refreshAssetHistory } from "@/lib/asset-history";
 import { useDocumentAccess } from "@/lib/documents";
 import { useEstate } from "@/lib/estates";
 
@@ -150,7 +151,8 @@ export function useChangeDocumentAsset(estateId: string, documentId: string) {
       }
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      await refreshAssetHistory(client, access.userId, estateId);
       client.setQueryData(
         associationKey(access.userId, estateId, documentId),
         data
