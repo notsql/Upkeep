@@ -178,8 +178,8 @@ Notebook `04-water-leak-classifier.ipynb`, with reusable code promoted to
 `src/ml_research/`:
 
 1. **Model.** Fine-tune `sentence-transformers/all-MiniLM-L6-v2` with a
-   2-class head, maximum 128 tokens, class-weighted loss (leaks are about 1 in
-   8), fixed random seed.
+   2-class head, maximum 128 tokens, fixed random seed. The loss uses the square
+   root of balanced class weights (see Check 1 result).
 2. **Check 1: cross-validation by sentence.** Five folds, stratified by class,
    with each sentence in exactly one fold. It can be run as often as needed.
    Scores are pooled across the folds' held-out predictions.
@@ -299,9 +299,10 @@ bad:
 - [x] Spike: the Java tokenizer (see Spike result).
 - [x] Agree this spec.
 - [ ] Write and cross-check the hand-written reports, and set them aside.
-- [ ] Data preparation: read, clean and de-duplicate, and review labels.
-- [ ] Notebook: train and calibrate, iterating on Check 1 until it meets the
-  targets. Record the results here.
+- [x] Data preparation: read, clean and de-duplicate, and review labels. No
+  labels were changed.
+- [x] Notebook: train and calibrate, iterating on Check 1 until it meets the
+  targets (see Check 1 result).
 - [ ] Final model, export, Check 2, parity fixture, model note. Record Check 2
   here.
 - [ ] Server red-green: probability mapping, parity test, text-only job.
@@ -309,6 +310,29 @@ bad:
 - [ ] `PLUMBING` end to end: enum, `pnpm api:generate`, Contractors page and
   dialog, and the resident notice.
 - [ ] `.docs` and full checks.
+
+## Check 1 result (2026-11-09)
+
+Notebook `04-water-leak-classifier.ipynb`, 369 sentences (47 leaks), five folds.
+Chosen settings: 8 epochs, learning rate 1e-4, square-root class weights,
+temperature 1.467.
+
+| At the 0.80 threshold | Precision | Recall | F1 | False positives | Missed leaks |
+| --- | --- | --- | --- | --- | --- |
+| Chosen, mean of 3 seeds | 0.951 | 0.957 | 0.954 | 3, 1, 3 | 2, 2, 2 |
+| TF-IDF reference | 0.978 | 0.936 | 0.957 | 1 | 3 |
+
+- **Targets are met on average, by about one sentence.** The seed 42 run alone
+  has precision 0.938. The best single run did not hold up on other seeds, so
+  the choice was made on the three-seed mean.
+- **The transformer does not beat TF-IDF on this dataset.** Check 2 is the
+  comparison that matters, so the TF-IDF reference also runs on it.
+- **Every false positive is a drainage report**, such as a blocked storm drain
+  pipe. Water that will not drain looks like a leak to the model.
+- **Calibration error is low (0.005), but mistakes are confident.** Precision
+  and recall do not change between thresholds 0.50 and 0.95, so on these
+  sentences the `INCONCLUSIVE` band is almost empty.
+- Tuning stopped here. More iterations would only fit these 369 sentences.
 
 ## Spike result (2026-11-09)
 
