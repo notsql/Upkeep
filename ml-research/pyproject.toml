@@ -20,6 +20,7 @@ dependencies = [
     "transformers>=5.22.0",
     "datasets>=5.1.0",
     "accelerate>=1.15.0",
+    "onnxscript>=0.7.0",
 ]
 
 [build-system]
