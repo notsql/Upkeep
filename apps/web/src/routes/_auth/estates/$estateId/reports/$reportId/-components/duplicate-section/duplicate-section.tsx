@@ -95,12 +95,12 @@ function DuplicateOfCard({
       <Card>
         <CardHeader>
           <SectionHeading icon={Copy} id={headingId}>
-            Duplicate
+            Already reported
           </SectionHeading>
         </CardHeader>
         <CardContent className="grid gap-3">
           <p>
-            {suspected ? "Possible duplicate of" : "Duplicate of"}{" "}
+            {suspected ? "May be the same problem as" : "Same problem as"}{" "}
             <Link
               params={{ estateId, reportId: original.reportId }}
               to="/estates/$estateId/reports/$reportId"
@@ -112,7 +112,7 @@ function DuplicateOfCard({
             This report cannot get its own work order. Use the original and its
             work orders.
             {suspected
-              ? " If this is not a duplicate, reject the link to allow one."
+              ? " If it's a different problem, choose Not the same problem first."
               : null}
           </p>
           {review.error ? (
@@ -139,7 +139,7 @@ function DuplicateOfCard({
                 onClick={reject}
                 variant="outline"
               >
-                Not a duplicate
+                Not the same problem
               </Button>
             </div>
           ) : null}
@@ -162,7 +162,7 @@ function LinkedDuplicatesCard({
       <Card>
         <CardHeader>
           <SectionHeading icon={Copy} id={headingId}>
-            Duplicates
+            Repeat reports
           </SectionHeading>
           <div className="flex flex-wrap gap-1">
             <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
@@ -250,7 +250,7 @@ function MarkDuplicateCard({
             disabled={!originalId || link.isPending}
             onClick={save}
           >
-            Link as duplicate
+            Mark as same problem
           </Button>
         </CardContent>
       </Card>

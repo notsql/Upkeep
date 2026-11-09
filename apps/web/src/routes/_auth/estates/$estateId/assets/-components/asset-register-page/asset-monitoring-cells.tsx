@@ -65,7 +65,7 @@ export function RiskFlag({
   if (source.pending) {
     return (
       <Skeleton
-        aria-label="Loading failure risk"
+        aria-label="Loading chance of breaking down"
         className="h-4 w-20"
         role="status"
       />

@@ -39,7 +39,7 @@ export function MemberEstates({
         { params: { path: { userId } } }
       );
       if (error || !data) {
-        throw new Error("Unable to load estate access");
+        throw new Error("Couldn't load estate access. Try again.");
       }
       return data;
     },
@@ -55,7 +55,7 @@ export function MemberEstates({
             options
           );
       if (error) {
-        throw new Error("Unable to update estate access");
+        throw new Error("Couldn't update estate access. Try again.");
       }
     },
     onSettled: () =>

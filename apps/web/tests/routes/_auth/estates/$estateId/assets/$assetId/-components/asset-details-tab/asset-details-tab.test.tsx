@@ -106,8 +106,10 @@ describe("AssetDetailsTab", () => {
 
   it("offers retirement in a danger zone that opens the confirmation", () => {
     tab();
-    const zone = screen.getByRole("region", { name: "Retire asset" });
-    fireEvent.click(within(zone).getByRole("button", { name: "Retire asset" }));
+    const zone = screen.getByRole("region", { name: "Take out of use" });
+    fireEvent.click(
+      within(zone).getByRole("button", { name: "Take out of use" })
+    );
     screen.getByRole("dialog", { name: "Retire Water pump?" });
   });
 
@@ -120,8 +122,12 @@ describe("AssetDetailsTab", () => {
     page.asset = { ...page.asset, deactivatedAt: "2026-10-01T00:00:00Z" };
     tab();
     expect(screen.queryByRole("link", { name: "Edit" })).toBeNull();
-    expect(screen.queryByRole("region", { name: "Retire asset" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Retire asset" })).toBeNull();
+    expect(
+      screen.queryByRole("region", { name: "Take out of use" })
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Take out of use" })
+    ).toBeNull();
     screen.getByRole("heading", { name: "Lifecycle history" });
   });
 });

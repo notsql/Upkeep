@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { useCallback } from "react";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
+import { PEOPLE_TITLE, PeopleViews } from "@/components/people/people-views";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
@@ -88,8 +89,9 @@ export function CouncilPage({
               ) : null
             }
             icon={Users}
-            title="Invitations"
+            title={PEOPLE_TITLE}
           />
+          <PeopleViews estateId={estateId} permission={permission} />
           <InactiveNote permission={permission} />
           <OwnerInvitations estateId={estateId} />
         </>

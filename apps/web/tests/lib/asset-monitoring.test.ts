@@ -116,12 +116,12 @@ describe("deviceSummaries", () => {
       device("gone", "DEACTIVATED"),
       device("single", "ONLINE"),
     ]);
-    expect(summaries("all-online")).toBe("2 devices online");
+    expect(summaries("all-online")).toBe("2 sensors online");
     expect(summaries("one-off")).toBe("1 of 2 offline");
     expect(summaries("awaiting")).toBe("1 of 1 offline");
-    expect(summaries("gone")).toBe("No devices");
-    expect(summaries("none")).toBe("No devices");
-    expect(summaries("single")).toBe("1 device online");
+    expect(summaries("gone")).toBe("No sensors");
+    expect(summaries("none")).toBe("No sensors");
+    expect(summaries("single")).toBe("1 sensor online");
   });
 });
 

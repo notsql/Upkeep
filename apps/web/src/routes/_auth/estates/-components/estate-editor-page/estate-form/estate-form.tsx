@@ -49,7 +49,7 @@ export function EstateForm({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to save the estate. Please try again."
+            : "Couldn't save the estate. Try again."
         );
       } finally {
         setPending(false);

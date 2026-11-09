@@ -6,10 +6,13 @@ import { ErrorState } from "@/components/states/error-state";
 it("announces the failure and retries", () => {
   const onRetry = vi.fn();
   renderWithProviders(
-    <ErrorState message="Unable to load work orders" onRetry={onRetry} />
+    <ErrorState
+      message="Couldn't load work orders. Try again."
+      onRetry={onRetry}
+    />
   );
   const alert = screen.getByRole("alert");
-  within(alert).getByText("Unable to load work orders");
+  within(alert).getByText("Couldn't load work orders. Try again.");
   fireEvent.click(within(alert).getByRole("button", { name: "Retry" }));
   expect(onRetry).toHaveBeenCalledOnce();
 });

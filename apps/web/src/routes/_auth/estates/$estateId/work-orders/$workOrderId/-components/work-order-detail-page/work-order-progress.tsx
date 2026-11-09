@@ -62,9 +62,7 @@ export function WorkOrderProgress({
     try {
       await refreshOrder();
     } catch {
-      setError(
-        "Unable to refresh the work order and history. Please try again."
-      );
+      setError("Couldn't refresh the work order and history. Try again.");
     }
   }, [refreshOrder]);
   const start = useCallback(async () => {
@@ -76,7 +74,9 @@ export function WorkOrderProgress({
       });
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Unable to start work."
+        cause instanceof Error
+          ? cause.message
+          : "Couldn't start work. Try again."
       );
     }
   }, [change.mutateAsync, order.version]);

@@ -22,7 +22,7 @@ describe("DeactivateAssetDialog", () => {
     );
     screen.getByRole("dialog", { name: "Retire Lift A?" });
     const button = screen.getByRole<HTMLButtonElement>("button", {
-      name: "Retire asset",
+      name: "Take out of use",
     });
     const input = screen.getByRole("textbox", { name: "Asset reference" });
     expect(button.disabled).toBe(true);
@@ -32,11 +32,14 @@ describe("DeactivateAssetDialog", () => {
     expect(button.disabled).toBe(true);
     fireEvent.change(input, { target: { value: "SUNRISE-A0001" } });
     expect(button.disabled).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
-      target: { value: "2025-01-01" },
-    });
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Retirement reason" }),
+      screen.getByRole("textbox", { name: "Date taken out of use" }),
+      {
+        target: { value: "2025-01-01" },
+      }
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Why it's out of use" }),
       { target: { value: " Worn out " } }
     );
     expect(button.disabled).toBe(false);
@@ -90,10 +93,10 @@ describe("DeactivateAssetDialog", () => {
     });
     fireEvent.change(input, { target: { value: "SUNRISE-A0001" } });
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Retirement reason" }),
+      screen.getByRole("textbox", { name: "Why it's out of use" }),
       { target: { value: "Reason" } }
     );
-    fireEvent.click(screen.getByRole("button", { name: "Retire asset" }));
+    fireEvent.click(screen.getByRole("button", { name: "Take out of use" }));
     expect((await screen.findByRole("alert")).textContent).toContain(
       "estate is inactive"
     );
@@ -105,7 +108,7 @@ describe("DeactivateAssetDialog", () => {
     await waitFor(() =>
       expect(
         screen.getByRole<HTMLButtonElement>("button", {
-          name: "Retire asset",
+          name: "Take out of use",
         }).disabled
       ).toBe(false)
     );
@@ -126,23 +129,29 @@ describe("DeactivateAssetDialog", () => {
       target: { value: "TEST-001-A0001" },
     });
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Retirement reason" }),
+      screen.getByRole("textbox", { name: "Why it's out of use" }),
       { target: { value: "Broken" } }
     );
-    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
-      target: { value: "2025-12-31" },
-    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Date taken out of use" }),
+      {
+        target: { value: "2025-12-31" },
+      }
+    );
     expect(screen.getByRole("alert").textContent).toContain("2026-01-01");
     expect(
-      screen.getByRole<HTMLButtonElement>("button", { name: "Retire asset" })
+      screen.getByRole<HTMLButtonElement>("button", { name: "Take out of use" })
         .disabled
     ).toBe(true);
-    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
-      target: { value: "2026-01-01" },
-    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Date taken out of use" }),
+      {
+        target: { value: "2026-01-01" },
+      }
+    );
     expect(screen.queryByRole("alert")).toBeNull();
     expect(
-      screen.getByRole<HTMLButtonElement>("button", { name: "Retire asset" })
+      screen.getByRole<HTMLButtonElement>("button", { name: "Take out of use" })
         .disabled
     ).toBe(false);
   });
@@ -161,15 +170,18 @@ describe("DeactivateAssetDialog", () => {
       target: { value: "TEST-001-A0001" },
     });
     fireEvent.change(
-      screen.getByRole("textbox", { name: "Retirement reason" }),
+      screen.getByRole("textbox", { name: "Why it's out of use" }),
       { target: { value: "Broken" } }
     );
-    fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
-      target: { value: "2999-01-01" },
-    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Date taken out of use" }),
+      {
+        target: { value: "2999-01-01" },
+      }
+    );
     expect(screen.getByRole("alert").textContent).toContain("future");
     expect(
-      screen.getByRole<HTMLButtonElement>("button", { name: "Retire asset" })
+      screen.getByRole<HTMLButtonElement>("button", { name: "Take out of use" })
         .disabled
     ).toBe(true);
   });
@@ -204,16 +216,16 @@ describe("DeactivateAssetDialog", () => {
         { target: { value: "TEST-001-A0001" } }
       );
       fireEvent.change(
-        screen.getByRole("textbox", { name: "Retirement reason" }),
+        screen.getByRole("textbox", { name: "Why it's out of use" }),
         { target: { value: "Broken" } }
       );
       expect(
         screen.getByRole<HTMLInputElement>("textbox", {
-          name: "Retirement date",
+          name: "Date taken out of use",
         }).value
       ).toBe("2026-10-08");
       const button = screen.getByRole<HTMLButtonElement>("button", {
-        name: "Retire asset",
+        name: "Take out of use",
       });
       expect(button.disabled).toBe(false);
       fireEvent.click(button);

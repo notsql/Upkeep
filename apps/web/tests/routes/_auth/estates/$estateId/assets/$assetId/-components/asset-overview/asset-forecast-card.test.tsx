@@ -6,9 +6,17 @@ import type { FailureRisk } from "@/lib/failure-risk";
 import { formatDate } from "@/lib/format";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
 
+const SEND_STEP = /Send step/u;
+
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
+}));
+
+vi.mock("@/components/dispatch/dispatch-action", () => ({
+  DispatchAction: ({ route, canSend }: { route: string; canSend: boolean }) => (
+    <span>{`Send step ${route}${canSend ? "" : " (ask)"}`}</span>
+  ),
 }));
 
 const RISK_PATH = "/estates/{estateId}/assets/{assetId}/failure-risk";
@@ -55,8 +63,15 @@ function serve() {
   }) as never);
 }
 
-function card() {
-  renderWithProviders(<AssetForecastCard assetId="asset" estateId="estate" />);
+function card(canSend = true) {
+  renderWithProviders(
+    <AssetForecastCard
+      assetId="asset"
+      assetName="Booster pump"
+      canSend={canSend}
+      estateId="estate"
+    />
+  );
 }
 
 beforeEach(() => {
@@ -82,13 +97,13 @@ describe("AssetForecastCard", () => {
 
   it("names the condition and that anomaly detection recorded it", async () => {
     card();
-    await screen.findByText("Condition: Needs attention · Anomaly detection");
-    screen.getByText("Failure risk");
+    await screen.findByText("Condition: Needs attention · Unusual readings");
+    screen.getByText("Chance of breaking down");
     const line = screen.getByText("Flagged for a check because", {
       exact: false,
     });
     expect(line.textContent).toBe(
-      "Flagged for a check because Condition: Needs attention · Anomaly detection, Failure risk"
+      "Flagged for a check because Condition: Needs attention · Unusual readings, Chance of breaking down"
     );
   });
 
@@ -107,7 +122,9 @@ describe("AssetForecastCard", () => {
       failuresObserved: 1,
     };
     card();
-    const lead = await screen.findByRole("figure", { name: "Forecast" });
+    const lead = await screen.findByRole("figure", {
+      name: "Expected repairs",
+    });
     within(lead).getByText(label);
     expect(lead.dataset.tone).toBe(tone);
     within(lead).getByText(`${Math.round(p90 * 100)}%`);
@@ -124,7 +141,9 @@ describe("AssetForecastCard", () => {
       failuresObserved: 2,
     };
     card();
-    const lead = await screen.findByRole("figure", { name: "Forecast" });
+    const lead = await screen.findByRole("figure", {
+      name: "Expected repairs",
+    });
     expect(lead.textContent).toContain("Recommended check");
     within(lead).getByText("Within 30 days");
   });
@@ -163,7 +182,9 @@ describe("AssetForecastCard", () => {
       expectedEndOfLife: "2041-11-07",
     };
     card();
-    const lead = await screen.findByRole("figure", { name: "Forecast" });
+    const lead = await screen.findByRole("figure", {
+      name: "Expected repairs",
+    });
     expect(lead.textContent).toContain("30%");
     const stats = screen.getByRole("list", { name: "Chance by horizon" });
     expect(stats.textContent).toContain("30 days");
@@ -201,5 +222,28 @@ describe("AssetForecastCard", () => {
     risk = { ...risk, expectedEndOfLife: undefined };
     card();
     await screen.findByText("Expected end of life: Not recorded");
+  });
+
+  it("offers the send step the app picks for a flagged asset", async () => {
+    card();
+    await screen.findByText("Send step CREW");
+  });
+
+  it("sends a contractor once the asset reaches the end of its life", async () => {
+    risk = { ...risk, flagReasons: ["FAILURE_RISK", "END_OF_LIFE"] };
+    card();
+    await screen.findByText("Send step CONTRACTOR");
+  });
+
+  it("tells a reader who cannot send to ask", async () => {
+    card(false);
+    await screen.findByText("Send step CREW (ask)");
+  });
+
+  it("offers no send step when nothing is flagged", async () => {
+    risk = { ...risk, flagReasons: [] };
+    card();
+    await screen.findByText("Breakdowns observed: 0");
+    expect(screen.queryByText(SEND_STEP)).toBeNull();
   });
 });

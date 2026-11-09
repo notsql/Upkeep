@@ -33,7 +33,7 @@ export function AccessConfirmation({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to update access. Please try again."
+          : "Couldn't update access. Try again."
       );
     } finally {
       setPending(false);

@@ -21,7 +21,7 @@ users before the theme toggle. Shown only when `useAppAccess()` lists an estate 
   element (absolute time on hover), the summary, then "Asset name (reference) · Estate name".
   Each row is a `Link` to `/estates/$estateId/assets/$assetId`; opening an unread row marks it read.
   Date-driven rows add a basis line under the summary:
-  - Service due: "Interval-based, not a prediction · Every 6 months · Manufacturer interval for the
+  - Service due: "Based on the service schedule · Every 6 months · Manufacturer interval for the
     category" (or "Set on this asset" for an override).
   - Repair predicted: "Prediction · 42% chance within 30 days · based on 3 recorded repairs" (or
     "based on typical pumps; no repairs recorded yet").
@@ -32,23 +32,28 @@ users before the theme toggle. Shown only when `useAppAccess()` lists an estate 
 
 Shared components in `src/components/notifications/`:
 
-- `alert-response-actions.tsx` (`AlertResponseActions`): outline **Acknowledge** (only while the
+- `alert-response-actions.tsx` (`AlertResponseActions`): outline **Mark as seen** (only while the
   response is `NONE`) and **Dismiss** buttons. Nothing once dismissed. A `locked` reason disables
   both and is shown under them. An acknowledge failure shows a destructive `Alert`.
 - `dismiss-alert-dialog.tsx`: a `FormDialog` "Dismiss alert" with a required "Reason" `Textarea`
   (max 500). Blank shows the `FieldError` "Enter a reason for dismissing this alert." Server errors
   show in the dialog.
-- `alert-response-summary.tsx`: "Not yet acknowledged", or "Acknowledged/Dismissed by NAME on
+- `alert-response-summary.tsx`: "Not seen yet", or "Marked as seen/Dismissed by NAME on
   DATE: REASON".
 
 Used by:
 
-- the inbox rows: anomaly rows show the summary and the actions under the link;
+- the inbox rows: an anomaly row is headed "<asset name> may have a problem" with "Its readings have
+  been unusual since <time>." and, while open and not responded to, "Have someone look at it. Mark as
+  seen once it's being handled. Dismiss it if this was expected, for example during maintenance."
+  Type badges: "Unusual readings", "Service due", "Repair expected"; the repair basis starts
+  "Expected repair ·";
 - the asset page: `asset-overview/anomaly-alerts-section/anomaly-alerts-section.tsx`, a
-  `SectionCard` "Anomaly alerts" on pumps for owners and Managers (`estate.owned ||
+  `SectionCard` "Unusual readings" on pumps for owners and Managers (`estate.owned ||
   canManageInvitationPermissions`), placed after the condition section. Each alert is a `Card`
-  with `ConditionBadge`, an Open/Resolved `Badge`, scores, explanation, detected times, the
-  summary and the actions. Actions are locked on an inactive estate or retired asset. The card
+  with `ConditionBadge`, an Open/Resolved `Badge`, the server's explanation, "Unusual from <t>
+  to <t>", the next step (`UNUSUAL_READINGS_STEP`, while open and not yet responded to), the
+  summary and the actions. No scores are shown. Actions are locked on an inactive estate or retired asset. The card
   renders only with at least one alert or on a load error (`ErrorState`); while loading or with
   no alerts it renders nothing.
 
@@ -59,11 +64,11 @@ Used by:
 renders `-components/notification-settings-page/notification-settings-page.tsx` and
 `notification-settings-form.tsx`.
 
-- Entry: sidebar Administration › **Notification settings** (`BellRing`), between Asset categories
+- Entry: sidebar Administration › **Notification settings** (`BellRing`), between People & access
   and Estate settings. `canOpenNotificationSettings(permission)` (`role === "MANAGER"`, which
   includes owners) gates both the sidebar and the `_auth` route guard (`OWNER_GATED`).
-- A `Card` form: "Anomaly score threshold" number input (0.51-1.00, two decimals), "Service reminder
-  lead time (days)" number input (0-365), "Repair prediction lead time" `Select` (30/60/90 days),
+- A `Card` form: "How sure before we warn you (%)" whole-number input (51-100, saved as 0.51-1.00), "Days of notice
+  before a service is due" number input (0-365), "Notice before an expected repair" `Select` (30/60/90 days),
   each with a `FieldDescription`; invalid values show a `FieldError` and set `aria-invalid`.
   **Save settings** shows "Settings saved." (`role="status"`); a refused save shows a destructive
   `Alert`. An inactive estate shows a warning `Alert` and disables the form.
@@ -85,3 +90,12 @@ renders `-components/notification-settings-page/notification-settings-page.tsx` 
 All throw `estateError(...)`. The session comes from `useAuthenticatedSession` (`lib/access.ts`), which
 drops a previous user's cached queries. `formatRelativeTime` formats "just now", "5 minutes ago",
 "yesterday".
+
+## Send steps (equipment dispatch)
+
+`CHECK_REQUESTED` rows read "Please inspect <equipment>" and open the Record
+inspection page; `CHECK_FAILED` rows read "Crew found a problem with
+<equipment>" with the note and a "Send a contractor" step; service-due and
+repair-predicted rows get "Send crew to inspect". The header bell now also
+shows for Crew. Type labels: "Please inspect", "Problem found". See
+[equipment-dispatch.md](equipment-dispatch.md).

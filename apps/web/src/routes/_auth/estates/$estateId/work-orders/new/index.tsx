@@ -8,8 +8,13 @@ export const Route = createFileRoute(
 )({
   validateSearch: (
     search: Record<string, unknown>
-  ): { sourceReportId?: string; sourceInspectionId?: string } => {
-    const { sourceReportId, sourceInspectionId } = search;
+  ): {
+    sourceReportId?: string;
+    sourceInspectionId?: string;
+    assetId?: string;
+    reason?: "END_OF_LIFE";
+  } => {
+    const { sourceReportId, sourceInspectionId, assetId, reason } = search;
     if (sourceReportId !== undefined && sourceInspectionId !== undefined) {
       throw new Error("Choose one source only.");
     }
@@ -25,9 +30,16 @@ export const Route = createFileRoute(
     ) {
       throw new Error("Invalid source inspection.");
     }
+    const prefill =
+      typeof assetId === "string" &&
+      UUID.test(assetId) &&
+      reason === "END_OF_LIFE" &&
+      sourceReportId === undefined &&
+      sourceInspectionId === undefined;
     return {
       ...(typeof sourceReportId === "string" ? { sourceReportId } : {}),
       ...(typeof sourceInspectionId === "string" ? { sourceInspectionId } : {}),
+      ...(prefill ? { assetId, reason } : {}),
     };
   },
   component: NewWorkOrderRoute,
@@ -35,11 +47,14 @@ export const Route = createFileRoute(
 });
 function NewWorkOrderRoute() {
   const { estateId } = Route.useParams();
-  const { sourceReportId, sourceInspectionId } = Route.useSearch();
+  const { sourceReportId, sourceInspectionId, assetId, reason } =
+    Route.useSearch();
   return (
     <WorkOrderForm
+      assetId={assetId}
       estateId={estateId}
-      key={`${estateId}:${sourceReportId}:${sourceInspectionId}`}
+      key={`${estateId}:${sourceReportId}:${sourceInspectionId}:${assetId}`}
+      reason={reason}
       sourceInspectionId={sourceInspectionId}
       sourceReportId={sourceReportId}
     />

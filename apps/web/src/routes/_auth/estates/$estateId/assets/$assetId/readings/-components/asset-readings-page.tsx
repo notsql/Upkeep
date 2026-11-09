@@ -77,7 +77,7 @@ export function AssetReadingsPage({
             shown ? (
               <>
                 Showing {countFormat.format(shown)}{" "}
-                {shown === 1 ? "timestamp" : "timestamps"}
+                {shown === 1 ? "time" : "times"}
               </>
             ) : null
           }

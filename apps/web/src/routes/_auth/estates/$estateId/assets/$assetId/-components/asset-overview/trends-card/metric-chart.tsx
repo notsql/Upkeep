@@ -23,7 +23,6 @@ import {
   formatClock,
   formatDayHour,
   formatMetricNumber,
-  formatScore,
   localSecondOfDay,
 } from "@/lib/format";
 import type { MetricSeries, ReadingRange, ReadingSeries } from "@/lib/readings";
@@ -77,7 +76,6 @@ function Legend({
   periods: AnomalyPeriod[];
   series: ReadingSeries;
 }) {
-  const max = Math.max(...periods.map((period) => period.maxScore));
   const count = periods.length === 1 ? "1 period" : `${periods.length} periods`;
   return (
     <p className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -101,11 +99,9 @@ function Legend({
               aria-hidden="true"
               className="bg-destructive/30 h-3 w-2 rounded-sm"
             />
-            {`Anomaly · ${count}, max ${formatScore(max)}`}
+            {`Unusual readings · ${count}`}
           </TooltipTrigger>
-          <TooltipContent>
-            {`score ≥ ${formatScore(series.anomalyThreshold)}`}
-          </TooltipContent>
+          <TooltipContent>"Shaded areas are unusual readings."</TooltipContent>
         </Tooltip>
       ) : null}
     </p>
@@ -159,7 +155,7 @@ export function MetricChart({
   );
   const note = coverageNote(metric, series, phrase);
   const thresholdText = periods.length
-    ? ` Anomalies are score ≥ ${formatScore(series.anomalyThreshold)}.`
+    ? " Shaded areas are unusual readings."
     : "";
   return (
     <figure aria-labelledby={captionId} className="grid min-w-0 gap-2">

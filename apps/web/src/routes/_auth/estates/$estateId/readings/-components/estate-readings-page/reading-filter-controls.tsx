@@ -151,18 +151,18 @@ export function ReadingFilterControls({
         </Field>
       ) : null}
       <Field className="w-full sm:w-48">
-        <FieldLabel>Metric</FieldLabel>
+        <FieldLabel>Measurement</FieldLabel>
         <Select onValueChange={metricChange} value={filters.metric ?? ""}>
-          <SelectTrigger aria-label="Metric" className="w-full">
+          <SelectTrigger aria-label="Measurement" className="w-full">
             <SelectValue>
               {filters.metric
                 ? (deviceMetrics[filters.metric as keyof typeof deviceMetrics]
-                    ?.name ?? "Invalid metric")
-                : "All metrics"}
+                    ?.name ?? "Unknown measurement")
+                : "All measurements"}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All metrics</SelectItem>
+            <SelectItem value="">All measurements</SelectItem>
             {Object.entries(deviceMetrics).map(([value, metric]) => (
               <SelectItem key={value} value={value}>
                 {metric.name}
@@ -202,7 +202,7 @@ export function ReadingFilterControls({
               id="estate-readings-suspect"
               onCheckedChange={suspectChange}
             />
-            <Label htmlFor="estate-readings-suspect">Suspect only</Label>
+            <Label htmlFor="estate-readings-suspect">Possibly wrong only</Label>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox
@@ -210,7 +210,9 @@ export function ReadingFilterControls({
               id="estate-readings-anomalous"
               onCheckedChange={anomalousChange}
             />
-            <Label htmlFor="estate-readings-anomalous">Anomalous only</Label>
+            <Label htmlFor="estate-readings-anomalous">
+              Unusual readings only
+            </Label>
           </div>
         </div>
       </FieldSet>

@@ -121,7 +121,7 @@ function useHistoryFailure(userId: string | undefined) {
       "message" in error &&
       typeof error.message === "string"
         ? error.message
-        : "Unable to load recorded history. Try again.";
+        : "Couldn't load recorded history. Try again.";
     throw new AssetHistoryError(message, status);
   };
 }

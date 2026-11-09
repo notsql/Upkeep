@@ -27,10 +27,11 @@ public final class FlatlineDetector {
             if (threshold.compareTo(Duration.ofMinutes(1)) < 0
                     || threshold.getSeconds() % 60 != 0
                     || threshold.getNano() != 0) {
-                throw new IllegalArgumentException("Flatline duration must be a positive whole number of minutes.");
+                throw new IllegalArgumentException(
+                        "Enter how long to wait, in whole minutes, before warning about a sensor.");
             }
             if (tolerance.signum() < 0) {
-                throw new IllegalArgumentException("Flatline tolerance must not be negative.");
+                throw new IllegalArgumentException("The allowed change can't be negative.");
             }
             if (maximumGap.isZero() || maximumGap.isNegative()) {
                 throw new IllegalArgumentException("Maximum reading gap must be positive.");

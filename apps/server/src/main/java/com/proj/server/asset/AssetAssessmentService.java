@@ -47,7 +47,7 @@ public class AssetAssessmentService {
     public AssetAssessmentResponse record(
             UUID estateId, UUID assetId, String owner, CreateAssetAssessmentRequest request) {
         if (request.assessedOn().isAfter(LocalDate.now(LATEST_TIME_ZONE))) {
-            throw new AssetException(HttpStatus.BAD_REQUEST, "The assessment date cannot be in the future.");
+            throw new AssetException(HttpStatus.BAD_REQUEST, "The date can't be in the future.");
         }
         // Looked up before any row is locked, so a slow WorkOS call never holds a lock.
         var recordedByName = workOS.findDisplayName(owner).orElse(null);

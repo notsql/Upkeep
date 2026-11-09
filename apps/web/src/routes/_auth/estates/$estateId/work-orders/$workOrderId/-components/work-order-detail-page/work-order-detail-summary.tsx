@@ -121,9 +121,9 @@ function DuplicateReports({ count }: { count: number }) {
   }
   return (
     <div>
-      <dt>Duplicate reports</dt>
+      <dt>Repeat reports</dt>
       <dd>
-        {count} confirmed {count === 1 ? "duplicate" : "duplicates"}
+        {count} confirmed {count === 1 ? "repeat report" : "repeat reports"}
       </dd>
     </div>
   );

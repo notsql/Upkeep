@@ -5,7 +5,7 @@ import { badgeVariantFor } from "@/lib/status-tone";
 /** The source badge and the sentence explaining where the interval comes from. */
 export function SourceBadge({ interval }: { interval: AssetServiceInterval }) {
   if (interval.source === "ASSET") {
-    return <Badge variant={badgeVariantFor("warning")}>Override</Badge>;
+    return <Badge variant={badgeVariantFor("warning")}>Custom</Badge>;
   }
   if (interval.source === "CATEGORY") {
     return <Badge variant="secondary">From category</Badge>;

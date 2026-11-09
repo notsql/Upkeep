@@ -6,10 +6,10 @@ export function LifecycleStatusBadge({
   inactiveLabel,
 }: {
   inactive: boolean;
-  inactiveLabel: "Inactive" | "Retired";
+  inactiveLabel: "Inactive" | "Out of use";
 }) {
   const tone = inactive
-    ? lifecycleTone[inactiveLabel === "Retired" ? "RETIRED" : "INACTIVE"]
+    ? lifecycleTone[inactiveLabel === "Out of use" ? "RETIRED" : "INACTIVE"]
     : lifecycleTone.ACTIVE;
   return (
     <Badge role="status" variant={badgeVariantFor(tone)}>

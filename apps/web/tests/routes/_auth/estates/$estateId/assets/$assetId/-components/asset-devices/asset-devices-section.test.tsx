@@ -50,8 +50,10 @@ vi.mock("@tanstack/react-router", () => ({
 
 const LAST_SEEN = /^Last seen /u;
 const ACTIONS_FOR = /^Actions for/u;
-const NOT_SHOWN_AGAIN = /won't be shown again/u;
-const STOPS_WORKING = /current key stops working immediately/u;
+const NOTHING_RECEIVED =
+  /^Added .*, nothing received\. Make sure it's switched on and set up with its connection key\.$/u;
+const NOT_SHOWN_AGAIN = /We won't show it again/u;
+const STOPS_WORKING = /current key stops working straight away/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
 
 const at = "2026-09-28T00:00:00Z";
@@ -132,7 +134,9 @@ describe("AssetDevicesSection", () => {
     renderSection();
     const item = within(await screen.findByRole("listitem"));
     item.getByRole("heading", { name: "PUMP-01" });
-    item.getByText("Awaiting first reading");
+    item.getByText("Waiting for first reading");
+    item.getByRole("note", { name: "Sensor isn't sending readings yet" });
+    item.getByText(NOTHING_RECEIVED);
     item.getByText("PT-100");
     item.getByText("Blk 101 › Plant room");
     item.getByText("Temperature (°C)");
@@ -162,8 +166,8 @@ describe("AssetDevicesSection", () => {
   it("says when an asset has no devices, and hides registration on a deactivated asset", async () => {
     devices = [];
     renderSection(false);
-    await screen.findByText("No devices yet");
-    expect(screen.queryByRole("link", { name: "Register device" })).toBeNull();
+    await screen.findByText("No sensors yet");
+    expect(screen.queryByRole("link", { name: "Add sensor" })).toBeNull();
   });
 
   it("lists devices on the page, not in a card", async () => {
@@ -176,7 +180,7 @@ describe("AssetDevicesSection", () => {
 it("leads each header action with an icon", () => {
   serve();
   renderSection();
-  expectLeadingIcon(screen.getByRole("link", { name: "Register device" }));
+  expectLeadingIcon(screen.getByRole("link", { name: "Add sensor" }));
   expectLeadingIcon(screen.getByRole("link", { name: "Readings" }));
 });
 
@@ -184,8 +188,7 @@ it("links to a dedicated device form from the asset", () => {
   serve();
   renderSection();
   expect(
-    screen.getByRole<HTMLAnchorElement>("link", { name: "Register device" })
-      .href
+    screen.getByRole<HTMLAnchorElement>("link", { name: "Add sensor" }).href
   ).toContain("/estates/estate-id/assets/asset-id/devices/new");
   expect(screen.queryByRole("textbox", { name: "Identifier" })).toBeNull();
 });
@@ -226,9 +229,9 @@ describe("AssetDevicesSection credentials", () => {
   it("says when a device has no credential", async () => {
     renderSection();
     const item = within(await screen.findByRole("listitem"));
-    item.getByText("No credential");
+    item.getByText("No connection key");
     (await openActions()).getByRole("menuitem", {
-      name: "Generate credential",
+      name: "Get connection key",
     });
   });
 
@@ -236,8 +239,10 @@ describe("AssetDevicesSection credentials", () => {
     devices = [{ ...device, credentialIssuedAt: issuedAt }];
     renderSection();
     const item = within(await screen.findByRole("listitem"));
-    item.getByText(`Credential issued ${formatDateTime(issuedAt)}`);
-    (await openActions()).getByRole("menuitem", { name: "Replace credential" });
+    item.getByText(`Connection key created ${formatDateTime(issuedAt)}`);
+    (await openActions()).getByRole("menuitem", {
+      name: "Replace connection key",
+    });
   });
 
   it("hides credential actions on a retired asset", async () => {
@@ -254,7 +259,7 @@ describe("AssetDevicesSection credentials", () => {
     renderSection();
     fireEvent.click(
       (await openActions()).getByRole("menuitem", {
-        name: "Generate credential",
+        name: "Get connection key",
       })
     );
 
@@ -269,8 +274,11 @@ describe("AssetDevicesSection credentials", () => {
       },
     });
     expect(
-      (dialog.getByRole("textbox", { name: "API key" }) as HTMLInputElement)
-        .value
+      (
+        dialog.getByRole("textbox", {
+          name: "Connection key",
+        }) as HTMLInputElement
+      ).value
     ).toBe(apiKey);
     dialog.getByText(NOT_SHOWN_AGAIN);
 
@@ -280,7 +288,9 @@ describe("AssetDevicesSection credentials", () => {
     fireEvent.click(dialog.getByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(screen.queryByDisplayValue(apiKey)).toBeNull();
-    await screen.findByText(`Credential issued ${formatDateTime(issuedAt)}`);
+    await screen.findByText(
+      `Connection key created ${formatDateTime(issuedAt)}`
+    );
   });
 
   it("asks before replacing a key, warning that the current one stops working", async () => {
@@ -288,7 +298,7 @@ describe("AssetDevicesSection credentials", () => {
     renderSection();
     fireEvent.click(
       (await openActions()).getByRole("menuitem", {
-        name: "Replace credential",
+        name: "Replace connection key",
       })
     );
 
@@ -302,16 +312,18 @@ describe("AssetDevicesSection credentials", () => {
 
     fireEvent.click(
       (await openActions()).getByRole("menuitem", {
-        name: "Replace credential",
+        name: "Replace connection key",
       })
     );
     fireEvent.click(
       within(await screen.findByRole("dialog")).getByRole("button", {
-        name: "Replace credential",
+        name: "Replace connection key",
       })
     );
     await waitFor(() => expect(api.POST).toHaveBeenCalledTimes(1));
-    const shown = await screen.findByRole("textbox", { name: "API key" });
+    const shown = await screen.findByRole("textbox", {
+      name: "Connection key",
+    });
     expect((shown as HTMLInputElement).value).toBe(apiKey);
   });
 });
@@ -335,8 +347,9 @@ describe("device deactivation and replacement (ID-45)", () => {
     devices = [{ ...device, deactivatedAt }];
     renderSection();
     const item = within(await screen.findByRole("listitem"));
-    item.getByText(`Deactivated ${formatDateTime(deactivatedAt)}`);
-    expect(item.queryByText("Awaiting first reading")).toBeNull();
+    item.getByText(`Turned off ${formatDateTime(deactivatedAt)}`);
+    expect(item.queryByText("Waiting for first reading")).toBeNull();
+    expect(item.queryByRole("note")).toBeNull();
     expect(
       item.queryByRole("button", { name: "Actions for PUMP-01" })
     ).toBeNull();
@@ -358,13 +371,13 @@ describe("device deactivation and replacement (ID-45)", () => {
     const menu = await openActions();
     expect(
       menu
-        .getByRole("menuitem", { name: "Replace device" })
+        .getByRole("menuitem", { name: "Replace sensor" })
         .getAttribute("href")
     ).toBe("/estates/estate-id/assets/asset-id/devices/device-id/replace");
-    menu.getByRole("menuitem", { name: "Deactivate device" });
+    menu.getByRole("menuitem", { name: "Turn off sensor" });
     expect(
       menu
-        .getByRole("menuitem", { name: "Deactivate device" })
+        .getByRole("menuitem", { name: "Turn off sensor" })
         .getAttribute("data-variant")
     ).toBe("destructive");
   });
@@ -388,28 +401,22 @@ describe("device deactivation and replacement (ID-45)", () => {
     renderSection();
     fireEvent.click(
       (await openActions()).getByRole("menuitem", {
-        name: "Deactivate device",
+        name: "Turn off sensor",
       })
     );
     const dialog = within(
-      await screen.findByRole("dialog", { name: "Deactivate PUMP-01?" })
+      await screen.findByRole("dialog", { name: "Turn off PUMP-01?" })
     );
     const confirm = dialog.getByRole<HTMLButtonElement>("button", {
-      name: "Deactivate device",
+      name: "Turn off sensor",
     });
-    fireEvent.change(
-      dialog.getByRole("textbox", { name: "Device identifier" }),
-      {
-        target: { value: "pump-01" },
-      }
-    );
+    fireEvent.change(dialog.getByRole("textbox", { name: "Sensor name" }), {
+      target: { value: "pump-01" },
+    });
     expect(confirm.disabled).toBe(true);
-    fireEvent.change(
-      dialog.getByRole("textbox", { name: "Device identifier" }),
-      {
-        target: { value: "PUMP-01" },
-      }
-    );
+    fireEvent.change(dialog.getByRole("textbox", { name: "Sensor name" }), {
+      target: { value: "PUMP-01" },
+    });
     fireEvent.click(confirm);
     await waitFor(() =>
       expect(api.POST).toHaveBeenCalledWith(
@@ -426,7 +433,7 @@ describe("device deactivation and replacement (ID-45)", () => {
         }
       )
     );
-    await screen.findByText(`Deactivated ${formatDateTime(deactivatedAt)}`);
+    await screen.findByText(`Turned off ${formatDateTime(deactivatedAt)}`);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

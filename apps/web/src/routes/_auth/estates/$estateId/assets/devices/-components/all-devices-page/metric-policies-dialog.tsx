@@ -20,14 +20,14 @@ function PolicyContent({ estateId }: { estateId: string }) {
   const { refetch } = policies;
   const retry = useCallback(() => refetch(), [refetch]);
   if (policies.isPending) {
-    return <LoadingState label="Loading metric policies…" rows={2} />;
+    return <LoadingState label="Loading warning settings…" rows={2} />;
   }
   if (policies.error) {
     return (
       <ErrorState
         message={policies.error.message}
         onRetry={retry}
-        retryLabel="Retry metric policies"
+        retryLabel="Try loading warning settings again"
       />
     );
   }
@@ -36,7 +36,8 @@ function PolicyContent({ estateId }: { estateId: string }) {
       {policies.data.estateActive ? null : (
         <Alert>
           <AlertDescription>
-            This estate is inactive. Metric policies remain available to view.
+            This estate is inactive. You can view these settings but not change
+            them.
           </AlertDescription>
         </Alert>
       )}
@@ -59,14 +60,14 @@ export function MetricPoliciesDialog({ estateId }: { estateId: string }) {
     <>
       <Button onClick={show} type="button" variant="outline">
         <SlidersHorizontal aria-hidden="true" />
-        Metric policies
+        When to warn
       </Button>
       <Dialog onOpenChange={setOpen} open={open}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Metric policies</DialogTitle>
+            <DialogTitle>When to warn</DialogTitle>
             <DialogDescription>
-              Estate-wide thresholds and tolerances for flatline detection
+              Warn me if a sensor sends the same reading for too long.
             </DialogDescription>
           </DialogHeader>
           {open ? <PolicyContent estateId={estateId} /> : null}

@@ -129,13 +129,6 @@ export function canOpenRoles(permission: Permission): boolean {
   return Boolean(permission?.canViewEstateRoles);
 }
 
-export function canOpenAssetCategories(
-  permission: Permission,
-  owned?: boolean
-): boolean {
-  return ownerOrDelegate(permission, owned);
-}
-
 /** Owners and Managers: the people who receive the estate's notifications. */
 export function canOpenNotificationSettings(permission: Permission): boolean {
   return permission?.role === "MANAGER";

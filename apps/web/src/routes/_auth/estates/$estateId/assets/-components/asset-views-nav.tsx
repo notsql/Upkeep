@@ -22,7 +22,7 @@ export function AssetViewsNav({ estateId }: { estateId: string }) {
           to: "/estates/$estateId/assets",
         },
         {
-          label: "All devices",
+          label: "All sensors",
           params: { estateId },
           to: "/estates/$estateId/assets/devices",
         },

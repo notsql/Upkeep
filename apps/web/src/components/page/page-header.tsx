@@ -26,7 +26,7 @@ export interface Breadcrumb {
     | "/estates/$estateId/locations"
     | "/estates/$estateId/documents"
     | "/estates/$estateId/inspections"
-    | "/estates/$estateId/asset-categories"
+    | "/estates/$estateId/inspections/schedules"
     | "/estates/$estateId/assets/$assetId";
 }
 

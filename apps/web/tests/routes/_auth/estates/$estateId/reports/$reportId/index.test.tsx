@@ -55,12 +55,12 @@ const otherId = "00000000-0000-0000-0000-000000000030";
 const timestamp = "2026-10-01T00:00:00Z";
 const detailPath = `/estates/${estateId}/reports/${reportId}`;
 const location = { id: "loc", label: "Block A › Level 4" };
-const POSSIBLE_DUPLICATE_OF = /Possible duplicate of/u;
-const DUPLICATE_OF = /^Duplicate of/u;
+const POSSIBLE_DUPLICATE_OF = /May be the same problem as/u;
+const DUPLICATE_OF = /^Same problem as/u;
 const CHANGED = /changed/iu;
 const LINK_TO_ORIGINAL = /Link to its original instead/u;
 const NO_OWN_WORK_ORDER = /cannot get its own work order/iu;
-const REJECT_TO_ALLOW = /reject the link/iu;
+const REJECT_TO_ALLOW = /choose Not the same problem/iu;
 
 const base = {
   id: reportId,
@@ -158,7 +158,7 @@ it("names the original of a suspected duplicate and links to it", async () => {
   linkedTo("SUSPECTED");
   await setup();
   const section = within(
-    await screen.findByRole("region", { name: "Duplicate" })
+    await screen.findByRole("region", { name: "Already reported" })
   );
   section.getByText(POSSIBLE_DUPLICATE_OF);
   const link = section.getByRole("link", { name: "Leaking pipe" });
@@ -193,7 +193,7 @@ it("lets managers reject a suspected duplicate", async () => {
   patch.mockResolvedValue({ data: base });
   await setup();
   fireEvent.click(
-    await screen.findByRole("button", { name: "Not a duplicate" })
+    await screen.findByRole("button", { name: "Not the same problem" })
   );
   await waitFor(() =>
     expect(patch).toHaveBeenCalledWith(
@@ -205,15 +205,17 @@ it("lets managers reject a suspected duplicate", async () => {
   );
 });
 
-it("offers only Not a duplicate on a confirmed duplicate", async () => {
+it("offers only Not the same problem on a confirmed duplicate", async () => {
   linkedTo("CONFIRMED");
   await setup();
   const section = within(
-    await screen.findByRole("region", { name: "Duplicate" })
+    await screen.findByRole("region", { name: "Already reported" })
   );
   section.getByText(DUPLICATE_OF);
   expect(section.queryByRole("button", { name: "Confirm" })).toBeNull();
-  fireEvent.click(section.getByRole("button", { name: "Not a duplicate" }));
+  fireEvent.click(
+    section.getByRole("button", { name: "Not the same problem" })
+  );
   await waitFor(() =>
     expect(patch).toHaveBeenCalledWith(
       "/estates/{estateId}/reports/{reportId}/duplicate",
@@ -230,7 +232,9 @@ it("shows no review or link controls without the review capability", async () =>
   await setup();
   await screen.findByRole("link", { name: "Leaking pipe" });
   expect(screen.queryByRole("button", { name: "Confirm" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "Not a duplicate" })).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Not the same problem" })
+  ).toBeNull();
   expect(screen.queryByRole("button", { name: "Original report" })).toBeNull();
 });
 
@@ -273,15 +277,15 @@ it("lists an original's duplicates with their counts", async () => {
   };
   await setup();
   const section = within(
-    await screen.findByRole("region", { name: "Duplicates" })
+    await screen.findByRole("region", { name: "Repeat reports" })
   );
   section.getByText("1 confirmed");
   section.getByText("1 to review");
   const items = section.getAllByRole("listitem");
   expect(items).toHaveLength(2);
   within(items[0] as HTMLElement).getByRole("link", { name: "Leak again" });
-  within(items[0] as HTMLElement).getByText("Possible duplicate");
-  within(items[1] as HTMLElement).getByText("Duplicate");
+  within(items[0] as HTMLElement).getByText("May already be reported");
+  within(items[1] as HTMLElement).getByText("Already reported");
   expect(screen.queryByRole("button", { name: "Original report" })).toBeNull();
 });
 
@@ -292,7 +296,7 @@ it("lets managers link an unlinked report to an original by hand", async () => {
   });
   await setup();
   const link = await screen.findByRole("button", {
-    name: "Link as duplicate",
+    name: "Mark as same problem",
   });
   expect(link.hasAttribute("disabled")).toBe(true);
   fireEvent.click(screen.getByRole("button", { name: "Original report" }));
@@ -330,7 +334,7 @@ it("shows the server's reason when a manual link is refused", async () => {
       name: "Leaking pipe",
     })
   );
-  fireEvent.click(screen.getByRole("button", { name: "Link as duplicate" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mark as same problem" }));
   await screen.findByText(LINK_TO_ORIGINAL);
 });
 
@@ -343,7 +347,7 @@ it("hides Create work order on a suspected duplicate and explains why", async ()
   linkedTo("SUSPECTED");
   await setup();
   const section = within(
-    await screen.findByRole("region", { name: "Duplicate" })
+    await screen.findByRole("region", { name: "Already reported" })
   );
   section.getByText(NO_OWN_WORK_ORDER);
   section.getByText(REJECT_TO_ALLOW);
@@ -354,7 +358,7 @@ it("hides Create work order on a confirmed duplicate", async () => {
   linkedTo("CONFIRMED");
   await setup();
   const section = within(
-    await screen.findByRole("region", { name: "Duplicate" })
+    await screen.findByRole("region", { name: "Already reported" })
   );
   section.getByText(NO_OWN_WORK_ORDER);
   expect(section.queryByText(REJECT_TO_ALLOW)).toBeNull();

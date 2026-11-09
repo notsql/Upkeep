@@ -151,7 +151,12 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
         setMapping(mappingFromHeaders(headers, lookup));
       } catch (cause) {
         if (current.current === scope && selected.current === next) {
-          setError(readingImportMessage(cause, "Unable to read CSV."));
+          setError(
+            readingImportMessage(
+              cause,
+              "Couldn't read the file. Make sure it's a CSV and try again."
+            )
+          );
         }
       }
     },
@@ -165,7 +170,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
       }
       if (!(file && validMapping(source, sample, mapping, mode))) {
         setError(
-          "Choose a file, source label and distinct mappings for asset, metric, measured time and value."
+          "Choose a file, give it a name, and match each column in your file."
         );
         return;
       }

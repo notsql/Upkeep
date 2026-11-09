@@ -34,7 +34,7 @@ function CurrentCondition({ current }: { current: Assessment | undefined }) {
         className="text-muted-foreground text-sm"
         role="status"
       >
-        Not assessed yet
+        Not checked yet
       </div>
     );
   }
@@ -95,7 +95,7 @@ export function AssetConditionSection({
           canRecord && !recording ? (
             <DialogTrigger render={<Button {...SECTION_ACTION} />}>
               <ClipboardCheck aria-hidden="true" />
-              Record assessment
+              Record condition check
             </DialogTrigger>
           ) : undefined
         }
@@ -117,7 +117,7 @@ export function AssetConditionSection({
             showCloseButton={!recordAssessment.isPending}
           >
             <DialogHeader>
-              <DialogTitle>Record assessment</DialogTitle>
+              <DialogTitle>Record condition check</DialogTitle>
               <DialogDescription>
                 Record the condition, assessment date and notes.
               </DialogDescription>

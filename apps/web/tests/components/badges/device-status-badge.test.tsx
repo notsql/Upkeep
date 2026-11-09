@@ -6,8 +6,8 @@ describe("DeviceStatusBadge", () => {
   it.each([
     ["ONLINE", "Online", "success"],
     ["OFFLINE", "Offline", "destructive"],
-    ["AWAITING_FIRST_READING", "Awaiting first reading", "info"],
-    ["DEACTIVATED", "Deactivated", "secondary"],
+    ["AWAITING_FIRST_READING", "Waiting for first reading", "info"],
+    ["DEACTIVATED", "Turned off", "secondary"],
   ] as const)("labels %s as %s in the %s variant", (status, label, variant) => {
     render(<DeviceStatusBadge status={status} />);
     expect(screen.getByText(label).dataset.variant).toBe(variant);

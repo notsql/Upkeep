@@ -17,11 +17,11 @@ function row(
 
 describe("ImportRowResults", () => {
   it.each([
-    ["IMPORTED", "success"],
-    ["DUPLICATE", "secondary"],
-    ["INVALID", "destructive"],
-  ] as const)("shows %s in the %s variant", (outcome, variant) => {
+    ["IMPORTED", "Imported", "success"],
+    ["DUPLICATE", "Already imported", "secondary"],
+    ["INVALID", "Has problems", "destructive"],
+  ] as const)("shows %s as %s in the %s variant", (outcome, label, variant) => {
     renderWithProviders(<ImportRowResults items={[row(1, outcome)]} />);
-    expect(screen.getByText(outcome).dataset.variant).toBe(variant);
+    expect(screen.getAllByText(label)[0]?.dataset.variant).toBe(variant);
   });
 });

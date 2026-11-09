@@ -13,8 +13,8 @@ resident estate) to `ResidentDashboard`.
 
 - `PageLayout` + `PageHeader` titled "Dashboard", action "Report a fault"
   (`buttonVariants()` link to `/reports/new`, with `estateId` when known).
-- Loading: `LoadingState` "Loading reports…". Error: `ErrorState` "Unable to
-  load reports" with Retry (refetches the list).
+- Loading: `LoadingState` "Loading reports…". Error: `ErrorState` "Couldn't
+  load reports. Try again." with Retry (refetches the list).
 - Three count `Card`s (each `role="region"` named by its label): **Open**,
   **In progress**, **Resolved**, read from `counts` on the response. Each has a decorative icon tile (`CircleDot`, `Hammer`, `CircleCheck`; `bg-brand-1/15 text-brand-3`).
 - "Recent reports" section (`SectionHeading` h2 with ClipboardList icon): the first 5 `items` as shared `ReportCard`s,

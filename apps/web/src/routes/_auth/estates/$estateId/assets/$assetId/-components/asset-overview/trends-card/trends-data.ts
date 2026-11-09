@@ -4,7 +4,6 @@ import {
   formatDateTime,
   formatDuration,
   formatMetricValue,
-  formatScore,
   formatTime,
   localSecondOfDay,
 } from "@/lib/format";
@@ -155,7 +154,7 @@ function periodText(period: AnomalyPeriod, longRange: boolean): string {
   const format = longRange ? formatDateTime : formatTime;
   const from = format(new Date(period.start).toISOString());
   const to = format(new Date(period.end).toISOString());
-  return `Anomaly from ${from} to ${to}, maximum score ${formatScore(period.maxScore)}.`;
+  return `Unusual readings from ${from} to ${to}.`;
 }
 
 /** The figure's screen-reader summary: latest, range extremes, anomaly periods. */
@@ -170,6 +169,6 @@ export function metricSummary(
   const max = Math.max(...metric.points.map((point) => point.max));
   const anomalies = periods.length
     ? periods.map((period) => periodText(period, longRange)).join(" ")
-    : "No anomalies.";
+    : "No unusual readings.";
   return `Latest ${formatMetricValue(name, latest?.avg ?? 0)}. Minimum ${formatMetricValue(name, min)}, maximum ${formatMetricValue(name, max)}. ${anomalies}`;
 }

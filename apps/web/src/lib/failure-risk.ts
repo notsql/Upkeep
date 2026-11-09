@@ -74,7 +74,7 @@ export const timeframeLabel: Record<Timeframe, string> = {
 
 export const flagReasonLabel: Record<FlagReason, string> = {
   CONDITION: "Condition",
-  FAILURE_RISK: "Failure risk",
+  FAILURE_RISK: "Chance of breaking down",
   END_OF_LIFE: "End of life",
 };
 

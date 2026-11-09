@@ -10,8 +10,8 @@ import { Restoration } from "@/routes/_auth/estates/$estateId/assets/$assetId/-c
 import { RetirementEdit } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/retirement-edit";
 
 const actionLabels: Record<string, string> = {
-  RETIRED: "Retired",
-  CORRECTED: "Retirement corrected",
+  RETIRED: "Out of use",
+  CORRECTED: "Out-of-use details changed",
   RESTORED: "Restored",
 };
 
@@ -28,16 +28,16 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
         {asset.deactivatedAt ? (
           <>
             <dl>
-              <dt>Retirement date</dt>
+              <dt>Date taken out of use</dt>
               <dd>{asset.retiredOn ?? "Not recorded"}</dd>
-              <dt>Retirement reason</dt>
+              <dt>Why it's out of use</dt>
               <dd className="whitespace-pre-wrap">
                 {asset.retirementReason ?? "Not recorded"}
               </dd>
             </dl>
             <div className="flex flex-wrap gap-4">
               <Button onClick={openCorrection} variant="outline">
-                Edit retirement information
+                Edit out-of-use details
               </Button>
               <Button onClick={openRestoration}>Restore asset</Button>
             </div>
@@ -75,8 +75,9 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                 By {event.actorUserId}
               </p>
               <p>
-                Previous retirement: {event.previousRetiredOn ?? "Not recorded"}{" "}
-                — {event.previousRetirementReason ?? "Not recorded"}
+                Previous out-of-use date:{" "}
+                {event.previousRetiredOn ?? "Not recorded"} —{" "}
+                {event.previousRetirementReason ?? "Not recorded"}
               </p>
               <p>
                 Result:{" "}

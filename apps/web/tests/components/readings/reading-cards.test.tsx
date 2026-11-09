@@ -36,8 +36,8 @@ describe("ReadingCards", () => {
         ]}
       />
     );
-    expect(screen.getByText("Duplicate timestamp").dataset.variant).toBe(
-      "warning"
-    );
+    expect(
+      screen.getByText("Sent twice for the same time").dataset.variant
+    ).toBe("warning");
   });
 });

@@ -2,6 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Activity } from "lucide-react";
 import { useCallback } from "react";
+import { PossiblyWrongNote } from "@/components/readings/possibly-wrong-note";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -26,10 +27,10 @@ export function emptyMessage(
   assetTotal?: number
 ): string {
   if (filters.anomalous) {
-    return "No anomalous readings match these filters";
+    return "No unusual readings match these filters";
   }
   if (filters.suspect) {
-    return "No matching suspect readings";
+    return "No possibly wrong readings match these filters";
   }
   if (isFiltered(filters)) {
     return "No matching readings";
@@ -117,6 +118,7 @@ export function ReadingResults({
   return (
     <>
       {readings.isFetching ? <p role="status">Refreshing readings…</p> : null}
+      <PossiblyWrongNote readings={data.items} />
       <ReadingTable items={data.items} refreshing={readings.isFetching} />
       <ReadingPagination
         filters={filters}

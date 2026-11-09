@@ -46,7 +46,7 @@ public class EstateDeviceController {
     @Operation(operationId = "listEstateDevices")
     public List<EstateDeviceResponse> list(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID estateId) {
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new DeviceException(HttpStatus.UNAUTHORIZED, "Sign in to manage devices.");
+            throw new DeviceException(HttpStatus.UNAUTHORIZED, "Sign in to manage sensors.");
         }
         return service.listForEstate(estateId, jwt.getSubject());
     }

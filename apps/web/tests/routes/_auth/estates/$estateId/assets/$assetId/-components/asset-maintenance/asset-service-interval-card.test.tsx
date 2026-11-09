@@ -84,13 +84,13 @@ it.each([
   [
     overridden,
     "Every 90 days",
-    "Override",
+    "Custom",
     "Replaces the Pump interval (every 6 months).",
   ],
   [
     { ...overridden, categoryInterval: null },
     "Every 90 days",
-    "Override",
+    "Custom",
     "The Pump category has no interval.",
   ],
 ])(
@@ -108,16 +108,18 @@ it("shows who last changed the override", () => {
   state.data = overridden;
   renderWithProviders(<AssetServiceIntervalCard assetId="a" estateId="e" />);
   expect(card().getByText(CASEY).textContent).toContain(
-    "Override last changed by Casey Doe"
+    "Custom interval last changed by Casey Doe"
   );
 });
 
 it("overrides the category's interval", async () => {
   renderWithProviders(<AssetServiceIntervalCard assetId="a" estateId="e" />);
   expect(card().queryByRole("button", { name: "Remove override" })).toBeNull();
-  fireEvent.click(card().getByRole("button", { name: "Override" }));
+  fireEvent.click(
+    card().getByRole("button", { name: "Set a custom interval" })
+  );
   const dialog = within(
-    screen.getByRole("dialog", { name: "Override service interval" })
+    screen.getByRole("dialog", { name: "Set a custom interval" })
   );
   fireEvent.change(dialog.getByRole("spinbutton", { name: "Every" }), {
     target: { value: "2" },
@@ -133,7 +135,7 @@ it("overrides the category's interval", async () => {
 it("edits or removes an existing override", async () => {
   state.data = overridden;
   renderWithProviders(<AssetServiceIntervalCard assetId="a" estateId="e" />);
-  card().getByRole("button", { name: "Edit override" });
+  card().getByRole("button", { name: "Edit custom interval" });
   fireEvent.click(card().getByRole("button", { name: "Remove override" }));
   await waitFor(() => expect(state.save).toHaveBeenCalledWith(null));
 });
@@ -154,13 +156,13 @@ it("locks the override with a reason", () => {
     <AssetServiceIntervalCard
       assetId="a"
       estateId="e"
-      locked="This asset is retired, so its service interval cannot be changed."
+      locked="This asset is out of use, so you can't change how often it's serviced."
     />
   );
   card().getByText(
-    "This asset is retired, so its service interval cannot be changed."
+    "This asset is out of use, so you can't change how often it's serviced."
   );
-  for (const name of ["Edit override", "Remove override"]) {
+  for (const name of ["Edit custom interval", "Remove override"]) {
     expect(card().getByRole("button", { name }).hasAttribute("disabled")).toBe(
       true
     );
@@ -176,5 +178,5 @@ it("shows a load error", () => {
 
 it("marks an override with the warning badge", () => {
   renderWithProviders(<SourceBadge interval={overridden as never} />);
-  expect(screen.getByText("Override").dataset.variant).toBe("warning");
+  expect(screen.getByText("Custom").dataset.variant).toBe("warning");
 });

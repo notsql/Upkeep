@@ -5,8 +5,8 @@ import { badgeVariantFor, deviceStatusTone } from "@/lib/status-tone";
 const labels: Record<DeviceStatus, string> = {
   ONLINE: "Online",
   OFFLINE: "Offline",
-  AWAITING_FIRST_READING: "Awaiting first reading",
-  DEACTIVATED: "Deactivated",
+  AWAITING_FIRST_READING: "Waiting for first reading",
+  DEACTIVATED: "Turned off",
 };
 
 export function DeviceStatusBadge({ status }: { status: DeviceStatus }) {

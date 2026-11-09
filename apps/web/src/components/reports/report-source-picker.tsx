@@ -108,7 +108,7 @@ export function ReportSourcePicker({
           ) : null}
           {reports.isError ? (
             <p role="alert">
-              Unable to load reports.{" "}
+              Couldn't load reports. Try again.{" "}
               <Button onClick={retry} type="button" variant="outline">
                 Retry reports
               </Button>

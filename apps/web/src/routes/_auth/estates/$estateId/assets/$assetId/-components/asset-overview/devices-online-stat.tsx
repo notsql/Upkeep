@@ -9,7 +9,7 @@ const DOTS = {
   none: statusDotClassName.neutral,
 } as const;
 
-/** "N of M devices online", linking to the Devices tab; hidden with no devices. */
+/** "N of M sensors online", linking to the Devices tab; hidden with no devices. */
 export function DevicesOnlineStat({
   assetId,
   estateId,
@@ -40,7 +40,7 @@ export function DevicesOnlineStat({
         aria-hidden="true"
         className={cn("size-2 shrink-0 rounded-full", DOTS[tone])}
       />
-      {`${online} of ${active.length} ${active.length === 1 ? "device" : "devices"} online`}
+      {`${online} of ${active.length} ${active.length === 1 ? "sensor" : "sensors"} online`}
     </Link>
   );
 }

@@ -37,7 +37,11 @@ class InspectionResultsIntegrationTests extends InspectionTestSupport {
                     .andExpect(jsonPath("$.outcome").value(outcome))
                     .andExpect(jsonPath("$.inspectedOn").value(today().toString()))
                     .andExpect(jsonPath("$.recordedByUserId").value(user))
-                    .andExpect(jsonPath("$.notes").isEmpty())
+                    // A Fail must say what is wrong; the fixture supplies "Not working".
+                    .andExpect(
+                            outcome.equals("FAIL")
+                                    ? jsonPath("$.notes").value("Not working")
+                                    : jsonPath("$.notes").isEmpty())
                     .andExpect(jsonPath("$.photos").isEmpty())
                     .andExpect(jsonPath("$.workOrder").isEmpty())
                     .andReturn()

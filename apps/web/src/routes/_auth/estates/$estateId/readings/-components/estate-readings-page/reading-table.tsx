@@ -36,11 +36,11 @@ export function ReadingTable({
             {[
               "Measured",
               "Asset",
-              "Metric",
+              "Measurement",
               "Value",
               "Source",
-              "Device",
-              "Flags",
+              "Sensor name",
+              "Warnings",
             ].map((label) => (
               <TableHead key={label}>{label}</TableHead>
             ))}

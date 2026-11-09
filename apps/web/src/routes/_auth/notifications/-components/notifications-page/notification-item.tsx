@@ -1,9 +1,11 @@
 import { Badge } from "@proj/ui/components/badge";
 import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import { AlertResponseActions } from "@/components/notifications/alert-response-actions";
 import { AlertResponseSummary } from "@/components/notifications/alert-response-summary";
+import { UNUSUAL_READINGS_STEP } from "@/components/notifications/unusual-readings-step";
+import { formatDateTime } from "@/lib/format";
 import {
   formatRelativeTime,
   NOTIFICATION_TYPE_LABELS,
@@ -11,6 +13,7 @@ import {
 } from "@/lib/notifications";
 import { formatInterval } from "@/lib/service-intervals";
 import { badgeVariantFor, notificationTypeTone } from "@/lib/status-tone";
+import { NotificationDispatch } from "@/routes/_auth/notifications/-components/notifications-page/notification-dispatch";
 
 const INTERVAL_SOURCES = {
   ASSET: "Set on this asset",
@@ -36,7 +39,7 @@ function repairBasis(prediction: RepairPredicted): string {
     prediction.basis === "ASSET_HISTORY"
       ? `based on ${prediction.failuresObserved} recorded ${repairs}`
       : "based on typical pumps; no repairs recorded yet";
-  return ["Prediction", chance, source].join(" · ");
+  return ["Expected repair", chance, source].join(" · ");
 }
 
 /** The one-line basis under the summary, for date-driven notifications. */
@@ -47,11 +50,71 @@ function basis(notification: Notification): string | undefined {
   }
   if (serviceDue) {
     return [
-      "Interval-based, not a prediction",
+      "Based on the service schedule",
       formatInterval(serviceDue.interval),
       INTERVAL_SOURCES[serviceDue.intervalSource],
     ].join(" · ");
   }
+}
+
+/** Warnings whose next step is sending crew or a contractor. */
+const SEND_STEP_TYPES: ReadonlySet<Notification["type"]> = new Set([
+  "SERVICE_DUE",
+  "REPAIR_PREDICTED",
+  "CHECK_FAILED",
+]);
+
+/** The headline for a warning; others lead with their summary. */
+function title(notification: Notification): string | undefined {
+  if (notification.type === "ANOMALY") {
+    return `${notification.assetName} may have a problem`;
+  }
+  if (notification.type === "CHECK_REQUESTED") {
+    return `Please inspect ${notification.assetName}`;
+  }
+  if (notification.type === "CHECK_FAILED") {
+    return `Crew found a problem with ${notification.assetName}`;
+  }
+}
+
+/** Where opening a row goes: the inspection form for someone sent to inspect. */
+function RowLink({
+  notification,
+  onClick,
+  children,
+}: {
+  notification: Notification;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  const className =
+    "hover:bg-accent/60 focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2";
+  const params = {
+    estateId: notification.estateId,
+    assetId: notification.assetId,
+  };
+  if (notification.type === "CHECK_REQUESTED") {
+    return (
+      <Link
+        className={className}
+        onClick={onClick}
+        params={params}
+        to="/estates/$estateId/assets/$assetId/inspections/new"
+      >
+        {children}
+      </Link>
+    );
+  }
+  return (
+    <Link
+      className={className}
+      onClick={onClick}
+      params={params}
+      to="/estates/$estateId/assets/$assetId"
+    >
+      {children}
+    </Link>
+  );
 }
 
 /** One inbox row: opening it marks it read and goes to the asset. */
@@ -63,6 +126,7 @@ export function NotificationItem({
   onOpen: (id: string) => void;
 }) {
   const { id, read } = notification;
+  const heading = title(notification);
   const open = useCallback(() => {
     if (!read) {
       onOpen(id);
@@ -75,15 +139,7 @@ export function NotificationItem({
         read ? "bg-background" : "border-primary/40 bg-accent/40"
       )}
     >
-      <Link
-        className="hover:bg-accent/60 focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2"
-        onClick={open}
-        params={{
-          estateId: notification.estateId,
-          assetId: notification.assetId,
-        }}
-        to="/estates/$estateId/assets/$assetId"
-      >
+      <RowLink notification={notification} onClick={open}>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Badge
             variant={badgeVariantFor(notificationTypeTone[notification.type])}
@@ -101,9 +157,22 @@ export function NotificationItem({
             {formatRelativeTime(notification.createdAt)}
           </time>
         </div>
-        <p className={cn("text-sm", read ? "" : "font-semibold")}>
-          {notification.summary}
-        </p>
+        {heading ? (
+          <>
+            <p className={cn("text-sm", read ? "" : "font-semibold")}>
+              {heading}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {notification.anomaly
+                ? `Its readings have been unusual since ${formatDateTime(notification.anomaly.firstDetectedAt)}.`
+                : notification.summary}
+            </p>
+          </>
+        ) : (
+          <p className={cn("text-sm", read ? "" : "font-semibold")}>
+            {notification.summary}
+          </p>
+        )}
         {basis(notification) ? (
           <p className="text-muted-foreground text-xs">{basis(notification)}</p>
         ) : null}
@@ -112,9 +181,16 @@ export function NotificationItem({
           <span aria-hidden="true"> · </span>
           <span>{notification.estateName}</span>
         </p>
-      </Link>
+      </RowLink>
+      {SEND_STEP_TYPES.has(notification.type) ? (
+        <NotificationDispatch notification={notification} />
+      ) : null}
       {notification.anomaly ? (
         <div className="grid gap-2 px-4 pb-4">
+          {notification.anomaly.response === "NONE" &&
+          !notification.resolvedAt ? (
+            <p className="text-sm">{UNUSUAL_READINGS_STEP}</p>
+          ) : null}
           <AlertResponseSummary anomaly={notification.anomaly} />
           <AlertResponseActions alert={notification} />
         </div>

@@ -26,7 +26,7 @@ export function AssetDetailsHeader({
       status={
         <LifecycleStatusBadge
           inactive={Boolean(asset.deactivatedAt)}
-          inactiveLabel="Retired"
+          inactiveLabel="Out of use"
         />
       }
       title={asset.name}

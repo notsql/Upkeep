@@ -132,16 +132,18 @@ describe("AssetOverview layout", () => {
   it("hides Anomaly alerts when the asset has none", async () => {
     overview();
     await screen.findByRole("region", { name: "Trends" });
-    expect(screen.queryByRole("region", { name: "Anomaly alerts" })).toBeNull();
+    expect(
+      screen.queryByRole("region", { name: "Unusual readings" })
+    ).toBeNull();
   });
 
   it("shows Anomaly alerts between Condition and Trends when there is one", async () => {
     alerts = [anomalyAlert];
     overview();
-    await screen.findByRole("region", { name: "Anomaly alerts" });
+    await screen.findByRole("region", { name: "Unusual readings" });
     expect(
       screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)
-    ).toEqual(["Condition", "Breakdown forecast", "Anomaly alerts"]);
+    ).toEqual(["Condition", "Breakdown forecast", "Unusual readings"]);
   });
 
   it("summarises the asset inline without repeating the reference", () => {

@@ -47,7 +47,7 @@ export function HistoryAssetFrame({
             meta={`${asset.reference} · ${asset.category} · ${asset.locationPath}`}
             status={
               <Badge variant="secondary">
-                {asset.status === "RETIRED" ? "Retired" : "Active"}
+                {asset.status === "RETIRED" ? "Out of use" : "Active"}
               </Badge>
             }
             title={asset.name}

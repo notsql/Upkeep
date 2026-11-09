@@ -168,7 +168,7 @@ it("shows all submitted images and keeps image failures visible", async () => {
     ).toHaveLength(2)
   );
   expect((await within(images).findByRole("alert")).textContent).toBe(
-    "Unable to load an image."
+    "Couldn't load an image. Try again."
   );
 });
 

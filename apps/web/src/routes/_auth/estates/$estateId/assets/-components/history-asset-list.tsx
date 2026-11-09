@@ -87,7 +87,7 @@ export function HistoryAssetList({
   return (
     <PageLayout className="space-y-5">
       <ListPageHeader
-        description="Browse assets and their recorded history, including retired equipment."
+        description="Browse assets and their recorded history, including assets out of use."
         icon={History}
         title="Assets"
       />
@@ -115,7 +115,7 @@ export function HistoryAssetList({
               <SelectContent>
                 <SelectItem value="ALL">All assets</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Retired</SelectItem>
+                <SelectItem value="INACTIVE">Out of use</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -178,7 +178,7 @@ export function HistoryAssetList({
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {asset.status === "RETIRED" ? "Retired" : "Active"}
+                        {asset.status === "RETIRED" ? "Out of use" : "Active"}
                       </Badge>
                     </TableCell>
                   </TableRow>

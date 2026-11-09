@@ -250,6 +250,33 @@ it("links the header create action to the new-role page", async () => {
   expect(screen.queryByRole("textbox", { name: "Role name" })).toBeNull();
 });
 
+it("shows the People & access heading and every people view to a manager", async () => {
+  await openRoles();
+  await screen.findByRole("heading", { level: 1, name: "People & access" });
+  const views = within(
+    screen.getByRole("navigation", { name: "People views" })
+  );
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Members",
+    "Waiting to join",
+    "Roles",
+  ]);
+  expect(
+    views.getByRole("link", { name: "Roles" }).getAttribute("aria-current")
+  ).toBe("page");
+});
+
+it("shows only the Roles view to a roles-only user", async () => {
+  serve({ delegated: true });
+  await openRoles();
+  const views = within(
+    await screen.findByRole("navigation", { name: "People views" })
+  );
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Roles",
+  ]);
+});
+
 it("lists custom roles in a table with a permissions summary and filters by search", async () => {
   serve({ existing: true });
   await openRoles();

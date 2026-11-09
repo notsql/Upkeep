@@ -6,15 +6,15 @@ type DuplicateState = components["schemas"]["DuplicateOf"]["state"];
 type EstateReportSummary =
   components["schemas"]["EstateIssueReportSummaryResponse"];
 
-/** "Possible duplicate" for a suspected link, "Duplicate" for a confirmed one. */
+/** "May already be reported" for a suspected link, "Already reported" for a confirmed one. */
 export function DuplicateStateBadge({ state }: { state: DuplicateState }) {
   return state === "CONFIRMED" ? (
     <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
-      Duplicate
+      Already reported
     </Badge>
   ) : (
     <Badge variant={badgeVariantFor(duplicateReportTone.SUSPECTED)}>
-      Possible duplicate
+      May already be reported
     </Badge>
   );
 }
@@ -30,7 +30,7 @@ export function DuplicateBadges({ report }: { report: EstateReportSummary }) {
     <div className="flex flex-wrap gap-1">
       {confirmed > 0 ? (
         <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
-          {confirmed} {confirmed === 1 ? "duplicate" : "duplicates"}
+          {confirmed} {confirmed === 1 ? "repeat report" : "repeat reports"}
         </Badge>
       ) : null}
       {suspected > 0 ? (

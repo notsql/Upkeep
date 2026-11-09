@@ -46,9 +46,9 @@ Response fields used: organization `id`, `name`; member `membershipId`,
 `userId`, `name`, `email`, `joined`, `roleSlugs`; role `slug`, `name`; estate
 access `estateId`, `name`, `code`, `owner`, `granted`, `active`.
 
-Error messages are fixed strings ("Unable to load organizations", "Unable to
-load members", "Unable to load roles", "Unable to update role", "Unable to load
-estate access", "Unable to update estate access"), not `estateError`.
+Error messages are fixed strings ("Couldn't load organizations. Try again.", "Couldn't
+load members. Try again.", "Couldn't load roles. Try again.", "Couldn't update role. Try again.", "Couldn't load
+estate access. Try again.", "Couldn't update estate access. Try again."), not `estateError`.
 
 ## Dashboard presentation
 

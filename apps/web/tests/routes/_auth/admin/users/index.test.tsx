@@ -71,7 +71,7 @@ it("shows a failed load without displaying mock users", async () => {
   get.mockResolvedValue({ error: {} });
   renderWithProviders(<Page />);
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to load organizations"
+    "Couldn't load organizations. Try again."
   );
   screen.getByRole("button", { name: "Retry" });
   expect(screen.queryByText("Alex Morgan")).toBeNull();
@@ -88,7 +88,7 @@ it("reports a failed save and keeps the saved role", async () => {
   });
   await chooseOption(role, "Admin");
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to update role"
+    "Couldn't update role. Try again."
   );
   expect(role.textContent).toContain("Viewer");
   expect(role.textContent).not.toContain("Admin");
@@ -111,7 +111,7 @@ it.each([
     "Admin"
   );
   expect((await screen.findByRole("alert")).textContent).toContain(
-    `Unable to update role: ${message}`
+    `Couldn't update role: ${message}`
   );
 });
 it("opens a member's estate access", async () => {

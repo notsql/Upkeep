@@ -66,7 +66,7 @@ export function WorkOrderDetailPage({
         <Alert className="rounded-xl" variant="warning">
           <AlertDescription className="flex flex-col items-start gap-3">
             <p>
-              Unable to refresh. Showing the last loaded work order; your draft
+              Couldn't refresh. Showing the last loaded work order; your draft
               is retained.
             </p>
             <Button onClick={retry} variant="outline">

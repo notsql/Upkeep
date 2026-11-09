@@ -138,9 +138,7 @@ export function LocationEditor({
       setChosen(selection(current.location.id, locations));
       mutation.reset();
     } catch {
-      setReloadError(
-        "Unable to reload the current location. Please try again."
-      );
+      setReloadError("Couldn't reload the current location. Try again.");
     } finally {
       setReloading(false);
     }
@@ -209,13 +207,13 @@ export function LocationEditor({
         </p>
       ) : null}
       {noDestinations ? (
-        <p>No active locations are available for correction.</p>
+        <p>There are no locations in use to choose from.</p>
       ) : null}
       {mutation.isError ? (
         <Alert role="alert" variant="destructive">
           <AlertDescription>
             {conflict
-              ? "The location or estate availability changed. Reload before another correction."
+              ? "The location changed. Reload the page, then try again."
               : mutation.error.message}
           </AlertDescription>
         </Alert>

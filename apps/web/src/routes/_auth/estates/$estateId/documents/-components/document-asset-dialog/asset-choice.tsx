@@ -38,7 +38,7 @@ export function AssetChoice({
       <TableCell>
         <LifecycleStatusBadge
           inactive={!!asset.deactivatedAt}
-          inactiveLabel="Retired"
+          inactiveLabel="Out of use"
         />
       </TableCell>
     </TableRow>

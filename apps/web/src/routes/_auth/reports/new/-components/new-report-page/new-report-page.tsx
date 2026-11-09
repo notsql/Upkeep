@@ -24,7 +24,7 @@ export function NewReportPage({
       <PageLayout className="max-w-3xl">
         {context.isError ? (
           <ErrorState
-            message="Unable to load your estate assignment. Please try again."
+            message="Couldn't load your estate assignment. Try again."
             onRetry={retry}
           />
         ) : (

@@ -57,7 +57,7 @@ queries. Its Cancel button returns to the asset history without creating work.
 
 The auth route checks work-order capabilities before the generic management
 guard. Crew can enter list/detail, but `/new` is denied and creation actions are
-hidden because `canCreateWorkOrders` is false. The sidebar shows Operations › Work orders
+hidden because `canCreateWorkOrders` is false. The sidebar shows Maintenance › Work orders
 with `canOpenWorkOrders`. The header `EstateFeatureSwitcher` (feature
 `work-orders`) uses labels, estate-local roles and capabilities from access context. It includes
 all membership estates and retains the work-order list when permitted in the
@@ -324,7 +324,7 @@ expectedVersion: the user explicitly reviews the current outcome before retrying
 
 Edit outcome reuses the labelled completion fields, prefilled from the outcome
 captured when the dialog opens. Blank optional values send explicit null, costs
-remain decimal strings, and downtime 0 remains zero. Correction reason is required
+remain decimal strings, and downtime 0 remains zero. Why you're changing it is required
 (max 500); mutations use the generated CorrectWorkOrderCompletionRequest. A save
 keeps the job Closed and preserves its original closer/time. CompletionOutcome
 shows Edited author/time in both detail and Maintenance. The Outcome corrections
@@ -420,7 +420,7 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   `WorkOrderFilters` takes `id`/`open` from `panel.barProps`, so the FilterBar
   is collapsed until toggled (open on load when filters are in the URL).
   `countWorkOrderFilters` (in `work-order-filters.tsx`) gives `activeCount`.
-  Load failure: `ErrorState` "Unable to load work orders".
+  Load failure: `ErrorState` "Couldn't load work orders. Try again.".
 - Detail (`work-order-detail-page.tsx`; the description/details card is
   `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
   `icon={Wrench}`, status `WorkOrderStatusBadge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
@@ -460,5 +460,13 @@ Tones come from `lib/status-tone.ts` (decision 0046).
 - Detail cards use `SectionHeading` icons: Completion outcome
   (`CircleCheck`), Status history (`History`) and Outcome corrections
   (`FilePenLine`).
-- The stale-data "Refresh work order" and "Unable to refresh" Alerts use
+- The stale-data "Refresh work order" and "Couldn't refresh. Try again." Alerts use
   `variant="warning"`.
+
+## Filled in from a warning (equipment dispatch)
+
+`/estates/$estateId/work-orders/new?assetId=<uuid>&reason=END_OF_LIFE` fills the
+form in for replacing that equipment (source "Maintenance recommendation", the
+equipment and its location, the reference note and description); see
+[equipment-dispatch.md](equipment-dispatch.md). `useAsset` gained an optional
+`enabled` argument for this.

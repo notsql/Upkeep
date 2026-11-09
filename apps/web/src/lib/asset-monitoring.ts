@@ -91,7 +91,7 @@ function ancestorId(
 }
 
 /**
- * Per-asset device summary: "No devices", "2 devices online" or
+ * Per-asset device summary: "No sensors", "2 sensors online" or
  * "1 of 2 offline". Offline and awaiting count as not online; deactivated
  * devices are left out.
  */
@@ -102,10 +102,10 @@ export function deviceSummaries(
   return (assetId) => {
     const count = counts.get(assetId);
     if (!count) {
-      return "No devices";
+      return "No sensors";
     }
     if (count.online === count.total) {
-      return `${count.total} ${count.total === 1 ? "device" : "devices"} online`;
+      return `${count.total} ${count.total === 1 ? "sensor" : "sensors"} online`;
     }
     return `${count.total - count.online} of ${count.total} offline`;
   };

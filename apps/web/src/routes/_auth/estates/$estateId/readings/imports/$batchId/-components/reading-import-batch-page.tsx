@@ -5,6 +5,7 @@ import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { importStatusLabels } from "@/lib/reading-imports";
 import { ImportBatchMetadata } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-batch-metadata";
 import { ImportBatchResults } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-batch-results";
 import { ImportBatchRollback } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-batch-rollback";
@@ -51,7 +52,9 @@ export function ReadingImportBatchPage({
             : undefined
         }
         status={
-          batch ? <Badge variant="outline">{batch.status}</Badge> : undefined
+          batch ? (
+            <Badge variant="outline">{importStatusLabels[batch.status]}</Badge>
+          ) : undefined
         }
         title="Import batch"
       />

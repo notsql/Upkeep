@@ -48,8 +48,11 @@ const members = [
   },
 ];
 
+let rolesVisible = true;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  rolesVisible = true;
   vi.mocked(api.GET).mockImplementation((path) => {
     let data: unknown = { id: "estate-id", name: "Maple Grove", owned: true };
     if (path === "/access/context") {
@@ -64,14 +67,14 @@ beforeEach(() => {
             canInviteMembers: true,
             canManageInvitationPermissions: true,
             canViewEstateInvitations: true,
-            canViewEstateRoles: true,
+            canViewEstateRoles: rolesVisible,
             canReassignRoles: true,
           },
         ],
       };
     }
     if (path === "/estates/{estateId}/invitation-roles") {
-      data = [{ role: "COUNCIL", label: "Council member" }];
+      data = [{ role: "COUNCIL", label: "Council" }];
     }
     if (
       path === "/estates/{estateId}/roles" ||
@@ -135,24 +138,31 @@ it("filters members by search text and role", async () => {
   });
   await chooseOption(
     screen.getByRole("combobox", { name: "Filter by role" }),
-    "Council member"
+    "Council"
   );
   table.getByText("Alice");
   expect(table.queryByText("Carl")).toBeNull();
 });
 
-it("links members and pending invitations as separate views", async () => {
+it("links members, waiting to join and roles as separate views", async () => {
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   const views = within(
-    await screen.findByRole("navigation", { name: "Member views" })
+    await screen.findByRole("navigation", { name: "People views" })
+  );
+  screen.getByRole("heading", { level: 1, name: "People & access" });
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Members",
+    "Waiting to join",
+    "Roles",
+  ]);
+  expect(views.getByRole("link", { name: "Roles" }).getAttribute("href")).toBe(
+    "/estates/$estateId/roles"
   );
   expect(
     views.getByRole("link", { name: "Members" }).getAttribute("href")
   ).toBe("/estates/$estateId/council");
   expect(
-    views
-      .getByRole("link", { name: "Pending invitations" })
-      .getAttribute("href")
+    views.getByRole("link", { name: "Waiting to join" }).getAttribute("href")
   ).toBe("/estates/$estateId/council/invitations");
   await screen.findByRole("table", { name: "Estate members" });
   expect(
@@ -161,6 +171,18 @@ it("links members and pending invitations as separate views", async () => {
     })
   ).toBeNull();
   expect(screen.queryByText("Maple Grove")).toBeNull();
+});
+
+it("hides the Roles view from a members-only user", async () => {
+  rolesVisible = false;
+  renderWithProviders(<CouncilPage estateId="estate-id" />);
+  const views = within(
+    await screen.findByRole("navigation", { name: "People views" })
+  );
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Members",
+    "Waiting to join",
+  ]);
 });
 
 it("shows pending invitations on their own view with the shared filters", async () => {
@@ -172,7 +194,7 @@ it("shows pending invitations on their own view with the shared filters", async 
     screen.queryByRole("combobox", { name: "Filter by status" })
   ).toBeNull();
   screen.getByRole("button", { name: "Filters" });
-  screen.getByRole("navigation", { name: "Member views" });
+  screen.getByRole("navigation", { name: "People views" });
   expect(screen.queryByRole("table", { name: "Estate members" })).toBeNull();
 });
 

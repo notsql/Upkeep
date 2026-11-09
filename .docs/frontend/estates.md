@@ -77,8 +77,8 @@ Device monitoring (`/estates/$estateId/sensors`) is a sidebar item under Assets,
 shown by `canOpenSensors` (owners, and MANAGER/COUNCIL with management access).
 See [flatlined-sensors.md](flatlined-sensors.md).
 
-The sidebar's Administration › **Members** item opens the council page when
-`canOpenMembers` is true. The route is
+The sidebar's Administration › **People & access** item opens the council page when
+`canOpenMembers` is true (otherwise Roles). The route is
 `estates/$estateId/council/index.tsx`. Estates mounts `InvitationAcceptance`
 for WorkOS email reconciliation and `PendingInvitations` for explicit in-app
 acceptance, both at the very top of the page above the "Estates" PageHeader
@@ -144,8 +144,8 @@ list is `ErrorState` "Retry estates". `ListPageHeader` "Estates" uses
 
 Custom VIEW_ESTATE adds estate list/detail visibility. The exact estate's
 canManageEstate (custom EDIT_ESTATE) controls detail editing, including inactive
-estates; it never grants ownership. The sidebar shows Roles when
-canViewEstateRoles, and Members when canViewEstateInvitations or existing
+estates; it never grants ownership. The sidebar shows People & access when
+canViewEstateRoles, or when canViewEstateInvitations or existing
 invite/admin flags permit. No VIEW_ESTATE means no overview query;
 role/invite/report-only users use their own scoped routes. See [estate-roles.md](estate-roles.md).
 
@@ -153,9 +153,9 @@ role/invite/report-only users use their own scoped routes. See [estate-roles.md]
 
 Assigned Crew may open a read-only estate overview using canViewEstateDetails.
 Their sidebar exposes Assets (inspection entry) and Work orders, without Estate
-settings, member administration or the management locations section. Devices,
-Asset categories and Inspections are sidebar items for owners and
-`canManageInvitationPermissions` delegates ([asset-categories.md](asset-categories.md),
+settings, member administration or the management locations section. Inspections
+(with its Check schedules tab) is a sidebar item for owners and
+`canManageInvitationPermissions` delegates ([check-schedules.md](check-schedules.md),
 [inspection-list.md](inspection-list.md)).
 See [inspections](inspections.md) for limited asset screens and recording.
 

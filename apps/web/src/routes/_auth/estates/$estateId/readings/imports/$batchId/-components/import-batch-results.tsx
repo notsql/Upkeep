@@ -54,8 +54,8 @@ export function ImportBatchResults({
             <SelectContent>
               <SelectItem value="ALL">All outcomes</SelectItem>
               <SelectItem value="IMPORTED">Imported</SelectItem>
-              <SelectItem value="DUPLICATE">Duplicate</SelectItem>
-              <SelectItem value="INVALID">Invalid</SelectItem>
+              <SelectItem value="DUPLICATE">Already imported</SelectItem>
+              <SelectItem value="INVALID">Has problems</SelectItem>
             </SelectContent>
           </Select>
         </Field>

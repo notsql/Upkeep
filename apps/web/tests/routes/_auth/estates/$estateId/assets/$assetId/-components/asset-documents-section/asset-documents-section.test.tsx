@@ -145,7 +145,9 @@ it("offers Retry after attachment read failure and then displays the documents",
   apiGet.mockImplementation((path, options) => {
     if (path === attachmentsPath && !failed) {
       failed = true;
-      return Promise.resolve(failure("Unable to load asset documents", 500));
+      return Promise.resolve(
+        failure("Couldn't load asset documents. Try again.", 500)
+      );
     }
     if (!original) {
       throw new Error("Missing HTTP fixture");
@@ -153,7 +155,7 @@ it("offers Retry after attachment read failure and then displays the documents",
     return original(path, options);
   });
   await openAssetDocuments("asset");
-  await screen.findByText("Unable to load asset documents");
+  await screen.findByText("Couldn't load asset documents. Try again.");
   fireEvent.click(screen.getByRole("button", { name: RETRY_BUTTON }));
   await screen.findByRole("row", { name: INVOICE_FILENAME });
   expect(apiPut).not.toHaveBeenCalled();

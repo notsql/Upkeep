@@ -72,7 +72,7 @@ beforeEach(() => {
     }
     if (path === "/estates/{estateId}/invitation-roles") {
       data = [
-        { role: "COUNCIL", label: "Council member" },
+        { role: "COUNCIL", label: "Council" },
         { role: "RESIDENT", label: "Resident" },
         { role: "MANAGER", label: "Manager (Admin)" },
         { role: "CREW", label: "Crew" },
@@ -235,7 +235,7 @@ it("retains input and reports a failed invitation", async () => {
 
 it("keeps the saved role unchanged when a role update fails", async () => {
   vi.mocked(api.PUT).mockResolvedValue({
-    error: { message: "Unable to save permission." },
+    error: { message: "Couldn't save permission. Try again." },
     response: new Response(null, { status: 502 }),
   });
   renderWithProviders(<CouncilPage estateId="estate-id" />);
@@ -244,11 +244,11 @@ it("keeps the saved role unchanged when a role update fails", async () => {
     "Crew"
   );
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to save permission."
+    "Couldn't save permission. Try again."
   );
   expect(
     screen.getByRole("combobox", { name: "Role for Alice" }).textContent
-  ).toContain("Council member");
+  ).toContain("Council");
 });
 
 it("blocks repeated submissions while sending", async () => {
@@ -382,7 +382,7 @@ it("confirms member removal and refreshes the member list", async () => {
 
 it("retains the confirmation and membership when removal fails", async () => {
   vi.mocked(api.DELETE).mockResolvedValue({
-    error: { message: "Unable to remove member." },
+    error: { message: "Couldn't remove member. Try again." },
     response: new Response(null, { status: 502 }),
   });
   renderWithProviders(<CouncilPage estateId="estate-id" />);
@@ -397,7 +397,7 @@ it("retains the confirmation and membership when removal fails", async () => {
     })
   );
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to remove member"
+    "Couldn't remove member. Try again."
   );
   expect(screen.getByRole("dialog")).toBeTruthy();
 });

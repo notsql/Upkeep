@@ -17,14 +17,16 @@ function conditionField() {
 function dateField() {
   // Date inputs have no ARIA role, so fall back to the label.
   return screen.getByRole<HTMLInputElement>("textbox", {
-    name: "Assessment date",
+    name: "Date checked",
   });
 }
 function notesField() {
   return screen.getByRole<HTMLTextAreaElement>("textbox", { name: "Notes" });
 }
 function submit() {
-  fireEvent.click(screen.getByRole("button", { name: "Record assessment" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Record condition check" })
+  );
 }
 
 describe("AssessmentForm", () => {
@@ -74,7 +76,7 @@ describe("AssessmentForm", () => {
     fireEvent.change(dateField(), { target: { value: "2999-01-01" } });
     fireEvent.change(notesField(), { target: { value: "Fine" } });
     submit();
-    await screen.findByText("The assessment date cannot be in the future.");
+    await screen.findByText("The date can't be in the future.");
     expect(onSave).not.toHaveBeenCalled();
   });
 

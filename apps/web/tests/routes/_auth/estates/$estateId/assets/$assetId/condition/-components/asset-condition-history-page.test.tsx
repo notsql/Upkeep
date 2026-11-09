@@ -129,7 +129,7 @@ describe("AssetConditionHistoryPage", () => {
     ];
     within(latest).getByText("Needs attention");
     within(latest).getByText(formatDate("2026-09-28"));
-    within(latest).getByText("Anomaly detection");
+    within(latest).getByText("Unusual readings");
     within(latest).getByText(
       formatAssessmentNotes({ notes: MODEL_NOTES, recordedByUserId: MODEL })
     );
@@ -188,7 +188,7 @@ describe("AssetConditionHistoryPage", () => {
   it("says when the asset has never been assessed", async () => {
     history = [];
     page();
-    await screen.findByText("Not assessed yet");
+    await screen.findByText("Not checked yet");
     expect(
       screen.queryByRole("list", { name: "Condition history" })
     ).toBeNull();

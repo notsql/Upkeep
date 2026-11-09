@@ -4,9 +4,9 @@ API: [service-intervals.md](../api/service-intervals.md).
 
 ## Where
 
-- **Asset categories page** (`/estates/$estateId/asset-categories`, see
-  [asset-categories.md](asset-categories.md)): a Service interval column, an edit dialog per
-  category, a missing-interval summary and filter.
+- **Check schedules page** (`/estates/$estateId/inspections/schedules`, formerly Asset
+  categories; see [check-schedules.md](check-schedules.md)): a How often column, an edit dialog
+  per equipment type, a No schedule yet summary and a filter by how often.
 - **Asset details page** (`/estates/$estateId/assets/$assetId`, see [assets.md](assets.md)): the
   `AssetServiceIntervalCard`, shown only when `estate.owned || estate.canManageInvitationPermissions`.
 
@@ -31,44 +31,45 @@ empty and Months when it is null. Save accepts only a whole number from 1 to the
 anything else (blank included) shows the `FieldError` "Enter a whole number of <days|months|years>
 from 1 to <3650|120|10>.", sets `aria-invalid` and calls nothing. **Clear** (shown only when
 `interval` is not null) saves `null`. While saving, inputs and buttons are disabled; a rejected
-`onSave` keeps the dialog open and shows the error in a destructive `Alert`. Cancel calls
+`onSave` keeps the dialog open and shows the error in a destructive `Alert` (its message, or
+"Couldn't save. Please try again." when it has none; this is the only change on the asset page). Cancel calls
 `onCancel`.
 
 shadcn: `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`,
 `DialogFooter`, `Field`, `FieldLabel`, `FieldError`, `Input`, `Select`, `SelectTrigger`,
 `SelectValue`, `SelectContent`, `SelectItem`, `Button`, `Alert`, `AlertDescription`.
 
-## `IntervalBadge` (`src/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/interval-badge.tsx`)
+## `IntervalBadge` (`src/routes/_auth/estates/$estateId/inspections/schedules/-components/check-schedules-page/interval-badge.tsx`)
 
 An outline `Badge` with `formatInterval(interval)` as its text, tinted by unit on the brand
 scale tokens: `DAY` brand-1 (sky), `MONTH` brand-2 (blue), `YEAR` brand-3 (indigo). A null interval is a
-plain outline "Not set" in the muted text colour. The text always names the unit, so colour is
+plain outline "No schedule" in the muted text colour. The text always names the unit, so colour is
 never the only signal.
 
-## Asset categories page additions
+## Check schedules page additions
 
-- `CategorySummaryCards` (`asset-categories/-components/asset-categories-layout/category-summary-cards.tsx`): three shared
+- `CategorySummaryCards` (`inspections/schedules/-components/check-schedules-layout/category-summary-cards.tsx`): three shared
   `SummaryCard`s (`src/components/page/summary-card.tsx`, a `Card`)
   in a `sm:grid-cols-3` grid, each a `region` named by its `h2` title, with a large count and a
   lucide icon:
-  - **Fails silently** (`EyeOff`): flagged count, "Categories flagged for spot checks".
-  - **Missing service interval**: count of categories with no interval. Above 0: amber warning
-    style and `TriangleAlert`, "N of M categories need an interval" and an outline **Show these
-    categories** `Button` that selects the Not set filter. At 0: `CircleCheck`, "Every category
+  - **Regular checks on** (`EyeOff`): flagged count, "Equipment types with regular checks".
+  - **No schedule yet**: count of categories with no interval. Above 0: amber warning
+    style and `TriangleAlert`, "N of M equipment types have no schedule" and an outline **Show
+    these** `Button` linking to `/inspections/schedules/not-set`. At 0: `CircleCheck`, "Every category
     has an interval.", no button.
-  - **Intervals set** (`CalendarClock`): count with an interval and a per-unit breakdown for units
+  - **Schedule set** (`CalendarClock`): count with an interval and a per-unit breakdown for units
     in use ("1 in months · 1 in years"), or "None yet".
-- shadcn `Tabs` (tablist "Filter by service interval"): All, Days, Months, Years, Not set.
-  Exactly one tab is `aria-selected="true"`; All is the default. Days/Months/Years keep categories whose `serviceInterval.unit` matches; Not
-  set keeps those with no interval. Local state only, not remembered. When nothing matches, the
-  table is replaced by `EmptyState` "No matching categories" with an outline "Clear filters"
-  that returns to All.
-- Table columns: Category, Assets, Fails silently, **Service interval** (`IntervalBadge`), Last
-  changed (the more recent of `lastChange` and `lastIntervalChange`; "Default" when neither), and an
-  unlabelled actions column with an outline **Edit interval** `Button` (accessible name "Edit
-  service interval for <Label>"), disabled in an inactive estate or while a flag save is pending.
-- The button opens `ServiceIntervalDialog` titled "Service interval for <Label>"; a successful save
-  or clear closes it and toasts "Service interval updated."
+- `SubNav` "Filter by how often": All (exact), Every few days, Every few months, Every few years,
+  No schedule; each its own URL (`days` / `months` / `years` / `not-set`). The unit views keep
+  categories whose `serviceInterval.unit` matches; No schedule keeps those with no interval. When
+  nothing matches, the table is replaced by `EmptyState` "Nothing here" ("No equipment is checked
+  this often.") with an outline "Clear filters" link back to All.
+- Table columns: Equipment type, Assets, Regular checks, **How often** (`IntervalBadge`), Last
+  changed (the more recent of `lastChange` and `lastIntervalChange`; "Never changed" when neither), and an
+  unlabelled actions column with an outline **Change how often** `Button` (accessible name "Change
+  how often <Label> is checked"), disabled in an inactive estate or while a flag save is pending.
+- The button opens `ServiceIntervalDialog` titled "How often to service <Label>"; a successful save
+  or clear closes it and toasts "Saved."
 
 ## `AssetServiceIntervalCard` (`assets/$assetId/-components/asset-maintenance/asset-service-interval-card.tsx`)
 

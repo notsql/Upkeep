@@ -1,27 +1,14 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
-import { pageHead } from "@/lib/page-title";
-import {
-  AssetCategoriesList,
-  intervalFilterFor,
-} from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/asset-categories-page";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-/** One service-interval view: days, months, years or not-set. */
+/** Old bookmark: one interval view, now under Check schedules. */
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/asset-categories/$interval/"
 )({
   beforeLoad: ({ params }) => {
-    const filter = intervalFilterFor(params.interval);
-    if (!filter) {
-      throw notFound();
-    }
-    return { filter };
+    throw redirect({
+      params,
+      replace: true,
+      to: "/estates/$estateId/inspections/schedules/$interval",
+    });
   },
-  component: AssetCategoriesIntervalRoute,
-  head: () => pageHead("Asset categories"),
 });
-
-function AssetCategoriesIntervalRoute() {
-  const { estateId } = Route.useParams();
-  const { filter } = Route.useRouteContext();
-  return <AssetCategoriesList estateId={estateId} filter={filter} />;
-}

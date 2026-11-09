@@ -181,7 +181,7 @@ it("links each asset section as its own page under one header", () => {
     ["Details", "/estates/estate/assets/asset/details"],
     ["Records", "/estates/estate/assets/asset/records"],
     ["Costs", "/estates/estate/assets/asset/costs"],
-    ["Devices 2", "/estates/estate/assets/asset/devices"],
+    ["Sensors 2", "/estates/estate/assets/asset/devices"],
   ]);
   screen.getByText("Section content");
   expect(screen.queryByRole("tablist")).toBeNull();
@@ -192,7 +192,7 @@ it("counts the asset's active devices on the Devices tab", () => {
   const nav = within(
     screen.getByRole("navigation", { name: "Asset sections" })
   );
-  const devices = nav.getByRole("link", { name: "Devices 2" });
+  const devices = nav.getByRole("link", { name: "Sensors 2" });
   within(devices).getByText("2");
 });
 
@@ -202,7 +202,7 @@ it("hides the device count when the asset has no active devices", () => {
   const nav = within(
     screen.getByRole("navigation", { name: "Asset sections" })
   );
-  nav.getByRole("link", { name: "Devices" });
+  nav.getByRole("link", { name: "Sensors" });
 });
 
 it("neither counts nor requests devices for a viewer who cannot see them", () => {
@@ -211,7 +211,7 @@ it("neither counts nor requests devices for a viewer who cannot see them", () =>
   const nav = within(
     screen.getByRole("navigation", { name: "Asset sections" })
   );
-  nav.getByRole("link", { name: "Devices" });
+  nav.getByRole("link", { name: "Sensors" });
   expect(page.devicesEnabled.every((enabled) => !enabled)).toBe(true);
 });
 
@@ -223,7 +223,7 @@ it("keeps only the title, status and reference in the header", () => {
   expect(
     screen.queryByRole("link", { name: "Create inspection record" })
   ).toBeNull();
-  expect(screen.queryByRole("button", { name: "Retire asset" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Take out of use" })).toBeNull();
 });
 
 it("shows the attention banner under the header, above the tabs", () => {
@@ -278,7 +278,7 @@ it.each([
   [
     { deactivatedAt: "2026-10-01T00:00:00Z" },
     {},
-    "This asset is retired, so its service interval cannot be changed.",
+    "This asset is out of use, so you can't change how often it's serviced.",
   ],
   [
     {},

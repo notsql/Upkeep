@@ -43,8 +43,11 @@ vi.mock("@/lib/notifications", async (importOriginal) => ({
   useDismissAlert: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
+const SCORE = /score/iu;
+const UNUSUAL_FROM = /^Unusual from .+ to .+$/u;
+
 function section() {
-  return within(screen.getByRole("region", { name: "Anomaly alerts" }));
+  return within(screen.getByRole("region", { name: "Unusual readings" }));
 }
 
 it("lists the asset's alerts with their outcome", () => {
@@ -54,10 +57,14 @@ it("lists the asset's alerts with their outcome", () => {
   const open = within(items[0]);
   open.getByText("Open");
   open.getByText("Needs attention");
-  open.getByText("Median score 0.74 · maximum 0.91");
+  expect(open.queryByText(SCORE)).toBeNull();
+  open.getByText(UNUSUAL_FROM);
+  open.getByText(
+    "Have someone look at it. Mark as seen once it's being handled. Dismiss it if this was expected, for example during maintenance."
+  );
   open.getByText("10 consecutive abnormal readings.");
-  open.getByText("Not yet acknowledged");
-  open.getByRole("button", { name: "Acknowledge" });
+  open.getByText("Not seen yet");
+  open.getByRole("button", { name: "Mark as seen" });
   const past = within(items[1]);
   past.getByText("Resolved");
   past.getByText("Faulty");
@@ -72,12 +79,12 @@ it("disables the actions with the lock reason", () => {
     <AnomalyAlertsSection
       assetId="a-1"
       estateId="e-1"
-      locked="This asset is retired, so its alerts cannot be changed."
+      locked="This asset is out of use, so you can't change its alerts."
     />
   );
   expect(
     section()
-      .getByRole("button", { name: "Acknowledge" })
+      .getByRole("button", { name: "Mark as seen" })
       .hasAttribute("disabled")
   ).toBe(true);
 });
@@ -85,13 +92,13 @@ it("disables the actions with the lock reason", () => {
 it("renders nothing when there are no alerts", () => {
   state.data = [];
   renderWithProviders(<AnomalyAlertsSection assetId="a-1" estateId="e-1" />);
-  expect(screen.queryByRole("region", { name: "Anomaly alerts" })).toBeNull();
+  expect(screen.queryByRole("region", { name: "Unusual readings" })).toBeNull();
 });
 
 it("renders nothing while loading", () => {
   state.data = undefined;
   renderWithProviders(<AnomalyAlertsSection assetId="a-1" estateId="e-1" />);
-  expect(screen.queryByRole("region", { name: "Anomaly alerts" })).toBeNull();
+  expect(screen.queryByRole("region", { name: "Unusual readings" })).toBeNull();
 });
 
 it("shows a load error", () => {

@@ -31,7 +31,7 @@ export function DeactivateDeviceDialog({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to deactivate the device. Please try again."
+          : "Couldn't turn off the sensor. Try again."
       );
     } finally {
       setPending(false);
@@ -46,21 +46,21 @@ export function DeactivateDeviceDialog({
   return (
     <ConfirmDialog
       confirmDisabled={!matches}
-      confirmLabel="Deactivate device"
-      description="Its key stops working immediately and it can't be reactivated. Its readings stay on the asset."
+      confirmLabel="Turn off sensor"
+      description="Its key stops working straight away and you can't turn it back on. We'll keep its readings."
       error={error}
       onCancel={onCancel}
       onConfirm={handleConfirm}
       open
       pending={pending}
       pendingLabel="Deactivating…"
-      title={`Deactivate ${identifier}?`}
+      title={`Turn off ${identifier}?`}
     >
       <div className="grid gap-2">
         <p className="text-sm" id={`${id}-help`}>
           Type <strong>{identifier}</strong> to confirm.
         </p>
-        <Label htmlFor={`${id}-identifier`}>Device identifier</Label>
+        <Label htmlFor={`${id}-identifier`}>Sensor name</Label>
         <Input
           aria-describedby={`${id}-help`}
           autoComplete="off"

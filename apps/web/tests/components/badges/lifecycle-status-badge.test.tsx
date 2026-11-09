@@ -5,7 +5,7 @@ import { LifecycleStatusBadge } from "@/components/badges/lifecycle-status-badge
 it.each([
   [false, "Inactive", "Active", "success"],
   [true, "Inactive", "Inactive", "secondary"],
-  [true, "Retired", "Retired", "secondary"],
+  [true, "Out of use", "Out of use", "secondary"],
 ] as const)(
   "announces lifecycle status for inactive=%s, %s",
   (inactive, inactiveLabel, expected, variant) => {

@@ -37,7 +37,10 @@ export function ResidentDashboard({ estateId }: { estateId?: string }) {
       />
       {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
-        <ErrorState message="Unable to load reports" onRetry={retry} />
+        <ErrorState
+          message="Couldn't load reports. Try again."
+          onRetry={retry}
+        />
       ) : null}
       {reports.data ? (
         <div className="grid gap-8">

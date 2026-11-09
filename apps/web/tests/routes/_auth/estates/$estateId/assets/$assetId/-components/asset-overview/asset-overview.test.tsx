@@ -49,6 +49,7 @@ const viewer = vi.hoisted(() => ({
   canRecordReadings: true,
   category: "PUMP",
   retired: false,
+  canCreateWorkOrders: false,
 }));
 vi.mock("@/lib/estates", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/estates")>()),
@@ -66,6 +67,7 @@ vi.mock("@/lib/access", async (importOriginal) => ({
           role: viewer.role,
           canViewReadings: viewer.canViewReadings,
           canRecordReadings: viewer.canRecordReadings,
+          canCreateWorkOrders: viewer.canCreateWorkOrders,
         },
       ],
     },
@@ -90,9 +92,16 @@ vi.mock("@/lib/catalogue", () => ({
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section",
   () => ({
-    AssetConditionSection: ({ upcoming }: { upcoming?: ReactNode }) => (
+    AssetConditionSection: ({
+      upcoming,
+      canRecord,
+    }: {
+      upcoming?: ReactNode;
+      canRecord: boolean;
+    }) => (
       <section aria-label="Condition">
         <h2>Condition</h2>
+        {canRecord ? <p>Can record assessment</p> : null}
         {upcoming}
       </section>
     ),
@@ -218,6 +227,7 @@ function requested(path: string): boolean {
 beforeEach(() => {
   vi.mocked(api.GET).mockReset();
   Object.assign(viewer, {
+    canCreateWorkOrders: false,
     owned: true,
     role: "MEMBER",
     canViewReadings: true,
@@ -231,13 +241,13 @@ beforeEach(() => {
   serve();
 });
 
-const STAT = /devices? online$/u;
+const STAT = /sensors? online$/u;
 
 describe("AssetOverview devices", () => {
   it("summarises how many devices are online and links to the Devices tab", async () => {
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     const stat = await screen.findByRole("link", {
-      name: "1 of 2 devices online",
+      name: "1 of 2 sensors online",
     });
     expect(stat.getAttribute("href")).toBe(
       `/estates/estate/assets/${ASSET}/devices`
@@ -251,7 +261,7 @@ describe("AssetOverview devices", () => {
       <AssetOverview assetId={ASSET} estateId="estate" />
     );
     const all = await screen.findByRole("link", {
-      name: "1 of 1 device online",
+      name: "1 of 1 sensor online",
     });
     expect(all.dataset.tone).toBe("all");
     first.unmount();
@@ -261,7 +271,7 @@ describe("AssetOverview devices", () => {
     ];
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     const none = await screen.findByRole("link", {
-      name: "0 of 2 devices online",
+      name: "0 of 2 sensors online",
     });
     expect(none.dataset.tone).toBe("none");
   });
@@ -275,7 +285,7 @@ describe("AssetOverview devices", () => {
       },
     ];
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
-    await screen.findByRole("link", { name: "1 of 1 device online" });
+    await screen.findByRole("link", { name: "1 of 1 sensor online" });
   });
 
   it("shows no stat when the asset has no active devices", async () => {
@@ -290,7 +300,7 @@ describe("AssetOverview devices", () => {
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("link", { name: STAT });
     expect(screen.queryByRole("list", { name: "Asset devices" })).toBeNull();
-    expect(screen.queryByRole("heading", { name: "Devices" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "Sensors" })).toBeNull();
     expect(requested(REVIEW_PATH)).toBe(false);
   });
 });
@@ -369,5 +379,17 @@ describe("AssetOverview access", () => {
     expect(screen.queryByRole("link", { name: STAT })).toBeNull();
     expect(requested(DEVICES_PATH)).toBe(false);
     expect(requested(REVIEW_PATH)).toBe(false);
+  });
+
+  it("leaves judging the condition to crew when the reader can send them", async () => {
+    viewer.canCreateWorkOrders = true;
+    renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
+    await screen.findByRole("heading", { name: "Condition" });
+    expect(screen.queryByText("Can record assessment")).toBeNull();
+  });
+
+  it("still lets a reader who cannot send crew record an assessment", async () => {
+    renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
+    await screen.findByText("Can record assessment");
   });
 });

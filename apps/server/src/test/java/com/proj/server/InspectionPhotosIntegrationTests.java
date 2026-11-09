@@ -82,7 +82,7 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
         var data = asset();
         member(data[0], "crew", "CREW");
         member(data[0], "manager", "MANAGER");
-        var request = submission(data, "FAIL", today().toString()).param("notes", "  Cracked seal  ");
+        var request = submission(data, "FAIL", today().toString(), "  Cracked seal  ");
         for (int i = 0; i < 3; i++) request.file(photo("png", 2, 2));
         String body = mvc.perform(request.with(jwt().jwt(t -> t.subject("crew"))))
                 .andExpect(status().isCreated())

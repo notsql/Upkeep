@@ -65,9 +65,9 @@ account menu (Account settings, Admin users for platform admins, Sign out).
 
 The sidebar appears only in estate scope (`/estates/$estateId/**`) and on the
 resident pages; it holds no switcher and no global links. Estate groups: Overview
-(unlabelled); Operations (Work orders, Fault reports, Inspections); Assets
-(Locations, Assets, Devices, Readings, Device monitoring, Failure risk); Records
-(Documents); Administration (Members, Roles, Asset categories, Estate settings).
+(unlabelled); Maintenance (Fault reports, Inspections, Work orders); Assets
+(Assets, Locations, Documents); Administration (People & access, Notification
+settings, Estate settings).
 Each item is filtered by its `lib/estate-destinations.ts` predicate and empty
 groups are omitted. Residents get one group: Dashboard (resident-only accounts),
 Report a fault, My reports. Details in [shell.md](shell.md).
@@ -92,7 +92,7 @@ Shared app pieces live in `apps/web/src/components/`:
 - `PageHeader`: title, optional description/status, breadcrumbs, contextual
   actions (right-aligned `actions`; the page's primary action goes there).
   Breadcrumb `to` is a union of `/estates`, `/reports`,
-  `/estates/$estateId/{assets,readings,work-orders,reports,roles,council,locations,devices,sensors,documents,inspections,failure-risk,asset-categories}` and
+  `/estates/$estateId/{assets,readings,work-orders,reports,roles,council,locations,devices,sensors,documents,inspections,inspections/schedules,failure-risk}` and
   `/estates/$estateId/assets/$assetId` (no `/`), with optional `params` and
   `search` (`{ estateId? }`, used by resident crumbs).
 - `FormActions`: submit label/pending state, optional `disabled` (submit only)
@@ -117,8 +117,8 @@ Shared app pieces live in `apps/web/src/components/`:
 - There is no `BackLink` (deleted); no page renders a "Back to …" link.
 - The estate overview and top-level sections (one segment under the estate:
   work-orders, reports, inspections, assets, devices, readings, sensors,
-  failure-risk, documents, council, roles, asset-categories, edit) render **no
-  breadcrumbs**; the sidebar shows where you are.
+  failure-risk, documents, council, roles, edit, plus Check schedules under
+  inspections) render **no breadcrumbs**; the sidebar shows where you are.
 - Pages two or more levels deep render breadcrumbs that start at the section
   and use loaded names, never "Estate": `Assets › Pump A › Edit`,
   `Work orders › WO-12`, `Fault reports › <report title>`,
@@ -563,7 +563,7 @@ action's role, not taste.
 | `default` (primary) | The **one** main action of the view: page-header create action, form submit, dialog confirm (non-destructive). At most one per view/dialog footer. | "New work order", "Save", "Create estate" |
 | `outline` | Secondary actions beside the primary; Cancel; Retry in error alerts; pagination; picker/dialog triggers; export; Clear filters as an EmptyState action | "Cancel", "Retry", "Next", "Export CSV" |
 | `ghost` | Row/inline and icon-only actions inside tables, cards and toolbars; FilterBar's Clear filters; dismiss | row "Edit", kebab menu |
-| `destructive` | Only the confirm button of a destructive action (in its confirmation dialog), and the trigger that opens it on a details page | "Delete file", "Retire asset", "Deactivate" |
+| `destructive` | Only the confirm button of a destructive action (in its confirmation dialog), and the trigger that opens it on a details page | "Delete file", "Take out of use", "Deactivate" |
 | `secondary` | Not used. Use `outline`. | - |
 | `link` | Inline navigation inside text | "View inspection" in a sentence |
 
@@ -694,7 +694,7 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
   inline editor/picker forms) with no single submit.
 
 ```tsx
-{orders.isError ? <ErrorState message="Unable to load work orders" onRetry={retry} /> : null}
+{orders.isError ? <ErrorState message="Couldn't load work orders. Try again." onRetry={retry} /> : null}
 
 <Pagination canNext={!!data.nextCursor} canPrevious={index > 0} label="Work order pages" onNext={next} onPrevious={previous} />
 

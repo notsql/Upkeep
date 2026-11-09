@@ -23,7 +23,7 @@ export function StatusHistory({
         ) : null}
         {history.isError ? (
           <ErrorState
-            message="Unable to load status history"
+            message="Couldn't load status history. Try again."
             onRetry={onRetry}
             retryLabel="Retry history"
           />

@@ -21,8 +21,8 @@ export function MetricPolicyDialog({
   if (policy) {
     description =
       policy.durationMinutes === null
-        ? "Not configured"
-        : `Current: ${policy.durationMinutes} minutes · tolerance ${policy.tolerance} ${policy.unit}`;
+        ? "No warning set yet"
+        : `Now: warn after ${policy.durationMinutes} minutes · allows ${policy.tolerance} ${policy.unit} change`;
   }
   return (
     <FormDialog
@@ -33,8 +33,8 @@ export function MetricPolicyDialog({
       open={Boolean(policy)}
       pending={editor.isPending}
       submitDisabled={!canManage}
-      submitLabel="Save policy"
-      title={`${label} policy`}
+      submitLabel="Save warning"
+      title={`${label} warning`}
     >
       {policy ? (
         <MetricPolicyFields

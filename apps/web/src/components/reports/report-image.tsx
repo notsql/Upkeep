@@ -20,7 +20,7 @@ export function ReportImage({
     return () => URL.revokeObjectURL(objectUrl);
   }, [data]);
   if (isError) {
-    return <p role="alert">Unable to load an image.</p>;
+    return <p role="alert">Couldn't load an image. Try again.</p>;
   }
   if (!url) {
     return loading;

@@ -28,6 +28,6 @@ public class AssetHistoryExceptionHandler {
     ResponseEntity<EstateError> unavailable() {
         return ResponseEntity.internalServerError()
                 .header("Cache-Control", "private, no-store")
-                .body(new EstateError("Unable to load recorded history. Try again."));
+                .body(new EstateError("Couldn't load the history. Try again."));
     }
 }

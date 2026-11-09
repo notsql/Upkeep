@@ -302,3 +302,11 @@ See [inspections](inspections.md) for the immutable result and lookup contracts.
 Creation, the limited asset picker, progress, completion and corrections require
 Owner/Manager authority. Crew have read-only work-order access, including orders
 linked to their recorded inspections.
+
+## Open work order (equipment dispatch)
+
+`GET /estates/{estateId}/assets/{assetId}/open-work-order` returns the asset's
+newest work order that is not `CLOSED` as `OpenWorkOrderResponse { id,
+reference }`, or 204 when there is none. Same readers as the work-order list.
+"Send a contractor" uses the existing create endpoint; see
+[equipment-dispatch.md](equipment-dispatch.md).

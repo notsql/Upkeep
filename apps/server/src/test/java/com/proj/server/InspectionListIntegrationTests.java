@@ -162,6 +162,7 @@ class InspectionListIntegrationTests {
                 .param("expectedLocationId", location.toString())
                 .param("outcome", outcome)
                 .param("inspectedOn", TODAY.toString())
+                .param("notes", "FAIL".equals(outcome) ? "Not working" : "")
                 .with(jwt().jwt(j -> j.subject("owner"))));
     }
 

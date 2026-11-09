@@ -41,8 +41,8 @@ export function EstateReportsResults({
         <ErrorState
           message={
             rejectedPage
-              ? "Unable to load this report page. Return to the first page."
-              : "Unable to load reports"
+              ? "Couldn't load this report page. Return to the first page."
+              : "Couldn't load reports. Try again."
           }
           onRetry={rejectedPage ? onFirst : onRetry}
           retryLabel={rejectedPage ? "Return to first page" : "Retry"}

@@ -218,7 +218,7 @@ it.each([401, 409, 503])(
       response: new Response(),
     });
     vi.mocked(api.POST).mockResolvedValue({
-      error: { message: "Unable to create estate." },
+      error: { message: "Couldn't create estate. Try again." },
       response: new Response(null, { status }),
     } as never);
     renderWithProviders(<EstateEditorPage />);
@@ -367,7 +367,7 @@ it("keeps the edit form hidden if permissions cannot load", async () => {
   );
   renderWithProviders(<EstateEditorPage estateId={estate.id} />);
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "Unable to load your access"
+    "Couldn't load your access. Try again."
   );
   expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
 });

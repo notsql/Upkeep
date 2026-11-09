@@ -17,7 +17,7 @@ export function DeviceForm({
   initialDevice,
   onSave,
   onCancel,
-  submitLabel = "Register device",
+  submitLabel = "Add sensor",
   pendingLabel = "Registering…",
 }: {
   defaultLocationId: string;

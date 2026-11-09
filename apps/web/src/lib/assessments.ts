@@ -70,7 +70,7 @@ export const ANOMALY_MODEL_USER_ID = "system:anomaly-model";
 /** Who recorded an assessment, as shown to people. */
 export function recorderName(assessment: Assessment): string {
   if (assessment.recordedByUserId === ANOMALY_MODEL_USER_ID) {
-    return "Anomaly detection";
+    return "Unusual readings";
   }
   return assessment.recordedByName ?? "Unknown user";
 }

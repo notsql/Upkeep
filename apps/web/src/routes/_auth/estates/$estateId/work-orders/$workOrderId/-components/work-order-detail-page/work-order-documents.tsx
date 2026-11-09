@@ -54,7 +54,7 @@ export function WorkOrderDocuments({
         ) : null}
         {documents.isError ? (
           <ErrorState
-            message="Unable to load documents"
+            message="Couldn't load documents. Try again."
             onRetry={retry}
             retryLabel="Retry documents"
           />

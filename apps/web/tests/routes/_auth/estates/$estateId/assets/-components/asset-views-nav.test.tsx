@@ -40,7 +40,7 @@ it("tabs between the asset views for any asset-page viewer", () => {
   renderWithProviders(<AssetViewsNav estateId={ESTATE} />);
   const nav = screen.getByRole("navigation", { name: "Asset views" });
   within(nav).getByRole("link", { name: "By location" });
-  within(nav).getByRole("link", { name: "All devices" });
+  within(nav).getByRole("link", { name: "All sensors" });
 });
 
 it("offers no All readings link, even for owners and Managers", () => {

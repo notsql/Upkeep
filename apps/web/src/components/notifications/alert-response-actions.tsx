@@ -37,7 +37,7 @@ export function AlertResponseActions({
     try {
       await acknowledgeAsync({ notificationId: id });
     } catch (cause) {
-      setError(message(cause, "Unable to acknowledge the alert."));
+      setError(message(cause, "Couldn't mark the alert as seen. Try again."));
     }
   }, [acknowledgeAsync, id]);
 
@@ -54,7 +54,9 @@ export function AlertResponseActions({
         await dismissAsync({ notificationId: id, reason });
         setDismissing(false);
       } catch (cause) {
-        setDismissError(message(cause, "Unable to dismiss the alert."));
+        setDismissError(
+          message(cause, "Couldn't dismiss the alert. Try again.")
+        );
       }
     },
     [dismissAsync, id]
@@ -76,7 +78,7 @@ export function AlertResponseActions({
             type="button"
             variant="outline"
           >
-            Acknowledge
+            Mark as seen
           </Button>
         ) : null}
         <Button

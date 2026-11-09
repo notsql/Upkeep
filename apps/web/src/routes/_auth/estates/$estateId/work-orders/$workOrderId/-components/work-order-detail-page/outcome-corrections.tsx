@@ -26,7 +26,7 @@ export function OutcomeCorrections({
         ) : null}
         {revisions.isError ? (
           <ErrorState
-            message="Unable to load outcome corrections"
+            message="Couldn't load the change history. Try again."
             onRetry={onRetry}
             retryLabel="Retry corrections"
           />

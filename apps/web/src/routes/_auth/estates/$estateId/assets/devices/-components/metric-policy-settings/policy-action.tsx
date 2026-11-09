@@ -22,7 +22,7 @@ export function PolicyAction({
   return (
     <Button
       aria-haspopup="dialog"
-      aria-label={`${label} ${metricLabel(policy.metric).toLowerCase()} policy`}
+      aria-label={`${label} ${metricLabel(policy.metric).toLowerCase()} warning`}
       disabled={saving}
       id={id}
       onClick={open}

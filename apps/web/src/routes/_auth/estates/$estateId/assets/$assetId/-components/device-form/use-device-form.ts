@@ -64,7 +64,7 @@ function validate(
     errors.interval = `Enter a whole number of seconds from 1 to ${MAX_REPORTING_INTERVAL_SECONDS}.`;
   }
   if (metrics.size === 0) {
-    errors.metrics = "Choose at least one metric.";
+    errors.metrics = "Choose at least one measurement.";
   }
   return errors;
 }
@@ -169,7 +169,7 @@ export function useDeviceForm({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to register the device. Please try again."
+            : "Couldn't add the sensor. Try again."
         );
       } finally {
         setPending(false);

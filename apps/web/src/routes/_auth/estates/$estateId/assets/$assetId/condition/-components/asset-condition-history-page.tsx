@@ -58,7 +58,7 @@ function ConditionHistoryContent({
           },
           { label: "Condition history" },
         ]}
-        description="Every assessment, newest first"
+        description="Every condition check, newest first"
         icon={HeartPulse}
         title="Condition history"
       />

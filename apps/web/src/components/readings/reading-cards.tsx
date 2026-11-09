@@ -62,7 +62,7 @@ export function ReadingCards({
                 </div>
                 {reading.deviceIdentifier ? (
                   <div>
-                    <dt className="text-muted-foreground">Device</dt>
+                    <dt className="text-muted-foreground">Sensor name</dt>
                     <dd>{reading.deviceIdentifier}</dd>
                   </div>
                 ) : null}

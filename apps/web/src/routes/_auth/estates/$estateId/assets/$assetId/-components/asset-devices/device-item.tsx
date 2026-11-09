@@ -72,12 +72,12 @@ function DeviceActions({
           }
         >
           <Replace aria-hidden="true" />
-          Replace device
+          Replace sensor
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onDeactivate} variant="destructive">
           <PowerOff aria-hidden="true" />
-          Deactivate device
+          Turn off sensor
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -113,7 +113,7 @@ export function DeviceItem({
     async (identifier: string) => {
       await deactivate.mutateAsync({ deviceId: device.id, identifier });
       setConfirming(false);
-      toast.success("Device deactivated. Its readings are kept.");
+      toast.success("Sensor turned off. We've kept its readings.");
     },
     [deactivate.mutateAsync, device.id]
   );
@@ -141,7 +141,7 @@ export function DeviceItem({
             <h3 className="font-medium break-all">{device.identifier}</h3>
             {device.deactivatedAt ? (
               <Badge className="whitespace-normal" variant="secondary">
-                {`Deactivated ${formatDateTime(device.deactivatedAt)}`}
+                {`Turned off ${formatDateTime(device.deactivatedAt)}`}
               </Badge>
             ) : (
               <DeviceStatusBadge status={device.status} />
@@ -169,6 +169,18 @@ export function DeviceItem({
               </Badge>
             ))}
           </div>
+          {status === "AWAITING_FIRST_READING" ? (
+            <div
+              aria-label="Sensor isn't sending readings yet"
+              className="text-sm"
+              role="note"
+            >
+              <p className="font-medium">Sensor isn't sending readings yet</p>
+              <p className="text-muted-foreground">
+                {`Added ${formatRelative(device.createdAt, new Date())}, nothing received. Make sure it's switched on and set up with its connection key.`}
+              </p>
+            </div>
+          ) : null}
           {replaces ? (
             <p className="text-muted-foreground text-sm">Replaces {replaces}</p>
           ) : null}
@@ -180,8 +192,8 @@ export function DeviceItem({
           {active ? (
             <p className="text-muted-foreground text-xs">
               {device.credentialIssuedAt
-                ? `Credential issued ${formatDateTime(device.credentialIssuedAt)}`
-                : "No credential"}
+                ? `Connection key created ${formatDateTime(device.credentialIssuedAt)}`
+                : "No connection key"}
             </p>
           ) : null}
           {actionable ? (

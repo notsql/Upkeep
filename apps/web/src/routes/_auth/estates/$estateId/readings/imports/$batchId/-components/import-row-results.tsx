@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import type { ReadingImportRow } from "@/lib/reading-imports";
+import { importOutcomeLabels } from "@/lib/reading-imports";
 import { badgeVariantFor, readingImportOutcomeTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
 
@@ -55,7 +56,7 @@ export function ImportRowResults({ items }: { items: ReadingImportRow[] }) {
                         readingImportOutcomeTone[row.outcome]
                       )}
                     >
-                      {row.outcome}
+                      {importOutcomeLabels[row.outcome]}
                     </Badge>
                   </dd>
                 </dl>
@@ -93,7 +94,7 @@ export function ImportRowResults({ items }: { items: ReadingImportRow[] }) {
                     readingImportOutcomeTone[row.outcome]
                   )}
                 >
-                  {row.outcome}
+                  {importOutcomeLabels[row.outcome]}
                 </Badge>
               </TableCell>
               <TableCell>

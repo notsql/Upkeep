@@ -106,7 +106,7 @@ export function useWorkOrderList(
       );
       if (error || !data) {
         return fail(
-          error?.message ?? "Unable to load work orders.",
+          error?.message ?? "Couldn't load work orders. Try again.",
           response.status
         );
       }
@@ -161,7 +161,7 @@ export function useWorkOrderAssets(
       );
       if (error || !data) {
         return fail(
-          error?.message ?? "Unable to load asset options.",
+          error?.message ?? "Couldn't load asset options. Try again.",
           response.status
         );
       }
@@ -189,7 +189,7 @@ export function useCreateWorkOrder(estateId: string) {
       if (error || !data) {
         return fail(
           error?.message ??
-            "Unable to save. Check the work-order list before trying again.",
+            "Couldn't save. Check the work-order list before trying again.",
           response.status
         );
       }
@@ -247,7 +247,7 @@ export function useWorkOrderStatusHistory(
       );
       if (error || !data) {
         return fail(
-          error?.message ?? "Unable to load status history.",
+          error?.message ?? "Couldn't load status history. Try again.",
           response.status
         );
       }
@@ -273,7 +273,7 @@ export function useAssetWorkOrderCompletions(
       );
       if (error || !data) {
         return fail(
-          error?.message ?? "Unable to load completed work orders.",
+          error?.message ?? "Couldn't load completed work orders. Try again.",
           response.status
         );
       }
@@ -342,7 +342,7 @@ export function useChangeWorkOrderStatus(
       if (error || !data) {
         return fail(
           error?.message ??
-            "Unable to start work. Refresh to check its status before retrying.",
+            "Couldn't start work. Refresh to check its status before you try again.",
           response.status
         );
       }
@@ -372,7 +372,7 @@ export function useSaveWorkOrderCompletion(
       if (error || !data) {
         return fail(
           error?.message ??
-            "Unable to save completion. Refresh to check whether it was saved before retrying.",
+            "Couldn't save completion. Refresh to check whether it was saved before you try again.",
           response.status
         );
       }
@@ -407,7 +407,7 @@ export function useWorkOrderCompletionRevisions(
       );
       if (error || !data) {
         return fail(
-          error?.message ?? "Unable to load outcome corrections.",
+          error?.message ?? "Couldn't load the change history. Try again.",
           response.status
         );
       }
@@ -440,7 +440,7 @@ export function useCorrectWorkOrderCompletion(
       if (error || !data) {
         return fail(
           error?.message ??
-            "Unable to save the correction. Refresh before retrying.",
+            "Couldn't save your changes. Refresh the page, then try again.",
           response.status
         );
       }

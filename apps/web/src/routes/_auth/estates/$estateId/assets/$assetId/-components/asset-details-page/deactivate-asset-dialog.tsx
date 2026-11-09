@@ -50,7 +50,7 @@ export function DeactivateAssetDialog({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to retire the asset. Please try again."
+          : "Couldn't take the asset out of use. Try again."
       );
     } finally {
       setPending(false);
@@ -78,7 +78,7 @@ export function DeactivateAssetDialog({
   return (
     <ConfirmDialog
       confirmDisabled={invalid || confirmation !== reference}
-      confirmLabel="Retire asset"
+      confirmLabel="Take out of use"
       description="The asset stays on record and remains readable, but it can no longer be edited until restored."
       error={error}
       onCancel={onCancel}
@@ -101,7 +101,7 @@ export function DeactivateAssetDialog({
           onChange={handleChange}
           value={confirmation}
         />
-        <Label htmlFor="retired-on">Retirement date</Label>
+        <Label htmlFor="retired-on">Date taken out of use</Label>
         <DatePicker
           aria-describedby={
             dateError ? "retirement-date-error" : "retirement-date-help"
@@ -128,7 +128,7 @@ export function DeactivateAssetDialog({
             {dateError}
           </p>
         ) : null}
-        <Label htmlFor="retirement-reason">Retirement reason</Label>
+        <Label htmlFor="retirement-reason">Why it's out of use</Label>
         <Textarea
           disabled={pending}
           id="retirement-reason"

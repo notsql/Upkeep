@@ -54,7 +54,7 @@ export function AssessmentForm({
           </Button>
         ) : null}
         <Button disabled={pending} type="submit">
-          {pending ? "Recording…" : "Record assessment"}
+          {pending ? "Recording…" : "Record condition check"}
         </Button>
       </div>
     </form>

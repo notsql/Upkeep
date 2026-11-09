@@ -11,6 +11,7 @@ import {
 } from "react";
 import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
 import { ListPageHeader } from "@/components/page/list-page-header";
+import { PEOPLE_TITLE, PeopleViews } from "@/components/people/people-views";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -110,8 +111,9 @@ export function RoleWorkspace({
         create={create}
         filters={all.length ? { activeCount, ...panel.toggleProps } : undefined}
         icon={ShieldCheck}
-        title="Roles"
+        title={PEOPLE_TITLE}
       />
+      <PeopleViews estateId={estateId} permission={estate} />
       <div className="grid gap-5">
         {all.length ? (
           <FilterBar

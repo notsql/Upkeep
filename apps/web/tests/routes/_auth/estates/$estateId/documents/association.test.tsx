@@ -69,7 +69,7 @@ const SAVE_LINK = /^save link$/iu;
 const MUTATION_ACTIONS = /save link|change work order|remove link/iu;
 const DOWNLOAD_INVOICE = /download invoice.pdf/iu;
 const CHANGE_ORDER = /^change work order$/iu;
-const CORRECTION_REASON = /correction reason/iu;
+const CORRECTION_REASON = /why you're changing it/iu;
 const REMOVE_LINK = /^remove link$/iu;
 const CONFIRM_REMOVAL = /^confirm removal$/iu;
 const UNLINKED = /not linked to a work order/iu;
@@ -416,7 +416,7 @@ it("lets a Manager correct a validation error without requiring a stale-link ref
     associationVersion: 1,
   };
   apiPut.mockResolvedValueOnce({
-    error: { message: "Enter a correction reason." },
+    error: { message: "Say why you're changing it." },
     response: new Response(null, { status: 400 }),
   });
   await open();
@@ -433,7 +433,7 @@ it("lets a Manager correct a validation error without requiring a stale-link ref
   });
   fireEvent.change(reason, { target: { value: "   " } });
   fireEvent.click(within(dialog).getByRole("button", { name: SAVE_LINK }));
-  await within(dialog).findByText("Enter a correction reason.");
+  await within(dialog).findByText("Say why you're changing it.");
   fireEvent.change(reason, { target: { value: "Corrected job selection" } });
   expect(
     within(dialog).getByRole<HTMLButtonElement>("button", { name: SAVE_LINK })

@@ -216,7 +216,7 @@ describe("assets by location", () => {
   it("shows the device summary and a risk flag for the owner", async () => {
     mockApi();
     renderRegister();
-    await screen.findByRole("columnheader", { name: "Devices" });
+    await screen.findByRole("columnheader", { name: "Sensors" });
     screen.getByRole("columnheader", { name: "Risk" });
     const pumpRow = (
       await screen.findByRole("link", { name: "Water pump" })
@@ -225,7 +225,7 @@ describe("assets by location", () => {
     const fanRow = screen
       .getByRole("link", { name: "Exhaust fan" })
       .closest("tr") as HTMLElement;
-    await within(fanRow).findByText("No devices");
+    await within(fanRow).findByText("No sensors");
     await within(fanRow).findByText("Flagged: Condition");
     expect(within(pumpRow).queryByText(FLAGGED)).toBeNull();
   });
@@ -243,7 +243,7 @@ describe("assets by location", () => {
     mockApi({ owned: false, role: "MEMBER" });
     renderRegister();
     await screen.findByRole("link", { name: "Water pump" });
-    expect(screen.queryByRole("columnheader", { name: "Devices" })).toBeNull();
+    expect(screen.queryByRole("columnheader", { name: "Sensors" })).toBeNull();
     expect(calledPaths()).not.toContain("/estates/{estateId}/devices");
   });
 
@@ -257,7 +257,7 @@ describe("assets by location", () => {
     renderRegister();
     await screen.findByRole("link", { name: "Water pump" });
     const alert = await screen.findByText(
-      "Device status and failure risk could not be loaded."
+      "Couldn't load sensor status or the chance of breaking down. Try again."
     );
     expect(screen.getAllByText("Unavailable")).toHaveLength(4);
     screen.getByRole("link", { name: "Exhaust fan" });
@@ -271,7 +271,7 @@ describe("assets by location", () => {
     await waitFor(() =>
       expect(
         screen.queryByText(
-          "Device status and failure risk could not be loaded."
+          "Couldn't load sensor status or the chance of breaking down. Try again."
         )
       ).toBeNull()
     );
@@ -280,7 +280,9 @@ describe("assets by location", () => {
   it("names only the failed source", async () => {
     mockApi({ overrides: { "/estates/{estateId}/failure-risk": failed } });
     renderRegister();
-    await screen.findByText("Failure risk could not be loaded.");
+    await screen.findByText(
+      "Couldn't load the chance of breaking down. Try again."
+    );
     await screen.findByText("1 of 2 offline");
     expect(screen.getAllByText("Unavailable")).toHaveLength(2);
   });
@@ -308,7 +310,7 @@ describe("assets by location", () => {
       ).toHaveLength(2)
     );
     expect(
-      screen.getAllByRole("status", { name: "Loading failure risk" })
+      screen.getAllByRole("status", { name: "Loading chance of breaking down" })
     ).toHaveLength(2);
     const before = assetOrder();
     resolveDevices(ok(devices));
@@ -318,12 +320,12 @@ describe("assets by location", () => {
     expect(assetOrder()).toEqual(before);
   });
 
-  it("links By location and All devices for a viewer who can open both", async () => {
+  it("links By location and All sensors for a viewer who can open both", async () => {
     mockApi();
     renderRegister();
     const nav = await screen.findByRole("navigation", { name: "Asset views" });
     within(nav).getByRole("link", { name: "By location" });
-    within(nav).getByRole("link", { name: "All devices" });
+    within(nav).getByRole("link", { name: "All sensors" });
   });
 
   it("shows no view tabs to a viewer who cannot open All devices", async () => {

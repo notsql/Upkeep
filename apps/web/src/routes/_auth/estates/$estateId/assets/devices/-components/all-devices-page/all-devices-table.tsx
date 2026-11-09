@@ -15,6 +15,7 @@ import type { MonitoredSensor } from "@/lib/flatlined-sensors";
 
 interface RowOptions {
   canManage: boolean;
+  canReplace: boolean;
   estateId: string;
   linkAssets: boolean;
   locationFor: (row: RankedDevice) => string | undefined;
@@ -55,7 +56,7 @@ function AllDevicesRow({
         <p className="text-muted-foreground text-sm">{row.assetReference}</p>
         {row.assetRetired ? (
           <Badge className="mt-1" variant="secondary">
-            Retired
+            Out of use
           </Badge>
         ) : null}
       </TableCell>
@@ -81,12 +82,14 @@ function AllDevicesRow({
       <TableCell className="max-w-80 py-4">
         {active && row.sensors.length ? (
           <ul
-            aria-label={`${row.identifier} metrics`}
+            aria-label={`${row.identifier} measurements`}
             className="grid gap-2 text-sm"
           >
             {row.sensors.map((sensor) => (
               <SensorLine
                 canManage={options.canManage}
+                canReplace={options.canReplace && !row.assetRetired}
+                estateId={options.estateId}
                 key={sensor.metric}
                 onPause={options.onPause}
                 sensor={sensor}
@@ -108,12 +111,12 @@ export function AllDevicesTable({
 }: RowOptions & { rows: RankedDevice[] }) {
   return (
     <Table
-      aria-label="All devices"
+      aria-label="All sensors"
       className="[&_td]:align-top [&_td]:whitespace-normal [&_th[scope=row]]:align-top [&_th[scope=row]]:whitespace-normal"
     >
       <TableHeader>
         <TableRow>
-          <TableHead>Device</TableHead>
+          <TableHead>Sensor</TableHead>
           <TableHead>Asset</TableHead>
           <TableHead>Location</TableHead>
           {options.showStatus ? (

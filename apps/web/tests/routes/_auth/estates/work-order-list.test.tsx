@@ -52,7 +52,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 const estateId = "00000000-0000-0000-0000-000000000001";
 const basePath = `/estates/${estateId}/work-orders`;
 const WORK_ORDER_WRITES = /start work|complete work|correct outcome/iu;
-const DUPLICATE = /duplicate/iu;
+const DUPLICATE = /repeat report/iu;
 const order = {
   id: "00000000-0000-0000-0000-000000000002",
   estateId,
@@ -637,7 +637,7 @@ it("shows the source report's confirmed duplicate count beside the priority", as
   );
   expect(repeatedRow).toBeDefined();
   expect(plainRow).toBeDefined();
-  within(repeatedRow as HTMLElement).getByText("3 duplicates");
+  within(repeatedRow as HTMLElement).getByText("3 repeat reports");
   expect(within(plainRow as HTMLElement).queryByText(DUPLICATE)).toBeNull();
 });
 
@@ -661,5 +661,5 @@ it("shows the duplicate count on mobile work-order summaries", async () => {
   );
   await setup();
   const list = within(await screen.findByRole("list", { name: "Work orders" }));
-  list.getByText("1 duplicate");
+  list.getByText("1 repeat report");
 });

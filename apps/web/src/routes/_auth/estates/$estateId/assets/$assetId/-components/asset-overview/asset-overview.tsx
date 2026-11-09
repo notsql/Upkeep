@@ -2,6 +2,7 @@ import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { canOpenInspections } from "@/lib/estate-destinations";
 import { useEstate } from "@/lib/estates";
+import { useWorkOrderAccess } from "@/lib/work-orders";
 import { AnomalyAlertsSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/anomaly-alerts-section/anomaly-alerts-section";
 import { AssetConditionSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-condition-section/asset-condition-section";
 import { AssetForecastCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-overview/asset-forecast-card";
@@ -19,7 +20,7 @@ function alertLock(
     return "This estate is inactive, so its alerts cannot be changed.";
   }
   if (assetRetired) {
-    return "This asset is retired, so its alerts cannot be changed.";
+    return "This asset is out of use, so you can't change its alerts.";
   }
 }
 
@@ -33,6 +34,7 @@ export function AssetOverview({
   const asset = useAsset(estateId, assetId);
   const estate = useEstate(estateId);
   const access = useAppAccess();
+  const workOrders = useWorkOrderAccess(estateId);
   if (!asset.data) {
     return null;
   }
@@ -42,6 +44,9 @@ export function AssetOverview({
     (item) => item.estateId === estateId
   );
   const assetActive = !asset.data.deactivatedAt;
+  // Owners and Managers send crew to judge the condition rather than judging it themselves.
+  const canSend =
+    assetActive && !estate.data?.deactivatedAt && workOrders.canCreate;
   const canSeeDevices = owned || permission?.role === "MANAGER";
   const showForecast = owned && asset.data.category === "PUMP";
   // The inspection list and service interval serve owners and delegates.
@@ -64,7 +69,7 @@ export function AssetOverview({
       >
         <AssetConditionSection
           assetId={assetId}
-          canRecord={assetActive}
+          canRecord={assetActive && !canSend}
           estateId={estateId}
           upcoming={
             showUpcoming ? (
@@ -79,7 +84,12 @@ export function AssetOverview({
           }
         />
         {showForecast ? (
-          <AssetForecastCard assetId={assetId} estateId={estateId} />
+          <AssetForecastCard
+            assetId={assetId}
+            assetName={asset.data.name}
+            canSend={canSend}
+            estateId={estateId}
+          />
         ) : null}
       </div>
       {asset.data.category === "PUMP" && canSeeService ? (

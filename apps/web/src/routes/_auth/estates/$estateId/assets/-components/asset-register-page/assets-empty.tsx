@@ -29,8 +29,8 @@ export function AssetsEmpty({
     <EmptyState
       description={
         canRegister
-          ? "Use Create to add the first asset, or set Status to All to include retired assets"
-          : "Set Status to All to include retired assets"
+          ? "Use Create to add the first asset, or set Status to All to include assets out of use."
+          : "Set Status to All to include assets out of use."
       }
       icon={Package}
       title="No assets yet"

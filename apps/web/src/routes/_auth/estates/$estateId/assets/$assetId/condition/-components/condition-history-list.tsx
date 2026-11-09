@@ -103,9 +103,9 @@ export function ConditionHistoryList({
   if (!assessments.data.length) {
     return (
       <EmptyState
-        description="Recorded assessments appear here"
+        description="Condition checks you record appear here."
         icon={HeartPulse}
-        title="Not assessed yet"
+        title="Not checked yet"
       />
     );
   }

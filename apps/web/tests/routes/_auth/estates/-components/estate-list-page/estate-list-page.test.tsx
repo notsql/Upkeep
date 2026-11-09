@@ -113,12 +113,12 @@ describe("estate list page", () => {
 
   it("explains a failed list request", async () => {
     vi.mocked(api.GET).mockResolvedValue({
-      error: { message: "Unable to load estates." },
+      error: { message: "Couldn't load estates. Try again." },
       response: new Response(null, { status: 500 }),
     });
     renderWithProviders(<Directory />);
     expect((await screen.findByRole("alert")).textContent).toContain(
-      "Unable to load estates"
+      "Couldn't load estates. Try again."
     );
   });
 
@@ -143,7 +143,7 @@ describe("estate list page", () => {
   it("offers retry after an estate load failure", async () => {
     vi.mocked(api.GET)
       .mockResolvedValueOnce({
-        error: { message: "Unable to load estates." },
+        error: { message: "Couldn't load estates. Try again." },
         response: new Response(null, { status: 500 }),
       })
       .mockResolvedValue({ data: [], response: new Response() });

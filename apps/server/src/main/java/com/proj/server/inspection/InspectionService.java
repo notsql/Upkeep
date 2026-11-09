@@ -90,6 +90,8 @@ public class InspectionService {
         authorize(estate, user, true, false);
         writableAsset(estate, asset, expectedLocation, date);
         String text = notes == null || notes.isBlank() ? null : notes.trim();
+        if (outcome == InspectionOutcome.FAIL && text == null)
+            throw error(HttpStatus.BAD_REQUEST, "Say what's wrong so the manager knows what to fix.");
         if (text != null && text.length() > 2000)
             throw error(HttpStatus.BAD_REQUEST, "Notes must be at most 2,000 trimmed characters.");
         var files = selected == null ? List.<MultipartFile>of() : selected;
@@ -110,6 +112,7 @@ public class InspectionService {
                 repository.create(id, current, outcome, date, text, user, name);
                 // The asset's open monthly check, if any, is done (ID-84).
                 checks.complete(asset, id);
+                if (outcome == InspectionOutcome.FAIL) checks.notifyFailed(estate, asset, id, summary(text));
                 for (var photo : uploaded)
                     repository.photo(photo.id(), estate, id, photo.key(), photo.type(), photo.size());
                 return repository.response(repository.result(estate, id));
@@ -179,6 +182,11 @@ public class InspectionService {
         var photo = repository.photo(estate, resultId, photoId);
         if (photo == null) throw error(HttpStatus.NOT_FOUND, "Inspection photo not found.");
         return new ImageBytes(images.read(photo.getStoragekey()), photo.getContenttype());
+    }
+
+    /** The inspector's note, shortened to fit a notification. */
+    private static String summary(String note) {
+        return note.length() <= 300 ? note : note.substring(0, 299) + "\u2026";
     }
 
     private static int limit(Integer requested) {

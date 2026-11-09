@@ -43,7 +43,7 @@ export function estateError(
     );
   }
   return new Error(
-    error?.message ?? "Unable to complete the estate request. Please try again."
+    error?.message ?? "Couldn't complete the estate request. Try again."
   );
 }
 

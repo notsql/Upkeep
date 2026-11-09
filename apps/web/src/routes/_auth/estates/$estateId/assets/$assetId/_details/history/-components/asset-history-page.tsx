@@ -29,7 +29,7 @@ export function AssetHistoryPage({
   if (access.error) {
     return (
       <p role="alert">
-        Unable to verify your access. Reload this page to try again.
+        Couldn't verify your access. Reload this page to try again.
       </p>
     );
   }

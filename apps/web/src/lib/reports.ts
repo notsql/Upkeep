@@ -33,7 +33,10 @@ export function useResidentContext() {
     queryFn: async () => {
       const { data, error } = await api.GET("/resident/context");
       if (error || !data) {
-        throw reportError(error, "Unable to load your estate assignment.");
+        throw reportError(
+          error,
+          "Couldn't load your estate assignment. Try again."
+        );
       }
       return data;
     },
@@ -51,7 +54,7 @@ export function useResidentLocations(estateId?: string) {
         params: { query: { estateId: estateId ?? "" } },
       });
       if (error || !data) {
-        throw reportError(error, "Unable to load locations.");
+        throw reportError(error, "Couldn't load locations. Try again.");
       }
       return data;
     },
@@ -88,7 +91,7 @@ export function useCreateReport() {
       if (error || !data) {
         throw reportError(
           error,
-          "Unable to submit the report. Check My reports before trying again."
+          "Couldn't submit the report. Check My reports before trying again."
         );
       }
       return data;
@@ -115,7 +118,7 @@ export function useReportList(cursor?: string, estateId?: string) {
         },
       });
       if (error || !data) {
-        throw reportError(error, "Unable to load reports.");
+        throw reportError(error, "Couldn't load reports. Try again.");
       }
       return data;
     },
@@ -156,7 +159,7 @@ export function useReportImage(reportId: string, imageId: string) {
         }
       );
       if (error || !data) {
-        throw reportError(error, "Unable to load report image.");
+        throw reportError(error, "Couldn't load report image. Try again.");
       }
       return data;
     },

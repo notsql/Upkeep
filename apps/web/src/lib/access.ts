@@ -37,7 +37,7 @@ export function useAppAccess() {
     }): Promise<components["schemas"]["AppAccessResponse"]> => {
       const { data, error } = await api.GET("/access/context", { signal });
       if (error || !data) {
-        throw new Error("Unable to load your access. Please try again.");
+        throw new Error("Couldn't load your access. Try again.");
       }
       return data;
     },

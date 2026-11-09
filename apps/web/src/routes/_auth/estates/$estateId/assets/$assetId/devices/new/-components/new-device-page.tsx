@@ -31,7 +31,7 @@ export function NewDevicePage({
   const save = useCallback(
     async (values: DeviceInput) => {
       await register.mutateAsync(values);
-      toast.success("Device registered. It is awaiting its first reading.");
+      toast.success("Sensor added. It's waiting for its first reading.");
       await cancel();
     },
     [register.mutateAsync, cancel]
@@ -56,11 +56,11 @@ export function NewDevicePage({
           to: "/estates/$estateId/assets/$assetId",
           params: { estateId, assetId },
         },
-        { label: "Register device" },
+        { label: "Add sensor" },
       ]}
-      description="Measurements and reporting interval"
+      description="What it measures and how often it reports"
       icon={Cpu}
-      title="Register device"
+      title="Add sensor"
     >
       {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}

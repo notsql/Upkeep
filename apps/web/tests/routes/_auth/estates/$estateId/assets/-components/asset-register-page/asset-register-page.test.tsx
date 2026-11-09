@@ -284,7 +284,7 @@ it("sorts the complete asset table naturally and by condition/status without los
       .getAllByRole("row")
       .slice(1)
       .map((row) => within(row).getAllByRole("cell")[4].textContent)
-  ).toEqual(["Faulty", "Good", "Not assessed yet"]);
+  ).toEqual(["Faulty", "Good", "Not checked yet"]);
   fireEvent.click(
     screen.getByRole("button", { name: "Sort by Current condition" })
   );
@@ -293,14 +293,14 @@ it("sorts the complete asset table naturally and by condition/status without los
       .getAllByRole("row")
       .slice(1)
       .map((row) => within(row).getAllByRole("cell")[4].textContent)
-  ).toEqual(["Good", "Faulty", "Not assessed yet"]);
+  ).toEqual(["Good", "Faulty", "Not checked yet"]);
   fireEvent.click(screen.getByRole("button", { name: "Sort by Status" }));
   expect(
     table
       .getAllByRole("row")
       .slice(1)
       .map((row) => within(row).getAllByRole("cell")[5].textContent)
-  ).toEqual(["Active", "Active", "Retired"]);
+  ).toEqual(["Active", "Active", "Out of use"]);
   expect(sortingAssets.map((asset) => asset.reference)).toEqual([
     "E-A0010",
     "E-A0002",

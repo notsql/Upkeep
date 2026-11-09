@@ -67,7 +67,7 @@ export function AssetFilterControls({
         options={{
           "": "All conditions",
           ...conditionLabel,
-          UNASSESSED: "Not assessed yet",
+          UNASSESSED: "Not checked yet",
         }}
         value={filters.condition ?? ""}
       />
@@ -75,7 +75,7 @@ export function AssetFilterControls({
         className={fieldClassName}
         label="Status"
         onChange={status}
-        options={{ ACTIVE: "Active", INACTIVE: "Retired", ALL: "All" }}
+        options={{ ACTIVE: "Active", INACTIVE: "Out of use", ALL: "All" }}
         value={filters.status ?? "ACTIVE"}
       />
     </>

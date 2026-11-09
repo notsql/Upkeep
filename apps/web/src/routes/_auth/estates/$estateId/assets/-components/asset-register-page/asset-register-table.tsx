@@ -71,7 +71,7 @@ export function AssetRegisterTable({
                 onSort={onSort}
               />
             ))}
-            {monitoring.devices ? <TableHead>Devices</TableHead> : null}
+            {monitoring.devices ? <TableHead>Sensors</TableHead> : null}
             {monitoring.risk ? <TableHead>Risk</TableHead> : null}
           </TableRow>
         </TableHeader>
@@ -169,7 +169,7 @@ function AssetRow({
       <TableCell>
         <LifecycleStatusBadge
           inactive={Boolean(asset.deactivatedAt)}
-          inactiveLabel="Retired"
+          inactiveLabel="Out of use"
         />
       </TableCell>
       {monitoring.devices ? (

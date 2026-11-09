@@ -4,7 +4,11 @@ import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { NotificationsPage } from "@/routes/_auth/notifications/-components/notifications-page/notifications-page";
 
-const ANOMALY_LINK = /Abnormal readings: needs attention/u;
+const SEND_STEP = /Please inspect Booster pump/u;
+const PLEASE_INSPECT = /Send step/u;
+
+const ANOMALY_LINK = /Booster pump may have a problem/u;
+const UNUSUAL_SINCE = /^Its readings have been unusual since .+\.$/u;
 const SERVICE_LINK = /Service due on 20 Nov 2026/u;
 const NOW = new Date().toISOString();
 
@@ -20,6 +24,7 @@ const base = {
   anomaly: null,
   serviceDue: null,
   repairPredicted: null,
+  inspectionResultId: null,
 };
 const anomaly = {
   ...base,
@@ -93,6 +98,16 @@ vi.mock("@tanstack/react-router", () => ({
     </a>
   ),
 }));
+vi.mock(
+  "@/routes/_auth/notifications/-components/notifications-page/notification-dispatch",
+  () => ({
+    NotificationDispatch: ({
+      notification,
+    }: {
+      notification: { type: string };
+    }) => <span>{`Send step for ${notification.type}`}</span>,
+  })
+);
 vi.mock("@/lib/notifications", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/notifications")>()),
   useNotifications: (page: number) => {
@@ -119,8 +134,12 @@ it("lists notifications newest first with type, asset, estate and summary", () =
   const items = list().getAllByRole("listitem");
   expect(items).toHaveLength(2);
   const first = within(items[0]);
-  first.getByText("Anomaly");
-  first.getByText("Abnormal readings: needs attention");
+  first.getByText("Unusual readings");
+  first.getByText("Booster pump may have a problem");
+  first.getByText(UNUSUAL_SINCE);
+  first.getByText(
+    "Have someone look at it. Mark as seen once it's being handled. Dismiss it if this was expected, for example during maintenance."
+  );
   first.getByText("Booster pump (P-1)");
   first.getByText("Harbour View");
   first.getByText("just now");
@@ -188,16 +207,19 @@ it("pages through older notifications", () => {
 it("offers acknowledge and dismiss on anomaly alerts only", () => {
   renderWithProviders(<NotificationsPage />);
   const [alertRow, dueRow] = list().getAllByRole("listitem");
-  within(alertRow).getByRole("button", { name: "Acknowledge" });
+  within(alertRow).getByRole("button", { name: "Mark as seen" });
   within(alertRow).getByRole("button", { name: "Dismiss" });
-  expect(within(dueRow).queryByRole("button")).toBeNull();
+  expect(
+    within(dueRow).queryByRole("button", { name: "Mark as seen" })
+  ).toBeNull();
+  expect(within(dueRow).queryByRole("button", { name: "Dismiss" })).toBeNull();
 });
 
 it("labels a service-due row as interval-based with its source", () => {
   renderWithProviders(<NotificationsPage />);
   const [, dueRow] = list().getAllByRole("listitem");
   within(dueRow).getByText(
-    "Interval-based, not a prediction · Every 6 months · Manufacturer interval for the category"
+    "Based on the service schedule · Every 6 months · Manufacturer interval for the category"
   );
 });
 
@@ -219,7 +241,7 @@ it("says when the interval was set on the asset", () => {
   };
   renderWithProviders(<NotificationsPage />);
   list().getByText(
-    "Interval-based, not a prediction · Every 90 days · Set on this asset"
+    "Based on the service schedule · Every 90 days · Set on this asset"
   );
 });
 
@@ -227,17 +249,17 @@ it.each([
   [
     "ASSET_HISTORY",
     3,
-    "Prediction · 42% chance within 30 days · based on 3 recorded repairs",
+    "Expected repair · 42% chance within 30 days · based on 3 recorded repairs",
   ],
   [
     "ASSET_HISTORY",
     1,
-    "Prediction · 42% chance within 30 days · based on 1 recorded repair",
+    "Expected repair · 42% chance within 30 days · based on 1 recorded repair",
   ],
   [
     "SERVICE_INTERVAL",
     0,
-    "Prediction · 42% chance within 30 days · based on typical pumps; no repairs recorded yet",
+    "Expected repair · 42% chance within 30 days · based on typical pumps; no repairs recorded yet",
   ],
 ])("explains a %s repair prediction", (basis, failuresObserved, text) => {
   state.data = {
@@ -262,4 +284,48 @@ it.each([
   };
   renderWithProviders(<NotificationsPage />);
   list().getByText(text);
+});
+
+const checkRequested = {
+  ...base,
+  id: "n-3",
+  type: "CHECK_REQUESTED",
+  summary: "Sent by Morgan Lee",
+  read: false,
+};
+const checkFailed = {
+  ...base,
+  id: "n-4",
+  type: "CHECK_FAILED",
+  summary: "Motor is grinding loudly",
+  read: false,
+  inspectionResultId: "r-1",
+};
+
+it("asks the person sent to inspect, linking to the inspection form", () => {
+  state.data = { items: [checkRequested], page: 0, size: 20, total: 1 };
+  renderWithProviders(<NotificationsPage />);
+  const link = list().getByRole("link", {
+    name: SEND_STEP,
+  });
+  expect(link.getAttribute("href")).toBe(
+    "/estates/e-1/assets/a-1/inspections/new"
+  );
+  list().getByText("Sent by Morgan Lee");
+  expect(list().queryByText(PLEASE_INSPECT)).toBeNull();
+});
+
+it("tells managers crew found a problem, with the inspector's note and a send step", () => {
+  state.data = { items: [checkFailed], page: 0, size: 20, total: 1 };
+  renderWithProviders(<NotificationsPage />);
+  list().getByText("Crew found a problem with Booster pump");
+  list().getByText("Motor is grinding loudly");
+  list().getByText("Send step for CHECK_FAILED");
+});
+
+it("offers the send step on service-due rows but not anomaly alerts", () => {
+  renderWithProviders(<NotificationsPage />);
+  const [alertRow, dueRow] = list().getAllByRole("listitem");
+  within(dueRow).getByText("Send step for SERVICE_DUE");
+  expect(within(alertRow).queryByText(PLEASE_INSPECT)).toBeNull();
 });

@@ -125,6 +125,8 @@ export const notificationTypeTone = {
   ANOMALY: "danger",
   SERVICE_DUE: "info",
   REPAIR_PREDICTED: "warning",
+  CHECK_REQUESTED: "info",
+  CHECK_FAILED: "danger",
 } as const satisfies Record<NotificationType, StatusTone>;
 
 export type AlertResponse = Schemas["AnomalyAlertDetails"]["response"];

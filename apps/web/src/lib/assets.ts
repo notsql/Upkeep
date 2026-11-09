@@ -15,11 +15,11 @@ export function assetQueryKey(
   return ["estates", userId, "assets", estateId, assetId] as const;
 }
 
-export function useAsset(estateId: string, assetId: string) {
+export function useAsset(estateId: string, assetId: string, enabled = true) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: assetQueryKey(userId, estateId, assetId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(
@@ -224,7 +224,7 @@ export function retirementDateError(
   installedOn?: string | null
 ): string | undefined {
   if (!date) {
-    return "Choose a retirement date.";
+    return "Choose the date it was taken out of use.";
   }
   const today = retirementToday();
   if (date > today) {

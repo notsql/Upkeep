@@ -160,9 +160,9 @@ export function AssetRegisterPage({
 /** One message naming every secondary source that failed. */
 function monitoringFailure(sources: ("devices" | "risk")[]): string {
   if (sources.length === 2) {
-    return "Device status and failure risk could not be loaded.";
+    return "Couldn't load sensor status or the chance of breaking down. Try again.";
   }
   return sources[0] === "devices"
     ? "Device status could not be loaded."
-    : "Failure risk could not be loaded.";
+    : "Couldn't load the chance of breaking down. Try again.";
 }

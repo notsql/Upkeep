@@ -9,6 +9,7 @@ import { Progress } from "@proj/ui/components/progress";
 import { cn } from "@proj/ui/lib/utils";
 import { TrendingDown, TriangleAlert } from "lucide-react";
 import { Fragment } from "react";
+import { DispatchAction } from "@/components/dispatch/dispatch-action";
 import { SectionHeading } from "@/components/page/section-heading";
 import { LoadingState } from "@/components/states/loading-state";
 import {
@@ -18,6 +19,7 @@ import {
   recorderName,
   useAssessments,
 } from "@/lib/assessments";
+import { dispatchRoute } from "@/lib/equipment-dispatch";
 import {
   type FailureRisk,
   type FlagReason,
@@ -79,7 +81,7 @@ function ForecastFigures({ risk }: { risk: FailureRisk }) {
   return (
     <>
       <figure
-        aria-label="Forecast"
+        aria-label="Expected repairs"
         className="grid gap-3"
         data-tone={tone.tone}
       >
@@ -132,12 +134,18 @@ function ForecastFigures({ risk }: { risk: FailureRisk }) {
 
 export function AssetForecastCard({
   assetId,
+  assetName,
+  canSend,
   estateId,
 }: {
   assetId: string;
+  assetName: string;
+  /** The asset and estate are active and the viewer can send crew or a contractor. */
+  canSend: boolean;
   estateId: string;
 }) {
   const risk = useAssetFailureRisk(estateId, assetId);
+  const route = dispatchRoute(risk.data?.flagReasons ?? []);
   // Already cached by the Condition card; the API returns the current one first.
   const current = useAssessments(estateId, assetId).data?.[0];
   const reason = risk.data ? noForecastReason(risk.data) : null;
@@ -152,7 +160,7 @@ export function AssetForecastCard({
       </CardHeader>
       <CardContent className="grid gap-4 text-sm">
         {risk.isPending ? (
-          <LoadingState label="Loading forecast…" rows={2} />
+          <LoadingState label="Loading expected repairs…" rows={2} />
         ) : null}
         {risk.error ? (
           <Alert variant="destructive">
@@ -184,6 +192,17 @@ export function AssetForecastCard({
                   ))}
                 </span>
               </p>
+            ) : null}
+            {route ? (
+              <div>
+                <DispatchAction
+                  assetId={assetId}
+                  assetName={assetName}
+                  canSend={canSend}
+                  estateId={estateId}
+                  route={route}
+                />
+              </div>
             ) : null}
             <p className="text-muted-foreground mt-auto flex flex-wrap gap-x-2 text-xs">
               <span>Breakdowns observed: {risk.data.failuresObserved}</span>

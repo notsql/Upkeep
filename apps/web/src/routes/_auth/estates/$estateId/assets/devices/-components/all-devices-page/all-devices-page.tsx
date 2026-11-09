@@ -28,36 +28,37 @@ function AllDevicesResults({
   return (
     <div className="grid min-w-0 gap-4">
       <p className="text-muted-foreground text-sm">
-        Most urgent first: possible flatline, offline, awaiting first reading,
-        online, deactivated. Refreshes every 60 seconds while this page is open.
+        Sensors that may not be working come first, then offline, waiting for a
+        first reading, working and turned off. This page updates every minute.
       </p>
       {page.devicesError ? (
         <ErrorState
           message={page.devicesError.message}
           onRetry={page.retryDevices}
-          retryLabel="Retry devices"
+          retryLabel="Try loading sensors again"
         />
       ) : null}
       {page.reviewError ? (
         <ErrorState
           message={page.reviewError.message}
           onRetry={page.retryReview}
-          retryLabel="Retry device monitoring"
+          retryLabel="Try checking sensors again"
         />
       ) : null}
       {page.rows ? null : (
-        <LoadingState label="Loading devices…" variant="table" />
+        <LoadingState label="Loading sensors…" variant="table" />
       )}
       {page.rows?.length === 0 && !(page.devicesError && page.reviewError) ? (
         <EmptyState
-          description="Register devices from an asset's Devices page"
+          description="Add a sensor from an asset's Sensors page."
           icon={Cpu}
-          title="No devices yet"
+          title="No sensors yet"
         />
       ) : null}
       {page.rows?.length ? (
         <AllDevicesTable
           canManage={page.canManage}
+          canReplace={withDevices}
           estateId={estateId}
           linkAssets={linkAssets}
           locationFor={page.locationFor}
@@ -89,9 +90,9 @@ export function AllDevicesPage({ estateId }: { estateId: string }) {
         actions={
           access.review ? <MetricPoliciesDialog estateId={estateId} /> : null
         }
-        description="Every device, most urgent first"
+        description="Every sensor, most urgent first"
         icon={Cpu}
-        title="All devices"
+        title="All sensors"
       />
       <AssetViewsNav estateId={estateId} />
       {access.pending ? (
@@ -106,9 +107,9 @@ export function AllDevicesPage({ estateId }: { estateId: string }) {
       ) : null}
       {access.pending || access.review ? null : (
         <EmptyState
-          description="Device monitoring is not available for your role"
+          description="Your role can't see sensors in this estate."
           icon={Cpu}
-          title="No device view"
+          title="No sensors to show"
         />
       )}
     </PageLayout>

@@ -64,6 +64,7 @@ export function InspectionForm({
     date,
     error,
     notes,
+    notesError,
     observed,
     outcome,
     photos,
@@ -132,6 +133,7 @@ export function InspectionForm({
             date={date}
             installedOn={observed.installedOn}
             notes={notes}
+            notesError={notesError}
             onDateChange={setDate}
             onNotesChange={changeNotes}
             onOutcomeChange={changeOutcome}

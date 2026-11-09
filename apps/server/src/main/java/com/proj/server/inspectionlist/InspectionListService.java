@@ -129,6 +129,82 @@ public class InspectionListService {
         return new GenerateInspectionListResponse(added, response(estate, today));
     }
 
+    /** A sent check and whether this call created it. */
+    public record Sent(InspectionCheckResponse check, boolean created) {}
+
+    /** Current members who can record inspections, by name. */
+    @Transactional(readOnly = true)
+    public List<InspectorResponse> inspectors(UUID estateId, String user) {
+        managed(estateId, user);
+        return inspectorsOf(estateId);
+    }
+
+    private List<InspectorResponse> inspectorsOf(UUID estateId) {
+        return repository.inspectors(estateId).entrySet().stream()
+                .map(entry -> new InspectorResponse(
+                        entry.getKey(),
+                        workOS.findDisplayName(entry.getKey()).orElse(entry.getKey()),
+                        roleName(entry.getValue())))
+                .sorted(Comparator.comparing(InspectorResponse::name, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(InspectorResponse::userId))
+                .toList();
+    }
+
+    private static String roleName(String role) {
+        return switch (role) {
+            case "OWNER" -> "Owner";
+            case "MANAGER" -> "Manager";
+            default -> "Crew";
+        };
+    }
+
+    /**
+     * Sends one person to inspect the asset this month. Returns the open check instead when there is
+     * one; the estate lock and the one-check-per-month rule keep two sends from opening two checks.
+     */
+    @Transactional
+    public Sent request(UUID estateId, UUID assetId, String user, InspectionRequest request) {
+        var assignee = request.assignedToUserId().strip();
+        // Looked up before any row is locked, so a slow WorkOS call never holds a lock.
+        var name = workOS.findDisplayName(user).orElse(null);
+        var assigneeName = workOS.findDisplayName(assignee).orElse(assignee);
+        var estate = managed(estateId, user);
+        if (estate.deactivatedAt() != null) {
+            throw new InspectionListException(HttpStatus.CONFLICT, "This estate is inactive. Crew cannot be sent.");
+        }
+        repository.lockEstate(estateId);
+        var asset = repository
+                .asset(estateId, assetId)
+                .orElseThrow(() -> new InspectionListException(HttpStatus.NOT_FOUND, "Asset not found."));
+        if (asset.getDeactivatedat() != null) {
+            throw new InspectionListException(HttpStatus.CONFLICT, "This equipment is out of use.");
+        }
+        var today = LocalDate.now(SINGAPORE);
+        var month = today.withDayOfMonth(1);
+        var existing = repository.current(assetId, month).orElse(null);
+        if (existing != null && existing.getCompletedbyresultid() == null) {
+            return new Sent(check(estate, today, existing.getId()), false);
+        }
+        if (existing != null) {
+            throw new InspectionListException(HttpStatus.CONFLICT, "This equipment was already inspected this month.");
+        }
+        if (!repository.inspectors(estateId).containsKey(assignee)) {
+            throw new InspectionListException(
+                    HttpStatus.BAD_REQUEST, assigneeName + " can no longer record inspections here.");
+        }
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        var id = repository.insertRequested(estateId, assetId, month, today, user, name, assignee, assigneeName, now);
+        repository.notifyAssignee(estateId, assetId, assignee, name == null ? "Sent to inspect" : "Sent by " + name);
+        return new Sent(check(estate, today, id), true);
+    }
+
+    private InspectionCheckResponse check(EstateResponse estate, LocalDate today, UUID id) {
+        return response(estate, today).checks().stream()
+                .filter(check -> check.id().equals(id))
+                .findFirst()
+                .orElseThrow();
+    }
+
     private record Plan(
             Map<UUID, DueDates.Due> due, List<AssetRecord> unscheduled, Map<UUID, EffectiveInterval> intervals) {}
 
@@ -242,7 +318,9 @@ public class InspectionListService {
                         : new CheckResultResponse(
                                 result.getId(),
                                 InspectionOutcome.valueOf(result.getOutcome()),
-                                result.getInspectedon()));
+                                result.getInspectedon()),
+                DueBasis.REQUESTED.name().equals(check.getDuebasis()) ? check.getGeneratedbyname() : null,
+                check.getAssignedtoname());
         return new Row(response, place.levelOrder());
     }
 

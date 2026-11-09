@@ -1,7 +1,7 @@
 # Device monitoring (ID-68)
 
 The flatline review, metric policies and maintenance pauses now live in
-Assets › All devices and the asset Overview (see [devices.md](devices.md) and
+Assets › All sensors and the asset Overview (see [devices.md](devices.md) and
 [assets.md](assets.md)). All API types come from the generated
 `@proj/api/schema` contract. See [API behaviour](../api/flatlined-sensors.md)
 and decision 0030.
@@ -27,13 +27,13 @@ appear.
 
 | File / component | Behaviour / shadcn components |
 | --- | --- |
-| `assets/devices/-components/metric-policy-settings/` / MetricPolicySettings (with the form, fields, name, status, summary, action and editor files) | Collapsible (optional `defaultExpanded`, used by the All devices "Metric policies" dialog) section with configured count, metric/unit, saved threshold/tolerance, Configured/Not set badge, and Edit/Set up buttons; table on desktop, stacked rows on mobile; Edit/Set up (ghost) opens the editor Dialog, read-only for Council/inactive estates; Table, Badge, Button |
+| `assets/devices/-components/metric-policy-settings/` / MetricPolicySettings (with the form, fields, name, status, summary, action and editor files) | Collapsible (optional `defaultExpanded`, used by the All sensors "When to warn" dialog) section with configured count, metric/unit, saved threshold/tolerance, Configured/Not set badge, and Edit/Set up buttons; table on desktop, stacked rows on mobile; Edit/Set up (ghost) opens the editor Dialog, read-only for Council/inactive estates; Table, Badge, Button |
 | metric-policy-form.tsx / MetricPolicyDialog; use-metric-policy-editor.ts / useMetricPolicyEditor | `MetricPolicyDialog`: the shared `FormDialog` (title "<Metric> policy", description the current threshold; fields Threshold, Time unit, Tolerance) with Cancel and "Save policy" ("Saving…" while pending, no dismissal); whole minutes/hours and nonnegative tolerance shared estate-wide; validation and save errors show as the dialog's `role="alert"` line. If management is lost mid-edit the draft stays, fields disable and saving is blocked with "Saving is paused until device metrics load"; FormDialog, Field, Input, Select |
 | `components/sensors/pause-sensor-dialog.tsx` / PauseSensorDialog | `FormDialog` "Pause <device> <metric>": finite pause for one device/metric, seven-day maximum, automatic expiry/fresh-start explanation; fields Pause duration and Time unit; "Start pause" / "Starting pause…"; errors keep the chosen duration; FormDialog, Field, Input, Select |
 | `components/sensors/sensor-line.tsx` / SensorLine | One device metric's flatline state badge and optional Pause button |
 | `components/sensors/sensor-format.ts` | Metric/time labels and integer minutes/hours conversion with bounds/overflow validation |
 
-The Metric policies section starts collapsed. Its shadcn Button header retains the
+The When to warn section starts collapsed. Its shadcn Button header retains the
 title, estate-wide threshold/tolerance description and configured count. A chevron
 indicates expansion; aria-expanded/aria-controls expose it to assistive technology,
 and the subtitle/count describe the button. The header wraps the count below its
@@ -64,7 +64,7 @@ and use user-first keys. That session hook cancels/removes the old account's cac
 | --- | --- | --- |
 | useFlatlinePolicies(estateId) | GET /estates/{estateId}/flatline-policies | [userId,"flatline",estateId,"policies"] |
 | useFlatlineReview(estateId,view,page) | GET /estates/{estateId}/flatlined-sensors?view=&page=&size=25 | [userId,"flatline",estateId,"review",view,page,25] |
-| useAllFlatlineReview(estateId,view) | Page 0, then pages 1..ceil(totalElements/size)-1 via `useQueries`; returns `{ sensors, canManage, isPending, error, refetch }` - entries concatenated and de-duplicated by `deviceId + metric`; `canManage` is the review's `canManage && estateActive`; `refetch` refetches every page of the view. Used by the asset Overview and Assets › All devices (both `view="ALL"`) | same keys as useFlatlineReview, one per page |
+| useAllFlatlineReview(estateId,view) | Page 0, then pages 1..ceil(totalElements/size)-1 via `useQueries`; returns `{ sensors, canManage, isPending, error, refetch }` - entries concatenated and de-duplicated by `deviceId + metric`; `canManage` is the review's `canManage && estateActive`; `refetch` refetches every page of the view. Used by the asset Overview and Assets › All sensors (both `view="ALL"`) | same keys as useFlatlineReview, one per page |
 | useSetFlatlinePolicy(estateId,metric) | PUT /estates/{estateId}/flatline-policies/{metric} | Success invalidates [userId,"flatline",estateId] |
 | usePauseFlatlineSensor(estateId,sensor) | POST /estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric} | Same prefix invalidation; success closes dialog |
 

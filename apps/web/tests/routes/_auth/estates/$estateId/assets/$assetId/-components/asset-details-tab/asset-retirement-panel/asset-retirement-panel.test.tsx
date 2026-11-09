@@ -68,11 +68,14 @@ it("restores only after exact reference confirmation using the displayed version
 it("corrects retirement information without changing identity", async () => {
   renderWithProviders(<AssetRetirementPanel asset={asset} />);
   fireEvent.click(
-    screen.getByRole("button", { name: "Edit retirement information" })
+    screen.getByRole("button", { name: "Edit out-of-use details" })
   );
-  fireEvent.change(screen.getByRole("textbox", { name: "Retirement reason" }), {
-    target: { value: " Corrected " },
-  });
+  fireEvent.change(
+    screen.getByRole("textbox", { name: "Why it's out of use" }),
+    {
+      target: { value: " Corrected " },
+    }
+  );
   fireEvent.click(
     screen.getByRole("button", { name: "Save retirement information" })
   );
@@ -96,11 +99,14 @@ it("explains an invalid retirement date when correcting information", () => {
     <AssetRetirementPanel asset={{ ...asset, installedOn: "2024-01-01" }} />
   );
   fireEvent.click(
-    screen.getByRole("button", { name: "Edit retirement information" })
+    screen.getByRole("button", { name: "Edit out-of-use details" })
   );
-  fireEvent.change(screen.getByRole("textbox", { name: "Retirement date" }), {
-    target: { value: "2023-12-31" },
-  });
+  fireEvent.change(
+    screen.getByRole("textbox", { name: "Date taken out of use" }),
+    {
+      target: { value: "2023-12-31" },
+    }
+  );
   expect(screen.getByRole("alert").textContent).toContain("2024-01-01");
   expect(
     screen.getByRole<HTMLButtonElement>("button", {

@@ -44,7 +44,7 @@ export function CompletionDialog({
       const value = (key: string) => String(form.get(key) ?? "").trim();
       const body = completionInput(form, expectedVersion);
       if (editing && !value("correctionReason")) {
-        setError("Enter a correction reason.");
+        setError("Say why you're changing it.");
         return;
       }
       if (!(body.findings && body.workPerformed)) {
@@ -66,7 +66,7 @@ export function CompletionDialog({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to save completion. Refresh to check whether it was saved before retrying."
+            : "Couldn't save completion. Refresh to check whether it was saved before you try again."
         );
       }
     },
@@ -78,9 +78,7 @@ export function CompletionDialog({
       await onRefresh();
       setReviewing(true);
     } catch {
-      setError(
-        "Unable to refresh the work order and history. Please try again."
-      );
+      setError("Couldn't refresh the work order and history. Try again.");
     } finally {
       setRefreshing(false);
     }
@@ -97,7 +95,7 @@ export function CompletionDialog({
       description={
         <>
           {editing
-            ? "Correct the recorded details and give a reason. The order stays Closed; the original completion and every correction remain in its audit."
+            ? "Fix the recorded details and say why. The order stays Closed. We keep the original and every change in its change history."
             : "Closing keeps this order Closed. Authorized owners and Managers can correct its recorded outcome later."}{" "}
           Leave optional costs and downtime blank if unknown; enter 0 for none.
           Costs are in SGD.
@@ -112,13 +110,15 @@ export function CompletionDialog({
         conflict ||
         order.status !== (editing ? "CLOSED" : "IN_PROGRESS")
       }
-      submitLabel={editing ? "Save correction" : "Complete work order"}
+      submitLabel={editing ? "Save changes" : "Complete work order"}
       title={editing ? "Edit completion outcome" : "Complete work order"}
     >
       <CompletionFields id={id} initialOutcome={initialOutcome} />
       {editing ? (
         <Field>
-          <FieldLabel htmlFor={`${id}-reason`}>Correction reason</FieldLabel>
+          <FieldLabel htmlFor={`${id}-reason`}>
+            Why you're changing it
+          </FieldLabel>
           <Textarea
             id={`${id}-reason`}
             maxLength={500}

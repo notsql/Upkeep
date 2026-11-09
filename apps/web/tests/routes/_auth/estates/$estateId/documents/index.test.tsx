@@ -259,7 +259,7 @@ beforeEach(() => {
     if (String(path) === documentsPath) {
       return Promise.resolve(
         listFailure
-          ? failure("Unable to load documents. Try again.")
+          ? failure("Couldn't load documents. Try again.")
           : success({ items, nextCursor })
       ) as never;
     }
