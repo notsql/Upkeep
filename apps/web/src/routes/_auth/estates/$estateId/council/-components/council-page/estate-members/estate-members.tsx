@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
+import { SearchX, Users } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -68,6 +69,7 @@ export function EstateMembers({
         {members.data?.length === 0 ? (
           <EmptyState
             description="Invited members appear here"
+            icon={Users}
             title="No members yet"
           />
         ) : null}
@@ -79,6 +81,7 @@ export function EstateMembers({
               </Button>
             }
             description="Try another search or role"
+            icon={SearchX}
             title="No matching members"
           />
         ) : null}

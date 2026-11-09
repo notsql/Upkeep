@@ -18,7 +18,7 @@ export function InspectionsGenerationStatus({
       ) : null}
       <p className="text-muted-foreground text-sm">
         {data.generatedAt
-          ? "Regenerating adds newly due checks and never duplicates them."
+          ? "This adds checks that are now due and never adds the same check twice."
           : "This month's list hasn't been generated yet."}
       </p>
       {data.estateActive ? null : (

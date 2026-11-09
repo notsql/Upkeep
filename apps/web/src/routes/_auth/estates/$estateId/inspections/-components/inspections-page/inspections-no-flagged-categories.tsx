@@ -8,10 +8,9 @@ export function InspectionsNoFlaggedCategories({
   estateId: string;
 }) {
   return (
-    <Alert aria-label="No flagged categories" className="gap-3 p-4" role="note">
+    <Alert aria-label="No regular checks" className="gap-3 p-4" role="note">
       <AlertDescription className="text-sm">
-        No asset categories are flagged as failing silently, so no checks can be
-        due.
+        No equipment has regular checks turned on yet, so nothing is due.
       </AlertDescription>
       <Link
         className={buttonVariants({
@@ -20,9 +19,9 @@ export function InspectionsNoFlaggedCategories({
           variant: "outline",
         })}
         params={{ estateId }}
-        to="/estates/$estateId/asset-categories"
+        to="/estates/$estateId/inspections/schedules"
       >
-        Flag categories
+        Turn on regular checks
       </Link>
     </Alert>
   );

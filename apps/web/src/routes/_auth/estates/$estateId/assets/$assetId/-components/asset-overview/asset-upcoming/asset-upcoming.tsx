@@ -6,7 +6,7 @@ import {
   ClipboardList,
   Wrench,
 } from "lucide-react";
-import { SectionCard } from "@/components/page/section-card";
+import { SectionHeading } from "@/components/page/section-heading";
 import { LoadingState } from "@/components/states/loading-state";
 import { localToday } from "@/lib/assessments";
 import { useAssetEvents } from "@/lib/asset-events";
@@ -30,7 +30,7 @@ const ICONS = {
 
 const TONE_TEXT: Record<UpcomingTone, string> = {
   overdue: "text-destructive",
-  soon: "text-amber-700 dark:text-amber-300",
+  soon: "text-warning",
   later: "text-muted-foreground",
 };
 
@@ -81,22 +81,21 @@ function UpcomingRow({
 /**
  * Work coming up for this asset, soonest first. Each source loads only for
  * viewers its endpoint serves: the inspection list for owners and delegates,
- * the service interval for those who see the Service interval card.
+ * the service interval for those who see the Service interval card. Card-less:
+ * the Condition card renders it as a sub-section.
  */
-export function AssetUpcoming({
+export function AssetUpcomingList({
   estateId,
   assetId,
   installedOn,
   canSeeInspections,
   canSeeService,
-  className,
 }: {
   estateId: string;
   assetId: string;
   installedOn: string | null | undefined;
   canSeeInspections: boolean;
   canSeeService: boolean;
-  className?: string;
 }) {
   const list = useInspectionList(estateId, canSeeInspections);
   const events = useAssetEvents(estateId, assetId, canSeeService);
@@ -117,7 +116,14 @@ export function AssetUpcoming({
   ].sort((a, b) => a.dueOn.localeCompare(b.dueOn));
 
   return (
-    <SectionCard className={className} icon={CalendarClock} title="Upcoming">
+    <div className="grid gap-2">
+      <SectionHeading
+        className="text-muted-foreground text-sm"
+        icon={CalendarClock}
+        level={3}
+      >
+        Upcoming
+      </SectionHeading>
       {pending && !failed ? (
         <LoadingState label="Loading upcoming work…" rows={2} />
       ) : null}
@@ -142,6 +148,6 @@ export function AssetUpcoming({
       {pending || failed || items.length ? null : (
         <p className="text-muted-foreground text-sm">Nothing scheduled</p>
       )}
-    </SectionCard>
+    </div>
   );
 }

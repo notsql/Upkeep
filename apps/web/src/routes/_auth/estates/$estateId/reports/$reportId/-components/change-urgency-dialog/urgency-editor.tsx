@@ -96,7 +96,7 @@ export function UrgencyEditor({
       setSafety(current.isSafety);
       mutation.reset();
     } catch {
-      setReloadError("Unable to reload urgency. Please try again.");
+      setReloadError("Couldn't reload urgency. Try again.");
     } finally {
       setReloading(false);
     }

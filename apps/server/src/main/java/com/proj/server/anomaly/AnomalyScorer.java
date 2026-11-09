@@ -75,7 +75,8 @@ public class AnomalyScorer implements AutoCloseable {
             }
             probabilities = values;
         } catch (OrtException error) {
-            throw new MlUnavailableException("The anomaly model failed. Try the batch again later.", error);
+            throw new MlUnavailableException(
+                    "We couldn't check these readings for anything unusual. Try the import again later.", error);
         }
         return anomalyColumn(probabilities, features.length);
     }

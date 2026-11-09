@@ -51,7 +51,7 @@ function useFailure(userId: string | undefined) {
     }
     throw new AssetDocumentError(
       error?.message ??
-        "Unable to save or load the asset link. Refresh before retrying.",
+        "Couldn't save or load the asset link. Refresh the page, then try again.",
       status
     );
   };

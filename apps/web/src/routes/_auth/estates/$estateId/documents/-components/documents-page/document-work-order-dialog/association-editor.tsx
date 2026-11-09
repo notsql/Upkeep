@@ -53,7 +53,7 @@ export function AssociationEditor({
       <form className="space-y-3" onSubmit={save}>
         {correction || removing ? (
           <div className="space-y-2">
-            <Label htmlFor={reasonId}>Correction reason</Label>
+            <Label htmlFor={reasonId}>Why you're changing it</Label>
             <Textarea
               id={reasonId}
               maxLength={500}

@@ -173,3 +173,13 @@ GET /notifications?page=0&size=20
   "serviceDue": { "dueOn": "2026-11-20", "interval": { "value": 6, "unit": "MONTH" },
   "intervalSource": "CATEGORY" }, "repairPredicted": null }], "page": 0, "size": 20, "total": 1 }
 ```
+
+## Check requested and check failed (equipment dispatch)
+
+Two more types, documented in [equipment-dispatch.md](equipment-dispatch.md):
+`CHECK_REQUESTED` ("Sent by <manager>", visible only to the one person sent,
+while they can still record inspections) and `CHECK_FAILED` (the inspector's
+note as `summary`, visible to managers). `NotificationResponse` gains
+`inspectionResultId` (set only for `CHECK_FAILED`); neither type has a detail
+object. Recording an inspection resolves the asset's open notifications of
+both types.

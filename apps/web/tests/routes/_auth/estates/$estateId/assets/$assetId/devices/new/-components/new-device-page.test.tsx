@@ -23,7 +23,7 @@ vi.mock("@tanstack/react-router", () => ({
     <a href={to}>{children}</a>
   ),
 }));
-const INTERVAL = /^Expected reporting interval/u;
+const INTERVAL = /^How often it reports/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
 const at = "2026-09-28T00:00:00Z";
 const locations: Location[] = [
@@ -73,7 +73,7 @@ it("registers a device and returns to the asset", async () => {
   renderWithProviders(
     <NewDevicePage assetId="asset-id" estateId="estate-id" />
   );
-  await screen.findByRole("heading", { name: "Register device", level: 1 });
+  await screen.findByRole("heading", { name: "Add sensor", level: 1 });
   await screen.findByRole("button", { name: "Cancel" });
   // The asset's location shows by its path once the locations have loaded.
   await waitFor(() =>
@@ -91,7 +91,7 @@ it("registers a device and returns to the asset", async () => {
   fireEvent.change(screen.getByRole("spinbutton", { name: INTERVAL }), {
     target: { value: "60" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Register device" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add sensor" }));
 
   await waitFor(() =>
     expect(api.POST).toHaveBeenCalledWith(DEVICES_PATH, {

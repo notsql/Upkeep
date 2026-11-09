@@ -22,7 +22,7 @@ export function AssetLinkBody({
       ) : null}
       {state.association.isError ? (
         <ErrorState
-          message="Unable to load asset association"
+          message="Couldn't load the asset link. Try again."
           onRetry={state.retry}
           retryLabel="Retry association"
         />

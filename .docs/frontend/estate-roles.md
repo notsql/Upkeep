@@ -36,9 +36,13 @@ Shared `roles/-components/`:
   ("Delete role", `Trash2` destructive "Delete role" / "Deleting role…",
   outline "Keep role"; locked while pending; errors as an alert line).
 
-List page: `ListPageHeader` "Roles" (`icon={ShieldCheck}`, no description)
-with the Filters toggle (only once roles exist) and `CreateButton` "Create"
-(to `roles/new`) when `canCreateRoles` and the catalogue loaded. Below it the
+List page: `ListPageHeader` "People & access" (`icon={ShieldCheck}`, no
+description) with the Filters toggle (only once roles exist) and
+`CreateButton` "Create" (to `roles/new`) when `canCreateRoles` and the
+catalogue loaded. Below it the "People views" `SubNav` (`PeopleViews`, see
+[council-invitations.md](council-invitations.md)): Members and Waiting to join
+only with `canOpenMembers`, Roles with `canOpenRoles` (a roles-only user sees
+just Roles). `/roles/new` and `/roles/$roleId/edit` have no sub-nav. Then the
 retractable `FilterBar` "Filter roles" (collapsed by default; search by name
 or description; "1 active" and the bar's ghost Clear filters). Then
 LoadingState (`table`) -> `ErrorState` "Retry roles" -> EmptyState "No custom
@@ -125,5 +129,5 @@ types independently of general management or fault-report access. Existing
 bounded delegation and explicit prerequisite validation apply. See
 [documents.md](documents.md) for the document screen and deletion authority.
 
-The Roles list header uses `icon={ShieldCheck}` (sidebar Roles); the form
-headers carry no icon. No header repeats the estate name. Row Edit and Delete are `ghost` (Delete opens the destructive confirm).
+The Roles list header uses `icon={ShieldCheck}` (sidebar People & access); the new-role
+form header uses `ShieldPlus` and the edit form `ShieldCheck`. The "No custom roles" empty state uses `ShieldCheck` and "No matching roles" uses `SearchX`. No header repeats the estate name. Row Edit and Delete are `ghost` (Delete opens the destructive confirm).

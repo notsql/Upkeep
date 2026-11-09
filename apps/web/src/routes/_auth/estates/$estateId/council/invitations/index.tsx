@@ -6,7 +6,7 @@ export const Route = createFileRoute(
   "/_auth/estates/$estateId/council/invitations/"
 )({
   component: CouncilInvitationsRoute,
-  head: () => pageHead("Pending invitations"),
+  head: () => pageHead("Waiting to join"),
 });
 
 function CouncilInvitationsRoute() {

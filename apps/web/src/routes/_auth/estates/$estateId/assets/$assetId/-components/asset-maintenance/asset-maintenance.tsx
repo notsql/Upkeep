@@ -12,7 +12,7 @@ function intervalLock(
     return "This estate is inactive, so its service intervals cannot be changed.";
   }
   if (assetRetired) {
-    return "This asset is retired, so its service interval cannot be changed.";
+    return "This asset is out of use, so you can't change how often it's serviced.";
   }
 }
 

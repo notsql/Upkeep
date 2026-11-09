@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Cpu } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormCard, FormPage } from "@/components/page/form-page";
@@ -30,7 +31,7 @@ export function NewDevicePage({
   const save = useCallback(
     async (values: DeviceInput) => {
       await register.mutateAsync(values);
-      toast.success("Device registered. It is awaiting its first reading.");
+      toast.success("Sensor added. It's waiting for its first reading.");
       await cancel();
     },
     [register.mutateAsync, cancel]
@@ -55,10 +56,11 @@ export function NewDevicePage({
           to: "/estates/$estateId/assets/$assetId",
           params: { estateId, assetId },
         },
-        { label: "Register device" },
+        { label: "Add sensor" },
       ]}
-      description="Measurements and reporting interval"
-      title="Register device"
+      description="What it measures and how often it reports"
+      icon={Cpu}
+      title="Add sensor"
     >
       {loading ? <LoadingState label="Loading asset…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}

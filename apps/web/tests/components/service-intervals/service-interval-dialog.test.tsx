@@ -105,6 +105,15 @@ it("keeps the dialog open with the error when saving fails", async () => {
   screen.getByRole("dialog", { name: "Service interval for Pump" });
 });
 
+it("says Couldn't save when the failure has no message", async () => {
+  open({ onSave: vi.fn(() => Promise.reject("offline")) });
+  fireEvent.change(valueInput(), { target: { value: "6" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Couldn't save. Please try again."
+  );
+});
+
 it("cancels", () => {
   const { onCancel } = open();
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));

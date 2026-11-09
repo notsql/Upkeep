@@ -24,7 +24,7 @@ const CATALOGUE = Object.keys(deviceMetrics) as DeviceMetric[];
 const SHORT_FLAG: Record<Exclude<ReadingFlag["type"], "ANOMALY">, string> = {
   OUT_OF_RANGE: "Out of range",
   GAP: "Gap",
-  DUPLICATE_TIMESTAMP: "Duplicate",
+  DUPLICATE_TIMESTAMP: "Same time as another",
 };
 
 /** Compact visible headers; the full name stays the accessible name. */

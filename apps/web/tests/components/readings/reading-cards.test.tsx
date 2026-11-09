@@ -1,5 +1,5 @@
 import { renderWithProviders, screen } from "@tests/test-utils";
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ReadingCards } from "@/components/readings/reading-cards";
 import { formatDateTime } from "@/lib/format";
 import type { AssetReading } from "@/lib/readings";
@@ -20,5 +20,24 @@ describe("ReadingCards", () => {
     renderWithProviders(<ReadingCards items={[reading]} />);
     screen.getByText("2.5 bar");
     screen.getByText(formatDateTime("2026-10-01T10:00:00Z"));
+  });
+
+  it("colours each flag by its status tone", () => {
+    renderWithProviders(
+      <ReadingCards
+        items={[
+          {
+            ...reading,
+            flags: [
+              { type: "GAP", gapSeconds: 3600 },
+              { type: "DUPLICATE_TIMESTAMP" },
+            ],
+          } as unknown as AssetReading,
+        ]}
+      />
+    );
+    expect(
+      screen.getByText("Sent twice for the same time").dataset.variant
+    ).toBe("warning");
   });
 });

@@ -59,7 +59,7 @@ export function EstateDangerZone({
           <h2 className="flex items-center gap-2">
             <OctagonAlert
               aria-hidden="true"
-              className="text-muted-foreground size-4"
+              className="text-destructive size-4"
             />
             Danger zone
           </h2>

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ListChecks, Plus } from "lucide-react";
+import { ClipboardList, ListChecks, Plus } from "lucide-react";
 import {
   SectionCard,
   sectionActionClassName,
@@ -72,6 +72,7 @@ export function InspectionHistoryPage({
         {history.data?.items.length === 0 ? (
           <EmptyState
             description="Saved inspections appear here"
+            icon={ClipboardList}
             title="No inspection records yet"
           />
         ) : null}

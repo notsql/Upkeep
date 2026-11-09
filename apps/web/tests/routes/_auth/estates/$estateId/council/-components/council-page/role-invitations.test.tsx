@@ -85,7 +85,7 @@ beforeEach(() => {
     if (path === "/estates/{estateId}/invitation-roles") {
       data = [
         { role: "MANAGER", label: "Manager (Admin)" },
-        { role: "COUNCIL", label: "Council member" },
+        { role: "COUNCIL", label: "Council" },
         { role: "RESIDENT", label: "Resident" },
         { role: "CREW", label: "Crew" },
       ];
@@ -104,7 +104,7 @@ it("defaults to Council even when another eligible role is listed first", async 
   expect(
     (await screen.findByRole("combobox", { name: "Invitation role" }))
       .textContent
-  ).toContain("Council member");
+  ).toContain("Council");
   fireEvent.change(screen.getByRole("textbox", { name: "Email" }), {
     target: { value: "council@example.com" },
   });

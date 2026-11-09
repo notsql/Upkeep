@@ -1,5 +1,5 @@
 import type { DeviceMetric } from "@/lib/devices";
-import { formatDateTime, formatMetricValue, formatScore } from "@/lib/format";
+import { formatDateTime, formatMetricValue } from "@/lib/format";
 import type { MetricSeries, ReadingSeries } from "@/lib/readings";
 
 /** Recharts passes `active` and the hovered row's `label` (the bucket start). */
@@ -37,7 +37,7 @@ export function MetricTooltip({
       <p className="text-muted-foreground">
         {point.count === 1 ? "1 sample" : `${point.count} samples`}
       </p>
-      {anomaly ? <p>Anomaly score {formatScore(anomaly.maxScore)}</p> : null}
+      {anomaly ? <p>Unusual reading</p> : null}
     </div>
   );
 }

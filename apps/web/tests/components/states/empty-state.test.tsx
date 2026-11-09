@@ -1,4 +1,5 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
+import { Inbox } from "lucide-react";
 import { expect, it } from "vitest";
 import { EmptyState } from "@/components/states/empty-state";
 
@@ -30,4 +31,12 @@ it("renders a recovery action when one is given", () => {
 it("draws no icon", () => {
   renderWithProviders(<EmptyState title="Nothing" />);
   expect(screen.getByRole("status").querySelector("svg")).toBeNull();
+});
+
+it("draws an optional icon decoratively, beside the title", () => {
+  renderWithProviders(<EmptyState icon={Inbox} title="No reports yet" />);
+  const status = screen.getByRole("status");
+  const icon = status.querySelector("svg");
+  expect(icon?.getAttribute("aria-hidden")).toBe("true");
+  expect(status.textContent).toBe("No reports yet");
 });

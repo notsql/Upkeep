@@ -169,9 +169,20 @@ it("names the month and summarises the checks in cards", () => {
   card("Not scheduled").getByText("1");
   expect(
     card("Not scheduled")
-      .getByRole("link", { name: "Set service intervals" })
+      .getByRole("link", { name: "Set check schedules" })
       .getAttribute("href")
-  ).toBe("/estates/oak/asset-categories");
+  ).toBe("/estates/oak/inspections/schedules");
+  const views = within(
+    screen.getByRole("navigation", { name: "Inspection views" })
+  );
+  expect(
+    views
+      .getAllByRole("link")
+      .map((link) => [link.textContent, link.getAttribute("href")])
+  ).toEqual([
+    ["Due checks", "/estates/oak/inspections"],
+    ["Check schedules", "/estates/oak/inspections/schedules"],
+  ]);
 });
 
 it("hides the Not scheduled card when every asset is scheduled", () => {
@@ -207,7 +218,7 @@ it("shows each check's due date, basis, status and action", () => {
     "Record inspection",
   ]);
   expect(cells("Block B, Block-wide", "P-1").slice(3)).toEqual([
-    "Predicted",
+    "Expected",
     "Done · Pass",
     "View result",
   ]);
@@ -268,7 +279,7 @@ it("says when regenerating found nothing new", async () => {
   renderWithProviders(<InspectionsPage estateId="oak" />);
   expect(screen.getByText(LAST_GENERATED)).toBeTruthy();
   screen.getByText(
-    "Regenerating adds newly due checks and never duplicates them."
+    "This adds checks that are now due and never adds the same check twice."
   );
   fireEvent.click(screen.getByRole("button", { name: "Regenerate list" }));
   await waitFor(() =>
@@ -322,27 +333,25 @@ it("explains that nothing can be due when no category is flagged", () => {
     flaggedCategoryCount: 0,
   };
   renderWithProviders(<InspectionsPage estateId="oak" />);
-  const note = within(
-    screen.getByRole("note", { name: "No flagged categories" })
-  );
+  const note = within(screen.getByRole("note", { name: "No regular checks" }));
   note.getByText(
-    "No asset categories are flagged as failing silently, so no checks can be due."
+    "No equipment has regular checks turned on yet, so nothing is due."
   );
   expect(
-    note.getByRole("link", { name: "Flag categories" }).getAttribute("href")
-  ).toBe("/estates/oak/asset-categories");
+    note
+      .getByRole("link", { name: "Turn on regular checks" })
+      .getAttribute("href")
+  ).toBe("/estates/oak/inspections/schedules");
 });
 
 it("keeps the note alongside checks still open from before", () => {
   state.data = { ...(state.data as object), flaggedCategoryCount: 0 };
   renderWithProviders(<InspectionsPage estateId="oak" />);
-  screen.getByRole("note", { name: "No flagged categories" });
+  screen.getByRole("note", { name: "No regular checks" });
   screen.getByRole("row", { name: L1 });
 });
 
 it("has no note while a category is flagged", () => {
   renderWithProviders(<InspectionsPage estateId="oak" />);
-  expect(
-    screen.queryByRole("note", { name: "No flagged categories" })
-  ).toBeNull();
+  expect(screen.queryByRole("note", { name: "No regular checks" })).toBeNull();
 });

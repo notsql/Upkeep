@@ -14,9 +14,11 @@ export const NOTIFICATION_PAGE_SIZE = 20;
 const COUNT_REFRESH_MS = 60_000;
 
 export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
-  ANOMALY: "Anomaly",
+  ANOMALY: "Unusual readings",
   SERVICE_DUE: "Service due",
-  REPAIR_PREDICTED: "Repair predicted",
+  REPAIR_PREDICTED: "Repair expected",
+  CHECK_REQUESTED: "Please inspect",
+  CHECK_FAILED: "Problem found",
 };
 
 /** Every notification query of one user; mutations invalidate this prefix. */

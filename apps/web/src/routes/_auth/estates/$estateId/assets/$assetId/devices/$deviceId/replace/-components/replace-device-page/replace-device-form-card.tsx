@@ -19,8 +19,8 @@ export function ReplaceDeviceFormCard({
       <div className="grid gap-5">
         <Alert>
           <AlertDescription>
-            {device.identifier} will be deactivated and its key will stop
-            working. The new device needs its own identifier and credential.
+            {device.identifier} will be turned off and its key will stop
+            working. The new sensor needs its own name and connection key.
           </AlertDescription>
         </Alert>
         <DeviceForm
@@ -35,7 +35,7 @@ export function ReplaceDeviceFormCard({
           onCancel={onCancel}
           onSave={onSave}
           pendingLabel="Replacing…"
-          submitLabel="Replace device"
+          submitLabel="Replace sensor"
         />
       </div>
     </FormCard>

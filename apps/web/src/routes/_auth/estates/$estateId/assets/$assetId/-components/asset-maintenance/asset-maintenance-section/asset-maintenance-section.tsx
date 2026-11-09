@@ -67,6 +67,7 @@ export function AssetMaintenanceSection({
                 ? "Use Record repair to add the first entry"
                 : "Repairs and completed work orders appear here"
             }
+            icon={Wrench}
             title="No maintenance recorded yet"
           />
         ) : null}

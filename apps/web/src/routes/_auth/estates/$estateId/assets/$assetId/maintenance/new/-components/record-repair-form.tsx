@@ -191,7 +191,7 @@ export function RecordRepairForm({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to record the event. Please try again."
+            : "Couldn't record the event. Try again."
         );
       } finally {
         submitting.current = false;

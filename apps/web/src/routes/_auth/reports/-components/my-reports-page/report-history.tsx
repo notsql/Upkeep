@@ -44,11 +44,15 @@ export function ReportHistory({ estateId }: HistoryProps) {
       />
       {reports.isPending ? <LoadingState label="Loading reports…" /> : null}
       {reports.isError ? (
-        <ErrorState message="Unable to load reports" onRetry={retry} />
+        <ErrorState
+          message="Couldn't load reports. Try again."
+          onRetry={retry}
+        />
       ) : null}
       {reports.data && (reports.data.items?.length ?? 0) === 0 ? (
         <EmptyState
           description="Use Create to report the first fault"
+          icon={ClipboardList}
           title={estateId ? "No reports for this estate yet" : "No reports yet"}
         />
       ) : null}

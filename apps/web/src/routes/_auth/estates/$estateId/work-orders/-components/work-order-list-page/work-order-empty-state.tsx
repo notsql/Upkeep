@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { SearchX, Wrench } from "lucide-react";
 import { EmptyState } from "@/components/states/empty-state";
 
 export function WorkOrderEmptyState({
@@ -19,6 +20,7 @@ export function WorkOrderEmptyState({
           </Button>
         }
         description="Try other filters"
+        icon={SearchX}
         title="No matching work orders"
       />
     );
@@ -30,6 +32,7 @@ export function WorkOrderEmptyState({
           ? "Use Create to add the first work order"
           : "Saved work orders appear here"
       }
+      icon={Wrench}
       title="No work orders yet"
     />
   );

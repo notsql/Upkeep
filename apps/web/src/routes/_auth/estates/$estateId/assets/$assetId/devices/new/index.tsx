@@ -6,7 +6,7 @@ export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/devices/new/"
 )({
   component: NewDeviceRoute,
-  head: () => pageHead("Register device"),
+  head: () => pageHead("Add sensor"),
 });
 function NewDeviceRoute() {
   const { estateId, assetId } = Route.useParams();

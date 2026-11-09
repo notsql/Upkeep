@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { useNavigate } from "@tanstack/react-router";
+import { Building2 } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormPage } from "@/components/page/form-page";
@@ -64,7 +65,7 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
     );
   }, [navigate, estateId]);
   return (
-    <FormPage {...heading(Boolean(estateId))}>
+    <FormPage icon={Building2} {...heading(Boolean(estateId))}>
       {estateId && (estate.isPending || waitingForPermissions) ? (
         <LoadingState label="Loading estate…" rows={2} />
       ) : null}

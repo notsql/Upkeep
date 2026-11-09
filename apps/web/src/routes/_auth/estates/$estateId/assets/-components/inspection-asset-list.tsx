@@ -3,7 +3,7 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Link } from "@tanstack/react-router";
-import { Layers, Search } from "lucide-react";
+import { ClipboardList, Layers, Search } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
 import { ListPageHeader } from "@/components/page/list-page-header";
@@ -123,6 +123,7 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
       {assets.data?.items.length === 0 ? (
         <EmptyState
           description={query ? "Try a different name or reference" : undefined}
+          icon={ClipboardList}
           title={query ? "No matching assets" : "No assets yet"}
         />
       ) : null}

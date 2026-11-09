@@ -190,6 +190,22 @@ public class WorkOrderController {
         return privateResponse(progress.completions(estateId, assetId, subject(principal)));
     }
 
+    @GetMapping("/assets/{assetId}/open-work-order")
+    @Operation(operationId = "getOpenWorkOrder", summary = "The asset's work order that is not closed, if any")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "The open work order"),
+        @ApiResponse(responseCode = "204", description = "No open work order")
+    })
+    public ResponseEntity<OpenWorkOrderResponse> openOrder(
+            @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID assetId) {
+        var order = orders.openOrder(estateId, subject(principal), assetId);
+        if (order == null)
+            return ResponseEntity.noContent()
+                    .header("Cache-Control", "private, no-store")
+                    .build();
+        return privateResponse(order);
+    }
+
     private static <T> ResponseEntity<T> privateResponse(T body) {
         return ResponseEntity.ok().header("Cache-Control", "private, no-store").body(body);
     }

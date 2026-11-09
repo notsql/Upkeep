@@ -44,7 +44,7 @@ vi.mock("@/lib/access", () => ({
 
 const SENSOR_ROW = /SENSOR-001/u;
 const FILTER_ASSET = /Filter by asset/u;
-const RETIRED_PUMP = /PUMP-001.*Retired/u;
+const RETIRED_PUMP = /PUMP-001.*Out of use/u;
 const ASSET = "b6d6fe0d-32c5-4c77-a034-81aac211dfaa";
 const READINGS = "/estates/{estateId}/readings";
 const OPTIONS = "/estates/{estateId}/readings/assets";
@@ -156,11 +156,35 @@ describe("estate reading browser", () => {
     expect(screen.queryByText("Maple Estate")).toBeNull();
   });
 
+  it("names columns in plain words and warns that flagged readings may be wrong", async () => {
+    show();
+    const table = await screen.findByRole("table", { name: "Readings" });
+    within(table).getByRole("columnheader", { name: "Measurement" });
+    within(table).getByRole("columnheader", { name: "Sensor name" });
+    within(table).getByRole("columnheader", { name: "Warnings" });
+    within(table).getByText("Outside normal range (-40 to 150 °C)");
+    const note = screen.getByRole("note", {
+      name: "Some readings may be wrong",
+    });
+    within(note).getByText(
+      "Look at the sensor, or take a manual reading to compare."
+    );
+  });
+
+  it("shows no wrong-reading warning when nothing is flagged", async () => {
+    page.items = [{ ...reading, flags: [] }];
+    show();
+    await screen.findByRole("table", { name: "Readings" });
+    expect(
+      screen.queryByRole("note", { name: "Some readings may be wrong" })
+    ).toBeNull();
+  });
+
   it("shows Sensor labels", async () => {
     permission.canRecord = false;
     show();
     const table = await screen.findByRole("table", { name: "Readings" });
-    within(table).getByText("Sensor");
+    within(table).getByRole("cell", { name: "Sensor" });
     expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
   });
 
@@ -192,7 +216,7 @@ describe("estate reading browser", () => {
     within(row).getByText("PUMP-001");
     within(row).getByText("Water pump");
     within(row).getByText("151 °C");
-    within(row).getByText("Out of range (valid -40 to 150 °C)");
+    within(row).getByText("Outside normal range (-40 to 150 °C)");
     expect(
       get.mock.calls.every(([path]) => path === READINGS || path === OPTIONS)
     ).toBe(true);
@@ -252,13 +276,13 @@ describe("estate reading browser", () => {
     });
   });
 
-  it("shows an anomaly flag as a destructive badge with its score", async () => {
+  it("shows an anomaly flag as a destructive Unusual reading badge", async () => {
     page.items = [
       { ...reading, flags: [{ type: "ANOMALY", anomalyScore: 0.8734 }] },
     ];
     show();
     const table = await screen.findByRole("table", { name: "Readings" });
-    const badge = within(table).getByText("Anomaly 0.87");
+    const badge = within(table).getByText("Unusual reading");
     expect(badge.getAttribute("data-variant")).toBe("destructive");
   });
 
@@ -293,7 +317,7 @@ describe("estate reading browser", () => {
     const change = show({ assetId: ASSET, metric: "TEMPERATURE", page: 4 });
     await screen.findByRole("table", { name: "Readings" });
     await chooseOption(
-      screen.getByRole("combobox", { name: "Metric" }),
+      screen.getByRole("combobox", { name: "Measurement" }),
       "Pressure"
     );
     expect(change).toHaveBeenLastCalledWith({
@@ -459,12 +483,12 @@ describe("estate reading browser", () => {
     {
       filters: { suspect: true },
       assets: 1,
-      message: "No matching suspect readings",
+      message: "No possibly wrong readings match these filters",
     },
     {
       filters: { anomalous: true },
       assets: 1,
-      message: "No anomalous readings match these filters",
+      message: "No unusual readings match these filters",
     },
   ])(
     "distinguishes empty states: $message",
@@ -586,7 +610,7 @@ it("shows mobile reading records with provenance and flags, retaining filter-awa
   manual.getByText("PUMP-001");
   manual.getByText("Manual");
   manual.getByText("Alex Technician");
-  manual.getByText("Out of range (valid -40 to 150 °C)");
+  manual.getByText("Outside normal range (-40 to 150 °C)");
   expect(manual.queryByText("SENSOR-001")).toBeNull();
   within(records.getAllByRole("listitem")[1]).getByText("SENSOR-001");
   expect(screen.queryByRole("table", { name: "Readings" })).toBeNull();

@@ -6,7 +6,7 @@ export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/"
 )({
   component: ReplaceDeviceRoute,
-  head: () => pageHead("Replace device"),
+  head: () => pageHead("Replace sensor"),
 });
 function ReplaceDeviceRoute() {
   const { estateId, assetId, deviceId } = Route.useParams();

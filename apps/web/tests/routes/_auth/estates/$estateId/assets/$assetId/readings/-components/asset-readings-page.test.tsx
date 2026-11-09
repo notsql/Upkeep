@@ -164,7 +164,7 @@ describe("AssetReadingsPage", () => {
     const calls = vi.mocked(api.GET).mock.calls as unknown[][];
     expect(calls.some(([path]) => path === ESTATE_READINGS)).toBe(false);
     expect(groupedQueries()[0]).toEqual({ limit: 50 });
-    screen.getByText("Showing 1 timestamp");
+    screen.getByText("Showing 1 time");
   });
 
   it("sends the date and metric filters", async () => {
@@ -246,7 +246,7 @@ describe("AssetReadingsPage", () => {
       limit: 50,
       before: "2026-10-01T08:00:02Z",
     });
-    screen.getByText("Showing 2 timestamps");
+    screen.getByText("Showing 2 times");
     expect(screen.queryByRole("button", { name: "Load older" })).toBeNull();
   });
 
@@ -275,7 +275,7 @@ describe("AssetReadingsPage", () => {
         onFiltersChange={vi.fn()}
       />
     );
-    await screen.findByText("Showing 1 timestamp");
+    await screen.findByText("Showing 1 time");
     expect(screen.queryByText("29.5")).toBeNull();
     expect(groupedQueries().at(-1)).toEqual({ limit: 50, flag: ["ANOMALY"] });
   });
@@ -299,7 +299,7 @@ describe("AssetReadingsPage", () => {
   it("says no anomalous readings match, with Clear filters", async () => {
     pages.first = { groups: [] };
     const { change } = renderPage({ anomalous: true });
-    await screen.findByText("No anomalous readings match these filters");
+    await screen.findByText("No unusual readings match these filters");
     // The filter bar has its own Clear filters; the empty state's comes last.
     const clears = screen.getAllByRole("button", { name: "Clear filters" });
     fireEvent.click(clears.at(-1) as HTMLElement);
@@ -371,7 +371,7 @@ describe("AssetReadingsPage", () => {
     const { change } = renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
     fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Suspect only" })
+      await screen.findByRole("checkbox", { name: "Possibly wrong only" })
     );
     expect(change).toHaveBeenCalledWith({ suspect: true, page: undefined });
   });
@@ -380,7 +380,7 @@ describe("AssetReadingsPage", () => {
     const { change } = renderPage();
     fireEvent.click(await screen.findByRole("button", { name: "Filters" }));
     fireEvent.click(
-      await screen.findByRole("checkbox", { name: "Anomalous only" })
+      await screen.findByRole("checkbox", { name: "Unusual readings only" })
     );
     expect(change).toHaveBeenCalledWith({ anomalous: true, page: undefined });
   });
@@ -390,7 +390,7 @@ describe("AssetReadingsPage", () => {
     const toolbar = await screen.findByRole("toolbar", {
       name: "Reading tools",
     });
-    await within(toolbar).findByText("Showing 1 timestamp");
+    await within(toolbar).findByText("Showing 1 time");
     within(toolbar).getByRole("button", { name: "Filters" });
     within(toolbar).getByRole("button", { name: "Export CSV" });
   });
@@ -412,7 +412,7 @@ describe("AssetReadingsPage", () => {
         `#${CSS.escape(toggle.getAttribute("aria-controls") ?? "")}`
       )
     ).not.toBeNull();
-    within(panel).getByRole("checkbox", { name: "Suspect only" });
+    within(panel).getByRole("checkbox", { name: "Possibly wrong only" });
     expect(within(panel).queryByText("Filters")).toBeNull();
   });
 

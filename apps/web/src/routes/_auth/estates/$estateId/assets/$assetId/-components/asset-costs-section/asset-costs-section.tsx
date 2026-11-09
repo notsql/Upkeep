@@ -61,6 +61,7 @@ export function AssetCostsSection({
       {loaded && rows.length === 0 ? (
         <EmptyState
           description="Try a longer period"
+          icon={Receipt}
           title="No costs in this period"
         />
       ) : null}

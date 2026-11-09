@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { History } from "lucide-react";
 import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -86,7 +87,8 @@ export function HistoryAssetList({
   return (
     <PageLayout className="space-y-5">
       <ListPageHeader
-        description="Browse assets and their recorded history, including retired equipment."
+        description="Browse assets and their recorded history, including assets out of use."
+        icon={History}
         title="Assets"
       />
       <Card>
@@ -113,7 +115,7 @@ export function HistoryAssetList({
               <SelectContent>
                 <SelectItem value="ALL">All assets</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Retired</SelectItem>
+                <SelectItem value="INACTIVE">Out of use</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -134,6 +136,7 @@ export function HistoryAssetList({
               </Button>
             ) : undefined
           }
+          icon={History}
           title={
             filters.q ||
             filters.status === "ACTIVE" ||
@@ -175,7 +178,7 @@ export function HistoryAssetList({
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">
-                        {asset.status === "RETIRED" ? "Retired" : "Active"}
+                        {asset.status === "RETIRED" ? "Out of use" : "Active"}
                       </Badge>
                     </TableCell>
                   </TableRow>

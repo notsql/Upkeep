@@ -17,7 +17,7 @@ export function NotificationSettingsPage({ estateId }: { estateId: string }) {
     <PageLayout>
       <PageHeader
         breadcrumbs={[{ label: estate.data?.name ?? "Estate" }]}
-        description="When managers of this estate are notified about anomalies, services and predicted repairs"
+        description="When we warn this estate's managers about unusual readings, services and expected repairs"
         icon={BellRing}
         title="Notification settings"
       />

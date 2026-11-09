@@ -2,14 +2,11 @@ import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
+import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { Copy } from "lucide-react";
 import { useCallback, useId, useState } from "react";
+import { SectionHeading } from "@/components/page/section-heading";
 import { DuplicateStateBadge } from "@/components/reports/duplicate-badges";
 import { ReportSourcePicker } from "@/components/reports/report-source-picker";
 import {
@@ -18,6 +15,7 @@ import {
   useLinkEstateReportDuplicate,
   useReviewEstateReportDuplicate,
 } from "@/lib/estate-reports";
+import { badgeVariantFor, duplicateReportTone } from "@/lib/status-tone";
 
 type ReviewState = components["schemas"]["ReviewDuplicateRequest"]["state"];
 
@@ -96,13 +94,13 @@ function DuplicateOfCard({
     <section aria-labelledby={headingId}>
       <Card>
         <CardHeader>
-          <CardTitle>
-            <h2 id={headingId}>Duplicate</h2>
-          </CardTitle>
+          <SectionHeading icon={Copy} id={headingId}>
+            Already reported
+          </SectionHeading>
         </CardHeader>
         <CardContent className="grid gap-3">
           <p>
-            {suspected ? "Possible duplicate of" : "Duplicate of"}{" "}
+            {suspected ? "May be the same problem as" : "Same problem as"}{" "}
             <Link
               params={{ estateId, reportId: original.reportId }}
               to="/estates/$estateId/reports/$reportId"
@@ -114,7 +112,7 @@ function DuplicateOfCard({
             This report cannot get its own work order. Use the original and its
             work orders.
             {suspected
-              ? " If this is not a duplicate, reject the link to allow one."
+              ? " If it's a different problem, choose Not the same problem first."
               : null}
           </p>
           {review.error ? (
@@ -141,7 +139,7 @@ function DuplicateOfCard({
                 onClick={reject}
                 variant="outline"
               >
-                Not a duplicate
+                Not the same problem
               </Button>
             </div>
           ) : null}
@@ -163,15 +161,15 @@ function LinkedDuplicatesCard({
     <section aria-labelledby={headingId}>
       <Card>
         <CardHeader>
-          <CardTitle>
-            <h2 id={headingId}>Duplicates</h2>
-          </CardTitle>
+          <SectionHeading icon={Copy} id={headingId}>
+            Repeat reports
+          </SectionHeading>
           <div className="flex flex-wrap gap-1">
-            <Badge variant="secondary">
+            <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
               {report.confirmedDuplicateCount} confirmed
             </Badge>
             {report.suspectedDuplicateCount > 0 ? (
-              <Badge variant="outline">
+              <Badge variant={badgeVariantFor(duplicateReportTone.SUSPECTED)}>
                 {report.suspectedDuplicateCount} to review
               </Badge>
             ) : null}
@@ -228,9 +226,9 @@ function MarkDuplicateCard({
     <section aria-labelledby={headingId}>
       <Card>
         <CardHeader>
-          <CardTitle>
-            <h2 id={headingId}>Mark as duplicate</h2>
-          </CardTitle>
+          <SectionHeading icon={Copy} id={headingId}>
+            Mark as duplicate
+          </SectionHeading>
         </CardHeader>
         <CardContent className="grid gap-3">
           <ReportSourcePicker
@@ -252,7 +250,7 @@ function MarkDuplicateCard({
             disabled={!originalId || link.isPending}
             onClick={save}
           >
-            Link as duplicate
+            Mark as same problem
           </Button>
         </CardContent>
       </Card>

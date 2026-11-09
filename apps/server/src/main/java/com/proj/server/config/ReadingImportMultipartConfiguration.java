@@ -32,7 +32,7 @@ public class ReadingImportMultipartConfiguration {
                         throw new MaxUploadSizeExceededException(17L * 1024 * 1024);
                     return parsed;
                 } catch (java.io.IOException | jakarta.servlet.ServletException error) {
-                    throw new MultipartException("Unable to read upload.", error);
+                    throw new MultipartException("Couldn't read the file. Try again.", error);
                 } catch (RuntimeException error) {
                     cleanupMultipart(parsed);
                     throw error;

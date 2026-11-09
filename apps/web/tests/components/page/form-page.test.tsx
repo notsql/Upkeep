@@ -1,4 +1,5 @@
 import { renderWithProviders, screen, within } from "@tests/test-utils";
+import { Wrench } from "lucide-react";
 import { expect, it } from "vitest";
 import { FormCard, FormPage } from "@/components/page/form-page";
 
@@ -31,4 +32,16 @@ it("labels a form card section by its title", () => {
   const section = screen.getByRole("region", { name: "Details" });
   within(section).getByText("Who did the work");
   expect(within(section).getByText("Fields")).toBeTruthy();
+});
+
+it("passes a decorative icon through to the form header", () => {
+  renderWithProviders(
+    <FormPage breadcrumbs={[{ label: "Create" }]} icon={Wrench} title="New">
+      <p>Fields</p>
+    </FormPage>
+  );
+  const heading = screen.getByRole("heading", { level: 1, name: "New" });
+  expect(
+    heading.parentElement?.querySelector("svg[aria-hidden='true']")
+  ).not.toBeNull();
 });

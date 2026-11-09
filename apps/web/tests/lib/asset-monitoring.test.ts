@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   deviceSummaries,
+  deviceSummaryTones,
   groupAssetsByLocation,
   rankDevices,
 } from "@/lib/asset-monitoring";
@@ -115,12 +116,12 @@ describe("deviceSummaries", () => {
       device("gone", "DEACTIVATED"),
       device("single", "ONLINE"),
     ]);
-    expect(summaries("all-online")).toBe("2 devices online");
+    expect(summaries("all-online")).toBe("2 sensors online");
     expect(summaries("one-off")).toBe("1 of 2 offline");
     expect(summaries("awaiting")).toBe("1 of 1 offline");
-    expect(summaries("gone")).toBe("No devices");
-    expect(summaries("none")).toBe("No devices");
-    expect(summaries("single")).toBe("1 device online");
+    expect(summaries("gone")).toBe("No sensors");
+    expect(summaries("none")).toBe("No sensors");
+    expect(summaries("single")).toBe("1 sensor online");
   });
 });
 
@@ -216,5 +217,20 @@ describe("rankDevices", () => {
       status: null,
     });
     expect(ranked[0]?.sensors).toHaveLength(2);
+  });
+});
+
+describe("deviceSummaryTones", () => {
+  it("is success when every device is online, the offline tone when any is not, and muted with none", () => {
+    const tones = deviceSummaryTones([
+      device("all-online", "ONLINE"),
+      device("one-off", "ONLINE"),
+      device("one-off", "OFFLINE"),
+      device("gone", "DEACTIVATED"),
+    ]);
+    expect(tones("all-online")).toBe("success");
+    expect(tones("one-off")).toBe("danger");
+    expect(tones("gone")).toBe("muted");
+    expect(tones("none")).toBe("muted");
   });
 });

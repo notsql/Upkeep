@@ -1,5 +1,5 @@
 import { Button } from "@proj/ui/components/button";
-import { Users } from "lucide-react";
+import { SearchX, Users } from "lucide-react";
 import { SectionHeading } from "@/components/page/section-heading";
 import { EmptyState } from "@/components/states/empty-state";
 import type { AdminUsersListProps } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-list-props";
@@ -45,6 +45,7 @@ export function AdminUsersMembers({
         <div className="p-4">
           <EmptyState
             description="Pick an estate to see members"
+            icon={Users}
             title="No estate selected"
           />
         </div>
@@ -60,10 +61,11 @@ export function AdminUsersMembers({
                 </Button>
               }
               description="Try another name or email"
+              icon={SearchX}
               title="No matching users"
             />
           ) : (
-            <EmptyState title="No members yet" />
+            <EmptyState icon={Users} title="No members yet" />
           )}
         </div>
       )}

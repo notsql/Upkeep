@@ -27,7 +27,7 @@ export function useInspectionsPage(estateId: string) {
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to generate the list. Please try again."
+          : "Couldn't generate the list. Try again."
       );
     }
   }, [mutateAsync]);

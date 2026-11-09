@@ -78,3 +78,13 @@ Example: `POST /estates/{estateId}/inspection-list/generate`
   "dueOn":"2026-11-01","dueBasis":"NEVER_INSPECTED","interval":null,"intervalSource":null,
   "status":"DUE","result":null}],"unscheduled":[],"flaggedCategoryCount":1}}
 ```
+
+## Requested checks (equipment dispatch)
+
+A manager can open a check for one asset with `POST
+/estates/{estateId}/assets/{assetId}/inspection-requests`; see
+[equipment-dispatch.md](equipment-dispatch.md). Such a check has `dueBasis`
+`REQUESTED`, `dueOn` = the day it was sent, and fills the new nullable
+`InspectionCheckResponse` fields `requestedByName` and `assignedToName` (null on
+every other basis). Generating the list skips equipment that already has this
+month's check, so a requested check is never duplicated.

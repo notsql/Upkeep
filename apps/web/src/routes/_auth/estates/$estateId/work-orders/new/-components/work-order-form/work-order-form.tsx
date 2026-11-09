@@ -3,11 +3,13 @@ import {
   FieldSeparator,
   FieldSet,
 } from "@proj/ui/components/field";
+import { Wrench } from "lucide-react";
 import type { ReactNode } from "react";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormCard, FormPage } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { useWorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-form";
+import type { WorkOrderReason } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-prefill";
 import { WorkOrderFormAssetFields } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-asset-fields";
 import { WorkOrderFormDetailsFields } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-details-fields";
 import { WorkOrderFormSourceStatus } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form-source-status";
@@ -22,12 +24,23 @@ export function WorkOrderForm({
   estateId,
   sourceReportId,
   sourceInspectionId,
+  assetId,
+  reason,
 }: {
   estateId: string;
   sourceReportId?: string;
   sourceInspectionId?: string;
+  /** With `reason`, fills the form in for that equipment. */
+  assetId?: string;
+  reason?: WorkOrderReason;
 }) {
-  const form = useWorkOrderForm(estateId, sourceReportId, sourceInspectionId);
+  const form = useWorkOrderForm(
+    estateId,
+    sourceReportId,
+    sourceInspectionId,
+    assetId,
+    reason
+  );
   return (
     <FormPage
       breadcrumbs={[
@@ -39,6 +52,7 @@ export function WorkOrderForm({
         { label: "Create" },
       ]}
       description="Describe the work, where it is and how urgent it is"
+      icon={Wrench}
       title="Create work order"
     >
       <WorkOrderFormBody estateId={estateId} form={form} />

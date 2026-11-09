@@ -17,7 +17,7 @@ export function ReadingAssetChoice({
       variant="outline"
     >
       {asset.reference} · {asset.name}
-      {asset.retired ? " · Retired" : ""}
+      {asset.retired ? " · Out of use" : ""}
     </Button>
   );
 }

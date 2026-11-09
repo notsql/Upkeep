@@ -14,7 +14,6 @@ import {
 import { buildSignInPath } from "@/lib/auth-redirect";
 import {
   canOpenAllDevices,
-  canOpenAssetCategories,
   canOpenAssets,
   canOpenEstateSettings,
   canOpenInspections,
@@ -30,14 +29,19 @@ type DestinationPredicate = (
 
 // Sections the sidebar gates on ownership; the guard uses the same predicates.
 const OWNER_GATED: Record<string, DestinationPredicate> = {
-  "asset-categories": canOpenAssetCategories,
+  // Old Check schedules bookmarks redirect to Inspections, so gate them alike.
+  "asset-categories": canOpenInspections,
   inspections: canOpenInspections,
   edit: canOpenEstateSettings,
   "notification-settings": canOpenNotificationSettings,
 };
 
-// Sections whose sub-views (one segment deeper) share the section's gate.
-const SUB_VIEW_SECTIONS = new Set(["asset-categories"]);
+// Sections whose sub-views (up to this many segments deeper) share the
+// section's gate: /inspections/schedules/$interval is two below Inspections.
+const SUB_VIEW_DEPTH: Record<string, number> = {
+  "asset-categories": 1,
+  inspections: 2,
+};
 
 /** Assets > All devices, which is gated like Devices and Device monitoring. */
 function isAllDevicesPath(segments: string[]) {
@@ -52,9 +56,9 @@ function isAllDevicesPath(segments: string[]) {
 function isSectionPath(segments: string[], feature: string | undefined) {
   return (
     segments.length === 3 ||
-    (segments.length === 4 &&
-      feature !== undefined &&
-      SUB_VIEW_SECTIONS.has(feature))
+    (feature !== undefined &&
+      segments.length > 3 &&
+      segments.length <= 3 + (SUB_VIEW_DEPTH[feature] ?? 0))
   );
 }
 
@@ -83,7 +87,7 @@ export const Route = createFileRoute("/_auth")({
     }
 
     if (!access) {
-      throw new Error("Unable to resolve access.");
+      throw new Error("Couldn't check your access. Try again.");
     }
     context.queryClient.setQueryData([user.id, "app-access"], access);
     if (path === "/estates" || path === "/estates/") {
@@ -115,7 +119,7 @@ export const Route = createFileRoute("/_auth")({
           queryFn: async () => {
             const result = await getSessionEstate({ data: estateId });
             if (!result) {
-              throw new Error("Unable to load the estate.");
+              throw new Error("Couldn't load the estate. Try again.");
             }
             return result;
           },

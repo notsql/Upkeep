@@ -95,3 +95,11 @@ estate/legacy tables and mobile cards, without inventing a device or recorder.
 
 See [the API contract](../api/reading-imports.md) for limits, row validation,
 deduplication, provenance retention and rollback ownership.
+
+## Colours
+
+Each row's outcome `Badge` takes `badgeVariantFor(readingImportOutcomeTone[outcome])`
+(`lib/status-tone.ts`): `IMPORTED` success, `DUPLICATE` muted (secondary), `INVALID` danger
+(destructive). The imports page header is `FormPageHeader` with an `Upload` icon tile, the batch
+page `DetailPageHeader` with `FileSpreadsheet`; their empty states carry the same icons. See
+[design-system.md](design-system.md).

@@ -41,7 +41,7 @@ export function NewReportForm({
         {form.locations.isError ? (
           <Alert variant="destructive">
             <AlertDescription>
-              Unable to load locations. Please try again.
+              Couldn't load locations. Try again.
             </AlertDescription>
           </Alert>
         ) : null}

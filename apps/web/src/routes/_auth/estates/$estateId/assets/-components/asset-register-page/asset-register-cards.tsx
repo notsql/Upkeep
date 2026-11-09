@@ -108,7 +108,7 @@ function AssetCardList({
                   </div>
                   <LifecycleStatusBadge
                     inactive={Boolean(asset.deactivatedAt)}
-                    inactiveLabel="Retired"
+                    inactiveLabel="Out of use"
                   />
                 </div>
                 <dl className="grid gap-2 text-sm">
@@ -130,7 +130,7 @@ function AssetCardList({
                   </div>
                   {monitoring.devices ? (
                     <div>
-                      <dt className="text-muted-foreground">Devices</dt>
+                      <dt className="text-muted-foreground">Sensors</dt>
                       <dd>
                         <DeviceSummary
                           assetId={asset.id}

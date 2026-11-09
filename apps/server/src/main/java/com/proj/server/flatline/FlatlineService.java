@@ -61,7 +61,7 @@ public class FlatlineService {
         access(estateId, user, admin, true, true);
         var device = repository
                 .device(estateId, deviceId, true)
-                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Device not found."));
+                .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Sensor not found."));
         if (device.retired()) {
             throw error(HttpStatus.CONFLICT, "This asset is retired.");
         }
@@ -197,7 +197,7 @@ public class FlatlineService {
         var scope = repository
                 .estate(estateId, user, lock)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Estate not found."));
-        if ("RESIDENT".equals(scope.role())) {
+        if (resident(scope)) {
             throw error(HttpStatus.FORBIDDEN, "Resident membership does not grant device monitoring access.");
         }
         if (!scope.owner() && scope.role() == null) {
@@ -211,6 +211,19 @@ public class FlatlineService {
             throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         }
         return scope;
+    }
+
+    /** The write half of {@link #access}, without the estate-active check; used by who-can-help. */
+    @Transactional(readOnly = true)
+    public boolean canPause(UUID estateId, String user) {
+        return repository
+                .estate(estateId, user, false)
+                .filter(scope -> !resident(scope) && canManage(scope, false))
+                .isPresent();
+    }
+
+    private static boolean resident(FlatlineRepository.EstateScope scope) {
+        return "RESIDENT".equals(scope.role());
     }
 
     private static boolean canManage(FlatlineRepository.EstateScope scope, boolean admin) {

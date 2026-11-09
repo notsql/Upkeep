@@ -27,7 +27,7 @@ import { expect, it } from "vitest";
 const INVOICE_CONFIRMATION = /invoice\.pdf/u;
 const DOWNLOAD_INVOICE = /download invoice\.pdf/iu;
 const ASSET_REFERENCE = /TT-A0001/u;
-const RETIRED_STATUS = /retired/iu;
+const RETIRED_STATUS = /out of use/iu;
 const SEARCH_LABEL = /search/iu;
 const CATEGORY_LABEL = /^category$/iu;
 const LOCATION_LABEL = /^location$/iu;
@@ -37,7 +37,7 @@ const SEARCH_BUTTON = /^search$/iu;
 const SELECTED_ASSET = /selected.*TT-A0001/iu;
 const CANCEL_BUTTON = /^cancel$/iu;
 const FILE_RETAINED = /file.*retain|file.*kept|keep.*file/iu;
-const CORRECTION_REASON = /correction reason/iu;
+const CORRECTION_REASON = /why you're changing it/iu;
 const EMPTY_REGISTER = /no assets/iu;
 const NO_MATCHES = /no.*match/iu;
 const CLEAR_FILTERS = /clear/iu;
@@ -245,11 +245,11 @@ it("combines search and every register filter while retaining the selected UUID"
   );
   await chooseOption(
     dialog.getByRole("combobox", { name: CONDITION_LABEL }),
-    "Not assessed yet"
+    "Not checked yet"
   );
   await chooseOption(
     dialog.getByRole("combobox", { name: STATUS_LABEL }),
-    "Retired"
+    "Out of use"
   );
   fireEvent.click(dialog.getByRole("button", { name: SEARCH_BUTTON }));
   await waitFor(() =>
@@ -472,7 +472,9 @@ it("offers Retry for an association read failure without issuing a mutation", as
   apiGet.mockImplementation((path, options) => {
     if (path === associationPath && !failed) {
       failed = true;
-      return Promise.resolve(failure("Unable to load asset association", 500));
+      return Promise.resolve(
+        failure("Couldn't load the asset link. Try again.", 500)
+      );
     }
     if (!original) {
       throw new Error("Missing HTTP fixture");

@@ -25,7 +25,7 @@ import {
 const FIELDS = ["asset", "metric", "measured_at", "value", "unit"] as const;
 const LABELS = {
   asset: "Asset column",
-  metric: "Metric column",
+  metric: "Measurement column",
   measured_at: "Measured at column",
   value: "Value column",
   unit: "Unit column (optional)",
@@ -135,7 +135,7 @@ export function ImportFormFields({
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="import-source">Source label</FieldLabel>
+        <FieldLabel htmlFor="import-source">Name for this import</FieldLabel>
         <Input
           aria-describedby={error ? "import-error" : undefined}
           aria-invalid={Boolean(error)}

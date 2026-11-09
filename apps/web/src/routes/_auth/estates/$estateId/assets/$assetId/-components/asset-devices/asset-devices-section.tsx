@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, Plus, RadioTower } from "lucide-react";
+import { Activity, Cpu, Plus, RadioTower } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import {
   PageSection,
@@ -58,17 +58,17 @@ export function AssetDevicesSection({
               to="/estates/$estateId/assets/$assetId/devices/new"
             >
               <Plus aria-hidden="true" />
-              Register device
+              Add sensor
             </Link>
           ) : null}
         </>
       }
       icon={RadioTower}
-      title="Devices"
+      title="Sensors"
     >
       <div className="grid gap-4">
         {devices.isPending ? (
-          <LoadingState label="Loading devices…" rows={2} />
+          <LoadingState label="Loading sensors…" rows={2} />
         ) : null}
         {devices.error ? (
           <ErrorState message={devices.error.message} onRetry={retry} />
@@ -78,14 +78,15 @@ export function AssetDevicesSection({
             <EmptyState
               description={
                 canRegister
-                  ? "Use Register device to add the first sensor"
+                  ? "Use Add sensor to add the first one."
                   : "Registered sensors appear here"
               }
-              title="No devices yet"
+              icon={Cpu}
+              title="No sensors yet"
             />
           </div>
         ) : null}
-        <ul aria-label="Devices" className="divide-y">
+        <ul aria-label="Sensors" className="divide-y">
           {devices.data?.map((device) => (
             <DeviceItem
               assetId={assetId}

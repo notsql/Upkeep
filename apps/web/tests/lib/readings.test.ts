@@ -139,17 +139,20 @@ describe("formatGap", () => {
 
 describe("flagLabel", () => {
   it.each([
-    [0.8734, "Anomaly 0.87"],
-    [0.875, "Anomaly 0.88"],
-    [0.51, "Anomaly 0.51"],
-    [1, "Anomaly 1.00"],
-  ])("labels an anomaly scored %s as %s", (anomalyScore, label) => {
-    expect(flagLabel({ type: "ANOMALY", anomalyScore }, "bar")).toBe(label);
-  });
+    [0.8734, "Unusual reading"],
+    [0.875, "Unusual reading"],
+    [0.51, "Unusual reading"],
+    [1, "Unusual reading"],
+  ])(
+    "labels an anomaly scored %s as %s, without the score",
+    (anomalyScore, label) => {
+      expect(flagLabel({ type: "ANOMALY", anomalyScore }, "bar")).toBe(label);
+    }
+  );
 
   it("labels out-of-range limits with grouped numbers", () => {
     expect(
       flagLabel({ type: "OUT_OF_RANGE", validMin: -1, validMax: 1500.5 }, "bar")
-    ).toBe("Out of range (valid -1 to 1,500.5 bar)");
+    ).toBe("Outside normal range (-1 to 1,500.5 bar)");
   });
 });

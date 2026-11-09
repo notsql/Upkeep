@@ -93,7 +93,7 @@ Code: `com.proj.server.anomaly.AnomalyScoringScheduler`, `AnomalyScoringService`
   `system:` prefix) count.
 - A run of at least 10 samples is `FAULTY` if its median is >= 0.98, else
   `NEEDS_ATTENTION`. It is recorded as an `AssetAssessment` by
-  `system:anomaly-model` / "Anomaly detection", `assessedOn` the run's last
+  `system:anomaly-model` / "Unusual readings", `assessedOn` the run's last
   sample (UTC date), only if the asset's current condition differs. Notes:
   `<n> consecutive abnormal samples in device readings from <first> to <last>. Median score <m>, maximum <x>.`
   `GOOD` is never recorded, and a pass records at most one assessment.

@@ -20,7 +20,9 @@ import java.util.UUID;
             "interval",
             "intervalSource",
             "status",
-            "result"
+            "result",
+            "requestedByName",
+            "assignedToName"
         })
 public record InspectionCheckResponse(
         UUID id,
@@ -45,4 +47,10 @@ public record InspectionCheckResponse(
         IntervalSource intervalSource,
 
         CheckStatus status,
-        @Schema(nullable = true) CheckResultResponse result) {}
+        @Schema(nullable = true) CheckResultResponse result,
+
+        @Schema(nullable = true, description = "Who sent crew; set only for REQUESTED checks")
+        String requestedByName,
+
+        @Schema(nullable = true, description = "Who was sent to inspect; set only for REQUESTED checks")
+        String assignedToName) {}

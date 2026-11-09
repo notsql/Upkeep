@@ -18,7 +18,7 @@ export function AssociationHistory({
       ) : null}
       {history.isError ? (
         <ErrorState
-          message="Unable to load association history"
+          message="Couldn't load the link history. Try again."
           onRetry={retryHistory}
           retryLabel="Retry history"
         />

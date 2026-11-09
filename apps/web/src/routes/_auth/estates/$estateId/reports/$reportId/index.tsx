@@ -1,6 +1,6 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { useCallback } from "react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -67,6 +67,7 @@ function EstateReportDetailPage() {
           },
           { label: report.data?.title ?? "Fault report" },
         ]}
+        icon={ClipboardList}
         title="Fault report details"
       />
       {report.isPending ? (

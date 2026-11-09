@@ -6,12 +6,9 @@ import { LifecycleStatusBadge } from "@/components/badges/lifecycle-status-badge
 import { formatMcst, type useEstateList } from "@/lib/estates";
 
 const monogramColours = [
-  "bg-sky-500/15 text-sky-700 dark:text-sky-300",
-  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
-  "bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  "bg-violet-500/15 text-violet-700 dark:text-violet-300",
-  "bg-rose-500/15 text-rose-700 dark:text-rose-300",
-  "bg-teal-500/15 text-teal-700 dark:text-teal-300",
+  "bg-brand-1/15 text-brand-3",
+  "bg-brand-2/10 text-brand-2",
+  "bg-brand-3/10 text-brand-3",
 ];
 
 function monogramColour(id: string): string {

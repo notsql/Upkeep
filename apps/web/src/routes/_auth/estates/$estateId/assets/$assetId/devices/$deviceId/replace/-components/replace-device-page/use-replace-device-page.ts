@@ -28,7 +28,7 @@ export function useReplaceDevicePage(
     async (values: DeviceInput) => {
       const created = await replace.mutateAsync(values);
       toast.success(
-        `Device replaced. Generate a credential for ${created.identifier} to start its readings.`
+        `Sensor replaced. Get a connection key for ${created.identifier} so it can send readings.`
       );
       await cancel();
     },
@@ -44,15 +44,14 @@ export function useReplaceDevicePage(
   let blocked: string | undefined;
   if (!(loading || error)) {
     if (!device) {
-      blocked = "Device not found.";
+      blocked = "We couldn't find this sensor.";
     } else if (device.deactivatedAt) {
-      blocked =
-        "This device is already deactivated. Register a new device on the asset instead.";
+      blocked = "This sensor is already turned off. Add a new sensor instead.";
     } else if (!allowed) {
       blocked =
-        "You cannot replace this device. Only the owner can replace devices on an active asset in an active estate.";
+        "You can't replace this sensor. Only the estate owner can, and only on equipment in use in an active estate.";
     }
   }
-  const title = device ? `Replace ${device.identifier}` : "Replace device";
+  const title = device ? `Replace ${device.identifier}` : "Replace sensor";
   return { asset, blocked, cancel, device, error, loading, save, title };
 }

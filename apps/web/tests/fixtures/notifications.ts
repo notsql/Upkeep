@@ -26,4 +26,5 @@ export const anomalyAlert = {
   },
   serviceDue: null,
   repairPredicted: null,
+  inspectionResultId: null,
 };

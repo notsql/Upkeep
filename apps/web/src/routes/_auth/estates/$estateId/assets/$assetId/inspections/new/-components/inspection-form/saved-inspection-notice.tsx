@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { ClipboardCheck } from "lucide-react";
 import { FormCard, FormPage } from "@/components/page/form-page";
 import type { InspectionResult } from "@/lib/inspections";
 
@@ -25,6 +26,7 @@ export function SavedInspectionNotice({
         },
         { label: "Inspection saved" },
       ]}
+      icon={ClipboardCheck}
       title="Inspection saved"
     >
       <FormCard>

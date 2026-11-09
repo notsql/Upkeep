@@ -17,7 +17,7 @@ it("does not describe an inactive asset conflict as a changed report", () => {
       reportSource
     />
   );
-  screen.getByText("Unable to create work order");
+  screen.getByText("Couldn't create work order. Try again.");
   expect(screen.queryByRole("button", { name: "Reload source" })).toBeNull();
 });
 

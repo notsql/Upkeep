@@ -117,7 +117,7 @@ export function useDocumentAssetDialog({
       await association.refetch({ throwOnError: true });
       setReviewing(true);
     } catch {
-      setRefreshError("Unable to refresh the asset link. Retry before saving.");
+      setRefreshError("Couldn't refresh the asset link. Retry before saving.");
     } finally {
       setRefreshing(false);
     }

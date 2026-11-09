@@ -60,7 +60,9 @@ export function useMetricPolicyEditor({
       );
     } catch (error) {
       setValidation(
-        error instanceof Error ? error.message : "Check the policy values."
+        error instanceof Error
+          ? error.message
+          : "Check the values and try again."
       );
     }
   }, [
@@ -88,7 +90,9 @@ export function useMetricPolicyEditor({
   const errorMessage =
     validation ||
     save.error?.message ||
-    (canManage ? undefined : "Saving is paused until device metrics load");
+    (canManage
+      ? undefined
+      : "Couldn't load your sensors, so this can't be saved yet. Try again.");
   const changeTolerance = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => setTolerance(event.target.value),
     []

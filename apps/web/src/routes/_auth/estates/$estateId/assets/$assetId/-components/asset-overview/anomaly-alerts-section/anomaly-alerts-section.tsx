@@ -3,9 +3,9 @@ import { Card, CardContent } from "@proj/ui/components/card";
 import { BellRing } from "lucide-react";
 import { AlertResponseActions } from "@/components/notifications/alert-response-actions";
 import { AlertResponseSummary } from "@/components/notifications/alert-response-summary";
+import { UNUSUAL_READINGS_STEP } from "@/components/notifications/unusual-readings-step";
 import { SectionCard } from "@/components/page/section-card";
 import { ErrorState } from "@/components/states/error-state";
-import { LoadingState } from "@/components/states/loading-state";
 import { type Notification, useAssetAnomalyAlerts } from "@/lib/notifications";
 import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
 
@@ -34,11 +34,13 @@ function AnomalyAlertItem({
               {alert.resolvedAt ? "Resolved" : "Open"}
             </Badge>
           </div>
-          <p className="text-sm">{`Median score ${anomaly.medianScore.toFixed(2)} · maximum ${anomaly.maxScore.toFixed(2)}`}</p>
           <p className="text-sm whitespace-pre-wrap">{anomaly.explanation}</p>
           <p className="text-muted-foreground text-sm">
-            {`First detected ${time(anomaly.firstDetectedAt)} · last detected ${time(anomaly.lastDetectedAt)}`}
+            {`Unusual from ${time(anomaly.firstDetectedAt)} to ${time(anomaly.lastDetectedAt)}`}
           </p>
+          {anomaly.response === "NONE" && !alert.resolvedAt ? (
+            <p className="text-sm">{UNUSUAL_READINGS_STEP}</p>
+          ) : null}
           <AlertResponseSummary anomaly={anomaly} />
           <AlertResponseActions alert={alert} locked={locked} />
         </CardContent>
@@ -59,22 +61,19 @@ export function AnomalyAlertsSection({
   locked?: string;
 }) {
   const alerts = useAssetAnomalyAlerts(estateId, assetId);
+  // Only an error or at least one alert earns the card; loading shows nothing
+  // so the page never flashes a card that then disappears.
+  if (!(alerts.error || alerts.data?.length)) {
+    return null;
+  }
   return (
     <SectionCard
-      description="Raised when anomaly detection finds abnormal readings"
+      description="Warnings about readings that don't look normal"
       icon={BellRing}
-      title="Anomaly alerts"
+      title="Unusual readings"
     >
       {alerts.error ? (
         <ErrorState message={alerts.error.message} onRetry={alerts.refetch} />
-      ) : null}
-      {alerts.isPending && !alerts.error ? (
-        <LoadingState label="Loading anomaly alerts" rows={1} />
-      ) : null}
-      {alerts.data && alerts.data.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          No anomaly alerts for this asset.
-        </p>
       ) : null}
       {alerts.data && alerts.data.length > 0 ? (
         <ul className="grid gap-3">

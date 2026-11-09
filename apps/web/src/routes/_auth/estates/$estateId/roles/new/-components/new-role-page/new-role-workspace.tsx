@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { ShieldPlus } from "lucide-react";
 import { useCallback } from "react";
 import { FormPageHeader } from "@/components/page/form-page-header";
 import { ErrorState } from "@/components/states/error-state";
@@ -61,6 +62,7 @@ export function NewRoleWorkspace({
           { label: "Create role" },
         ]}
         description="Name the role and choose what it can do"
+        icon={ShieldPlus}
         title="Create role"
       />
       <div className="grid gap-6">

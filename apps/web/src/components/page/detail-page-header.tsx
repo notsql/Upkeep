@@ -1,3 +1,4 @@
+import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { type Breadcrumb, PageHeader } from "@/components/page/page-header";
 
@@ -7,12 +8,14 @@ import { type Breadcrumb, PageHeader } from "@/components/page/page-header";
  * destructive action last).
  */
 export function DetailPageHeader({
+  icon,
   breadcrumbs,
   title,
   status,
   meta,
   actions,
 }: {
+  icon?: LucideIcon;
   breadcrumbs: Breadcrumb[];
   title: string;
   status?: ReactNode;
@@ -23,6 +26,7 @@ export function DetailPageHeader({
     <PageHeader
       actions={actions}
       breadcrumbs={breadcrumbs}
+      icon={icon}
       meta={meta}
       status={status}
       title={title}

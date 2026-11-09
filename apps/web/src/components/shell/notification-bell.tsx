@@ -6,11 +6,16 @@ import { useUnreadNotificationCount } from "@/lib/notifications";
 
 const BADGE_CAP = 99;
 
-/** The header's link to /notifications, shown to users who manage an estate (ID-100). */
+/**
+ * The header's link to /notifications, shown to users who manage an estate
+ * (ID-100) and to crew, who can be sent to inspect.
+ */
 export function NotificationBell() {
   const access = useAppAccess();
   const manages =
-    access.data?.estates.some((estate) => estate.role === "MANAGER") ?? false;
+    access.data?.estates.some(
+      (estate) => estate.role === "MANAGER" || estate.role === "CREW"
+    ) ?? false;
   const count = useUnreadNotificationCount(manages);
   if (!manages) {
     return null;

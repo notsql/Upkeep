@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
+import { FileSpreadsheet } from "lucide-react";
 import { FilterBar } from "@/components/filters/filter-bar";
 import { SectionCard } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
@@ -53,8 +54,8 @@ export function ImportBatchResults({
             <SelectContent>
               <SelectItem value="ALL">All outcomes</SelectItem>
               <SelectItem value="IMPORTED">Imported</SelectItem>
-              <SelectItem value="DUPLICATE">Duplicate</SelectItem>
-              <SelectItem value="INVALID">Invalid</SelectItem>
+              <SelectItem value="DUPLICATE">Already imported</SelectItem>
+              <SelectItem value="INVALID">Has problems</SelectItem>
             </SelectContent>
           </Select>
         </Field>
@@ -66,7 +67,7 @@ export function ImportBatchResults({
         <ErrorState message={rows.error.message} onRetry={onRetry} />
       ) : null}
       {rows.data?.items.length === 0 ? (
-        <EmptyState title="No matching row results" />
+        <EmptyState icon={FileSpreadsheet} title="No matching row results" />
       ) : null}
       <ImportRowResults items={rows.data?.items ?? []} />
       {rows.data ? (

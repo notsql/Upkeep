@@ -1,5 +1,6 @@
 import {
   councilEstateAccess,
+  crewEstateAccess,
   ownerEstateAccess,
   workspaceAccess,
 } from "@tests/fixtures/access";
@@ -80,4 +81,10 @@ it("is hidden from users who manage no estate", async () => {
   renderWithProviders(<NotificationBell />);
   await waitFor(() => expect(state.accessLoads).toBe(1));
   expect(screen.queryByRole("link", { name: ANY_NOTIFICATIONS })).toBeNull();
+});
+
+it("shows crew their notifications, since they can be sent to inspect", async () => {
+  state.estates = [crewEstateAccess];
+  renderWithProviders(<NotificationBell />);
+  await screen.findByRole("link", { name: "Notifications" });
 });

@@ -34,9 +34,21 @@ public class NotificationRepository {
         this.db = db;
     }
 
-    /** Notifications of the estates the user manages, decided at read time. */
+    /**
+     * Estate notifications of the estates the user manages, plus those addressed to the user in estates
+     * where they can still record inspections. Decided at read time.
+     */
     static Condition visibleTo(String user) {
-        return NOTIFICATION.ESTATEID.in(DSL.select(ESTATE.ID).from(ESTATE).where(AccessService.managerEstates(user)));
+        return NOTIFICATION
+                .RECIPIENTUSERID
+                .isNull()
+                .and(NOTIFICATION.ESTATEID.in(
+                        DSL.select(ESTATE.ID).from(ESTATE).where(AccessService.managerEstates(user))))
+                .or(NOTIFICATION
+                        .RECIPIENTUSERID
+                        .eq(user)
+                        .and(NOTIFICATION.ESTATEID.in(
+                                DSL.select(ESTATE.ID).from(ESTATE).where(AccessService.inspectorEstates(user)))));
     }
 
     private static Condition readBy(String user) {
@@ -257,7 +269,8 @@ public class NotificationRepository {
                                 number(n.getProbability()),
                                 FailureRiskBasis.valueOf(n.getBasis()),
                                 n.getFailuresobserved())
-                        : null);
+                        : null,
+                n.getInspectionresultid());
     }
 
     private static double number(BigDecimal value) {

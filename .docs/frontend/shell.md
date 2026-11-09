@@ -53,7 +53,7 @@ only): PageHeader "Report a fault" (`icon={LayoutDashboard}`, so the button's Cl
 or accept an invitation"), a primary "Report a fault" and, with
 `canCreateEstate`, an outline "Create estate" (Plus). The public home header
 uses `icon={LayoutDashboard}` ("Estates, equipment and council access"); the
-System status title has a HeartPulse icon. A failed access lookup on home is `ErrorState` + Retry. There is
+System status title has a HeartPulse icon (`text-brand-2`). the feature cards show their icons in `bg-brand-1/15 text-brand-3` tiles. The active sidebar item uses `sidebar-accent` with its icon in `text-sidebar-primary` (`DestinationLink`). A failed access lookup on home is `ErrorState` + Retry. There is
 no portfolio dashboard; `/estates` is the single "All estates" landing
 (directory + pending invitations, see [estates.md](estates.md)).
 
@@ -132,21 +132,20 @@ a group with no visible items is not rendered.
 | Group | Item | Route under `/estates/$estateId` | Predicate (`lib/estate-destinations.ts`) |
 | --- | --- | --- | --- |
 | (unlabelled) | Overview | `` (exact match) | `canOpenOverview`: `canViewEstateDetails ?? canViewManagement` |
-| Operations | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
-| Operations | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
-| Operations | Inspections | `/inspections` | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
-| Assets | Locations | `/locations` | `canViewManagement` |
+| Maintenance | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
+| Maintenance | Inspections | `/inspections` (also active on `/inspections/schedules/**`) | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
+| Maintenance | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
 | Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewAssetHistory \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |
-| Records | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
-| Administration | Members | `/council` | `canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions` |
-| Administration | Roles | `/roles` | `canOpenRoles`: `canViewEstateRoles` |
-| Administration | Asset categories | `/asset-categories` | `canOpenAssetCategories`: `owned \|\| canManageInvitationPermissions` |
+| Assets | Locations | `/locations` | `canViewManagement` |
+| Assets | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
+| Administration | People & access | `/council` when `canOpenMembers`, else `/roles`; active on `/council/**` and `/roles/**` | `canOpenMembers \|\| canOpenRoles` (`canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions`; `canOpenRoles`: `canViewEstateRoles`) |
+| Administration | Notification settings | `/notification-settings` | `canOpenNotificationSettings`: `role === "MANAGER"` |
 | Administration | Estate settings | `/edit` | `canOpenEstateSettings`: `owned \|\| canManageEstate` |
 
 There is no Devices, Readings, Device monitoring or Failure risk item: those
-pages live under Assets (All devices, the asset Overview, By location's risk
-column). Owners and Managers reach `/readings` through the "All readings" link
-on the Assets views (`canOpenAllReadings`: `canViewReadings` and not CREW);
+pages live under Assets (All sensors, the asset Overview, By location's risk
+column). No screen links to `/readings` any more (the "All readings" link was
+removed from the Assets views); it is reachable by URL only;
 Crew reach an asset's readings from a work order's "View readings" / "Record
 reading" links (see [work-orders.md](work-orders.md)).
 
@@ -154,7 +153,7 @@ reading" links (see [work-orders.md](work-orders.md)).
 `["estates", userId, "details", estateId]`), mounted only when
 `canViewManagement`; owner-only items stay hidden until it resolves. Access
 loading or errored: no items. Role- or invitation-only estates show only
-Administration > Roles/Members.
+Administration > People & access.
 
 Active state: an item is active when its route equals or prefixes the pathname
 (nested pages keep their section), Overview by exact match; active links get
@@ -181,12 +180,15 @@ In `_auth/route.tsx`, `guardDestination` handles the section-level URLs
 
 - `/assets` (list) 404s unless `canOpenAssets`. Asset children
   (`/assets/$assetId/**`) keep `guardInspectionContext`.
-- `/assets/devices` (All devices) is matched first (`isAllDevicesPath`, so
+- `/assets/devices` (All sensors) is matched first (`isAllDevicesPath`, so
   "devices" is never treated as an asset ID by `guardInspectionContext`) and
   uses `canOpenAllDevices` (`canOpenDevices || canOpenSensors`), loading
   ownership like the owner-gated sections: owner, Manager and Council open it
   without `canViewAssets`; Crew and inspection-only readers get `notFound()`.
-- `/asset-categories`, `/inspections`, `/edit` use `OWNER_GATED`
+- `/inspections` (and up to two levels below it, so
+  `/inspections/schedules/$interval`; `SUB_VIEW_DEPTH`), `/asset-categories`
+  (old Check schedules bookmarks, which redirect; gated by `canOpenInspections`
+  plus one sub-view), `/notification-settings` and `/edit` use `OWNER_GATED`
   predicates. If access flags alone
   do not open the page, the guard loads ownership with
   `queryClient.ensureQueryData` on `["estates", userId, "details", estateId]`
@@ -249,7 +251,7 @@ for their report navigation. Report estates are switched from the header switche
 - **Status pills:** stock shadcn `Badge` variants only, with the state always in
   the label text. LifecycleStatusBadge: Active `default`, Inactive/Retired
   `destructive`. ConditionBadge: Good `default`, Needs attention `secondary`,
-  Faulty `destructive`, Not assessed yet `outline`. Estates uses shadcn `Empty`; other features retain descriptive empty text.
+  Faulty `destructive`, Not checked yet `outline`. Estates uses shadcn `Empty`; other features retain descriptive empty text.
 - **Success feedback:** `toast.success(...)` from `sonner`.
 - **Forms:** feature-local state/FormData, existing shadcn Input/Select/Checkbox/
   Textarea and Label (or Field where already used), disabled fieldsets while
@@ -280,7 +282,7 @@ before requiring management access. Roles requires canViewEstateRoles; council
 requires canViewEstateInvitations/canInviteMembers/member-admin authority. Access
 lookup failures mount no controls. Role-only and invitation-only users therefore
 need no VIEW_ESTATE. AppNavigation avoids useEstate for these contexts and
-shows only Administration > Roles/Members; the header switcher labels them from
+shows only Administration > People & access; the header switcher labels them from
 access estateName. Home sends a scoped-only user to Roles or estate
 invitations after checking management/report entry. Access/cache remains per user.
 See [estate-roles.md](estate-roles.md) and [council-invitations.md](council-invitations.md).

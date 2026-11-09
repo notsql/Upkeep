@@ -21,7 +21,7 @@ Types: `FailureRisk` = `FailureRiskResponse`.
 
 Constants: `timeframeLabel` (`WITHIN_30_DAYS` "Within 30 days", `WITHIN_60_DAYS`,
 `WITHIN_90_DAYS`, `BEYOND_90_DAYS` "Beyond 90 days"); `flagReasonLabel`
-(`CONDITION` "Condition", `FAILURE_RISK` "Failure risk", `END_OF_LIFE` "End of
+(`CONDITION` "Condition", `FAILURE_RISK` "Chance of breaking down", `END_OF_LIFE` "End of
 life"). Helpers: `noForecastReason(risk)` ("Not supported" when `basis` is
 `NOT_SUPPORTED`, "Not enough data" when `probability90Days` is null, else null);
 `formatProbability(value)`. `FlagReason` is exported.

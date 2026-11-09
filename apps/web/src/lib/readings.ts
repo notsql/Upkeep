@@ -9,7 +9,7 @@ import { api } from "@/lib/api";
 import { assetQueryKey } from "@/lib/assets";
 import type { DeviceMetric } from "@/lib/devices";
 import { estateError, useEstateSession } from "@/lib/estates";
-import { formatNumber, formatScore } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 import { type ReadingSearch, readingFilterError } from "@/lib/reading-filters";
 
 export type AssetReadingPage = components["schemas"]["AssetReadingPage"];
@@ -43,6 +43,11 @@ const GAP_UNITS: [string, number][] = [
   ["m", 60],
   ["s", 1],
 ];
+
+/** A gap, a repeated time or a value outside the normal range. */
+export function isPossiblyWrong(flag: ReadingFlag): boolean {
+  return SUSPECT_FLAGS.includes(flag.type);
+}
 
 /** A gap length such as "2h 5m"; zero parts are left out. */
 export function formatGap(seconds: number): string {
@@ -80,12 +85,12 @@ export function flagLabel(flag: ReadingFlag, unit: string): string {
     return `Gap ${formatGap(flag.gapSeconds ?? 0)}`;
   }
   if (flag.type === "DUPLICATE_TIMESTAMP") {
-    return "Duplicate timestamp";
+    return "Sent twice for the same time";
   }
   if (flag.type === "ANOMALY") {
-    return `Anomaly ${formatScore(flag.anomalyScore ?? 0)}`;
+    return "Unusual reading";
   }
-  return `Out of range (valid ${formatNumber(flag.validMin ?? 0)} to ${formatNumber(flag.validMax ?? 0)} ${unit})`;
+  return `Outside normal range (${formatNumber(flag.validMin ?? 0)} to ${formatNumber(flag.validMax ?? 0)} ${unit})`;
 }
 
 export function readingsQueryKey(

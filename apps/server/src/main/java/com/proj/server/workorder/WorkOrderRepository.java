@@ -59,6 +59,20 @@ public class WorkOrderRepository {
                 .fetchOne();
     }
 
+    /** The asset's newest work order that is not closed, if any. */
+    public OpenWorkOrderResponse openOrder(UUID estate, UUID asset) {
+        return db.select(WORKORDER.ID, WORKORDER.REFERENCE)
+                .from(WORKORDER)
+                .where(WORKORDER
+                        .ESTATEID
+                        .eq(estate)
+                        .and(WORKORDER.ASSETID.eq(asset))
+                        .and(WORKORDER.STATUS.ne(WorkOrderStatus.CLOSED.name())))
+                .orderBy(WORKORDER.CREATEDAT.desc(), WORKORDER.ID.desc())
+                .limit(1)
+                .fetchOne(row -> new OpenWorkOrderResponse(row.value1(), row.value2()));
+    }
+
     public String inspectionOrder(UUID estate, UUID inspection) {
         return db.select(WORKORDER.REFERENCE)
                 .from(WORKORDER)

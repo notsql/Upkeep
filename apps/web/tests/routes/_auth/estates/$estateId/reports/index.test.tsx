@@ -90,7 +90,7 @@ const LEVEL_TWO = /Level 2/u;
 const NONE = /none|no common area|level only/iu;
 const UNAVAILABLE = /unavailable|unable|not found/iu;
 const NO_DESTINATIONS =
-  /no.*active.*locations|no.*destinations|no.*locations.*available/iu;
+  /no.*locations.*in use|no.*active.*locations|no.*destinations|no.*locations.*available/iu;
 
 const report = {
   id: reportId,
@@ -1348,9 +1348,9 @@ it("badges originals with duplicate counts and linked reports with their state",
     return within(found as HTMLElement);
   };
   const originalCard = await card("Original leak");
-  originalCard.getByText("2 duplicates");
+  originalCard.getByText("2 repeat reports");
   originalCard.getByText("1 to review");
-  (await card("Leak again")).getByText("Possible duplicate");
-  (await card("Same leak")).getByText("Duplicate");
+  (await card("Leak again")).getByText("May already be reported");
+  (await card("Same leak")).getByText("Already reported");
   expect((await card("Broken light")).queryByText(DUPLICATE_BADGE)).toBeNull();
 });

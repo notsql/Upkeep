@@ -13,7 +13,7 @@ export function useAssetDetailsTab(estateId: string, assetId: string) {
     async (request: components["schemas"]["DeactivateAssetRequest"]) => {
       await deactivate.mutateAsync(request);
       setConfirming(false);
-      toast.success("Asset retired. Its record has been preserved.");
+      toast.success("Asset taken out of use. We've kept its history.");
     },
     [deactivate.mutateAsync]
   );

@@ -24,7 +24,7 @@ export function DeactivateLocation({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to deactivate the location. Please try again."
+          : "Couldn't deactivate the location. Try again."
       );
     } finally {
       setPending(false);

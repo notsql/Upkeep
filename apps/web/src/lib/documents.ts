@@ -48,7 +48,7 @@ export function useDocuments(estateId: string, filters: DocumentFilters) {
         signal,
       });
       if (error || !data) {
-        throw documentError(error, "Unable to load documents. Try again.");
+        throw documentError(error, "Couldn't load documents. Try again.");
       }
       return data;
     },
@@ -84,7 +84,7 @@ export function useUploadDocument(estateId: string) {
       if (result.error || !result.data || result.response.status !== 201) {
         throw documentError(
           result.error,
-          "Unable to upload the file. Check the document list before retrying."
+          "Couldn't upload the file. Check the document list before you try again."
         );
       }
       return result.data;
@@ -112,7 +112,7 @@ export function useDeleteDocument(estateId: string) {
         }
       );
       if (error || response.status !== 204) {
-        throw documentError(error, "Unable to remove the file. Please retry.");
+        throw documentError(error, "Couldn't remove the file. Try again.");
       }
     },
     onSuccess: async () => {
@@ -137,10 +137,7 @@ export function useDownloadDocument(estateId: string) {
         }
       );
       if (error || !data) {
-        throw documentError(
-          error,
-          "Unable to download the file. Please retry."
-        );
+        throw documentError(error, "Couldn't download the file. Try again.");
       }
       const url = URL.createObjectURL(data);
       const link = window.document.createElement("a");

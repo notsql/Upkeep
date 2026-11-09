@@ -50,7 +50,7 @@ export function AssetDetailsNav({
                 {count}
               </Badge>
             ) : undefined,
-          label: "Devices",
+          label: "Sensors",
           params,
           to: "/estates/$estateId/assets/$assetId/devices",
         },

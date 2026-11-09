@@ -134,6 +134,16 @@ public class Inspectioncheck extends TableImpl<InspectioncheckRecord> {
      */
     public final TableField<InspectioncheckRecord, OffsetDateTime> COMPLETEDAT = createField(DSL.name("completedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
 
+    /**
+     * The column <code>public.InspectionCheck.assignedToName</code>.
+     */
+    public final TableField<InspectioncheckRecord, String> ASSIGNEDTONAME = createField(DSL.name("assignedToName"), SQLDataType.VARCHAR(255), this, "");
+
+    /**
+     * The column <code>public.InspectionCheck.assignedToUserId</code>.
+     */
+    public final TableField<InspectioncheckRecord, String> ASSIGNEDTOUSERID = createField(DSL.name("assignedToUserId"), SQLDataType.VARCHAR(255), this, "");
+
     private Inspectioncheck(Name alias, Table<InspectioncheckRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -244,8 +254,9 @@ public class Inspectioncheck extends TableImpl<InspectioncheckRecord> {
     @Override
     public List<Check<InspectioncheckRecord>> getChecks() {
         return Arrays.asList(
+            Internal.createCheck(this, DSL.name("InspectionCheck_assigned_check"), "((((\"dueBasis\")::text = 'REQUESTED'::text) = (\"assignedToUserId\" IS NOT NULL)))", true),
             Internal.createCheck(this, DSL.name("InspectionCheck_completed_check"), "(((\"completedByResultId\" IS NULL) = (\"completedAt\" IS NULL)))", true),
-            Internal.createCheck(this, DSL.name("InspectionCheck_dueBasis_check"), "(((\"dueBasis\")::text = ANY ((ARRAY['PREDICTION'::character varying, 'INTERVAL'::character varying, 'NEVER_INSPECTED'::character varying])::text[])))", true),
+            Internal.createCheck(this, DSL.name("InspectionCheck_dueBasis_check"), "(((\"dueBasis\")::text = ANY ((ARRAY['PREDICTION'::character varying, 'INTERVAL'::character varying, 'NEVER_INSPECTED'::character varying, 'REQUESTED'::character varying])::text[])))", true),
             Internal.createCheck(this, DSL.name("InspectionCheck_interval_check"), "((((\"intervalValue\" IS NULL) AND (\"intervalUnit\" IS NULL) AND (\"intervalSource\" IS NULL)) OR (((\"intervalSource\")::text = ANY ((ARRAY['ASSET'::character varying, 'CATEGORY'::character varying])::text[])) AND ((((\"intervalUnit\")::text = 'DAY'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 3650))) OR (((\"intervalUnit\")::text = 'MONTH'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 120))) OR (((\"intervalUnit\")::text = 'YEAR'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 10)))))))", true),
             Internal.createCheck(this, DSL.name("InspectionCheck_month_check"), "((EXTRACT(day FROM month) = (1)::numeric))", true)
         );

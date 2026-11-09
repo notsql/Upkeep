@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { History } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -28,7 +29,7 @@ export function AssetHistoryPage({
   if (access.error) {
     return (
       <p role="alert">
-        Unable to verify your access. Reload this page to try again.
+        Couldn't verify your access. Reload this page to try again.
       </p>
     );
   }
@@ -117,6 +118,7 @@ function HistoryTimeline({
       )}
       {pages && entries.length === 0 ? (
         <EmptyState
+          icon={History}
           title={
             filters.from || filters.to
               ? "No recorded history in this date range"

@@ -36,7 +36,7 @@ export function AssociationBody({
   if (!latest) {
     return association.isError ? (
       <ErrorState
-        message="Unable to load document link"
+        message="Couldn't load document link. Try again."
         onRetry={retryAssociation}
         retryLabel="Retry document link"
       />
@@ -68,7 +68,7 @@ export function AssociationBody({
       </section>
       {association.isError ? (
         <ErrorState
-          message="Unable to refresh the document link"
+          message="Couldn't refresh the document link. Try again."
           onRetry={refresh}
           retryLabel="Retry document link"
         />

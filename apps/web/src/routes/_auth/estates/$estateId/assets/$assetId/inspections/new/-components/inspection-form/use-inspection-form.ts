@@ -29,6 +29,7 @@ export function useInspectionForm(estateId: string, assetId: string) {
     )
   );
   const [notes, setNotes] = useState("");
+  const [notesError, setNotesError] = useState<string>();
   const [photos, setPhotos] = useState<SelectedInspectionPhoto[]>([]);
   const [observed, setObserved] = useState<InspectionAsset>();
   const [review, setReview] = useState<InspectionAsset>();
@@ -52,6 +53,11 @@ export function useInspectionForm(estateId: string, assetId: string) {
       if (saving.current || save.isPending || !outcome || !observed || review) {
         return;
       }
+      if (outcome === "FAIL" && !notes.trim()) {
+        setNotesError("Say what's wrong so the manager knows what to fix.");
+        return;
+      }
+      setNotesError(undefined);
       saving.current = true;
       setError(undefined);
       let result: InspectionResult | undefined;
@@ -93,7 +99,7 @@ export function useInspectionForm(estateId: string, assetId: string) {
             failure instanceof Error
               ? failure
               : new Error(
-                  "Unable to confirm the save. Refresh inspection history before submitting again."
+                  "Couldn't confirm the save. Refresh inspection history before submitting again."
                 )
           );
         }
@@ -135,10 +141,10 @@ export function useInspectionForm(estateId: string, assetId: string) {
       setOutcome(value === "PASS" || value === "FAIL" ? value : ""),
     []
   );
-  const changeNotes = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) => setNotes(event.target.value),
-    []
-  );
+  const changeNotes = useCallback((event: ChangeEvent<HTMLTextAreaElement>) => {
+    setNotes(event.target.value);
+    setNotesError(undefined);
+  }, []);
   const removePhoto = useCallback(
     (id: string) =>
       setPhotos((previous) => previous.filter((photo) => photo.id !== id)),
@@ -154,6 +160,7 @@ export function useInspectionForm(estateId: string, assetId: string) {
     date,
     error,
     notes,
+    notesError,
     observed,
     outcome,
     photos,

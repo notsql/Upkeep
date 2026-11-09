@@ -158,7 +158,7 @@ describe("historical import on the Readings page", () => {
       within(results).getByText(imported.sourceLabel);
       within(results).getByText(BATCH_REFERENCE);
       within(results).getByText("151.123456 °C");
-      within(results).getByText("Out of range (valid -40 to 150 °C)");
+      within(results).getByText("Outside normal range (-40 to 150 °C)");
       expect(within(results).queryByText("Sensor")).toBeNull();
       expect(within(results).queryByText("Manual")).toBeNull();
       expect(within(results).queryByText(MISSING_RECORDER)).toBeNull();

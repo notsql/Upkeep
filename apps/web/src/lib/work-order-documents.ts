@@ -47,7 +47,7 @@ function useAssociationFailure(userId: string | undefined) {
     }
     throw new DocumentAssociationError(
       error?.message ??
-        "Unable to save or load the document link. Refresh before retrying.",
+        "Couldn't save or load the document link. Refresh the page, then try again.",
       status
     );
   };

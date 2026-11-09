@@ -253,7 +253,7 @@ export function useCreateInspection(estateId: string, assetId: string) {
         return fail(
           error,
           response.status,
-          "Unable to confirm the save. Refresh inspection history before submitting again."
+          "Couldn't confirm the save. Refresh inspection history before submitting again."
         );
       }
       return data;

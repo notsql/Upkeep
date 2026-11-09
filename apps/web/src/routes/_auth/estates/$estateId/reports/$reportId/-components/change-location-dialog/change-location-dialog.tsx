@@ -24,12 +24,12 @@ export function ChangeLocationDialog({
   const openEditor = useCallback(() => setOpen(true), []);
   const retry = useCallback(() => locations.refetch(), [locations.refetch]);
   if (locations.isPending) {
-    return <LoadingState label="Loading correction locations…" rows={1} />;
+    return <LoadingState label="Loading locations…" rows={1} />;
   }
   if (locations.isError) {
     return (
       <ErrorState
-        message="Unable to load locations"
+        message="Couldn't load locations. Try again."
         onRetry={retry}
         retryLabel="Retry locations"
       />

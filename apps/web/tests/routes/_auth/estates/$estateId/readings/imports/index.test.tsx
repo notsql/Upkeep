@@ -168,9 +168,12 @@ async function fill(csv = CSV) {
   fireEvent.change(screen.getByLabelText("CSV file"), {
     target: { files: [file] },
   });
-  fireEvent.change(screen.getByRole("textbox", { name: "Source label" }), {
-    target: { value: SOURCE },
-  });
+  fireEvent.change(
+    screen.getByRole("textbox", { name: "Name for this import" }),
+    {
+      target: { value: SOURCE },
+    }
+  );
   await screen.findByRole("combobox", { name: "Value column" });
   return file;
 }
@@ -202,7 +205,7 @@ describe("historical CSV upload", () => {
     await showUpload();
     screen.getByRole("heading", { level: 1, name: "Import CSV" });
     screen.getByLabelText("CSV file");
-    screen.getByRole("textbox", { name: "Source label" });
+    screen.getByRole("textbox", { name: "Name for this import" });
     await screen.findByText(SOURCE);
     screen.getByRole("button", { name: "Import" });
     screen.getByRole("link", { name: "Cancel" });
@@ -242,7 +245,7 @@ describe("historical CSV upload", () => {
       "Equipment"
     );
     await chooseOption(
-      screen.getByRole("combobox", { name: "Metric column" }),
+      screen.getByRole("combobox", { name: "Measurement column" }),
       "Signal"
     );
     await chooseOption(
@@ -287,7 +290,7 @@ describe("historical CSV upload", () => {
     expect(
       (
         screen.getByRole("textbox", {
-          name: "Source label",
+          name: "Name for this import",
         }) as HTMLInputElement
       ).value
     ).toBe(SOURCE);
@@ -304,9 +307,12 @@ describe("historical CSV upload", () => {
     await fill();
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
     await screen.findByRole("alert");
-    fireEvent.change(screen.getByRole("textbox", { name: "Source label" }), {
-      target: { value: "Corrected vendor label" },
-    });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Name for this import" }),
+      {
+        target: { value: "Corrected vendor label" },
+      }
+    );
     fireEvent.click(screen.getByRole("button", { name: "Import" }));
     await waitFor(() => expect(post).toHaveBeenCalledTimes(2));
     expect((await submittedOptions(1)).submissionId).not.toBe(
@@ -418,7 +424,7 @@ describe("import results and rollback", () => {
     );
     await chooseOption(
       screen.getByRole("combobox", { name: "Outcome" }),
-      "Invalid"
+      "Has problems"
     );
     await waitFor(() =>
       expect(get).toHaveBeenCalledWith(

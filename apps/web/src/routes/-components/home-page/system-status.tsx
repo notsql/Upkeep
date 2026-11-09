@@ -29,10 +29,7 @@ export function SystemStatus() {
     <Card className="mt-8">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <HeartPulse
-            aria-hidden="true"
-            className="text-muted-foreground size-4"
-          />
+          <HeartPulse aria-hidden="true" className="text-brand-2 size-4" />
           System status
         </CardTitle>
       </CardHeader>

@@ -2,6 +2,7 @@ import type { Asset } from "@/lib/assets";
 import type { DeviceStatus, EstateDevice } from "@/lib/devices";
 import type { MonitoredSensor } from "@/lib/flatlined-sensors";
 import { flattenLocations, type Location } from "@/lib/locations";
+import { deviceStatusTone, type StatusTone } from "@/lib/status-tone";
 
 export interface AssetLevelGroup {
   assets: Asset[];
@@ -90,13 +91,48 @@ function ancestorId(
 }
 
 /**
- * Per-asset device summary: "No devices", "2 devices online" or
+ * Per-asset device summary: "No sensors", "2 sensors online" or
  * "1 of 2 offline". Offline and awaiting count as not online; deactivated
  * devices are left out.
  */
 export function deviceSummaries(
   devices: readonly EstateDevice[]
 ): (assetId: string) => string {
+  const counts = deviceCounts(devices);
+  return (assetId) => {
+    const count = counts.get(assetId);
+    if (!count) {
+      return "No sensors";
+    }
+    if (count.online === count.total) {
+      return `${count.total} ${count.total === 1 ? "sensor" : "sensors"} online`;
+    }
+    return `${count.total - count.online} of ${count.total} offline`;
+  };
+}
+
+/**
+ * The tone for each asset's device summary: success when all are online,
+ * the offline device tone when any is not, muted with no devices.
+ */
+export function deviceSummaryTones(
+  devices: readonly EstateDevice[]
+): (assetId: string) => StatusTone {
+  const counts = deviceCounts(devices);
+  return (assetId) => {
+    const count = counts.get(assetId);
+    if (!count) {
+      return "muted";
+    }
+    return count.online === count.total
+      ? deviceStatusTone.ONLINE
+      : deviceStatusTone.OFFLINE;
+  };
+}
+
+function deviceCounts(
+  devices: readonly EstateDevice[]
+): Map<string, { total: number; online: number }> {
   const counts = new Map<string, { total: number; online: number }>();
   for (const device of devices) {
     if (device.status === "DEACTIVATED") {
@@ -109,16 +145,7 @@ export function deviceSummaries(
     }
     counts.set(device.assetId, count);
   }
-  return (assetId) => {
-    const count = counts.get(assetId);
-    if (!count) {
-      return "No devices";
-    }
-    if (count.online === count.total) {
-      return `${count.total} ${count.total === 1 ? "device" : "devices"} online`;
-    }
-    return `${count.total - count.online} of ${count.total} offline`;
-  };
+  return counts;
 }
 
 /** One row of Assets > All devices. */

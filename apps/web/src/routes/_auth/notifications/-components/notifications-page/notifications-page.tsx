@@ -49,7 +49,7 @@ export function NotificationsPage() {
             Mark all as read
           </Button>
         }
-        description="Anomalies, services coming due and predicted repairs in the estates you manage"
+        description="Unusual readings, services coming due and expected repairs in the estates you manage"
         icon={Bell}
         title="Notifications"
       />
@@ -101,6 +101,7 @@ function NotificationList({
     return (
       <EmptyState
         description="You'll be told here when an asset needs attention."
+        icon={Bell}
         title="No notifications yet"
       />
     );

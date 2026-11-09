@@ -64,7 +64,7 @@ export function LocationForm({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to save the location. Please try again."
+            : "Couldn't save the location. Try again."
         );
       } finally {
         setPending(false);

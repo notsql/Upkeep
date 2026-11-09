@@ -29,7 +29,7 @@ export function ListCard({
       <CardHeader>
         <CardTitle>
           <h2 className="flex items-center gap-2">
-            <Icon aria-hidden="true" className="text-muted-foreground size-4" />
+            <Icon aria-hidden="true" className="text-brand-2 size-4" />
             {title}
           </h2>
         </CardTitle>
@@ -37,7 +37,7 @@ export function ListCard({
       </CardHeader>
       <CardContent className="grid gap-3">
         {empty ? (
-          <EmptyState title="Nothing to show" />
+          <EmptyState icon={Icon} title="Nothing to show" />
         ) : (
           <ul className="divide-y">{children}</ul>
         )}

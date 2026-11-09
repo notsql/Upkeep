@@ -84,7 +84,7 @@ public class DeviceService {
     public DeviceResponse register(UUID estateId, UUID assetId, String owner, CreateDeviceRequest request) {
         var estate = estates.findOwned(estateId, owner, true).orElseThrow(DeviceService::estateNotFound);
         if (estate.deactivatedAt() != null) {
-            throw new DeviceException(HttpStatus.CONFLICT, "This estate is inactive. Devices cannot be registered.");
+            throw new DeviceException(HttpStatus.CONFLICT, "This estate is inactive. You can't add sensors.");
         }
         var asset = assets.find(assetId, estateId, true).orElseThrow(DeviceService::assetNotFound);
         if (asset.getDeactivatedat() != null) {
@@ -150,23 +150,24 @@ public class DeviceService {
         }
         var device = repository.find(deviceId, assetId, estateId, true).orElseThrow(DeviceService::deviceNotFound);
         if (device.getDeactivatedat() != null) {
-            throw new DeviceException(HttpStatus.CONFLICT, "This device is deactivated. It cannot be given a key.");
+            throw new DeviceException(
+                    HttpStatus.CONFLICT, "This sensor is turned off. You can't give it a connection key.");
         }
         var key = DeviceKeys.generate();
         var issuedAt = repository
                 .replaceCredential(deviceId, assetId, estateId, DeviceKeys.hash(key))
-                .orElseThrow(() -> new DeviceException(HttpStatus.NOT_FOUND, "Device not found."));
+                .orElseThrow(() -> new DeviceException(HttpStatus.NOT_FOUND, "Sensor not found."));
         return new DeviceCredentialResponse(deviceId, key, issuedAt);
     }
 
     private void lockActiveEstateAndAsset(UUID estateId, UUID assetId, String owner) {
         var estate = estates.findOwned(estateId, owner, true).orElseThrow(DeviceService::estateNotFound);
         if (estate.deactivatedAt() != null) {
-            throw new DeviceException(HttpStatus.CONFLICT, "This estate is inactive. Its devices cannot be changed.");
+            throw new DeviceException(HttpStatus.CONFLICT, "This estate is inactive. You can't change its sensors.");
         }
         var asset = assets.find(assetId, estateId, true).orElseThrow(DeviceService::assetNotFound);
         if (asset.getDeactivatedat() != null) {
-            throw new DeviceException(HttpStatus.CONFLICT, "This asset is deactivated. Its devices cannot be changed.");
+            throw new DeviceException(HttpStatus.CONFLICT, "This asset is out of use. You can't change its sensors.");
         }
     }
 
@@ -228,7 +229,7 @@ public class DeviceService {
     }
 
     private static DeviceException deviceNotFound() {
-        return new DeviceException(HttpStatus.NOT_FOUND, "Device not found.");
+        return new DeviceException(HttpStatus.NOT_FOUND, "Sensor not found.");
     }
 
     private static DeviceException assetNotFound() {

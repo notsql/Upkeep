@@ -205,3 +205,9 @@ location review is open; Cancel navigates to the asset). After saving,
 (`inspection-detail.tsx`) uses `DetailPageHeader` with the Pass/Fail `Badge` as
 `status` and "<reference> · <name>" as `meta` (no estate-name fallback). Asset
 and record load failures use `ErrorState` ("Retry asset", "Retry inspection").
+
+## A Fail needs a note (equipment dispatch)
+
+With Fail chosen the notes field is labelled "Notes: what's wrong?" and is
+required; saving it blank shows "Say what's wrong so the manager knows what to
+fix." and sends nothing. See [equipment-dispatch.md](equipment-dispatch.md).

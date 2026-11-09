@@ -346,6 +346,7 @@ model AssetInspectionResult {
   photos           AssetInspectionPhoto[]
   workOrders       WorkOrder[]
   completedCheck   InspectionCheck?
+  notifications    Notification[]
 
   @@unique([id, estateId])
   @@index([estateId, assetId, inspectedOn, createdAt, id])
@@ -504,6 +505,9 @@ model InspectionCheck {
   generatedAt         DateTime  @default(now()) @db.Timestamptz(6)
   completedByResultId String?   @unique @db.Uuid
   completedAt         DateTime? @db.Timestamptz(6)
+  // Set only for REQUESTED checks: the person a manager sent to inspect.
+  assignedToUserId    String?   @db.VarChar(255)
+  assignedToName      String?   @db.VarChar(255)
 
   estate      Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   asset       Asset                  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
@@ -565,12 +569,18 @@ model Notification {
   basis                String?  @db.VarChar(17)
   failuresObserved     Int?
 
-  estate Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  asset  Asset              @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  reads  NotificationRead[]
+  // CHECK_FAILED: the failed result. CHECK_REQUESTED: the one user it is addressed to.
+  inspectionResultId String? @db.Uuid
+  recipientUserId    String? @db.VarChar(255)
+
+  estate           Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  asset            Asset                  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  inspectionResult AssetInspectionResult? @relation(fields: [inspectionResultId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  reads            NotificationRead[]
 
   @@index([estateId, createdAt(sort: Desc), id])
   @@index([assetId, type, createdAt])
+  @@index([recipientUserId])
 }
 
 /// One user's read receipt for a notification.

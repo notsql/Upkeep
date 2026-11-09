@@ -1,15 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { pageHead } from "@/lib/page-title";
-import { AssetCategoriesList } from "@/routes/_auth/estates/$estateId/asset-categories/-components/asset-categories-page/asset-categories-page";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
+/** Old bookmark: Asset categories is now Check schedules under Inspections. */
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/asset-categories/"
 )({
-  component: AssetCategoriesRoute,
-  head: () => pageHead("Asset categories"),
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      params,
+      replace: true,
+      to: "/estates/$estateId/inspections/schedules",
+    });
+  },
 });
-
-function AssetCategoriesRoute() {
-  const { estateId } = Route.useParams();
-  return <AssetCategoriesList estateId={estateId} filter="ALL" />;
-}

@@ -112,10 +112,10 @@ export function HistoryEntryDetails({
     case "LIFECYCLE":
       return (
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <Value label="Recorded retirement date" value={details.retiredOn} />
+          <Value label="Recorded out-of-use date" value={details.retiredOn} />
           {details.previousRetiredOn ? (
             <Value
-              label="Previous retirement date"
+              label="Previous out-of-use date"
               value={details.previousRetiredOn}
             />
           ) : null}

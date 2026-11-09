@@ -3,7 +3,7 @@ import { Users } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useFilterPanel } from "@/components/filters/filter-bar";
 import { ListPageHeader } from "@/components/page/list-page-header";
-import { SubNav } from "@/components/page/sub-nav";
+import { PEOPLE_TITLE, PeopleViews } from "@/components/people/people-views";
 import {
   useEstateRoleDefinitions,
   useEstateRolePermissions,
@@ -74,24 +74,9 @@ export function MembersWorkspace({
         }
         filters={{ activeCount, ...panel.toggleProps }}
         icon={Users}
-        title="Members"
+        title={PEOPLE_TITLE}
       />
-      <SubNav
-        items={[
-          {
-            exact: true,
-            label: "Members",
-            params: { estateId },
-            to: "/estates/$estateId/council",
-          },
-          {
-            label: "Pending invitations",
-            params: { estateId },
-            to: "/estates/$estateId/council/invitations",
-          },
-        ]}
-        label="Member views"
-      />
+      <PeopleViews estateId={estateId} permission={permission} />
       <InactiveNote permission={permission} />
       <MemberFilters
         {...panel.barProps}

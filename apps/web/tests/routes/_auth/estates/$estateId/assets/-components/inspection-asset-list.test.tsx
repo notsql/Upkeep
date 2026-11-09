@@ -75,8 +75,8 @@ it("pages with Previous page and Next page", () => {
   expect(nav).toBeTruthy();
 });
 
-it("tabs to All devices for an inspection reader who can open it", () => {
+it("tabs to All sensors for an inspection reader who can open it", () => {
   renderWithProviders(<InspectionAssetList estateId="estate" />);
   screen.getByRole("navigation", { name: "Asset views" });
-  screen.getByRole("link", { name: "All devices" });
+  screen.getByRole("link", { name: "All sensors" });
 });

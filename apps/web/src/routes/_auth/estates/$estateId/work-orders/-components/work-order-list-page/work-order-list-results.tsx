@@ -38,7 +38,10 @@ export function WorkOrderListResults({
         <LoadingState label="Loading work orders…" variant="table" />
       ) : null}
       {orders.isError ? (
-        <ErrorState message="Unable to load work orders" onRetry={onRetry} />
+        <ErrorState
+          message="Couldn't load work orders. Try again."
+          onRetry={onRetry}
+        />
       ) : null}
       {orders.data && !orders.isError ? (
         <>

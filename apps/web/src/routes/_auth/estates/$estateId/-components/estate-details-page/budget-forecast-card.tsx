@@ -24,10 +24,7 @@ export function BudgetForecastCard({ estateId }: { estateId: string }) {
       <CardHeader>
         <CardTitle>
           <h2 className="flex items-center gap-2">
-            <PiggyBank
-              aria-hidden="true"
-              className="text-muted-foreground size-4"
-            />
+            <PiggyBank aria-hidden="true" className="text-brand-2 size-4" />
             Maintenance budget
           </h2>
         </CardTitle>

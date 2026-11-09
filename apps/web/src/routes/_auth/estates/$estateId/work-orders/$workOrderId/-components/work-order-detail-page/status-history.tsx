@@ -1,9 +1,6 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
+import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
+import { History } from "lucide-react";
+import { SectionHeading } from "@/components/page/section-heading";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import type { useWorkOrderStatusHistory } from "@/lib/work-orders";
@@ -18,9 +15,7 @@ export function StatusHistory({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          <h2>Status history</h2>
-        </CardTitle>
+        <SectionHeading icon={History}>Status history</SectionHeading>
       </CardHeader>
       <CardContent>
         {history.isPending ? (
@@ -28,7 +23,7 @@ export function StatusHistory({
         ) : null}
         {history.isError ? (
           <ErrorState
-            message="Unable to load status history"
+            message="Couldn't load status history. Try again."
             onRetry={onRetry}
             retryLabel="Retry history"
           />

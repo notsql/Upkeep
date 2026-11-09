@@ -99,7 +99,9 @@ export function useReadingImportBatchState({
     } catch (cause) {
       const live = current.current === scope && !request.signal.aborted;
       if (live) {
-        setError(readingImportMessage(cause, "Unable to revert batch."));
+        setError(
+          readingImportMessage(cause, "Couldn't undo this import. Try again.")
+        );
       }
     } finally {
       if (controller.current === request) {
@@ -125,7 +127,12 @@ export function useReadingImportBatchState({
       await downloadImportReport(estateId, batchId, request.signal);
     } catch (cause) {
       if (!request.signal.aborted && current.current === scope) {
-        setError(readingImportMessage(cause, "Unable to download report."));
+        setError(
+          readingImportMessage(
+            cause,
+            "Couldn't download the report. Try again."
+          )
+        );
       }
     } finally {
       if (current.current === scope) {

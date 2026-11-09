@@ -18,6 +18,7 @@ export function DestinationLink({ item }: { item: NavigationItem }) {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
+        className="data-active:[&_svg]:text-sidebar-primary"
         isActive={item.active}
         render={
           <Link

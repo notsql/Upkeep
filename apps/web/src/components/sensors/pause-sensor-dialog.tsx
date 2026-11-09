@@ -59,18 +59,18 @@ export function PauseSensorDialog({
   const errorMessage = validation || pause.error?.message;
   return (
     <FormDialog
-      description="Only this device and metric will be paused. Readings continue to be stored. Detection starts fresh after the pause expires automatically. Maximum: 7 days."
+      description="We'll stop warning about this measurement for the time you choose, up to 7 days. The sensor keeps saving readings."
       error={errorMessage}
       onClose={onClose}
       onSubmit={handleSubmit}
       open
       pending={pause.isPending}
-      pendingLabel="Starting pause…"
-      submitLabel="Start pause"
-      title={`Pause ${sensor.deviceIdentifier} ${metricLabel(sensor.metric).toLowerCase()}`}
+      pendingLabel="Pausing warnings…"
+      submitLabel="Pause warnings"
+      title={`Pause warnings for ${sensor.deviceIdentifier} ${metricLabel(sensor.metric).toLowerCase()}`}
     >
       <Field>
-        <FieldLabel htmlFor={`${id}-duration`}>Pause duration</FieldLabel>
+        <FieldLabel htmlFor={`${id}-duration`}>Pause for</FieldLabel>
         <Input
           disabled={pause.isPending}
           id={`${id}-duration`}

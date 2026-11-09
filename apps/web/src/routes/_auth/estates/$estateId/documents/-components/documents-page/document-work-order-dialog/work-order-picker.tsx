@@ -120,7 +120,7 @@ export function WorkOrderPicker({
       ) : null}
       {orders.isError ? (
         <ErrorState
-          message="Unable to load work orders"
+          message="Couldn't load work orders. Try again."
           onRetry={retry}
           retryLabel="Retry work orders"
         />

@@ -14,7 +14,7 @@ export function ConditionBadge({
 }) {
   return (
     <Badge variant={condition ? variants[condition] : "outline"}>
-      {condition ? conditionLabel[condition] : "Not assessed yet"}
+      {condition ? conditionLabel[condition] : "Not checked yet"}
     </Badge>
   );
 }

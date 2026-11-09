@@ -7,6 +7,7 @@ import {
   waitFor,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
+import { formatDate } from "@/lib/format";
 import { WorkOrderRequestError } from "@/lib/work-orders";
 import { WorkOrderForm } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/work-order-form";
 
@@ -70,6 +71,28 @@ vi.mock("@/lib/inspections", () => ({
   }),
   useInspectionAsset: () => ({
     data: undefined,
+    isPending: false,
+    isError: false,
+  }),
+}));
+vi.mock("@/lib/assets", () => ({
+  useAsset: (_estateId: string, assetId: string) => ({
+    data: assetId
+      ? {
+          id: "pump",
+          reference: "OAK-A0001",
+          name: "Booster pump",
+          locationId: "level",
+          locationPath: "Block A › Level 1",
+        }
+      : undefined,
+    isPending: false,
+    isError: false,
+  }),
+}));
+vi.mock("@/lib/failure-risk", () => ({
+  useAssetFailureRisk: () => ({
+    data: { expectedEndOfLife: "2026-10-01", flagReasons: ["END_OF_LIFE"] },
     isPending: false,
     isError: false,
   }),
@@ -369,4 +392,39 @@ it("confirms an asset location change and locks the work location until unlinkin
   expect(
     screen.getByRole("combobox", { name: "Location" }).hasAttribute("disabled")
   ).toBe(false);
+});
+
+it("fills itself in to replace equipment at the end of its life", async () => {
+  renderWithProviders(
+    <WorkOrderForm assetId="pump" estateId="oak" reason="END_OF_LIFE" />
+  );
+  expect(
+    screen.getByRole("combobox", { name: "Source" }).textContent
+  ).toContain("Maintenance recommendation");
+  const reference = screen.getByRole("textbox", {
+    name: "Source reference or explanation",
+  }) as HTMLTextAreaElement;
+  await waitFor(() =>
+    expect(reference.value).toBe(
+      `Reached end of life (expected ${formatDate("2026-10-01")})`
+    )
+  );
+  expect(
+    (
+      screen.getByRole("textbox", {
+        name: "Description",
+      }) as HTMLTextAreaElement
+    ).value
+  ).toBe("Replace Booster pump. It has reached the end of its expected life.");
+  fireEvent.click(screen.getByRole("button", { name: "Create work order" }));
+  await waitFor(() =>
+    expect(mocks.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        assetId: "pump",
+        locationId: "level",
+        source: "MAINTENANCE_RECOMMENDATION",
+        category: "EQUIPMENT_FAULT",
+      })
+    )
+  );
 });

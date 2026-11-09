@@ -55,7 +55,7 @@ class AssetHistoryFailureTests {
         mvc.perform(get(path).with(jwt().jwt(t -> t.subject("owner"))))
                 .andExpect(status().isInternalServerError())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(jsonPath("$.message").value("Unable to load recorded history. Try again."))
+                .andExpect(jsonPath("$.message").value("Couldn't load the history. Try again."))
                 .andExpect(jsonPath("$.items").doesNotExist())
                 .andExpect(jsonPath("$.asset").doesNotExist());
     }

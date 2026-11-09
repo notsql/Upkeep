@@ -59,9 +59,9 @@ export function SummaryCards({
               variant: "outline",
             })}
             params={{ estateId }}
-            to="/estates/$estateId/asset-categories"
+            to="/estates/$estateId/inspections/schedules"
           >
-            Set service intervals
+            Set check schedules
           </Link>
         </SummaryCard>
       ) : null}

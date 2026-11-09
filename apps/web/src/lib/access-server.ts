@@ -24,7 +24,7 @@ export const getSessionAccess = createServerFn({ method: "GET" }).handler(
     });
     const { data, error } = await client.GET("/access/context");
     if (error || !data) {
-      throw new Error("Unable to resolve your access. Please try again.");
+      throw new Error("Couldn't check your access. Try again.");
     }
     return { user: auth.user, access: data };
   }

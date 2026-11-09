@@ -149,14 +149,14 @@ it("shows how many confirmed duplicates the source report has", () => {
   renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  screen.getByText("Duplicate reports");
-  screen.getByText("2 confirmed duplicates");
+  screen.getByText("Repeat reports");
+  screen.getByText("2 confirmed repeat reports");
 });
 it("omits the duplicate count when the source report has none", () => {
   renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  expect(screen.queryByText("Duplicate reports")).toBeNull();
+  expect(screen.queryByText("Repeat reports")).toBeNull();
 });
 it("lets Managers explicitly start unassigned work using the observed version", async () => {
   state.access.canUpdate = true;
@@ -453,10 +453,13 @@ it("prefills a closed outcome and sends corrections with a reason, explicit zero
     dialog.getByRole("spinbutton", { name: "Downtime (minutes)" }),
     { target: { value: "0" } }
   );
-  fireEvent.change(dialog.getByRole("textbox", { name: "Correction reason" }), {
-    target: { value: " Invoice correction " },
-  });
-  fireEvent.click(dialog.getByRole("button", { name: "Save correction" }));
+  fireEvent.change(
+    dialog.getByRole("textbox", { name: "Why you're changing it" }),
+    {
+      target: { value: " Invoice correction " },
+    }
+  );
+  fireEvent.click(dialog.getByRole("button", { name: "Save changes" }));
   await waitFor(() =>
     expect(state.correct).toHaveBeenCalledWith({
       expectedVersion: 2,
@@ -489,19 +492,22 @@ it("requires a correction reason and keeps edits through a failed save and stale
   expect(
     (
       dialog.getByRole("textbox", {
-        name: "Correction reason",
+        name: "Why you're changing it",
       }) as HTMLTextAreaElement
     ).required
   ).toBe(true);
   fireEvent.change(dialog.getByRole("textbox", { name: "Findings" }), {
     target: { value: "Corrected findings" },
   });
-  fireEvent.change(dialog.getByRole("textbox", { name: "Correction reason" }), {
-    target: { value: "Fix typo" },
-  });
+  fireEvent.change(
+    dialog.getByRole("textbox", { name: "Why you're changing it" }),
+    {
+      target: { value: "Fix typo" },
+    }
+  );
   state.version = 3;
   view.rerender(<WorkOrderDetailPage estateId="oak" workOrderId="order" />);
-  fireEvent.click(dialog.getByRole("button", { name: "Save correction" }));
+  fireEvent.click(dialog.getByRole("button", { name: "Save changes" }));
   await dialog.findByRole("alert");
   expect(
     (dialog.getByRole("textbox", { name: "Findings" }) as HTMLTextAreaElement)
@@ -510,7 +516,7 @@ it("requires a correction reason and keeps edits through a failed save and stale
   expect(
     (
       dialog.getByRole("button", {
-        name: "Save correction",
+        name: "Save changes",
       }) as HTMLButtonElement
     ).disabled
   ).toBe(true);
@@ -520,7 +526,7 @@ it("requires a correction reason and keeps edits through a failed save and stale
       name: "I reviewed the updated work order",
     })
   );
-  fireEvent.click(dialog.getByRole("button", { name: "Save correction" }));
+  fireEvent.click(dialog.getByRole("button", { name: "Save changes" }));
   await waitFor(() =>
     expect(state.correct).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -581,13 +587,16 @@ it("keeps the correction draft when refreshing its current version fails over th
   const dialog = within(
     await screen.findByRole("dialog", { name: "Edit completion outcome" })
   );
-  fireEvent.change(dialog.getByRole("textbox", { name: "Correction reason" }), {
-    target: { value: "Fix typo" },
-  });
+  fireEvent.change(
+    dialog.getByRole("textbox", { name: "Why you're changing it" }),
+    {
+      target: { value: "Fix typo" },
+    }
+  );
   fireEvent.change(dialog.getByRole("textbox", { name: "Findings" }), {
     target: { value: "Keep my draft" },
   });
-  fireEvent.click(dialog.getByRole("button", { name: "Save correction" }));
+  fireEvent.click(dialog.getByRole("button", { name: "Save changes" }));
   fireEvent.click(
     await dialog.findByRole("button", { name: "Refresh work order" })
   );
@@ -607,7 +616,7 @@ it("keeps the correction draft when refreshing its current version fails over th
     })
   ).toBeNull();
   await stillOpen.findByText(
-    "Unable to refresh the work order and history. Please try again."
+    "Couldn't refresh the work order and history. Try again."
   );
 });
 
@@ -645,7 +654,7 @@ it("keeps a completion dialog in completion mode when refresh reveals a saved ou
   );
   await unchangedMode.findByText("Current status: CLOSED");
   expect(
-    unchangedMode.queryByRole("textbox", { name: "Correction reason" })
+    unchangedMode.queryByRole("textbox", { name: "Why you're changing it" })
   ).toBeNull();
   expect(
     (

@@ -36,7 +36,7 @@ export function MetricPolicyFields({
     <>
       <div className="grid gap-3 sm:grid-cols-2">
         <Field>
-          <FieldLabel htmlFor={`${id}-duration`}>Threshold</FieldLabel>
+          <FieldLabel htmlFor={`${id}-duration`}>Warn after</FieldLabel>
           <Input
             disabled={isPending || !canManage}
             id={`${id}-duration`}
@@ -69,7 +69,7 @@ export function MetricPolicyFields({
       </div>
       <Field>
         <FieldLabel htmlFor={`${id}-tolerance`}>
-          Tolerance ({policy.unit})
+          Allowed change ({policy.unit})
         </FieldLabel>
         <Input
           disabled={isPending || !canManage}
@@ -83,9 +83,9 @@ export function MetricPolicyFields({
         />
       </Field>
       <p className="text-muted-foreground text-sm">
-        Zero requires exact matching. This policy applies to{" "}
-        {label.toLowerCase()} readings from every device in this estate. Maximum
-        threshold: 30 days.
+        Readings that change by this much or less count as the same. This
+        applies to {label.toLowerCase()} readings from every sensor in this
+        estate, for up to 30 days.
       </p>
     </>
   );
