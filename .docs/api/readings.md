@@ -352,10 +352,10 @@ Checked in that order (page, size, from/to), then estate, then asset.
 | unit | string | yes | The metric's catalogue unit |
 | value | number | yes | Compatibility numeric representation, rounded to 6 places in storage |
 | valueText | string | no | Exact stored decimal in plain notation; prefer for display, numeric value is the older-server fallback |
-| deviceId | uuid or null | yes | Device for SENSOR; null for MANUAL |
-| deviceIdentifier | string or null | yes | Device identifier for SENSOR; null for MANUAL |
-| flags | ReadingFlagResponse[] | yes | Empty when nothing is flagged; order GAP, DUPLICATE_TIMESTAMP, OUT_OF_RANGE, ANOMALY |
-| source | SENSOR / MANUAL | yes | Derived from the stored table, never client-assigned |
+| deviceId | uuid or null | yes | Device for SENSOR; null for MANUAL/IMPORT |
+| deviceIdentifier | string or null | yes | Device identifier for SENSOR; null for MANUAL/IMPORT |
+| flags | ReadingFlagResponse[] | yes | Empty when nothing is suspect; order GAP, DUPLICATE_TIMESTAMP, OUT_OF_RANGE, ANOMALY |
+| source | SENSOR / MANUAL / IMPORT | yes | Derived from the stored table, never client-assigned |
 | recordedByUserId | string or null | yes | Authenticated recorder subject for MANUAL; null for SENSOR |
 | recordedByName | string or null | yes | Recorder display-name snapshot; nullable when unavailable |
 | recordedAt | date-time | yes | UTC time of manual recording or sensor receipt |
@@ -500,7 +500,7 @@ fields are doubled. Embedded commas/newlines and Unicode remain valid CSV.
 | metric | Stable DeviceMetric enum code |
 | value | Decimal with exactly six fractional digits; no grouping or exponent |
 | unit | Catalogue unit, e.g. °C / bar / kWh |
-| source | SENSOR or MANUAL |
+| source | SENSOR, MANUAL or IMPORT |
 | device_id | Sensor device UUID, empty for manual |
 | device_identifier | Sensor device identifier, empty for manual |
 | recorded_by_user_id | Stored authenticated manual recorder subject, empty for sensor |
@@ -547,7 +547,7 @@ with open("readings.csv", encoding="utf-8-sig", newline="") as source:
                 row[column] = row[column][1:]
         measurement = Decimal(row["value"])
         flags = row["flags"].split(";") if row["flags"] else []
-        # source identifies SENSOR/MANUAL; empty metadata is not a fabricated name.
+        # source identifies SENSOR/MANUAL/IMPORT; empty metadata is not a fabricated name.
 ```
 
 ### Streaming and limits
@@ -566,3 +566,10 @@ Request cancellation frees the cursor/worker; the frontend verifies completion
 before saving its Blob. Large-file evidence and opt-in benchmark commands are in
 the frontend document and ID-61 spec. The benchmark is local real HTTP, not a
 claim that a manual production Cloud Run deployment was performed.
+
+## Historical CSV imports
+
+Historical imports are available through the estate Readings **Import CSV** action.
+See [historical reading imports](reading-imports.md) for the complete built flow and contract.
+Reading sources now include IMPORT alongside SENSOR and MANUAL; imported rows carry
+optional batch/source provenance and participate in lists, flags, filters and export.

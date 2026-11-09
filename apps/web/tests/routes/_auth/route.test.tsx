@@ -89,6 +89,9 @@ function routerFor(path: string) {
     "/estates/$estateId/assets/$assetId/readings",
     "/estates/$estateId/assets/$assetId/records",
     "/estates/$estateId/readings",
+    "/estates/$estateId/readings/new",
+    "/estates/$estateId/readings/imports",
+    "/estates/$estateId/readings/imports/$batchId",
     "/estates/$estateId/readings/$assetId",
     "/estates/$estateId/assets/$assetId/inspections/new",
     "/estates/$estateId/assets/$assetId/inspections/$inspectionId",
@@ -143,6 +146,61 @@ beforeEach(() => {
     accessToken: "ordinary-user-token",
   });
   get.mockResolvedValue({ data: residentAccess, response: new Response() });
+});
+
+it.each(["imports", "imports/batch-1"])(
+  "denies a Crew bookmark to readings/%s before child loaders run",
+  async (suffix) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [
+          {
+            ...crewEstateAccess,
+            canViewReadings: true,
+            canRecordReadings: true,
+            canImportReadings: false,
+            canRevertReadingImports: false,
+          },
+        ],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(
+      `/estates/${crewEstateAccess.estateId}/readings/${suffix}`
+    );
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(true);
+    expect(managementLoader).not.toHaveBeenCalled();
+  }
+);
+
+it("denies a bookmarked manual-entry route when write capability is unavailable", async () => {
+  get.mockResolvedValue({
+    data: {
+      ...unassignedAccess,
+      canEnterWorkspace: true,
+      estates: [
+        {
+          ...crewEstateAccess,
+          canViewReadings: true,
+          canRecordReadings: false,
+        },
+      ],
+    },
+    response: new Response(),
+  });
+  const router = routerFor(
+    `/estates/${crewEstateAccess.estateId}/readings/new`
+  );
+  await router.load();
+  expect(
+    router.state.matches.some((match) => match.status === "notFound")
+  ).toBe(true);
+  expect(managementLoader).not.toHaveBeenCalled();
 });
 
 const ASSET_READINGS =

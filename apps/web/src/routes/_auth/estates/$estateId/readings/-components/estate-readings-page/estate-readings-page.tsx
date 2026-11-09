@@ -1,8 +1,11 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { Activity } from "lucide-react";
+import { Button } from "@proj/ui/components/button";
+import { Link } from "@tanstack/react-router";
+import { Activity, Upload } from "lucide-react";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
+import { useAppAccess } from "@/lib/access";
 import type { ReadingSearch } from "@/lib/reading-filters";
 import { ReadingExport } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-export";
 import { ReadingFilterControls } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-filter-controls";
@@ -19,6 +22,14 @@ export function EstateReadingsPage({
   filters: ReadingSearch;
   onFiltersChange: (filters: ReadingSearch) => void;
 }) {
+  const access = useAppAccess();
+  const permission = access.data?.estates.find(
+    (estate) => estate.estateId === estateId
+  );
+  const inactive =
+    permission?.canViewReadings &&
+    !permission.canRecordReadings &&
+    !permission.canImportReadings;
   const {
     activeCount,
     assets,
@@ -41,7 +52,33 @@ export function EstateReadingsPage({
   }
   return (
     <PageLayout className="min-w-0 space-y-6 [overflow-wrap:anywhere]">
-      <ListPageHeader icon={Activity} title="Readings" />
+      <ListPageHeader
+        actions={
+          permission?.canImportReadings ? (
+            <Button
+              render={
+                <Link
+                  params={{ estateId }}
+                  to="/estates/$estateId/readings/imports"
+                />
+              }
+              variant="outline"
+            >
+              <Upload aria-hidden="true" />
+              Import CSV
+            </Button>
+          ) : undefined
+        }
+        icon={Activity}
+        title="Readings"
+      />
+      {inactive ? (
+        <Alert>
+          <AlertDescription>
+            This estate is inactive. Import and rollback are unavailable.
+          </AlertDescription>
+        </Alert>
+      ) : null}
       <div className="space-y-3">
         <ReadingToolbar
           activeCount={activeCount}

@@ -39,6 +39,8 @@ model Estate {
   notificationSettings EstateNotificationSettings?
   notificationSweeps   NotificationSweep[]
 
+  readingImportBatches ReadingImportBatch[]
+
   roleDefinitions EstateRoleDefinition[]
 
   @@index([ownerUserId])
@@ -275,7 +277,8 @@ model Asset {
   anomalyScores     AnomalyScore[]
   notifications     Notification[]
 
-  documents Document[]
+  documents        Document[]
+  importedReadings ImportedReading[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
@@ -898,4 +901,77 @@ model EstateRolePermission {
   catalogue  Permission           @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
 
   @@id([roleId, permission])
+}
+
+// Vendor history is isolated from device/manual ingestion and live monitoring.
+model ReadingImportBatch {
+  id               String    @id @default(uuid()) @db.Uuid
+  estateId         String    @db.Uuid
+  submissionId     String    @db.Uuid
+  sourceLabel      String    @db.VarChar(200)
+  originalFilename String    @db.VarChar(255)
+  fileHash         String    @db.VarChar(64)
+  sizeBytes        Int
+  mapping          Json
+  parserVersion    String    @db.VarChar(30)
+  uploaderUserId   String    @db.VarChar(255)
+  uploaderName     String?   @db.VarChar(200)
+  createdAt        DateTime  @db.Timestamptz(6)
+  status           String    @default("COMPLETED") @db.VarChar(20)
+  totalRows        Int
+  importedRows     Int
+  duplicateRows    Int
+  invalidRows      Int
+  warningRows      Int
+  rollbackUserId   String?   @db.VarChar(255)
+  rollbackAt       DateTime? @db.Timestamptz(6)
+  rollbackReason   String?   @db.VarChar(2000)
+  removedCount     Int?
+
+  estate   Estate             @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  readings ImportedReading[]
+  rows     ReadingImportRow[]
+
+  @@unique([id, estateId])
+  @@unique([estateId, uploaderUserId, submissionId])
+  @@index([estateId, createdAt])
+}
+
+model ImportedReading {
+  id         String   @id @default(uuid()) @db.Uuid
+  estateId   String   @db.Uuid
+  assetId    String   @db.Uuid
+  batchId    String   @db.Uuid
+  metric     String   @db.VarChar(30)
+  value      Decimal  @db.Decimal(18, 6)
+  measuredAt DateTime @db.Timestamptz(6)
+  recordedAt DateTime @db.Timestamptz(6)
+
+  asset Asset              @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  batch ReadingImportBatch @relation(fields: [batchId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([estateId, assetId, metric, measuredAt])
+  @@index([assetId, metric, measuredAt])
+  @@index([batchId])
+}
+
+// Reading IDs remain audit values after a rollback; no restrictive reading FK.
+model ReadingImportRow {
+  batchId            String    @db.Uuid
+  recordNumber       Int
+  startingLineNumber Int
+  outcome            String    @db.VarChar(20)
+  readingId          String?   @db.Uuid
+  source             String?   @db.VarChar(20)
+  assetId            String?   @db.Uuid
+  metric             String?   @db.VarChar(30)
+  measuredAt         DateTime? @db.Timestamptz(6)
+  valueText          String?   @db.VarChar(32)
+  origin             Json?
+  issues             Json
+
+  batch ReadingImportBatch @relation(fields: [batchId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([batchId, recordNumber])
+  @@index([batchId, outcome, recordNumber])
 }

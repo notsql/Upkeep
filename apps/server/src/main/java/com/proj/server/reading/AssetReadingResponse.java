@@ -42,7 +42,43 @@ public record AssetReadingResponse(
         ReadingSource source,
         @Schema(nullable = true) String recordedByUserId,
         @Schema(nullable = true) String recordedByName,
-        OffsetDateTime recordedAt) {
+        OffsetDateTime recordedAt,
+
+        @Schema(nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        UUID importBatchId,
+
+        @Schema(nullable = true, requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+        String sourceLabel) {
+    public AssetReadingResponse(
+            UUID id,
+            OffsetDateTime measuredAt,
+            DeviceMetric metric,
+            String unit,
+            BigDecimal value,
+            UUID deviceId,
+            String deviceIdentifier,
+            List<ReadingFlagResponse> flags,
+            ReadingSource source,
+            String recordedByUserId,
+            String recordedByName,
+            OffsetDateTime recordedAt) {
+        this(
+                id,
+                measuredAt,
+                metric,
+                unit,
+                value,
+                deviceId,
+                deviceIdentifier,
+                flags,
+                source,
+                recordedByUserId,
+                recordedByName,
+                recordedAt,
+                null,
+                null);
+    }
+
     @JsonProperty("valueText")
     @Schema(
             description = "Exact stored decimal for display without binary floating-point conversion",

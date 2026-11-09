@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategoryflagchange;
@@ -23,13 +24,20 @@ import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estateuser;
+import com.proj.server.db.tables.Importedreading;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
+import com.proj.server.db.tables.Issuereporturgencyevent;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Notification;
+import com.proj.server.db.tables.Notificationread;
+import com.proj.server.db.tables.Readingimportbatch;
+import com.proj.server.db.tables.Readingimportrow;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
@@ -51,6 +59,7 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index ANOMALYSCORE_ASSETID_MEASUREDAT_KEY = Internal.createIndex(DSL.name("AnomalyScore_assetId_measuredAt_key"), Anomalyscore.ANOMALYSCORE, new OrderField[] { Anomalyscore.ANOMALYSCORE.ASSETID, Anomalyscore.ANOMALYSCORE.MEASUREDAT }, true);
     public static final Index ASSET_ESTATEID_IDX = Internal.createIndex(DSL.name("Asset_estateId_idx"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID }, false);
     public static final Index ASSET_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("Asset_estateId_reference_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ESTATEID, Asset.ASSET.REFERENCE }, true);
     public static final Index ASSET_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Asset_id_estateId_key"), Asset.ASSET, new OrderField[] { Asset.ASSET.ID, Asset.ASSET.ESTATEID }, true);
@@ -98,6 +107,9 @@ public class Indexes {
     public static final Index ESTATEROLEDEFINITION_ESTATEID_NORMALIZEDNAME_KEY = Internal.createIndex(DSL.name("EstateRoleDefinition_estateId_normalizedName_key"), Estateroledefinition.ESTATEROLEDEFINITION, new OrderField[] { Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID, Estateroledefinition.ESTATEROLEDEFINITION.NORMALIZEDNAME }, true);
     public static final Index ESTATEROLEDEFINITION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("EstateRoleDefinition_id_estateId_key"), Estateroledefinition.ESTATEROLEDEFINITION, new OrderField[] { Estateroledefinition.ESTATEROLEDEFINITION.ID, Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID }, true);
     public static final Index ESTATEUSER_USERID_IDX = Internal.createIndex(DSL.name("EstateUser_userId_idx"), Estateuser.ESTATEUSER, new OrderField[] { Estateuser.ESTATEUSER.USERID }, false);
+    public static final Index IMPORTEDREADING_ASSETID_METRIC_MEASUREDAT_IDX = Internal.createIndex(DSL.name("ImportedReading_assetId_metric_measuredAt_idx"), Importedreading.IMPORTEDREADING, new OrderField[] { Importedreading.IMPORTEDREADING.ASSETID, Importedreading.IMPORTEDREADING.METRIC, Importedreading.IMPORTEDREADING.MEASUREDAT }, false);
+    public static final Index IMPORTEDREADING_BATCHID_IDX = Internal.createIndex(DSL.name("ImportedReading_batchId_idx"), Importedreading.IMPORTEDREADING, new OrderField[] { Importedreading.IMPORTEDREADING.BATCHID }, false);
+    public static final Index IMPORTEDREADING_ESTATEID_ASSETID_METRIC_MEASUREDAT_KEY = Internal.createIndex(DSL.name("ImportedReading_estateId_assetId_metric_measuredAt_key"), Importedreading.IMPORTEDREADING, new OrderField[] { Importedreading.IMPORTEDREADING.ESTATEID, Importedreading.IMPORTEDREADING.ASSETID, Importedreading.IMPORTEDREADING.METRIC, Importedreading.IMPORTEDREADING.MEASUREDAT }, true);
     public static final Index INSPECTIONCHECK_ASSETID_MONTH_KEY = Internal.createIndex(DSL.name("InspectionCheck_assetId_month_key"), Inspectioncheck.INSPECTIONCHECK, new OrderField[] { Inspectioncheck.INSPECTIONCHECK.ASSETID, Inspectioncheck.INSPECTIONCHECK.MONTH }, true);
     public static final Index INSPECTIONCHECK_COMPLETEDBYRESULTID_KEY = Internal.createIndex(DSL.name("InspectionCheck_completedByResultId_key"), Inspectioncheck.INSPECTIONCHECK, new OrderField[] { Inspectioncheck.INSPECTIONCHECK.COMPLETEDBYRESULTID }, true);
     public static final Index INSPECTIONCHECK_ESTATEID_MONTH_IDX = Internal.createIndex(DSL.name("InspectionCheck_estateId_month_idx"), Inspectioncheck.INSPECTIONCHECK, new OrderField[] { Inspectioncheck.INSPECTIONCHECK.ESTATEID, Inspectioncheck.INSPECTIONCHECK.MONTH }, false);
@@ -108,8 +120,11 @@ public class Indexes {
     public static final Index ISSUEREPORT_ESTATEID_LOCATIONID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_estateId_locationId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ESTATEID, Issuereport.ISSUEREPORT.LOCATIONID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
     public static final Index ISSUEREPORT_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("IssueReport_id_estateId_key"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.ID, Issuereport.ISSUEREPORT.ESTATEID }, true);
     public static final Index ISSUEREPORT_SUBMITTEDBYUSERID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("IssueReport_submittedByUserId_createdAt_id_idx"), Issuereport.ISSUEREPORT, new OrderField[] { Issuereport.ISSUEREPORT.SUBMITTEDBYUSERID, Issuereport.ISSUEREPORT.CREATEDAT, Issuereport.ISSUEREPORT.ID }, false);
+    public static final Index ISSUEREPORTDUPLICATE_ESTATEID_ORIGINALREPORTID_STATE_IDX = Internal.createIndex(DSL.name("IssueReportDuplicate_estateId_originalReportId_state_idx"), Issuereportduplicate.ISSUEREPORTDUPLICATE, new OrderField[] { Issuereportduplicate.ISSUEREPORTDUPLICATE.ESTATEID, Issuereportduplicate.ISSUEREPORTDUPLICATE.ORIGINALREPORTID, Issuereportduplicate.ISSUEREPORTDUPLICATE.STATE }, false);
+    public static final Index ISSUEREPORTDUPLICATE_REPORTID_ESTATEID_KEY = Internal.createIndex(DSL.name("IssueReportDuplicate_reportId_estateId_key"), Issuereportduplicate.ISSUEREPORTDUPLICATE, new OrderField[] { Issuereportduplicate.ISSUEREPORTDUPLICATE.REPORTID, Issuereportduplicate.ISSUEREPORTDUPLICATE.ESTATEID }, true);
     public static final Index ISSUEREPORTIMAGE_REPORTID_IDX = Internal.createIndex(DSL.name("IssueReportImage_reportId_idx"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.REPORTID }, false);
     public static final Index ISSUEREPORTIMAGE_STORAGEKEY_KEY = Internal.createIndex(DSL.name("IssueReportImage_storageKey_key"), Issuereportimage.ISSUEREPORTIMAGE, new OrderField[] { Issuereportimage.ISSUEREPORTIMAGE.STORAGEKEY }, true);
+    public static final Index ISSUEREPORTURGENCYEVENT_REPORTID_VERSION_KEY = Internal.createIndex(DSL.name("IssueReportUrgencyEvent_reportId_version_key"), Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT, new OrderField[] { Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT.REPORTID, Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT.VERSION }, true);
     public static final Index LOCATION_ESTATEID_IDX = Internal.createIndex(DSL.name("Location_estateId_idx"), Location.LOCATION, new OrderField[] { Location.LOCATION.ESTATEID }, false);
     public static final Index LOCATION_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.ESTATEID }, true);
     public static final Index LOCATION_ID_TYPE_ESTATEID_KEY = Internal.createIndex(DSL.name("Location_id_type_estateId_key"), Location.LOCATION, new OrderField[] { Location.LOCATION.ID, Location.LOCATION.TYPE, Location.LOCATION.ESTATEID }, true);
@@ -117,8 +132,17 @@ public class Indexes {
     public static final Index MANUALREADING_ASSETID_METRIC_MEASUREDAT_IDX = Internal.createIndex(DSL.name("ManualReading_assetId_metric_measuredAt_idx"), Manualreading.MANUALREADING, new OrderField[] { Manualreading.MANUALREADING.ASSETID, Manualreading.MANUALREADING.METRIC, Manualreading.MANUALREADING.MEASUREDAT }, false);
     public static final Index MANUALREADING_ESTATEID_RECORDEDBYUSERID_SUBMISSIONID_KEY = Internal.createIndex(DSL.name("ManualReading_estateId_recordedByUserId_submissionId_key"), Manualreading.MANUALREADING, new OrderField[] { Manualreading.MANUALREADING.ESTATEID, Manualreading.MANUALREADING.RECORDEDBYUSERID, Manualreading.MANUALREADING.SUBMISSIONID }, true);
     public static final Index MANUFACTURER_NAME_KEY = Internal.createIndex(DSL.name("Manufacturer_name_key"), Manufacturer.MANUFACTURER, new OrderField[] { Manufacturer.MANUFACTURER.NAME }, true);
+    public static final Index NOTIFICATION_ASSETID_TYPE_CREATEDAT_IDX = Internal.createIndex(DSL.name("Notification_assetId_type_createdAt_idx"), Notification.NOTIFICATION, new OrderField[] { Notification.NOTIFICATION.ASSETID, Notification.NOTIFICATION.TYPE, Notification.NOTIFICATION.CREATEDAT }, false);
+    public static final Index NOTIFICATION_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("Notification_estateId_createdAt_id_idx"), Notification.NOTIFICATION, new OrderField[] { Notification.NOTIFICATION.ESTATEID, Notification.NOTIFICATION.CREATEDAT.desc(), Notification.NOTIFICATION.ID }, false);
+    public static final Index NOTIFICATION_ONE_OPEN_PER_ASSET_TYPE = Internal.createIndex(DSL.name("Notification_one_open_per_asset_type"), Notification.NOTIFICATION, new OrderField[] { Notification.NOTIFICATION.ASSETID, Notification.NOTIFICATION.TYPE }, true);
+    public static final Index NOTIFICATIONREAD_USERID_IDX = Internal.createIndex(DSL.name("NotificationRead_userId_idx"), Notificationread.NOTIFICATIONREAD, new OrderField[] { Notificationread.NOTIFICATIONREAD.USERID }, false);
+    public static final Index READINGIMPORTBATCH_ESTATEID_CREATEDAT_IDX = Internal.createIndex(DSL.name("ReadingImportBatch_estateId_createdAt_idx"), Readingimportbatch.READINGIMPORTBATCH, new OrderField[] { Readingimportbatch.READINGIMPORTBATCH.ESTATEID, Readingimportbatch.READINGIMPORTBATCH.CREATEDAT }, false);
+    public static final Index READINGIMPORTBATCH_ESTATEID_UPLOADERUSERID_SUBMISSIONID_KEY = Internal.createIndex(DSL.name("ReadingImportBatch_estateId_uploaderUserId_submissionId_key"), Readingimportbatch.READINGIMPORTBATCH, new OrderField[] { Readingimportbatch.READINGIMPORTBATCH.ESTATEID, Readingimportbatch.READINGIMPORTBATCH.UPLOADERUSERID, Readingimportbatch.READINGIMPORTBATCH.SUBMISSIONID }, true);
+    public static final Index READINGIMPORTBATCH_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("ReadingImportBatch_id_estateId_key"), Readingimportbatch.READINGIMPORTBATCH, new OrderField[] { Readingimportbatch.READINGIMPORTBATCH.ID, Readingimportbatch.READINGIMPORTBATCH.ESTATEID }, true);
+    public static final Index READINGIMPORTROW_BATCHID_OUTCOME_RECORDNUMBER_IDX = Internal.createIndex(DSL.name("ReadingImportRow_batchId_outcome_recordNumber_idx"), Readingimportrow.READINGIMPORTROW, new OrderField[] { Readingimportrow.READINGIMPORTROW.BATCHID, Readingimportrow.READINGIMPORTROW.OUTCOME, Readingimportrow.READINGIMPORTROW.RECORDNUMBER }, false);
     public static final Index WORKORDER_ESTATEID_CREATEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrder_estateId_createdAt_id_idx"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.CREATEDAT, Workorder.WORKORDER.ID }, false);
     public static final Index WORKORDER_ESTATEID_REFERENCE_KEY = Internal.createIndex(DSL.name("WorkOrder_estateId_reference_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.REFERENCE }, true);
+    public static final Index WORKORDER_ESTATEID_SOURCEREPORTID_IDX = Internal.createIndex(DSL.name("WorkOrder_estateId_sourceReportId_idx"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ESTATEID, Workorder.WORKORDER.SOURCEREPORTID }, false);
     public static final Index WORKORDER_ID_ESTATEID_KEY = Internal.createIndex(DSL.name("WorkOrder_id_estateId_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.ID, Workorder.WORKORDER.ESTATEID }, true);
     public static final Index WORKORDER_SOURCEINSPECTIONID_KEY = Internal.createIndex(DSL.name("WorkOrder_sourceInspectionId_key"), Workorder.WORKORDER, new OrderField[] { Workorder.WORKORDER.SOURCEINSPECTIONID }, true);
     public static final Index WORKORDERCOMPLETION_ESTATEID_COMPLETEDAT_ID_IDX = Internal.createIndex(DSL.name("WorkOrderCompletion_estateId_completedAt_id_idx"), Workordercompletion.WORKORDERCOMPLETION, new OrderField[] { Workordercompletion.WORKORDERCOMPLETION.ESTATEID, Workordercompletion.WORKORDERCOMPLETION.COMPLETEDAT, Workordercompletion.WORKORDERCOMPLETION.ID }, false);

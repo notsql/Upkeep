@@ -1,6 +1,6 @@
 # Readings (frontend)
 
-Estate-wide and per-asset sensor/manual readings with provenance and suspect-data flags. Paths are
+Estate-wide and per-asset sensor/manual/imported readings with provenance and suspect-data flags. Paths are
 relative to `apps/web/src/`. API: [../api/readings.md](../api/readings.md).
 
 ## Estate readings browser (ID-60)
@@ -40,7 +40,7 @@ All new components are in the route's `-components/` folder:
 
 | File | Responsibility |
 | --- | --- |
-| `estate-readings-page.tsx` | Composes `ListPageHeader` (no actions), `ReadingToolbar` (no summary), the collapsible filters and results; `useFilterPanel(activeCount)` drives the toggle |
+| `estate-readings-page.tsx` | Composes `ListPageHeader` with the permission-gated **Import CSV** action, `ReadingToolbar` (no summary), the collapsible filters and results; `useFilterPanel(activeCount)` drives the toggle |
 | `use-estate-readings-page.ts` | Access, queries and selected asset label |
 | `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To `DateTimePicker`s (each `w-full sm:w-auto`, so the date trigger keeps "Pick a date" and the hour/minute selects sit beside it, wrapping underneath when narrow), and a `FieldSet` "Flags" (`FieldLegend variant="label"`) grouping the Suspect only and Anomalous only Checkboxes; its own light panel (`<search aria-label="Reading filters">`, bordered, no heading - the toolbar's Filters button names it) inside a shadcn `Collapsible` when given `id`/`open` (from `useFilterPanel(...).barProps`), always shown otherwise; a ghost "Clear filters" ends the row, shown only when a filter is set. Exports `countReadingFilters` |
 | `reading-toolbar.tsx` | `ReadingToolbar`: one `role="toolbar"` row "Reading tools" - optional `summary` left; right, a small outline "Filters" toggle (`SlidersHorizontal`, `aria-expanded`, `aria-controls` the panel, accessible name "Filters" or "Filters, N active", secondary `Badge` with N) and `exportAction` |
@@ -51,8 +51,8 @@ All new components are in the route's `-components/` folder:
 | `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, source/recorder, device and flag Badges (`flagVariant`: `destructive` for ANOMALY, `outline` otherwise; also in `components/readings/reading-cards.tsx`) |
 
 Filters stack on mobile; long labels wrap without widening the page. Both estate-wide and legacy tables use auto-height, width-bounded flag badges with wrapping, left-aligned text and a readable line height; long flag labels stay inside their borders. Device columns reserve a readable minimum width rather than wrapping identifiers into tall strips. Both Flags columns reserve a minimum width so labels remain readable on mobile; the table scrolls within its own region. Browser checks cover 1280, 375 and 320 px. Crew rows
-do not link to owner-only asset pages. There is no way to create a reading in
-the web app: readings arrive from devices through the server. Historical
+do not link to owner-only asset pages. Manual entry is unavailable in
+the web app; readings arrive from devices or the historical CSV import flow. Historical
 manual readings (source `MANUAL`) still display with their recorder.
 
 The estate table shows every page for up to six pages. Longer results show the
@@ -213,8 +213,9 @@ use Neon. Demo UUIDs and credentials are not part of the committed documentation
 The manual-entry routes (`/readings/new`, `/readings/$assetId/new`), their
 `ManualReadingForm`, `lib/manual-reading-form.ts`, `useReadingMetrics`,
 `useCreateManualReading`, `manualReadingLocation` and every "Create" /
-"Record reading" link were removed. The web app no longer reads
-`canRecordReadings`. The server endpoints `POST /estates/{estateId}/readings/manual`
+"Record reading" link were removed. The readings browser uses
+`canRecordReadings` with `canImportReadings` to show its inactive-estate notice;
+the auth guard retains the capability check for old manual-entry bookmarks. The server endpoints `POST /estates/{estateId}/readings/manual`
 and `GET /estates/{estateId}/readings/metrics` are untouched (see
 [../api/readings.md](../api/readings.md)). The asset filter picker
 (`reading-asset-picker.tsx`) has only its filter mode (All assets, retired
@@ -424,7 +425,7 @@ longer lists readings.
 
 Below 768px, `components/readings/reading-cards.tsx` renders both the estate-wide
 and legacy asset lists as a single accessible `Readings` list. Each shadcn Card
-shows the metric, exact value text/unit, measured time (`formatDateTime`), Manual/Sensor provenance (including
+shows the metric, exact value text/unit, measured time (`formatDateTime`), Manual/Sensor/Import provenance (including
 manual recorder name/ID fallback), applicable device, all flags and estate-list
 asset name/reference. Long labels and flags wrap. Manual entries do not invent
 a device. The estate `reading-table.tsx` (also used by the asset readings page) uses the
@@ -468,7 +469,7 @@ server fetching stays bounded. A safe server attachment filename is used with a
 `readings-v1.csv` fallback. The temporary object URL/link is cleaned up after use.
 
 The API document defines every CSV column, UTC/decimal/null/source/escaping rule
-and a pipeline parser example. No legacy per-asset export button, CSV import,
+and a pipeline parser example. No legacy per-asset export button,
 source filter, chart, scheduled export or background job is included.
 
 The validation decoder consumes the leading BOM, while the downloaded Blob
@@ -592,6 +593,12 @@ from the running Spring OpenAPI document; the uncached Maven exporter cannot run
 offline under the repository's no-install rule, so the installed type generator
 consumes that actual runtime export.
 
+Manual-reading form tests freeze only `Date` at 17:00 local time so their
+16:00 measurement stays in the past regardless of the runner's clock or
+timezone. Timers remain real for UI interactions and query updates. A separate
+case sets the clock to 15:54 and verifies that a 16:00 measurement is rejected
+by the five-minute future-time limit.
+
 Both reading lists, legacy asset history and shared mobile cards prefer optional
 valueText from the server, falling back to value for older responses. Exact display
 text removes unnecessary trailing zeroes while retaining every significant digit;
@@ -629,38 +636,27 @@ before numeric conversion. The CSV retains all stored digits, but Excel numeric
 cells support only 15 significant digits; formatting a previously rounded cell
 cannot restore its original digits. See [Microsoft's import guidance](https://support.microsoft.com/en-us/excel/keeping-leading-zeros-and-large-numbers).
 
-## Screen states
-
-`reading-filter-controls.tsx` no longer wraps its fields in a Card: it renders a
-`FilterBar` (`search` landmark "Reading filters", fields `w-full sm:w-48`, Clear
-filters in actions). Record manual reading (Plus icon) is the PageHeader action;
-Export CSV stays below the header. `reading-results.tsx` uses `LoadingState`
-(table) and `EmptyState` for the four empty messages; the filtered ones add a
-Clear filters action, and the beyond-last-page recovery is an `EmptyState` with
-Go to first page. The asset picker and manual-entry metric load use
-`LoadingState`.
-
-## Design-system pass
-
-Readings and Record manual reading PageHeaders use `icon={Activity}`. From/To
-filters are `DateTimePicker`s (trigger named "From" / "To (exclusive)", time
-fields "From time" / "To (exclusive) time"); values stay `YYYY-MM-DDTHH:mm`.
-Manual reading's Measured at is a `DateTimePicker` (trigger "Measured at", time
-"Measured at time"), defaulting to now; an empty value fails the existing
-validation.
-
-## Shared page components
+## Screen states and shared page components
 
 `EstateReadingsPage` uses `ListPageHeader` (`icon={Activity}`, title
-"Readings", no estate-name description) with `filters` = `FilterToggle` and
-`create` = `CreateButton` "Create" to `/estates/$estateId/readings/new`
-(keeping `assetId`/`metric`), only with record permission.
+"Readings", no estate-name description), with an outline **Import CSV**
+link when `canImportReadings` is available. An inactive-estate notice explains
+that import and rollback are unavailable. The `ReadingToolbar` below the
+header contains the filter toggle and `ReadingExport`.
+
 `ReadingFilterControls` takes `id`/`open` from
 `useFilterPanel(countReadingFilters(filters)).barProps`, so the "Reading
-filters" bar is collapsed until toggled (open on load when filters are set).
-`ReadingResults` empty states carry no create button (the header Create is
-the entry point) and no icon; "No matching" states offer Clear filters. Reading, asset and asset-picker load failures use
-`ErrorState`. Paging keeps `ReadingPagination`. `ReadingExport` still renders
-below the header. The manual-reading form uses `FormPageHeader` (breadcrumbs
-Readings / Record manual reading, no icon or estate name) and `ErrorState`
-"Retry form options".
+filters" panel is collapsed until toggled (open on load when filters are set).
+From/To filters are `DateTimePicker`s; values stay `YYYY-MM-DDTHH:mm`.
+`ReadingResults` uses `LoadingState` (table) and `EmptyState` for empty
+results. Filtered empty states offer Clear filters; beyond-last-page recovery
+provides Go to first page. Reading, asset and asset-picker load failures use
+`ErrorState`. Paging keeps `ReadingPagination`. Manual-entry forms and Create
+links remain removed.
+
+## Historical CSV imports
+
+Historical imports are available through the estate Readings **Import CSV** action.
+See [historical reading imports](reading-imports.md) for the complete built flow and contract.
+Reading sources now include IMPORT alongside SENSOR and MANUAL; imported rows carry
+optional batch/source provenance and participate in lists, flags, filters and export.

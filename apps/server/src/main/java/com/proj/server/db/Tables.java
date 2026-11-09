@@ -4,6 +4,7 @@
 package com.proj.server.db;
 
 
+import com.proj.server.db.tables.Anomalyscore;
 import com.proj.server.db.tables.Asset;
 import com.proj.server.db.tables.Assetassessment;
 import com.proj.server.db.tables.Assetcategory;
@@ -22,18 +23,27 @@ import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Documentworkorderevent;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
+import com.proj.server.db.tables.Estatenotificationsettings;
 import com.proj.server.db.tables.Estateroledefinition;
 import com.proj.server.db.tables.Estaterolepermission;
 import com.proj.server.db.tables.Estateuser;
 import com.proj.server.db.tables.Flatlinepolicy;
+import com.proj.server.db.tables.Importedreading;
 import com.proj.server.db.tables.Inspectioncheck;
 import com.proj.server.db.tables.Inspectionlistrun;
 import com.proj.server.db.tables.Issuereport;
+import com.proj.server.db.tables.Issuereportduplicate;
 import com.proj.server.db.tables.Issuereportimage;
+import com.proj.server.db.tables.Issuereporturgencyevent;
 import com.proj.server.db.tables.Location;
 import com.proj.server.db.tables.Manualreading;
 import com.proj.server.db.tables.Manufacturer;
+import com.proj.server.db.tables.Notification;
+import com.proj.server.db.tables.Notificationread;
+import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Readingimportbatch;
+import com.proj.server.db.tables.Readingimportrow;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
@@ -45,6 +55,11 @@ import com.proj.server.db.tables.Workorderstatusevent;
  */
 @SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
+
+    /**
+     * The table <code>public.AnomalyScore</code>.
+     */
+    public static final Anomalyscore ANOMALYSCORE = Anomalyscore.ANOMALYSCORE;
 
     /**
      * The table <code>public.Asset</code>.
@@ -137,6 +152,11 @@ public class Tables {
     public static final Estateinvitation ESTATEINVITATION = Estateinvitation.ESTATEINVITATION;
 
     /**
+     * The table <code>public.EstateNotificationSettings</code>.
+     */
+    public static final Estatenotificationsettings ESTATENOTIFICATIONSETTINGS = Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS;
+
+    /**
      * The table <code>public.EstateRoleDefinition</code>.
      */
     public static final Estateroledefinition ESTATEROLEDEFINITION = Estateroledefinition.ESTATEROLEDEFINITION;
@@ -157,6 +177,11 @@ public class Tables {
     public static final Flatlinepolicy FLATLINEPOLICY = Flatlinepolicy.FLATLINEPOLICY;
 
     /**
+     * The table <code>public.ImportedReading</code>.
+     */
+    public static final Importedreading IMPORTEDREADING = Importedreading.IMPORTEDREADING;
+
+    /**
      * The table <code>public.InspectionCheck</code>.
      */
     public static final Inspectioncheck INSPECTIONCHECK = Inspectioncheck.INSPECTIONCHECK;
@@ -172,9 +197,19 @@ public class Tables {
     public static final Issuereport ISSUEREPORT = Issuereport.ISSUEREPORT;
 
     /**
+     * The table <code>public.IssueReportDuplicate</code>.
+     */
+    public static final Issuereportduplicate ISSUEREPORTDUPLICATE = Issuereportduplicate.ISSUEREPORTDUPLICATE;
+
+    /**
      * The table <code>public.IssueReportImage</code>.
      */
     public static final Issuereportimage ISSUEREPORTIMAGE = Issuereportimage.ISSUEREPORTIMAGE;
+
+    /**
+     * The table <code>public.IssueReportUrgencyEvent</code>.
+     */
+    public static final Issuereporturgencyevent ISSUEREPORTURGENCYEVENT = Issuereporturgencyevent.ISSUEREPORTURGENCYEVENT;
 
     /**
      * The table <code>public.Location</code>.
@@ -192,9 +227,34 @@ public class Tables {
     public static final Manufacturer MANUFACTURER = Manufacturer.MANUFACTURER;
 
     /**
+     * The table <code>public.Notification</code>.
+     */
+    public static final Notification NOTIFICATION = Notification.NOTIFICATION;
+
+    /**
+     * The table <code>public.NotificationRead</code>.
+     */
+    public static final Notificationread NOTIFICATIONREAD = Notificationread.NOTIFICATIONREAD;
+
+    /**
+     * The table <code>public.NotificationSweep</code>.
+     */
+    public static final Notificationsweep NOTIFICATIONSWEEP = Notificationsweep.NOTIFICATIONSWEEP;
+
+    /**
      * The table <code>public.Permission</code>.
      */
     public static final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
+     * The table <code>public.ReadingImportBatch</code>.
+     */
+    public static final Readingimportbatch READINGIMPORTBATCH = Readingimportbatch.READINGIMPORTBATCH;
+
+    /**
+     * The table <code>public.ReadingImportRow</code>.
+     */
+    public static final Readingimportrow READINGIMPORTROW = Readingimportrow.READINGIMPORTROW;
 
     /**
      * The table <code>public.WorkOrder</code>.

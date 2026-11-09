@@ -96,6 +96,13 @@ public record AppAccessResponse(
             boolean canViewEstateInvitations,
             boolean canViewDocuments,
             boolean canUploadDocuments,
+
+            @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            boolean canImportReadings,
+
+            @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+            boolean canRevertReadingImports,
+
             boolean canReviewFaultReportDuplicates,
             boolean canChangeFaultReportUrgency) {}
 }

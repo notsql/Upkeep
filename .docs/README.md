@@ -35,6 +35,7 @@ same change as the code.
 - [Device readings](api/device-readings.md): devices submitting readings with their API key; validation, duplicates, conflicts and last-seen.
 - [Device telemetry](api/device-telemetry.md): devices submitting batches of up to 500 readings, with a per-item result (created, already stored, invalid, conflict); both device paths trigger asynchronous anomaly scoring.
 - [Device status](api/device-status.md): derived Online/Offline/Awaiting first reading status and the Manager's estate-wide device list.
+- [Historical reading imports](api/reading-imports.md): CSV mapping, partial acceptance, idempotent batches, per-row reports and rollback.
 - [Readings](api/readings.md): Owner/Manager/Crew estate-wide filtering, minimal asset options, pagination and flags; attributed manual entry, Manual/Sensor provenance and filtered CSV export; legacy owner-only asset readings retained; complete filtered CSV v1 exports with provenance.
 - [Anomaly check](api/anomaly-check.md): anomaly-detection assessments from device readings.
 - [Flatlined sensors](api/flatlined-sensors.md): estate metric policies, per-device/metric maintenance pauses and derived reading reviews.
@@ -73,7 +74,8 @@ Work orders: [API](api/work-orders.md) · [Frontend](frontend/work-orders.md).
 | [frontend/devices.md](frontend/devices.md) | `/estates/$estateId/assets/devices` (Assets › All devices: every device ranked by severity with flatline state, pauses and a Metric policies dialog; `/estates/$estateId/devices` redirects there), device list on asset details, dedicated device registration and replacement pages, and device deactivation |
 | [frontend/flatlined-sensors.md](frontend/flatlined-sensors.md) | `/estates/$estateId/sensors` and `/sensors/all` (redirect to `/assets/devices`); shared metric-policy and pause components and the flatline hooks |
 | [frontend/formatting.md](frontend/formatting.md) | `lib/format.ts`: Intl-based dates (date-only without time-zone shift), instants, relative times, per-metric reading values, scores and model assessment notes |
-| [frontend/readings.md](frontend/readings.md) | Estate-wide reading browser (`/…/readings`, linked from Assets as "All readings"), one asset's readings (`/…/readings/$assetId`; `?assetId=` redirects there) and the per-asset readings page (`/…/assets/$assetId/readings`, on the estate endpoint), attributed manual entry (`/…/readings/new`, `/…/readings/$assetId/new`), provenance, filters, pagination and month-sized performance evidence |
+| [frontend/reading-imports.md](frontend/reading-imports.md) | Upload/mapping, batch history, desktop/mobile reports, uncertain retries and rollback |
+| [frontend/readings.md](frontend/readings.md) | Estate-wide reading browser (`/…/readings`, linked from Assets as "All readings"), one asset's readings (`/…/readings/$assetId`; `?assetId=` redirects there) and the per-asset readings page (`/…/assets/$assetId/readings`, on the estate endpoint), historical CSV imports, provenance, filters, pagination and month-sized performance evidence |
 | [frontend/admin-users.md](frontend/admin-users.md) | `/admin/users`: member roles and per-user estate access |
 | [frontend/estate-roles.md](frontend/estate-roles.md) | `/estates/$estateId/roles`: custom-role authoring, permission checklist, editing/deletion and capability-based entry |
 | [frontend/council-invitations.md](frontend/council-invitations.md) | Estate role invitations, member-role controls, ownership transfer; pending invitations on /estates (/invitations redirects) |

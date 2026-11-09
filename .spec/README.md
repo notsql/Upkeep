@@ -31,6 +31,7 @@ code, it belongs here.
 
 | Spec | Jira | Status |
 | --- | --- | --- |
+| [import-historical-readings-csv.md](features/import-historical-readings-csv.md) | - | implemented; CSV mapping, partial acceptance, exact-value deduplication, audited reports and rollback; automated verification and 43,200/100,000-record workload pass; browser/vendor acceptance pending |
 | [asset-readings-charts-refresh.md](features/asset-readings-charts-refresh.md) | - | agreed 2026-11-08, not started; Trends redesign (stat tiles with sparklines and change, one selected-metric chart, full-range x-axis for sparse data, compact range/Live/refresh controls) and grouped "View all readings" via filtered `getAssetReadingGroups` (from/to, metric, flag) with "Load older" |
 | [asset-readings-charts.md](features/asset-readings-charts.md) | - | built and verified 2026-11-08; per-metric trend charts with anomaly bands from a new time-bucketed `getAssetReadingSeries` endpoint, grouped latest readings from `getAssetReadingGroups`, Live 1 s polling, shared Intl `lib/format.ts`, clearer Condition/forecast/details formatting |
 | [streaming-anomaly-detection.md](features/streaming-anomaly-detection.md) | - | built and verified 2026-11-08; batch device telemetry, ingest-triggered ONNX scoring with `AnomalyScore`, `ANOMALY` reading flag, human-assessment reset, dataset fetch script, local `apps/device-simulator` replaying an uploaded held-out SKAB CSV; end-to-end check passed (model re-flags only after a person\'s reset) |

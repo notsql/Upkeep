@@ -4,7 +4,9 @@ import static com.proj.server.db.tables.Anomalyscore.ANOMALYSCORE;
 import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Device.DEVICE;
 import static com.proj.server.db.tables.Devicereading.DEVICEREADING;
+import static com.proj.server.db.tables.Importedreading.IMPORTEDREADING;
 import static com.proj.server.db.tables.Manualreading.MANUALREADING;
+import static com.proj.server.db.tables.Readingimportbatch.READINGIMPORTBATCH;
 import static org.jooq.impl.DSL.falseCondition;
 import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.name;
@@ -53,6 +55,8 @@ public class AssetReadingRepository {
     private static final Field<String> RECORDED_NAME = field(name("recordedByName"), SQLDataType.VARCHAR);
     private static final Field<OffsetDateTime> RECORDED_AT =
             field(name("recordedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6));
+    private static final Field<UUID> BATCH_ID = field(name("importBatchId"), SQLDataType.UUID);
+    private static final Field<String> SOURCE_LABEL = field(name("sourceLabel"), SQLDataType.VARCHAR);
     private static final Field<Integer> INTERVAL = field(name("interval"), SQLDataType.INTEGER);
     private static final Field<OffsetDateTime> PREVIOUS_AT =
             field(name("previousAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6));
@@ -107,7 +111,9 @@ public class AssetReadingRepository {
                         SOURCE,
                         RECORDED_BY,
                         RECORDED_NAME,
-                        RECORDED_AT)
+                        RECORDED_AT,
+                        BATCH_ID,
+                        SOURCE_LABEL)
                 .from(readings)
                 .where(matching(from, to, flags))
                 .orderBy(MEASURED_AT.desc(), ID.desc())
@@ -181,7 +187,9 @@ public class AssetReadingRepository {
                 SOURCE,
                 RECORDED_BY,
                 RECORDED_NAME,
-                RECORDED_AT);
+                RECORDED_AT,
+                BATCH_ID,
+                SOURCE_LABEL);
         query.addFrom(flagged(estate, asset, metric));
         query.addConditions(matching(from, to, flags));
         query.addOrderBy(MEASURED_AT.desc(), ID.desc());
@@ -205,7 +213,9 @@ public class AssetReadingRepository {
                 reading.source(),
                 reading.recordedByUserId(),
                 reading.recordedByName(),
-                reading.recordedAt());
+                reading.recordedAt(),
+                reading.importBatchId(),
+                reading.sourceLabel());
     }
 
     public long countEstate(
@@ -515,7 +525,9 @@ public class AssetReadingRepository {
                         DSL.inline("SENSOR").as(SOURCE),
                         DSL.val((String) null).as(RECORDED_BY),
                         DSL.val((String) null).as(RECORDED_NAME),
-                        DEVICEREADING.RECEIVEDAT.as(RECORDED_AT))
+                        DEVICEREADING.RECEIVEDAT.as(RECORDED_AT),
+                        DSL.val((UUID) null, SQLDataType.UUID).as(BATCH_ID),
+                        DSL.val((String) null).as(SOURCE_LABEL))
                 .from(DEVICEREADING)
                 .join(DEVICE)
                 .on(DEVICE.ID.eq(DEVICEREADING.DEVICEID))
@@ -548,12 +560,46 @@ public class AssetReadingRepository {
                         DSL.inline("MANUAL"),
                         MANUALREADING.RECORDEDBYUSERID,
                         MANUALREADING.RECORDEDBYNAME,
-                        MANUALREADING.RECORDEDAT)
+                        MANUALREADING.RECORDEDAT,
+                        DSL.val((UUID) null, SQLDataType.UUID),
+                        DSL.val((String) null))
                 .from(MANUALREADING)
                 .join(ASSET)
                 .on(ASSET.ID.eq(MANUALREADING.ASSETID).and(ASSET.ESTATEID.eq(MANUALREADING.ESTATEID)))
                 .where(manualConditions);
-        var sources = sensor.unionAll(manual).asTable("source_reading");
+        var importedConditions = new ArrayList<Condition>();
+        if (estateId != null) importedConditions.add(IMPORTEDREADING.ESTATEID.eq(estateId));
+        if (assetId != null) importedConditions.add(IMPORTEDREADING.ASSETID.eq(assetId));
+        if (metric != null) importedConditions.add(IMPORTEDREADING.METRIC.eq(metric.name()));
+        var imported = select(
+                        IMPORTEDREADING.ID,
+                        IMPORTEDREADING.ASSETID,
+                        ASSET.NAME,
+                        ASSET.REFERENCE,
+                        IMPORTEDREADING.MEASUREDAT,
+                        IMPORTEDREADING.METRIC,
+                        IMPORTEDREADING.VALUE,
+                        DSL.val((UUID) null, SQLDataType.UUID),
+                        DSL.val((String) null),
+                        DSL.val((Integer) null),
+                        DSL.val((OffsetDateTime) null, SQLDataType.TIMESTAMPWITHTIMEZONE(6)),
+                        DSL.val((Double) null, SQLDataType.DOUBLE),
+                        DSL.inline("IMPORT"),
+                        DSL.val((String) null),
+                        DSL.val((String) null),
+                        IMPORTEDREADING.RECORDEDAT,
+                        IMPORTEDREADING.BATCHID,
+                        READINGIMPORTBATCH.SOURCELABEL)
+                .from(IMPORTEDREADING)
+                .join(ASSET)
+                .on(ASSET.ID.eq(IMPORTEDREADING.ASSETID).and(ASSET.ESTATEID.eq(IMPORTEDREADING.ESTATEID)))
+                .join(READINGIMPORTBATCH)
+                .on(READINGIMPORTBATCH
+                        .ID
+                        .eq(IMPORTEDREADING.BATCHID)
+                        .and(READINGIMPORTBATCH.ESTATEID.eq(IMPORTEDREADING.ESTATEID)))
+                .where(importedConditions);
+        var sources = sensor.unionAll(manual).unionAll(imported).asTable("source_reading");
         return select(sources.fields())
                 .select(DSL.count()
                         .over(partitionBy(sources.field(ASSET_ID), sources.field(METRIC), sources.field(MEASURED_AT)))
@@ -612,7 +658,9 @@ public class AssetReadingRepository {
                 ReadingSource.valueOf(row.get(SOURCE)),
                 row.get(RECORDED_BY),
                 row.get(RECORDED_NAME),
-                row.get(RECORDED_AT).withOffsetSameInstant(ZoneOffset.UTC));
+                row.get(RECORDED_AT).withOffsetSameInstant(ZoneOffset.UTC),
+                row.get(BATCH_ID),
+                row.get(SOURCE_LABEL));
     }
 
     private static List<ReadingFlagResponse> flags(Record row, DeviceMetric metric) {
