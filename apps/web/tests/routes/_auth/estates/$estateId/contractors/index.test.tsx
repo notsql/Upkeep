@@ -126,7 +126,13 @@ it("shows one row per equipment type, filled from the saved contractors", async 
   expect(
     (screen.getByRole("textbox", { name: PUMP_NAME }) as HTMLInputElement).value
   ).toBe("");
-  for (const type of ["Pump", "Lift", "Gate", "Common-area light"]) {
+  for (const type of [
+    "Pump",
+    "Lift",
+    "Gate",
+    "Common-area light",
+    "Plumbing",
+  ]) {
     screen.getByRole("heading", { name: type });
   }
 });

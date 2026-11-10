@@ -18,6 +18,7 @@ export const EQUIPMENT_TYPES: { value: EquipmentType; label: string }[] = [
   { value: "LIFT", label: "Lift" },
   { value: "GATE", label: "Gate" },
   { value: "LIGHT", label: "Common-area light" },
+  { value: "PLUMBING", label: "Plumbing" },
 ];
 
 export const ROUTING_STATES: { value: RoutingState; label: string }[] = [

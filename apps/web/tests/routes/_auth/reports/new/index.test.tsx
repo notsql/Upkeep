@@ -402,9 +402,9 @@ it("cancels back to the selected estate's reports without submitting", async () 
 });
 
 const AI_NOTICE =
-  /text and photos are analysed by an AI service \(Anthropic\) and may be emailed to the estate's contractor/u;
+  /text is read by Upkeep's automated classifier, and the report, including photos, may be emailed to the estate's contractor/u;
 
-it("tells residents an AI service reads the report and a contractor may receive it", async () => {
+it("tells residents an automated classifier reads the report and a contractor may receive it", async () => {
   renderWithProviders(<NewReportPage />);
   await screen.findByRole("heading", { name: "Report a fault" });
   await screen.findByText(AI_NOTICE);

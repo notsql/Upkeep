@@ -16,7 +16,7 @@ API: [../api/report-routing.md](../api/report-routing.md).
 | `useRetryDispatch(estateId)` | POST `…/work-orders/{workOrderId}/dispatch/retry` | same |
 
 The file also exports labels: `EQUIPMENT_TYPES` (Pump, Lift, Gate,
-Common-area light), `ROUTING_STATES` (Classifying, Needs review, Work order
+Common-area light, Plumbing), `ROUTING_STATES` (Classifying, Needs review, Work order
 created, Dismissed), `PRIORITIES`, `workOrderStatusLabel` and
 `dispatchStatusLabel` (Sending, Sent <time>, Failed to send).
 
@@ -57,6 +57,6 @@ created, Dismissed), `PRIORITIES`, `workOrderStatusLabel` and
   `canCreateWorkOrders` it offers "Email contractor" (a Dialog ending in
   "Assign and email", with the same "Set up contractors" link when the type has
   no contractor) for open orders, and "Retry sending" for failed ones.
-- **Resident report form:** above Submit, a notice says the text and photos are
-  analysed by an AI service (Anthropic) and may be emailed to the estate's
-  contractor.
+- **Resident report form:** above Submit, a notice says the text is read by
+  Upkeep's automated classifier, and that the report, including photos, may be
+  emailed to the estate's contractor.
