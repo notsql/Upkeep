@@ -1,6 +1,8 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
+import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
+import { FilterToggle } from "@/components/filters/filter-toggle";
 import {
   assetHistoryQueryKey,
   type HistoryDateFilters,
@@ -25,6 +27,8 @@ function HistoryRoute() {
   const navigate = Route.useNavigate();
   const access = useAssetHistoryAccess(estateId);
   const client = useQueryClient();
+  const activeCount = filters.from || filters.to ? 1 : 0;
+  const panel = useFilterPanel(activeCount);
   const changeDates = useCallback(
     async (dates: HistoryDateFilters) => {
       if (dates.from !== filters.from || dates.to !== filters.to) {
@@ -52,11 +56,20 @@ function HistoryRoute() {
   );
   const content = (
     <div className="space-y-5">
-      <HistoryDateFilter
-        filters={filters}
-        key={`${filters.from ?? ""}:${filters.to ?? ""}`}
-        onApply={changeDates}
-      />
+      <div className="flex justify-end">
+        <FilterToggle activeCount={activeCount} {...panel.toggleProps} />
+      </div>
+      <FilterBar
+        activeCount={activeCount}
+        label="Filter history"
+        {...panel.barProps}
+      >
+        <HistoryDateFilter
+          filters={filters}
+          key={`${filters.from ?? ""}:${filters.to ?? ""}`}
+          onApply={changeDates}
+        />
+      </FilterBar>
       <AssetHistoryPage
         assetId={assetId}
         estateId={estateId}

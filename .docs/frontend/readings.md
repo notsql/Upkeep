@@ -256,7 +256,7 @@ In `assets/$assetId/readings/-components/`.
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
 | `AssetReadingsPage` (`asset-readings-page.tsx`) | `AssetReadingsHeader`; `ReadingToolbar` with summary "Showing N times" (no total - the keyset endpoint does not count; hidden when none), Filters toggle and the estate `ReadingExport` (CSV with the asset and current filters, disabled while the first page loads or errors); the estate `ReadingFilterControls` without the asset picker, collapsed behind the toggle; `AssetReadingGroups`. `useAssetReadingGroupPages(estateId, assetId, filters)`. Without `canViewReadings` it shows "Readings access is no longer available." | `Alert`, `AlertDescription` (rest via the estate components) |
-| `AssetReadingGroups` (`asset-reading-groups.tsx`) | Validation error `Alert` (no request); `ErrorState` "Retry readings"; `LoadingState` table "Loading readings…" until the first page arrives; empty states (below); otherwise `GroupedReadingsTable` (aria-label "Readings", `metrics` restricted to the metric filter), and a "Load older" outline `Button` while `hasNextPage` ("Loading…" and disabled while fetching the next page; a failed next page shows an `Alert` under the table). No cards, no Live, no background refresh. | `Alert`, `Button` |
+| `AssetReadingGroups` (`asset-reading-groups.tsx`) | Validation error `Alert` (no request); `ErrorState` "Retry readings"; `LoadingState` table "Loading readings…" until the first page arrives; empty states (below); otherwise `GroupedReadingsTable` (aria-label "Readings", `metrics` restricted to the metric filter; below 768px (`useMobile`) a list with the same aria-label of `Item size="sm"` rows divided by `ItemSeparator`, one per reading time: title = each metric name with its value emphasised, muted line = measured time (`formatDateTime`) · source, trailing = anomaly `Badge` and per-reading flag badges with their tooltips; no day headings), and a "Load older" outline `Button` while `hasNextPage` ("Loading…" and disabled while fetching the next page; a failed next page shows an `Alert` under the table). No cards, no Live, no background refresh. | `Alert`, `Button` |
 | `AssetReadingsHeader` (`asset-readings-header.tsx`) | `PageHeader` "Readings" (`Activity`), breadcrumbs Assets / asset name ("Asset" while loading) / Readings, description "Sensor and manual readings, newest first"; no actions. | via `PageHeader` |
 
 `ReadingFilterControls` (`readings/-components/estate-readings-page/reading-filter-controls.tsx`)
@@ -426,11 +426,13 @@ longer lists readings.
 ## Mobile reading records
 
 Below 768px, `components/readings/reading-cards.tsx` renders both the estate-wide
-and legacy asset lists as a single accessible `Readings` list. Each shadcn Card
-shows the metric, exact value text/unit, measured time (`formatDateTime`), Manual/Sensor/Import provenance (including
-manual recorder name/ID fallback), applicable device, all flags and estate-list
-asset name/reference. Long labels and flags wrap. Manual entries do not invent
-a device. The estate `reading-table.tsx` (also used by the asset readings page) uses the
+and legacy asset lists as flat `ListRows` "Readings" of `ListRow`s (`Gauge`
+tile; design-system "List rows"; no card). Each row: title = exact value text/unit
+(semibold, tabular) then the metric name; under it (estate list only) = asset name ·
+reference; meta (muted, truncated) = source (Manual · recorder name/ID fallback, Import ·
+source label · Batch id, or Sensor · device name) · measured time (`formatDateTime`);
+trailing = every flag `Badge` (`readingFlagTone`). Long labels and flags wrap.
+Manual entries do not invent a device. The estate `reading-table.tsx` (also used by the asset readings page) uses the
 existing `useMobile` hook to select cards or desktop tables from the same query
 result; filters, query keys, numbered estate paging and legacy paging are
 unchanged. Only the current presentation mounts. Cards expose refresh busy
@@ -676,3 +678,7 @@ take a manual reading to compare." Import rows and batches show
 `importOutcomeLabels` (Imported, Already imported, Has problems) and
 `importStatusLabels` (Imported, Undone) from `lib/reading-imports.ts`, never
 the enum. The import form's source label is "Name for this import".
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of the estate readings list (`useEstateReadingFeed`, offset pages, key `[userId, "estate-readings", estateId, "feed", filters-without-page]`) instead of `ReadingPagination`.

@@ -53,7 +53,11 @@ No schedule; each its own URL) and the child view.
 
 `CheckSchedulesList` (`-components/check-schedules-page/check-schedules-page.tsx`;
 state in `use-check-schedules-list.ts`, table in `check-schedules-table.tsx`)
-renders:
+renders (below 768px, `useMobile`, the table becomes a `ul` labelled `Equipment
+types` of shadcn `Item`s, `CategoryItem` in `category-row.tsx`: title = equipment
+type; line 1 "<n> assets · Regular checks on/off"; line 2 the `IntervalBadge` and
+last change; trailing `DropdownMenu` "Actions for <type>" with Change how often and
+Turn on/off checks):
 
 - when `estateActive` is false, a `role="note"` paragraph "This estate is
   inactive, so its check schedules can't be changed." and every row action

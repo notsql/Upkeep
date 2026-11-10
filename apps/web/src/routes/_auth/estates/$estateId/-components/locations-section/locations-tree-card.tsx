@@ -1,4 +1,3 @@
-import { Card } from "@proj/ui/components/card";
 import { ToggleGroup, ToggleGroupItem } from "@proj/ui/components/toggle-group";
 import { type ComponentProps, type ReactNode, useCallback } from "react";
 import { ErrorState } from "@/components/states/error-state";
@@ -38,46 +37,44 @@ export function LocationsTreeCard({
     [onViewChange]
   );
   return (
-    <Card className="mt-4 gap-0 overflow-hidden py-0">
-      <section
-        aria-label="Blocks and levels"
-        className="scroll-mt-24"
-        id="locations"
-      >
-        <div className="flex justify-end border-b px-4 py-2">
-          <ToggleGroup
-            aria-label="View"
-            disabled={viewLocked}
-            onValueChange={changeView}
-            size="sm"
-            spacing={0}
-            value={[view]}
-            variant="outline"
-          >
-            <ToggleGroupItem value="building">Building</ToggleGroupItem>
-            <ToggleGroupItem value="tree">Tree</ToggleGroupItem>
-          </ToggleGroup>
+    <section
+      aria-label="Blocks and levels"
+      className="mt-4 scroll-mt-24"
+      id="locations"
+    >
+      <div className="flex justify-end pb-2">
+        <ToggleGroup
+          aria-label="View"
+          disabled={viewLocked}
+          onValueChange={changeView}
+          size="sm"
+          spacing={0}
+          value={[view]}
+          variant="outline"
+        >
+          <ToggleGroupItem value="building">Building</ToggleGroupItem>
+          <ToggleGroupItem value="tree">Tree</ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      {pending ? (
+        <div className="py-4">
+          <LoadingState label="Loading locations…" />
         </div>
-        {pending ? (
-          <div className="p-4">
-            <LoadingState label="Loading locations…" />
-          </div>
-        ) : null}
-        {error ? (
-          <div className="p-4">
-            <ErrorState message={error.message} onRetry={onRetry} />
-          </div>
-        ) : null}
-        {tree && view === "building" && tree.tree.length ? (
-          <LocationsBuildings {...tree} />
-        ) : null}
-        {tree && (view === "tree" || !tree.tree.length) ? (
-          <div className="px-4 pb-4">
-            <LocationTree {...tree} />
-          </div>
-        ) : null}
-        {dialog}
-      </section>
-    </Card>
+      ) : null}
+      {error ? (
+        <div className="py-4">
+          <ErrorState message={error.message} onRetry={onRetry} />
+        </div>
+      ) : null}
+      {tree && view === "building" && tree.tree.length ? (
+        <LocationsBuildings {...tree} />
+      ) : null}
+      {tree && (view === "tree" || !tree.tree.length) ? (
+        <div className="pb-4">
+          <LocationTree {...tree} />
+        </div>
+      ) : null}
+      {dialog}
+    </section>
   );
 }

@@ -4,7 +4,7 @@ import { BellRing } from "lucide-react";
 import { AlertResponseActions } from "@/components/notifications/alert-response-actions";
 import { AlertResponseSummary } from "@/components/notifications/alert-response-summary";
 import { UNUSUAL_READINGS_STEP } from "@/components/notifications/unusual-readings-step";
-import { SectionCard } from "@/components/page/section-card";
+import { PageSection } from "@/components/page/section-card";
 import { ErrorState } from "@/components/states/error-state";
 import { type Notification, useAssetAnomalyAlerts } from "@/lib/notifications";
 import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
@@ -61,13 +61,13 @@ export function AnomalyAlertsSection({
   locked?: string;
 }) {
   const alerts = useAssetAnomalyAlerts(estateId, assetId);
-  // Only an error or at least one alert earns the card; loading shows nothing
-  // so the page never flashes a card that then disappears.
+  // Only an error or at least one alert earns the section; loading shows nothing
+  // so the page never flashes a section that then disappears.
   if (!(alerts.error || alerts.data?.length)) {
     return null;
   }
   return (
-    <SectionCard
+    <PageSection
       description="Warnings about readings that don't look normal"
       icon={BellRing}
       title="Unusual readings"
@@ -82,6 +82,6 @@ export function AnomalyAlertsSection({
           ))}
         </ul>
       ) : null}
-    </SectionCard>
+    </PageSection>
   );
 }

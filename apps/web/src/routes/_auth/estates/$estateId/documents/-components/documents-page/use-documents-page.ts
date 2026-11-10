@@ -10,9 +10,12 @@ import {
   type EstateDocument,
   useDeleteDocument,
   useDocumentAccess,
+  useDocumentFeed,
   useDocuments,
   useDownloadDocument,
 } from "@/lib/documents";
+import { asPagedList } from "@/lib/infinite-list";
+import { useMobile } from "@/lib/use-mobile";
 import { useWorkOrderDocumentAccess } from "@/lib/work-order-documents";
 import type { AssetDocumentSelection } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/asset-association-selection";
 import { countDocumentFilters } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/document-filters";
@@ -35,7 +38,11 @@ export function useDocumentsPage(
   );
   const [associationDocument, setAssociationDocument] =
     useState<EstateDocument>();
-  const documents = useDocuments(estateId, filters);
+  const mobile = useMobile();
+  const { cursor: _cursor, ...feedFilters } = filters;
+  const page = useDocuments(estateId, filters, !mobile);
+  const feed = asPagedList(useDocumentFeed(estateId, feedFilters, mobile));
+  const documents = mobile ? feed : page;
   const deletion = useDeleteDocument(estateId);
   const download = useDownloadDocument(estateId);
   const [selected, setSelected] = useState<EstateDocument>();

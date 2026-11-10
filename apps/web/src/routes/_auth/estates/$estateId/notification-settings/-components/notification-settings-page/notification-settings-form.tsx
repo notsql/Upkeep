@@ -1,6 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Field,
   FieldDescription,
@@ -139,110 +138,106 @@ export function NotificationSettingsForm({
   const disabled = inactive || save.isPending;
 
   return (
-    <Card>
-      <CardContent>
-        <form className="grid gap-6" noValidate onSubmit={submit}>
-          {inactive ? (
-            <Alert variant="warning">
-              <AlertDescription>
-                This estate is inactive, so you can't change these settings.
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          <Field>
-            <FieldLabel htmlFor={`${id}-threshold`}>
-              How sure before we warn you (%)
-            </FieldLabel>
-            <Input
-              disabled={disabled}
-              id={`${id}-threshold`}
-              inputMode="numeric"
-              max={MAX_PERCENT}
-              min={MIN_PERCENT}
-              onChange={changeThreshold}
-              step={1}
-              type="number"
-              value={threshold}
-              {...invalidProps(invalid.threshold, `${id}-threshold-error`)}
-            />
-            <FieldDescription>
-              We warn managers when readings look unusual with at least this
-              much certainty. 51% warns about every unusual stretch.
-            </FieldDescription>
-            {invalid.threshold ? (
-              <FieldError id={`${id}-threshold-error`}>
-                Enter a whole number from 51 to 100.
-              </FieldError>
-            ) : null}
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-lead`}>
-              Days of notice before a service is due
-            </FieldLabel>
-            <Input
-              disabled={disabled}
-              id={`${id}-lead`}
-              inputMode="numeric"
-              max={MAX_LEAD_DAYS}
-              min={0}
-              onChange={changeLeadDays}
-              step={1}
-              type="number"
-              value={leadDays}
-              {...invalidProps(invalid.lead, `${id}-lead-error`)}
-            />
-            <FieldDescription>
-              We remind managers this many days before a service is due.
-            </FieldDescription>
-            {invalid.lead ? (
-              <FieldError id={`${id}-lead-error`}>
-                Enter a whole number of days from 0 to 365.
-              </FieldError>
-            ) : null}
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-repair`}>
-              Notice before an expected repair
-            </FieldLabel>
-            <Select
-              disabled={disabled}
-              items={REPAIR_LEADS}
-              onValueChange={changeRepairLead}
-              value={repairLead}
-            >
-              <SelectTrigger className="w-full" id={`${id}-repair`}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {REPAIR_LEADS.map((item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FieldDescription>
-              We warn managers when a pump is likely to need a repair within
-              this time.
-            </FieldDescription>
-          </Field>
-          {error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-          <div className="flex items-center gap-3">
-            <Button disabled={disabled} type="submit">
-              {save.isPending ? "Saving…" : "Save settings"}
-            </Button>
-            {saved ? (
-              <p className="text-muted-foreground text-sm" role="status">
-                Settings saved.
-              </p>
-            ) : null}
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <form className="grid gap-6" noValidate onSubmit={submit}>
+      {inactive ? (
+        <Alert variant="warning">
+          <AlertDescription>
+            This estate is inactive, so you can't change these settings.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      <Field>
+        <FieldLabel htmlFor={`${id}-threshold`}>
+          How sure before we warn you (%)
+        </FieldLabel>
+        <Input
+          disabled={disabled}
+          id={`${id}-threshold`}
+          inputMode="numeric"
+          max={MAX_PERCENT}
+          min={MIN_PERCENT}
+          onChange={changeThreshold}
+          step={1}
+          type="number"
+          value={threshold}
+          {...invalidProps(invalid.threshold, `${id}-threshold-error`)}
+        />
+        <FieldDescription>
+          We warn managers when readings look unusual with at least this much
+          certainty. 51% warns about every unusual stretch.
+        </FieldDescription>
+        {invalid.threshold ? (
+          <FieldError id={`${id}-threshold-error`}>
+            Enter a whole number from 51 to 100.
+          </FieldError>
+        ) : null}
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`${id}-lead`}>
+          Days of notice before a service is due
+        </FieldLabel>
+        <Input
+          disabled={disabled}
+          id={`${id}-lead`}
+          inputMode="numeric"
+          max={MAX_LEAD_DAYS}
+          min={0}
+          onChange={changeLeadDays}
+          step={1}
+          type="number"
+          value={leadDays}
+          {...invalidProps(invalid.lead, `${id}-lead-error`)}
+        />
+        <FieldDescription>
+          We remind managers this many days before a service is due.
+        </FieldDescription>
+        {invalid.lead ? (
+          <FieldError id={`${id}-lead-error`}>
+            Enter a whole number of days from 0 to 365.
+          </FieldError>
+        ) : null}
+      </Field>
+      <Field>
+        <FieldLabel htmlFor={`${id}-repair`}>
+          Notice before an expected repair
+        </FieldLabel>
+        <Select
+          disabled={disabled}
+          items={REPAIR_LEADS}
+          onValueChange={changeRepairLead}
+          value={repairLead}
+        >
+          <SelectTrigger className="w-full" id={`${id}-repair`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {REPAIR_LEADS.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <FieldDescription>
+          We warn managers when a pump is likely to need a repair within this
+          time.
+        </FieldDescription>
+      </Field>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+      <div className="flex items-center gap-3">
+        <Button disabled={disabled} type="submit">
+          {save.isPending ? "Saving…" : "Save settings"}
+        </Button>
+        {saved ? (
+          <p className="text-muted-foreground text-sm" role="status">
+            Settings saved.
+          </p>
+        ) : null}
+      </div>
+    </form>
   );
 }

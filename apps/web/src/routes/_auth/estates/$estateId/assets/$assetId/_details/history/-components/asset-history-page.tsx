@@ -127,7 +127,7 @@ function HistoryTimeline({
         />
       ) : null}
       {entries.length ? (
-        <ol aria-label="Recorded asset history" className="space-y-4">
+        <ol aria-label="Recorded asset history" className="divide-y">
           {entries.map((entry) => (
             <HistoryTimelineEntry
               assetId={assetId}

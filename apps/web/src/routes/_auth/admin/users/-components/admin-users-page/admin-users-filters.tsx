@@ -23,7 +23,11 @@ export function AdminUsersFilters({
   onOrganizationChange,
   disabled,
 }: {
-  barProps: { id: string; open: boolean };
+  barProps: {
+    id: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  };
   activeCount: number;
   onClear: () => void;
   search: string;

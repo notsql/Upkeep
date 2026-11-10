@@ -50,6 +50,7 @@ export function ReportFilters({
   onChange,
   id: panelId,
   open,
+  onOpenChange,
   showQueueView = false,
 }: {
   filters: EstateReportFilters;
@@ -58,6 +59,7 @@ export function ReportFilters({
   /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   showQueueView?: boolean;
 }) {
   const id = useId();
@@ -189,6 +191,7 @@ export function ReportFilters({
         id={panelId}
         label="Filter reports"
         onClear={clear}
+        onOpenChange={onOpenChange}
         open={open}
       >
         {showQueueView ? (

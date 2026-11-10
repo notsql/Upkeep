@@ -1343,7 +1343,7 @@ it("badges originals with duplicate counts and linked reports with their state",
   await setup();
   const card = async (title: string) => {
     const link = await screen.findByRole("link", { name: title });
-    const found = link.closest("[data-slot='card']");
+    const found = link.closest("li");
     expect(found).not.toBeNull();
     return within(found as HTMLElement);
   };

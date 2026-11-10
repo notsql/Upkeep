@@ -17,7 +17,11 @@ export function EstateReportsLocations({
   filters: EstateReportFilters;
   onChange: (values: EstateReportFilters) => void;
   onRetry: () => void;
-  barProps: { id: string; open: boolean };
+  barProps: {
+    id: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  };
 }) {
   const { blockId, minLevelPosition, maxLevelPosition } = filters;
   return (

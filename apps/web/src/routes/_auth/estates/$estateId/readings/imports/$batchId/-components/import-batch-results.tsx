@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Select,
@@ -8,15 +9,14 @@ import {
 } from "@proj/ui/components/select";
 import { FileSpreadsheet } from "lucide-react";
 import { FilterBar } from "@/components/filters/filter-bar";
-import { SectionCard } from "@/components/page/section-card";
+import { PageSection } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
-import type {
-  ReadingImportOutcome,
-  useReadingImportRows,
-} from "@/lib/reading-imports";
+import type { PagedList } from "@/lib/infinite-list";
+import type { ReadingImportOutcome } from "@/lib/reading-imports";
 import { ImportRowResults } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-row-results";
 
 export function ImportBatchResults({
@@ -29,7 +29,7 @@ export function ImportBatchResults({
   onNext,
   onPrevious,
 }: {
-  rows: ReturnType<typeof useReadingImportRows>;
+  rows: PagedList<components["schemas"]["ReadingImportRowPage"]>;
   page: number;
   outcome: ReadingImportOutcome | undefined;
   onClearOutcome: () => void;
@@ -39,7 +39,7 @@ export function ImportBatchResults({
   onPrevious: () => void;
 }) {
   return (
-    <SectionCard title="Row results">
+    <PageSection title="Row results">
       <FilterBar
         activeCount={outcome ? 1 : 0}
         label="Import result filters"
@@ -70,7 +70,8 @@ export function ImportBatchResults({
         <EmptyState icon={FileSpreadsheet} title="No matching row results" />
       ) : null}
       <ImportRowResults items={rows.data?.items ?? []} />
-      {rows.data ? (
+      {rows.data && rows.more ? <LoadMore {...rows.more} /> : null}
+      {rows.data && !rows.more ? (
         <Pagination
           canNext={(page + 1) * rows.data.size < rows.data.totalItems}
           canPrevious={page > 0}
@@ -81,6 +82,6 @@ export function ImportBatchResults({
           summary={`${rows.data.totalItems} records`}
         />
       ) : null}
-    </SectionCard>
+    </PageSection>
   );
 }

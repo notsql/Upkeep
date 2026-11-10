@@ -1,9 +1,8 @@
 import { buttonVariants } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { ClipboardList, Plus } from "lucide-react";
 import { useCallback } from "react";
-import { DetailCard } from "@/components/page/detail-card";
+import { DetailList } from "@/components/page/detail-list";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
@@ -67,28 +66,24 @@ export function InspectionAssetPage({
         meta={context.reference}
         title={context.name}
       />
-      <Card>
-        <CardContent className="pt-6">
-          <DetailCard>
-            <div>
-              <dt>Reference</dt>
-              <dd>{context.reference}</dd>
-            </div>
-            <div>
-              <dt>Category</dt>
-              <dd>{context.category}</dd>
-            </div>
-            <div>
-              <dt>Location</dt>
-              <dd>{context.locationPath}</dd>
-            </div>
-            <div>
-              <dt>Installation date</dt>
-              <dd>{context.installedOn ?? "Not recorded"}</dd>
-            </div>
-          </DetailCard>
-        </CardContent>
-      </Card>
+      <DetailList>
+        <div>
+          <dt>Reference</dt>
+          <dd>{context.reference}</dd>
+        </div>
+        <div>
+          <dt>Category</dt>
+          <dd>{context.category}</dd>
+        </div>
+        <div>
+          <dt>Location</dt>
+          <dd>{context.locationPath}</dd>
+        </div>
+        <div>
+          <dt>Installation date</dt>
+          <dd>{context.installedOn ?? "Not recorded"}</dd>
+        </div>
+      </DetailList>
       <InspectionHistoryTable assetId={assetId} estateId={estateId} />
       {active ? null : (
         <p role="note">

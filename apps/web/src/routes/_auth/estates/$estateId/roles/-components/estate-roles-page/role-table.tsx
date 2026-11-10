@@ -8,12 +8,17 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { SearchX } from "lucide-react";
+import { ListRows } from "@/components/list/list-row";
 import { EmptyState } from "@/components/states/empty-state";
 import type {
   EstatePermission,
   EstateRoleDefinition,
 } from "@/lib/estate-roles";
-import { RoleRow } from "@/routes/_auth/estates/$estateId/roles/-components/estate-roles-page/role-row";
+import { useMobile } from "@/lib/use-mobile";
+import {
+  RoleItem,
+  RoleRow,
+} from "@/routes/_auth/estates/$estateId/roles/-components/estate-roles-page/role-row";
 
 export type EstateAccess = components["schemas"]["EstateAccessResponse"];
 
@@ -30,6 +35,7 @@ export function RoleTable({
   onDelete: (role: EstateRoleDefinition) => void;
   onClear: () => void;
 }) {
+  const mobile = useMobile();
   if (!roles.length) {
     return (
       <EmptyState
@@ -42,6 +48,21 @@ export function RoleTable({
         icon={SearchX}
         title="No matching roles"
       />
+    );
+  }
+  if (mobile) {
+    return (
+      <ListRows label="Custom roles">
+        {roles.map((role) => (
+          <RoleItem
+            catalogue={catalogue}
+            estate={estate}
+            key={role.id}
+            onDelete={onDelete}
+            role={role}
+          />
+        ))}
+      </ListRows>
     );
   }
   return (

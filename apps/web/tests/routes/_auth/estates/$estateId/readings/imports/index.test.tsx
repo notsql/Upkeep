@@ -438,25 +438,53 @@ describe("import results and rollback", () => {
     );
   });
 
-  it.each([false, true])(
-    "preserves record numbers, outcomes and reasons with mobile=%s",
-    async (mobile) => {
-      state.mobile = mobile;
-      await showBatch();
-      await screen.findByText(SOURCE);
-      const report = screen.getByRole(mobile ? "list" : "table", {
-        name: "Import results",
-      });
-      // Both the record number and its starting physical line must remain visible.
-      expect(within(report).getAllByText("2")).toHaveLength(2);
-      expect(within(report).getAllByText("3")).toHaveLength(2);
-      within(report).getByText("ASSET_NOT_FOUND");
-      within(report).getByText("Asset was not found in this estate.");
-      within(report).getByText("OUT_OF_RANGE");
-      screen.getByRole("link", { name: "Download report" });
-      screen.getByRole("button", { name: "Revert batch" });
-    }
-  );
+  it("lists each record as an item on a phone with its line, outcome and problems", async () => {
+    state.mobile = true;
+    await showBatch();
+    await screen.findByText(SOURCE);
+    const report = screen.getByRole("list", { name: "Import results" });
+    expect(screen.queryByRole("table", { name: "Import results" })).toBeNull();
+    const [first, second] = within(report).getAllByRole("listitem");
+    within(first as HTMLElement).getByText("Record 2");
+    within(first as HTMLElement).getByText("Imported");
+    within(first as HTMLElement).getByText(
+      "Line 2 · Value is outside the expected range."
+    );
+    within(second as HTMLElement).getByText("Record 3");
+    within(second as HTMLElement).getByText("Has problems");
+    within(second as HTMLElement).getByText(
+      "Line 3 · Asset was not found in this estate."
+    );
+    screen.getByRole("link", { name: "Download report" });
+    screen.getByRole("button", { name: "Revert batch" });
+  });
+
+  it("lists past imports as linked items on a phone", async () => {
+    state.mobile = true;
+    await showUpload();
+    const history = await screen.findByRole("list", { name: "Import history" });
+    const item = within(history).getByRole("link", {
+      name: new RegExp(SOURCE, "u"),
+    });
+    within(item).getByText("Imported");
+    within(item).getByText("1 readings imported", { exact: false });
+  });
+
+  it("preserves record numbers, outcomes and reasons in the table", async () => {
+    await showBatch();
+    await screen.findByText(SOURCE);
+    const report = screen.getByRole("table", {
+      name: "Import results",
+    });
+    // Both the record number and its starting physical line must remain visible.
+    expect(within(report).getAllByText("2")).toHaveLength(2);
+    expect(within(report).getAllByText("3")).toHaveLength(2);
+    within(report).getByText("ASSET_NOT_FOUND");
+    within(report).getByText("Asset was not found in this estate.");
+    within(report).getByText("OUT_OF_RANGE");
+    screen.getByRole("link", { name: "Download report" });
+    screen.getByRole("button", { name: "Revert batch" });
+  });
 
   it("shows an all-invalid batch as a completed result with its issues", async () => {
     get.mockImplementation((path: string) =>

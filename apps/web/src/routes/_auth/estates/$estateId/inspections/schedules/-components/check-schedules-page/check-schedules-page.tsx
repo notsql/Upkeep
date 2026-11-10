@@ -50,6 +50,7 @@ export function CheckSchedulesList({
             </Link>
           }
           description="No equipment is checked this often."
+          fill
           icon={Tags}
           title="Nothing here"
         />

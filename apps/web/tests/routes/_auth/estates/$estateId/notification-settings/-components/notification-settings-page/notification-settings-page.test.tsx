@@ -1,10 +1,13 @@
 import { fireEvent } from "@testing-library/react";
+import { ownerEstateAccess, workspaceAccess } from "@tests/fixtures/access";
 import {
   chooseOption,
   renderWithProviders,
   screen,
   waitFor,
+  within,
 } from "@tests/test-utils";
+import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { NotificationSettingsPage } from "@/routes/_auth/estates/$estateId/notification-settings/-components/notification-settings-page/notification-settings-page";
 
@@ -13,6 +16,7 @@ const state = vi.hoisted(() => ({
   error: null as Error | null,
   deactivatedAt: null as string | null,
   save: vi.fn(),
+  canManageEstate: true,
 }));
 
 beforeEach(() => {
@@ -24,7 +28,29 @@ beforeEach(() => {
   state.error = null;
   state.deactivatedAt = null;
   state.save = vi.fn(() => Promise.resolve(state.settings));
+  state.canManageEstate = true;
 });
+
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children, to }: { children: ReactNode; to: string }) => (
+    <a href={to}>{children}</a>
+  ),
+}));
+vi.mock("@/lib/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/access")>()),
+  useAppAccess: () => ({
+    data: {
+      ...workspaceAccess,
+      estates: [
+        {
+          ...ownerEstateAccess,
+          estateId: "e-1",
+          canManageEstate: state.canManageEstate,
+        },
+      ],
+    },
+  }),
+}));
 
 vi.mock("@/lib/notifications", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/notifications")>()),
@@ -53,6 +79,29 @@ vi.mock("@/lib/estates", async (importOriginal) => ({
 function field(name: string) {
   return screen.getByRole<HTMLInputElement>("spinbutton", { name });
 }
+
+it("sits under Estate settings with Details and Notifications tabs", () => {
+  renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
+  screen.getByRole("heading", { level: 1, name: "Estate settings" });
+  const views = within(
+    screen.getByRole("navigation", { name: "Settings views" })
+  );
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Details",
+    "Notifications",
+  ]);
+});
+
+it("hides the Details tab from a Manager who cannot edit the estate", () => {
+  state.canManageEstate = false;
+  renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
+  const views = within(
+    screen.getByRole("navigation", { name: "Settings views" })
+  );
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Notifications",
+  ]);
+});
 
 it("shows the estate's current settings", () => {
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);

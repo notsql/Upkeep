@@ -1,11 +1,5 @@
 import { Button } from "@proj/ui/components/button";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@proj/ui/components/card";
-import {
   Table,
   TableBody,
   TableHead,
@@ -17,11 +11,11 @@ import type { ReactNode } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import type { DocumentFilters, EstateDocument } from "@/lib/documents";
 import { useMobile } from "@/lib/use-mobile";
+import type { DocumentRowProps } from "@/routes/_auth/estates/$estateId/documents/-components/document-actions";
 import {
-  DocumentActions,
-  type DocumentRowProps,
-} from "@/routes/_auth/estates/$estateId/documents/-components/document-actions";
-import { DocumentRow } from "@/routes/_auth/estates/$estateId/documents/-components/document-row";
+  DocumentItem,
+  DocumentRow,
+} from "@/routes/_auth/estates/$estateId/documents/-components/document-row";
 
 export function DocumentList({
   items,
@@ -56,6 +50,7 @@ export function DocumentList({
             ) : undefined
           }
           description="Try other filters"
+          fill
           icon={FileText}
           title="No matching documents"
         />
@@ -64,6 +59,7 @@ export function DocumentList({
     return (
       <EmptyState
         description="Uploads appear here"
+        fill
         icon={FileText}
         title="No documents yet"
       />
@@ -71,49 +67,15 @@ export function DocumentList({
   }
   if (mobile) {
     return (
-      <ul aria-label="Documents" className="grid min-w-0 gap-3">
-        {items.map((document) => (
-          <li className="min-w-0" key={document.id}>
-            <Card
-              className="min-w-0 rounded-xl [overflow-wrap:anywhere]"
-              size="sm"
-            >
-              <CardHeader>
-                <h2 className="text-sm font-medium">
-                  {document.originalFilename}
-                </h2>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid gap-2">
-                  <div>
-                    <dt className="text-muted-foreground">Type</dt>
-                    <dd>
-                      {document.documentType === "INVOICE"
-                        ? "Invoice"
-                        : "Service report"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Uploaded</dt>
-                    <dd>
-                      <time dateTime={document.createdAt}>
-                        {new Date(document.createdAt).toLocaleString()}
-                      </time>
-                    </dd>
-                  </div>
-                  {renderAssets ? (
-                    <div>
-                      <dt className="text-muted-foreground">Asset</dt>
-                      <dd>{renderAssets(document)}</dd>
-                    </div>
-                  ) : null}
-                </dl>
-              </CardContent>
-              <CardFooter>
-                <DocumentActions document={document} {...actions} />
-              </CardFooter>
-            </Card>
-          </li>
+      <ul aria-label="Documents" className="flex min-w-0 flex-col">
+        {items.map((document, index) => (
+          <DocumentItem
+            assets={renderAssets?.(document)}
+            document={document}
+            first={index === 0}
+            key={document.id}
+            {...actions}
+          />
         ))}
       </ul>
     );

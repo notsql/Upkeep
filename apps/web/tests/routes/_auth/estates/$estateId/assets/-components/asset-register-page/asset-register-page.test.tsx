@@ -440,3 +440,30 @@ it("applies mobile filter drafts, discards Cancel and keeps search when clearing
       .value
   ).toBe("pump");
 });
+
+it("shows each mobile asset as a list item: name, then reference, category and location on one muted line", async () => {
+  const resize = mockMobileViewport();
+  const responses: Record<string, unknown> = {
+    "/estates/{estateId}/assets": sortingAssets,
+    "/asset-categories": [{ code: "PUMP", label: "Pump" }],
+  };
+  vi.mocked(api.GET).mockImplementation(
+    async (path) =>
+      ({
+        data: responses[path] ?? [],
+        response: new Response(),
+      }) as never
+  );
+  renderWithProviders(<SortedRegister />);
+  const list = within(await screen.findByRole("list", { name: "Assets" }));
+  const items = list.getAllByRole("listitem");
+  expect(items).toHaveLength(3);
+  const link = list.getByRole("link", { name: "Zulu pump (E-A0010)" });
+  await within(link).findByText("Pump");
+  expect(within(link).getByText("E-A0010").closest("p")?.textContent).toBe(
+    "E-A0010 · Pump · Block 10"
+  );
+  within(link).getByText("Out of use");
+  expect(screen.queryByRole("table")).toBeNull();
+  resize(false);
+});

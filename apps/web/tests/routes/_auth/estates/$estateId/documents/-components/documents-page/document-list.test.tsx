@@ -17,6 +17,8 @@ const document: EstateDocument = {
   canDelete: true,
 };
 
+const UPLOADED = /^Uploaded /u;
+
 function renderAssetLink() {
   return <a href="/estates/estate/assets/pump">Pump A</a>;
 }
@@ -36,6 +38,31 @@ it("keeps asset links in the mobile document list and omits the removed Size fie
   list.getByRole("button", { name: "Download Invoice.pdf" });
   expect(list.queryByText("Size")).toBeNull();
   expect(list.queryByText("1,234 bytes")).toBeNull();
+});
+
+it("lists each document with its type, links and upload date, and a menu when there are several actions", async () => {
+  const remove = vi.fn();
+  renderWithProviders(
+    <DocumentList
+      downloading={false}
+      failed={false}
+      items={[document]}
+      onDelete={remove}
+      onDownload={vi.fn()}
+      renderAssets={renderAssetLink}
+    />
+  );
+  const list = within(screen.getByRole("list", { name: "Documents" }));
+  const item = within(list.getByRole("listitem"));
+  item.getByText("Invoice.pdf");
+  item.getByText("Invoice");
+  item.getByText(UPLOADED);
+  fireEvent.click(
+    item.getByRole("button", { name: "Actions for Invoice.pdf" })
+  );
+  screen.getByRole("menuitem", { name: "Download" });
+  fireEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
+  expect(remove).toHaveBeenCalledWith(document);
 });
 
 it("explains an empty result when only a document type filter is active", () => {

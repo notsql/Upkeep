@@ -30,8 +30,12 @@ are extended. UI uses folder routes and shared shadcn components.
   refresh feedback and explicit review of updated association state.
 
 `routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/` adds
-`work-order-documents.tsx`, a Card/Table section of current attachments, file
+`work-order-documents.tsx`, a `PageSection`/Table section (no card) of current attachments, file
 metadata, authenticated Download, empty/loading/retry feedback and cursor paging.
+Below 768px (`useMobile`) the table becomes a `ul` labelled `Documents` of shadcn
+`Item`s (`AttachmentItem` in `attachment-row.tsx`, divided by `ItemSeparator`):
+title = filename, line 1 "Invoice/Service report · 1,234 bytes", line 2
+"Uploaded <time>", trailing Download button (same handler as the table).
 It mounts only with document read permission and work-order access; its instance
 is scoped to user/estate/order. It reuses ID-22's typed Blob download hook. Deleted
 files disappear on refetch/invalidation; no document blob cache or public file URL
@@ -223,5 +227,5 @@ creation intent and unavailable-reporting/history access have regression coverag
 
 ## Design-system pass
 
-The detail-page Documents card titles with `SectionHeading icon={Files}`; the empty
+The detail-page Documents section is a `PageSection` titled "Documents" with `icon={Files}`; the empty
 state is "No documents yet" ("Linked documents appear here").

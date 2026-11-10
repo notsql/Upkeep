@@ -18,7 +18,7 @@ loader data (`getRouteApi("/_auth").useLoaderData().user`) and shows a
 - **Email** - `user.email`.
 
 Read-only. Uses shared `PageHeader` (no breadcrumbs, `icon={UserRound}`, description "Profile and sign-in identity") and the
-`DetailCard` summary surface. No edits or API calls are introduced.
+`DetailList` (a plain `dl`, no card) below the header. No edits or API calls are introduced.
 
 Entry: "Account settings" in the circular top-right account menu (the only
 entry; there is no sidebar on `/account`). It opens

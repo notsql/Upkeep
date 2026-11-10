@@ -1,11 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
 import { HeartPulse } from "lucide-react";
+import { PageSection } from "@/components/page/section-card";
 import { useHealth } from "@/lib/health";
 
 export function SystemStatus() {
@@ -26,14 +21,10 @@ export function SystemStatus() {
     );
   }
   return (
-    <Card className="mt-8">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <HeartPulse aria-hidden="true" className="text-brand-2 size-4" />
-          System status
-        </CardTitle>
-      </CardHeader>
-      <CardContent>{content}</CardContent>
-    </Card>
+    <div className="mt-8">
+      <PageSection icon={HeartPulse} title="System status">
+        {content}
+      </PageSection>
+    </div>
   );
 }

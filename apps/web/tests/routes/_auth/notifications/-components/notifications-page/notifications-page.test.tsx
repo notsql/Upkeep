@@ -1,4 +1,6 @@
 import { fireEvent } from "@testing-library/react";
+import { intersect } from "@tests/intersection";
+import { mockMobileViewport } from "@tests/mock-viewport";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
@@ -76,6 +78,12 @@ beforeEach(() => {
   state.read = vi.fn();
   state.readAll = vi.fn();
 });
+
+const apiGet = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/api", () => ({ api: { GET: apiGet } }));
+vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
+  useAuth: () => ({ user: { id: "manager" }, loading: false }),
+}));
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -328,4 +336,32 @@ it("offers the send step on service-due rows but not anomaly alerts", () => {
   const [alertRow, dueRow] = list().getAllByRole("listitem");
   within(dueRow).getByText("Send step for SERVICE_DUE");
   expect(within(alertRow).queryByText(PLEASE_INSPECT)).toBeNull();
+});
+
+it("loads the next notification page on mobile as the list scrolls", async () => {
+  mockMobileViewport();
+  apiGet.mockImplementation(
+    (_path: string, options: { params: { query: { page: number } } }) => {
+      const { page } = options.params.query;
+      return Promise.resolve({
+        data: {
+          items: [page === 0 ? anomaly : serviceDue],
+          page,
+          size: 20,
+          total: 21,
+        },
+        response: new Response(),
+      });
+    }
+  );
+  renderWithProviders(<NotificationsPage />);
+  await screen.findByText("Booster pump may have a problem");
+  expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+  intersect();
+  await screen.findByText("Service due on 20 Nov 2026");
+  expect(list().getAllByRole("listitem")).toHaveLength(2);
+  await screen.findByText("That's everything");
+  expect(apiGet).toHaveBeenCalledWith("/notifications", {
+    params: { query: { page: 1, size: 20 } },
+  });
 });

@@ -1,5 +1,10 @@
 import type { components } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
@@ -55,11 +60,11 @@ export function useUnreadNotificationCount(enabled: boolean) {
   });
 }
 
-export function useNotifications(page: number) {
+export function useNotifications(page: number, enabled = true) {
   const { userId, ready } = useAuthenticatedSession();
   return useQuery({
     queryKey: notificationPageQueryKey(userId, page),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET("/notifications", {
@@ -70,6 +75,30 @@ export function useNotifications(page: number) {
       }
       return data;
     },
+  });
+}
+
+/** The same list as `useNotifications`, page after page, for phone widths. */
+export function useNotificationFeed(enabled: boolean) {
+  const { userId, ready } = useAuthenticatedSession();
+  return useInfiniteQuery({
+    queryKey: [...notificationsQueryKey(userId), "feed"],
+    enabled: ready && enabled,
+    retry: false,
+    initialPageParam: 0,
+    queryFn: async ({
+      pageParam,
+    }): Promise<components["schemas"]["NotificationPageResponse"]> => {
+      const { data, error, response } = await api.GET("/notifications", {
+        params: { query: { page: pageParam, size: NOTIFICATION_PAGE_SIZE } },
+      });
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    getNextPageParam: (page) =>
+      (page.page + 1) * page.size < page.total ? page.page + 1 : undefined,
   });
 }
 

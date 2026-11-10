@@ -1,6 +1,12 @@
 import { fireEvent } from "@testing-library/react";
 import { historyAsset } from "@tests/fixtures/asset-history";
-import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
+import { mockMobileViewport } from "@tests/mock-viewport";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
@@ -173,4 +179,33 @@ it("adds History alongside existing owner sections", () => {
     screen.getByRole("link", { name: "History" }).getAttribute("href")
   ).toBe("/estates/estate/assets/pump/history");
   screen.getByRole("link", { name: "Records" });
+});
+
+it("shows each asset as a linked list item on a phone", async () => {
+  const resize = mockMobileViewport();
+  vi.mocked(api.GET).mockResolvedValue({
+    data: {
+      items: [historyAsset, { ...historyAsset, id: "fan", name: "Fan" }],
+      nextCursor: null,
+    },
+    response: new Response(),
+  } as never);
+  renderWithProviders(
+    <HistoryAssetList
+      estateId="estate"
+      filters={{}}
+      onFiltersChange={vi.fn()}
+    />
+  );
+  const list = within(await screen.findByRole("list", { name: "Assets" }));
+  const items = list.getAllByRole("listitem");
+  expect(items).toHaveLength(2);
+  expect(list.getAllByRole("separator")).toHaveLength(1);
+  const link = within(items[0]).getByRole("link");
+  expect(link.getAttribute("href")).toBe("/estates/estate/assets/pump");
+  within(link).getByText("Water pump");
+  within(link).getByText("E-A0001 · PUMP · Block A › Pump room");
+  within(link).getByText("Active");
+  expect(screen.queryByRole("table")).toBeNull();
+  resize(false);
 });

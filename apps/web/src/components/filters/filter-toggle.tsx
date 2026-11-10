@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import { ListFilter } from "lucide-react";
 
 /**
@@ -19,6 +20,8 @@ export function FilterToggle({
   controls,
   onToggle,
 }: FilterToggleProps) {
+  // Icon-only on mobile; the aria-label keeps the name.
+  const mobile = useIsMobile();
   return (
     <Button
       aria-controls={controls}
@@ -27,11 +30,12 @@ export function FilterToggle({
         activeCount > 0 ? `Filters, ${activeCount} active` : "Filters"
       }
       onClick={onToggle}
+      size={mobile ? "icon" : "default"}
       type="button"
       variant="outline"
     >
       <ListFilter aria-hidden="true" />
-      Filters
+      {mobile ? null : "Filters"}
       {activeCount > 0 ? (
         <Badge aria-hidden="true" variant="secondary">
           {activeCount}

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { act, fireEvent } from "@testing-library/react";
 import { residentEstateAccess, unassignedAccess } from "@tests/fixtures/access";
+import { intersect } from "@tests/intersection";
 import {
   chooseOption,
   renderWithProviders,
@@ -772,16 +773,24 @@ it.each([true, false])(
     list.getByText(filename);
     list.getByText("Invoice");
     expect(list.queryByText("1,234 bytes")).toBeNull();
-    list.getByRole("button", { name: `Download ${filename}` });
-    expect(
-      list.queryByRole("button", { name: `Delete ${filename}` }) !== null
-    ).toBe(canDelete);
-    expect(
-      list.queryByRole("button", { name: `Work-order link for ${filename}` })
-    ).toBeNull();
+    list.getByRole("listitem");
+    if (canDelete) {
+      fireEvent.click(
+        list.getByRole("button", { name: `Actions for ${filename}` })
+      );
+      await screen.findByRole("menuitem", { name: "Download" });
+      expect(
+        screen.queryByRole("menuitem", { name: "Work-order link" })
+      ).toBeNull();
+    } else {
+      list.getByRole("button", { name: `Download ${filename}` });
+      expect(
+        list.queryByRole("button", { name: `Actions for ${filename}` })
+      ).toBeNull();
+    }
     expect(screen.queryByRole("table")).toBeNull();
     if (canDelete) {
-      fireEvent.click(list.getByRole("button", { name: `Delete ${filename}` }));
+      fireEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
       const dialog = within(
         await screen.findByRole("dialog", { name: "Delete file" })
       );
@@ -789,13 +798,20 @@ it.each([true, false])(
       fireEvent.click(dialog.getByRole("button", { name: "Cancel" }));
       expect(apiDelete).not.toHaveBeenCalled();
     }
-    fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+    // Phones scroll instead of paging: the next page loads into the list.
+    expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+    intersect();
     await waitFor(() =>
-      expect(router.state.location.search).toMatchObject({
-        filename: "Invoice",
-        cursor: "more-documents",
-      })
+      expect(
+        apiGet.mock.calls.some(
+          ([path, options]) =>
+            path === documentsPath &&
+            JSON.stringify(options).includes('"cursor":"more-documents"') &&
+            JSON.stringify(options).includes('"filename":"Invoice"')
+        )
+      ).toBe(true)
     );
+    expect(router.state.location.search).not.toHaveProperty("cursor");
   }
 );
 it("shows the Documents table without a Size column or size cells", async () => {

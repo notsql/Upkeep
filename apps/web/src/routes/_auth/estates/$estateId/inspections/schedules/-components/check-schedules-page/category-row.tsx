@@ -1,6 +1,21 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@proj/ui/components/dropdown-menu";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemSeparator,
+  ItemTitle,
+} from "@proj/ui/components/item";
 import { TableCell, TableHead, TableRow } from "@proj/ui/components/table";
+import { EllipsisVertical } from "lucide-react";
 import { useCallback } from "react";
 import type { EstateAssetCategory } from "@/lib/asset-categories";
 import { IntervalBadge } from "@/routes/_auth/estates/$estateId/inspections/schedules/-components/check-schedules-page/interval-badge";
@@ -87,5 +102,72 @@ export function CategoryRow({
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+/** The phone view of one equipment type (mobile list items). */
+export function CategoryItem({
+  category,
+  disabled,
+  first,
+  onToggleFlag,
+  onEditInterval,
+}: {
+  category: EstateAssetCategory;
+  disabled: boolean;
+  first: boolean;
+  onToggleFlag: (category: EstateAssetCategory) => void;
+  onEditInterval: (category: EstateAssetCategory) => void;
+}) {
+  const toggleFlag = useCallback(
+    () => onToggleFlag(category),
+    [category, onToggleFlag]
+  );
+  const editInterval = useCallback(
+    () => onEditInterval(category),
+    [category, onEditInterval]
+  );
+  const assets = `${category.activeAssetCount} ${category.activeAssetCount === 1 ? "asset" : "assets"}`;
+  const checks = `Regular checks ${category.failsSilently ? "on" : "off"}`;
+  return (
+    <li>
+      {first ? null : <ItemSeparator className="my-0" />}
+      <Item size="sm">
+        <ItemContent className="min-w-0">
+          <ItemTitle className="line-clamp-none [overflow-wrap:anywhere]">
+            {category.label}
+          </ItemTitle>
+          <ItemDescription className="text-xs">{`${assets} · ${checks}`}</ItemDescription>
+          <ItemDescription className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+            <IntervalBadge interval={category.serviceInterval} />
+            <span>{lastChanged(category)}</span>
+          </ItemDescription>
+        </ItemContent>
+        <ItemActions>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={`Actions for ${category.label}`}
+                  disabled={disabled}
+                  size="icon"
+                  variant="ghost"
+                />
+              }
+            >
+              <EllipsisVertical aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={editInterval}>
+                Change how often
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={toggleFlag}>
+                {category.failsSilently ? "Turn off checks" : "Turn on checks"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </ItemActions>
+      </Item>
+    </li>
   );
 }

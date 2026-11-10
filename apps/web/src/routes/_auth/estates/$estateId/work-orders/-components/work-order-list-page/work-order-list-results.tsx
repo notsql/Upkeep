@@ -1,7 +1,10 @@
+import type { components } from "@proj/api/schema";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
-import type { useWorkOrderList, WorkOrderListSearch } from "@/lib/work-orders";
+import type { PagedList } from "@/lib/infinite-list";
+import type { WorkOrderListSearch } from "@/lib/work-orders";
 import { WorkOrderEmptyState } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-empty-state";
 import { WorkOrderTable } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-table";
 
@@ -29,7 +32,7 @@ export function WorkOrderListResults({
   onPrevious: () => void;
   onRetry: () => void;
   onSort: (column: NonNullable<WorkOrderListSearch["sortBy"]>) => void;
-  orders: ReturnType<typeof useWorkOrderList>;
+  orders: PagedList<components["schemas"]["WorkOrderPageResponse"]>;
   sortBy: NonNullable<WorkOrderListSearch["sortBy"]>;
 }) {
   return (
@@ -61,17 +64,21 @@ export function WorkOrderListResults({
               sortBy={sortBy}
             />
           )}
-          <Pagination
-            canNext={!!orders.data.nextCursor}
-            canPrevious={canPrevious}
-            disabled={orders.isPlaceholderData}
-            label="Work order pages"
-            onNext={onNext}
-            onPrevious={onPrevious}
-            summary={`${orders.data.items.length} ${
-              orders.data.items.length === 1 ? "work order" : "work orders"
-            } on this page`}
-          />
+          {orders.more ? (
+            <LoadMore {...orders.more} />
+          ) : (
+            <Pagination
+              canNext={!!orders.data.nextCursor}
+              canPrevious={canPrevious}
+              disabled={orders.isPlaceholderData}
+              label="Work order pages"
+              onNext={onNext}
+              onPrevious={onPrevious}
+              summary={`${orders.data.items.length} ${
+                orders.data.items.length === 1 ? "work order" : "work orders"
+              } on this page`}
+            />
+          )}
         </>
       ) : null}
     </>

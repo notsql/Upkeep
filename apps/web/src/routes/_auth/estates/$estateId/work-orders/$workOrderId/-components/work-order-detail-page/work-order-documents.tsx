@@ -1,5 +1,4 @@
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import {
   Table,
   TableBody,
@@ -9,17 +8,21 @@ import {
 } from "@proj/ui/components/table";
 import { Files, FileText } from "lucide-react";
 import { useCallback, useState } from "react";
-import { SectionHeading } from "@/components/page/section-heading";
+import { PageSection } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { type EstateDocument, useDownloadDocument } from "@/lib/documents";
+import { useMobile } from "@/lib/use-mobile";
 import {
   useWorkOrderDocumentAccess,
   useWorkOrderDocuments,
 } from "@/lib/work-order-documents";
 
-import { AttachmentRow } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/attachment-row";
+import {
+  AttachmentItem,
+  AttachmentRow,
+} from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/attachment-row";
 
 export function WorkOrderDocuments({
   estateId,
@@ -29,6 +32,7 @@ export function WorkOrderDocuments({
   workOrderId: string;
 }) {
   const access = useWorkOrderDocumentAccess(estateId);
+  const mobile = useMobile();
   const [cursor, setCursor] = useState<string>();
   const documents = useWorkOrderDocuments(estateId, workOrderId, cursor);
   const download = useDownloadDocument(estateId);
@@ -46,62 +50,72 @@ export function WorkOrderDocuments({
     return null;
   }
   return (
-    <Card>
-      <CardContent className="min-w-0 space-y-4">
-        <SectionHeading icon={Files}>Documents</SectionHeading>
-        {documents.isPending ? (
-          <LoadingState label="Loading documents…" variant="table" />
+    <PageSection icon={Files} title="Documents">
+      {documents.isPending ? (
+        <LoadingState label="Loading documents…" variant="table" />
+      ) : null}
+      {documents.isError ? (
+        <ErrorState
+          message="Couldn't load documents. Try again."
+          onRetry={retry}
+          retryLabel="Retry documents"
+        />
+      ) : null}
+      {download.isError ? <p role="alert">{download.error.message}</p> : null}
+      {!documents.isError && documents.data?.items.length === 0 ? (
+        <EmptyState
+          description="Linked documents appear here"
+          icon={FileText}
+          title="No documents yet"
+        />
+      ) : null}
+      {!documents.isError && documents.data?.items.length && mobile ? (
+        <ul aria-label="Documents" className="flex min-w-0 flex-col">
+          {documents.data.items.map((document, index) => (
+            <AttachmentItem
+              document={document}
+              first={index === 0}
+              key={document.id}
+              onDownload={downloadDocument}
+              pending={download.isPending}
+            />
+          ))}
+        </ul>
+      ) : null}
+      {!(documents.isError || mobile) && documents.data?.items.length ? (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Filename</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Uploaded</TableHead>
+              <TableHead>File</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.data.items.map((document) => (
+              <AttachmentRow
+                document={document}
+                key={document.id}
+                onDownload={downloadDocument}
+                pending={download.isPending}
+              />
+            ))}
+          </TableBody>
+        </Table>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        {cursor ? (
+          <Button onClick={first} variant="outline">
+            First document page
+          </Button>
         ) : null}
-        {documents.isError ? (
-          <ErrorState
-            message="Couldn't load documents. Try again."
-            onRetry={retry}
-            retryLabel="Retry documents"
-          />
+        {documents.data?.nextCursor ? (
+          <Button onClick={next} variant="outline">
+            Next documents
+          </Button>
         ) : null}
-        {download.isError ? <p role="alert">{download.error.message}</p> : null}
-        {!documents.isError && documents.data?.items.length === 0 ? (
-          <EmptyState
-            description="Linked documents appear here"
-            icon={FileText}
-            title="No documents yet"
-          />
-        ) : null}
-        {!documents.isError && documents.data?.items.length ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Filename</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Uploaded</TableHead>
-                <TableHead>File</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.data.items.map((document) => (
-                <AttachmentRow
-                  document={document}
-                  key={document.id}
-                  onDownload={downloadDocument}
-                  pending={download.isPending}
-                />
-              ))}
-            </TableBody>
-          </Table>
-        ) : null}
-        <div className="flex flex-wrap gap-2">
-          {cursor ? (
-            <Button onClick={first} variant="outline">
-              First document page
-            </Button>
-          ) : null}
-          {documents.data?.nextCursor ? (
-            <Button onClick={next} variant="outline">
-              Next documents
-            </Button>
-          ) : null}
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+    </PageSection>
   );
 }

@@ -89,6 +89,7 @@ export function CouncilPage({
               ) : null
             }
             icon={Users}
+            inlineActions
             title={PEOPLE_TITLE}
           />
           <PeopleViews estateId={estateId} permission={permission} />

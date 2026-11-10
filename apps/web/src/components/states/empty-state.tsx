@@ -6,6 +6,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@proj/ui/components/empty";
+import { cn } from "@proj/ui/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -18,21 +19,33 @@ import type { ReactNode } from "react";
  *
  * Inside a Card's content it drops its border so it never reads as a
  * card-in-a-card.
+ *
+ * `fill` is for a list page whose main content is this empty state: below
+ * `md` it drops the border and takes the rest of the screen under the page
+ * header, clear of the bottom navigation, content centred. Desktop is
+ * unchanged. Leave it off for empty states inside cards or sections.
  */
 export function EmptyState({
   title,
   icon: Icon,
   description,
   action,
+  fill = false,
 }: {
   title: string;
   icon?: LucideIcon;
   description?: ReactNode;
   action?: ReactNode;
+  fill?: boolean;
 }) {
   return (
     <Empty
-      className="gap-3 rounded-lg border border-solid px-6 py-10 in-data-[slot=card-content]:border-0 in-data-[slot=card-content]:py-6"
+      className={cn(
+        "gap-3 rounded-lg border border-solid px-6 py-10 in-data-[slot=card-content]:border-0 in-data-[slot=card-content]:py-6",
+        fill &&
+          "max-md:min-h-[calc(100dvh-20rem-env(safe-area-inset-bottom))] max-md:border-0"
+      )}
+      data-fill={fill ? "true" : undefined}
       role="status"
     >
       <EmptyHeader>

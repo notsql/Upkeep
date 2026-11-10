@@ -45,11 +45,13 @@ export function MemberFilters({
   onClear,
   id,
   open,
+  onOpenChange,
 }: {
   filter: MemberFilter;
   onClear: () => void;
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   roles: { value: string; label: string }[];
   onChange: (filter: MemberFilter) => void;
 }) {
@@ -68,6 +70,7 @@ export function MemberFilters({
       id={id}
       label="Filter members"
       onClear={onClear}
+      onOpenChange={onOpenChange}
       open={open}
       search={
         <Input

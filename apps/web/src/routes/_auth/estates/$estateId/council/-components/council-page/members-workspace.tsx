@@ -74,6 +74,7 @@ export function MembersWorkspace({
         }
         filters={{ activeCount, ...panel.toggleProps }}
         icon={Users}
+        inlineActions
         title={PEOPLE_TITLE}
       />
       <PeopleViews estateId={estateId} permission={permission} />

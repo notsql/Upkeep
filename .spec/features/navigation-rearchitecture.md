@@ -153,6 +153,8 @@ still redirect a `RESIDENT` membership to the resident area (existing
 - Active state: the item whose route prefixes the pathname is active
   (`aria-current="page"`); nested pages keep their section active. Exact match
   for Overview.
+- **Superseded by [mobile-bottom-navigation.md](mobile-bottom-navigation.md)**
+  (mobile now uses a bottom bar and section tabs, not the Sheet).
 - Mobile (<768px): the same sidebar opens as the existing `Sheet` from the
   header `SidebarTrigger`, closing on navigation. `EstateNavigation` and
   `components/estate-section-menu.tsx` are deleted.

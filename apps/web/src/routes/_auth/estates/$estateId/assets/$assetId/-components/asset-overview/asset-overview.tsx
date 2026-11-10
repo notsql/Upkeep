@@ -1,3 +1,5 @@
+import { Card, CardContent } from "@proj/ui/components/card";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { canOpenInspections } from "@/lib/estate-destinations";
@@ -35,6 +37,7 @@ export function AssetOverview({
   const estate = useEstate(estateId);
   const access = useAppAccess();
   const workOrders = useWorkOrderAccess(estateId);
+  const mobile = useIsMobile();
   if (!asset.data) {
     return null;
   }
@@ -103,7 +106,11 @@ export function AssetOverview({
         />
       ) : null}
       {permission?.canViewReadings ? (
-        <TrendsCard assetId={assetId} estateId={estateId} />
+        <Card size={mobile ? "sm" : "default"}>
+          <CardContent>
+            <TrendsCard assetId={assetId} estateId={estateId} />
+          </CardContent>
+        </Card>
       ) : null}
     </>
   );

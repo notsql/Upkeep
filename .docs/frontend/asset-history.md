@@ -5,7 +5,7 @@ Contract: [asset-history API](../api/asset-history.md). Route paths below are un
 
 | Route/folder | Behavior |
 | --- | --- |
-| `index.tsx`, `-components/history-asset-list.tsx` | Council directory at `/estates/$estateId/assets`; owners keep the register and inspection-only readers keep their existing list |
+| `index.tsx`, `-components/history-asset-list.tsx` | Council directory at `/estates/$estateId/assets`; owners keep the register and inspection-only readers keep their existing list. Desktop: table "Assets" (Reference, Name link, Category, Location, Status). Below 768px (`useMobile`): `ul aria-label="Assets"` of shadcn `Item size="sm"` rows divided by `ItemSeparator`, each item one link to the asset (labelled "<name> (<reference>)"): title name, muted line Reference · Category · Location, trailing secondary status `Badge` (Active / Out of use) |
 | `$assetId/_details/route.tsx` | Council profile root redirects with replacement to History; the History branch renders its outlet without starting a history query |
 | `$assetId/_details/history/index.tsx` | `/estates/$estateId/assets/$assetId/history`, title Asset history; validates date search before mounting the Council frame, filters and timeline |
 | `$assetId/_details/history/-components/` | Timeline, entry/details components, document dialog, read-only frame and `history-date-filter.tsx` |
@@ -17,7 +17,8 @@ History is an additional owner section; existing workflows remain.
 
 ## Directory and timeline
 
-The Council list uses shadcn Input, Select, Card, Table, Badge, Button and shared
+The Council list uses shadcn Input, Select, Table, Badge, Button (search/status row and table sit
+straight on the page, no cards) and shared
 loading/error/empty components. It calls GET `/estates/{estateId}/asset-history`.
 URL search holds `q`, `status`, `cursor`. Search debounces 300 ms; search/status
 changes reset paging. Next page retains filters, First page clears the cursor,
@@ -30,8 +31,8 @@ summary information. No owner-only asset query supplies the Council frame.
 The History leaf route owns this frame so it shares the applied date bounds with
 the timeline and never starts a separate unfiltered query for a filtered URL.
 
-The timeline uses shadcn Card/Badge/Button and an ordered list named Recorded asset
-history. Every row has a type label, heading and time element. Dates retain date-only
+The timeline uses shadcn Badge/Button and a divided ordered list named Recorded asset
+history (rows, not cards); the date filter is a plain form, not a card. Every row has a type label, heading and time element. Dates retain date-only
 precision; instants display SGT. Documents explicitly label Upload date. Unknown
 costs/provider/downtime display Not recorded; zero stays zero. Completion corrections
 show Edited. Conditions show stored condition/notes and provenance, including
@@ -44,6 +45,13 @@ failure differ. Hidden document authority is explained separately. History state
 that older activity may not have been recorded.
 
 ## Date range
+
+The date form sits in a `FilterBar` (label "Filter history") behind a
+`FilterToggle` at the top right of the tab, opened with `useFilterPanel`: shut
+by default, open on desktop when the URL already has a range, and a bottom
+sheet titled "Filters" on mobile (see design-system.md). The toggle reads
+"Filters, 1 active" while either bound is applied. The Singapore-days hint
+lives inside the panel.
 
 History URL search holds optional `from`/`to` in strict `YYYY-MM-DD` form. The
 shadcn-based shared DatePicker fields are labelled From date and To date; Apply
@@ -103,3 +111,7 @@ Tests cover source chronology/provenance, paging/retry, native previews, lazy fi
 reads, focus/URL cleanup, scope/permission changes, Council search/pagination,
 navigation/parent guards, date validation/URL restoration, range pagination and
 observable refresh after source writes.
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of "Asset pages" history asset list (`useHistoryAssetFeed`, key `[userId, "asset-history", estateId, "feed", q, status]`); First page / Next page are hidden there.

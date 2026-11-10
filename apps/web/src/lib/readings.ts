@@ -262,7 +262,11 @@ export function readingFilterQuery(filters: ReadingSearch) {
   };
 }
 
-export function useEstateReadings(estateId: string, filters: ReadingSearch) {
+export function useEstateReadings(
+  estateId: string,
+  filters: ReadingSearch,
+  enabled = true
+) {
   const { userId, ready } = useEstateSession();
   const access = useAppAccess();
   const allowed = access.data?.estates.some(
@@ -270,7 +274,7 @@ export function useEstateReadings(estateId: string, filters: ReadingSearch) {
   );
   return useQuery({
     queryKey: [userId, "estate-readings", estateId, filters],
-    enabled: ready && !!allowed && !readingFilterError(filters),
+    enabled: ready && !!allowed && !readingFilterError(filters) && enabled,
     retry: false,
     placeholderData: (previous, query) =>
       query?.queryKey[0] === userId && query?.queryKey[2] === estateId
@@ -295,6 +299,48 @@ export function useEstateReadings(estateId: string, filters: ReadingSearch) {
       }
       return data;
     },
+  });
+}
+
+/** The same list as `useEstateReadings`, page after page, for phones. */
+export function useEstateReadingFeed(
+  estateId: string,
+  { page: _page, ...filters }: ReadingSearch,
+  enabled: boolean
+) {
+  const { userId, ready } = useEstateSession();
+  const access = useAppAccess();
+  const allowed = access.data?.estates.some(
+    (estate) => estate.estateId === estateId && estate.canViewReadings
+  );
+  return useInfiniteQuery({
+    queryKey: [userId, "estate-readings", estateId, "feed", filters],
+    enabled: ready && !!allowed && !readingFilterError(filters) && enabled,
+    retry: false,
+    initialPageParam: 0,
+    queryFn: async ({
+      pageParam,
+    }): Promise<components["schemas"]["EstateReadingPage"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/readings",
+        {
+          params: {
+            path: { estateId },
+            query: {
+              ...readingFilterQuery(filters),
+              page: pageParam,
+              size: READINGS_PAGE_SIZE,
+            },
+          },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    getNextPageParam: (page) =>
+      (page.page + 1) * page.size < page.totalItems ? page.page + 1 : undefined,
   });
 }
 

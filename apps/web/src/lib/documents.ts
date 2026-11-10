@@ -1,5 +1,10 @@
 import type { components, paths } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
@@ -35,12 +40,16 @@ export function useDocumentAccess(estateId: string) {
   };
 }
 
-export function useDocuments(estateId: string, filters: DocumentFilters) {
+export function useDocuments(
+  estateId: string,
+  filters: DocumentFilters,
+  enabled = true
+) {
   const { userId, ready } = useAuthenticatedSession();
   const access = useDocumentAccess(estateId);
   return useQuery({
     queryKey: [userId, "documents", estateId, filters],
-    enabled: ready && access.canView,
+    enabled: ready && access.canView && enabled,
     retry: false,
     queryFn: async ({ signal }) => {
       const { data, error } = await api.GET("/estates/{estateId}/documents", {
@@ -52,6 +61,39 @@ export function useDocuments(estateId: string, filters: DocumentFilters) {
       }
       return data;
     },
+  });
+}
+
+/** The same list as `useDocuments`, page after page, for phone widths. */
+export function useDocumentFeed(
+  estateId: string,
+  filters: Omit<DocumentFilters, "cursor">,
+  enabled: boolean
+) {
+  const { userId, ready } = useAuthenticatedSession();
+  const access = useDocumentAccess(estateId);
+  return useInfiniteQuery({
+    queryKey: [userId, "documents", estateId, "feed", filters],
+    enabled: ready && access.canView && enabled,
+    retry: false,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["DocumentPageResponse"]> => {
+      const { data, error } = await api.GET("/estates/{estateId}/documents", {
+        params: {
+          path: { estateId },
+          query: { ...filters, cursor: pageParam },
+        },
+        signal,
+      });
+      if (error || !data) {
+        throw documentError(error, "Couldn't load documents. Try again.");
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
 }
 

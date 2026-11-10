@@ -82,7 +82,7 @@ function ForecastFigures({ risk }: { risk: FailureRisk }) {
     <>
       <figure
         aria-label="Expected repairs"
-        className="grid gap-3"
+        className="grid gap-2"
         data-tone={tone.tone}
       >
         <div className="grid gap-0.5">
@@ -91,7 +91,7 @@ function ForecastFigures({ risk }: { risk: FailureRisk }) {
           </span>
           <p className="flex flex-wrap items-baseline gap-x-2">
             <span
-              className={cn("text-4xl font-semibold tabular-nums", tone.text)}
+              className={cn("text-2xl font-semibold tabular-nums", tone.text)}
             >
               {formatProbability(risk.probability90Days)}
             </span>
@@ -100,18 +100,18 @@ function ForecastFigures({ risk }: { risk: FailureRisk }) {
             </span>
           </p>
         </div>
-        <p className="bg-muted/50 flex flex-wrap items-baseline justify-between gap-x-3 rounded-lg px-3 py-2">
+        <p className="bg-muted/50 flex flex-wrap items-baseline justify-between gap-x-3 rounded-md px-2.5 py-1 text-xs">
           <span className="text-muted-foreground text-xs">
             Recommended check
           </span>
-          <span className="font-medium">
+          <span className="text-sm font-medium">
             {risk.recommendedTimeframe
               ? timeframeLabel[risk.recommendedTimeframe]
               : "—"}
           </span>
         </p>
       </figure>
-      <ul aria-label="Chance by horizon" className="grid grid-cols-3 gap-4">
+      <ul aria-label="Chance by horizon" className="grid grid-cols-3 gap-3">
         {HORIZONS.map(([label, key]) => (
           <li className="grid gap-1.5" key={key}>
             <span className="flex items-baseline justify-between gap-2">
@@ -158,7 +158,7 @@ export function AssetForecastCard({
           </SectionHeading>
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid gap-4 text-sm">
+      <CardContent className="grid gap-3 text-sm">
         {risk.isPending ? (
           <LoadingState label="Loading expected repairs…" rows={2} />
         ) : null}

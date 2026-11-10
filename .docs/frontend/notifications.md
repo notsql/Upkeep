@@ -49,11 +49,11 @@ Used by:
   Type badges: "Unusual readings", "Service due", "Repair expected"; the repair basis starts
   "Expected repair ·";
 - the asset page: `asset-overview/anomaly-alerts-section/anomaly-alerts-section.tsx`, a
-  `SectionCard` "Unusual readings" on pumps for owners and Managers (`estate.owned ||
+  `PageSection` "Unusual readings" (no outer card) on pumps for owners and Managers (`estate.owned ||
   canManageInvitationPermissions`), placed after the condition section. Each alert is a `Card`
   with `ConditionBadge`, an Open/Resolved `Badge`, the server's explanation, "Unusual from <t>
   to <t>", the next step (`UNUSUAL_READINGS_STEP`, while open and not yet responded to), the
-  summary and the actions. No scores are shown. Actions are locked on an inactive estate or retired asset. The card
+  summary and the actions. No scores are shown. Actions are locked on an inactive estate or retired asset. The section
   renders only with at least one alert or on a load error (`ErrorState`); while loading or with
   no alerts it renders nothing.
 
@@ -64,10 +64,15 @@ Used by:
 renders `-components/notification-settings-page/notification-settings-page.tsx` and
 `notification-settings-form.tsx`.
 
-- Entry: sidebar Administration › **Notification settings** (`BellRing`), between People & access
-  and Estate settings. `canOpenNotificationSettings(permission)` (`role === "MANAGER"`, which
-  includes owners) gates both the sidebar and the `_auth` route guard (`OWNER_GATED`).
-- A `Card` form: "How sure before we warn you (%)" whole-number input (51-100, saved as 0.51-1.00), "Days of notice
+- Entry: the **Notifications** tab of Estate settings (sidebar Administration › **Estate settings**,
+  which links here for a Manager who cannot edit the estate). `canOpenNotificationSettings(permission)`
+  (`role === "MANAGER"`, which includes owners) gates the tab, the sidebar entry and the `_auth`
+  route guard (`OWNER_GATED`).
+- `FormPage` titled "Estate settings" (`Building2`, no breadcrumbs, the notification description),
+  then `EstateSettingsViews` (`components/settings/estate-settings-views.tsx`): a `SubNav`
+  `nav aria-label="Settings views"` with **Details** (`/edit`, `canOpenEstateSettings`) and
+  **Notifications** (this page), each shown only to those who can open it; hidden when empty.
+- A form straight on the page (no card): "How sure before we warn you (%)" whole-number input (51-100, saved as 0.51-1.00), "Days of notice
   before a service is due" number input (0-365), "Notice before an expected repair" `Select` (30/60/90 days),
   each with a `FieldDescription`; invalid values show a `FieldError` and set `aria-invalid`.
   **Save settings** shows "Settings saved." (`role="status"`); a refused save shows a destructive
@@ -99,3 +104,7 @@ inspection page; `CHECK_FAILED` rows read "Crew found a problem with
 repair-predicted rows get "Send crew to inspect". The header bell now also
 shows for Crew. Type labels: "Please inspect", "Problem found". See
 [equipment-dispatch.md](equipment-dispatch.md).
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Notification pages (`useNotificationFeed`, offset pages, key `[...notificationsQueryKey(userId), "feed"]`).

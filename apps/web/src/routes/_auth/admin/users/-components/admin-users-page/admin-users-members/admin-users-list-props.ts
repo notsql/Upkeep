@@ -4,7 +4,7 @@ import type {
   Role,
 } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-user-types";
 
-/** What the member cards and the member table both need to draw a row. */
+/** What the member list and the member table both need to draw a row. */
 export interface AdminUsersListProps {
   onManage: (event: MouseEvent<HTMLButtonElement>) => void;
   onRoleChange: (membershipId: string, role: string) => void;

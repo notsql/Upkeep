@@ -20,6 +20,7 @@ export function WorkOrderEmptyState({
           </Button>
         }
         description="Try other filters"
+        fill
         icon={SearchX}
         title="No matching work orders"
       />
@@ -32,6 +33,7 @@ export function WorkOrderEmptyState({
           ? "Use Create to add the first work order"
           : "Saved work orders appear here"
       }
+      fill
       icon={Wrench}
       title="No work orders yet"
     />

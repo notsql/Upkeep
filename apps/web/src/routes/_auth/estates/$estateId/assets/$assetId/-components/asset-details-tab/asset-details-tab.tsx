@@ -1,9 +1,11 @@
 import { Button } from "@proj/ui/components/button";
+import { Separator } from "@proj/ui/components/separator";
 import { Link } from "@tanstack/react-router";
 import { ClipboardList, Pencil } from "lucide-react";
 import { useId } from "react";
+import { DetailList } from "@/components/page/detail-list";
 import {
-  SectionCard,
+  PageSection,
   sectionActionClassName,
 } from "@/components/page/section-card";
 import { SectionHeading } from "@/components/page/section-heading";
@@ -34,14 +36,14 @@ function AssetFacts({ asset }: { asset: Asset }) {
     ["Serial number", asset.serialNumber || NOT_RECORDED],
   ];
   return (
-    <dl className="[&_dt]:text-muted-foreground grid gap-4 sm:grid-cols-2 [&_dd]:font-medium [&_dd]:wrap-anywhere [&_dt]:mb-1 [&_dt]:text-sm">
+    <DetailList>
       {facts.map(([term, value]) => (
         <div key={term}>
           <dt>{term}</dt>
           <dd>{value}</dd>
         </div>
       ))}
-    </dl>
+    </DetailList>
   );
 }
 
@@ -82,7 +84,7 @@ export function AssetDetailsTab({
   const active = !asset.data.deactivatedAt;
   return (
     <>
-      <SectionCard
+      <PageSection
         actions={
           active ? (
             <Link
@@ -99,7 +101,8 @@ export function AssetDetailsTab({
         title="Details"
       >
         <AssetFacts asset={asset.data} />
-      </SectionCard>
+      </PageSection>
+      <Separator />
       <AssetRetirementPanel asset={asset.data} />
       {active ? <RetireZone onRetire={openConfirmation} /> : null}
       {confirming ? (

@@ -159,6 +159,10 @@ async function openHistory(search = "") {
 }
 
 function editDates(from: string, to: string) {
+  // The date fields sit behind the Filters button until it is pressed.
+  if (!screen.queryByRole("textbox", { name: "From date" })) {
+    fireEvent.click(screen.getByRole("button", { name: "Filters" }));
+  }
   fireEvent.change(screen.getByRole("textbox", { name: "From date" }), {
     target: { value: from },
   });
@@ -548,4 +552,22 @@ it("applying a previously loaded range restarts at page one instead of restoring
     screen.queryByRole("heading", { name: "Older March invoice uploaded" })
   ).toBeNull();
   screen.getByRole("button", { name: "Load more" });
+});
+
+it("keeps the date filters behind a Filters button until it is pressed", async () => {
+  await openHistory();
+  await screen.findByRole("heading", { name: "April invoice uploaded" });
+  expect(screen.queryByRole("textbox", { name: "From date" })).toBeNull();
+  expect(screen.queryByText(SINGAPORE)).toBeNull();
+  const toggle = screen.getByRole("button", { name: "Filters" });
+  expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  fireEvent.click(toggle);
+  await screen.findByRole("textbox", { name: "From date" });
+  screen.getByText(SINGAPORE);
+});
+
+it("marks the Filters button while a date range is applied", async () => {
+  await openHistory(marchSearch);
+  await screen.findByRole("heading", { name: "Condition assessed" });
+  screen.getByRole("button", { name: "Filters, 1 active" });
 });

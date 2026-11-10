@@ -1,5 +1,14 @@
 import { Badge } from "@proj/ui/components/badge";
 import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemSeparator,
+  ItemTitle,
+} from "@proj/ui/components/item";
+import {
   Table,
   TableBody,
   TableCell,
@@ -16,6 +25,7 @@ import { Fragment, useId } from "react";
 import { type DeviceMetric, deviceMetrics } from "@/lib/devices";
 import { formatDateTime, formatMetricNumber, formatTime } from "@/lib/format";
 import { flagLabel, type ReadingFlag, type ReadingGroup } from "@/lib/readings";
+import { useMobile } from "@/lib/use-mobile";
 
 type GroupedMetric = ReadingGroup["metrics"][number];
 
@@ -176,6 +186,73 @@ function GroupRow({
   );
 }
 
+function GroupItem({
+  group,
+  metrics,
+  showDevice,
+}: {
+  group: ReadingGroup;
+  metrics: DeviceMetric[];
+  showDevice: boolean;
+}) {
+  const anomaly = anomalyFlag(group);
+  const readings = group.metrics.filter((reading) =>
+    metrics.includes(reading.metric)
+  );
+  const flagged = readings.flatMap((reading) =>
+    reading.flags
+      .filter((flag) => flag.type !== "ANOMALY")
+      .map((flag) => ({ flag, reading }))
+  );
+  return (
+    <Item className="flex-nowrap items-start" role="listitem" size="sm">
+      <ItemContent className="min-w-0">
+        <ItemTitle className="line-clamp-none flex-wrap gap-x-3 gap-y-0.5">
+          {readings.map((reading) => (
+            <span className="whitespace-nowrap" key={reading.readingId}>
+              <span className="font-normal">
+                {deviceMetrics[reading.metric].name}
+              </span>{" "}
+              <span className="font-semibold tabular-nums">
+                {formatMetricNumber(
+                  reading.metric,
+                  reading.valueText ?? reading.value
+                )}{" "}
+                {reading.unit}
+              </span>
+            </span>
+          ))}
+        </ItemTitle>
+        <ItemDescription className="text-xs">
+          <time dateTime={group.measuredAt}>
+            {formatDateTime(group.measuredAt)}
+          </time>{" "}
+          · <span>{sourceLabel(group, showDevice)}</span>
+        </ItemDescription>
+      </ItemContent>
+      {anomaly || flagged.length ? (
+        <ItemActions className="max-w-[45%] flex-col items-end gap-1">
+          {anomaly ? (
+            <Badge
+              className="h-auto text-right whitespace-normal"
+              variant="destructive"
+            >
+              {flagLabel(anomaly, "")}
+            </Badge>
+          ) : null}
+          {flagged.map(({ flag, reading }) => (
+            <CellFlag
+              flag={flag}
+              key={`${reading.readingId}-${flag.type}`}
+              unit={reading.unit}
+            />
+          ))}
+        </ItemActions>
+      ) : null}
+    </Item>
+  );
+}
+
 /** One row per (time, source, device); a column per metric present. */
 export function GroupedReadingsTable({
   groups,
@@ -203,6 +280,23 @@ export function GroupedReadingsTable({
   // Source says nothing when every row comes from the one device.
   const showSource =
     showDevice || groups.some((group) => group.source === "MANUAL");
+  const mobile = useMobile();
+  if (mobile) {
+    return (
+      <ItemGroup aria-busy={refreshing} aria-label={label} className="gap-0">
+        {groups.map((group, index) => (
+          <Fragment key={groupKey(group)}>
+            {index > 0 ? <ItemSeparator className="my-0" /> : null}
+            <GroupItem
+              group={group}
+              metrics={metrics}
+              showDevice={showDevice}
+            />
+          </Fragment>
+        ))}
+      </ItemGroup>
+    );
+  }
   const columns = metrics.length + (showSource ? 3 : 2);
   let previousDay: string | undefined;
   return (

@@ -4,6 +4,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import { cn } from "@proj/ui/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
@@ -22,8 +23,14 @@ export function SummaryCard({
   warning?: boolean;
   children: ReactNode;
 }) {
+  const mobile = useIsMobile();
   return (
-    <Card aria-label={title} className="h-full gap-3" role="region">
+    <Card
+      aria-label={title}
+      className="h-full gap-3"
+      role="region"
+      size={mobile ? "sm" : "default"}
+    >
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <CardTitle>
           <h2 className="text-sm">{title}</h2>
@@ -41,7 +48,9 @@ export function SummaryCard({
         </span>
       </CardHeader>
       <CardContent className="grid gap-2">
-        <p className="text-3xl font-semibold tabular-nums">{value}</p>
+        <p className="text-2xl font-semibold tabular-nums md:text-3xl">
+          {value}
+        </p>
         {children}
       </CardContent>
     </Card>

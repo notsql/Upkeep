@@ -1,9 +1,9 @@
 import { Alert, AlertDescription, AlertTitle } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
+import { Separator } from "@proj/ui/components/separator";
 import { CircleCheck } from "lucide-react";
 import { useCallback, useState } from "react";
-import { SectionHeading } from "@/components/page/section-heading";
+import { PageSection } from "@/components/page/section-card";
 import { CompletionOutcome } from "@/components/work-orders/work-order-completion";
 import {
   useChangeWorkOrderStatus,
@@ -106,29 +106,29 @@ export function WorkOrderProgress({
         </Alert>
       ) : null}
       {order.completion ? (
-        <Card>
-          <CardHeader>
-            <SectionHeading icon={CircleCheck}>
-              Completion outcome
-            </SectionHeading>
-            {canUpdate ? (
-              <Button
-                className="w-fit"
-                onClick={openCompletion}
-                variant="outline"
-              >
-                Edit outcome
-              </Button>
-            ) : null}
-          </CardHeader>
-          <CardContent>
+        <>
+          <PageSection
+            actions={
+              canUpdate ? (
+                <Button onClick={openCompletion} variant="outline">
+                  Edit outcome
+                </Button>
+              ) : null
+            }
+            icon={CircleCheck}
+            title="Completion outcome"
+          >
             <CompletionOutcome completion={order.completion} />
-          </CardContent>
-        </Card>
+          </PageSection>
+          <Separator />
+        </>
       ) : null}
       <StatusHistory history={history} onRetry={retryHistory} />
       {order.completion ? (
-        <OutcomeCorrections onRetry={retryRevisions} revisions={revisions} />
+        <>
+          <Separator />
+          <OutcomeCorrections onRetry={retryRevisions} revisions={revisions} />
+        </>
       ) : null}
       {completing && canUpdate ? (
         <CompletionDialog

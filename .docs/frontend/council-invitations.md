@@ -22,6 +22,9 @@ Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
   `canInviteMembers`, the **Invite member** trigger (`UserPlus`) in the
   `actions` slot - the last action, where Create sits on other list pages. It
   is labelled "Invite member", not "Create", because it sends an invitation.
+  On mobile the trigger is icon-only (`size="icon"`, `aria-label="Invite
+  member"`, like `CreateButton`), and the header passes `inlineActions` so
+  Filters and Invite sit on the title's row instead of wrapping below it.
   The trigger opens a shadcn Dialog titled "Invite member" with the
   email/role form.
 - `PeopleViews` (`src/components/people/people-views.tsx`), a `SubNav`
@@ -37,10 +40,12 @@ Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
   trigger `w-full`). Filtering is client-side; it applies to whichever view is
   shown. Filter state is per page mount (switching views resets it); the API
   has no server-side filters.
-- Members view: card "Members" with an "N active" success Badge (no icon - the header
-  has Users), then the paged Table (Name, Email, Role, Status, Actions). Role
-  shows exactly one Badge: "Owner" (hint "Full Manager access plus
-  ownership") for the estate owner, otherwise the preset label or custom role
+- Members view: `PageSection` "Members" (no card; description says each member has one role; no count
+  badge - the list is the count), then the paged Table (Name, Email (muted,
+  truncated), Role, Actions). There is no Status column: every listed member is
+  active (invitations live on Waiting to join). Role shows exactly one Badge:
+  "Owner" (a focusable shadcn `Tooltip` trigger, tooltip "Full Manager access
+  plus ownership") for the estate owner, otherwise the preset label or custom role
   name. Loading is `LoadingState` "Loading members…" (table); a failed roster
   or estate read is `ErrorState` + Retry; no roster is `EmptyState` "No members
   yet" (`Users` icon); filters with no result show `EmptyState` "No matching
@@ -48,7 +53,7 @@ Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
   FilterBar's own ghost Clear filters.
 - Waiting to join view (and the whole page body for delegated inviters, whose
   page also has the "People & access" header and the "People views" tabs):
-  card "Pending invitations" (`Mail` icon) with an "N pending" info Badge; each row
+  `PageSection` "Pending invitations" (`Mail` icon, no card) with an "N pending" info Badge; each row
   shows email, role Badge, delivery and expiry, and a ghost **Revoke** button
   (accessible name "Cancel invitation for <email>") that confirms in a
   `ConfirmDialog` ("Cancel invitation?", destructive "Cancel invitation",
@@ -58,7 +63,7 @@ Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
   because the API has no resend endpoint.
 - Delegated inviters (no `canManageInvitationPermissions`) get
   `ListPageHeader` "Invitations" (Users icon, Invite member action), no
-  SubNav or filters, and the pending-invitations card on both routes.
+  SubNav or filters, and the pending-invitations section on both routes.
 - The access check before render shows `LoadingState` "Loading estate
   access…"; a failed check is `ErrorState` with "Retry access"; no permission
   is a destructive Alert.
@@ -127,12 +132,23 @@ previous user's cache. Spring rechecks authority independently of stale UI.
 CouncilPage renders members in a shadcn Table captioned Estate members with
 Name, Email, Role/Owner and Actions columns. Existing invitation forms, role
 editing, removal/ownership confirmations, per-row pending/errors and self/owner
-protections remain. Long text wraps; horizontal scrolling is confined to the
-member table on small screens. No API or permission change accompanies this UI.
+protections remain: for the owner and for yourself the role picker is shown
+disabled with a short muted hint beneath it ("Transfer ownership first to
+change this." / "Another Manager can change your role."), and no remove
+button. Names and emails truncate rather than wrap; horizontal scrolling is confined to the
+member table. Below 768px (`useMobile`) the same page of members renders as a
+flat `ListRows` "Estate members" of `ListRow`s (design-system "List rows"; no
+card): tile = the name's initial; title = name (truncated) with the single role
+Badge (Owner with its tooltip, else the role name); meta = the muted email, truncated;
+trailing only an "Actions for {name}" `DropdownMenu` (Transfer ownership to
+{name} when offered; "Remove access", labelled "Remove access for {email}").
+The role picker ("Role for {name}") and saving/error status sit under the
+title; confirmations are the same dialogs. No API or permission change accompanies this UI.
 
 `estate-members-table.tsx` paginates the existing user-scoped member array at 20 rows,
 with the shared `Pagination` (nav "Member pages", outline "Previous page" /
-"Next page", summary "1–20 of 45 members"). A shorter refreshed roster
+"Next page", summary "1–20 of 45 members"); the whole pagination bar is hidden when the
+roster fits on one page. A shorter refreshed roster
 clamps the current page. The table is keyed by estate and session user so
 context changes reset pagination. Failed roster reads hide stale member rows.
 The existing useEstateMembers endpoint/query key and mutation invalidations
@@ -204,12 +220,16 @@ role/roster/offer/access queries; see [estate-roles.md](estate-roles.md).
 ## Icons and copy
 
 PageHeader `icon={Users}` (sidebar People & access), description "Members and
-invitations · <estate>". Members CardTitle has a Users icon, Pending
+invitations · <estate>". The count Badges sit in each section's actions slot. Members has no icon, Pending
 invitations a Mail icon (description "Not yet accepted"). Empty: "No members
 yet" ("Invited members appear here"), "No pending invitations" ("Sent
 invitations appear here"). The access-error "Retry access" is `outline`.
 
-Colour: the tones come from `invitationTone`. Pending counts are info, and
-"Active" (the member count and the Status column) is success. Role-name Badges
+Colour: the tones come from `invitationTone`. Pending counts are info; the members list shows no status or count badge.
+Role-name Badges
 stay secondary. "No pending invitations" uses the `Mail` icon, and both "No
 matching …" empty states use `SearchX`.
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Member pages: the client-side member list grows 20 at a time instead of paging.

@@ -1,4 +1,12 @@
-import { Card, CardContent } from "@proj/ui/components/card";
+import { Badge } from "@proj/ui/components/badge";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemSeparator,
+  ItemTitle,
+} from "@proj/ui/components/item";
 import {
   Table,
   TableBody,
@@ -25,23 +33,38 @@ export function ImportHistory({
   }
   if (mobile) {
     return (
-      <ul aria-label="Import history" className="space-y-3">
-        {items.map((batch) => (
+      <ul aria-label="Import history" className="flex flex-col">
+        {items.map((batch, index) => (
           <li key={batch.id}>
-            <Card>
-              <CardContent>
+            {index > 0 ? <ItemSeparator className="my-0" /> : null}
+            <Item
+              render={
                 <Link
                   params={{ estateId, batchId: batch.id }}
                   to="/estates/$estateId/readings/imports/$batchId"
-                >
+                />
+              }
+              size="sm"
+            >
+              <ItemContent className="min-w-0">
+                <ItemTitle className="[overflow-wrap:anywhere]">
                   {batch.sourceLabel}
-                </Link>
-                <p>
-                  {importStatusLabels[batch.status]} · {batch.importedRows}{" "}
-                  imported
-                </p>
-              </CardContent>
-            </Card>
+                </ItemTitle>
+                <ItemDescription>
+                  {new Date(batch.createdAt).toLocaleString()} ·{" "}
+                  {batch.importedRows} readings imported
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Badge
+                  variant={
+                    batch.status === "REVERTED" ? "outline" : "secondary"
+                  }
+                >
+                  {importStatusLabels[batch.status]}
+                </Badge>
+              </ItemActions>
+            </Item>
           </li>
         ))}
       </ul>

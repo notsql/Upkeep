@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { ClipboardList, ListChecks, Plus } from "lucide-react";
 import {
-  SectionCard,
+  PageSection,
   sectionActionClassName,
 } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
 import { InspectionHistoryRecordsTable } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-records-table";
 import { useInspectionHistoryPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/use-inspection-history-page";
@@ -25,7 +26,9 @@ export function InspectionHistoryPage({
     active,
     asset,
     cursors,
+    feed,
     history,
+    mobile,
     next,
     nextCursor,
     previous,
@@ -34,7 +37,7 @@ export function InspectionHistoryPage({
   } = useInspectionHistoryPage(estateId, assetId);
 
   return (
-    <SectionCard
+    <PageSection
       actions={
         canCreate && active ? (
           <Link
@@ -47,17 +50,18 @@ export function InspectionHistoryPage({
           </Link>
         ) : undefined
       }
-      className="max-w-full min-w-0"
       icon={ListChecks}
       title="Inspection records"
     >
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {history.isPending ? (
           <LoadingState label="Loading inspection records…" rows={2} />
         ) : null}
         {history.isError ? (
           <ErrorState
-            message={history.error.message}
+            message={
+              history.error?.message ?? "Inspection history is unavailable."
+            }
             onRetry={retry}
             retryLabel="Retry inspections"
           />
@@ -82,7 +86,10 @@ export function InspectionHistoryPage({
             is inactive or retired.
           </p>
         ) : null}
-        {history.data?.items.length || cursors.length > 1 ? (
+        {mobile && history.data?.items.length ? (
+          <LoadMore {...feed.more} />
+        ) : null}
+        {!mobile && (history.data?.items.length || cursors.length > 1) ? (
           <Pagination
             canNext={Boolean(nextCursor)}
             canPrevious={cursors.length > 1}
@@ -93,6 +100,6 @@ export function InspectionHistoryPage({
           />
         ) : null}
       </div>
-    </SectionCard>
+    </PageSection>
   );
 }

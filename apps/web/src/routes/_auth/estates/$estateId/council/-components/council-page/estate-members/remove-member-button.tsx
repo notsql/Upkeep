@@ -4,6 +4,36 @@ import { useRemoveEstateMember } from "@/lib/council-invitations";
 import { useEstateSession } from "@/lib/estates";
 import { AccessConfirmation } from "@/routes/_auth/estates/$estateId/council/-components/council-page/access-confirmation";
 
+/** Asks before removing a member's access to the estate. */
+export function RemoveMemberConfirmation({
+  estateId,
+  memberId,
+  email,
+  onClose,
+}: {
+  estateId: string;
+  memberId: string;
+  email: string;
+  onClose: () => void;
+}) {
+  const removal = useRemoveEstateMember(estateId);
+  const confirm = useCallback(
+    () => removal.mutateAsync(memberId),
+    [memberId, removal]
+  );
+  return (
+    <AccessConfirmation
+      confirmLabel="Remove access"
+      description="They will lose access and invitation permission for this estate. Outstanding invitations they sent will be cancelled. Their account, access to other estates, and members who already accepted their invitations will remain."
+      email={email}
+      keepLabel="Keep access"
+      onClose={onClose}
+      onConfirm={confirm}
+      title="Remove estate access?"
+    />
+  );
+}
+
 export function RemoveMemberButton({
   estateId,
   memberId,
@@ -14,14 +44,9 @@ export function RemoveMemberButton({
   email: string;
 }) {
   const { userId } = useEstateSession();
-  const removal = useRemoveEstateMember(estateId);
   const [open, setOpen] = useState(false);
   const show = useCallback(() => setOpen(true), []);
   const close = useCallback(() => setOpen(false), []);
-  const confirm = useCallback(
-    () => removal.mutateAsync(memberId),
-    [memberId, removal]
-  );
   if (userId === memberId) {
     return null;
   }
@@ -35,14 +60,11 @@ export function RemoveMemberButton({
         Remove access
       </Button>
       {open ? (
-        <AccessConfirmation
-          confirmLabel="Remove access"
-          description="They will lose access and invitation permission for this estate. Outstanding invitations they sent will be cancelled. Their account, access to other estates, and members who already accepted their invitations will remain."
+        <RemoveMemberConfirmation
           email={email}
-          keepLabel="Keep access"
+          estateId={estateId}
+          memberId={memberId}
           onClose={close}
-          onConfirm={confirm}
-          title="Remove estate access?"
         />
       ) : null}
     </>

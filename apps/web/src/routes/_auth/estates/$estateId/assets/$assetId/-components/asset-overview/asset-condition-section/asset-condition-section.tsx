@@ -100,51 +100,52 @@ export function AssetConditionSection({
           ) : undefined
         }
         className="h-full"
-        contentClassName="flex flex-1 flex-col gap-4"
         icon={HeartPulse}
         title="Condition"
       >
-        {assessments.isPending ? (
-          <LoadingState label="Loading condition…" rows={2} />
-        ) : null}
-        {assessments.error ? (
-          <ErrorState message={assessments.error.message} onRetry={retry} />
-        ) : null}
-        {assessments.data ? <CurrentCondition current={current} /> : null}
-        {recording && canRecord ? (
-          <DialogContent
-            className="sm:max-w-lg"
-            showCloseButton={!recordAssessment.isPending}
-          >
-            <DialogHeader>
-              <DialogTitle>Record condition check</DialogTitle>
-              <DialogDescription>
-                Record the condition, assessment date and notes.
-              </DialogDescription>
-            </DialogHeader>
-            <AssessmentForm onCancel={cancel} onSave={save} />
-          </DialogContent>
-        ) : null}
-        {assessments.data && assessments.data.length > 1 ? (
-          <Link
-            className={buttonVariants({
-              className: "mt-auto -ml-2.5 self-start",
-              size: "sm",
-              variant: "link",
-            })}
-            params={{ estateId, assetId }}
-            to="/estates/$estateId/assets/$assetId/condition"
-          >
-            View history ({assessments.data.length})
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        ) : null}
-        {upcoming ? (
-          <>
-            <Separator />
-            {upcoming}
-          </>
-        ) : null}
+        <div className="flex flex-col gap-4">
+          {assessments.isPending ? (
+            <LoadingState label="Loading condition…" rows={2} />
+          ) : null}
+          {assessments.error ? (
+            <ErrorState message={assessments.error.message} onRetry={retry} />
+          ) : null}
+          {assessments.data ? <CurrentCondition current={current} /> : null}
+          {recording && canRecord ? (
+            <DialogContent
+              className="sm:max-w-lg"
+              showCloseButton={!recordAssessment.isPending}
+            >
+              <DialogHeader>
+                <DialogTitle>Record condition check</DialogTitle>
+                <DialogDescription>
+                  Record the condition, assessment date and notes.
+                </DialogDescription>
+              </DialogHeader>
+              <AssessmentForm onCancel={cancel} onSave={save} />
+            </DialogContent>
+          ) : null}
+          {assessments.data && assessments.data.length > 1 ? (
+            <Link
+              className={buttonVariants({
+                className: "-ml-2.5 self-start",
+                size: "sm",
+                variant: "link",
+              })}
+              params={{ estateId, assetId }}
+              to="/estates/$estateId/assets/$assetId/condition"
+            >
+              View history ({assessments.data.length})
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          ) : null}
+          {upcoming ? (
+            <>
+              <Separator />
+              {upcoming}
+            </>
+          ) : null}
+        </div>
       </SectionCard>
     </Dialog>
   );

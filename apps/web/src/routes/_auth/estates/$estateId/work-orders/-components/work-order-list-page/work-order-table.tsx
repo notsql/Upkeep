@@ -14,7 +14,7 @@ import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
 import type { WorkOrder, WorkOrderListSearch } from "@/lib/work-orders";
 import { DuplicateCountBadge } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/duplicate-count-badge";
-import { WorkOrderCards } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-cards";
+import { WorkOrderItems } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-items";
 import { WorkOrderSortControls } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-sort-controls";
 
 type SortColumn = NonNullable<WorkOrderListSearch["sortBy"]>;
@@ -50,7 +50,7 @@ export function WorkOrderTable({
           onSort={onSort}
           sortBy={sortBy}
         />
-        <WorkOrderCards estateId={estateId} loading={loading} orders={orders} />
+        <WorkOrderItems estateId={estateId} loading={loading} orders={orders} />
       </div>
     );
   }

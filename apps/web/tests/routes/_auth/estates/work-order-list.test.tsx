@@ -10,6 +10,8 @@ import {
   ownerEstateAccess,
   unassignedAccess,
 } from "@tests/fixtures/access";
+import { intersect } from "@tests/intersection";
+import { mockMobileViewport } from "@tests/mock-viewport";
 import {
   chooseOption,
   renderWithProviders,
@@ -558,8 +560,12 @@ it("shows mobile work-order summaries with sorting, filtering and paging intact"
   state.crew = true;
   const { router } = await setup(`${basePath}?priority=HIGH&q=TEST`);
   const list = within(await screen.findByRole("list", { name: "Work orders" }));
-  list.getByRole("link", { name: "TEST-W0001" });
-  list.getByText("Leaking pipe");
+  const item = within(list.getAllByRole("listitem")[0]);
+  expect(
+    item.getByRole("link", { name: "TEST-W0001" }).getAttribute("href")
+  ).toBe(`${basePath}/${order.id}`);
+  item.getByText("Leaking pipe");
+  item.getByText("TEST-W0001 · Block A / Level 1");
   list.getByText("HIGH");
   expect(list.getByText("Open").dataset.variant).toBe("outline");
   list.getByText("CLEANLINESS");
@@ -583,21 +589,47 @@ it("shows mobile work-order summaries with sorting, filtering and paging intact"
   await waitFor(() =>
     expect(router.state.location.search.direction).toBe("ASC")
   );
-  await waitFor(() =>
-    expect(
-      screen.getByRole("button", { name: "Next page" }).hasAttribute("disabled")
-    ).toBe(false)
+  expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+});
+
+it("loads the next work-order page on mobile as the list scrolls", async () => {
+  mockMobileViewport();
+  const serve = state.get.getMockImplementation();
+  state.get.mockImplementation(
+    (path: string, options?: { params?: { query?: { cursor?: string } } }) => {
+      if (path !== "/estates/{estateId}/work-orders") {
+        return serve?.(path, options);
+      }
+      const second = options?.params?.query?.cursor === "page-two";
+      return Promise.resolve({
+        data: {
+          items: [
+            second
+              ? { ...order, id: "second", reference: "TEST-W0009" }
+              : order,
+          ],
+          nextCursor: second ? null : "page-two",
+        },
+        response: new Response(),
+      });
+    }
   );
-  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
-  await waitFor(() =>
-    expect(router.state.location.search).toMatchObject({
-      priority: "HIGH",
-      q: "TEST",
-      sortBy: "PRIORITY",
-      direction: "ASC",
-      cursor: "page-two",
-    })
-  );
+  const { router } = await setup(`${basePath}?priority=HIGH`);
+  await screen.findByRole("link", { name: "TEST-W0001" });
+  expect(screen.queryByRole("button", { name: "Next page" })).toBeNull();
+  intersect();
+  await screen.findByRole("link", { name: "TEST-W0009" });
+  screen.getByRole("link", { name: "TEST-W0001" });
+  await screen.findByText("That's everything");
+  expect(router.state.location.search.cursor).toBeUndefined();
+  expect(
+    state.get.mock.calls.some(
+      ([path, options]) =>
+        path === "/estates/{estateId}/work-orders" &&
+        options?.params?.query?.cursor === "page-two" &&
+        options?.params?.query?.priority === "HIGH"
+    )
+  ).toBe(true);
 });
 
 it("shows the source report's confirmed duplicate count beside the priority", async () => {

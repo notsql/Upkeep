@@ -4,22 +4,32 @@ import {
   Collapsible,
   CollapsibleContent,
 } from "@proj/ui/components/collapsible";
+import { Sheet, SheetContent, SheetTitle } from "@proj/ui/components/sheet";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
+import { cn } from "@proj/ui/lib/utils";
 import { ListFilter, X } from "lucide-react";
-import { type ReactNode, useCallback, useId, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useId, useState } from "react";
 
 /**
  * State for a retractable FilterBar and its FilterToggle. Collapsed by
- * default; starts expanded when filters are already active on load.
+ * default; starts expanded when filters are already active on load - except
+ * on mobile, where the bar is a bottom sheet and must not pop up on load.
  */
 export function useFilterPanel(activeCount: number) {
   const id = useId();
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(activeCount > 0);
+  useEffect(() => {
+    if (mobile) {
+      setOpen(false);
+    }
+  }, [mobile]);
   const onToggle = useCallback(() => setOpen((value) => !value), []);
   return {
     open,
     setOpen,
     toggleProps: { controls: id, expanded: open, onToggle },
-    barProps: { id, open },
+    barProps: { id, open, onOpenChange: setOpen },
   };
 }
 
@@ -32,7 +42,9 @@ export function useFilterPanel(activeCount: number) {
  * 640px and wraps above it.
  *
  * Pass `id` and `open` (from `useFilterPanel`) to make it retractable behind
- * a FilterToggle; without `open` it is always shown.
+ * a FilterToggle; without `open` it is always shown. On mobile a retractable
+ * bar opens as a bottom sheet titled "Filters" instead; `onOpenChange` lets
+ * the sheet close itself.
  */
 export function FilterBar({
   label,
@@ -43,6 +55,7 @@ export function FilterBar({
   onClear,
   id,
   open,
+  onOpenChange,
 }: {
   label: string;
   search?: ReactNode;
@@ -52,16 +65,24 @@ export function FilterBar({
   onClear?: () => void;
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
+  const mobile = useIsMobile();
+  const sheet = mobile && open !== undefined;
   const filtering = activeCount > 0;
   const bar = (
     <search
       aria-label={label}
-      className="bg-muted/40 rounded-lg border p-3 sm:p-4"
+      className={sheet ? "" : "bg-muted/40 rounded-lg border p-3 sm:p-4"}
       // biome-ignore lint/a11y/noRedundantRoles: jsdom does not yet map <search> to the search role.
       role="search"
     >
-      <div className="mb-3 flex min-h-6 items-center gap-2">
+      <div
+        className={cn(
+          "flex min-h-6 items-center gap-2",
+          sheet && !filtering ? "hidden" : "mb-3"
+        )}
+      >
         {/* The FilterToggle already shows ListFilter when retractable. */}
         {open === undefined ? (
           <ListFilter
@@ -69,7 +90,8 @@ export function FilterBar({
             className="text-muted-foreground size-4"
           />
         ) : null}
-        <span className="text-sm font-medium">Filters</span>
+        {/* The sheet's own title already says "Filters". */}
+        {sheet ? null : <span className="text-sm font-medium">Filters</span>}
         {filtering ? (
           <Badge variant="secondary">{activeCount} active</Badge>
         ) : null}
@@ -101,9 +123,46 @@ export function FilterBar({
   if (open === undefined) {
     return id ? <div id={id}>{bar}</div> : bar;
   }
+  if (sheet) {
+    return (
+      <FilterSheet id={id} onOpenChange={onOpenChange} open={open}>
+        {bar}
+      </FilterSheet>
+    );
+  }
   return (
     <Collapsible open={open}>
       <CollapsibleContent id={id}>{bar}</CollapsibleContent>
     </Collapsible>
+  );
+}
+
+/**
+ * The mobile home of a retractable filter panel: a bottom sheet titled
+ * "Filters", driven by `useFilterPanel`'s `open` / `onOpenChange`. Closing it
+ * only hides the controls; applied filters stay applied.
+ */
+export function FilterSheet({
+  id,
+  open,
+  onOpenChange,
+  children,
+}: {
+  id?: string;
+  open: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <Sheet onOpenChange={onOpenChange} open={open}>
+      <SheetContent
+        className="max-h-[85svh] gap-3 overflow-y-auto rounded-t-xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]"
+        id={id}
+        side="bottom"
+      >
+        <SheetTitle className="pr-10">Filters</SheetTitle>
+        {children}
+      </SheetContent>
+    </Sheet>
   );
 }

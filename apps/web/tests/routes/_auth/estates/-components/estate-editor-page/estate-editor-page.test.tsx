@@ -396,6 +396,31 @@ it("titles edit mode Estate settings without back links or breadcrumbs", async (
   expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
 });
 
+it("shows Details and Notifications tabs in Estate settings", async () => {
+  mockSettings({ ...estate, owned: true });
+  renderWithProviders(<EstateEditorPage estateId={estate.id} />);
+  const views = within(
+    await screen.findByRole("navigation", { name: "Settings views" })
+  );
+  expect(
+    views.getAllByRole("link").map((link) => link.getAttribute("href"))
+  ).toEqual([
+    "/estates/$estateId/edit",
+    "/estates/$estateId/notification-settings",
+  ]);
+  expect(views.getAllByRole("link").map((link) => link.textContent)).toEqual([
+    "Details",
+    "Notifications",
+  ]);
+});
+
+it("has no settings tabs while creating an estate", () => {
+  renderWithProviders(<EstateEditorPage />);
+  expect(
+    screen.queryByRole("navigation", { name: "Settings views" })
+  ).toBeNull();
+});
+
 it.each([
   ["owner, active", true, undefined, true],
   ["owner, inactive", true, "2026-09-25T00:00:00Z", false],

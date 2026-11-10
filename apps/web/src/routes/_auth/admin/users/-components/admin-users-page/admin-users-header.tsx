@@ -1,4 +1,3 @@
-import { Card } from "@proj/ui/components/card";
 import { ShieldCheck } from "lucide-react";
 import type { FilterToggleProps } from "@/components/filters/filter-toggle";
 import { ListPageHeader } from "@/components/page/list-page-header";
@@ -13,10 +12,10 @@ export function AdminUsersHeader({
   return (
     <ListPageHeader
       actions={
-        <Card className="gap-1 px-4" size="sm">
+        <div className="grid gap-1">
           <p className="text-muted-foreground text-xs">Total users</p>
           <p className="text-2xl font-semibold">{totalUsers ?? "—"}</p>
-        </Card>
+        </div>
       }
       description="Member roles and estate access"
       filters={filters}

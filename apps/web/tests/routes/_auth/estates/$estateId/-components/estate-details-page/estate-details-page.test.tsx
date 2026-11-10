@@ -179,7 +179,7 @@ describe("estate overview dashboard", () => {
     expect(screen.queryByRole("link", { name: WO_2 })).toBeNull();
     await screen.findByRole("link", { name: LEAK });
     await screen.findByRole("link", { name: PUMP });
-    screen.getByRole("link", { name: "Estate settings" });
+    expect(screen.queryByRole("link", { name: "Estate settings" })).toBeNull();
     expect(screen.queryByRole("textbox")).toBeNull();
     await within(
       await screen.findByRole("region", { name: "Maintenance budget" })

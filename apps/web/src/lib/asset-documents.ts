@@ -1,5 +1,10 @@
 import type { components } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
@@ -87,7 +92,8 @@ export function useDocumentAsset(estateId: string, documentId: string) {
 export function useAssetDocuments(
   estateId: string,
   assetId: string,
-  cursor?: string
+  cursor?: string,
+  enabled = true
 ) {
   const access = useAssetDocumentAccess(estateId);
   const fail = useFailure(access.userId);
@@ -100,7 +106,7 @@ export function useAssetDocuments(
       assetId,
       cursor,
     ],
-    enabled: access.canRead,
+    enabled: access.canRead && enabled,
     retry: false,
     queryFn: async ({ signal }) => {
       const { data, error, response } = await api.GET(
@@ -120,6 +126,46 @@ export function useAssetDocuments(
     ...query,
     data: access.canRead && !query.isError ? query.data : undefined,
   };
+}
+
+/** The same list as `useAssetDocuments`, page after page, for phones. */
+export function useAssetDocumentFeed(
+  estateId: string,
+  assetId: string,
+  enabled: boolean
+) {
+  const access = useAssetDocumentAccess(estateId);
+  const fail = useFailure(access.userId);
+  return useInfiniteQuery({
+    queryKey: [
+      access.userId,
+      "documents",
+      estateId,
+      "asset-attachments",
+      assetId,
+      "feed",
+    ],
+    enabled: access.canRead && enabled,
+    retry: false,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["DocumentPageResponse"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/assets/{assetId}/documents",
+        {
+          params: { path: { estateId, assetId }, query: { cursor: pageParam } },
+          signal,
+        }
+      );
+      if (error || !data) {
+        return fail(error, response.status);
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
 }
 
 export function useChangeDocumentAsset(estateId: string, documentId: string) {

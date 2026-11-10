@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@proj/ui/components/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2 } from "lucide-react";
 import { useCallback, useEffect } from "react";
@@ -78,7 +77,7 @@ export function MemberEstates({
     access.refetch();
   }, [access]);
 
-  const section = (
+  return (
     <section
       aria-label={showTitle ? undefined : `Estates for ${name}`}
       aria-labelledby={showTitle ? "member-estates-heading" : undefined}
@@ -141,13 +140,5 @@ export function MemberEstates({
         ))}
       </ul>
     </section>
-  );
-  if (!showTitle) {
-    return section;
-  }
-  return (
-    <Card>
-      <CardContent>{section}</CardContent>
-    </Card>
   );
 }

@@ -29,17 +29,23 @@ Upload components are `reading-imports-page.tsx`, `import-form-fields.tsx` and
 - `import-batch-metadata.tsx` displays source/uploader/counts and rollback
   metadata, with download and permitted revert actions.
 - `import-batch-results.tsx` renders the outcome filter, query states and
-  pagination around `import-row-results.tsx`, the responsive table/card renderer.
+  pagination around `import-row-results.tsx`, the responsive table/row-list renderer.
 - `import-batch-rollback.tsx` renders the confirmation dialog, inserted count,
   required reason and pending/error feedback.
 
 The sections receive explicit data and callbacks rather than the entire page
 state. Batch/row types come from the generated contract via
 `lib/reading-imports.ts`. They use PageLayout, FormPageHeader/DetailPageHeader,
-SectionCard, FormActions, shared LoadingState/ErrorState/EmptyState, Pagination,
-ConfirmDialog, and shadcn Card/Table/Field/Input/Select/Alert/Badge/Button.
+PageSection, Separator, DetailList (batch metadata), FormActions, shared LoadingState/ErrorState/EmptyState, Pagination,
+ConfirmDialog, and shadcn Table/Field/Input/Select/Alert/Badge/Button. No cards:
+the upload form and "Batch history" sit on the page split by a `Separator`, and
+the batch page's "Batch metadata" and "Row results" sections likewise.
 Named, focusable overflow sections contain desktop tables; useMobile selects
-cards below 768px from the same query state. Resizing does not reset paging,
+shadcn `Item size="sm"` lists split by `ItemSeparator` (no cards) below 768px
+from the same query state: "Import history" items are whole-item links (title =
+source label; muted "uploaded date · N readings imported"; trailing status
+badge), "Import results" items show "Record N", a muted "Line N · reason ·
+reason" line and a trailing outcome badge (issue codes are table-only). Resizing does not reset paging,
 filters or mapping. Source labels, filenames and issues wrap.
 
 The file picker is labelled CSV file; Source label is required. A FileReader
@@ -60,7 +66,7 @@ a browser request does not undo a committed batch. Estate/account changes abort
 in-flight requests, reset upload state and prevent late navigation/results.
 
 The report preserves every record/physical-line number, outcome, issue code,
-field and reason on desktop and mobile. All-invalid batches use the normal
+field and reason on desktop; mobile keeps record, line, outcome and reasons. All-invalid batches use the normal
 completed report. Outcome filtering resets page zero. Report download uses the
 typed client and bearer-token bridge, then a temporary Blob URL; it never sends
 a raw fetch or a manually attached Authorization header.
@@ -103,3 +109,7 @@ Each row's outcome `Badge` takes `badgeVariantFor(readingImportOutcomeTone[outco
 (destructive). The imports page header is `FormPageHeader` with an `Upload` icon tile, the batch
 page `DetailPageHeader` with `FileSpreadsheet`; their empty states carry the same icons. See
 [design-system.md](design-system.md).
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Batch history (`useReadingImportFeed`, key `[userId, "reading-imports", estateId, "feed"]`) and batch row results (`useReadingImportRowFeed`, key `[userId, "reading-imports", estateId, batchId, "feed", outcome]`).

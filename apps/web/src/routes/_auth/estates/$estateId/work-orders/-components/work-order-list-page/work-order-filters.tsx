@@ -59,12 +59,14 @@ export function WorkOrderFilters({
   onChange,
   id: panelId,
   open,
+  onOpenChange,
 }: {
   filters: Filters;
   onChange: (filters: Filters) => void;
   /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const id = useId();
   const [priority, setPriority] = useState<
@@ -137,6 +139,7 @@ export function WorkOrderFilters({
         id={panelId}
         label="Filter work orders"
         onClear={clear}
+        onOpenChange={onOpenChange}
         open={open}
         search={
           <Field>

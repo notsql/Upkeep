@@ -1,4 +1,12 @@
 import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemSeparator,
+  ItemTitle,
+} from "@proj/ui/components/item";
+import {
   Table,
   TableBody,
   TableCell,
@@ -10,6 +18,7 @@ import { Link } from "@tanstack/react-router";
 import type { InspectionCheck } from "@/lib/inspection-list";
 import { useInspectionAccess } from "@/lib/inspections";
 import { formatInterval } from "@/lib/service-intervals";
+import { useMobile } from "@/lib/use-mobile";
 import { CheckAction } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/check-action";
 import { EndOfLifeAction } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/end-of-life-action";
 import { StatusBadge } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/status-badge";
@@ -48,6 +57,44 @@ export function CheckTable({
   canRecord: boolean;
 }) {
   const canSend = Boolean(useInspectionAccess(estateId).canCreateWorkOrders);
+  const mobile = useMobile();
+  if (mobile) {
+    return (
+      <ul aria-label="Checks" className="flex min-w-0 flex-col">
+        {checks.map((check, index) => (
+          <li key={check.id}>
+            {index > 0 ? <ItemSeparator className="my-0" /> : null}
+            <Item size="sm">
+              <ItemContent className="min-w-0">
+                <ItemTitle className="line-clamp-none w-full items-start justify-between [overflow-wrap:anywhere]">
+                  <Link
+                    className="underline"
+                    params={{ estateId, assetId: check.assetId }}
+                    to="/estates/$estateId/assets/$assetId"
+                  >
+                    {check.assetName}
+                  </Link>
+                  <StatusBadge check={check} />
+                </ItemTitle>
+                <ItemDescription className="text-xs">{`${check.assetReference} · ${check.categoryLabel}`}</ItemDescription>
+                <ItemDescription className="text-xs">{`Due ${formatDate(check.dueOn)} · ${basis(check)}`}</ItemDescription>
+              </ItemContent>
+              <ItemActions className="w-full justify-end">
+                {canSend && !check.result && check.dueBasis === "PREDICTION" ? (
+                  <EndOfLifeAction check={check} estateId={estateId} />
+                ) : null}
+                <CheckAction
+                  canRecord={canRecord}
+                  check={check}
+                  estateId={estateId}
+                />
+              </ItemActions>
+            </Item>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <Table>
       <TableHeader>

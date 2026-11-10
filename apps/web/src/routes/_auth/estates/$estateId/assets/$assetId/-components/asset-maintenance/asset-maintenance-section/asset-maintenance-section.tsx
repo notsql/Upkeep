@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Hammer, Wrench } from "lucide-react";
 import {
-  SectionCard,
+  PageSection,
   sectionActionClassName,
 } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
@@ -30,7 +30,7 @@ export function AssetMaintenanceSection({
   } = useAssetMaintenanceSection(estateId, assetId);
 
   return (
-    <SectionCard
+    <PageSection
       actions={
         canRecord ? (
           <Link
@@ -92,6 +92,6 @@ export function AssetMaintenanceSection({
           </ul>
         ) : null}
       </div>
-    </SectionCard>
+    </PageSection>
   );
 }

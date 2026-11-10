@@ -2,7 +2,7 @@ import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { DetailCard } from "@/components/page/detail-card";
+import { DetailList } from "@/components/page/detail-list";
 import { FormCard } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { InspectionSourceLink } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/inspection-source-link";
@@ -82,7 +82,7 @@ export function WorkOrderInspectionContext({
         <Alert>
           <AlertDescription>
             Review the recorded and current asset locations before continuing.
-            <DetailCard>
+            <DetailList className="mt-3">
               <div>
                 <dt>Recorded inspection location</dt>
                 <dd>{inspection.record.locationPath}</dd>
@@ -91,7 +91,7 @@ export function WorkOrderInspectionContext({
                 <dt>Current work location</dt>
                 <dd>{inspection.asset.locationPath}</dd>
               </div>
-            </DetailCard>
+            </DetailList>
           </AlertDescription>
           <Button
             disabled={inspection.reloading}

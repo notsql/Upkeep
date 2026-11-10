@@ -9,7 +9,10 @@ const SEND_STEP = /Send step/u;
 const state = vi.hoisted(() => ({
   risks: [] as { assetId: string; flagReasons: string[] }[],
   canCreate: true,
+  mobile: false,
 }));
+
+vi.mock("@/lib/use-mobile", () => ({ useMobile: () => state.mobile }));
 
 vi.mock("@/lib/failure-risk", () => ({
   useEstateFailureRisk: () => ({ data: state.risks }),
@@ -57,6 +60,7 @@ function row(checks: InspectionCheck[]) {
 beforeEach(() => {
   state.risks = [];
   state.canCreate = true;
+  state.mobile = false;
 });
 
 describe("CheckTable", () => {
@@ -89,5 +93,24 @@ describe("CheckTable", () => {
     state.canCreate = false;
     const cells = row([check({})]);
     expect(cells.queryByText(SEND_STEP)).toBeNull();
+  });
+
+  describe("on a phone", () => {
+    it("lists each check with the asset first, then category, due date and basis", () => {
+      state.mobile = true;
+      state.risks = [{ assetId: "pump", flagReasons: ["END_OF_LIFE"] }];
+      renderWithProviders(
+        <CheckTable canRecord checks={[check({})]} estateId="estate" />
+      );
+      expect(screen.queryByRole("table")).toBeNull();
+      const list = within(screen.getByRole("list", { name: "Checks" }));
+      const item = within(list.getAllByRole("listitem")[0]);
+      item.getByRole("link", { name: "Booster pump" });
+      item.getByText("P-1 · Pump");
+      item.getByText("Due 9 Nov 2026 · Expected");
+      item.getByText("Due");
+      item.getByText("Send step CONTRACTOR");
+      item.getByRole("link", { name: "Record inspection" });
+    });
   });
 });

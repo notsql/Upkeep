@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
+import { Separator } from "@proj/ui/components/separator";
 import { FileSpreadsheet } from "lucide-react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -75,6 +76,7 @@ export function ReadingImportBatchPage({
             onDownload={state.handleDownload}
             onShowRevert={state.showRevert}
           />
+          <Separator />
           <ImportBatchResults
             onClearOutcome={state.clearOutcome}
             onNext={state.nextPage}

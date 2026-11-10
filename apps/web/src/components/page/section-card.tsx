@@ -6,6 +6,7 @@ import {
   CardDescription,
   CardHeader,
 } from "@proj/ui/components/card";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import type { LucideIcon } from "lucide-react";
 import { type ReactNode, useId } from "react";
 import { SectionHeading } from "@/components/page/section-heading";
@@ -44,8 +45,9 @@ export function SectionCard({
   children: ReactNode;
 }) {
   const headingId = useId();
+  const mobile = useIsMobile();
   return (
-    <Card className={className}>
+    <Card className={className} size={mobile ? "sm" : "default"}>
       <section aria-labelledby={headingId} className="contents">
         <CardHeader>
           <SectionHeading icon={icon} id={headingId} level={level}>

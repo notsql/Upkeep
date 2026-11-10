@@ -5,7 +5,7 @@ export function PageLayout({ className, ...props }: ComponentProps<"main">) {
   return (
     <main
       className={cn(
-        "mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:px-8 md:py-8",
+        "mx-auto w-full max-w-6xl px-3 py-4 md:px-8 md:py-8",
         className
       )}
       {...props}

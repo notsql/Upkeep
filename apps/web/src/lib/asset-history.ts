@@ -170,7 +170,8 @@ export function useAssetHistory(
 
 export function useHistoryAssets(
   estateId: string,
-  filters: HistoryAssetFilters
+  filters: HistoryAssetFilters,
+  enabled = true
 ) {
   const access = useAssetHistoryAccess(estateId);
   const fail = useHistoryFailure(access.userId);
@@ -184,7 +185,7 @@ export function useHistoryAssets(
       filters.status ?? "ALL",
       filters.cursor,
     ],
-    enabled: access.canView,
+    enabled: access.canView && enabled,
     retry: false,
     queryFn: async ({ signal }) => {
       const { data, error, response } = await api.GET(
@@ -204,6 +205,49 @@ export function useHistoryAssets(
     ...query,
     data: access.canView && !query.isError ? query.data : undefined,
   };
+}
+
+/** The same list as `useHistoryAssets`, page after page, for phones. */
+export function useHistoryAssetFeed(
+  estateId: string,
+  { q, status }: Omit<HistoryAssetFilters, "cursor">,
+  enabled: boolean
+) {
+  const access = useAssetHistoryAccess(estateId);
+  const fail = useHistoryFailure(access.userId);
+  return useInfiniteQuery({
+    queryKey: [
+      access.userId,
+      "asset-history",
+      estateId,
+      "feed",
+      q ?? "",
+      status ?? "ALL",
+    ],
+    enabled: access.canView && enabled,
+    retry: false,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["AssetHistoryAssetPageResponse"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/asset-history",
+        {
+          params: {
+            path: { estateId },
+            query: { q, status, cursor: pageParam, limit: 25 },
+          },
+          signal,
+        }
+      );
+      if (error || !data) {
+        return fail(error, response.status);
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
 }
 
 export function useHistoryDocument(

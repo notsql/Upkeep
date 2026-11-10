@@ -1,13 +1,15 @@
+import type { components } from "@proj/api/schema";
 import type { ReactNode } from "react";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
 import type {
   DocumentFilters,
   EstateDocument,
-  useDocuments,
   useDownloadDocument,
 } from "@/lib/documents";
+import type { PagedList } from "@/lib/infinite-list";
 import { DocumentList } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/document-list";
 
 export function DocumentsResults({
@@ -24,7 +26,7 @@ export function DocumentsResults({
   onRetry,
   renderAssets,
 }: {
-  documents: ReturnType<typeof useDocuments>;
+  documents: PagedList<components["schemas"]["DocumentPageResponse"]>;
   download: ReturnType<typeof useDownloadDocument>;
   filters: DocumentFilters;
   notice: string | undefined;
@@ -44,7 +46,10 @@ export function DocumentsResults({
         <LoadingState label="Loading documents…" variant="table" />
       ) : null}
       {documents.isError ? (
-        <ErrorState message={documents.error.message} onRetry={onRetry} />
+        <ErrorState
+          message={documents.error?.message ?? "Couldn't load documents."}
+          onRetry={onRetry}
+        />
       ) : null}
       {download.isError ? <p role="alert">{download.error.message}</p> : null}
       <DocumentList
@@ -59,7 +64,10 @@ export function DocumentsResults({
         onDownload={onDownload}
         renderAssets={renderAssets}
       />
-      {documents.data && !documents.isError ? (
+      {documents.data && !documents.isError && documents.more ? (
+        <LoadMore {...documents.more} />
+      ) : null}
+      {documents.data && !documents.isError && !documents.more ? (
         <Pagination
           canNext={!!documents.data.nextCursor}
           canPrevious={!!filters.cursor}

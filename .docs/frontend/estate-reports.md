@@ -31,7 +31,7 @@ supplies the existing report capabilities.
 
 | Route folder | Screen and components | API calls |
 | --- | --- | --- |
-| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, state in `use-estate-reports-page.ts`) | Shared report cards with linked title, labelled estate name, full location path, status Badge and submission time. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
+| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, state in `use-estate-reports-page.ts`) | Flat `ListRows` "Reports" of `ReportRow`s (`components/reports/report-row.tsx`, design-system "List rows"; no cards) with linked `h2` title, labelled estate name, full location path, status Badge and submission time. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
 | `reports/$reportId/index.tsx` → `/estates/{estateId}/reports/{reportId}` | Shared report Card/Badge and metadata, Updated timestamp, complete plain-text description, private images and empty/image-error states. Correction uses shadcn Dialog, Label, Select, Button and Alert in adjacent `-components/change-location-dialog/change-location-dialog.tsx`. The adjacent `-components/private-report-image.tsx` provides the responder query wrapper. | GET `/estates/{estateId}/reports/{reportId}`; GET `/estates/{estateId}/reports/{reportId}/images/{imageId}`; PATCH `/estates/{estateId}/reports/{reportId}/location`; locations for correction |
 
 The list's adjacent `-components/report-filters/report-filters.tsx` renders two filter groups:
@@ -226,3 +226,7 @@ The list shows a "Routing: <state>" Badge per report and a "Routing" filter
 (`routingState`). The detail page adds the routing card, with send, dismiss and
 retry for work-order creators, and polls every 5 s while classifying. See
 [report-routing.md](report-routing.md).
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Report pages (`useEstateReportFeed`, key `[userId, "estate-reports", estateId, "feed", filters, 20]`).
+

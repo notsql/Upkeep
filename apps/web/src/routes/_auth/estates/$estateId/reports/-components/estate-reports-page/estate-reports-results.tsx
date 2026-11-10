@@ -1,10 +1,12 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
+import { ListRows } from "@/components/list/list-row";
 import { DuplicateBadges } from "@/components/reports/duplicate-badges";
-import { ReportCard } from "@/components/reports/report-card";
+import { ReportRow } from "@/components/reports/report-row";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
 import {
   ReportRequestError,
@@ -12,6 +14,7 @@ import {
 } from "@/lib/estate-reports";
 import { routingStateLabel } from "@/lib/report-routing";
 import { ReportsEmpty } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/reports-empty";
+import type { PagedList } from "@/lib/infinite-list";
 
 export function EstateReportsResults({
   estateId,
@@ -24,7 +27,7 @@ export function EstateReportsResults({
   onFirst,
 }: {
   estateId: string;
-  reports: ReturnType<typeof useEstateReportList>;
+  reports: PagedList<components["schemas"]["EstateIssueReportPageResponse"]>;
   cursor: string | undefined;
   filtered: boolean;
   onClear: () => void;
@@ -53,10 +56,10 @@ export function EstateReportsResults({
       {reports.data?.items.length === 0 ? (
         <ReportsEmpty filtered={filtered} onClear={onClear} />
       ) : null}
-      {reports.isError
-        ? null
-        : reports.data?.items.map((report) => (
-            <ReportCard
+      {reports.isError || !reports.data?.items.length ? null : (
+        <ListRows label="Reports">
+          {reports.data.items.map((report) => (
+            <ReportRow
               badges={<DuplicateBadges report={report} />}
               key={report.id}
               report={report}
@@ -84,7 +87,12 @@ export function EstateReportsResults({
               ) : null}
             </ReportCard>
           ))}
-      {reports.data && !reports.isError ? (
+        </ListRows>
+      )}
+      {reports.data && !reports.isError && reports.more ? (
+        <LoadMore {...reports.more} />
+      ) : null}
+      {reports.data && !reports.isError && !reports.more ? (
         <Pagination
           canNext={!!reports.data.nextCursor}
           canPrevious={!!cursor}

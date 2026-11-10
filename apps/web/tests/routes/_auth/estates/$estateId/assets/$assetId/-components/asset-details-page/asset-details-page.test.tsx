@@ -176,8 +176,8 @@ it("links each asset section as its own page under one header", () => {
       .getAllByRole("link")
       .map((link) => [link.textContent, link.getAttribute("href")])
   ).toEqual([
-    ["History", "/estates/estate/assets/asset/history"],
     ["Overview", "/estates/estate/assets/asset"],
+    ["History", "/estates/estate/assets/asset/history"],
     ["Details", "/estates/estate/assets/asset/details"],
     ["Records", "/estates/estate/assets/asset/records"],
     ["Costs", "/estates/estate/assets/asset/costs"],

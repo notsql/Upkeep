@@ -20,6 +20,7 @@ export function AssetsEmpty({
           </Button>
         }
         description="Try fewer filters"
+        fill
         icon={Package}
         title="No matching assets"
       />
@@ -32,6 +33,7 @@ export function AssetsEmpty({
           ? "Use Create to add the first asset, or set Status to All to include assets out of use."
           : "Set Status to All to include assets out of use."
       }
+      fill
       icon={Package}
       title="No assets yet"
     />

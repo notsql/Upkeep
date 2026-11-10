@@ -104,9 +104,13 @@ document and work-order read capabilities; writes remain Owner/Manager-only.
 ## Responsive document list
 
 `-components/documents-page/document-list.tsx` uses the existing `useMobile` media query:
-under 768px it renders a labelled `Documents` list of shadcn Cards; desktop keeps
-a semantic table labelled Documents. Both use the existing page query result.
-Cards show the full wrapping filename, type, uploaded time and asset association;
+under 768px it renders a `ul` labelled `Documents` of shadcn `Item`s
+(`DocumentItem` in `document-row.tsx`, `size="sm"`, divided by `ItemSeparator`,
+no cards); desktop keeps a semantic table labelled Documents. Both use the existing
+page query result. Each item: title = full wrapping filename; line 1 = type · linked
+assets; line 2 = "Uploaded <time>"; trailing actions: a lone Download button, or,
+when Unlink/Work order link/Delete are also offered, a `DropdownMenu` ("Actions for
+<filename>") with Unlink, Work order link, Download and Delete menu items;
 the estate list omits Size on both desktop and mobile. `DocumentActions` in
 `document-row.tsx` is shared by both presentations:
 download stays disabled while pending, association is offered only with existing
@@ -149,3 +153,7 @@ message). `document-asset-dialog.tsx` and `document-work-order-dialog.tsx` stay
 hand-built Dialogs: their footers switch between Unlink/Save link with a
 conditional disabled state, and the work-order dialog nests the picker's own
 `<form>`, which `FormDialog`'s form cannot contain.
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Document pages (`useDocumentFeed`, key `[userId, "documents", estateId, "feed", filters-without-cursor]`).

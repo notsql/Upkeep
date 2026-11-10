@@ -1,6 +1,11 @@
 import { fireEvent } from "@testing-library/react";
-import { renderWithProviders, screen, within } from "@tests/test-utils";
-import { expect, it, vi } from "vitest";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
 import { FilterToggle } from "@/components/filters/filter-toggle";
 
@@ -80,4 +85,32 @@ it("starts expanded when filters are active on load", () => {
       .getAttribute("aria-expanded")
   ).toBe("true");
   screen.getByRole("search", { name: "Filter work orders" });
+});
+
+describe("on mobile", () => {
+  const desktopWidth = window.innerWidth;
+  afterEach(() => {
+    window.innerWidth = desktopWidth;
+  });
+
+  it("opens the filters in a bottom sheet titled Filters and closes it again", async () => {
+    window.innerWidth = 375;
+    renderWithProviders(<CollapsibleFilters activeCount={0} />);
+    const toggle = screen.getByRole("button", { name: "Filters" });
+    fireEvent.click(toggle);
+    const sheet = await screen.findByRole("dialog", { name: "Filters" });
+    expect(sheet.dataset.side).toBe("bottom");
+    within(sheet).getByRole("search", { name: "Filter work orders" });
+    within(sheet).getByRole("combobox", { name: "Status" });
+    fireEvent.click(within(sheet).getByRole("button", { name: "Close" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("keeps the sheet shut on load even when filters are active", () => {
+    window.innerWidth = 375;
+    renderWithProviders(<CollapsibleFilters activeCount={1} />);
+    screen.getByRole("button", { name: "Filters, 1 active" });
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
 });

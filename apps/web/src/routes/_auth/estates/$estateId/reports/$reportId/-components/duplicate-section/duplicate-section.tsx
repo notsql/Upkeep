@@ -2,11 +2,10 @@ import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
 import { Copy } from "lucide-react";
-import { useCallback, useId, useState } from "react";
-import { SectionHeading } from "@/components/page/section-heading";
+import { useCallback, useState } from "react";
+import { PageSection } from "@/components/page/section-card";
 import { DuplicateStateBadge } from "@/components/reports/duplicate-badges";
 import { ReportSourcePicker } from "@/components/reports/report-source-picker";
 import {
@@ -37,7 +36,7 @@ export function DuplicateSection({
   return (
     <>
       {report.duplicateOf ? (
-        <DuplicateOfCard
+        <DuplicateOfSection
           canReview={canReview}
           estateId={estateId}
           reload={reload}
@@ -45,16 +44,16 @@ export function DuplicateSection({
         />
       ) : null}
       {report.duplicates.length > 0 ? (
-        <LinkedDuplicatesCard estateId={estateId} report={report} />
+        <LinkedDuplicatesSection estateId={estateId} report={report} />
       ) : null}
       {canReview && !report.duplicateOf && report.duplicates.length === 0 ? (
-        <MarkDuplicateCard estateId={estateId} reportId={report.id} />
+        <MarkDuplicateSection estateId={estateId} reportId={report.id} />
       ) : null}
     </>
   );
 }
 
-function DuplicateOfCard({
+function DuplicateOfSection({
   estateId,
   report,
   canReview,
@@ -65,7 +64,6 @@ function DuplicateOfCard({
   canReview: boolean;
   reload: () => Promise<unknown>;
 }) {
-  const headingId = useId();
   const review = useReviewEstateReportDuplicate(estateId, report.id);
   const original = report.duplicateOf;
   const decide = useCallback(
@@ -91,124 +89,111 @@ function DuplicateOfCard({
   const conflict =
     review.error instanceof ReportRequestError && review.error.status === 409;
   return (
-    <section aria-labelledby={headingId}>
-      <Card>
-        <CardHeader>
-          <SectionHeading icon={Copy} id={headingId}>
-            Already reported
-          </SectionHeading>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <p>
-            {suspected ? "May be the same problem as" : "Same problem as"}{" "}
-            <Link
-              params={{ estateId, reportId: original.reportId }}
-              to="/estates/$estateId/reports/$reportId"
-            >
-              {original.title}
-            </Link>
-          </p>
-          <p className="text-muted-foreground">
-            This report cannot get its own work order. Use the original and its
-            work orders.
-            {suspected
-              ? " If it's a different problem, choose Not the same problem first."
-              : null}
-          </p>
-          {review.error ? (
-            <Alert role="alert" variant="destructive">
-              <AlertDescription>
-                {review.error.message}{" "}
-                {conflict ? (
-                  <Button onClick={reloadAfterConflict} variant="outline">
-                    Reload
-                  </Button>
-                ) : null}
-              </AlertDescription>
-            </Alert>
-          ) : null}
-          {canReview ? (
-            <div className="flex flex-wrap gap-2">
-              {suspected ? (
-                <Button disabled={review.isPending} onClick={confirm}>
-                  Confirm
+    <PageSection icon={Copy} title="Already reported">
+      <div className="grid gap-3">
+        <p>
+          {suspected ? "May be the same problem as" : "Same problem as"}{" "}
+          <Link
+            params={{ estateId, reportId: original.reportId }}
+            to="/estates/$estateId/reports/$reportId"
+          >
+            {original.title}
+          </Link>
+        </p>
+        <p className="text-muted-foreground">
+          This report cannot get its own work order. Use the original and its
+          work orders.
+          {suspected
+            ? " If it's a different problem, choose Not the same problem first."
+            : null}
+        </p>
+        {review.error ? (
+          <Alert role="alert" variant="destructive">
+            <AlertDescription>
+              {review.error.message}{" "}
+              {conflict ? (
+                <Button onClick={reloadAfterConflict} variant="outline">
+                  Reload
                 </Button>
               ) : null}
-              <Button
-                disabled={review.isPending}
-                onClick={reject}
-                variant="outline"
-              >
-                Not the same problem
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {canReview ? (
+          <div className="flex flex-wrap gap-2">
+            {suspected ? (
+              <Button disabled={review.isPending} onClick={confirm}>
+                Confirm
               </Button>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-    </section>
+            ) : null}
+            <Button
+              disabled={review.isPending}
+              onClick={reject}
+              variant="outline"
+            >
+              Not the same problem
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </PageSection>
   );
 }
 
-function LinkedDuplicatesCard({
+function LinkedDuplicatesSection({
   estateId,
   report,
 }: {
   estateId: string;
   report: EstateReport;
 }) {
-  const headingId = useId();
   return (
-    <section aria-labelledby={headingId}>
-      <Card>
-        <CardHeader>
-          <SectionHeading icon={Copy} id={headingId}>
-            Repeat reports
-          </SectionHeading>
-          <div className="flex flex-wrap gap-1">
-            <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
-              {report.confirmedDuplicateCount} confirmed
+    <PageSection
+      actions={
+        <>
+          <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
+            {report.confirmedDuplicateCount} confirmed
+          </Badge>
+          {report.suspectedDuplicateCount > 0 ? (
+            <Badge variant={badgeVariantFor(duplicateReportTone.SUSPECTED)}>
+              {report.suspectedDuplicateCount} to review
             </Badge>
-            {report.suspectedDuplicateCount > 0 ? (
-              <Badge variant={badgeVariantFor(duplicateReportTone.SUSPECTED)}>
-                {report.suspectedDuplicateCount} to review
-              </Badge>
-            ) : null}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid gap-2">
-            {report.duplicates.map((duplicate) => (
-              <li
-                className="flex flex-wrap items-center gap-x-2 gap-y-1"
-                key={duplicate.reportId}
-              >
-                <Link
-                  params={{ estateId, reportId: duplicate.reportId }}
-                  to="/estates/$estateId/reports/$reportId"
-                >
-                  {duplicate.title}
-                </Link>
-                <DuplicateStateBadge state={duplicate.state} />
-                <span className="text-muted-foreground italic">
-                  {duplicate.location.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    </section>
+          ) : null}
+        </>
+      }
+      icon={Copy}
+      title="Repeat reports"
+    >
+      <ul className="grid gap-2">
+        {report.duplicates.map((duplicate) => (
+          <li
+            className="flex flex-wrap items-center gap-x-2 gap-y-1"
+            key={duplicate.reportId}
+          >
+            <Link
+              params={{ estateId, reportId: duplicate.reportId }}
+              to="/estates/$estateId/reports/$reportId"
+            >
+              {duplicate.title}
+            </Link>
+            <DuplicateStateBadge state={duplicate.state} />
+            <span className="text-muted-foreground italic">
+              {duplicate.location.label}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </PageSection>
   );
 }
 
-function MarkDuplicateCard({
+function MarkDuplicateSection({
   estateId,
   reportId,
 }: {
   estateId: string;
   reportId: string;
 }) {
-  const headingId = useId();
   const [originalId, setOriginalId] = useState("");
   const link = useLinkEstateReportDuplicate(estateId, reportId);
   const choose = useCallback(
@@ -223,37 +208,30 @@ function MarkDuplicateCard({
     [link.mutate, originalId]
   );
   return (
-    <section aria-labelledby={headingId}>
-      <Card>
-        <CardHeader>
-          <SectionHeading icon={Copy} id={headingId}>
-            Mark as duplicate
-          </SectionHeading>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          <ReportSourcePicker
-            chooseLabel="Choose original report"
-            emptyText="No other reports match these filters."
-            estateId={estateId}
-            excludeId={reportId}
-            label="Original report"
-            onChange={choose}
-            value={originalId}
-          />
-          {link.error ? (
-            <Alert role="alert" variant="destructive">
-              <AlertDescription>{link.error.message}</AlertDescription>
-            </Alert>
-          ) : null}
-          <Button
-            className="w-fit"
-            disabled={!originalId || link.isPending}
-            onClick={save}
-          >
-            Mark as same problem
-          </Button>
-        </CardContent>
-      </Card>
-    </section>
+    <PageSection icon={Copy} title="Mark as duplicate">
+      <div className="grid gap-3">
+        <ReportSourcePicker
+          chooseLabel="Choose original report"
+          emptyText="No other reports match these filters."
+          estateId={estateId}
+          excludeId={reportId}
+          label="Original report"
+          onChange={choose}
+          value={originalId}
+        />
+        {link.error ? (
+          <Alert role="alert" variant="destructive">
+            <AlertDescription>{link.error.message}</AlertDescription>
+          </Alert>
+        ) : null}
+        <Button
+          className="w-fit"
+          disabled={!originalId || link.isPending}
+          onClick={save}
+        >
+          Mark as same problem
+        </Button>
+      </div>
+    </PageSection>
   );
 }

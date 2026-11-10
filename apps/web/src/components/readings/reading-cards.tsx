@@ -1,6 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
-import { Card, CardContent, CardHeader } from "@proj/ui/components/card";
-import { ReadingProvenance } from "@/components/readings/reading-provenance";
+import { Gauge } from "lucide-react";
+import { ListRow, ListRows } from "@/components/list/list-row";
 import { deviceMetrics } from "@/lib/devices";
 import { formatDateTime } from "@/lib/format";
 import {
@@ -10,80 +10,106 @@ import {
 } from "@/lib/readings";
 import { badgeVariantFor, readingFlagTone } from "@/lib/status-tone";
 
+type Reading = AssetReading | EstateReading;
+
+function SourceText({ reading }: { reading: Reading }) {
+  if (reading.source === "MANUAL") {
+    return (
+      <>
+        <span>Manual</span> ·{" "}
+        <span>
+          {reading.recordedByName ||
+            `Name unavailable (${reading.recordedByUserId})`}
+        </span>
+      </>
+    );
+  }
+  if (reading.source === "IMPORT") {
+    return (
+      <>
+        <span>Import</span>
+        {reading.sourceLabel ? (
+          <>
+            {" "}
+            · <span>{reading.sourceLabel}</span>
+          </>
+        ) : null}
+        {reading.importBatchId ? (
+          <>
+            {" "}
+            · <span>Batch {reading.importBatchId}</span>
+          </>
+        ) : null}
+      </>
+    );
+  }
+  return (
+    <>
+      <span>Sensor</span>
+      {reading.deviceIdentifier ? (
+        <>
+          {" "}
+          · <span>{reading.deviceIdentifier}</span>
+        </>
+      ) : null}
+    </>
+  );
+}
+
+/** Phone view of readings: one list item per reading. */
 export function ReadingCards({
   items,
   refreshing = false,
 }: {
-  items: (AssetReading | EstateReading)[];
+  items: Reading[];
   refreshing?: boolean;
 }) {
   return (
-    <ul
-      aria-busy={refreshing}
-      aria-label="Readings"
-      className="grid min-w-0 gap-3"
-    >
+    <ListRows busy={refreshing} label="Readings">
       {items.map((reading) => (
-        <li className="min-w-0" key={reading.id}>
-          <Card
-            className="min-w-0 rounded-xl [overflow-wrap:anywhere]"
-            size="sm"
-          >
-            <CardHeader className="gap-2">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h2 className="text-sm font-medium">
-                    {deviceMetrics[reading.metric].name}
-                  </h2>
-                  <p className="text-lg font-semibold">
-                    {reading.valueText ?? reading.value} {reading.unit}
-                  </p>
-                </div>
-                <ReadingProvenance reading={reading} />
+        <ListRow
+          icon={Gauge}
+          key={reading.id}
+          meta={
+            <>
+              <SourceText reading={reading} /> ·{" "}
+              <time dateTime={reading.measuredAt}>
+                {formatDateTime(reading.measuredAt)}
+              </time>
+            </>
+          }
+          title={
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-semibold tabular-nums">
+                {reading.valueText ?? reading.value} {reading.unit}
+              </span>
+              <span>{deviceMetrics[reading.metric].name}</span>
+            </span>
+          }
+          trailing={
+            reading.flags.length ? (
+              <div className="flex max-w-[45vw] flex-col items-end gap-1">
+                {reading.flags.map((flag) => (
+                  <Badge
+                    className="h-auto max-w-full py-0.5 text-right leading-snug whitespace-normal"
+                    key={flag.type}
+                    variant={badgeVariantFor(readingFlagTone[flag.type])}
+                  >
+                    {flagLabel(flag, reading.unit)}
+                  </Badge>
+                ))}
               </div>
-              {"assetReference" in reading ? (
-                <div>
-                  <p className="font-medium">{reading.assetName}</p>
-                  <p className="text-muted-foreground">
-                    {reading.assetReference}
-                  </p>
-                </div>
-              ) : null}
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <dl className="grid gap-2">
-                <div>
-                  <dt className="text-muted-foreground">Measured</dt>
-                  <dd>
-                    <time dateTime={reading.measuredAt}>
-                      {formatDateTime(reading.measuredAt)}
-                    </time>
-                  </dd>
-                </div>
-                {reading.deviceIdentifier ? (
-                  <div>
-                    <dt className="text-muted-foreground">Sensor name</dt>
-                    <dd>{reading.deviceIdentifier}</dd>
-                  </div>
-                ) : null}
-              </dl>
-              {reading.flags.length ? (
-                <div className="flex min-w-0 flex-wrap items-start gap-1">
-                  {reading.flags.map((flag) => (
-                    <Badge
-                      className="h-auto max-w-full py-0.5 text-left leading-snug whitespace-normal"
-                      key={flag.type}
-                      variant={badgeVariantFor(readingFlagTone[flag.type])}
-                    >
-                      {flagLabel(flag, reading.unit)}
-                    </Badge>
-                  ))}
-                </div>
-              ) : null}
-            </CardContent>
-          </Card>
-        </li>
+            ) : null
+          }
+        >
+          {"assetReference" in reading ? (
+            <p className="text-muted-foreground truncate text-xs">
+              <span>{reading.assetName}</span> ·{" "}
+              <span>{reading.assetReference}</span>
+            </p>
+          ) : null}
+        </ListRow>
       ))}
-    </ul>
+    </ListRows>
   );
 }
