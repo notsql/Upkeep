@@ -15,6 +15,8 @@ public record WorkOrderEmail(String to, String toName, String subject, String bo
 
     public record Attachment(String filename, String contentType, byte[] bytes) {}
 
+    public record Image(byte[] bytes, String contentType) {}
+
     public record Content(
             String reference,
             EquipmentType equipmentType,
@@ -26,7 +28,7 @@ public record WorkOrderEmail(String to, String toName, String subject, String bo
             OffsetDateTime reportedAt,
             String title,
             String description,
-            List<FaultClassifier.Image> photos) {}
+            List<Image> photos) {}
 
     public static WorkOrderEmail build(Content content) {
         var subject = "Work order %s: %s fault at %s"

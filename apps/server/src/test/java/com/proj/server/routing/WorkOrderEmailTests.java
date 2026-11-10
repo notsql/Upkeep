@@ -113,6 +113,6 @@ class WorkOrderEmailTests {
                 OffsetDateTime.parse("2026-10-26T14:05:00+08:00"),
                 title,
                 description,
-                List.of(new FaultClassifier.Image(JPEG, "image/jpeg"), new FaultClassifier.Image(PNG, "image/png")));
+                List.of(new WorkOrderEmail.Image(JPEG, "image/jpeg"), new WorkOrderEmail.Image(PNG, "image/png")));
     }
 }

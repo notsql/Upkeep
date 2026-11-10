@@ -117,7 +117,7 @@ class SmtpWorkOrderEmailSenderTests {
                 OffsetDateTime.parse("2026-10-26T06:05:00Z"),
                 "Lift stuck",
                 "Doors won't open\nat level 3",
-                List.of(new FaultClassifier.Image(PHOTO, "image/jpeg"))));
+                List.of(new WorkOrderEmail.Image(PHOTO, "image/jpeg"))));
     }
 
     private static Map<?, ?> onlyMessage() {

@@ -1250,7 +1250,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+              "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
             }
           }
         ],
@@ -1326,7 +1326,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+              "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
             }
           }
         ],
@@ -11548,7 +11548,7 @@
           },
           "equipmentType": {
             "type": ["string", "null"],
-            "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
           },
           "confidence": { "type": "number", "maximum": 1, "minimum": 0 },
           "reason": { "type": "string" },
@@ -11747,7 +11747,7 @@
         "properties": {
           "equipmentType": {
             "type": "string",
-            "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
           },
           "contractorName": { "type": "string" },
           "contractorEmail": { "type": "string" },
@@ -11989,7 +11989,7 @@
         "properties": {
           "equipmentType": {
             "type": "string",
-            "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
           },
           "name": { "type": "string" },
           "email": { "type": "string" },
@@ -12449,7 +12449,7 @@
         "properties": {
           "equipmentType": {
             "type": "string",
-            "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
           }
         },
         "required": ["equipmentType"]
@@ -12491,7 +12491,7 @@
         "properties": {
           "equipmentType": {
             "type": "string",
-            "enum": ["PUMP", "LIFT", "GATE", "LIGHT"]
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
           },
           "priority": {
             "type": "string",

@@ -92,7 +92,7 @@ public class DispatchDeliveryJob {
     private WorkOrderEmail email(RoutingRepository.Delivery delivery) {
         var source = routing.source(delivery.reportId()).orElseThrow();
         var photos = source.images().stream()
-                .map(image -> new FaultClassifier.Image(images.read(image.key()), image.contentType()))
+                .map(image -> new WorkOrderEmail.Image(images.read(image.key()), image.contentType()))
                 .toList();
         return WorkOrderEmail.build(new WorkOrderEmail.Content(
                 delivery.reference(),

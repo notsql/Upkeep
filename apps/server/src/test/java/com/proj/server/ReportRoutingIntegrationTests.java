@@ -227,7 +227,6 @@ class ReportRoutingIntegrationTests {
         contractor(estate, "LIFT");
         var report = queuedReport(estate);
         image(report, new byte[] {9, 9});
-        when(imageStore.read(any())).thenReturn(new byte[] {9, 9});
         when(classifier.classify(any()))
                 .thenReturn(Classification.of("EQUIPMENT_FAULT", "LIFT", 0.92, "Lift doors stuck", MODEL));
 
@@ -235,9 +234,7 @@ class ReportRoutingIntegrationTests {
 
         var input = ArgumentCaptor.forClass(FaultClassifier.Report.class);
         verify(classifier).classify(input.capture());
-        assertEquals("Block A › Level 4", input.getValue().locationLabel());
-        assertArrayEquals(
-                new byte[] {9, 9}, input.getValue().images().getFirst().bytes());
+        verify(imageStore, never()).read(any());
         assertFalse(input.getValue().toString().contains("resident-a"));
 
         var order = workOrderFor(report);
@@ -345,18 +342,19 @@ class ReportRoutingIntegrationTests {
     }
 
     @Test
-    void anUnreadablePhotoCountsAsAFailedAttempt() throws Exception {
+    void anUnreadablePhotoDoesNotStopClassification() throws Exception {
         var estate = estate();
         var report = queuedReport(estate);
         image(report, new byte[] {1});
         when(imageStore.read(any()))
                 .thenThrow(new ResidentReportException(HttpStatus.SERVICE_UNAVAILABLE, "Image storage down"));
+        when(classifier.classify(any()))
+                .thenReturn(Classification.of("NOT_EQUIPMENT", "NONE", 0.9, "Not a water leak", MODEL));
 
         assertTrue(classification.classifyNext());
 
-        assertEquals("CLASSIFYING", routing(report).get("state"));
-        assertEquals(1, routing(report).get("attempts"));
-        verify(classifier, never()).classify(any());
+        assertEquals("NEEDS_REVIEW", routing(report).get("state"));
+        verify(classifier).classify(any());
     }
 
     @Test

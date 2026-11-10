@@ -24,9 +24,10 @@ endpoints. Errors are `EstateError { message }`; responses are
    classified.
 2. `ReportClassificationJob` (every 15 s, first run after 30 s;
    `app.routing.poll-interval`, `app.routing.initial-delay`) claims a due row
-   with `FOR UPDATE SKIP LOCKED` and a 3-minute lease. It reads the photos from
-   R2 and calls `FaultClassifier` (Claude `claude-haiku-5-5`). The model sees
-   the title, description, location label and photos, never the submitter.
+   with `FOR UPDATE SKIP LOCKED` and a 3-minute lease. It calls
+   `FaultClassifier` (`OnnxFaultClassifier`, the in-process water leak model
+   `water-leak-minilm-v1`, decision 0048). The model sees the title and
+   description joined by a space, never the photos, location or submitter.
 3. Writing the result locks the estate, then the routing row (lease checked).
    Each valid answer is stored in `ReportClassification`.
 4. **Automatic routing** needs `EQUIPMENT_FAULT`, a type, `confidence >= 0.80`
@@ -42,8 +43,8 @@ endpoints. Errors are `EstateError { message }`; responses are
    model's own for `INCONCLUSIVE` and `NOT_EQUIPMENT`, or one of: `Confidence
    below threshold`, `No <TYPE> contractor configured`, `The report's location
    is inactive` (ID-36's rules refused the order), `Estate is inactive`, or
-   `Automatic classification unavailable` (no API key, or 3 failed attempts
-   retried after 30 s and 2 min).
+   `Automatic classification unavailable` (3 failed attempts, retried after
+   30 s and 2 min).
 6. `DispatchDeliveryJob` emails `PENDING` dispatches. On success the dispatch
    is `SENT` with `sentAt`. On failure it retries with backoff (30 s × 4ⁿ, at
    most 1 h) and becomes `FAILED` after 5 attempts. `lastErrorCode` is internal:
@@ -60,7 +61,7 @@ made; a Manager can email it later.
 
 | Method and path | Request | Success | Other statuses |
 | --- | --- | --- | --- |
-| GET `/estates/{estateId}/contractors` | — | 200 `EquipmentContractorResponse[]` in PUMP, LIFT, GATE, LIGHT order; types without a route are absent | 400, 401, 403, 404 |
+| GET `/estates/{estateId}/contractors` | — | 200 `EquipmentContractorResponse[]` in PUMP, LIFT, GATE, LIGHT, PLUMBING order; types without a route are absent | 400, 401, 403, 404 |
 | PUT `/estates/{estateId}/contractors/{equipmentType}` | `EquipmentContractorRequest` | 200 `EquipmentContractorResponse` | 400 unknown type or invalid name/email (control characters included), 401, 403, 404, 409 inactive estate |
 | DELETE `/estates/{estateId}/contractors/{equipmentType}` | — | 204, also when there was none; the provider is kept | 400, 401, 403, 404 |
 | POST `/estates/{estateId}/reports/{reportId}/work-order` | `SendToContractorRequest { equipmentType, priority }` | 201 `ReportRoutingResponse` (`WORK_ORDER`, order `ASSIGNED`, dispatch `MANAGER`) | 400, 401, 403, 404 report not in estate, 409 not `NEEDS_REVIEW`, no route for the type, or ID-36 rule (inactive location or estate) |
@@ -74,7 +75,7 @@ made; a Manager can email it later.
 | DTO | Fields |
 | --- | --- |
 | `EquipmentContractorRequest` | `name` (1–200 after trimming), `email` (valid, ≤ 254) |
-| `EquipmentContractorResponse` | `equipmentType: PUMP \| LIFT \| GATE \| LIGHT`, `name`, `email`, `updatedAt` (the provider's) |
+| `EquipmentContractorResponse` | `equipmentType: PUMP \| LIFT \| GATE \| LIGHT \| PLUMBING`, `name`, `email`, `updatedAt` (the provider's) |
 | `SendToContractorRequest` | `equipmentType`, `priority: LOW \| MEDIUM \| HIGH \| URGENT` |
 | `DispatchRequest` | `equipmentType` |
 | `WorkOrderDispatchResponse` | `equipmentType`, `contractorName`, `contractorEmail` (copied at dispatch), `approval: AUTOMATIC \| MANAGER`, `status: PENDING \| SENT \| FAILED`, `sentAt \| null`, `createdAt` |
@@ -100,7 +101,7 @@ POST /estates/<estate-uuid>/reports/<report-uuid>/work-order
 ## The email
 
 Plain text to the copied address. The subject is `Work order <ID-36
-reference>: <Pump|Lift|Gate|Common-area light> fault at <estate name>`, with
+reference>: <Pump|Lift|Gate|Common-area light|Plumbing> fault at <estate name>`, with
 control characters replaced. The body has the contractor name, reference,
 equipment, estate name and address, location label, submission time (UTC),
 the resident's title and description verbatim, and the photo count. Photos are
@@ -128,7 +129,5 @@ row.
 
 | Setting | Purpose |
 | --- | --- |
-| `ANTHROPIC_API_KEY` | Enables classification; unset sends everything to review. |
-| `app.routing.model` | `claude-haiku-5-5`. |
 | `SPRING_MAIL_HOST` (`smtp.gmail.com`), `SPRING_MAIL_PORT` (587), `SPRING_MAIL_USERNAME` (the `csd.upkeep` Gmail address), `SPRING_MAIL_PASSWORD` (a Google app password) | Gmail SMTP with STARTTLS required. Without a host there is no sender, and dispatches fail with `MAIL_NOT_CONFIGURED`. |
 | `APP_MAIL_FROM`, `APP_MAIL_REPLY_TO` | Optional; blank means the SMTP account and no Reply-To. |

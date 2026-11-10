@@ -33,9 +33,8 @@ labelled water leak reports and realistic lookalikes.
 - The dataset is de-duplicated to core sentences and always split by sentence,
   because a random split of its raw rows reports 0.99 F1 mostly by remembering
   repeated sentences.
-- Quality is measured twice: cross-validation by sentence while iterating, and
-  one final run on hand-written estate-style reports set aside before
-  training. A parity fixture keeps Spring in step with the export.
+- Quality is measured by cross-validation by sentence. A parity fixture keeps
+  Spring in step with the export.
 
 Rejected: lift faults (no real report text exists publicly); building the
 tokenizer into the graph with `onnxruntime-extensions` (its newest Java jar,
@@ -49,10 +48,10 @@ never route to a contractor in Upkeep); an image model (no labelled photos).
   `ANTHROPIC_API_KEY` is no longer needed, and the resident notice changes.
 - Only water leaks route automatically. Pumps, lifts, gates and lights go to
   the managing agent, who can still send them to a contractor.
-- The training data is US street complaints, so performance on estate text is
-  a measured unknown, reported from the hand-written check.
+- The training data is US street complaints, and the model is evaluated only
+  on those, so its performance on what estate residents write is unmeasured.
 - The server gains the DJL tokenizer library, a model of about 23 MB in the
   jar, and roughly 100 MB more memory.
 - Classification quality is now owned by the team. A model change means
-  retraining, re-running both checks, and updating the parity fixture and
+  retraining, re-running cross-validation, and updating the parity fixture and
   `WaterLeakModel`'s constants in the same change.

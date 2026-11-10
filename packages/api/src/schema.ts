@@ -2185,7 +2185,7 @@ export interface components {
       /** @enum {string} */
       outcome: "EQUIPMENT_FAULT" | "INCONCLUSIVE" | "NOT_EQUIPMENT";
       /** @enum {string|null} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | null;
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING" | null;
       confidence: number;
       reason: string;
       /** Format: date-time */
@@ -2281,7 +2281,7 @@ export interface components {
     };
     WorkOrderDispatchResponse: {
       /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
       contractorName: string;
       contractorEmail: string;
       /** @enum {string} */
@@ -2411,7 +2411,7 @@ export interface components {
     };
     EquipmentContractorResponse: {
       /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
       name: string;
       email: string;
       /** Format: date-time */
@@ -2637,7 +2637,7 @@ export interface components {
     };
     DispatchRequest: {
       /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
     };
     CreateEstateRoleRequest: {
       name: string;
@@ -2658,7 +2658,7 @@ export interface components {
     };
     SendToContractorRequest: {
       /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
       /** @enum {string} */
       priority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
     };
@@ -12735,7 +12735,7 @@ export interface operations {
       header?: never;
       path: {
         estateId: string;
-        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
       };
       cookie?: never;
     };
@@ -13471,7 +13471,7 @@ export interface operations {
       header?: never;
       path: {
         estateId: string;
-        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT";
+        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
       };
       cookie?: never;
     };

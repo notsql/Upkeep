@@ -5,7 +5,8 @@ public enum EquipmentType {
     PUMP("Pump"),
     LIFT("Lift"),
     GATE("Gate"),
-    LIGHT("Common-area light");
+    LIGHT("Common-area light"),
+    PLUMBING("Plumbing");
 
     private final String label;
 

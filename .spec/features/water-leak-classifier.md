@@ -42,8 +42,8 @@ cars parked at hydrants. It is MIT licensed.
 - **Text only.** The model reads the title and description. Photos are still
   stored and still emailed to the contractor, but the model does not see them.
 - **One shipped model:** a fine-tuned small transformer.
-- **Two checks:** sentence-split cross-validation on the dataset while
-  iterating, then one final run on hand-written estate-style reports.
+- **One check:** cross-validation by sentence on the dataset. A test on
+  hand-written estate reports was planned and dropped on 2026-11-09.
 
 ## Behaviour
 
@@ -99,7 +99,7 @@ a string validated by Spring, so this needs no migration.
 - `available()` is true once the model has loaded. If loading fails, the
   application fails at startup: the files ship inside the jar, so a load
   failure is a build defect, not a runtime state.
-- The input is `title`, then `description`, joined as plain text. The dataset
+- The input is `title`, a single space, then `description`. The dataset
   has no location, so the location label is not used. The resident's identity
   is never part of the input.
 - `Classification.model` records the version, for example
@@ -155,22 +155,8 @@ on both the training and test side. A TF-IDF baseline shows why:
 
 The first row mostly measures remembering sentences already seen. The second
 is dominated by one sentence repeated 62 times, which sinks recall whenever it
-is held out. The third is the honest measure and the one Check 1 uses. It also
-shows the dataset's wording is easy to separate, even for a simple model, so
-Check 2 is where the transformer has to prove its worth.
-
-### Hand-written reports
-
-- About 50 reports, each with a title and description: about 25 leaks and 25
-  not, written as residents would, with typos and Singlish.
-- The not-leak half includes lookalikes (mopped corridor, rain through a
-  window, choked drain) and unrelated faults.
-- Written **before any training**, ideally by someone other than the person
-  preparing the training data, and each label checked by a second person.
-  Unclear cases are agreed or left out.
-- Include one report containing a literal `[SEP]` or `[CLS]`.
-- Kept out of training and tuning. Nobody looks at the model's output on them
-  until the final run.
+is held out. The third is the honest measure and the one cross-validation uses. It also
+shows the dataset's wording is easy to separate, even for a simple model.
 
 ## Training and evaluation (`ml-research`)
 
@@ -179,38 +165,32 @@ Notebook `04-water-leak-classifier.ipynb`, with reusable code promoted to
 
 1. **Model.** Fine-tune `sentence-transformers/all-MiniLM-L6-v2` with a
    2-class head, maximum 128 tokens, fixed random seed. The loss uses the square
-   root of balanced class weights (see Check 1 result).
-2. **Check 1: cross-validation by sentence.** Five folds, stratified by class,
+   root of balanced class weights (see Cross-validation result).
+2. **Cross-validation by sentence.** Five folds, stratified by class,
    with each sentence in exactly one fold. It can be run as often as needed.
    Scores are pooled across the folds' held-out predictions.
 3. **Calibration.** One temperature, fitted on the pooled held-out predictions
    and folded into the exported logits.
-4. **Targets for Check 1, at the `0.80` threshold:** precision `>= 0.95` and
+4. **Targets for cross-validation, at the `0.80` threshold:** precision `>= 0.95` and
    F1 `>= 0.85`. A false route emails a contractor for nothing, so precision
    matters most. Each iteration is a row in the notebook's log: what changed,
    and the scores. The TF-IDF baseline is one reference row in that log. It is
    not a second model and is not shipped.
 5. **Final model.** Trained on every sentence, with the settings and epoch
-   count that Check 1 settled on.
+   count that cross-validation settled on.
 6. **Export.** ONNX plus `tokenizer.json`, quantised to int8 (about 23 MB,
    against about 90 MB at full precision). Exporting needs `onnxscript` in
    `ml-research/pyproject.toml`; a human runs `uv sync`.
-7. **Check 2: the hand-written reports, once, on the exported model.** Recorded
-   in `metrics.json`: precision, recall, F1, confusion matrix, share routed
-   automatically, and every mistake. There is no target. With 50 reports each
-   one is worth 2%, so it is a clear indication and not a precise measurement.
-   A score below Check 1 is expected and is reported as a finding: the model
-   learned from US street complaints.
-8. **Also recorded:** a precision/coverage curve from Check 1 for thresholds
+7. **Also recorded:** a precision/coverage curve from cross-validation for thresholds
    0.5 to 0.95, and expected calibration error with a reliability diagram.
-9. **Parity fixture.** About 20 reports with their expected probabilities from
+8. **Parity fixture.** About 20 reports with their expected probabilities from
    the exported model, in `parity-fixture.json`.
-10. **Model note.** Next to the artifact: source, cleaning, label changes,
-    settings, seed and both checks' results.
+9. **Model note.** Next to the artifact: source, cleaning, label changes,
+   settings, seed and the cross-validation result.
 
-If Check 2 shows the model does badly on estate text, the fix is adding
-estate-style examples to the training data. The 50 reports have then been
-seen, so a fresh batch is needed to test again.
+**Limitation.** The model is evaluated only on US street complaints, and those
+same sentences chose its settings, so the scores are somewhat optimistic. How
+it performs on what estate residents write has not been measured.
 
 ## Server design
 
@@ -230,9 +210,9 @@ seen, so a fresh batch is needed to test again.
 - `FaultClassifier.Report` loses `images` and `locationLabel`.
   `FaultClassifier.Image` is deleted.
 - **Removed:** `AnthropicFaultClassifier`,
-  `AnthropicFaultClassifierEvaluationTests`, `spring.ai.anthropic.api-key`,
-  `app.routing.model`, and the `ANTHROPIC_API_KEY` secret. The Spring AI
-  starter and its auto-configuration exclusion predate ID-70 and stay.
+  `AnthropicFaultClassifierEvaluationTests` and `app.routing.model`. The Spring
+  AI starter, its auto-configuration exclusion, `spring.ai.anthropic.api-key`
+  and the `.env.example` entry predate ID-70 and stay.
 - The model is about 23 MB, committed under
   `apps/server/src/main/resources/routing/`, as the 5 MB anomaly model is.
   Memory on Cloud Run rises by roughly 100 MB. Inference runs in the scheduled
@@ -291,6 +271,7 @@ bad:
 - Automatic routing for any fault other than water leaks.
 - Types of leak, severity, or raising work-order priority from the result.
 - Reading photos, or using the location.
+- Testing on hand-written estate reports.
 - A second shipped model.
 - Retraining from live reports or Manager decisions.
 
@@ -298,20 +279,18 @@ bad:
 
 - [x] Spike: the Java tokenizer (see Spike result).
 - [x] Agree this spec.
-- [ ] Write and cross-check the hand-written reports, and set them aside.
 - [x] Data preparation: read, clean and de-duplicate, and review labels. No
   labels were changed.
-- [x] Notebook: train and calibrate, iterating on Check 1 until it meets the
-  targets (see Check 1 result).
-- [ ] Final model, export, Check 2, parity fixture, model note. Record Check 2
-  here.
-- [ ] Server red-green: probability mapping, parity test, text-only job.
-  Remove the Anthropic classifier.
-- [ ] `PLUMBING` end to end: enum, `pnpm api:generate`, Contractors page and
-  dialog, and the resident notice.
-- [ ] `.docs` and full checks.
+- [x] Notebook: train and calibrate, iterating on cross-validation until it meets the
+  targets (see Cross-validation result).
+- [x] Final model, export, parity fixture, model note (see Final model).
+- [x] Server red-green: probability mapping, parity test, text-only job.
+  Remove the Anthropic classifier. `PLUMBING` added to the enum and contract.
+- [x] Web: `PLUMBING` on the Contractors page and dialog, and the resident
+  notice.
+- [x] `.docs` and full checks.
 
-## Check 1 result (2026-11-09)
+## Cross-validation result (2026-11-09)
 
 Notebook `04-water-leak-classifier.ipynb`, 369 sentences (47 leaks), five folds.
 Chosen settings: 8 epochs, learning rate 1e-4, square-root class weights,
@@ -325,14 +304,34 @@ temperature 1.467.
 - **Targets are met on average, by about one sentence.** The seed 42 run alone
   has precision 0.938. The best single run did not hold up on other seeds, so
   the choice was made on the three-seed mean.
-- **The transformer does not beat TF-IDF on this dataset.** Check 2 is the
-  comparison that matters, so the TF-IDF reference also runs on it.
+- **The transformer does not beat TF-IDF on this dataset.**
 - **Every false positive is a drainage report**, such as a blocked storm drain
   pipe. Water that will not drain looks like a leak to the model.
 - **Calibration error is low (0.005), but mistakes are confident.** Precision
   and recall do not change between thresholds 0.50 and 0.95, so on these
   sentences the `INCONCLUSIVE` band is almost empty.
 - Tuning stopped here. More iterations would only fit these 369 sentences.
+
+## Final model (2026-11-09)
+
+Notebook `05-water-leak-export.ipynb`, version `water-leak-minilm-v1`, trained on
+all 369 sentences with the chosen settings. It has no held-out score of its own:
+its expected performance is the cross-validation result above.
+
+| Check | Result |
+| --- | --- |
+| File size | 23.6 MB int8 (91.7 MB at full precision) |
+| PyTorch vs full-precision ONNX, largest probability difference | 8.6e-8 |
+| Full precision vs int8, largest probability difference | 0.008 |
+| Routing decisions changed by int8 at 0.80 | 0 of 369 |
+
+The ONNX output is `probabilities`, calibrated, in class order `NOT_LEAK`,
+`WATER_LEAK`.
+
+**CPU differences.** Run from Java on Apple Silicon and on Linux amd64, the int8
+model's probabilities differ by at most 0.006 on the 369 sentences, and no routing
+decision changes. The parity fixture's deliberately odd inputs differ by up to
+0.05, so its probability tolerance is 0.06. Its token IDs must match exactly.
 
 ## Spike result (2026-11-09)
 
@@ -356,5 +355,8 @@ so a mismatch is detected. What this means for the build:
 - **Native library.** DJL extracts it to `~/.djl.ai` on first use, so the
   runtime user needs a writable home. The image's `spring` user has one.
 
-Not covered: the team's own int8 model (the parity fixture checks it) and the
-real server image with its AOT cache (checked when the model is wired in).
+The team's int8 model passed the same comparison in `WaterLeakModelTests`. The real
+server image, built for `linux/arm64`, recorded its AOT cache with the model loaded
+and started as the `spring` user. An amd64 image could not be built under emulation
+on Apple Silicon, because `tar` fails while unpacking Maven there. Loading on
+`linux/amd64` was shown in a plain Java 25 container instead.

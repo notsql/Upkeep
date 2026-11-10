@@ -1,6 +1,5 @@
 package com.proj.server.routing;
 
-import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.workorder.WorkOrderException;
 import com.proj.server.workorder.WorkOrderPriority;
 import com.proj.server.workorder.WorkOrderProgressService;
@@ -31,7 +30,6 @@ public class ReportClassificationJob {
 
     private final RoutingRepository routing;
     private final FaultClassifier classifier;
-    private final ResidentImageStore images;
     private final WorkOrderService orders;
     private final WorkOrderProgressService progress;
     private final TransactionTemplate transactions;
@@ -40,14 +38,12 @@ public class ReportClassificationJob {
     public ReportClassificationJob(
             RoutingRepository routing,
             FaultClassifier classifier,
-            ResidentImageStore images,
             WorkOrderService orders,
             WorkOrderProgressService progress,
             TransactionTemplate transactions,
             Clock clock) {
         this.routing = routing;
         this.classifier = classifier;
-        this.images = images;
         this.orders = orders;
         this.progress = progress;
         this.transactions = transactions;
@@ -82,11 +78,7 @@ public class ReportClassificationJob {
         }
         Classification result;
         try {
-            var photos = source.images().stream()
-                    .map(image -> new FaultClassifier.Image(images.read(image.key()), image.contentType()))
-                    .toList();
-            result = classifier.classify(
-                    new FaultClassifier.Report(source.title(), source.description(), source.locationLabel(), photos));
+            result = classifier.classify(new FaultClassifier.Report(source.title(), source.description()));
         } catch (RuntimeException failure) {
             log.warn("Classifying report {} failed: {}", reportId, failure.getMessage());
             settle(estateId, reportId, lease, attempts -> {

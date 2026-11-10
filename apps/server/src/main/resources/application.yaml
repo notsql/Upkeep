@@ -72,9 +72,6 @@ app:
     # Server-side secret for the WorkOS API (GET /users). Unlike the issuer
     # below, a blank default is safe: nothing auto-configures off it.
     api-key: ${WORKOS_API_KEY:}
-  routing:
-    # The model that classifies fault reports (ID-70); the key is ANTHROPIC_API_KEY.
-    model: claude-haiku-5-5
   mail:
     # Blank: send as the authenticated SMTP account, with no Reply-To.
     from: ${APP_MAIL_FROM:}
