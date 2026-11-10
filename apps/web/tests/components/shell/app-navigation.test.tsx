@@ -365,6 +365,8 @@ it("hides Contractors from accounts that cannot create work orders", async () =>
   const nav = await setup("/estates/pine/reports");
   await nav.findByRole("link", { name: "Fault reports" });
   expect(nav.queryByRole("link", { name: "Contractors" })).toBeNull();
+});
+
 it.each(["/estates/pine/edit", "/estates/pine/notification-settings"])(
   "marks Estate settings active on %s",
   async (path) => {

@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
 import { ListRows } from "@/components/list/list-row";
@@ -8,13 +9,10 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
-import {
-  ReportRequestError,
-  type useEstateReportList,
-} from "@/lib/estate-reports";
+import { ReportRequestError } from "@/lib/estate-reports";
+import type { PagedList } from "@/lib/infinite-list";
 import { routingStateLabel } from "@/lib/report-routing";
 import { ReportsEmpty } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/reports-empty";
-import type { PagedList } from "@/lib/infinite-list";
 
 export function EstateReportsResults({
   estateId,
@@ -60,7 +58,16 @@ export function EstateReportsResults({
         <ListRows label="Reports">
           {reports.data.items.map((report) => (
             <ReportRow
-              badges={<DuplicateBadges report={report} />}
+              badges={
+                <div className="flex flex-wrap gap-1">
+                  <DuplicateBadges report={report} />
+                  {report.routing ? (
+                    <Badge variant="outline">
+                      Routing: {routingStateLabel(report.routing.state)}
+                    </Badge>
+                  ) : null}
+                </div>
+              }
               key={report.id}
               report={report}
               title={
@@ -77,15 +84,7 @@ export function EstateReportsResults({
                   urgency={report.urgency}
                 />
               }
-            >
-              {report.routing ? (
-                <div>
-                  <Badge variant="outline">
-                    Routing: {routingStateLabel(report.routing.state)}
-                  </Badge>
-                </div>
-              ) : null}
-            </ReportCard>
+            />
           ))}
         </ListRows>
       )}
