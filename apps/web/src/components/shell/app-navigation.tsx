@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Files,
+  HardHat,
   Layers,
   LayoutDashboard,
   type LucideIcon,
@@ -31,6 +32,7 @@ import { residentNavigation } from "@/components/shell/resident-navigation";
 import { useAppAccess } from "@/lib/access";
 import {
   assetsEntry,
+  canOpenContractors,
   canOpenDocuments,
   canOpenEstateSettings,
   canOpenFaultReports,
@@ -172,6 +174,12 @@ function estateGroups(
           "/estates/$estateId/reports",
           ClipboardList,
           canOpenFaultReports(permission)
+        ),
+        ...item(
+          "Contractors",
+          "/estates/$estateId/contractors",
+          HardHat,
+          canOpenContractors(permission)
         ),
         ...item(
           "Inspections",

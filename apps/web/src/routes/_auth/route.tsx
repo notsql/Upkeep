@@ -15,9 +15,13 @@ import { buildSignInPath } from "@/lib/auth-redirect";
 import {
   canOpenAllDevices,
   canOpenAssets,
+  canOpenContractors,
   canOpenEstateSettings,
+  canOpenFaultReports,
   canOpenInspections,
+  canOpenMembers,
   canOpenNotificationSettings,
+  canOpenRoles,
 } from "@/lib/estate-destinations";
 
 type EstatePermission = components["schemas"]["EstateAccessResponse"];
@@ -34,6 +38,17 @@ const OWNER_GATED: Record<string, DestinationPredicate> = {
   inspections: canOpenInspections,
   edit: canOpenEstateSettings,
   "notification-settings": canOpenNotificationSettings,
+};
+
+// Sections gated only by access flags, through the sidebar's own predicates.
+const CAPABILITY_GATED: Record<
+  string,
+  (permission: EstatePermission | undefined) => boolean
+> = {
+  reports: canOpenFaultReports,
+  contractors: canOpenContractors,
+  roles: canOpenRoles,
+  council: canOpenMembers,
 };
 
 // Sections whose sub-views (up to this many segments deeper) share the
@@ -188,38 +203,21 @@ function guardEstatePath(
   if (guardInspectionContext(path, estate)) {
     return;
   }
-  switch (feature) {
-    case "reports":
-      if (!estate?.canViewFaultReports) {
-        throw notFound();
-      }
-      return;
-    case "roles":
-      if (!estate?.canViewEstateRoles) {
-        throw notFound();
-      }
-      return;
-    case "council":
-      if (
-        !(
-          estate?.canViewEstateInvitations ||
-          estate?.canInviteMembers ||
-          estate?.canManageInvitationPermissions
-        )
-      ) {
-        throw notFound();
-      }
-      return;
-    default:
-      if (checkedByDestination(path, feature)) {
-        return;
-      }
-      if (
-        !estate?.canViewManagement ||
-        (feature === "assets" && !estate.canViewAssets)
-      ) {
-        throw notFound();
-      }
+  const gate = feature ? CAPABILITY_GATED[feature] : undefined;
+  if (gate) {
+    if (!gate(estate)) {
+      throw notFound();
+    }
+    return;
+  }
+  if (checkedByDestination(path, feature)) {
+    return;
+  }
+  if (
+    !estate?.canViewManagement ||
+    (feature === "assets" && !estate.canViewAssets)
+  ) {
+    throw notFound();
   }
 }
 

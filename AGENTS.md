@@ -63,6 +63,25 @@ Non-negotiable. Breaking one of these is a bug even if the code works.
     also means no `git commit`, `git commit --amend`, `git merge`,
     `git rebase`, `git cherry-pick`, `git revert` or `git push` on your own
     initiative. Where a workflow below says "commit", that is the human's step.
+14. **Start from current `main`, on the story's own branch.** Before planning
+    or building, run `git fetch` and `git rev-list --count HEAD..origin/main`.
+    If the branch is behind `main`, or is named for a different story, stop
+    and ask the human to branch or merge (rule 13). Never design against a
+    stale tree: teammates' merged work is invisible from it.
+15. **Look for existing work before adding a model, endpoint or screen.**
+    Search `origin/main`, not just the working tree, for the concept:
+    `git show origin/main:packages/db/prisma/schema/schema.prisma`,
+    `git ls-tree --name-only origin/main .spec/features/`, and `git branch -r`
+    for open work. Extend what exists. If a new design would overlap an
+    existing one (the same table name, the same concept), raise it in the
+    spec before writing code.
+16. **A new table is not usable until the shared dev database has it.** Code
+    that writes to a table whose migration is not applied to Neon `dev` fails
+    for everyone running the branch locally. This is worst when an existing
+    flow (a submission, a sign-in) gains the write. Check with
+    `prisma migrate status` (see "Adding or changing a database table"), and
+    name every flow that breaks until the migration is applied in the
+    hand-off.
 
 Rules 4-6 are explained in `.spec/decisions/`.
 
@@ -202,6 +221,11 @@ cache is never served to the next.
 
 ### Adding or changing a database table
 
+0. From `packages/db`, run
+   `infisical run --env=dev --path=/packages/db -- npx prisma migrate status`.
+   Migrations listed as "found in the database but not locally" mean the
+   branch is behind `main`: stop (rule 14). Check `origin/main`'s schema for
+   a model with the same name or purpose (rule 15).
 1. Edit `packages/db/prisma/schema/schema.prisma`.
 2. `pnpm db:migrate` - creates the migration and applies it.
 3. `pnpm db:generate` - regenerates the Prisma client **and** the jOOQ classes
@@ -354,6 +378,8 @@ and what not to test. The essentials:
 
 ## 7. Before you finish
 
+- The branch is named for this story and was current with `origin/main` when
+  work began (rule 14); `git fetch` again and say if `main` has moved since.
 - Non-trivial work had an agreed spec in `.spec/features/` before coding.
 - Tests were written first and seen failing before the implementation.
 - `pnpm check-types` and `pnpm test` pass.
@@ -361,7 +387,9 @@ and what not to test. The essentials:
 - If you touched a controller: `pnpm api:generate` was run and the generated
   files are committed.
 - If you touched the Prisma schema: `pnpm db:generate` was run, and the
-  migration and the regenerated jOOQ sources are committed.
+  migration and the regenerated jOOQ sources are committed. The hand-off says
+  whether Neon `dev` has the migration and, if not, which existing flows fail
+  until it is applied (rule 16).
 - `.docs/api/` and `.docs/frontend/` match what was built, and
   `.docs/README.md` links any new file.
 - Any screen you touched uses shadcn components and folder-based routes.

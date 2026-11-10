@@ -1,6 +1,7 @@
 package com.proj.server.resident;
 
 import com.proj.server.report.DuplicateService;
+import com.proj.server.routing.RoutingRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -19,18 +20,21 @@ public class ResidentReportService {
     private final ResidentImageStore images;
     private final TransactionTemplate transactions;
     private final DuplicateService duplicates;
+    private final RoutingRepository routing;
 
     public ResidentReportService(
             ResidentReportRepository reports,
             ResidentImageValidator validator,
             ResidentImageStore images,
             TransactionTemplate transactions,
-            DuplicateService duplicates) {
+            DuplicateService duplicates,
+            RoutingRepository routing) {
         this.reports = reports;
         this.validator = validator;
         this.images = images;
         this.transactions = transactions;
         this.duplicates = duplicates;
+        this.routing = routing;
     }
 
     public ResidentContextResponse context(String userId) {
@@ -98,6 +102,7 @@ public class ResidentReportService {
                     reports.addImage(image.id(), reportId, image.key(), image.contentType(), image.size());
                 }
                 duplicates.detect(current.id(), reportId, locationId, reportTitle, reportDescription);
+                routing.queue(reportId, current.id());
                 return reports.detail(userId, reportId).orElseThrow();
             });
             return created;

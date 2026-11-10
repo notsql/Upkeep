@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { pageHead } from "@/lib/page-title";
+import { ROUTING_STATES, type RoutingState } from "@/lib/report-routing";
 import { EstateReportsPage } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/estate-reports-page";
 import type { EstateReportsSearch } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-search";
 
@@ -45,6 +46,9 @@ export const Route = createFileRoute("/_auth/estates/$estateId/reports/")({
         : {}),
       ...(minLevelPosition === undefined ? {} : { minLevelPosition }),
       ...(maxLevelPosition === undefined ? {} : { maxLevelPosition }),
+      ...(parseRoutingState(search.routingState)
+        ? { routingState: parseRoutingState(search.routingState) }
+        : {}),
       ...(typeof search.cursor === "string" && search.cursor
         ? { cursor: search.cursor }
         : {}),
@@ -78,6 +82,10 @@ function EstateReportsRoute() {
       search={search}
     />
   );
+}
+
+function parseRoutingState(value: unknown): RoutingState | undefined {
+  return ROUTING_STATES.find((state) => state.value === value)?.value;
 }
 
 function position(value: unknown): number | undefined {

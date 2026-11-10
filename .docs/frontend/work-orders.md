@@ -474,6 +474,13 @@ equipment and its location, the reference note and description); see
 [equipment-dispatch.md](equipment-dispatch.md). `useAsset` gained an optional
 `enabled` argument for this.
 
+## Contractor email (ID-70)
+
+`$workOrderId/index.tsx` passes a `sections` slot to `WorkOrderDetailPage`,
+which renders it after the order Card. For `EQUIPMENT_FAULT` orders from a
+resident report, the slot shows the "Contractor email" Card. See
+[report-routing.md](report-routing.md). Status `ASSIGNED` can now be reached
+by emailing a contractor.
 ## Phones: infinite scroll
 
 Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Work order pages (`useWorkOrderFeed`, key `[userId, "work-orders", estateId, "feed", filters+sort]`); the URL `cursor` is left alone.

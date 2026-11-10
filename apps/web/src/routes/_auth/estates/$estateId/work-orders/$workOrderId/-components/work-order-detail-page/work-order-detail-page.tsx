@@ -1,7 +1,8 @@
+import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Wrench } from "lucide-react";
-import { useCallback } from "react";
+import { type ReactNode, useCallback } from "react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
@@ -15,9 +16,15 @@ import { WorkOrderProgress } from "@/routes/_auth/estates/$estateId/work-orders/
 export function WorkOrderDetailPage({
   estateId,
   workOrderId,
+  sections,
 }: {
   estateId: string;
   workOrderId: string;
+  /** Feature sections shown after the order details, such as ID-70's contractor email. */
+  sections?: (
+    order: components["schemas"]["WorkOrderResponse"],
+    canCreate: boolean
+  ) => ReactNode;
 }) {
   const access = useWorkOrderAccess(estateId);
   const order = useWorkOrder(estateId, workOrderId);
@@ -82,6 +89,7 @@ export function WorkOrderDetailPage({
         data={data}
         estateId={estateId}
       />
+      {sections?.(data, access.canCreate)}
       {access.canViewDocuments ? (
         <WorkOrderDocuments
           estateId={estateId}

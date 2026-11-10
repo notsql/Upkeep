@@ -17,6 +17,7 @@ import { ChangeUrgencyDialog } from "@/routes/_auth/estates/$estateId/reports/$r
 import { DuplicateSection } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/duplicate-section/duplicate-section";
 import { LatestUrgencyChange } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/latest-urgency-change";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
+import { RoutingCard } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/routing-card";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/reports/$reportId/"
@@ -34,6 +35,7 @@ function EstateReportDetailPage() {
     const result = await report.refetch();
     return result.isError ? undefined : result.data;
   }, [report.refetch]);
+  const loaded = report.isError ? undefined : report.data;
   if (access.pending) {
     return <LoadingState label="Loading access…" rows={2} />;
   }
@@ -79,7 +81,7 @@ function EstateReportDetailPage() {
           onRetry={reload}
         />
       ) : null}
-      {report.data && !report.isError ? (
+      {loaded ? (
         <ReportCard
           locationAction={
             access.canRelocate || access.canChangeUrgency ? (
@@ -88,31 +90,31 @@ function EstateReportDetailPage() {
                   <ChangeLocationDialog
                     estateId={estateId}
                     reload={reload}
-                    report={report.data}
+                    report={loaded}
                   />
                 ) : null}
                 {access.canChangeUrgency ? (
                   <ChangeUrgencyDialog
                     estateId={estateId}
                     reload={reload}
-                    report={report.data}
+                    report={loaded}
                   />
                 ) : null}
               </div>
             ) : null
           }
-          report={report.data}
+          report={loaded}
           showUpdated
           urgency={
             <ReportUrgencyBadges
-              isSafety={report.data.isSafety}
-              urgency={report.data.urgency}
+              isSafety={loaded.isSafety}
+              urgency={loaded.urgency}
             />
           }
         >
-          <LatestUrgencyChange change={report.data.lastUrgencyChange} />
-          <ReportDetails report={report.data}>
-            {report.data.images.map((image) => (
+          <LatestUrgencyChange change={loaded.lastUrgencyChange} />
+          <ReportDetails report={loaded}>
+            {loaded.images.map((image) => (
               <PrivateReportImage
                 estateId={estateId}
                 imageId={image.id}
@@ -123,12 +125,19 @@ function EstateReportDetailPage() {
           </ReportDetails>
         </ReportCard>
       ) : null}
-      {report.data && !report.isError ? (
+      {loaded ? (
         <DuplicateSection
           canReview={access.canReviewDuplicates}
           estateId={estateId}
           reload={reload}
-          report={report.data}
+          report={loaded}
+        />
+      ) : null}
+      {loaded?.routing ? (
+        <RoutingCard
+          estateId={estateId}
+          reportId={reportId}
+          routing={loaded.routing}
         />
       ) : null}
     </PageLayout>

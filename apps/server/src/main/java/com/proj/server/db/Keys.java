@@ -21,6 +21,7 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Documentworkorderevent;
+import com.proj.server.db.tables.Equipmentproviderroute;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estatenotificationsettings;
@@ -44,9 +45,13 @@ import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
 import com.proj.server.db.tables.Readingimportbatch;
 import com.proj.server.db.tables.Readingimportrow;
+import com.proj.server.db.tables.Reportclassification;
+import com.proj.server.db.tables.Reportrouting;
+import com.proj.server.db.tables.Serviceprovider;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderdispatch;
 import com.proj.server.db.tables.Workorderstatusevent;
 import com.proj.server.db.tables.records.AnomalyscoreRecord;
 import com.proj.server.db.tables.records.AssetRecord;
@@ -65,6 +70,7 @@ import com.proj.server.db.tables.records.DeviceflatlinepauseRecord;
 import com.proj.server.db.tables.records.DevicereadingRecord;
 import com.proj.server.db.tables.records.DocumentRecord;
 import com.proj.server.db.tables.records.DocumentworkordereventRecord;
+import com.proj.server.db.tables.records.EquipmentproviderrouteRecord;
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.db.tables.records.EstateinvitationRecord;
 import com.proj.server.db.tables.records.EstatenotificationsettingsRecord;
@@ -88,9 +94,13 @@ import com.proj.server.db.tables.records.NotificationsweepRecord;
 import com.proj.server.db.tables.records.PermissionRecord;
 import com.proj.server.db.tables.records.ReadingimportbatchRecord;
 import com.proj.server.db.tables.records.ReadingimportrowRecord;
+import com.proj.server.db.tables.records.ReportclassificationRecord;
+import com.proj.server.db.tables.records.ReportroutingRecord;
+import com.proj.server.db.tables.records.ServiceproviderRecord;
 import com.proj.server.db.tables.records.WorkorderRecord;
 import com.proj.server.db.tables.records.WorkordercompletionRecord;
 import com.proj.server.db.tables.records.WorkordercompletionrevisionRecord;
+import com.proj.server.db.tables.records.WorkorderdispatchRecord;
 import com.proj.server.db.tables.records.WorkorderstatuseventRecord;
 
 import org.jooq.ForeignKey;
@@ -129,6 +139,7 @@ public class Keys {
     public static final UniqueKey<DevicereadingRecord> DEVICEREADING_PKEY = Internal.createUniqueKey(Devicereading.DEVICEREADING, DSL.name("DeviceReading_pkey"), new TableField[] { Devicereading.DEVICEREADING.ID }, true);
     public static final UniqueKey<DocumentRecord> DOCUMENT_PKEY = Internal.createUniqueKey(Document.DOCUMENT, DSL.name("Document_pkey"), new TableField[] { Document.DOCUMENT.ID }, true);
     public static final UniqueKey<DocumentworkordereventRecord> DOCUMENTWORKORDEREVENT_PKEY = Internal.createUniqueKey(Documentworkorderevent.DOCUMENTWORKORDEREVENT, DSL.name("DocumentWorkOrderEvent_pkey"), new TableField[] { Documentworkorderevent.DOCUMENTWORKORDEREVENT.ID }, true);
+    public static final UniqueKey<EquipmentproviderrouteRecord> EQUIPMENTPROVIDERROUTE_PKEY = Internal.createUniqueKey(Equipmentproviderroute.EQUIPMENTPROVIDERROUTE, DSL.name("EquipmentProviderRoute_pkey"), new TableField[] { Equipmentproviderroute.EQUIPMENTPROVIDERROUTE.ESTATEID, Equipmentproviderroute.EQUIPMENTPROVIDERROUTE.EQUIPMENTTYPE }, true);
     public static final UniqueKey<EstateRecord> ESTATE_PKEY = Internal.createUniqueKey(Estate.ESTATE, DSL.name("Estate_pkey"), new TableField[] { Estate.ESTATE.ID }, true);
     public static final UniqueKey<EstateinvitationRecord> ESTATEINVITATION_PKEY = Internal.createUniqueKey(Estateinvitation.ESTATEINVITATION, DSL.name("EstateInvitation_pkey"), new TableField[] { Estateinvitation.ESTATEINVITATION.ID }, true);
     public static final UniqueKey<EstatenotificationsettingsRecord> ESTATENOTIFICATIONSETTINGS_PKEY = Internal.createUniqueKey(Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS, DSL.name("EstateNotificationSettings_pkey"), new TableField[] { Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS.ESTATEID }, true);
@@ -152,9 +163,13 @@ public class Keys {
     public static final UniqueKey<PermissionRecord> PERMISSION_PKEY = Internal.createUniqueKey(Permission.PERMISSION, DSL.name("Permission_pkey"), new TableField[] { Permission.PERMISSION.CODE }, true);
     public static final UniqueKey<ReadingimportbatchRecord> READINGIMPORTBATCH_PKEY = Internal.createUniqueKey(Readingimportbatch.READINGIMPORTBATCH, DSL.name("ReadingImportBatch_pkey"), new TableField[] { Readingimportbatch.READINGIMPORTBATCH.ID }, true);
     public static final UniqueKey<ReadingimportrowRecord> READINGIMPORTROW_PKEY = Internal.createUniqueKey(Readingimportrow.READINGIMPORTROW, DSL.name("ReadingImportRow_pkey"), new TableField[] { Readingimportrow.READINGIMPORTROW.BATCHID, Readingimportrow.READINGIMPORTROW.RECORDNUMBER }, true);
+    public static final UniqueKey<ReportclassificationRecord> REPORTCLASSIFICATION_PKEY = Internal.createUniqueKey(Reportclassification.REPORTCLASSIFICATION, DSL.name("ReportClassification_pkey"), new TableField[] { Reportclassification.REPORTCLASSIFICATION.ID }, true);
+    public static final UniqueKey<ReportroutingRecord> REPORTROUTING_PKEY = Internal.createUniqueKey(Reportrouting.REPORTROUTING, DSL.name("ReportRouting_pkey"), new TableField[] { Reportrouting.REPORTROUTING.REPORTID }, true);
+    public static final UniqueKey<ServiceproviderRecord> SERVICEPROVIDER_PKEY = Internal.createUniqueKey(Serviceprovider.SERVICEPROVIDER, DSL.name("ServiceProvider_pkey"), new TableField[] { Serviceprovider.SERVICEPROVIDER.ID }, true);
     public static final UniqueKey<WorkorderRecord> WORKORDER_PKEY = Internal.createUniqueKey(Workorder.WORKORDER, DSL.name("WorkOrder_pkey"), new TableField[] { Workorder.WORKORDER.ID }, true);
     public static final UniqueKey<WorkordercompletionRecord> WORKORDERCOMPLETION_PKEY = Internal.createUniqueKey(Workordercompletion.WORKORDERCOMPLETION, DSL.name("WorkOrderCompletion_pkey"), new TableField[] { Workordercompletion.WORKORDERCOMPLETION.ID }, true);
     public static final UniqueKey<WorkordercompletionrevisionRecord> WORKORDERCOMPLETIONREVISION_PKEY = Internal.createUniqueKey(Workordercompletionrevision.WORKORDERCOMPLETIONREVISION, DSL.name("WorkOrderCompletionRevision_pkey"), new TableField[] { Workordercompletionrevision.WORKORDERCOMPLETIONREVISION.ID }, true);
+    public static final UniqueKey<WorkorderdispatchRecord> WORKORDERDISPATCH_PKEY = Internal.createUniqueKey(Workorderdispatch.WORKORDERDISPATCH, DSL.name("WorkOrderDispatch_pkey"), new TableField[] { Workorderdispatch.WORKORDERDISPATCH.ID }, true);
     public static final UniqueKey<WorkorderstatuseventRecord> WORKORDERSTATUSEVENT_PKEY = Internal.createUniqueKey(Workorderstatusevent.WORKORDERSTATUSEVENT, DSL.name("WorkOrderStatusEvent_pkey"), new TableField[] { Workorderstatusevent.WORKORDERSTATUSEVENT.ID }, true);
 
     // -------------------------------------------------------------------------
@@ -177,6 +192,7 @@ public class Keys {
     public static final ForeignKey<AssetmodelRecord, ManufacturerRecord> ASSETMODEL__ASSETMODEL_MANUFACTURERID_FKEY = Internal.createForeignKey(Assetmodel.ASSETMODEL, DSL.name("AssetModel_manufacturerId_fkey"), new TableField[] { Assetmodel.ASSETMODEL.MANUFACTURERID }, Keys.MANUFACTURER_PKEY, new TableField[] { Manufacturer.MANUFACTURER.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<DeviceRecord, EstateRecord> DEVICE__DEVICE_ESTATEID_FKEY = Internal.createForeignKey(Device.DEVICE, DSL.name("Device_estateId_fkey"), new TableField[] { Device.DEVICE.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<DocumentRecord, EstateRecord> DOCUMENT__DOCUMENT_ESTATEID_FKEY = Internal.createForeignKey(Document.DOCUMENT, DSL.name("Document_estateId_fkey"), new TableField[] { Document.DOCUMENT.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<EquipmentproviderrouteRecord, EstateRecord> EQUIPMENTPROVIDERROUTE__EQUIPMENTPROVIDERROUTE_ESTATEID_FKEY = Internal.createForeignKey(Equipmentproviderroute.EQUIPMENTPROVIDERROUTE, DSL.name("EquipmentProviderRoute_estateId_fkey"), new TableField[] { Equipmentproviderroute.EQUIPMENTPROVIDERROUTE.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateinvitationRecord, EstateRecord> ESTATEINVITATION__ESTATEINVITATION_ESTATEID_FKEY = Internal.createForeignKey(Estateinvitation.ESTATEINVITATION, DSL.name("EstateInvitation_estateId_fkey"), new TableField[] { Estateinvitation.ESTATEINVITATION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstatenotificationsettingsRecord, EstateRecord> ESTATENOTIFICATIONSETTINGS__ESTATENOTIFICATIONSETTINGS_ESTATEID_FKEY = Internal.createForeignKey(Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS, DSL.name("EstateNotificationSettings_estateId_fkey"), new TableField[] { Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<EstateroledefinitionRecord, EstateRecord> ESTATEROLEDEFINITION__ESTATEROLEDEFINITION_ESTATEID_FKEY = Internal.createForeignKey(Estateroledefinition.ESTATEROLEDEFINITION, DSL.name("EstateRoleDefinition_estateId_fkey"), new TableField[] { Estateroledefinition.ESTATEROLEDEFINITION.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
@@ -196,5 +212,7 @@ public class Keys {
     public static final ForeignKey<NotificationsweepRecord, EstateRecord> NOTIFICATIONSWEEP__NOTIFICATIONSWEEP_ESTATEID_FKEY = Internal.createForeignKey(Notificationsweep.NOTIFICATIONSWEEP, DSL.name("NotificationSweep_estateId_fkey"), new TableField[] { Notificationsweep.NOTIFICATIONSWEEP.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<ReadingimportbatchRecord, EstateRecord> READINGIMPORTBATCH__READINGIMPORTBATCH_ESTATEID_FKEY = Internal.createForeignKey(Readingimportbatch.READINGIMPORTBATCH, DSL.name("ReadingImportBatch_estateId_fkey"), new TableField[] { Readingimportbatch.READINGIMPORTBATCH.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<ReadingimportrowRecord, ReadingimportbatchRecord> READINGIMPORTROW__READINGIMPORTROW_BATCHID_FKEY = Internal.createForeignKey(Readingimportrow.READINGIMPORTROW, DSL.name("ReadingImportRow_batchId_fkey"), new TableField[] { Readingimportrow.READINGIMPORTROW.BATCHID }, Keys.READINGIMPORTBATCH_PKEY, new TableField[] { Readingimportbatch.READINGIMPORTBATCH.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<ReportclassificationRecord, IssuereportRecord> REPORTCLASSIFICATION__REPORTCLASSIFICATION_REPORTID_FKEY = Internal.createForeignKey(Reportclassification.REPORTCLASSIFICATION, DSL.name("ReportClassification_reportId_fkey"), new TableField[] { Reportclassification.REPORTCLASSIFICATION.REPORTID }, Keys.ISSUEREPORT_PKEY, new TableField[] { Issuereport.ISSUEREPORT.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
+    public static final ForeignKey<ServiceproviderRecord, EstateRecord> SERVICEPROVIDER__SERVICEPROVIDER_ESTATEID_FKEY = Internal.createForeignKey(Serviceprovider.SERVICEPROVIDER, DSL.name("ServiceProvider_estateId_fkey"), new TableField[] { Serviceprovider.SERVICEPROVIDER.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
     public static final ForeignKey<WorkorderRecord, EstateRecord> WORKORDER__WORKORDER_ESTATEID_FKEY = Internal.createForeignKey(Workorder.WORKORDER, DSL.name("WorkOrder_estateId_fkey"), new TableField[] { Workorder.WORKORDER.ESTATEID }, Keys.ESTATE_PKEY, new TableField[] { Estate.ESTATE.ID }, true, ForeignKeyRule.RESTRICT, ForeignKeyRule.RESTRICT);
 }

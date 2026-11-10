@@ -2,11 +2,15 @@ package com.proj.server.report;
 
 import com.proj.server.resident.IssueReportSummaryResponse;
 import com.proj.server.resident.IssueReportSummaryResponse.ReportLocation;
+import com.proj.server.routing.ReportRoutingResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** Responder view of a report: the resident summary plus duplicate and urgency information. */
+/**
+ * Responder view of a report: the resident summary plus duplicate and urgency information, and routing (ID-70),
+ * which resident responses never carry.
+ */
 @Schema(
         requiredProperties = {
             "id",
@@ -22,7 +26,8 @@ import java.util.UUID;
             "duplicateOf",
             "urgency",
             "isSafety",
-            "urgencyVersion"
+            "urgencyVersion",
+            "routing"
         })
 public record EstateIssueReportSummaryResponse(
         UUID id,
@@ -38,7 +43,10 @@ public record EstateIssueReportSummaryResponse(
         @Schema(nullable = true) DuplicateOf duplicateOf,
         ReportUrgency urgency,
         boolean isSafety,
-        int urgencyVersion) {
+        int urgencyVersion,
+
+        @Schema(nullable = true, description = "Null for reports submitted before automatic routing")
+        ReportRoutingResponse routing) {
     public static EstateIssueReportSummaryResponse of(
             IssueReportSummaryResponse report, ReportUrgencyRepository.Values values) {
         return new EstateIssueReportSummaryResponse(
@@ -55,7 +63,27 @@ public record EstateIssueReportSummaryResponse(
                 null,
                 values.urgency(),
                 values.isSafety(),
-                values.version());
+                values.version(),
+                null);
+    }
+
+    public EstateIssueReportSummaryResponse withRouting(ReportRoutingResponse reportRouting) {
+        return new EstateIssueReportSummaryResponse(
+                id,
+                title,
+                description,
+                estateName,
+                location,
+                status,
+                createdAt,
+                updatedAt,
+                confirmedDuplicateCount,
+                suspectedDuplicateCount,
+                duplicateOf,
+                urgency,
+                isSafety,
+                urgencyVersion,
+                reportRouting);
     }
 
     public EstateIssueReportSummaryResponse withDuplicates(DuplicateRepository.Summary info) {
@@ -73,6 +101,7 @@ public record EstateIssueReportSummaryResponse(
                 info.duplicateOf(),
                 urgency,
                 isSafety,
-                urgencyVersion);
+                urgencyVersion,
+                routing);
     }
 }

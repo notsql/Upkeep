@@ -12,11 +12,19 @@ export type EstateReportFilters = Pick<
   NonNullable<
     paths["/estates/{estateId}/reports"]["get"]["parameters"]["query"]
   >,
-  "blockId" | "minLevelPosition" | "maxLevelPosition" | "openOnly" | "sort"
+  | "blockId"
+  | "minLevelPosition"
+  | "maxLevelPosition"
+  | "routingState"
+  | "openOnly"
+  | "sort"
 >;
 
 export type EstateReport =
   components["schemas"]["EstateIssueReportDetailResponse"];
+
+/** While the system is still classifying a report, check back for its routing. */
+const CLASSIFYING_POLL_MS = 5000;
 
 export class ReportRequestError extends Error {
   readonly status: number;
@@ -121,11 +129,15 @@ export function useEstateReportFeed(
 
 export function useEstateReport(estateId: string, reportId: string) {
   const { userId, canView } = useEstateReportAccess(estateId);
-  return useQuery({
+  return useQuery<EstateReport>({
     queryKey: [userId, "estate-reports", estateId, "detail", reportId],
     enabled: canView && !!reportId,
     retry: false,
     refetchOnWindowFocus: true,
+    refetchInterval: (query) =>
+      query.state.data?.routing?.state === "CLASSIFYING"
+        ? CLASSIFYING_POLL_MS
+        : false,
     queryFn: async ({ signal }) => {
       const { data, error, response } = await api.GET(
         "/estates/{estateId}/reports/{reportId}",

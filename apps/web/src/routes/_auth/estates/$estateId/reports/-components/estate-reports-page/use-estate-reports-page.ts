@@ -7,6 +7,7 @@ import {
   useEstateReportList,
   useEstateReportLocations,
 } from "@/lib/estate-reports";
+import type { RoutingState } from "@/lib/report-routing";
 import { asPagedList } from "@/lib/infinite-list";
 import { useMobile } from "@/lib/use-mobile";
 import type { EstateReportsSearch } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-search";
@@ -18,6 +19,7 @@ export function useEstateReportsPage(
     blockId,
     minLevelPosition,
     maxLevelPosition,
+    routingState,
     cursor,
     openOnly = true,
     sort = "URGENCY",
@@ -31,18 +33,35 @@ export function useEstateReportsPage(
     openOnly,
     sort,
   };
-  const activeCount = countReportFilters(filters);
+  const activeCount = countReportFilters(filters) + (routingState ? 1 : 0);
   const filtered = activeCount > 0;
   const panel = useFilterPanel(activeCount);
   const access = useEstateReportAccess(estateId);
+  const reports = useEstateReportList(
+    estateId,
+    { ...filters, routingState },
+    cursor
+  );
   const mobile = useMobile();
   const page = useEstateReportList(estateId, filters, cursor, !mobile);
   const feed = asPagedList(useEstateReportFeed(estateId, filters, mobile));
   const reports = mobile ? feed : page;
   const locations = useEstateReportLocations(estateId);
   const filter = useCallback(
-    (values: EstateReportFilters) => onSearch(values),
-    [onSearch]
+    (values: EstateReportFilters) => onSearch({ ...values, routingState }),
+    [onSearch, routingState]
+  );
+  const filterRouting = useCallback(
+    (value: RoutingState | undefined) =>
+      onSearch({
+        blockId,
+        minLevelPosition,
+        maxLevelPosition,
+        routingState: value,
+        openOnly,
+        sort,
+      }),
+    [blockId, minLevelPosition, maxLevelPosition, openOnly, sort, onSearch]
   );
   const clearFilters = useCallback(() => onSearch({}), [onSearch]);
   const retry = useCallback(() => reports.refetch(), [reports.refetch]);
@@ -55,6 +74,7 @@ export function useEstateReportsPage(
       blockId,
       minLevelPosition,
       maxLevelPosition,
+      routingState,
       cursor: reports.data?.nextCursor ?? undefined,
       openOnly,
       sort,
@@ -63,6 +83,7 @@ export function useEstateReportsPage(
     blockId,
     minLevelPosition,
     maxLevelPosition,
+    routingState,
     onSearch,
     openOnly,
     sort,
@@ -70,8 +91,23 @@ export function useEstateReportsPage(
   ]);
   const first = useCallback(
     () =>
-      onSearch({ blockId, minLevelPosition, maxLevelPosition, openOnly, sort }),
-    [blockId, minLevelPosition, maxLevelPosition, openOnly, sort, onSearch]
+      onSearch({
+        blockId,
+        minLevelPosition,
+        maxLevelPosition,
+        routingState,
+        openOnly,
+        sort,
+      }),
+    [
+      blockId,
+      minLevelPosition,
+      maxLevelPosition,
+      routingState,
+      openOnly,
+      sort,
+      onSearch,
+    ]
   );
 
   return {
@@ -79,6 +115,7 @@ export function useEstateReportsPage(
     activeCount,
     clearFilters,
     filter,
+    filterRouting,
     filtered,
     filters,
     first,
@@ -88,5 +125,6 @@ export function useEstateReportsPage(
     reports,
     retry,
     retryLocations,
+    routingState,
   };
 }

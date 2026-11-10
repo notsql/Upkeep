@@ -120,6 +120,7 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   expect(names).toEqual([
     "Overview",
     "Fault reports",
+    "Contractors",
     "Inspections",
     "Work orders",
     "Assets",
@@ -351,6 +352,19 @@ it("hides People & access when the user can open neither page", async () => {
   expect(nav.queryByRole("link", { name: "People & access" })).toBeNull();
 });
 
+it("offers Contractors to accounts that can create work orders", async () => {
+  estate({});
+  const nav = await setup("/estates/pine/reports");
+  expect(
+    (await nav.findByRole("link", { name: "Contractors" })).getAttribute("href")
+  ).toBe("/estates/pine/contractors");
+});
+
+it("hides Contractors from accounts that cannot create work orders", async () => {
+  estate({ canCreateWorkOrders: false });
+  const nav = await setup("/estates/pine/reports");
+  await nav.findByRole("link", { name: "Fault reports" });
+  expect(nav.queryByRole("link", { name: "Contractors" })).toBeNull();
 it.each(["/estates/pine/edit", "/estates/pine/notification-settings"])(
   "marks Estate settings active on %s",
   async (path) => {

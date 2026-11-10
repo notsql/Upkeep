@@ -6,6 +6,7 @@ import { EstateReportsLocations } from "@/routes/_auth/estates/$estateId/reports
 import { EstateReportsResults } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/estate-reports-results";
 import { useEstateReportsPage } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/use-estate-reports-page";
 import type { EstateReportsSearch } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-search";
+import { RoutingStateFilter } from "@/routes/_auth/estates/$estateId/reports/-components/routing-state-filter";
 
 export function EstateReportsPage({
   estateId,
@@ -37,6 +38,10 @@ export function EstateReportsPage({
         locations={page.locations}
         onChange={page.filter}
         onRetry={page.retryLocations}
+      />
+      <RoutingStateFilter
+        onChange={page.filterRouting}
+        value={page.routingState}
       />
       <EstateReportsResults
         cursor={search.cursor}

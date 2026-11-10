@@ -2,6 +2,7 @@ package com.proj.server.report;
 
 import com.proj.server.estate.EstateError;
 import com.proj.server.resident.ResidentReportException;
+import com.proj.server.routing.RoutingState;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -69,6 +70,9 @@ public class EstateReportController {
             @Parameter(description = "Inclusive maximum LEVEL.sortOrder, including negative positions")
                     @RequestParam(required = false)
                     Integer maxLevelPosition,
+            @Parameter(description = "Only reports in this routing state; reports from before routing never match")
+                    @RequestParam(required = false)
+                    RoutingState routingState,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Integer limit,
             @RequestParam(defaultValue = "false") boolean openOnly,
@@ -84,6 +88,7 @@ public class EstateReportController {
                 blockId,
                 minLevelPosition,
                 maxLevelPosition,
+                routingState,
                 cursor,
                 limit,
                 openOnly,

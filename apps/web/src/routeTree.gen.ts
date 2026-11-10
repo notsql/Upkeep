@@ -30,6 +30,7 @@ import { Route as ApiAuthSignUpIndexRouteImport } from './routes/api/auth/sign-u
 import { Route as AuthEstatesEstateIdAssetCategoriesIndexRouteImport } from './routes/_auth/estates/$estateId/asset-categories/index'
 import { Route as AuthEstatesEstateIdAssetsIndexRouteImport } from './routes/_auth/estates/$estateId/assets/index'
 import { Route as AuthEstatesEstateIdAssetsAssetIdRouteRouteImport } from './routes/_auth/estates/$estateId/assets/$assetId/route'
+import { Route as AuthEstatesEstateIdContractorsIndexRouteImport } from './routes/_auth/estates/$estateId/contractors/index'
 import { Route as AuthEstatesEstateIdCouncilIndexRouteImport } from './routes/_auth/estates/$estateId/council/index'
 import { Route as AuthEstatesEstateIdDevicesIndexRouteImport } from './routes/_auth/estates/$estateId/devices/index'
 import { Route as AuthEstatesEstateIdDocumentsIndexRouteImport } from './routes/_auth/estates/$estateId/documents/index'
@@ -185,6 +186,12 @@ const AuthEstatesEstateIdAssetsAssetIdRouteRoute =
   AuthEstatesEstateIdAssetsAssetIdRouteRouteImport.update({
     id: '/estates/$estateId/assets/$assetId',
     path: '/estates/$estateId/assets/$assetId',
+    getParentRoute: () => AuthRouteRoute,
+  } as any)
+const AuthEstatesEstateIdContractorsIndexRoute =
+  AuthEstatesEstateIdContractorsIndexRouteImport.update({
+    id: '/estates/$estateId/contractors/',
+    path: '/estates/$estateId/contractors/',
     getParentRoute: () => AuthRouteRoute,
   } as any)
 const AuthEstatesEstateIdCouncilIndexRoute =
@@ -495,6 +502,7 @@ export interface FileRoutesByFullPath {
   '/estates/$estateId/inspections/schedules': typeof AuthEstatesEstateIdInspectionsSchedulesRouteRouteWithChildren
   '/estates/$estateId/asset-categories/': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
+  '/estates/$estateId/contractors/': typeof AuthEstatesEstateIdContractorsIndexRoute
   '/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/devices/': typeof AuthEstatesEstateIdDevicesIndexRoute
   '/estates/$estateId/documents/': typeof AuthEstatesEstateIdDocumentsIndexRoute
@@ -562,6 +570,7 @@ export interface FileRoutesByTo {
   '/estates/$estateId/assets/$assetId': typeof AuthEstatesEstateIdAssetsAssetIdDetailsIndexRoute
   '/estates/$estateId/asset-categories': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/estates/$estateId/assets': typeof AuthEstatesEstateIdAssetsIndexRoute
+  '/estates/$estateId/contractors': typeof AuthEstatesEstateIdContractorsIndexRoute
   '/estates/$estateId/council': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/estates/$estateId/devices': typeof AuthEstatesEstateIdDevicesIndexRoute
   '/estates/$estateId/documents': typeof AuthEstatesEstateIdDocumentsIndexRoute
@@ -631,6 +640,7 @@ export interface FileRoutesById {
   '/_auth/estates/$estateId/inspections/schedules': typeof AuthEstatesEstateIdInspectionsSchedulesRouteRouteWithChildren
   '/_auth/estates/$estateId/asset-categories/': typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   '/_auth/estates/$estateId/assets/': typeof AuthEstatesEstateIdAssetsIndexRoute
+  '/_auth/estates/$estateId/contractors/': typeof AuthEstatesEstateIdContractorsIndexRoute
   '/_auth/estates/$estateId/council/': typeof AuthEstatesEstateIdCouncilIndexRoute
   '/_auth/estates/$estateId/devices/': typeof AuthEstatesEstateIdDevicesIndexRoute
   '/_auth/estates/$estateId/documents/': typeof AuthEstatesEstateIdDocumentsIndexRoute
@@ -702,6 +712,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/inspections/schedules'
     | '/estates/$estateId/asset-categories/'
     | '/estates/$estateId/assets/'
+    | '/estates/$estateId/contractors/'
     | '/estates/$estateId/council/'
     | '/estates/$estateId/devices/'
     | '/estates/$estateId/documents/'
@@ -769,6 +780,7 @@ export interface FileRouteTypes {
     | '/estates/$estateId/assets/$assetId'
     | '/estates/$estateId/asset-categories'
     | '/estates/$estateId/assets'
+    | '/estates/$estateId/contractors'
     | '/estates/$estateId/council'
     | '/estates/$estateId/devices'
     | '/estates/$estateId/documents'
@@ -837,6 +849,7 @@ export interface FileRouteTypes {
     | '/_auth/estates/$estateId/inspections/schedules'
     | '/_auth/estates/$estateId/asset-categories/'
     | '/_auth/estates/$estateId/assets/'
+    | '/_auth/estates/$estateId/contractors/'
     | '/_auth/estates/$estateId/council/'
     | '/_auth/estates/$estateId/devices/'
     | '/_auth/estates/$estateId/documents/'
@@ -1043,6 +1056,13 @@ declare module '@tanstack/react-router' {
       path: '/estates/$estateId/assets/$assetId'
       fullPath: '/estates/$estateId/assets/$assetId'
       preLoaderRoute: typeof AuthEstatesEstateIdAssetsAssetIdRouteRouteImport
+      parentRoute: typeof AuthRouteRoute
+    }
+    '/_auth/estates/$estateId/contractors/': {
+      id: '/_auth/estates/$estateId/contractors/'
+      path: '/estates/$estateId/contractors'
+      fullPath: '/estates/$estateId/contractors/'
+      preLoaderRoute: typeof AuthEstatesEstateIdContractorsIndexRouteImport
       parentRoute: typeof AuthRouteRoute
     }
     '/_auth/estates/$estateId/council/': {
@@ -1488,6 +1508,7 @@ interface AuthRouteRouteChildren {
   AuthEstatesEstateIdInspectionsSchedulesRouteRoute: typeof AuthEstatesEstateIdInspectionsSchedulesRouteRouteWithChildren
   AuthEstatesEstateIdAssetCategoriesIndexRoute: typeof AuthEstatesEstateIdAssetCategoriesIndexRoute
   AuthEstatesEstateIdAssetsIndexRoute: typeof AuthEstatesEstateIdAssetsIndexRoute
+  AuthEstatesEstateIdContractorsIndexRoute: typeof AuthEstatesEstateIdContractorsIndexRoute
   AuthEstatesEstateIdCouncilIndexRoute: typeof AuthEstatesEstateIdCouncilIndexRoute
   AuthEstatesEstateIdDevicesIndexRoute: typeof AuthEstatesEstateIdDevicesIndexRoute
   AuthEstatesEstateIdDocumentsIndexRoute: typeof AuthEstatesEstateIdDocumentsIndexRoute
@@ -1534,6 +1555,8 @@ const AuthRouteRouteChildren: AuthRouteRouteChildren = {
   AuthEstatesEstateIdAssetCategoriesIndexRoute:
     AuthEstatesEstateIdAssetCategoriesIndexRoute,
   AuthEstatesEstateIdAssetsIndexRoute: AuthEstatesEstateIdAssetsIndexRoute,
+  AuthEstatesEstateIdContractorsIndexRoute:
+    AuthEstatesEstateIdContractorsIndexRoute,
   AuthEstatesEstateIdCouncilIndexRoute: AuthEstatesEstateIdCouncilIndexRoute,
   AuthEstatesEstateIdDevicesIndexRoute: AuthEstatesEstateIdDevicesIndexRoute,
   AuthEstatesEstateIdDocumentsIndexRoute:

@@ -51,6 +51,11 @@
 			<artifactId>spring-boot-starter-jooq</artifactId>
 		</dependency>
 		<dependency>
+			<!-- SMTP for contractor work orders (ID-70); version from the Boot parent. -->
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-restclient</artifactId>
 		</dependency>
@@ -98,6 +103,15 @@
 			<groupId>com.microsoft.onnxruntime</groupId>
 			<artifactId>onnxruntime</artifactId>
 			<version>1.31.1</version>
+		</dependency>
+		<!--
+			Tokenizes report text for the water leak model (decision 0049). The jar
+			bundles the native libraries, including osx-aarch64 and linux-x86_64.
+		-->
+		<dependency>
+			<groupId>ai.djl.huggingface</groupId>
+			<artifactId>tokenizers</artifactId>
+			<version>0.40.0</version>
 		</dependency>
 
 		<dependency>

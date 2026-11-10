@@ -7,6 +7,7 @@ export type Destination =
   | "/estates/$estateId"
   | "/estates/$estateId/work-orders"
   | "/estates/$estateId/reports"
+  | "/estates/$estateId/contractors"
   | "/estates/$estateId/inspections"
   | "/estates/$estateId/locations"
   | "/estates/$estateId/assets"

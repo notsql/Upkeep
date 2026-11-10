@@ -35,6 +35,21 @@ public class WorkOrderProgressService {
             throw error(HttpStatus.FORBIDDEN, "Only the owner or an assigned Manager can update work-order progress.");
     }
 
+    /**
+     * Assigns an Open order to the provider ID-70 just emailed, through the same status history as other changes.
+     * The caller holds the estate lock and the transaction, and has already authorized the actor.
+     */
+    public void assign(UUID estate, UUID id, String user, String name) {
+        var row = repository.lockOrder(estate, id);
+        if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
+        if (WorkOrderStatus.valueOf(row.getStatus()) != WorkOrderStatus.OPEN)
+            throw error(HttpStatus.CONFLICT, "Only an open work order can be assigned to a contractor.");
+        var now = OffsetDateTime.now(ZoneOffset.UTC);
+        int version = row.getVersion() + 1;
+        repository.updateStatus(id, WorkOrderStatus.ASSIGNED, now, version);
+        repository.appendStatus(id, estate, WorkOrderStatus.OPEN, WorkOrderStatus.ASSIGNED, user, name, now, version);
+    }
+
     // Controllers resolve optional names before entering write transactions.
     public String actorName(String user) {
         return workOS.findDisplayName(user).orElse(null);

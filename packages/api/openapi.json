@@ -1232,6 +1232,141 @@
         }
       }
     },
+    "/estates/{estateId}/contractors/{equipmentType}": {
+      "put": {
+        "tags": ["equipment-contractor-controller"],
+        "summary": "Create or replace the contractor for one equipment type",
+        "operationId": "saveEquipmentContractor",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "equipmentType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EquipmentContractorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Work-order creation authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The saved contractor",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EquipmentContractorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["equipment-contractor-controller"],
+        "summary": "Remove the contractor for one equipment type",
+        "operationId": "removeEquipmentContractor",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "equipmentType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Work-order creation authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Removed, or there was none" }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{assetId}/service-interval": {
       "get": {
         "tags": ["service-interval-controller"],
@@ -2422,6 +2557,231 @@
         }
       }
     },
+    "/estates/{estateId}/work-orders/{workOrderId}/dispatch": {
+      "get": {
+        "tags": ["routing-controller"],
+        "summary": "The contractor email for a work order, if any",
+        "operationId": "getWorkOrderDispatch",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type or priority",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Work-order creation authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report or work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The dispatch, or null when no contractor has been emailed",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderDispatchStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["routing-controller"],
+        "summary": "Assign an open equipment-fault work order to the type's contractor and email them",
+        "operationId": "dispatchWorkOrder",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/DispatchRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type or priority",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Work-order creation authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report or work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "The dispatch, queued for email",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderDispatchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry": {
+      "post": {
+        "tags": ["routing-controller"],
+        "summary": "Queue a failed contractor email for another attempt",
+        "operationId": "retryWorkOrderDispatch",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type or priority",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Work-order creation authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate, report or work order",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The dispatch, pending again",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOrderDispatchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/roles": {
       "get": {
         "tags": ["estate-role-controller"],
@@ -2476,6 +2836,186 @@
               }
             }
           },
+          "200": {
+            "description": "Estate-scoped custom definitions",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["estate-role-controller"],
+        "operationId": "create_1",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEstateRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid definition or identifier",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Custom role created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/reports/{reportId}/work-order": {
+      "post": {
+        "tags": ["routing-controller"],
+        "summary": "Create a work order from an escalated report and email the type's contractor",
+        "operationId": "sendReportToContractor",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendToContractorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type or priority",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": { "description": "Sign in required" },
+          "403": {
+            "description": "Estate permission required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or role not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "The report's routing, with its assigned work order",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportRoutingResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/reports/{reportId}/dismiss": {
+      "post": {
+        "tags": ["routing-controller"],
+        "summary": "Handle an escalated report without a contractor email",
+        "operationId": "dismissReportRouting",
           "200": {
             "description": "Estate-scoped custom definitions",
             "content": {
@@ -7174,6 +7714,16 @@
             "schema": { "type": "integer", "format": "int32" }
           },
           {
+            "name": "routingState",
+            "in": "query",
+            "description": "Only reports in this routing state; reports from before routing never match",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["CLASSIFYING", "NEEDS_REVIEW", "WORK_ORDER", "DISMISSED"]
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -9220,6 +9770,68 @@
         }
       }
     },
+    "/estates/{estateId}/contractors": {
+      "get": {
+        "tags": ["equipment-contractor-controller"],
+        "summary": "The estate's external contractor per equipment type",
+        "operationId": "listEquipmentContractors",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Work-order creation authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Contractors in equipment-type order; types without one are absent",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EquipmentContractorResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -11209,6 +11821,29 @@
         },
         "required": ["originalReportId"]
       },
+      "ClassificationResponse": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "string",
+            "enum": ["EQUIPMENT_FAULT", "INCONCLUSIVE", "NOT_EQUIPMENT"]
+          },
+          "equipmentType": {
+            "type": ["string", "null"],
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+          },
+          "confidence": { "type": "number", "maximum": 1, "minimum": 0 },
+          "reason": { "type": "string" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "confidence",
+          "createdAt",
+          "equipmentType",
+          "outcome",
+          "reason"
+        ]
+      },
       "DuplicateOf": {
         "type": "object",
         "properties": {
@@ -11260,6 +11895,11 @@
               { "$ref": "#/components/schemas/ReportUrgencyChange" },
               { "type": "null" }
             ]
+          },
+          "routing": {
+            "type": "null",
+            "$ref": "#/components/schemas/ReportRoutingResponse",
+            "description": "Null for reports submitted before automatic routing"
           }
         },
         "required": [
@@ -11274,6 +11914,7 @@
           "isSafety",
           "lastUrgencyChange",
           "location",
+          "routing",
           "status",
           "suspectedDuplicateCount",
           "title",
@@ -11312,6 +11953,32 @@
         },
         "required": ["id", "label"]
       },
+      "ReportRoutingResponse": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": ["CLASSIFYING", "NEEDS_REVIEW", "WORK_ORDER", "DISMISSED"]
+          },
+          "reason": { "type": ["string", "null"] },
+          "classification": {
+            "type": "null",
+            "$ref": "#/components/schemas/ClassificationResponse"
+          },
+          "workOrder": {
+            "type": "null",
+            "$ref": "#/components/schemas/RoutedWorkOrder"
+          },
+          "decidedAt": { "type": ["string", "null"], "format": "date-time" }
+        },
+        "required": [
+          "classification",
+          "decidedAt",
+          "reason",
+          "state",
+          "workOrder"
+        ]
+      },
       "ReportUrgencyChange": {
         "type": "object",
         "properties": {
@@ -11339,6 +12006,46 @@
           "toIsSafety",
           "toUrgency",
           "version"
+        ]
+      },
+      "RoutedWorkOrder": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "reference": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["OPEN", "ASSIGNED", "IN_PROGRESS", "CLOSED"]
+          },
+          "dispatch": {
+            "type": "null",
+            "$ref": "#/components/schemas/WorkOrderDispatchResponse"
+          }
+        },
+        "required": ["dispatch", "id", "reference", "status"]
+      },
+      "WorkOrderDispatchResponse": {
+        "type": "object",
+        "properties": {
+          "equipmentType": {
+            "type": "string",
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+          },
+          "contractorName": { "type": "string" },
+          "contractorEmail": { "type": "string" },
+          "approval": { "type": "string", "enum": ["AUTOMATIC", "MANAGER"] },
+          "status": { "type": "string", "enum": ["PENDING", "SENT", "FAILED"] },
+          "sentAt": { "type": ["string", "null"], "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        },
+        "required": [
+          "approval",
+          "contractorEmail",
+          "contractorName",
+          "createdAt",
+          "equipmentType",
+          "sentAt",
+          "status"
         ]
       },
       "NotificationSettingsRequest": {
@@ -11545,6 +12252,32 @@
           "changedAt",
           "documentId"
         ]
+      },
+      "EquipmentContractorRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 200, "minLength": 0 },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254,
+            "minLength": 0
+          }
+        },
+        "required": ["email", "name"]
+      },
+      "EquipmentContractorResponse": {
+        "type": "object",
+        "properties": {
+          "equipmentType": {
+            "type": "string",
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+          },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["email", "equipmentType", "name", "updatedAt"]
       },
       "ServiceInterval": {
         "type": "object",
@@ -12005,6 +12738,16 @@
           "source"
         ]
       },
+      "DispatchRequest": {
+        "type": "object",
+        "properties": {
+          "equipmentType": {
+            "type": "string",
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+          }
+        },
+        "required": ["equipmentType"]
+      },
       "CreateEstateRoleRequest": {
         "type": "object",
         "properties": {
@@ -12036,6 +12779,20 @@
           }
         },
         "required": ["name", "permissions"]
+      },
+      "SendToContractorRequest": {
+        "type": "object",
+        "properties": {
+          "equipmentType": {
+            "type": "string",
+            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
+          }
+        },
+        "required": ["equipmentType", "priority"]
       },
       "CreateManualReadingRequest": {
         "type": "object",
@@ -13598,6 +14355,16 @@
         },
         "required": ["items", "nextCursor"]
       },
+      "WorkOrderDispatchStatusResponse": {
+        "type": "object",
+        "properties": {
+          "dispatch": {
+            "type": "null",
+            "$ref": "#/components/schemas/WorkOrderDispatchResponse"
+          }
+        },
+        "required": ["dispatch"]
+      },
       "WorkOrderCompletionRevisionResponse": {
         "type": "object",
         "properties": {
@@ -13708,7 +14475,12 @@
             "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
           },
           "isSafety": { "type": "boolean" },
-          "urgencyVersion": { "type": "integer", "format": "int32" }
+          "urgencyVersion": { "type": "integer", "format": "int32" },
+          "routing": {
+            "type": "null",
+            "$ref": "#/components/schemas/ReportRoutingResponse",
+            "description": "Null for reports submitted before automatic routing"
+          }
         },
         "required": [
           "confirmedDuplicateCount",
@@ -13719,6 +14491,7 @@
           "id",
           "isSafety",
           "location",
+          "routing",
           "status",
           "suspectedDuplicateCount",
           "title",

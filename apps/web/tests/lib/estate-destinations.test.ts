@@ -5,6 +5,7 @@ import {
   assetsEntry,
   canOpenAllReadings,
   canOpenAssets,
+  canOpenContractors,
   canOpenDevices,
   canOpenDocuments,
   canOpenEstateSettings,
@@ -112,6 +113,9 @@ describe("capability destinations", () => {
     expect(canOpenMembers(crewEstateAccess)).toBe(false);
     expect(canOpenRoles(ownerEstateAccess)).toBe(true);
     expect(canOpenRoles(crewEstateAccess)).toBe(false);
+    expect(canOpenContractors(ownerEstateAccess)).toBe(true);
+    expect(canOpenContractors(crewEstateAccess)).toBe(false);
+    expect(canOpenContractors(undefined)).toBe(false);
   });
 });
 

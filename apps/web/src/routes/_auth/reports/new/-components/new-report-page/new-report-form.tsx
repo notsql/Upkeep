@@ -86,6 +86,11 @@ export function NewReportForm({
             <AlertDescription>{form.error}</AlertDescription>
           </Alert>
         ) : null}
+        <p className="text-muted-foreground text-sm">
+          Your report's text is read by Upkeep's automated classifier, and the
+          report, including photos, may be emailed to the estate's contractor.
+          Please don't include personal details you don't want shared.
+        </p>
         <FormActions
           disabled={
             !form.estateId || form.locations.isPending || form.locations.isError

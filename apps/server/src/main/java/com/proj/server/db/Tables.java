@@ -21,6 +21,7 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Documentworkorderevent;
+import com.proj.server.db.tables.Equipmentproviderroute;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estatenotificationsettings;
@@ -44,9 +45,13 @@ import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
 import com.proj.server.db.tables.Readingimportbatch;
 import com.proj.server.db.tables.Readingimportrow;
+import com.proj.server.db.tables.Reportclassification;
+import com.proj.server.db.tables.Reportrouting;
+import com.proj.server.db.tables.Serviceprovider;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderdispatch;
 import com.proj.server.db.tables.Workorderstatusevent;
 
 
@@ -140,6 +145,11 @@ public class Tables {
      * The table <code>public.DocumentWorkOrderEvent</code>.
      */
     public static final Documentworkorderevent DOCUMENTWORKORDEREVENT = Documentworkorderevent.DOCUMENTWORKORDEREVENT;
+
+    /**
+     * The table <code>public.EquipmentProviderRoute</code>.
+     */
+    public static final Equipmentproviderroute EQUIPMENTPROVIDERROUTE = Equipmentproviderroute.EQUIPMENTPROVIDERROUTE;
 
     /**
      * The table <code>public.Estate</code>.
@@ -257,6 +267,21 @@ public class Tables {
     public static final Readingimportrow READINGIMPORTROW = Readingimportrow.READINGIMPORTROW;
 
     /**
+     * The table <code>public.ReportClassification</code>.
+     */
+    public static final Reportclassification REPORTCLASSIFICATION = Reportclassification.REPORTCLASSIFICATION;
+
+    /**
+     * The table <code>public.ReportRouting</code>.
+     */
+    public static final Reportrouting REPORTROUTING = Reportrouting.REPORTROUTING;
+
+    /**
+     * The table <code>public.ServiceProvider</code>.
+     */
+    public static final Serviceprovider SERVICEPROVIDER = Serviceprovider.SERVICEPROVIDER;
+
+    /**
      * The table <code>public.WorkOrder</code>.
      */
     public static final Workorder WORKORDER = Workorder.WORKORDER;
@@ -270,6 +295,11 @@ public class Tables {
      * The table <code>public.WorkOrderCompletionRevision</code>.
      */
     public static final Workordercompletionrevision WORKORDERCOMPLETIONREVISION = Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+
+    /**
+     * The table <code>public.WorkOrderDispatch</code>.
+     */
+    public static final Workorderdispatch WORKORDERDISPATCH = Workorderdispatch.WORKORDERDISPATCH;
 
     /**
      * The table <code>public.WorkOrderStatusEvent</code>.

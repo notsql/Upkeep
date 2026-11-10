@@ -5,6 +5,8 @@ import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.resident.ResidentReportRepository;
 import com.proj.server.resident.ResidentReportService.ImageBytes;
+import com.proj.server.routing.RoutingRepository;
+import com.proj.server.routing.RoutingState;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -20,18 +22,21 @@ public class EstateReportService {
     private final ResidentImageStore images;
     private final DuplicateRepository duplicates;
     private final ReportUrgencyRepository urgency;
+    private final RoutingRepository routing;
 
     public EstateReportService(
             EstateReportRepository repository,
             ResidentReportRepository reports,
             ResidentImageStore images,
             DuplicateRepository duplicates,
-            ReportUrgencyRepository urgency) {
+            ReportUrgencyRepository urgency,
+            RoutingRepository routing) {
         this.repository = repository;
         this.reports = reports;
         this.images = images;
         this.duplicates = duplicates;
         this.urgency = urgency;
+        this.routing = routing;
     }
 
     public Record authorize(UUID estateId, String user, EstatePermissionCode permission, boolean lock) {
@@ -57,6 +62,7 @@ public class EstateReportService {
             UUID blockId,
             Integer minLevelPosition,
             Integer maxLevelPosition,
+            RoutingState routingState,
             String cursor,
             Integer requestedLimit,
             boolean openOnly,
@@ -75,10 +81,26 @@ public class EstateReportService {
         int limit = requestedLimit == null ? 20 : requestedLimit;
         if (limit < 1 || limit > 50) throw error(HttpStatus.BAD_REQUEST, "Limit must be between 1 and 50.");
         var scope = ReportQueueCursor.scope(
-                estateId, locationId, blockId, minLevelPosition, maxLevelPosition, openOnly, sort);
+                estateId,
+                locationId,
+                blockId,
+                minLevelPosition,
+                maxLevelPosition,
+                openOnly,
+                sort,
+                routingState == null ? null : routingState.name());
         var before = ReportQueueCursor.decode(cursor, scope);
         var found = reports.estateList(
-                estateId, locationId, blockId, minLevelPosition, maxLevelPosition, before, openOnly, sort, limit + 1);
+                estateId,
+                locationId,
+                blockId,
+                minLevelPosition,
+                maxLevelPosition,
+                routingState == null ? null : routingState.name(),
+                before,
+                openOnly,
+                sort,
+                limit + 1);
         var page = found.size() > limit ? found.subList(0, limit) : found;
         String next = null;
         if (found.size() > limit) {
@@ -86,10 +108,12 @@ public class EstateReportService {
             next = new ReportQueueCursor(last.isSafety(), last.urgency().rank(), last.createdAt(), last.id())
                     .encode(scope);
         }
-        var info = duplicates.summaries(
-                estateId, page.stream().map(report -> report.id()).toList());
+        var ids = page.stream().map(report -> report.id()).toList();
+        var info = duplicates.summaries(estateId, ids);
+        var routings = routing.routings(ids);
         var items = page.stream()
-                .map(report -> report.withDuplicates(info.getOrDefault(report.id(), DuplicateRepository.NONE)))
+                .map(report -> report.withDuplicates(info.getOrDefault(report.id(), DuplicateRepository.NONE))
+                        .withRouting(routings.get(report.id())))
                 .toList();
         return new EstateIssueReportPageResponse(items, next);
     }
@@ -197,7 +221,8 @@ public class EstateReportService {
                 info,
                 duplicates.linked(estateId, reportId),
                 urgency.values(estateId, reportId),
-                urgency.latest(estateId, reportId));
+                urgency.latest(estateId, reportId),
+                routing.routings(List.of(reportId)).get(reportId));
     }
 
     private static ResidentReportException error(HttpStatus status, String message) {

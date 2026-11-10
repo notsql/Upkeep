@@ -23,7 +23,8 @@ class EstateReportAuthorizationTests {
             mock(ResidentReportRepository.class),
             mock(ResidentImageStore.class),
             mock(DuplicateRepository.class),
-            mock(ReportUrgencyRepository.class));
+            mock(ReportUrgencyRepository.class),
+            mock(com.proj.server.routing.RoutingRepository.class));
     private final UUID estateId = UUID.randomUUID();
 
     @ParameterizedTest

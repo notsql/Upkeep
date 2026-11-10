@@ -23,9 +23,9 @@ Resident endpoints keep their original report DTOs unchanged.
 
 | DTO | Fields |
 | --- | --- |
-| `EstateIssueReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `urgencyVersion: integer`, `confirmedDuplicateCount: integer`, `suspectedDuplicateCount: integer`, `duplicateOf: DuplicateOf \| null` |
+| `EstateIssueReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `urgencyVersion: integer`, `confirmedDuplicateCount: integer`, `suspectedDuplicateCount: integer`, `duplicateOf: DuplicateOf \| null`, `routing: ReportRoutingResponse \| null` (null for reports submitted before automatic routing) |
 | `ReportLocation` | `id: UUID`, `label: string` (full current path, e.g. `Block A › Level 4 › Lift lobby`) |
-| `EstateIssueReportDetailResponse` | Summary fields plus `images: ReportImage[]`, `duplicates: LinkedDuplicate[]`, `lastUrgencyChange: ReportUrgencyChange \| null` |
+| `EstateIssueReportDetailResponse` | Summary fields (including `routing`) plus `images: ReportImage[]`, `duplicates: LinkedDuplicate[]`, `lastUrgencyChange: ReportUrgencyChange \| null` |
 | `ReportImage` | `id: UUID`, `contentType: string` (`image/jpeg` or `image/png`) |
 | `EstateIssueReportPageResponse` | `items: EstateIssueReportSummaryResponse[]`, `nextCursor: string \| null` |
 | `RelocateReportRequest` | Required, non-null `locationId: UUID`, `expectedLocationId: UUID` |
@@ -41,7 +41,7 @@ new submission constraints are documented in [resident-reports.md](resident-repo
 
 | Method/path | Request | Success | Other statuses |
 | --- | --- | --- | --- |
-| GET `/estates/{estateId}/reports` | Optional `openOnly: boolean` (default false), `sort: URGENCY \| NEWEST \| OLDEST` (default URGENCY), `locationId: UUID`, `blockId: UUID`, `minLevelPosition: int32`, `maxLevelPosition: int32`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `EstateIssueReportPageResponse` | 400 invalid UUID/cursor/limit/range/sort or non-block blockId; 401; 403; 404 |
+| GET `/estates/{estateId}/reports` | Optional `openOnly: boolean` (default false), `sort: URGENCY \| NEWEST \| OLDEST` (default URGENCY), `locationId: UUID`, `blockId: UUID`, `minLevelPosition: int32`, `maxLevelPosition: int32`, `routingState: CLASSIFYING \| NEEDS_REVIEW \| WORK_ORDER \| DISMISSED`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `EstateIssueReportPageResponse` | 400 invalid UUID/cursor/limit/range/sort or non-block blockId; 401; 403; 404 |
 | GET `/estates/{estateId}/reports/{reportId}` | UUID paths | 200 `EstateIssueReportDetailResponse` | 400; 401; 403; 404 |
 | PATCH `/estates/{estateId}/reports/{reportId}/location` | JSON `RelocateReportRequest` | 200 updated `EstateIssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid UUID/body or block-only destination; 401; 403; 404; 409 |
 | PATCH `/estates/{estateId}/reports/{reportId}/urgency` | JSON `ChangeReportUrgencyRequest` | 200 updated `EstateIssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid body or Safety below Urgent; 401; 403; 404; 409 stale version or inactive estate |
@@ -179,3 +179,10 @@ Urgency updates return the combined estate detail, preserving duplicate links an
 counts. Duplicate decisions, manual links and relocation return the same DTO
 with current urgency/version/latest-change metadata. Sorting never changes saved
 urgency or work-order priority.
+
+## Routing (ID-70)
+
+The estate DTOs are separate from the resident `IssueReport*Response` types, so
+`routing` never reaches residents. `routingState` filters before pagination and is part of the cursor scope,
+and reports without routing never match it. Relocation does not reclassify a
+report or change its work order. See [report-routing.md](report-routing.md).

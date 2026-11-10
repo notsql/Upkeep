@@ -19,6 +19,11 @@ export function canOpenFaultReports(permission: Permission): boolean {
   return Boolean(permission?.canViewFaultReports);
 }
 
+// ID-70: contractors are managed by whoever can create work orders.
+export function canOpenContractors(permission: Permission): boolean {
+  return Boolean(permission?.canCreateWorkOrders);
+}
+
 function ownerOrDelegate(permission: Permission, owned?: boolean): boolean {
   return Boolean(
     permission && (owned || permission.canManageInvitationPermissions)

@@ -9,9 +9,16 @@ import org.springframework.http.HttpStatus;
 
 public record ReportQueueCursor(boolean isSafety, int rank, OffsetDateTime createdAt, UUID id) {
     public static String scope(
-            UUID estate, UUID location, UUID block, Integer min, Integer max, boolean openOnly, ReportSort sort) {
+            UUID estate,
+            UUID location,
+            UUID block,
+            Integer min,
+            Integer max,
+            boolean openOnly,
+            ReportSort sort,
+            String routingState) {
         return "queue-v2|" + estate + "|" + location + "|" + block + "|" + min + "|" + max + "|" + openOnly + "|"
-                + sort.name();
+                + sort.name() + "|" + routingState;
     }
 
     public String encode(String scope) {

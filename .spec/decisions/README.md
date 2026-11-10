@@ -42,3 +42,6 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0044 - Duplicate fault reports are rule-based suggestions a manager confirms](0044-duplicate-reports-are-rule-based-suggestions.md)
 
 - [0045 - Report urgency and Safety classification](0045-report-urgency-and-safety.md)
+- [0047 - Fault report classification runs in Spring](0047-fault-classification-runs-in-spring.md)
+- [0048 - Contractors are reached by email dispatch on ID-36 work orders](0048-contractor-dispatch-on-work-orders.md)
+- [0049 - Fault classification uses a trained water leak model](0049-fault-classification-uses-a-trained-water-leak-model.md)

@@ -15,6 +15,7 @@ import com.proj.server.db.tables.Assetevent.AsseteventPath;
 import com.proj.server.db.tables.Assetinspectionresult.AssetinspectionresultPath;
 import com.proj.server.db.tables.Device.DevicePath;
 import com.proj.server.db.tables.Document.DocumentPath;
+import com.proj.server.db.tables.Equipmentproviderroute.EquipmentproviderroutePath;
 import com.proj.server.db.tables.Estateinvitation.EstateinvitationPath;
 import com.proj.server.db.tables.Estatenotificationsettings.EstatenotificationsettingsPath;
 import com.proj.server.db.tables.Estateroledefinition.EstateroledefinitionPath;
@@ -27,6 +28,7 @@ import com.proj.server.db.tables.Location.LocationPath;
 import com.proj.server.db.tables.Notification.NotificationPath;
 import com.proj.server.db.tables.Notificationsweep.NotificationsweepPath;
 import com.proj.server.db.tables.Readingimportbatch.ReadingimportbatchPath;
+import com.proj.server.db.tables.Serviceprovider.ServiceproviderPath;
 import com.proj.server.db.tables.Workorder.WorkorderPath;
 import com.proj.server.db.tables.records.EstateRecord;
 
@@ -311,6 +313,19 @@ public class Estate extends TableImpl<EstateRecord> {
         return _document;
     }
 
+    private transient EquipmentproviderroutePath _equipmentproviderroute;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.EquipmentProviderRoute</code> table
+     */
+    public EquipmentproviderroutePath equipmentproviderroute() {
+        if (_equipmentproviderroute == null)
+            _equipmentproviderroute = new EquipmentproviderroutePath(this, null, Keys.EQUIPMENTPROVIDERROUTE__EQUIPMENTPROVIDERROUTE_ESTATEID_FKEY.getInverseKey());
+
+        return _equipmentproviderroute;
+    }
+
     private transient EstateinvitationPath _estateinvitation;
 
     /**
@@ -465,6 +480,19 @@ public class Estate extends TableImpl<EstateRecord> {
             _readingimportbatch = new ReadingimportbatchPath(this, null, Keys.READINGIMPORTBATCH__READINGIMPORTBATCH_ESTATEID_FKEY.getInverseKey());
 
         return _readingimportbatch;
+    }
+
+    private transient ServiceproviderPath _serviceprovider;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.ServiceProvider</code> table
+     */
+    public ServiceproviderPath serviceprovider() {
+        if (_serviceprovider == null)
+            _serviceprovider = new ServiceproviderPath(this, null, Keys.SERVICEPROVIDER__SERVICEPROVIDER_ESTATEID_FKEY.getInverseKey());
+
+        return _serviceprovider;
     }
 
     private transient WorkorderPath _workorder;

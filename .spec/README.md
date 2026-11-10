@@ -79,6 +79,8 @@ code, it belongs here.
 | [suspect-readings.md](features/suspect-readings.md) | ID-67 | built |
 | [ui-redesign.md](features/ui-redesign.md) | ID-93 | implemented; current iteration accepted by user; Git merge/PR review pending |
 | [portfolio-home-and-estate-directory.md](features/portfolio-home-and-estate-directory.md) | ID-93 follow-up | implemented; current iteration accepted by user; Git merge/PR review pending |
+| [equipment-fault-work-orders.md](features/equipment-fault-work-orders.md) | ID-70 | implemented on feat/id-70-report-routing; tests pass; migration not yet on Neon dev; model evaluation and secrets outstanding |
+| [water-leak-classifier.md](features/water-leak-classifier.md) | ID-70 | agreed 2026-11-09; replaces ID-70's Anthropic classifier with a trained water leak model |
 
 Draft specs carry an **Implementation phases** checklist. Build them in the
 order listed, test-first, and tick the boxes as you go. New specs start from

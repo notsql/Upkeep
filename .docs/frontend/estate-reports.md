@@ -220,6 +220,13 @@ feature preserves the other feature’s displayed data.
 status share one map: Open is outline, Assigned is info, In progress is warning
 and Closed is success. An unknown status shows as-is, outlined.
 
+## Routing (ID-70)
+
+The list shows a "Routing: <state>" Badge per report and a "Routing" filter
+(`routingState`). The detail page adds the routing card, with send, dismiss and
+retry for work-order creators, and polls every 5 s while classifying. See
+[report-routing.md](report-routing.md).
 ## Phones: infinite scroll
 
 Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Report pages (`useEstateReportFeed`, key `[userId, "estate-reports", estateId, "feed", filters, 20]`).
+

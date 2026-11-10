@@ -21,6 +21,7 @@ import com.proj.server.db.tables.Deviceflatlinepause;
 import com.proj.server.db.tables.Devicereading;
 import com.proj.server.db.tables.Document;
 import com.proj.server.db.tables.Documentworkorderevent;
+import com.proj.server.db.tables.Equipmentproviderroute;
 import com.proj.server.db.tables.Estate;
 import com.proj.server.db.tables.Estateinvitation;
 import com.proj.server.db.tables.Estatenotificationsettings;
@@ -44,9 +45,13 @@ import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
 import com.proj.server.db.tables.Readingimportbatch;
 import com.proj.server.db.tables.Readingimportrow;
+import com.proj.server.db.tables.Reportclassification;
+import com.proj.server.db.tables.Reportrouting;
+import com.proj.server.db.tables.Serviceprovider;
 import com.proj.server.db.tables.Workorder;
 import com.proj.server.db.tables.Workordercompletion;
 import com.proj.server.db.tables.Workordercompletionrevision;
+import com.proj.server.db.tables.Workorderdispatch;
 import com.proj.server.db.tables.Workorderstatusevent;
 
 import java.util.Arrays;
@@ -155,6 +160,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.DocumentWorkOrderEvent</code>.
      */
     public final Documentworkorderevent DOCUMENTWORKORDEREVENT = Documentworkorderevent.DOCUMENTWORKORDEREVENT;
+
+    /**
+     * The table <code>public.EquipmentProviderRoute</code>.
+     */
+    public final Equipmentproviderroute EQUIPMENTPROVIDERROUTE = Equipmentproviderroute.EQUIPMENTPROVIDERROUTE;
 
     /**
      * The table <code>public.Estate</code>.
@@ -272,6 +282,21 @@ public class Public extends SchemaImpl {
     public final Readingimportrow READINGIMPORTROW = Readingimportrow.READINGIMPORTROW;
 
     /**
+     * The table <code>public.ReportClassification</code>.
+     */
+    public final Reportclassification REPORTCLASSIFICATION = Reportclassification.REPORTCLASSIFICATION;
+
+    /**
+     * The table <code>public.ReportRouting</code>.
+     */
+    public final Reportrouting REPORTROUTING = Reportrouting.REPORTROUTING;
+
+    /**
+     * The table <code>public.ServiceProvider</code>.
+     */
+    public final Serviceprovider SERVICEPROVIDER = Serviceprovider.SERVICEPROVIDER;
+
+    /**
      * The table <code>public.WorkOrder</code>.
      */
     public final Workorder WORKORDER = Workorder.WORKORDER;
@@ -285,6 +310,11 @@ public class Public extends SchemaImpl {
      * The table <code>public.WorkOrderCompletionRevision</code>.
      */
     public final Workordercompletionrevision WORKORDERCOMPLETIONREVISION = Workordercompletionrevision.WORKORDERCOMPLETIONREVISION;
+
+    /**
+     * The table <code>public.WorkOrderDispatch</code>.
+     */
+    public final Workorderdispatch WORKORDERDISPATCH = Workorderdispatch.WORKORDERDISPATCH;
 
     /**
      * The table <code>public.WorkOrderStatusEvent</code>.
@@ -324,6 +354,7 @@ public class Public extends SchemaImpl {
             Devicereading.DEVICEREADING,
             Document.DOCUMENT,
             Documentworkorderevent.DOCUMENTWORKORDEREVENT,
+            Equipmentproviderroute.EQUIPMENTPROVIDERROUTE,
             Estate.ESTATE,
             Estateinvitation.ESTATEINVITATION,
             Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS,
@@ -347,9 +378,13 @@ public class Public extends SchemaImpl {
             Permission.PERMISSION,
             Readingimportbatch.READINGIMPORTBATCH,
             Readingimportrow.READINGIMPORTROW,
+            Reportclassification.REPORTCLASSIFICATION,
+            Reportrouting.REPORTROUTING,
+            Serviceprovider.SERVICEPROVIDER,
             Workorder.WORKORDER,
             Workordercompletion.WORKORDERCOMPLETION,
             Workordercompletionrevision.WORKORDERCOMPLETIONREVISION,
+            Workorderdispatch.WORKORDERDISPATCH,
             Workorderstatusevent.WORKORDERSTATUSEVENT
         );
     }

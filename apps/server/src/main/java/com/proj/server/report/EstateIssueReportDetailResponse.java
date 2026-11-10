@@ -3,12 +3,13 @@ package com.proj.server.report;
 import com.proj.server.resident.IssueReportDetailResponse;
 import com.proj.server.resident.IssueReportDetailResponse.ReportImage;
 import com.proj.server.resident.IssueReportSummaryResponse.ReportLocation;
+import com.proj.server.routing.ReportRoutingResponse;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/** Responder report detail: the resident detail plus duplicate and urgency information. */
+/** Responder report detail: the resident detail plus duplicate, urgency and routing (ID-70) information. */
 @Schema(
         requiredProperties = {
             "id",
@@ -27,7 +28,8 @@ import java.util.UUID;
             "urgency",
             "isSafety",
             "urgencyVersion",
-            "lastUrgencyChange"
+            "lastUrgencyChange",
+            "routing"
         })
 public record EstateIssueReportDetailResponse(
         UUID id,
@@ -49,13 +51,17 @@ public record EstateIssueReportDetailResponse(
         ReportUrgency urgency,
         boolean isSafety,
         int urgencyVersion,
-        @Schema(types = {"object", "null"}) ReportUrgencyChange lastUrgencyChange) {
+        @Schema(types = {"object", "null"}) ReportUrgencyChange lastUrgencyChange,
+
+        @Schema(nullable = true, description = "Null for reports submitted before automatic routing")
+        ReportRoutingResponse routing) {
     static EstateIssueReportDetailResponse of(
             IssueReportDetailResponse report,
             DuplicateRepository.Summary info,
             List<LinkedDuplicate> duplicates,
             ReportUrgencyRepository.Values values,
-            ReportUrgencyChange change) {
+            ReportUrgencyChange change,
+            ReportRoutingResponse routing) {
         return new EstateIssueReportDetailResponse(
                 report.id(),
                 report.title(),
@@ -73,6 +79,7 @@ public record EstateIssueReportDetailResponse(
                 values.urgency(),
                 values.isSafety(),
                 values.version(),
-                change);
+                change,
+                routing);
     }
 }
