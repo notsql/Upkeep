@@ -7,8 +7,8 @@ The Members section is two folder routes sharing one page component
 
 | Route | File | `view` | Tab title |
 | --- | --- | --- | --- |
-| `/estates/$estateId/council` | `council/index.tsx` | `"members"` (default) | "Council members" |
-| `/estates/$estateId/council/invitations` | `council/invitations/index.tsx` | `"invitations"` | "Pending invitations" |
+| `/estates/$estateId/council` | `council/index.tsx` | `"members"` (default) | "Members" |
+| `/estates/$estateId/council/invitations` | `council/invitations/index.tsx` | `"invitations"` | "Waiting to join" |
 
 Route-local `council/-components/`: CouncilPage, access-controls,
 access-confirmation, invitation-form, member-filters, estate-members-table,
@@ -16,16 +16,19 @@ member-permission and role-picker.
 
 Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
 
-- `ListPageHeader` "Members" (`icon={Users}`, no description) with the
+- `ListPageHeader` "People & access" (`icon={Users}`, no description; the
+  same heading as Roles, see [estate-roles.md](estate-roles.md)) with the
   Filters toggle (`FilterToggle`, "Filters, N active") and, when
   `canInviteMembers`, the **Invite member** trigger (`UserPlus`) in the
   `actions` slot - the last action, where Create sits on other list pages. It
   is labelled "Invite member", not "Create", because it sends an invitation.
   The trigger opens a shadcn Dialog titled "Invite member" with the
   email/role form.
-- `SubNav` "Member views": "Members" (`exact`, `/estates/$estateId/council`)
-  and "Pending invitations" (`/estates/$estateId/council/invitations`). The
-  router marks the current one `aria-current="page"`.
+- `PeopleViews` (`src/components/people/people-views.tsx`), a `SubNav`
+  "People views": "Members" (`exact`, `/estates/$estateId/council`) and
+  "Waiting to join" (`/estates/$estateId/council/invitations`), shown when
+  `canOpenMembers`, then "Roles" (`/estates/$estateId/roles`) when
+  `canOpenRoles`. The router marks the current one `aria-current="page"`.
 - Inactive estates show "This estate is inactive. New invitations are disabled."
 - MemberFilters: the retractable `FilterBar` "Filter members" (collapsed by
   default, `useFilterPanel`), with `type="search"` Input "Search members"
@@ -34,17 +37,18 @@ Layout, top to bottom (Managers, i.e. `canManageInvitationPermissions`):
   trigger `w-full`). Filtering is client-side; it applies to whichever view is
   shown. Filter state is per page mount (switching views resets it); the API
   has no server-side filters.
-- Members view: card "Members" with an "N active" Badge (no icon - the header
+- Members view: card "Members" with an "N active" success Badge (no icon - the header
   has Users), then the paged Table (Name, Email, Role, Status, Actions). Role
   shows exactly one Badge: "Owner" (hint "Full Manager access plus
   ownership") for the estate owner, otherwise the preset label or custom role
   name. Loading is `LoadingState` "Loading members…" (table); a failed roster
   or estate read is `ErrorState` + Retry; no roster is `EmptyState` "No members
-  yet" (default Inbox); filters with no result show `EmptyState` "No matching
+  yet" (`Users` icon); filters with no result show `EmptyState` "No matching
   members" (SearchX) with an outline "Clear filters" action, alongside the
   FilterBar's own ghost Clear filters.
-- Pending invitations view (and the whole page body for delegated inviters):
-  card "Pending invitations" (`Mail` icon) with an "N pending" Badge; each row
+- Waiting to join view (and the whole page body for delegated inviters, whose
+  page also has the "People & access" header and the "People views" tabs):
+  card "Pending invitations" (`Mail` icon) with an "N pending" info Badge; each row
   shows email, role Badge, delivery and expiry, and a ghost **Revoke** button
   (accessible name "Cancel invitation for <email>") that confirms in a
   `ConfirmDialog` ("Cancel invitation?", destructive "Cancel invitation",
@@ -199,8 +203,13 @@ role/roster/offer/access queries; see [estate-roles.md](estate-roles.md).
 
 ## Icons and copy
 
-PageHeader `icon={Users}` (sidebar Members), description "Members and
+PageHeader `icon={Users}` (sidebar People & access), description "Members and
 invitations · <estate>". Members CardTitle has a Users icon, Pending
 invitations a Mail icon (description "Not yet accepted"). Empty: "No members
 yet" ("Invited members appear here"), "No pending invitations" ("Sent
 invitations appear here"). The access-error "Retry access" is `outline`.
+
+Colour: the tones come from `invitationTone`. Pending counts are info, and
+"Active" (the member count and the Status column) is success. Role-name Badges
+stay secondary. "No pending invitations" uses the `Mail` icon, and both "No
+matching …" empty states use `SearchX`.

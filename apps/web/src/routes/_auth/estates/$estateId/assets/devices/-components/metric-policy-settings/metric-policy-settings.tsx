@@ -84,7 +84,7 @@ export function MetricPolicySettings({
               aria-controls={`${id}-content`}
               aria-describedby={`${id}-description ${id}-count`}
               aria-expanded={expanded}
-              aria-label="Metric policies"
+              aria-label="When to warn"
               className="grid h-auto w-full grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 p-0 text-left whitespace-normal hover:bg-transparent sm:grid-cols-[auto_minmax(0,1fr)_auto_auto] sm:items-center dark:hover:bg-transparent"
               disabled={saving}
               onClick={toggleExpanded}
@@ -96,13 +96,13 @@ export function MetricPolicySettings({
               />
               <span className="min-w-0">
                 <span className="block text-lg font-semibold">
-                  Metric policies
+                  When to warn
                 </span>
                 <span
                   className="text-muted-foreground mt-1 block text-sm font-normal"
                   id={`${id}-description`}
                 >
-                  Estate-wide thresholds and tolerances
+                  How long a sensor can send the same reading before we warn you
                 </span>
               </span>
               <Badge
@@ -110,7 +110,7 @@ export function MetricPolicySettings({
                 id={`${id}-count`}
                 variant="secondary"
               >
-                {configured} of {policies.length} configured
+                {`${configured} of ${policies.length} set`}
               </Badge>
               <ChevronDown
                 aria-hidden="true"
@@ -125,12 +125,11 @@ export function MetricPolicySettings({
           >
             {canManage ? null : (
               <p className="text-muted-foreground text-sm">
-                Only estate owners and assigned managers can change metric
-                policies.
+                You can view these settings but not change them.
               </p>
             )}
             {mobile ? (
-              <ul aria-label="Metric policies" className="divide-y">
+              <ul aria-label="When to warn" className="divide-y">
                 {policies.map((item) => (
                   <li
                     className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 first:pt-0"
@@ -155,11 +154,11 @@ export function MetricPolicySettings({
                 ))}
               </ul>
             ) : (
-              <Table aria-label="Metric policies">
+              <Table aria-label="When to warn">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Metric</TableHead>
-                    <TableHead>Policy</TableHead>
+                    <TableHead>Measurement</TableHead>
+                    <TableHead>Warn after</TableHead>
                     <TableHead>Status</TableHead>
                     {canManage ? (
                       <TableHead>

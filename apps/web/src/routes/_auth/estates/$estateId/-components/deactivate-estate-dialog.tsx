@@ -29,7 +29,7 @@ export function DeactivateEstateDialog({
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to deactivate the estate. Please try again."
+          : "Couldn't deactivate the estate. Try again."
       );
     } finally {
       setPending(false);

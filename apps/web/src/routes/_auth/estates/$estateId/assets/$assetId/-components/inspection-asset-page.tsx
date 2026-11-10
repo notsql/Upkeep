@@ -1,7 +1,7 @@
 import { buttonVariants } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { useCallback } from "react";
 import { DetailCard } from "@/components/page/detail-card";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
@@ -63,6 +63,7 @@ export function InspectionAssetPage({
           },
           { label: context.name },
         ]}
+        icon={ClipboardList}
         meta={context.reference}
         title={context.name}
       />

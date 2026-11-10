@@ -10,6 +10,7 @@ import { useAppAccess } from "@/lib/access";
 import {
   type AssetBlockGroup,
   deviceSummaries,
+  deviceSummaryTones,
   groupAssetsByLocation,
 } from "@/lib/asset-monitoring";
 import {
@@ -86,6 +87,7 @@ export function useAssetRegisterPage(
         pending: devices.isPending,
         failed: devices.isError,
         valueFor: summary,
+        toneFor: deviceSummaryTones(devices.data ?? []),
       } satisfies MonitoringSource;
     }
     if (owned) {

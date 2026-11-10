@@ -75,7 +75,7 @@ export function useUploadDocumentForm(
       setError(
         failure instanceof Error
           ? failure.message
-          : "Unable to upload. Check the document list before retrying."
+          : "Couldn't upload. Check the document list before you try again."
       );
     }
   }, [

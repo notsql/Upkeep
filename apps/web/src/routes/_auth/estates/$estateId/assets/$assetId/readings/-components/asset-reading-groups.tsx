@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
+import { Activity } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -58,11 +59,12 @@ export function AssetReadingGroups({
               Clear filters
             </Button>
           }
+          icon={Activity}
           title={emptyMessage(filters)}
         />
       );
     }
-    return <EmptyState title={emptyMessage(filters)} />;
+    return <EmptyState icon={Activity} title={emptyMessage(filters)} />;
   }
   return (
     <div className="min-w-0 space-y-3">

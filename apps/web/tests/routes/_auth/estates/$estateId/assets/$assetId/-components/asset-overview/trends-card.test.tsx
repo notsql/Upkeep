@@ -27,7 +27,7 @@ const ASSET = "11111111-1111-4111-8111-111111111111";
 const SERIES_PATH = "/estates/{estateId}/assets/{assetId}/readings/series";
 const PRESSURE_SUMMARY =
   /Latest 2\.75 bar\. Minimum 2\.50 bar, maximum 2\.75 bar\./u;
-const NO_ANOMALIES = /No anomalies\./u;
+const NO_ANOMALIES = /No unusual readings\./u;
 const UPDATED = /^Updated /u;
 const ANOMALY_TEXT = /anomal/u;
 const IN_RANGE = /in range$/u;
@@ -114,13 +114,13 @@ async function chooseRange(name: string): Promise<void> {
 }
 
 function tiles(): HTMLElement[] {
-  return within(screen.getByRole("group", { name: "Metric" })).getAllByRole(
-    "button"
-  );
+  return within(
+    screen.getByRole("group", { name: "Measurement" })
+  ).getAllByRole("button");
 }
 
 function tile(name: RegExp): HTMLElement {
-  return within(screen.getByRole("group", { name: "Metric" })).getByRole(
+  return within(screen.getByRole("group", { name: "Measurement" })).getByRole(
     "button",
     { name }
   );
@@ -216,7 +216,7 @@ describe("TrendsCard tiles", () => {
   it("shows the anomaly count once, not on each tile", async () => {
     card();
     await screen.findByRole("figure");
-    expect(screen.getAllByText("1 anomaly in range")).toHaveLength(1);
+    expect(screen.getAllByText("1 unusual stretch")).toHaveLength(1);
     for (const item of tiles()) {
       expect(within(item).queryByText(ANOMALY_TEXT)).toBeNull();
     }
@@ -291,12 +291,13 @@ describe("TrendsCard chart", () => {
     });
     const from = formatTime("2026-11-07T12:59:10Z");
     const to = formatTime("2026-11-07T12:59:12Z");
-    within(figure).getByText(
-      `Anomaly from ${from} to ${to}, maximum score 0.88.`,
-      { exact: false }
-    );
-    within(figure).getByText("Anomaly · 1 period, max 0.88");
-    within(figure).getByText("score ≥ 0.60", { exact: false });
+    within(figure).getByText(`Unusual readings from ${from} to ${to}.`, {
+      exact: false,
+    });
+    within(figure).getByText("Unusual readings · 1 period");
+    within(figure).getByText("Shaded areas are unusual readings.", {
+      exact: false,
+    });
   });
 
   it("says when no period is anomalous", async () => {

@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 import {
   assetsEntry,
   canOpenAllReadings,
-  canOpenAssetCategories,
   canOpenAssets,
   canOpenContractors,
   canOpenDevices,
@@ -37,7 +36,6 @@ const delegate = { ...managementOnly, canManageInvitationPermissions: true };
 describe("owner-or-delegate destinations", () => {
   it.each([
     ["devices", canOpenDevices],
-    ["asset categories", canOpenAssetCategories],
     ["inspections", canOpenInspections],
   ])("%s need ownership or invitation-permission management", (_, open) => {
     expect(open(managementOnly, false)).toBe(false);

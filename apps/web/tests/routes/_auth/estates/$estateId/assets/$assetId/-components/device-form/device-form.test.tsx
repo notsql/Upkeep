@@ -17,7 +17,7 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 }));
 
 const REQUIRED = /required/iu;
-const INTERVAL = /^Expected reporting interval/u;
+const INTERVAL = /^How often it reports/u;
 
 const at = "2026-09-28T00:00:00Z";
 function location(id: string, name: string, parentId?: string): Location {
@@ -52,7 +52,7 @@ function metric(name: string) {
   return screen.getByRole("checkbox", { name });
 }
 function submit() {
-  fireEvent.click(screen.getByRole("button", { name: "Register device" }));
+  fireEvent.click(screen.getByRole("button", { name: "Add sensor" }));
 }
 
 async function renderForm(onSave = vi.fn().mockResolvedValue(undefined)) {
@@ -122,7 +122,7 @@ describe("DeviceForm", () => {
     submit();
     // Identifier, model and interval; location starts at the asset's.
     expect(await screen.findAllByText(REQUIRED)).toHaveLength(3);
-    screen.getByText("Choose at least one metric.");
+    screen.getByText("Choose at least one measurement.");
     expect(onSave).not.toHaveBeenCalled();
   });
 
@@ -170,7 +170,7 @@ describe("DeviceForm", () => {
           reportingIntervalSeconds: 300,
         }}
         onSave={onSave}
-        submitLabel="Replace device"
+        submitLabel="Replace sensor"
       />
     );
     await waitFor(() =>
@@ -182,7 +182,7 @@ describe("DeviceForm", () => {
     screen.getByRole("checkbox", { name: "Pressure (bar)", checked: true });
     screen.getByRole("checkbox", { name: "Temperature (°C)", checked: false });
     fireEvent.change(identifierField(), { target: { value: "PUMP-02" } });
-    fireEvent.click(screen.getByRole("button", { name: "Replace device" }));
+    fireEvent.click(screen.getByRole("button", { name: "Replace sensor" }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith({
         identifier: "PUMP-02",

@@ -6,7 +6,7 @@ export const Route = createFileRoute(
   "/_auth/estates/$estateId/assets/devices/"
 )({
   component: AllDevicesRoute,
-  head: () => pageHead("All devices"),
+  head: () => pageHead("All sensors"),
 });
 
 function AllDevicesRoute() {

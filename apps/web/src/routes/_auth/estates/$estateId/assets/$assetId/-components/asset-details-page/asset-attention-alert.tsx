@@ -2,6 +2,7 @@ import { Alert } from "@proj/ui/components/alert";
 import { buttonVariants } from "@proj/ui/components/button";
 import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
+import { DispatchAction } from "@/components/dispatch/dispatch-action";
 import {
   type AssetCondition,
   conditionLabel,
@@ -9,6 +10,8 @@ import {
   recorderName,
   useAssessments,
 } from "@/lib/assessments";
+import { dispatchRoute } from "@/lib/equipment-dispatch";
+import { useAssetFailureRisk } from "@/lib/failure-risk";
 import { formatAssessmentNotes, formatDate } from "@/lib/format";
 
 /** Conditions that warrant an inspection, each with its banner tone. */
@@ -19,21 +22,32 @@ const BANNER_TONES: Partial<Record<AssetCondition, string>> = {
 
 /**
  * A full-width banner under the asset header, on every tab, while the
- * current condition calls for an inspection. The button shows only to
- * viewers who can file one; the condition itself is shown to everyone.
+ * current condition calls for an inspection. Owners and Managers get the
+ * one send step the app picks; crew can file the inspection themselves;
+ * anyone else is told to ask. The condition itself is shown to everyone.
  */
 export function AssetAttentionAlert({
+  active,
   assetId,
+  assetName,
   canInspect,
+  canSend,
   estateId,
 }: {
+  /** The asset and estate are active. */
+  active: boolean;
   assetId: string;
+  assetName: string;
   /** The asset and estate are active and the viewer can create inspections. */
   canInspect: boolean;
+  /** The asset and estate are active and the viewer can send crew or a contractor. */
+  canSend: boolean;
   estateId: string;
 }) {
   // The API returns the current assessment first.
   const current = useAssessments(estateId, assetId).data?.[0];
+  const risk = useAssetFailureRisk(estateId, assetId, active);
+  const route = dispatchRoute(risk.data?.flagReasons ?? []) ?? "CREW";
   const tone = current ? BANNER_TONES[current.condition] : undefined;
   if (!(current && tone)) {
     return null;
@@ -68,7 +82,16 @@ export function AssetAttentionAlert({
           </>
         ) : null}
       </p>
-      {canInspect ? (
+      {active && (canSend || !canInspect) ? (
+        <DispatchAction
+          assetId={assetId}
+          assetName={assetName}
+          canSend={canSend}
+          estateId={estateId}
+          route={route}
+        />
+      ) : null}
+      {canInspect && !canSend ? (
         <Link
           className={buttonVariants({
             size: "sm",

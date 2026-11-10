@@ -99,6 +99,8 @@ function routerFor(path: string) {
     "/estates/$estateId/asset-categories",
     "/estates/$estateId/asset-categories/$interval",
     "/estates/$estateId/inspections",
+    "/estates/$estateId/inspections/schedules",
+    "/estates/$estateId/inspections/schedules/$interval",
     "/estates/$estateId/council",
     "/estates/$estateId/reports",
     "/estates/$estateId/reports/$reportId",
@@ -679,6 +681,8 @@ it("does not let a WorkOS admin claim bypass a missing report capability", async
 const OWNER_GATED = [
   "/estates/oak/asset-categories",
   "/estates/oak/inspections",
+  "/estates/oak/inspections/schedules",
+  "/estates/oak/inspections/schedules/days",
   "/estates/oak/asset-categories/months",
   "/estates/oak/edit",
   "/estates/oak/assets",
@@ -777,13 +781,15 @@ it.each([
     estate: managementOnly,
     owned: true,
   })),
-  ...["/estates/oak/asset-categories", "/estates/oak/inspections"].map(
-    (path) => ({
-      path,
-      estate: { ...managementOnly, canManageInvitationPermissions: true },
-      owned: false,
-    })
-  ),
+  ...[
+    "/estates/oak/inspections",
+    "/estates/oak/inspections/schedules",
+    "/estates/oak/inspections/schedules/days",
+  ].map((path) => ({
+    path,
+    estate: { ...managementOnly, canManageInvitationPermissions: true },
+    owned: false,
+  })),
   {
     path: "/estates/oak/edit",
     estate: { ...managementOnly, canManageEstate: true },

@@ -66,10 +66,12 @@ export function AssetServiceIntervalCard({
     setError(undefined);
     try {
       await mutateAsync(null);
-      toast.success("Override removed.");
+      toast.success("Custom interval removed.");
     } catch (cause) {
       setError(
-        cause instanceof Error ? cause.message : "Unable to remove override."
+        cause instanceof Error
+          ? cause.message
+          : "Couldn't remove the custom interval. Try again."
       );
     }
   }, [mutateAsync]);
@@ -114,7 +116,7 @@ export function AssetServiceIntervalCard({
                 <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <History aria-hidden="true" className="size-3.5 shrink-0" />
                   <span>
-                    Override last changed by{" "}
+                    Custom interval last changed by{" "}
                     {change.changedByName ?? "Unknown user"} ·{" "}
                     {new Date(change.changedAt).toLocaleString()}
                   </span>
@@ -136,7 +138,9 @@ export function AssetServiceIntervalCard({
                   onClick={open}
                   variant="outline"
                 >
-                  {overridden ? "Edit override" : "Override"}
+                  {overridden
+                    ? "Edit custom interval"
+                    : "Set a custom interval"}
                 </Button>
                 {overridden ? (
                   <Button
@@ -158,7 +162,7 @@ export function AssetServiceIntervalCard({
           interval={data.override ?? null}
           onCancel={close}
           onSave={save}
-          title="Override service interval"
+          title="Set a custom interval"
         />
       ) : null}
     </section>

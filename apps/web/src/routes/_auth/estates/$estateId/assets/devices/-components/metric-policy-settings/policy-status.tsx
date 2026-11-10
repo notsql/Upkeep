@@ -5,7 +5,7 @@ export function PolicyStatus({ policy }: { policy: SensorPolicy }) {
   const configured = policy.durationMinutes !== null;
   return (
     <Badge variant={configured ? "default" : "secondary"}>
-      {configured ? "Configured" : "Not set"}
+      {configured ? "Set" : "Not set"}
     </Badge>
   );
 }

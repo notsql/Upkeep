@@ -1,5 +1,6 @@
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
+import { ClipboardCheck } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { useInspectionResults } from "@/lib/inspections";
@@ -52,7 +53,10 @@ export function InspectionSaveRecovery({
             ))}
           </ul>
           {history.data.items.length === 0 ? (
-            <EmptyState title="No inspection records yet" />
+            <EmptyState
+              icon={ClipboardCheck}
+              title="No inspection records yet"
+            />
           ) : null}
           {history.data.nextCursor ? (
             <Button onClick={next} type="button" variant="outline">

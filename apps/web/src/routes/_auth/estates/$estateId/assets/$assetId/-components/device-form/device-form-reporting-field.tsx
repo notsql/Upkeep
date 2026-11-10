@@ -33,7 +33,7 @@ export function DeviceFormReportingField({
       <FieldLegend>Reporting</FieldLegend>
       <Field>
         <FieldLabel htmlFor={`${id}-interval`}>
-          Expected reporting interval (seconds)
+          How often it reports (seconds)
         </FieldLabel>
         <Input
           {...errorProps("interval")}

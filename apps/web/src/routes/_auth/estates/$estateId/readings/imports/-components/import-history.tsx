@@ -9,6 +9,7 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import type { ReadingImportBatch } from "@/lib/reading-imports";
+import { importStatusLabels } from "@/lib/reading-imports";
 import { useMobile } from "@/lib/use-mobile";
 
 export function ImportHistory({
@@ -36,7 +37,8 @@ export function ImportHistory({
                   {batch.sourceLabel}
                 </Link>
                 <p>
-                  {batch.status} · {batch.importedRows} imported
+                  {importStatusLabels[batch.status]} · {batch.importedRows}{" "}
+                  imported
                 </p>
               </CardContent>
             </Card>
@@ -75,7 +77,7 @@ export function ImportHistory({
               <TableCell>
                 {new Date(batch.createdAt).toLocaleString()}
               </TableCell>
-              <TableCell>{batch.status}</TableCell>
+              <TableCell>{importStatusLabels[batch.status]}</TableCell>
               <TableCell>{batch.importedRows}</TableCell>
             </TableRow>
           ))}

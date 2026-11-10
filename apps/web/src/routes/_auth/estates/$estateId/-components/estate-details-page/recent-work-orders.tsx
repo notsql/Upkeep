@@ -1,6 +1,7 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
 import { History } from "lucide-react";
+import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import { useWorkOrderList } from "@/lib/work-orders";
 import {
   footerLink,
@@ -42,9 +43,7 @@ export function RecentWorkOrders({ estateId }: { estateId: string }) {
                 {order.description} · {order.locationPath}
               </span>
             </span>
-            <Badge
-              variant={order.priority === "URGENT" ? "destructive" : "outline"}
-            >
+            <Badge variant={badgeVariantFor(reportUrgencyTone[order.priority])}>
               {order.priority.toLowerCase()}
             </Badge>
           </Link>

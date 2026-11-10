@@ -43,18 +43,16 @@ export const conditionStyle: Record<
   GOOD: {
     tone: "good",
     icon: CircleCheck,
-    text: "text-emerald-700 dark:text-emerald-300",
-    surface:
-      "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-100",
-    node: "bg-emerald-50 ring-emerald-300 dark:bg-emerald-950 dark:ring-emerald-800",
+    text: "text-success",
+    surface: "border-success/40 bg-success/10 text-success dark:bg-success/20",
+    node: "bg-success/10 ring-success/40 dark:bg-success/20",
   },
   NEEDS_ATTENTION: {
     tone: "needs-attention",
     icon: TriangleAlert,
-    text: "text-amber-700 dark:text-amber-300",
-    surface:
-      "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-100",
-    node: "bg-amber-50 ring-amber-300 dark:bg-amber-950 dark:ring-amber-800",
+    text: "text-warning",
+    surface: "border-warning/40 bg-warning/10 text-warning dark:bg-warning/20",
+    node: "bg-warning/10 ring-warning/40 dark:bg-warning/20",
   },
   FAULTY: {
     tone: "faulty",
@@ -72,7 +70,7 @@ export const ANOMALY_MODEL_USER_ID = "system:anomaly-model";
 /** Who recorded an assessment, as shown to people. */
 export function recorderName(assessment: Assessment): string {
   if (assessment.recordedByUserId === ANOMALY_MODEL_USER_ID) {
-    return "Anomaly detection";
+    return "Unusual readings";
   }
   return assessment.recordedByName ?? "Unknown user";
 }

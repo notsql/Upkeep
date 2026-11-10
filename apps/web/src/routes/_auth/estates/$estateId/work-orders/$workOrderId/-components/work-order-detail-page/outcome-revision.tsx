@@ -32,12 +32,12 @@ export function OutcomeRevision({
       </Button>
       {expanded ? (
         <div className="grid gap-6 lg:grid-cols-2" id={id}>
-          <section aria-label="Before correction">
-            <h3 className="mb-3 font-medium">Before correction</h3>
+          <section aria-label="Before the change">
+            <h3 className="mb-3 font-medium">Before the change</h3>
             <CompletionOutcome completion={revision.before} />
           </section>
-          <section aria-label="After correction">
-            <h3 className="mb-3 font-medium">After correction</h3>
+          <section aria-label="After the change">
+            <h3 className="mb-3 font-medium">After the change</h3>
             <CompletionOutcome completion={revision.after} />
           </section>
         </div>

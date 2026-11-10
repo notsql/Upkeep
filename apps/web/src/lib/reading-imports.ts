@@ -215,3 +215,17 @@ export async function downloadImportReport(
 export function readingImportMessage(cause: unknown, fallback: string): string {
   return cause instanceof Error ? cause.message : fallback;
 }
+
+/** On-screen names for a row's outcome; the enum stays in code. */
+export const importOutcomeLabels: Record<ReadingImportOutcome, string> = {
+  IMPORTED: "Imported",
+  DUPLICATE: "Already imported",
+  INVALID: "Has problems",
+};
+
+/** On-screen names for a batch's state. */
+export const importStatusLabels: Record<ReadingImportBatch["status"], string> =
+  {
+    COMPLETED: "Imported",
+    REVERTED: "Undone",
+  };

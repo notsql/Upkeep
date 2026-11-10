@@ -27,9 +27,11 @@ server enforces it.
 
 - `duplicate-badges.tsx`:
   - `DuplicateBadges` shows shadcn Badges for "N duplicate(s)" (confirmed),
-    "N to review" (suspected), and "Possible duplicate" or "Duplicate" for the
+    "N to review" (suspected), and "May already be reported" or "Duplicate" for the
     report's own link.
-  - `DuplicateStateBadge` is the single state badge.
+  - `DuplicateStateBadge` is the single state badge. Tones come from
+    `duplicateReportTone`: suspected ("May already be reported", "N to review") is
+    warning, and confirmed ("Duplicate", "N duplicate(s)") is secondary (muted).
 - `report-card.tsx` has an optional `badges` slot in the card header.
 - `report-source-picker.tsx` (`ReportSourcePicker`) moved here from
   `work-orders/new/-components/work-order-form/` because two routes use it. It gained optional
@@ -50,22 +52,22 @@ server enforces it.
 shadcn Card:
 
 - **Duplicate** (the report has a link):
-  - "Possible duplicate of" or "Duplicate of", then a Link to the original;
+  - "May be the same problem as" or "Duplicate of", then a Link to the original;
   - a note that the report cannot get its own work order, plus, for a suspected
     link, that rejecting it allows one. The route hides Create work order
     whenever `duplicateOf` is set.
-  - With `canReviewDuplicates`: Confirm (suspected only) and Not a duplicate
+  - With `canReviewDuplicates`: Confirm (suspected only) and Not the same problem
     Buttons, sending the state the caller saw as `expectedState`. A 409 shows
     an Alert with Reload, which resets the mutation and refetches. Other errors
     show the server's message.
 - **Duplicates** (the report is an original):
-  - "N confirmed" and "N to review" Badges;
+  - "N confirmed" (muted) and "N to review" (warning) Badges;
   - a list of linked reports, each a Link, a `DuplicateStateBadge` and its
     location label.
 - **Mark as duplicate** (`canReviewDuplicates`, no active link and no
   duplicates):
   - `ReportSourcePicker` labelled "Original report", with this report excluded;
-  - a "Link as duplicate" Button, disabled until an original is chosen;
+  - a "Mark as same problem" Button, disabled until an original is chosen;
   - a 400 shows the server's message in an Alert.
 
 Tests:
@@ -79,3 +81,6 @@ The combined estate DTOs also carry urgency/Safety/version and latest-change
 metadata. Duplicate mutations retain these fields when updating detail caches;
 urgency saves retain duplicate counts, links and controls. Queue sorting and
 urgency editing are documented in [estate-reports.md](estate-reports.md).
+
+The detail page's Duplicate, Duplicates and Mark as duplicate cards title
+with `SectionHeading` and the `Copy` icon.

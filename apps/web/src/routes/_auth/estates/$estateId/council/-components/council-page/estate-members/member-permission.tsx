@@ -8,6 +8,7 @@ import {
   useUpdateEstateRole,
 } from "@/lib/council-invitations";
 import { useEstateSession } from "@/lib/estates";
+import { badgeVariantFor, invitationTone } from "@/lib/status-tone";
 import { AccessConfirmation } from "@/routes/_auth/estates/$estateId/council/-components/council-page/access-confirmation";
 import { RemoveMemberButton } from "@/routes/_auth/estates/$estateId/council/-components/council-page/estate-members/remove-member-button";
 import {
@@ -105,7 +106,7 @@ export function MemberPermission({
         )}
       </TableCell>
       <TableCell>
-        <Badge variant="outline">Active</Badge>
+        <Badge variant={badgeVariantFor(invitationTone.ACTIVE)}>Active</Badge>
       </TableCell>
       <TableCell className="min-w-60 whitespace-normal">
         <div className="grid gap-3">

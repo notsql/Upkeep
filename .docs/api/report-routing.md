@@ -1,7 +1,7 @@
 # Report routing and contractor email API (ID-70)
 
 Source of truth: `packages/api/openapi.json`. Spec:
-`.spec/features/equipment-fault-work-orders.md`. Decisions 0046 and 0047.
+`.spec/features/equipment-fault-work-orders.md`. Decisions 0047 and 0048.
 Implementation: `com.proj.server.routing`, plus hooks in
 `com.proj.server.workorder` (see [work-orders.md](work-orders.md)).
 
@@ -26,7 +26,7 @@ endpoints. Errors are `EstateError { message }`; responses are
    `app.routing.poll-interval`, `app.routing.initial-delay`) claims a due row
    with `FOR UPDATE SKIP LOCKED` and a 3-minute lease. It calls
    `FaultClassifier` (`OnnxFaultClassifier`, the in-process water leak model
-   `water-leak-minilm-v1`, decision 0048). The model sees the title and
+   `water-leak-minilm-v1`, decision 0049). The model sees the title and
    description joined by a space, never the photos, location or submitter.
 3. Writing the result locks the estate, then the routing row (lease checked).
    Each valid answer is stored in `ReportClassification`.

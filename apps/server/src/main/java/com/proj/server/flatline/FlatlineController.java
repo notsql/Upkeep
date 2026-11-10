@@ -103,7 +103,7 @@ public class FlatlineController {
 
     private static String user(Jwt jwt) {
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sign in to monitor device readings.");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Sign in to see sensor readings.");
         }
         return jwt.getSubject();
     }

@@ -8,8 +8,10 @@ import {
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
 import type { InspectionCheck } from "@/lib/inspection-list";
+import { useInspectionAccess } from "@/lib/inspections";
 import { formatInterval } from "@/lib/service-intervals";
 import { CheckAction } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/check-action";
+import { EndOfLifeAction } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/end-of-life-action";
 import { StatusBadge } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/status-badge";
 
 export function formatDate(date: string): string {
@@ -21,8 +23,12 @@ export function formatDate(date: string): string {
 }
 
 function basis(check: InspectionCheck): string {
+  if (check.dueBasis === "REQUESTED") {
+    const by = check.requestedByName ? ` by ${check.requestedByName}` : "";
+    return `Sent to ${check.assignedToName ?? "someone"}${by}`;
+  }
   if (check.dueBasis === "PREDICTION") {
-    return "Predicted";
+    return "Expected";
   }
   if (check.dueBasis === "NEVER_INSPECTED") {
     return "Never inspected";
@@ -41,6 +47,7 @@ export function CheckTable({
   estateId: string;
   canRecord: boolean;
 }) {
+  const canSend = Boolean(useInspectionAccess(estateId).canCreateWorkOrders);
   return (
     <Table>
       <TableHeader>
@@ -74,11 +81,16 @@ export function CheckTable({
               <StatusBadge check={check} />
             </TableCell>
             <TableCell>
-              <CheckAction
-                canRecord={canRecord}
-                check={check}
-                estateId={estateId}
-              />
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {canSend && !check.result && check.dueBasis === "PREDICTION" ? (
+                  <EndOfLifeAction check={check} estateId={estateId} />
+                ) : null}
+                <CheckAction
+                  canRecord={canRecord}
+                  check={check}
+                  estateId={estateId}
+                />
+              </div>
             </TableCell>
           </TableRow>
         ))}

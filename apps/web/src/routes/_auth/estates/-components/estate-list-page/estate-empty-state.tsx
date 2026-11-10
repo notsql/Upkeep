@@ -1,4 +1,5 @@
 import { Button } from "@proj/ui/components/button";
+import { Building2, SearchX } from "lucide-react";
 import { EmptyState } from "@/components/states/empty-state";
 
 export function EstateEmptyState({
@@ -22,6 +23,7 @@ export function EstateEmptyState({
       description={
         filtersActive ? emptyMessage : "Use Create to add the first estate"
       }
+      icon={filtersActive ? SearchX : Building2}
       title={filtersActive ? "No matching estates" : emptyMessage}
     />
   );

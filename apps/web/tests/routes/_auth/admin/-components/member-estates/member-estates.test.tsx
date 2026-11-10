@@ -117,7 +117,7 @@ describe("MemberEstates", () => {
     renderWithProviders(<MemberEstates name="Casey Doe" userId="usr_1" />);
     fireEvent.click(await screen.findByRole("checkbox", { name: maple }));
     expect((await screen.findByRole("alert")).textContent).toContain(
-      "Unable to update estate access"
+      "Couldn't update estate access. Try again."
     );
   });
 

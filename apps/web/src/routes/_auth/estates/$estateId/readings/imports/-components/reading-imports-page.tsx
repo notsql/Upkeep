@@ -3,6 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { Card, CardContent } from "@proj/ui/components/card";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
+import { Upload } from "lucide-react";
 import {
   type FormEvent,
   useCallback,
@@ -150,7 +151,12 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
         setMapping(mappingFromHeaders(headers, lookup));
       } catch (cause) {
         if (current.current === scope && selected.current === next) {
-          setError(readingImportMessage(cause, "Unable to read CSV."));
+          setError(
+            readingImportMessage(
+              cause,
+              "Couldn't read the file. Make sure it's a CSV and try again."
+            )
+          );
         }
       }
     },
@@ -164,7 +170,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
       }
       if (!(file && validMapping(source, sample, mapping, mode))) {
         setError(
-          "Choose a file, source label and distinct mappings for asset, metric, measured time and value."
+          "Choose a file, give it a name, and match each column in your file."
         );
         return;
       }
@@ -264,6 +270,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
           },
           { label: "Import CSV" },
         ]}
+        icon={Upload}
         title="Import CSV"
       />
       {allowed ? (
@@ -332,7 +339,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
           <ErrorState message={history.error.message} onRetry={retryHistory} />
         ) : null}
         {history.data?.items.length === 0 ? (
-          <EmptyState title="No import batches yet" />
+          <EmptyState icon={Upload} title="No import batches yet" />
         ) : null}
         <ImportHistory estateId={estateId} items={history.data?.items ?? []} />
         {history.data ? (

@@ -77,10 +77,16 @@ abstract class InspectionTestSupport {
         return "/estates/" + data[0] + "/assets/" + data[2] + "/inspections";
     }
 
+    /** A Fail must say what is wrong (spec equipment-dispatch.md), so one gets a default note. */
     MockMultipartHttpServletRequestBuilder submission(UUID[] data, String outcome, String date) {
+        return submission(data, outcome, date, "FAIL".equals(outcome) ? "Not working" : null);
+    }
+
+    MockMultipartHttpServletRequestBuilder submission(UUID[] data, String outcome, String date, String notes) {
         var request = multipart(inspections(data)).param("expectedLocationId", data[1].toString());
         if (outcome != null) request.param("outcome", outcome);
         if (date != null) request.param("inspectedOn", date);
+        if (notes != null) request.param("notes", notes);
         return request;
     }
 
@@ -111,6 +117,7 @@ abstract class InspectionTestSupport {
 
     void cleanup(UUID estate) {
         for (String table : List.of(
+                "Notification",
                 "WorkOrderCompletionRevision",
                 "WorkOrderCompletion",
                 "WorkOrderStatusEvent",

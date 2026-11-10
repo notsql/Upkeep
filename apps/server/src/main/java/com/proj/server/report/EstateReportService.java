@@ -189,11 +189,21 @@ public class EstateReportService {
     }
 
     /** Reviewing and linking duplicates needs current MANAGER membership in an active estate. */
+    private static boolean reviewsDuplicates(String role) {
+        return "MANAGER".equals(role);
+    }
+
+    /** The permission half of {@link #authorizeActiveManager}, without locks or the active check. */
+    @Transactional(readOnly = true)
+    public boolean canReviewDuplicates(UUID estateId, String user) {
+        return repository.estate(estateId, false) != null && reviewsDuplicates(repository.role(estateId, user, false));
+    }
+
     private void authorizeActiveManager(UUID estateId, String user) {
         var estate = repository.estate(estateId, true);
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user, true);
-        if (!"MANAGER".equals(role)) {
+        if (!reviewsDuplicates(role)) {
             boolean known = user.equals(estate.get("ownerUserId", String.class)) || role != null;
             throw error(
                     known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,

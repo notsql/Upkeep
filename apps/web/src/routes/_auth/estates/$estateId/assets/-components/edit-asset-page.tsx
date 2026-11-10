@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { useNavigate } from "@tanstack/react-router";
+import { Pencil } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormCard, FormPage } from "@/components/page/form-page";
@@ -50,6 +51,7 @@ export function EditAssetPage({
         { label: "Edit" },
       ]}
       description="Reference stays the same"
+      icon={Pencil}
       title="Edit asset"
     >
       {asset.isPending ? (

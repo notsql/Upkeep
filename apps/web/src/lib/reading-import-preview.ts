@@ -7,7 +7,12 @@ export function readImportSample(file: File): Promise<string[][]> {
   }
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Unable to read this CSV file."));
+    reader.onerror = () =>
+      reject(
+        new Error(
+          "Couldn't read this file. Make sure it's a CSV and try again."
+        )
+      );
     reader.onload = () => {
       try {
         resolve(parseImportSample(String(reader.result)));
@@ -100,7 +105,7 @@ export function parseImportSample(raw: string): string[][] {
     header.some((cell) => !cell.trim()) ||
     new Set(header).size !== header.length
   ) {
-    throw new Error("Every CSV column needs a distinct, nonblank header.");
+    throw new Error("Every column in the file needs its own heading.");
   }
   return rows;
 }

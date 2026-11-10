@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { SearchX } from "lucide-react";
 import { EmptyState } from "@/components/states/empty-state";
 import type {
   EstatePermission,
@@ -38,6 +39,7 @@ export function RoleTable({
           </Button>
         }
         description="Try another name or description"
+        icon={SearchX}
         title="No matching roles"
       />
     );

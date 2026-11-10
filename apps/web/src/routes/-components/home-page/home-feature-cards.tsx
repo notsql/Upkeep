@@ -11,7 +11,12 @@ export function HomeFeatureCards() {
     <div className="grid gap-5 sm:grid-cols-3">
       <Card>
         <CardHeader>
-          <Building2 aria-hidden="true" className="text-primary mb-2 size-6" />
+          <span
+            aria-hidden="true"
+            className="bg-brand-1/15 text-brand-3 mb-2 flex size-9 items-center justify-center rounded-lg"
+          >
+            <Building2 className="size-5" />
+          </span>
           <CardTitle>Estates</CardTitle>
         </CardHeader>
         <CardContent className="text-muted-foreground text-sm">
@@ -20,7 +25,12 @@ export function HomeFeatureCards() {
       </Card>
       <Card>
         <CardHeader>
-          <Layers aria-hidden="true" className="text-primary mb-2 size-6" />
+          <span
+            aria-hidden="true"
+            className="bg-brand-1/15 text-brand-3 mb-2 flex size-9 items-center justify-center rounded-lg"
+          >
+            <Layers className="size-5" />
+          </span>
           <CardTitle>Assets</CardTitle>
         </CardHeader>
         <CardContent className="text-muted-foreground text-sm">
@@ -29,7 +39,12 @@ export function HomeFeatureCards() {
       </Card>
       <Card>
         <CardHeader>
-          <Users aria-hidden="true" className="text-primary mb-2 size-6" />
+          <span
+            aria-hidden="true"
+            className="bg-brand-1/15 text-brand-3 mb-2 flex size-9 items-center justify-center rounded-lg"
+          >
+            <Users className="size-5" />
+          </span>
           <CardTitle>Council access</CardTitle>
         </CardHeader>
         <CardContent className="text-muted-foreground text-sm">

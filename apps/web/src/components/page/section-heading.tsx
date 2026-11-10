@@ -25,10 +25,7 @@ export function SectionHeading({
       id={id}
     >
       {Icon ? (
-        <Icon
-          aria-hidden="true"
-          className="text-muted-foreground size-5 shrink-0"
-        />
+        <Icon aria-hidden="true" className="text-brand-2 size-5 shrink-0" />
       ) : null}
       {children}
     </Tag>

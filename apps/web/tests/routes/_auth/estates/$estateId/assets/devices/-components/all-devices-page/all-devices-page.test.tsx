@@ -79,6 +79,8 @@ const DEVICES_PATH = "/estates/{estateId}/devices";
 const REVIEW_PATH = "/estates/{estateId}/flatlined-sensors";
 const POLICY_PATH = "/estates/{estateId}/flatline-policies";
 const PAUSE = /^Pause/u;
+const SAME_READING =
+  /^It has sent the same reading \(20(?:\.0)? ?°C\) for 1 hr\.$/u;
 const MODEL = "PT-100";
 const at = "2026-10-20T04:00:00Z";
 
@@ -175,6 +177,10 @@ function serve() {
       [DEVICES_PATH]: devices,
       [REVIEW_PATH]: reviewPage(options?.params?.query?.page ?? 0),
       [POLICY_PATH]: { canManage, estateActive: true, policies },
+      "/estates/{estateId}/who-can-help": {
+        action: "REPLACE_SENSOR",
+        roles: ["estate owner"],
+      },
     };
     return Promise.resolve({ data: data[path], response: new Response() });
   }) as never);
@@ -188,7 +194,7 @@ function requested(path: string): boolean {
 
 /** The device identifier of each body row, top to bottom. */
 function deviceOrder(): string[] {
-  const table = screen.getByRole("table", { name: "All devices" });
+  const table = screen.getByRole("table", { name: "All sensors" });
   return within(table)
     .getAllByRole("rowheader")
     .map((cell) => (cell.textContent ?? "").replace(MODEL, ""));
@@ -217,7 +223,7 @@ beforeEach(() => {
 describe("AllDevicesPage", () => {
   it("ranks a flatlined device first, then offline, awaiting, online and deactivated", async () => {
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
-    await screen.findByRole("table", { name: "All devices" });
+    await screen.findByRole("table", { name: "All sensors" });
     expect(deviceOrder()).toEqual([
       "FLAT-1",
       "OFF-1",
@@ -225,8 +231,8 @@ describe("AllDevicesPage", () => {
       "ONLINE-1",
       "GONE-1",
     ]);
-    const table = screen.getByRole("table", { name: "All devices" });
-    within(table).getByText("Possible flatline");
+    const table = screen.getByRole("table", { name: "All sensors" });
+    within(table).getByText("Sensor may not be working");
   });
 
   it("shows a flatline that is on the second review page", async () => {
@@ -237,10 +243,10 @@ describe("AllDevicesPage", () => {
       sensor("ONLINE-1", "Boiler", "FLATLINED"),
     ];
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
-    await screen.findByRole("table", { name: "All devices" });
+    await screen.findByRole("table", { name: "All sensors" });
     expect(deviceOrder()[0]).toBe("ONLINE-1");
-    within(screen.getByRole("table", { name: "All devices" })).getByText(
-      "Possible flatline"
+    within(screen.getByRole("table", { name: "All sensors" })).getByText(
+      "Sensor may not be working"
     );
   });
 
@@ -248,7 +254,7 @@ describe("AllDevicesPage", () => {
     failing.add(REVIEW_PATH);
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
     const retry = await screen.findByRole("button", {
-      name: "Retry device monitoring",
+      name: "Try checking sensors again",
     });
     expect(deviceOrder()).toEqual([
       "OFF-1",
@@ -262,39 +268,78 @@ describe("AllDevicesPage", () => {
     await waitFor(() => expect(deviceOrder()[0]).toBe("FLAT-1"));
   });
 
-  it("offers Pause for maintenance when the review allows managing", async () => {
+  it("offers Pause warnings when the review allows managing", async () => {
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Pause FLAT-1 temperature" })
+      await screen.findByRole("button", {
+        name: "Pause warnings for FLAT-1 temperature",
+      })
     );
-    await screen.findByRole("dialog", { name: "Pause FLAT-1 temperature" });
+    await screen.findByRole("dialog", {
+      name: "Pause warnings for FLAT-1 temperature",
+    });
   });
 
-  it("hides Pause for maintenance without manage rights", async () => {
+  it("hides Pause warnings without manage rights", async () => {
     canManage = false;
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
-    await screen.findByText("Possible flatline");
+    await screen.findByText("Sensor may not be working");
     expect(screen.queryByRole("button", { name: PAUSE })).toBeNull();
   });
 
-  it("opens Metric policies in a dialog listing every metric", async () => {
+  it("explains a sensor that may not be working and links an owner to Replace sensor", async () => {
+    renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
+    await screen.findByText(SAME_READING);
+    const replace = await screen.findByRole("link", {
+      name: "Replace sensor",
+    });
+    expect(replace.getAttribute("href")).toBe(
+      `/estates/${ESTATE}/assets/asset-FLAT-1/devices/FLAT-1/replace`
+    );
+    screen.getByRole("button", {
+      name: "Pause warnings for FLAT-1 temperature",
+    });
+  });
+
+  it("tells a reader who can neither replace nor pause who to ask", async () => {
+    Object.assign(viewer, {
+      owned: false,
+      role: "COUNCIL",
+      canViewAssets: false,
+    });
+    canManage = false;
+    renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
+    await screen.findByText("Ask the estate owner to replace this sensor.");
+    expect(screen.queryByRole("link", { name: "Replace sensor" })).toBeNull();
+  });
+
+  it("opens When to warn in a dialog listing every measurement", async () => {
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
     fireEvent.click(
-      await screen.findByRole("button", { name: "Metric policies" })
+      await screen.findByRole("button", { name: "When to warn" })
     );
     const dialog = await screen.findByRole("dialog", {
-      name: "Metric policies",
+      name: "When to warn",
     });
     await within(dialog).findByText("Temperature");
     within(dialog).getByText("Humidity");
     within(dialog).getByText("Pressure");
+    within(dialog).getByText("0 of 3 set");
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Set up temperature warning" })
+    );
+    const form = await screen.findByRole("dialog", {
+      name: "Temperature warning",
+    });
+    within(form).getByLabelText("Warn after");
+    within(form).getByLabelText("Allowed change (u)");
   });
 
-  it("shows By location and All devices tabs to a register viewer", async () => {
+  it("shows By location and All sensors tabs to a register viewer", async () => {
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
     const nav = await screen.findByRole("navigation", { name: "Asset views" });
     within(nav).getByRole("link", { name: "By location" });
-    within(nav).getByRole("link", { name: "All devices" });
+    within(nav).getByRole("link", { name: "All sensors" });
   });
 
   it("builds read-only rows from the review for Council without requesting devices", async () => {
@@ -305,10 +350,10 @@ describe("AllDevicesPage", () => {
     });
     canManage = false;
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
-    await screen.findByRole("table", { name: "All devices" });
+    await screen.findByRole("table", { name: "All sensors" });
     expect(deviceOrder()).toEqual(["FLAT-1", "ONLINE-1"]);
     expect(requested(DEVICES_PATH)).toBe(false);
-    const table = screen.getByRole("table", { name: "All devices" });
+    const table = screen.getByRole("table", { name: "All sensors" });
     expect(
       within(table).queryByRole("columnheader", { name: "Status" })
     ).toBeNull();

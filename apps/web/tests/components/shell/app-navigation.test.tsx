@@ -56,6 +56,8 @@ async function setup(initialPath: string) {
     "/estates",
     "/estates/$estateId",
     "/estates/$estateId/$section",
+    "/estates/$estateId/$section/$sub",
+    "/estates/$estateId/$section/$sub/$leaf",
     "/estates/$estateId/assets/$assetId",
     "/reports",
     "/reports/new",
@@ -117,22 +119,29 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   const names = nav.getAllByRole("link").map((link) => link.textContent);
   expect(names).toEqual([
     "Overview",
-    "Work orders",
     "Fault reports",
     "Contractors",
     "Inspections",
-    "Locations",
+    "Work orders",
     "Assets",
+    "Locations",
     "Documents",
-    "Members",
-    "Roles",
-    "Asset categories",
+    "People & access",
     "Notification settings",
     "Estate settings",
   ]);
-  for (const label of ["Operations", "Assets", "Records", "Administration"]) {
-    nav.getByRole("group", { name: label });
+  expect(
+    nav.getAllByRole("group").map((group) => group.getAttribute("aria-label"))
+  ).toEqual(["Maintenance", "Assets", "Administration"]);
+  for (const label of ["Operations", "Records"]) {
+    expect(nav.queryByRole("group", { name: label })).toBeNull();
   }
+  for (const label of ["Asset categories", "Members", "Roles"]) {
+    expect(nav.queryByRole("link", { name: label })).toBeNull();
+  }
+  expect(
+    nav.getByRole("link", { name: "People & access" }).getAttribute("href")
+  ).toBe("/estates/pine/council");
   expect(nav.queryByText("Workspace")).toBeNull();
   expect(nav.queryByRole("button", { name: SWITCH_ESTATE })).toBeNull();
   expect(nav.queryByRole("link", { name: "UpKeep" })).toBeNull();
@@ -176,14 +185,14 @@ it("hides owner-only items for a management-only non-owner", async () => {
     canViewInspectionResults: false,
   });
   const nav = await setup("/estates/pine");
-  await nav.findByRole("link", { name: "Members" });
+  await nav.findByRole("link", { name: "People & access" });
   await waitFor(() => expect(requestedPaths()).toContain("/estates/{id}"));
   for (const label of [
     "Inspections",
     "Devices",
     "Asset categories",
     "Notification settings",
-    "Failure risk",
+    "Chance of breaking down",
     "Estate settings",
     "Assets",
     "Device monitoring",
@@ -198,8 +207,10 @@ it("shows delegate destinations to a non-owner who manages invitation permission
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "Inspections" });
   nav.getByRole("link", { name: "Assets" });
-  nav.getByRole("link", { name: "Asset categories" });
-  expect(nav.queryByRole("link", { name: "Failure risk" })).toBeNull();
+  expect(nav.queryByRole("link", { name: "Asset categories" })).toBeNull();
+  expect(
+    nav.queryByRole("link", { name: "Chance of breaking down" })
+  ).toBeNull();
   expect(nav.queryByRole("link", { name: "Estate settings" })).toBeNull();
 });
 
@@ -209,7 +220,9 @@ it("hides owner-only items until ownership is known", async () => {
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "Overview" });
   expect(nav.queryByRole("link", { name: "Devices" })).toBeNull();
-  expect(nav.queryByRole("link", { name: "Failure risk" })).toBeNull();
+  expect(
+    nav.queryByRole("link", { name: "Chance of breaking down" })
+  ).toBeNull();
 });
 
 it("shows only the Administration group for a roles-only estate", async () => {
@@ -226,10 +239,12 @@ it("shows only the Administration group for a roles-only estate", async () => {
     ],
   };
   const nav = await setup("/estates/oak/roles");
-  await nav.findByRole("link", { name: "Roles" });
+  const people = await nav.findByRole("link", { name: "People & access" });
   expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual([
-    "Roles",
+    "People & access",
   ]);
+  expect(people.getAttribute("href")).toBe("/estates/oak/roles");
+  expect(people.getAttribute("aria-current")).toBe("page");
   expect(
     nav.getAllByRole("group").map((group) => group.getAttribute("aria-label"))
   ).toEqual(["Administration"]);
@@ -241,8 +256,8 @@ it("shows Crew only their permitted sections", async () => {
   await nav.findByRole("link", { name: "Work orders" });
   expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual([
     "Overview",
-    "Work orders",
     "Fault reports",
+    "Work orders",
     "Assets",
   ]);
   expect(nav.queryByRole("group", { name: "Records" })).toBeNull();
@@ -299,6 +314,47 @@ it("renders no items while access is unavailable", async () => {
   const nav = await setup("/estates/pine");
   await waitFor(() => expect(vi.mocked(api.GET)).toHaveBeenCalled());
   expect(nav.queryAllByRole("link")).toHaveLength(0);
+});
+
+it.each([
+  "/estates/pine/council",
+  "/estates/pine/council/invitations",
+  "/estates/pine/roles",
+  "/estates/pine/roles/new",
+  "/estates/pine/roles/r1/edit",
+])("marks People & access active on %s", async (path) => {
+  const nav = await setup(path);
+  const people = await nav.findByRole("link", { name: "People & access" });
+  expect(people.getAttribute("aria-current")).toBe("page");
+});
+
+it.each([
+  "/estates/pine/inspections",
+  "/estates/pine/inspections/schedules",
+  "/estates/pine/inspections/schedules/days",
+])("marks Inspections active on %s", async (path) => {
+  const nav = await setup(path);
+  const inspections = await nav.findByRole("link", { name: "Inspections" });
+  expect(inspections.getAttribute("aria-current")).toBe("page");
+});
+
+it("links People & access to Members for a members-only user", async () => {
+  estate({ canViewEstateRoles: false });
+  const nav = await setup("/estates/pine");
+  const people = await nav.findByRole("link", { name: "People & access" });
+  expect(people.getAttribute("href")).toBe("/estates/pine/council");
+});
+
+it("hides People & access when the user can open neither page", async () => {
+  estate({
+    canViewEstateRoles: false,
+    canViewEstateInvitations: false,
+    canInviteMembers: false,
+    canManageInvitationPermissions: false,
+  });
+  const nav = await setup("/estates/pine");
+  await nav.findByRole("link", { name: "Overview" });
+  expect(nav.queryByRole("link", { name: "People & access" })).toBeNull();
 });
 
 it("offers Contractors to accounts that can create work orders", async () => {

@@ -324,3 +324,11 @@ package:
 - `WorkOrderException` is public, so the routing controllers return its status.
 - New endpoints: GET and POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch`,
   and POST `…/dispatch/retry`.
+
+## Open work order (equipment dispatch)
+
+`GET /estates/{estateId}/assets/{assetId}/open-work-order` returns the asset's
+newest work order that is not `CLOSED` as `OpenWorkOrderResponse { id,
+reference }`, or 204 when there is none. Same readers as the work-order list.
+"Send a contractor" uses the existing create endpoint; see
+[equipment-dispatch.md](equipment-dispatch.md).

@@ -1,8 +1,9 @@
 package com.proj.server.inspectionlist;
 
-/** Why a check is due: a failure-risk prediction, a service interval, or no inspection yet. */
+/** Why a check is due: a prediction, a service interval, no inspection yet, or a manager sent crew. */
 public enum DueBasis {
     PREDICTION,
     INTERVAL,
-    NEVER_INSPECTED
+    NEVER_INSPECTED,
+    REQUESTED
 }

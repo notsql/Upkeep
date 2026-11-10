@@ -84,7 +84,7 @@ export function useSendToContractor(estateId: string, reportId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to send the work order.",
+          error?.message ?? "Couldn't send the work order. Try again.",
           response?.status ?? 500
         );
       }
@@ -105,7 +105,7 @@ export function useDismissReport(estateId: string, reportId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to dismiss the report.",
+          error?.message ?? "Couldn't dismiss the report. Try again.",
           response?.status ?? 500
         );
       }
@@ -128,7 +128,7 @@ export function useWorkOrderDispatch(estateId: string, workOrderId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to load the contractor email.",
+          error?.message ?? "Couldn't load the contractor email. Try again.",
           response?.status ?? 500
         );
       }
@@ -151,7 +151,7 @@ export function useDispatchWorkOrder(estateId: string, workOrderId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to email the contractor.",
+          error?.message ?? "Couldn't email the contractor. Try again.",
           response?.status ?? 500
         );
       }
@@ -172,7 +172,7 @@ export function useRetryDispatch(estateId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to retry the contractor email.",
+          error?.message ?? "Couldn't resend the contractor email. Try again.",
           response?.status ?? 500
         );
       }

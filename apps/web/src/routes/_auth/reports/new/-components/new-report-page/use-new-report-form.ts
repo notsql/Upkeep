@@ -72,7 +72,7 @@ export function useNewReportForm(
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to submit. Check My reports before trying again."
+            : "Couldn't submit. Check My reports before trying again."
         );
       }
     },

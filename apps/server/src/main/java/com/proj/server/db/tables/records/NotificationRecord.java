@@ -401,6 +401,34 @@ public class NotificationRecord extends UpdatableRecordImpl<NotificationRecord> 
         return (Integer) get(26);
     }
 
+    /**
+     * Setter for <code>public.Notification.inspectionResultId</code>.
+     */
+    public void setInspectionresultid(UUID value) {
+        set(27, value);
+    }
+
+    /**
+     * Getter for <code>public.Notification.inspectionResultId</code>.
+     */
+    public UUID getInspectionresultid() {
+        return (UUID) get(27);
+    }
+
+    /**
+     * Setter for <code>public.Notification.recipientUserId</code>.
+     */
+    public void setRecipientuserid(String value) {
+        set(28, value);
+    }
+
+    /**
+     * Getter for <code>public.Notification.recipientUserId</code>.
+     */
+    public String getRecipientuserid() {
+        return (String) get(28);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -424,7 +452,7 @@ public class NotificationRecord extends UpdatableRecordImpl<NotificationRecord> 
     /**
      * Create a detached, initialised NotificationRecord
      */
-    public NotificationRecord(UUID id, UUID estateid, UUID assetid, String type, String summary, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime resolvedat, String condition, BigDecimal medianscore, BigDecimal maxscore, OffsetDateTime firstdetectedat, OffsetDateTime lastdetectedat, String explanation, String response, String respondedbyuserid, String respondedbyname, OffsetDateTime respondedat, String responsereason, LocalDate dueon, Integer intervalvalue, String intervalunit, String intervalsource, String recommendedtimeframe, BigDecimal probability, String basis, Integer failuresobserved) {
+    public NotificationRecord(UUID id, UUID estateid, UUID assetid, String type, String summary, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime resolvedat, String condition, BigDecimal medianscore, BigDecimal maxscore, OffsetDateTime firstdetectedat, OffsetDateTime lastdetectedat, String explanation, String response, String respondedbyuserid, String respondedbyname, OffsetDateTime respondedat, String responsereason, LocalDate dueon, Integer intervalvalue, String intervalunit, String intervalsource, String recommendedtimeframe, BigDecimal probability, String basis, Integer failuresobserved, UUID inspectionresultid, String recipientuserid) {
         super(Notification.NOTIFICATION);
 
         setId(id);
@@ -454,6 +482,8 @@ public class NotificationRecord extends UpdatableRecordImpl<NotificationRecord> 
         setProbability(probability);
         setBasis(basis);
         setFailuresobserved(failuresobserved);
+        setInspectionresultid(inspectionresultid);
+        setRecipientuserid(recipientuserid);
         resetTouchedOnNotNull();
     }
 }

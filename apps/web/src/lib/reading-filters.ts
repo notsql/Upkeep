@@ -110,7 +110,7 @@ export function readingFilterError(filters: ReadingSearch): string | undefined {
     return "Choose a valid asset or clear the asset filter.";
   }
   if (filters.metric && !Object.hasOwn(deviceMetrics, filters.metric)) {
-    return "Choose a valid metric or clear the metric filter.";
+    return "Choose a measurement from the list, or clear the filter.";
   }
   if (filters.from && !validLocalDateTime(filters.from)) {
     return "Enter a valid start date and time.";

@@ -7,17 +7,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@proj/ui/components/card";
-import { Mail } from "lucide-react";
+import { Mail, SearchX } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { useOutstandingInvitations } from "@/lib/council-invitations";
+import { badgeVariantFor, invitationTone } from "@/lib/status-tone";
 import {
   type MemberFilter,
   matchesFilter,
 } from "@/routes/_auth/estates/$estateId/council/-components/council-page/member-filters";
-
 import { OutstandingInvitation } from "@/routes/_auth/estates/$estateId/council/-components/council-page/outstanding-invitation";
 
 export function OwnerInvitations({
@@ -48,7 +48,9 @@ export function OwnerInvitations({
           <Mail aria-hidden="true" className="text-muted-foreground size-4" />
           <h2>Pending invitations</h2>
           {invitations.data ? (
-            <Badge variant="outline">{invitations.data.length} pending</Badge>
+            <Badge variant={badgeVariantFor(invitationTone.PENDING)}>
+              {invitations.data.length} pending
+            </Badge>
           ) : null}
         </CardTitle>
         <CardDescription>Not yet accepted</CardDescription>
@@ -63,6 +65,7 @@ export function OwnerInvitations({
         {invitations.data?.length === 0 ? (
           <EmptyState
             description="Sent invitations appear here"
+            icon={Mail}
             title="No pending invitations"
           />
         ) : null}
@@ -76,6 +79,7 @@ export function OwnerInvitations({
               ) : undefined
             }
             description="Try another search or role"
+            icon={SearchX}
             title="No matching invitations"
           />
         ) : null}

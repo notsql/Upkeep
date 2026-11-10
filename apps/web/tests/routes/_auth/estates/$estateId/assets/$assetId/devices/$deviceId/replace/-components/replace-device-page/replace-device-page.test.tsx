@@ -25,7 +25,7 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const WILL_BE_DEACTIVATED =
-  /PUMP-01 will be deactivated and its key will stop working/u;
+  /PUMP-01 will be turned off and its key will stop working/u;
 const at = "2026-10-22T00:00:00Z";
 const locations: Location[] = [
   { id: "b1", type: "BLOCK", name: "Blk 101", createdAt: at, updatedAt: at },
@@ -101,7 +101,7 @@ it("replaces a device with a new one that starts from the old device's details",
   fireEvent.change(screen.getByRole("textbox", { name: "Identifier" }), {
     target: { value: "PUMP-02" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Replace device" }));
+  fireEvent.click(screen.getByRole("button", { name: "Replace sensor" }));
 
   await waitFor(() =>
     expect(api.POST).toHaveBeenCalledWith(
@@ -131,7 +131,7 @@ it("does not offer replacing a device that is already deactivated", async () => 
   devices = [{ ...old, deactivatedAt: at }];
   renderPage();
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "already deactivated"
+    "already turned off"
   );
   expect(screen.queryByRole("textbox", { name: "Identifier" })).toBeNull();
 });

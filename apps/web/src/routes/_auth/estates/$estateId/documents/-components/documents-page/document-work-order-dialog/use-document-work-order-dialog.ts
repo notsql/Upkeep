@@ -140,7 +140,7 @@ export function useDocumentWorkOrderDialog({
       setReviewing(true);
     } catch {
       setRefreshError(
-        "Unable to refresh the document link and history. Please retry."
+        "Couldn't refresh the document link and history. Try again."
       );
     } finally {
       setRefreshing(false);

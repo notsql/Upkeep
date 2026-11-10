@@ -7,7 +7,7 @@ export function DuplicateCountBadge({ count }: { count?: number }) {
   }
   return (
     <Badge variant="secondary">
-      {count} {count === 1 ? "duplicate" : "duplicates"}
+      {count} {count === 1 ? "repeat report" : "repeat reports"}
     </Badge>
   );
 }

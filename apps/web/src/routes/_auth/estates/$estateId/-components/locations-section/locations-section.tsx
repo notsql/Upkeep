@@ -55,8 +55,8 @@ export function LocationsSection({ estateId }: { estateId: string }) {
             ) : null
           }
           error={locations.error}
-          id={id}
           onRetry={page.retryLocations}
+          onViewChange={page.setView}
           pending={locations.isPending}
           tree={
             locations.data
@@ -76,6 +76,8 @@ export function LocationsSection({ estateId }: { estateId: string }) {
                 }
               : undefined
           }
+          view={page.view}
+          viewLocked={page.searching}
         />
       </Dialog>
       {deactivateTarget ? (

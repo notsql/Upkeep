@@ -110,7 +110,7 @@ public class DeviceController {
 
     private static String owner(Jwt jwt) {
         if (jwt == null || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
-            throw new DeviceException(HttpStatus.UNAUTHORIZED, "Sign in to manage devices.");
+            throw new DeviceException(HttpStatus.UNAUTHORIZED, "Sign in to manage sensors.");
         }
         return jwt.getSubject();
     }

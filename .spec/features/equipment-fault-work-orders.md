@@ -21,8 +21,8 @@ ID-70 adds: classification, routing, Manager review and contractor email. The
 first version's migration was never applied to a shared database. It is
 deleted and authored again on top of `main`'s migrations.
 
-The decision records are numbered 0046 and 0047, because `main` already
-uses up to 0045.
+The decision records are numbered 0047 and 0048, because `main` already
+uses up to 0046.
 
 ## Problem
 
@@ -87,7 +87,7 @@ The screen is unchanged: one name and email per equipment type. Underneath:
 
 > **Agreed revision (2026-11-09):** the model call below is replaced by a
 > classifier the team trains, scoped to water leaks and reading text only. See
-> [water-leak-classifier.md](water-leak-classifier.md) and decision 0048.
+> [water-leak-classifier.md](water-leak-classifier.md) and decision 0049.
 
 Unchanged. Submission queues the report in `ReportRouting` (`CLASSIFYING`).
 Reports from before routing are never classified. A scheduled job sends the
@@ -297,7 +297,7 @@ Everything in the first version's list, plus:
   the work-order link and the contractor-email section) were written before
   their tests; each new test was then shown to fail against a deliberately
   broken version.
-- [x] Decision records 0046 (classification in Spring) and 0047 (contractor
+- [x] Decision records 0047 (classification in Spring) and 0048 (contractor
   email dispatch on work orders). `.docs` updated; full checks run.
 - [ ] Apply the migration to Neon `dev`, add the secrets, run the model
   evaluation by hand and record its result here.

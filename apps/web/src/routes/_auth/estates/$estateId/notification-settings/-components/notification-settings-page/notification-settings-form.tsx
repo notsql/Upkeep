@@ -27,9 +27,9 @@ import {
   useSaveNotificationSettings,
 } from "@/lib/notifications";
 
-const THRESHOLD = /^(?:0\.\d{1,2}|1(?:\.0{1,2})?)$/u;
 const WHOLE_NUMBER = /^\d+$/u;
-const MIN_THRESHOLD = 0.51;
+const MIN_PERCENT = 51;
+const MAX_PERCENT = 100;
 const MAX_LEAD_DAYS = 365;
 const REPAIR_LEADS = [
   { value: "30", label: "30 days" },
@@ -37,13 +37,16 @@ const REPAIR_LEADS = [
   { value: "90", label: "90 days" },
 ];
 
+/** A whole percentage from 51 to 100, saved as the 0.51 to 1.00 the API takes. */
 function parseThreshold(value: string): number | undefined {
   const trimmed = value.trim();
-  if (!THRESHOLD.test(trimmed)) {
+  if (!WHOLE_NUMBER.test(trimmed)) {
     return;
   }
-  const number = Number(trimmed);
-  return number >= MIN_THRESHOLD ? number : undefined;
+  const percent = Number(trimmed);
+  return percent >= MIN_PERCENT && percent <= MAX_PERCENT
+    ? percent / 100
+    : undefined;
 }
 
 function parseLeadDays(value: string): number | undefined {
@@ -72,7 +75,7 @@ export function NotificationSettingsForm({
   const save = useSaveNotificationSettings(estateId);
   const { mutateAsync } = save;
   const [threshold, setThreshold] = useState(
-    settings.anomalyScoreThreshold.toFixed(2)
+    String(Math.round(settings.anomalyScoreThreshold * 100))
   );
   const [leadDays, setLeadDays] = useState(String(settings.serviceLeadDays));
   const [repairLead, setRepairLead] = useState(String(settings.repairLeadDays));
@@ -126,7 +129,7 @@ export function NotificationSettingsForm({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to save the settings. Please try again."
+            : "Couldn't save the settings. Try again."
         );
       }
     },
@@ -140,42 +143,41 @@ export function NotificationSettingsForm({
       <CardContent>
         <form className="grid gap-6" noValidate onSubmit={submit}>
           {inactive ? (
-            <Alert>
+            <Alert variant="warning">
               <AlertDescription>
-                This estate is inactive, so its notification settings cannot be
-                changed.
+                This estate is inactive, so you can't change these settings.
               </AlertDescription>
             </Alert>
           ) : null}
           <Field>
             <FieldLabel htmlFor={`${id}-threshold`}>
-              Anomaly score threshold
+              How sure before we warn you (%)
             </FieldLabel>
             <Input
               disabled={disabled}
               id={`${id}-threshold`}
-              inputMode="decimal"
-              max={1}
-              min={MIN_THRESHOLD}
+              inputMode="numeric"
+              max={MAX_PERCENT}
+              min={MIN_PERCENT}
               onChange={changeThreshold}
-              step={0.01}
+              step={1}
               type="number"
               value={threshold}
               {...invalidProps(invalid.threshold, `${id}-threshold-error`)}
             />
             <FieldDescription>
-              Notify when an abnormal run's median score reaches this value.
-              0.51 notifies on every abnormal run.
+              We warn managers when readings look unusual with at least this
+              much certainty. 51% warns about every unusual stretch.
             </FieldDescription>
             {invalid.threshold ? (
               <FieldError id={`${id}-threshold-error`}>
-                Enter a threshold from 0.51 to 1.00.
+                Enter a whole number from 51 to 100.
               </FieldError>
             ) : null}
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-lead`}>
-              Service reminder lead time (days)
+              Days of notice before a service is due
             </FieldLabel>
             <Input
               disabled={disabled}
@@ -190,7 +192,7 @@ export function NotificationSettingsForm({
               {...invalidProps(invalid.lead, `${id}-lead-error`)}
             />
             <FieldDescription>
-              Notify this many days before a service interval comes due.
+              We remind managers this many days before a service is due.
             </FieldDescription>
             {invalid.lead ? (
               <FieldError id={`${id}-lead-error`}>
@@ -200,7 +202,7 @@ export function NotificationSettingsForm({
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-repair`}>
-              Repair prediction lead time
+              Notice before an expected repair
             </FieldLabel>
             <Select
               disabled={disabled}
@@ -220,7 +222,8 @@ export function NotificationSettingsForm({
               </SelectContent>
             </Select>
             <FieldDescription>
-              Notify when a pump's breakdown forecast falls within this window.
+              We warn managers when a pump is likely to need a repair within
+              this time.
             </FieldDescription>
           </Field>
           {error ? (

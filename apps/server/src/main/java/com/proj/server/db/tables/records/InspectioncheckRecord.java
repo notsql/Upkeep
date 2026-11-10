@@ -218,6 +218,34 @@ public class InspectioncheckRecord extends UpdatableRecordImpl<InspectioncheckRe
         return (OffsetDateTime) get(13);
     }
 
+    /**
+     * Setter for <code>public.InspectionCheck.assignedToName</code>.
+     */
+    public void setAssignedtoname(String value) {
+        set(14, value);
+    }
+
+    /**
+     * Getter for <code>public.InspectionCheck.assignedToName</code>.
+     */
+    public String getAssignedtoname() {
+        return (String) get(14);
+    }
+
+    /**
+     * Setter for <code>public.InspectionCheck.assignedToUserId</code>.
+     */
+    public void setAssignedtouserid(String value) {
+        set(15, value);
+    }
+
+    /**
+     * Getter for <code>public.InspectionCheck.assignedToUserId</code>.
+     */
+    public String getAssignedtouserid() {
+        return (String) get(15);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -241,7 +269,7 @@ public class InspectioncheckRecord extends UpdatableRecordImpl<InspectioncheckRe
     /**
      * Create a detached, initialised InspectioncheckRecord
      */
-    public InspectioncheckRecord(UUID id, UUID estateid, UUID assetid, LocalDate month, LocalDate dueon, String duebasis, Integer intervalvalue, String intervalunit, String intervalsource, String generatedbyuserid, String generatedbyname, OffsetDateTime generatedat, UUID completedbyresultid, OffsetDateTime completedat) {
+    public InspectioncheckRecord(UUID id, UUID estateid, UUID assetid, LocalDate month, LocalDate dueon, String duebasis, Integer intervalvalue, String intervalunit, String intervalsource, String generatedbyuserid, String generatedbyname, OffsetDateTime generatedat, UUID completedbyresultid, OffsetDateTime completedat, String assignedtoname, String assignedtouserid) {
         super(Inspectioncheck.INSPECTIONCHECK);
 
         setId(id);
@@ -258,6 +286,8 @@ public class InspectioncheckRecord extends UpdatableRecordImpl<InspectioncheckRe
         setGeneratedat(generatedat);
         setCompletedbyresultid(completedbyresultid);
         setCompletedat(completedat);
+        setAssignedtoname(assignedtoname);
+        setAssignedtouserid(assignedtouserid);
         resetTouchedOnNotNull();
     }
 }

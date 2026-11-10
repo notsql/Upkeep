@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Card, CardContent } from "@proj/ui/components/card";
+import { ClipboardCheck } from "lucide-react";
 import { useCallback } from "react";
 import { DetailCard } from "@/components/page/detail-card";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
@@ -63,6 +64,7 @@ export function InspectionDetail({
           },
           { label: "Inspection record" },
         ]}
+        icon={ClipboardCheck}
         meta={
           asset.data
             ? `${asset.data.reference} · ${asset.data.name}`

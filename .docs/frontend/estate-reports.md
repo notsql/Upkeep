@@ -158,11 +158,11 @@ The list uses `ListPageHeader` (`icon={ClipboardList}`, `filters` =
 `FilterToggle`; no create action). `ReportFilters` takes `id`/`open` from
 `useFilterPanel(countReportFilters(filters)).barProps`, so the bar is collapsed
 until toggled (open on load when the URL has filters). The detail uses
-`DetailPageHeader` (breadcrumbs, no icon) whose Create work order link has a
+`DetailPageHeader` (breadcrumbs, `icon={ClipboardList}`) whose Create work order link has a
 leading `Plus`. Load errors (reports, locations, detail, correction locations)
 use `ErrorState`. Both report edit dialogs use the shared `FormDialog`, which supports disabled
 submission and a Reload secondary action on conflicts. Empty states: "No reports
-yet" (default `Inbox`, "Resident reports appear here") and "No matching reports" (`SearchX`, "Try other
+yet" (`ClipboardList`, "Resident reports appear here") and "No matching reports" (`SearchX`, "Try other
 filters", outline Clear filters).
 
 ## Urgency queue and editing
@@ -178,7 +178,7 @@ sort; refresh and browser navigation restore both controls. The estate overview 
 labelled “Fault reports by urgency” to match the same API order.
 
 Shared `report-urgency-badges.tsx` renders stock shadcn Badges with text labels
-(Urgent uses destructive; other levels use outline) and a separate Safety Badge.
+toned by `reportUrgencyTone` (Low is outline, Medium is info, High is warning, Urgent is destructive) and a separate Safety Badge.
 Estate cards/detail pass this optional metadata into shared report presentation;
 resident cards/detail do not. Existing theme tokens and wrapping layouts apply.
 
@@ -212,6 +212,13 @@ Urgency and duplicate information share the generated `EstateIssueReport*` DTOs.
 Cards retain both badge groups; detail retains duplicate review/link controls
 and urgency editing. Both mutations cache the combined response, so saving either
 feature preserves the other feature’s displayed data.
+
+## Colour
+
+`ReportMetadata` shows the status through `WorkOrderStatusBadge`, so it reads
+"In progress" (warning) rather than `IN_PROGRESS`. Report status and work-order
+status share one map: Open is outline, Assigned is info, In progress is warning
+and Closed is success. An unknown status shows as-is, outlined.
 
 ## Routing (ID-70)
 

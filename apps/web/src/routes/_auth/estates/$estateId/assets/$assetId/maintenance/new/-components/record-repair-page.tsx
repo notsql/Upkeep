@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Wrench } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormPage } from "@/components/page/form-page";
@@ -49,6 +50,7 @@ export function RecordRepairPage({
         { label: "Record repair" },
       ]}
       description="What happened to this asset, when, and what it cost"
+      icon={Wrench}
       title="Record repair"
     >
       {asset.isPending ? (

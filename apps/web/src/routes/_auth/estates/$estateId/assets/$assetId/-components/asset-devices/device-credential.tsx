@@ -44,7 +44,7 @@ export function useDeviceCredential(
       setError(
         cause instanceof Error
           ? cause.message
-          : "Unable to generate a credential. Please try again."
+          : "Couldn't create a connection key. Try again."
       );
     }
   }, [issue.mutateAsync, device.id]);
@@ -63,14 +63,16 @@ export function useDeviceCredential(
     }
     try {
       await navigator.clipboard.writeText(issued.apiKey);
-      toast.success("API key copied.");
+      toast.success("Connection key copied.");
     } catch {
-      setError("Unable to copy. Select the key and copy it manually.");
+      setError("Couldn't copy the key. Select it and copy it yourself.");
     }
   }, [issued]);
 
   return {
-    actionLabel: hasCredential ? "Replace credential" : "Generate credential",
+    actionLabel: hasCredential
+      ? "Replace connection key"
+      : "Get connection key",
     cancel,
     confirming,
     copy,
@@ -111,26 +113,26 @@ export function DeviceCredentialDialogs({
       ) : null}
 
       <ConfirmDialog
-        confirmLabel="Replace credential"
-        description="The current key stops working immediately. The device cannot send readings until it is given the new key."
+        confirmLabel="Replace connection key"
+        description="The current key stops working straight away. The sensor can't send readings until you give it the new key."
         onCancel={cancel}
         onConfirm={generate}
         open={confirming}
-        title={`Replace the credential for ${device.identifier}?`}
+        title={`Replace the connection key for ${device.identifier}?`}
       />
 
       <Dialog onOpenChange={doneOnClose} open={Boolean(issued)}>
         <DialogContent className="p-6 sm:max-w-lg" showCloseButton={false}>
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
-              API key for {device.identifier}
+              Connection key for {device.identifier}
             </DialogTitle>
             <DialogDescription className="mt-2 text-sm">
-              Copy this key into the device now. It won't be shown again.
+              Copy this key into the sensor now. We won't show it again.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
-            <Label htmlFor={`api-key-${device.id}`}>API key</Label>
+            <Label htmlFor={`api-key-${device.id}`}>Connection key</Label>
             <div className="flex gap-2">
               <Input
                 className="font-mono"

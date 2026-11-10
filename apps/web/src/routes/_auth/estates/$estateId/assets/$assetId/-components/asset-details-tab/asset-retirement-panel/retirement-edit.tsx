@@ -67,13 +67,13 @@ export function RetirementEdit({
     <Dialog onOpenChange={handleOpenChange} open>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Edit retirement information</DialogTitle>
+          <DialogTitle>Edit out-of-use details</DialogTitle>
           <DialogDescription>
             Previous information remains in the lifecycle history.
           </DialogDescription>
         </DialogHeader>
         <form className="grid gap-4" onSubmit={submit}>
-          <Label htmlFor="correction-date">Retirement date</Label>
+          <Label htmlFor="correction-date">Date taken out of use</Label>
           <DatePicker
             aria-describedby={
               dateError ? "correction-date-error" : "correction-date-help"
@@ -105,7 +105,7 @@ export function RetirementEdit({
               {dateError}
             </p>
           ) : null}
-          <Label htmlFor="correction-reason">Retirement reason</Label>
+          <Label htmlFor="correction-reason">Why it's out of use</Label>
           <Textarea
             disabled={correction.isPending}
             id="correction-reason"

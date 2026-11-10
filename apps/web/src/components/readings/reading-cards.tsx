@@ -7,8 +7,8 @@ import {
   type AssetReading,
   type EstateReading,
   flagLabel,
-  flagVariant,
 } from "@/lib/readings";
+import { badgeVariantFor, readingFlagTone } from "@/lib/status-tone";
 
 export function ReadingCards({
   items,
@@ -62,7 +62,7 @@ export function ReadingCards({
                 </div>
                 {reading.deviceIdentifier ? (
                   <div>
-                    <dt className="text-muted-foreground">Device</dt>
+                    <dt className="text-muted-foreground">Sensor name</dt>
                     <dd>{reading.deviceIdentifier}</dd>
                   </div>
                 ) : null}
@@ -73,7 +73,7 @@ export function ReadingCards({
                     <Badge
                       className="h-auto max-w-full py-0.5 text-left leading-snug whitespace-normal"
                       key={flag.type}
-                      variant={flagVariant(flag)}
+                      variant={badgeVariantFor(readingFlagTone[flag.type])}
                     >
                       {flagLabel(flag, reading.unit)}
                     </Badge>

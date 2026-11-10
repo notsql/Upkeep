@@ -11,6 +11,8 @@ import type { Assessment } from "@/lib/assessments";
 import { formatDate } from "@/lib/format";
 import { AssetAttentionAlert } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-page/asset-attention-alert";
 
+const SEND_STEP = /Send step/u;
+
 vi.mock("@/lib/api", () => ({ api: { GET: vi.fn() } }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "owner" }, loading: false }),
@@ -35,6 +37,24 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+const risk = vi.hoisted(() => ({ flagReasons: [] as string[] }));
+vi.mock("@/lib/failure-risk", () => ({
+  useAssetFailureRisk: () => ({ data: { flagReasons: risk.flagReasons } }),
+}));
+vi.mock("@/components/dispatch/dispatch-action", () => ({
+  DispatchAction: ({
+    route,
+    canSend,
+    assetName,
+  }: {
+    route: string;
+    canSend: boolean;
+    assetName: string;
+  }) => (
+    <span>{`Send step ${route} for ${assetName}${canSend ? "" : " (ask)"}`}</span>
+  ),
+}));
+
 let history: Assessment[];
 
 function current(
@@ -53,11 +73,14 @@ function current(
   };
 }
 
-function renderAlert(canInspect = true) {
+function renderAlert(canInspect = true, canSend = false, active = true) {
   return renderWithProviders(
     <AssetAttentionAlert
+      active={active}
       assetId="asset"
+      assetName="Booster pump"
       canInspect={canInspect}
+      canSend={canSend}
       estateId="estate"
     />
   );
@@ -65,6 +88,7 @@ function renderAlert(canInspect = true) {
 
 beforeEach(() => {
   vi.mocked(api.GET).mockReset();
+  risk.flagReasons = ["CONDITION"];
   history = [current("NEEDS_ATTENTION")];
   vi.mocked(api.GET).mockImplementation((() =>
     Promise.resolve({ data: history, response: new Response() })) as never);
@@ -76,7 +100,7 @@ describe("AssetAttentionAlert", () => {
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toContain("Needs attention");
     expect(alert.textContent).toContain(
-      `flagged by Anomaly detection on ${formatDate("2026-11-08")}`
+      `flagged by Unusual readings on ${formatDate("2026-11-08")}`
     );
     expect(
       within(alert)
@@ -108,6 +132,29 @@ describe("AssetAttentionAlert", () => {
     expect(
       screen.queryByRole("link", { name: "File an inspection" })
     ).toBeNull();
+    within(alert).getByText("Send step CREW for Booster pump (ask)");
+  });
+
+  it("offers a sender the send step instead of filing an inspection themselves", async () => {
+    renderAlert(true, true);
+    const alert = await screen.findByRole("alert");
+    within(alert).getByText("Send step CREW for Booster pump");
+    expect(
+      screen.queryByRole("link", { name: "File an inspection" })
+    ).toBeNull();
+  });
+
+  it("sends a contractor when the equipment is also at the end of its life", async () => {
+    risk.flagReasons = ["CONDITION", "END_OF_LIFE"];
+    renderAlert(true, true);
+    const alert = await screen.findByRole("alert");
+    within(alert).getByText("Send step CONTRACTOR for Booster pump");
+  });
+
+  it("offers no send step for retired equipment or an inactive estate", async () => {
+    renderAlert(false, false, false);
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).queryByText(SEND_STEP)).toBeNull();
   });
 
   it("includes the assessment's note", async () => {

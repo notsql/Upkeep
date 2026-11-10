@@ -34,7 +34,7 @@ function dialog() {
 
 it("acknowledges an alert", async () => {
   renderWithProviders(<AlertResponseActions alert={anomalyAlert} />);
-  fireEvent.click(screen.getByRole("button", { name: "Acknowledge" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mark as seen" }));
   await waitFor(() =>
     expect(state.acknowledge).toHaveBeenCalledWith({ notificationId: "n-1" })
   );
@@ -96,7 +96,7 @@ it("only offers Dismiss once acknowledged", () => {
       }}
     />
   );
-  expect(screen.queryByRole("button", { name: "Acknowledge" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Mark as seen" })).toBeNull();
   screen.getByRole("button", { name: "Dismiss" });
 });
 
@@ -116,11 +116,11 @@ it("disables the actions with the reason when locked", () => {
   renderWithProviders(
     <AlertResponseActions
       alert={anomalyAlert}
-      locked="This asset is retired, so its alerts cannot be changed."
+      locked="This asset is out of use, so you can't change its alerts."
     />
   );
-  screen.getByText("This asset is retired, so its alerts cannot be changed.");
-  for (const name of ["Acknowledge", "Dismiss"]) {
+  screen.getByText("This asset is out of use, so you can't change its alerts.");
+  for (const name of ["Mark as seen", "Dismiss"]) {
     expect(screen.getByRole("button", { name }).hasAttribute("disabled")).toBe(
       true
     );

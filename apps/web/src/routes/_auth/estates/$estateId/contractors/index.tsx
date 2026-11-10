@@ -37,7 +37,7 @@ function ContractorsPage() {
         <LoadingState label="Loading contractors…" />
       ) : null}
       {contractors.isError ? (
-        <ErrorState message="Unable to load contractors" onRetry={retry} />
+        <ErrorState message="Couldn't load contractors" onRetry={retry} />
       ) : null}
       {contractors.data
         ? EQUIPMENT_TYPES.map((type) => {

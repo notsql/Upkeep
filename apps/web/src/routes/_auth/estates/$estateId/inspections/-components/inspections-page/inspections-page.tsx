@@ -3,6 +3,7 @@ import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { InspectionViews } from "@/routes/_auth/estates/$estateId/inspections/-components/inspection-views";
 import { GenerateButton } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/generate-button";
 import { InspectionsChecks } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/inspections-checks";
 import { InspectionsGenerationStatus } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/inspections-generation-status";
@@ -39,6 +40,7 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
         icon={ClipboardCheck}
         title="Inspections"
       />
+      <InspectionViews estateId={estateId} />
       {list.isPending ? <LoadingState label="Loading inspections…" /> : null}
       {list.error ? (
         <ErrorState message={list.error.message} onRetry={retry} />

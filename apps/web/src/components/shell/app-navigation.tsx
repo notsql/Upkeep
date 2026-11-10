@@ -21,8 +21,6 @@ import {
   type LucideIcon,
   MapPin,
   Settings,
-  ShieldCheck,
-  Tags,
   Users,
   Wrench,
 } from "lucide-react";
@@ -35,7 +33,6 @@ import { residentNavigation } from "@/components/shell/resident-navigation";
 import { useAppAccess } from "@/lib/access";
 import {
   assetsEntry,
-  canOpenAssetCategories,
   canOpenContractors,
   canOpenDocuments,
   canOpenEstateSettings,
@@ -134,6 +131,19 @@ function estateGroups(
       },
     ];
   };
+  const people = item(
+    "People & access",
+    canOpenMembers(permission)
+      ? "/estates/$estateId/council"
+      : "/estates/$estateId/roles",
+    Users,
+    canOpenMembers(permission) || canOpenRoles(permission)
+  ).map((entry) => ({
+    ...entry,
+    active: [`${base}/council`, `${base}/roles`].some(
+      (section) => pathname === section || pathname.startsWith(`${section}/`)
+    ),
+  }));
   return [
     {
       items: item(
@@ -144,14 +154,8 @@ function estateGroups(
       ),
     },
     {
-      label: "Operations",
+      label: "Maintenance",
       items: [
-        ...item(
-          "Work orders",
-          "/estates/$estateId/work-orders",
-          Wrench,
-          canOpenWorkOrders(permission)
-        ),
         ...item(
           "Fault reports",
           "/estates/$estateId/reports",
@@ -170,11 +174,23 @@ function estateGroups(
           ClipboardCheck,
           canOpenInspections(permission, owned)
         ),
+        ...item(
+          "Work orders",
+          "/estates/$estateId/work-orders",
+          Wrench,
+          canOpenWorkOrders(permission)
+        ),
       ],
     },
     {
       label: "Assets",
       items: [
+        ...item(
+          "Assets",
+          assets ?? "/estates/$estateId/assets",
+          Layers,
+          assets !== undefined
+        ),
         ...item(
           "Locations",
           "/estates/$estateId/locations",
@@ -182,43 +198,17 @@ function estateGroups(
           Boolean(permission.canViewManagement)
         ),
         ...item(
-          "Assets",
-          assets ?? "/estates/$estateId/assets",
-          Layers,
-          assets !== undefined
+          "Documents",
+          "/estates/$estateId/documents",
+          Files,
+          canOpenDocuments(permission)
         ),
       ],
     },
     {
-      label: "Records",
-      items: item(
-        "Documents",
-        "/estates/$estateId/documents",
-        Files,
-        canOpenDocuments(permission)
-      ),
-    },
-    {
       label: "Administration",
       items: [
-        ...item(
-          "Members",
-          "/estates/$estateId/council",
-          Users,
-          canOpenMembers(permission)
-        ),
-        ...item(
-          "Roles",
-          "/estates/$estateId/roles",
-          ShieldCheck,
-          canOpenRoles(permission)
-        ),
-        ...item(
-          "Asset categories",
-          "/estates/$estateId/asset-categories",
-          Tags,
-          canOpenAssetCategories(permission, owned)
-        ),
+        ...people,
         ...item(
           "Notification settings",
           "/estates/$estateId/notification-settings",

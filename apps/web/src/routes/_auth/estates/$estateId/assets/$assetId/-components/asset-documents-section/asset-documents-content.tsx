@@ -72,6 +72,7 @@ export function AssetDocumentsContent({
         {documents.data?.items.length === 0 ? (
           <EmptyState
             description="Linked documents appear here"
+            icon={FileText}
             title="No documents yet"
           />
         ) : null}

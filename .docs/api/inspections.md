@@ -128,3 +128,11 @@ curl -H 'Authorization: Bearer <token>' \
 
 The 201 body has `outcome: "FAIL"` and `workOrder: null`. Saving this result
 does not create a work order.
+
+## A Fail needs a note (equipment dispatch)
+
+`outcome` `FAIL` with blank or whitespace-only `notes` returns 400 "Say what's
+wrong so the manager knows what to fix." A saved Fail raises a `CHECK_FAILED`
+notification for the estate's managers, and any saved result resolves the
+asset's open `CHECK_REQUESTED`/`CHECK_FAILED` notifications. See
+[equipment-dispatch.md](equipment-dispatch.md).

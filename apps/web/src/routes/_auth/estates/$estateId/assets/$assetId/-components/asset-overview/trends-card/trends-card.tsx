@@ -136,13 +136,13 @@ function TrendsBody({
         <div>
           <Badge variant="destructive">
             {periods.length === 1
-              ? "1 anomaly in range"
-              : `${periods.length} anomalies in range`}
+              ? "1 unusual stretch"
+              : `${periods.length} unusual stretches`}
           </Badge>
         </div>
       ) : null}
       <ToggleGroup
-        aria-label="Metric"
+        aria-label="Measurement"
         className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"
         onValueChange={select}
         value={[selected.metric]}

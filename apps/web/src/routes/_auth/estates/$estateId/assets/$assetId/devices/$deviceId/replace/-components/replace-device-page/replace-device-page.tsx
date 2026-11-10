@@ -1,3 +1,4 @@
+import { RefreshCw } from "lucide-react";
 import { FormPage } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
 import { ReplaceDeviceFormCard } from "@/routes/_auth/estates/$estateId/assets/$assetId/devices/$deviceId/replace/-components/replace-device-page/replace-device-form-card";
@@ -31,12 +32,13 @@ export function ReplaceDevicePage({
           to: "/estates/$estateId/assets/$assetId",
           params: { estateId, assetId },
         },
-        { label: "Replace device" },
+        { label: "Replace sensor" },
       ]}
-      description="New hardware; readings stay with the old device"
+      description="Swap in new hardware. Old readings stay with the old sensor."
+      icon={RefreshCw}
       title={title}
     >
-      {loading ? <LoadingState label="Loading device…" rows={2} /> : null}
+      {loading ? <LoadingState label="Loading sensor…" rows={2} /> : null}
       {error ? <p role="alert">{error.message}</p> : null}
       {blocked ? <p role="alert">{blocked}</p> : null}
       {device && !blocked && !loading && !error ? (

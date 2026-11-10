@@ -16,7 +16,7 @@ export type RoleOption =
 export const presetOptions: RoleOption[] = [
   {
     role: "COUNCIL",
-    label: "Council member",
+    label: "Council",
     customRoleId: null,
     customRoleVersion: null,
     permissions: null,

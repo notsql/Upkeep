@@ -27,7 +27,7 @@ export function DocumentAssets({
   if (association.isError) {
     return (
       <ErrorState
-        message={`Unable to load asset link for ${document.originalFilename}`}
+        message={`Couldn't load asset link for $. Try again.{document.originalFilename}`}
         onRetry={retry}
         retryAriaLabel={`Retry asset link for ${document.originalFilename}`}
       />

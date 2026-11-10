@@ -57,7 +57,7 @@ queries. Its Cancel button returns to the asset history without creating work.
 
 The auth route checks work-order capabilities before the generic management
 guard. Crew can enter list/detail, but `/new` is denied and creation actions are
-hidden because `canCreateWorkOrders` is false. The sidebar shows Operations › Work orders
+hidden because `canCreateWorkOrders` is false. The sidebar shows Maintenance › Work orders
 with `canOpenWorkOrders`. The header `EstateFeatureSwitcher` (feature
 `work-orders`) uses labels, estate-local roles and capabilities from access context. It includes
 all membership estates and retains the work-order list when permitted in the
@@ -324,7 +324,7 @@ expectedVersion: the user explicitly reviews the current outcome before retrying
 
 Edit outcome reuses the labelled completion fields, prefilled from the outcome
 captured when the dialog opens. Blank optional values send explicit null, costs
-remain decimal strings, and downtime 0 remains zero. Correction reason is required
+remain decimal strings, and downtime 0 remains zero. Why you're changing it is required
 (max 500); mutations use the generated CorrectWorkOrderCompletionRequest. A save
 keeps the job Closed and preserves its original closer/time. CompletionOutcome
 shows Edited author/time in both detail and Maintenance. The Outcome corrections
@@ -406,7 +406,7 @@ first work order" when the user can create, else "Saved work orders appear
 here"; no action - the header Create is the entry point); "No matching work orders" offers Clear filters, which keeps the sort.
 Detail: status history/corrections/documents load with `LoadingState`; "No
 corrections yet" and "No documents yet" (under a `SectionHeading` "Documents")
-are `EmptyState`s (no icon). Only the list header shows `icon={Wrench}`; Retry
+are `EmptyState`s (`FilePenLine`, `FileText`). List and detail headers show `icon={Wrench}`; Retry
 locations / Retry source are `outline`. New: access/source/location loads use `LoadingState`; the
 "Work order already raised" screen uses `PageHeader`.
 
@@ -420,10 +420,10 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   `WorkOrderFilters` takes `id`/`open` from `panel.barProps`, so the FilterBar
   is collapsed until toggled (open on load when filters are in the URL).
   `countWorkOrderFilters` (in `work-order-filters.tsx`) gives `activeCount`.
-  Load failure: `ErrorState` "Unable to load work orders".
+  Load failure: `ErrorState` "Couldn't load work orders. Try again.".
 - Detail (`work-order-detail-page.tsx`; the description/details card is
   `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
-  status `Badge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
+  `icon={Wrench}`, status `WorkOrderStatusBadge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
   `work-order-progress.tsx` and `work-order-documents.tsx` use `ErrorState`
   ("Retry history", "Retry corrections", "Retry documents"). The completion
   dialog is the shared `FormDialog` ("Saving…" while pending): `submitDisabled`
@@ -431,8 +431,8 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   Refresh-work-order recovery `Alert` and review notice sit in `children`;
   `onSubmit` reads the uncontrolled fields from the form via `FormData`.
 - Create (`work-order-form.tsx`): `FormPage` "Create work order" (description
-  "Describe the work, where it is and how urgent it is") with breadcrumbs, no
-  icon. Access loading, "Work-order creation is unavailable" and the
+  "Describe the work, where it is and how urgent it is") with breadcrumbs and
+  `icon={Wrench}`. Access loading, "Work-order creation is unavailable" and the
   inspection-source dead ends (`renderInspectionWorkOrderStatus`: retry, "Work
   order already raised" as a titled `FormCard`, "Only a failed inspection…")
   render inside it. Then a `FormCard` "Source" ("Where this work came from":
@@ -442,6 +442,34 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   `FieldSet` "Asset", save errors, and `FormActions` "Create work order"
   (`disabled` = the form's `blocked` guard; Cancel only for an inspection
   source).
+
+## Colour
+
+Tones come from `lib/status-tone.ts` (decision 0046).
+
+- Status: `components/work-orders/work-order-status-badge.tsx`
+  (`WorkOrderStatusBadge`) renders the `workOrderStatusLabel`, so "Open"
+  instead of `OPEN`. Variants: Open is outline, Assigned is info, In progress
+  is warning and Closed is success. The list table, the mobile cards and the
+  detail header all use it. Status history keeps its plain text.
+- Priority: the list table, the mobile cards and the detail summary show a
+  Badge with the raw enum text, toned by `reportUrgencyTone`. LOW is outline,
+  MEDIUM is info, HIGH is warning and URGENT is destructive.
+- Empty states: "No work orders yet" uses `Wrench` and "No matching work
+  orders" uses `SearchX`.
+- Detail cards use `SectionHeading` icons: Completion outcome
+  (`CircleCheck`), Status history (`History`) and Outcome corrections
+  (`FilePenLine`).
+- The stale-data "Refresh work order" and "Couldn't refresh. Try again." Alerts use
+  `variant="warning"`.
+
+## Filled in from a warning (equipment dispatch)
+
+`/estates/$estateId/work-orders/new?assetId=<uuid>&reason=END_OF_LIFE` fills the
+form in for replacing that equipment (source "Maintenance recommendation", the
+equipment and its location, the reference note and description); see
+[equipment-dispatch.md](equipment-dispatch.md). `useAsset` gained an optional
+`enabled` argument for this.
 
 ## Contractor email (ID-70)
 

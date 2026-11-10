@@ -390,6 +390,10 @@ it("offers the saved record without resubmission when navigation fails after sav
     await screen.findByRole("combobox", { name: "Outcome" }),
     "Fail"
   );
+  // A Fail must say what's wrong.
+  fireEvent.change(screen.getByRole("textbox", { name: NOTES }), {
+    target: { value: "Cracked seal" },
+  });
   vi.spyOn(router, "navigate").mockRejectedValue(
     new Error("Navigation failed")
   );
@@ -431,6 +435,10 @@ it.each(["OWNER", "MANAGER"])(
       await screen.findByRole("combobox", { name: "Outcome" }),
       "Fail"
     );
+    // A Fail must say what's wrong.
+    fireEvent.change(screen.getByRole("textbox", { name: NOTES }), {
+      target: { value: "Cracked seal" },
+    });
     fireEvent.click(
       screen.getByRole("button", { name: "Save inspection record" })
     );
@@ -454,6 +462,10 @@ it("saves a Crew Fail and returns to history without offering work-order creatio
     await screen.findByRole("combobox", { name: "Outcome" }),
     "Fail"
   );
+  // A Fail must say what's wrong.
+  fireEvent.change(screen.getByRole("textbox", { name: NOTES }), {
+    target: { value: "Cracked seal" },
+  });
   fireEvent.click(
     screen.getByRole("button", { name: "Save inspection record" })
   );
@@ -544,6 +556,10 @@ it("offers history checking after an ambiguous save without automatically retryi
     await screen.findByRole("combobox", { name: "Outcome" }),
     "Fail"
   );
+  // A Fail must say what's wrong.
+  fireEvent.change(screen.getByRole("textbox", { name: NOTES }), {
+    target: { value: "Cracked seal" },
+  });
   fireEvent.click(
     screen.getByRole("button", { name: "Save inspection record" })
   );
@@ -560,7 +576,9 @@ it.each(["MANAGER", "CREW"])(
     await screen.findByRole("heading", { name: "Water Pump" });
     screen.getByRole("link", { name: "Create inspection record" });
     expect(screen.queryByRole("link", { name: "Edit asset" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Retire asset" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Take out of use" })
+    ).toBeNull();
     expect(
       state.get.mock.calls.some(([path]) =>
         [
@@ -889,4 +907,28 @@ it("keeps the form page header when the asset context fails to load", async () =
   await setup();
   await screen.findByRole("button", { name: "Retry asset" });
   screen.getByRole("heading", { level: 1, name: "Create inspection record" });
+});
+
+it("will not save a Fail until it says what's wrong", async () => {
+  await setup();
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Outcome" }),
+    "Fail"
+  );
+  const notes = screen.getByRole("textbox", { name: "Notes: what's wrong?" });
+  fireEvent.change(notes, { target: { value: "   " } });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Save inspection record" })
+  );
+  await screen.findByText("Say what's wrong so the manager knows what to fix.");
+  expect(state.post).not.toHaveBeenCalled();
+});
+
+it("keeps the note optional for a Pass", async () => {
+  await setup();
+  await chooseOption(
+    await screen.findByRole("combobox", { name: "Outcome" }),
+    "Pass"
+  );
+  screen.getByRole("textbox", { name: "Notes (optional)" });
 });

@@ -25,7 +25,7 @@ export function DeviceFormMetricsFields({
 }) {
   return (
     <FieldSet disabled={pending} {...errorProps("metrics")}>
-      <FieldLegend>Supported metrics</FieldLegend>
+      <FieldLegend>What it measures</FieldLegend>
       <div className="grid gap-2 sm:grid-cols-2">
         {catalogue.map(([metric, { name, unit }]) => (
           <MetricOption

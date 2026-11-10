@@ -3,7 +3,7 @@ import { pageHead } from "@/lib/page-title";
 import { CouncilPage } from "@/routes/_auth/estates/$estateId/council/-components/council-page/council-page";
 export const Route = createFileRoute("/_auth/estates/$estateId/council/")({
   component: CouncilRoute,
-  head: () => pageHead("Council members"),
+  head: () => pageHead("Members"),
 });
 function CouncilRoute() {
   const { estateId } = Route.useParams();

@@ -1,3 +1,4 @@
+import { Building2 } from "lucide-react";
 import { PageLayout } from "@/components/page/page-layout";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -44,6 +45,7 @@ export function AdminUsersPage() {
         {organizations.data?.length === 0 && (
           <EmptyState
             description="Created estates appear here"
+            icon={Building2}
             title="No estates yet"
           />
         )}

@@ -57,7 +57,7 @@ export function AssessmentFormFields({
 
   return (
     <fieldset className="grid gap-5" disabled={pending}>
-      <legend className="sr-only">Condition assessment</legend>
+      <legend className="sr-only">Condition check</legend>
       <div className="grid gap-2">
         <Label htmlFor={`${id}-condition`}>Condition</Label>
         <Select
@@ -84,7 +84,7 @@ export function AssessmentFormFields({
         {errorText("condition")}
       </div>
       <div className="grid gap-2">
-        <Label htmlFor={`${id}-assessed-on`}>Assessment date</Label>
+        <Label htmlFor={`${id}-assessed-on`}>Date checked</Label>
         <DatePicker
           {...errorProps("assessedOn")}
           clearable={false}

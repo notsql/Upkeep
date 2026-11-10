@@ -98,6 +98,26 @@ describe("AssetConditionSection", () => {
     serve();
   });
 
+  it("shows the upcoming work inside the Condition card, under a separator", () => {
+    renderWithProviders(
+      <AssetConditionSection
+        assetId="asset-id"
+        canRecord
+        estateId="estate-id"
+        upcoming={<h3>Upcoming</h3>}
+      />
+    );
+    const card = screen.getByRole("region", { name: "Condition" });
+    within(card).getByRole("heading", { level: 3, name: "Upcoming" });
+    within(card).getByRole("separator");
+  });
+
+  it("shows no separator without upcoming work", async () => {
+    renderSection();
+    await screen.findByRole("status", { name: "Current condition" });
+    expect(screen.queryByRole("separator")).toBeNull();
+  });
+
   it("shows the latest assessment as the current condition", async () => {
     renderSection();
     const current = await screen.findByRole("status", {
@@ -138,7 +158,7 @@ describe("AssetConditionSection", () => {
   it("leads Record assessment with an icon", async () => {
     renderSection();
     expectLeadingIcon(
-      await screen.findByRole("button", { name: "Record assessment" })
+      await screen.findByRole("button", { name: "Record condition check" })
     );
   });
 
@@ -177,9 +197,9 @@ describe("AssetConditionSection", () => {
     expect(
       (await screen.findByRole("status", { name: "Current condition" }))
         .textContent
-    ).toContain("Not assessed yet");
+    ).toContain("Not checked yet");
     expect(
-      screen.queryByRole("button", { name: "Record assessment" })
+      screen.queryByRole("button", { name: "Record condition check" })
     ).toBeNull();
   });
 
@@ -199,19 +219,21 @@ describe("AssetConditionSection", () => {
     }) as never);
     renderSection();
     fireEvent.click(
-      await screen.findByRole("button", { name: "Record assessment" })
+      await screen.findByRole("button", { name: "Record condition check" })
     );
     await chooseOption(
       screen.getByRole("combobox", { name: "Condition" }),
       "Needs attention"
     );
-    fireEvent.change(screen.getByRole("textbox", { name: "Assessment date" }), {
+    fireEvent.change(screen.getByRole("textbox", { name: "Date checked" }), {
       target: { value: "2026-09-27" },
     });
     fireEvent.change(screen.getByRole("textbox", { name: "Notes" }), {
       target: { value: "Noisy bearing." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Record assessment" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record condition check" })
+    );
 
     await waitFor(() =>
       expect(api.POST).toHaveBeenCalledWith(PATH, {
@@ -238,9 +260,11 @@ it("opens assessment in a dialog and cancels without recording", async () => {
     response: new Response(),
   } as never);
   renderSection();
-  fireEvent.click(screen.getByRole("button", { name: "Record assessment" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Record condition check" })
+  );
   const dialog = await screen.findByRole("dialog", {
-    name: "Record assessment",
+    name: "Record condition check",
   });
   fireEvent.change(within(dialog).getByRole("textbox", { name: "Notes" }), {
     target: { value: "Draft" },
@@ -287,12 +311,12 @@ describe("AssetConditionSection formatting", () => {
     );
   });
 
-  it("names Anomaly detection as the source of a model assessment", async () => {
+  it("names unusual readings as the source of a model assessment", async () => {
     renderSection();
     const current = await screen.findByRole("status", {
       name: "Current condition",
     });
-    expect(current.textContent).toContain("Anomaly detection");
+    expect(current.textContent).toContain("Unusual readings");
   });
 
   it("formats model notes and keeps a person's notes verbatim", async () => {

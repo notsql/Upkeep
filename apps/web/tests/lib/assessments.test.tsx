@@ -50,7 +50,7 @@ function Forecasts({ condition }: { condition: AssessmentInput["condition"] }) {
           : "Unflagged"}
       </p>
       <button onClick={recordAssessment} type="button">
-        Record assessment
+        Record condition check
       </button>
       {isSuccess ? <p>Assessment saved</p> : null}
     </>
@@ -90,7 +90,9 @@ it.each(["FAULTY", "GOOD"] as const)(
     const initial = condition === "GOOD" ? "Flagged" : "Unflagged";
     expect(assetForecast.textContent).toBe(initial);
     expect(estateForecast.textContent).toBe(initial);
-    fireEvent.click(screen.getByRole("button", { name: "Record assessment" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Record condition check" })
+    );
     await screen.findByText("Assessment saved");
     const expected = condition === "GOOD" ? "Unflagged" : "Flagged";
     await waitFor(() => {

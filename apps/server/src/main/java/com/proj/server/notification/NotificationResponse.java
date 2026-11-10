@@ -10,7 +10,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/** One notification as the caller sees it. Exactly one detail object is non-null, matching {@code type}. */
+/** One notification as the caller sees it. At most one detail object is non-null, matching {@code type}. */
 @Schema(
         requiredProperties = {
             "id",
@@ -27,7 +27,8 @@ import java.util.UUID;
             "read",
             "anomaly",
             "serviceDue",
-            "repairPredicted"
+            "repairPredicted",
+            "inspectionResultId"
         })
 public record NotificationResponse(
         UUID id,
@@ -44,7 +45,10 @@ public record NotificationResponse(
         boolean read,
         Anomaly anomaly,
         ServiceDue serviceDue,
-        RepairPredicted repairPredicted) {
+        RepairPredicted repairPredicted,
+
+        @Schema(nullable = true, description = "The failed inspection result; set only for CHECK_FAILED")
+        UUID inspectionResultId) {
 
     @Schema(
             name = "AnomalyAlertDetails",

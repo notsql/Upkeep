@@ -53,14 +53,14 @@ function RetireZone({ onRetire }: { onRetire: () => void }) {
       className="border-destructive/40 bg-destructive/5 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4"
     >
       <div className="grid min-w-0 flex-1 gap-1">
-        <SectionHeading id={headingId}>Retire asset</SectionHeading>
+        <SectionHeading id={headingId}>Take out of use</SectionHeading>
         <p className="text-muted-foreground text-sm">
           Retiring keeps the asset and its records readable, but nothing can be
           edited or recorded against it until it is restored.
         </p>
       </div>
       <Button onClick={onRetire} variant="destructive">
-        Retire asset
+        Take out of use
       </Button>
     </section>
   );

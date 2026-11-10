@@ -38,8 +38,7 @@ public class WorkOrderService {
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user);
         boolean owner = user.equals(estate.getOwneruserid());
-        boolean manager = owner || "MANAGER".equals(role);
-        boolean allowed = !"RESIDENT".equals(role) && (manager || (!create && "CREW".equals(role)));
+        boolean allowed = permits(owner, role, create);
         if (!allowed)
             throw error(
                     owner || role != null ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
@@ -48,6 +47,18 @@ public class WorkOrderService {
                             : "Estate not found.");
         if (create && estate.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         return estate;
+    }
+
+    private static boolean permits(boolean owner, String role, boolean create) {
+        boolean manager = owner || "MANAGER".equals(role);
+        return !"RESIDENT".equals(role) && (manager || (!create && "CREW".equals(role)));
+    }
+
+    /** The permission half of creating a work order, without the estate-active check; used by who-can-help. */
+    @Transactional(readOnly = true)
+    public boolean canCreate(UUID estateId, String user) {
+        var estate = repository.estate(estateId, false);
+        return estate != null && permits(user.equals(estate.getOwneruserid()), repository.role(estateId, user), true);
     }
 
     @Transactional
@@ -151,6 +162,12 @@ public class WorkOrderService {
         if (location == null) throw error(HttpStatus.NOT_FOUND, "Location not found.");
         if (!Boolean.TRUE.equals(location.get("active", Boolean.class)))
             throw error(HttpStatus.CONFLICT, "The location or an ancestor is inactive.");
+    }
+
+    /** Null when the asset has no work order that is not closed. */
+    public OpenWorkOrderResponse openOrder(UUID estateId, String user, UUID assetId) {
+        authorize(estateId, user, false, false);
+        return repository.openOrder(estateId, assetId);
     }
 
     public WorkOrderResponse detail(UUID estateId, String user, UUID id) {

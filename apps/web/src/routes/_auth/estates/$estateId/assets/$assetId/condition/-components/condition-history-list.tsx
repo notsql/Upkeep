@@ -1,6 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { cn } from "@proj/ui/lib/utils";
-import { Cpu, User } from "lucide-react";
+import { Cpu, HeartPulse, User } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -67,7 +67,7 @@ function TimelineEntry({
             <span className={cn("font-semibold", style.text)}>
               {conditionLabel[assessment.condition]}
             </span>
-            {current ? <Badge variant="outline">Current</Badge> : null}
+            {current ? <Badge variant="info">Current</Badge> : null}
           </p>
           <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-xs">
             <span>{formatDate(assessment.assessedOn)}</span>
@@ -103,8 +103,9 @@ export function ConditionHistoryList({
   if (!assessments.data.length) {
     return (
       <EmptyState
-        description="Recorded assessments appear here"
-        title="Not assessed yet"
+        description="Condition checks you record appear here."
+        icon={HeartPulse}
+        title="Not checked yet"
       />
     );
   }

@@ -37,7 +37,7 @@ export function EstateReportsLocations({
       ) : null}
       {locations.isError ? (
         <ErrorState
-          message="Unable to load locations"
+          message="Couldn't load locations. Try again."
           onRetry={onRetry}
           retryLabel="Retry locations"
         />

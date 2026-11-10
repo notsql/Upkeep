@@ -89,7 +89,7 @@ export function ServiceIntervalDialog({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to save the service interval. Please try again."
+            : "Couldn't save. Please try again."
         );
       } finally {
         saving.current = false;

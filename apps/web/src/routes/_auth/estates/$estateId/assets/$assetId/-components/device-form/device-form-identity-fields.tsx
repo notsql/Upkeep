@@ -29,7 +29,7 @@ export function DeviceFormIdentityFields({
 }) {
   return (
     <FieldSet disabled={pending}>
-      <FieldLegend>Device identity</FieldLegend>
+      <FieldLegend>Sensor details</FieldLegend>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field>
           <FieldLabel htmlFor={`${id}-identifier`}>Identifier</FieldLabel>

@@ -403,7 +403,7 @@ class DeviceControllerTests {
     void hidesDevicesElsewhereAndEstatesTheCallerDoesNotOwn() throws Exception {
         mvc.perform(deactivate("PUMP-01"))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Device not found."));
+                .andExpect(jsonPath("$.message").value("Sensor not found."));
         mvc.perform(as("other", post(one + "/deactivate"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"identifier\":\"PUMP-01\"}"))
@@ -457,7 +457,8 @@ class DeviceControllerTests {
                 .thenReturn(Optional.of(stored(deviceId, "PUMP-01", now, null)));
         mvc.perform(as("owner", post(one + "/credential")))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("This device is deactivated. It cannot be given a key."));
+                .andExpect(
+                        jsonPath("$.message").value("This sensor is turned off. You can't give it a connection key."));
         verify(repository, never()).replaceCredential(any(), any(), any(), any());
     }
 

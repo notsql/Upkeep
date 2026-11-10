@@ -8,7 +8,7 @@ import { cn } from "@proj/ui/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-/** A dashboard count in a card, named by its title; amber when it needs attention. */
+/** A dashboard count in a card, named by its title; its icon tile turns warning-toned when it needs attention. */
 export function SummaryCard({
   title,
   value,
@@ -23,28 +23,22 @@ export function SummaryCard({
   children: ReactNode;
 }) {
   return (
-    <Card
-      aria-label={title}
-      className={cn(
-        "h-full gap-3",
-        warning &&
-          "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950"
-      )}
-      role="region"
-    >
+    <Card aria-label={title} className="h-full gap-3" role="region">
       <CardHeader className="flex flex-row items-start justify-between gap-3">
         <CardTitle>
           <h2 className="text-sm">{title}</h2>
         </CardTitle>
-        <Icon
+        <span
           aria-hidden="true"
           className={cn(
-            "size-5 shrink-0",
+            "flex size-9 shrink-0 items-center justify-center rounded-lg",
             warning
-              ? "text-amber-700 dark:text-amber-300"
-              : "text-muted-foreground"
+              ? "bg-warning/10 text-warning"
+              : "bg-brand-1/15 text-brand-3"
           )}
-        />
+        >
+          <Icon className="size-5" />
+        </span>
       </CardHeader>
       <CardContent className="grid gap-2">
         <p className="text-3xl font-semibold tabular-nums">{value}</p>

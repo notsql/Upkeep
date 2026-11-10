@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@proj/ui/components/card";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Building2 } from "lucide-react";
 import { useCallback, useEffect } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -38,7 +39,7 @@ export function MemberEstates({
         { params: { path: { userId } } }
       );
       if (error || !data) {
-        throw new Error("Unable to load estate access");
+        throw new Error("Couldn't load estate access. Try again.");
       }
       return data;
     },
@@ -54,7 +55,7 @@ export function MemberEstates({
             options
           );
       if (error) {
-        throw new Error("Unable to update estate access");
+        throw new Error("Couldn't update estate access. Try again.");
       }
     },
     onSettled: () =>
@@ -112,7 +113,7 @@ export function MemberEstates({
 
       {access.data?.length === 0 ? (
         <div className="mt-4">
-          <EmptyState title="No estates yet" />
+          <EmptyState icon={Building2} title="No estates yet" />
         </div>
       ) : null}
 

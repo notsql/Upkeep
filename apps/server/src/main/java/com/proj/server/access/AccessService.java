@@ -35,6 +35,17 @@ public class AccessService {
                                 .where(ESTATEUSER.USERID.eq(user).and(ESTATEUSER.ROLE.eq("MANAGER"))))));
     }
 
+    /** Estates where the user can record inspections: owner, Manager or Crew, never a resident. */
+    public static Condition inspectorEstates(String user) {
+        return residentEstate(user)
+                .not()
+                .and(ESTATE.OWNERUSERID
+                        .eq(user)
+                        .or(ESTATE.ID.in(DSL.select(ESTATEUSER.ESTATEID)
+                                .from(ESTATEUSER)
+                                .where(ESTATEUSER.USERID.eq(user).and(ESTATEUSER.ROLE.in("MANAGER", "CREW"))))));
+    }
+
     public static Condition residentEstate(String user) {
         return ESTATE.ID.in(DSL.select(ESTATEUSER.ESTATEID)
                 .from(ESTATEUSER)

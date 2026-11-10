@@ -1,4 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
+import { Package } from "lucide-react";
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormPage } from "@/components/page/form-page";
@@ -33,6 +34,7 @@ export function NewAssetPage({ estateId }: { estateId: string }) {
         { label: "Register asset" },
       ]}
       description="Equipment and its location"
+      icon={Package}
       title="Register asset"
     >
       <AssetForm estateId={estateId} onCancel={cancel} onSave={save} />

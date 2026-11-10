@@ -11,9 +11,9 @@ management/resident fallbacks, rendering Page not found for unavailable features
 Owner, Manager and Crew receive this read capability without asset-register
 access. Header labels come from access context; no owner-only queries are made.
 
-There is no Readings sidebar item. Owners and Managers reach this page from
-the "All readings" link on the Assets views (`AssetViewsNav`,
-`canOpenAllReadings`: `canViewReadings` and not CREW); Crew reach one asset's
+There is no Readings sidebar item, and the Assets views no longer link here:
+owners and Managers (`canOpenAllReadings`: `canViewReadings` and not CREW)
+open `/estates/$estateId/readings` directly; Crew reach one asset's
 readings from a work order (see [work-orders.md](work-orders.md)). Estate
 switching preserves Readings for permitted destinations and retains the
 Resident fallback to estate-filtered My reports.
@@ -42,13 +42,13 @@ All new components are in the route's `-components/` folder:
 | --- | --- |
 | `estate-readings-page.tsx` | Composes `ListPageHeader` with the permission-gated **Import CSV** action, `ReadingToolbar` (no summary), the collapsible filters and results; `useFilterPanel(activeCount)` drives the toggle |
 | `use-estate-readings-page.ts` | Access, queries and selected asset label |
-| `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To `DateTimePicker`s (each `w-full sm:w-auto`, so the date trigger keeps "Pick a date" and the hour/minute selects sit beside it, wrapping underneath when narrow), and a `FieldSet` "Flags" (`FieldLegend variant="label"`) grouping the Suspect only and Anomalous only Checkboxes; its own light panel (`<search aria-label="Reading filters">`, bordered, no heading - the toolbar's Filters button names it) inside a shadcn `Collapsible` when given `id`/`open` (from `useFilterPanel(...).barProps`), always shown otherwise; a ghost "Clear filters" ends the row, shown only when a filter is set. Exports `countReadingFilters` |
+| `reading-filter-controls.tsx` | shadcn Fields, metric Select, From/To `DateTimePicker`s (each `w-full sm:w-auto`, so the date trigger keeps "Pick a date" and the hour/minute selects sit beside it, wrapping underneath when narrow), and a `FieldSet` "Flags" (`FieldLegend variant="label"`) grouping the Possibly wrong only and Unusual readings only Checkboxes; its own light panel (`<search aria-label="Reading filters">`, bordered, no heading - the toolbar's Filters button names it) inside a shadcn `Collapsible` when given `id`/`open` (from `useFilterPanel(...).barProps`), always shown otherwise; a ghost "Clear filters" ends the row, shown only when a filter is set. Exports `countReadingFilters` |
 | `reading-toolbar.tsx` | `ReadingToolbar`: one `role="toolbar"` row "Reading tools" - optional `summary` left; right, a small outline "Filters" toggle (`SlidersHorizontal`, `aria-expanded`, `aria-controls` the panel, accessible name "Filters" or "Filters, N active", secondary `Badge` with N) and `exportAction` |
 | `reading-export.tsx` | Small outline "Export CSV" `Button` (`Download` icon, `title` "Exports all matching readings, across every page."), "Cancel export" while pending; error `Alert` / "Export cancelled." wrap below the toolbar row |
 | `reading-asset-picker.tsx` | Button/Dialog picker, name/reference search, retired labels, All assets and option pagination |
 | `reading-results.tsx` | Loading, validation, errors/Retry, empty states and page recovery |
 | `reading-pagination.tsx` | Previous/Next, current-page indicator, numbered page jumps and ellipses |
-| `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, source/recorder, device and flag Badges (`flagVariant`: `destructive` for ANOMALY, `outline` otherwise; also in `components/readings/reading-cards.tsx`) |
+| `reading-table.tsx` | Contained scrolling, time, asset labels, metric, value/unit, source/recorder, device and flag Badges (`badgeVariantFor(readingFlagTone[type])` from `lib/status-tone.ts`: ANOMALY and OUT_OF_RANGE `destructive`, GAP and DUPLICATE_TIMESTAMP `warning`; also in `components/readings/reading-cards.tsx`) |
 
 Filters stack on mobile; long labels wrap without widening the page. Both estate-wide and legacy tables use auto-height, width-bounded flag badges with wrapping, left-aligned text and a readable line height; long flag labels stay inside their borders. Device columns reserve a readable minimum width rather than wrapping identifiers into tall strips. Both Flags columns reserve a minimum width so labels remain readable on mobile; the table scrolls within its own region. Browser checks cover 1280, 375 and 320 px. Crew rows
 do not link to owner-only asset pages. Manual entry is unavailable in
@@ -81,7 +81,7 @@ preserves scroll and supports reload/Back/Forward restoration.
 | `useReadingAssets(estateId, search, page, enabled)` | `/estates/{estateId}/readings/assets` | `[userId, "reading-assets", estateId, search, page]` |
 
 Queries require session readiness and target-estate `canViewReadings`. Invalid
-reading filters disable the reading request. Page size is 50; Suspect only
+reading filters disable the reading request. Page size is 50; Possibly wrong only
 sends `GAP`, `DUPLICATE_TIMESTAMP`, `OUT_OF_RANGE` (never `ANOMALY`); Anomalous
 only sends `flag=ANOMALY`; both together send all four, which the API matches
 as "any of". API errors throw `estateError`; retry is explicit.
@@ -93,7 +93,7 @@ the current options/results temporarily displays Selected asset, retaining its
 original ID until labelled data is available.
 
 Empty states distinguish No assets yet, No readings yet, No matching readings
-No matching suspect readings and, when Anomalous only is set (checked first),
+No possibly wrong readings match these filters and, when Unusual readings only is set (checked first),
 No anomalous readings match these filters (`SearchX`). A page beyond a nonzero total
 shows "No readings on this page" with Go to first page instead of claiming there
 have never been readings.
@@ -196,7 +196,7 @@ use Neon. Demo UUIDs and credentials are not part of the committed documentation
 
 1. As Owner, Manager and Crew, open Readings in an assigned estate; verify Crew
    cannot access asset editing, financial data or credentials through this page.
-2. Search/select an asset, combine metric and time filters, then Suspect only.
+2. Search/select an asset, combine metric and time filters, then Possibly wrong only.
    Check rows, totals and estate/asset scoping.
 3. Use Next/Previous, change filters, reload and use Back/Forward. Check reset to
    page one on filter changes, URL restoration and preserved scroll.
@@ -255,7 +255,7 @@ In `assets/$assetId/readings/-components/`.
 
 | Component (file) | Does | shadcn |
 | --- | --- | --- |
-| `AssetReadingsPage` (`asset-readings-page.tsx`) | `AssetReadingsHeader`; `ReadingToolbar` with summary "Showing N timestamps" (no total - the keyset endpoint does not count; hidden when none), Filters toggle and the estate `ReadingExport` (CSV with the asset and current filters, disabled while the first page loads or errors); the estate `ReadingFilterControls` without the asset picker, collapsed behind the toggle; `AssetReadingGroups`. `useAssetReadingGroupPages(estateId, assetId, filters)`. Without `canViewReadings` it shows "Readings access is no longer available." | `Alert`, `AlertDescription` (rest via the estate components) |
+| `AssetReadingsPage` (`asset-readings-page.tsx`) | `AssetReadingsHeader`; `ReadingToolbar` with summary "Showing N times" (no total - the keyset endpoint does not count; hidden when none), Filters toggle and the estate `ReadingExport` (CSV with the asset and current filters, disabled while the first page loads or errors); the estate `ReadingFilterControls` without the asset picker, collapsed behind the toggle; `AssetReadingGroups`. `useAssetReadingGroupPages(estateId, assetId, filters)`. Without `canViewReadings` it shows "Readings access is no longer available." | `Alert`, `AlertDescription` (rest via the estate components) |
 | `AssetReadingGroups` (`asset-reading-groups.tsx`) | Validation error `Alert` (no request); `ErrorState` "Retry readings"; `LoadingState` table "Loading readings…" until the first page arrives; empty states (below); otherwise `GroupedReadingsTable` (aria-label "Readings", `metrics` restricted to the metric filter), and a "Load older" outline `Button` while `hasNextPage` ("Loading…" and disabled while fetching the next page; a failed next page shows an `Alert` under the table). No cards, no Live, no background refresh. | `Alert`, `Button` |
 | `AssetReadingsHeader` (`asset-readings-header.tsx`) | `PageHeader` "Readings" (`Activity`), breadcrumbs Assets / asset name ("Asset" while loading) / Readings, description "Sensor and manual readings, newest first"; no actions. | via `PageHeader` |
 
@@ -273,8 +273,8 @@ without the fixed asset, so the asset is not counted there.
 | Flag | Text |
 | --- | --- |
 | GAP | `Gap {formatGap(gapSeconds)}`, e.g. "Gap 2h 5m" (units d/h/m/s, zero parts left out, "0s" for zero) |
-| DUPLICATE_TIMESTAMP | `Duplicate timestamp` |
-| ANOMALY | `Anomaly {anomalyScore.toFixed(2)}`, e.g. "Anomaly 0.87"; destructive-variant Badge |
+| DUPLICATE_TIMESTAMP | `Sent twice for the same time` |
+| ANOMALY | `Unusual reading` (no score); destructive-variant Badge |
 | OUT_OF_RANGE | `Out of range (valid {validMin} to {validMax} {unit})`, numbers via `toLocaleString`; the range comes from the API, never hard-coded |
 
 ### Empty states
@@ -282,7 +282,7 @@ without the fixed asset, so the asset is not counted there.
 `AssetReadingGroups` reuses `emptyMessage`/`isFiltered` exported from the
 estate `ReadingResults`, judged on the page's own filters (the fixed
 asset does not count): anomalous on - "No anomalous readings match these
-filters"; suspect on - "No matching suspect readings"; metric,
+filters"; suspect on - "No possibly wrong readings match these filters"; metric,
 from or to set - "No matching readings" with "Clear filters"; otherwise "No
 readings yet". Every filtered empty state has "Clear filters".
 
@@ -362,11 +362,13 @@ description.
 - **Chart:** `metric-chart.tsx` (`MetricChart`), the selected metric only, full
   width, `h-48 md:h-64`. A `figure` labelled by its `figcaption` (visible
   "Pressure · bar", accessible "Pressure (bar), last 1 minute"), an inline
-  muted legend ("Average", "Min–max" when `bucketSeconds > 1`, and "Anomaly ·
-  1 period, max 0.88" with a `Tooltip` "score ≥ 0.60" when there are periods),
-  and an `sr-only` summary: "Latest …. Minimum …, maximum …. Anomaly from <t>
-  to <t>, maximum score 0.88." or "No anomalies.", plus "Anomalies are score
-  ≥ 0.60." when there are periods. The `ChartContainer` is `aria-hidden`; a
+  muted legend ("Average", "Min–max" when `bucketSeconds > 1`, and "Unusual
+  readings · 1 period" with a `Tooltip` "Shaded areas are unusual readings."
+  when there are periods; no scores), and an `sr-only` summary: "Latest ….
+  Minimum …, maximum …. Unusual readings from <t> to <t>." or "No unusual
+  readings.", plus "Shaded areas are unusual readings." when there are
+  periods. The tile group is labelled "Measurement"; the badge reads "1
+  unusual stretch" / "N unusual stretches". The `ChartContainer` is `aria-hidden`; a
   recharts `ComposedChart` (from `@proj/ui/lib/recharts`) draws a 2 px `avg`
   `Line` in `var(--chart-2)`, a min–max `Area` in `var(--chart-2)` at 0.2
   opacity when `bucketSeconds > 1`, and anomaly `ReferenceArea`s in
@@ -416,7 +418,7 @@ longer lists readings.
   `OUT_OF_RANGE` / `GAP` / `DUPLICATE_TIMESTAMP` show as a small outline
   `Badge` button under the value, short text, full `flagLabel` as accessible
   name and tooltip.
-- **Flags column:** `ANOMALY` once per row as the destructive "Anomaly 0.87"
+- **Flags column:** `ANOMALY` once per row as the destructive "Unusual reading"
   badge; the row has `aria-describedby` pointing at it. Empty otherwise.
 - **States:** `LoadingState` table "Loading readings…", `ErrorState` "Retry
   readings", `EmptyState` "No readings yet".
@@ -660,3 +662,17 @@ Historical imports are available through the estate Readings **Import CSV** acti
 See [historical reading imports](reading-imports.md) for the complete built flow and contract.
 Reading sources now include IMPORT alongside SENSOR and MANUAL; imported rows carry
 optional batch/source provenance and participate in lists, flags, filters and export.
+
+## Plain-English wording (plain-english-wording.md, phase 1)
+
+Filters say "Measurement" / "All measurements" / "Unknown measurement",
+"Possibly wrong only" and "Unusual readings only". Table columns are
+Measured, Asset, Measurement, Value, Source, Sensor name, Warnings. When any
+row on the page carries a GAP, DUPLICATE_TIMESTAMP or OUT_OF_RANGE flag
+(`isPossiblyWrong` in `lib/readings.ts`), `PossiblyWrongNote`
+(`components/readings/possibly-wrong-note.tsx`) shows above the table: a
+`role="note"` Alert "Some readings may be wrong" with "Look at the sensor, or
+take a manual reading to compare." Import rows and batches show
+`importOutcomeLabels` (Imported, Already imported, Has problems) and
+`importStatusLabels` (Imported, Undone) from `lib/reading-imports.ts`, never
+the enum. The import form's source label is "Name for this import".

@@ -1,5 +1,6 @@
 import {
   Field,
+  FieldError,
   FieldLabel,
   FieldLegend,
   FieldSet,
@@ -29,6 +30,7 @@ export function InspectionFields({
   onOutcomeChange,
   onDateChange,
   onNotesChange,
+  notesError,
 }: {
   outcome: InspectionInput["outcome"] | "";
   date: string;
@@ -37,6 +39,8 @@ export function InspectionFields({
   onOutcomeChange: (value: string | null) => void;
   onDateChange: (value: string) => void;
   onNotesChange: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  /** Shown when a Fail is saved without saying what's wrong. */
+  notesError?: string;
 }) {
   return (
     <FieldSet>
@@ -74,13 +78,18 @@ export function InspectionFields({
         </Field>
       </div>
       <Field>
-        <FieldLabel htmlFor="inspection-notes">Notes (optional)</FieldLabel>
+        <FieldLabel htmlFor="inspection-notes">
+          {outcome === "FAIL" ? "Notes: what's wrong?" : "Notes (optional)"}
+        </FieldLabel>
         <Textarea
+          aria-invalid={notesError ? true : undefined}
           id="inspection-notes"
           maxLength={2000}
           onChange={onNotesChange}
+          required={outcome === "FAIL"}
           value={notes}
         />
+        {notesError ? <FieldError>{notesError}</FieldError> : null}
       </Field>
     </FieldSet>
   );

@@ -18,12 +18,19 @@ import {
   WorkOrderRequestError,
 } from "@/lib/work-orders";
 import { useWorkOrderInspection } from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-inspection";
+import {
+  useWorkOrderPrefill,
+  type WorkOrderReason,
+} from "@/routes/_auth/estates/$estateId/work-orders/new/-components/work-order-form/use-work-order-prefill";
 
 export function useWorkOrderForm(
   estateId: string,
   sourceReportId?: string,
-  sourceInspectionId?: string
+  sourceInspectionId?: string,
+  prefillAssetId?: string,
+  reason?: WorkOrderReason
 ) {
+  const prefill = useWorkOrderPrefill(estateId, prefillAssetId, reason);
   const access = useWorkOrderAccess(estateId);
   const save = useCreateWorkOrder(estateId);
   const navigate = useNavigate();
@@ -39,6 +46,9 @@ export function useWorkOrderForm(
   const [source, setSource] = useState<WorkOrderInput["source"]>(() => {
     if (sourceInspectionId) {
       return "INSPECTION";
+    }
+    if (reason) {
+      return "MAINTENANCE_RECOMMENDATION";
     }
     return sourceReportId ? "RESIDENT_REPORT" : "MANUAL";
   });
@@ -78,6 +88,15 @@ export function useWorkOrderForm(
       setDescription(inspection.record.notes ?? "");
     }
   }, [sourceInspectionId, inspection.record, inspection.asset]);
+  useEffect(() => {
+    if (prefill && initialized.current !== prefill.asset.id) {
+      initialized.current = prefill.asset.id;
+      setAsset(prefill.asset);
+      setLocation(prefill.asset.locationId);
+      setReference(prefill.sourceReference);
+      setDescription(prefill.description);
+    }
+  }, [prefill]);
   useEffect(() => {
     if (
       report.data &&
@@ -307,7 +326,7 @@ export function useWorkOrderForm(
 function workOrderFailure(failure: unknown): Error {
   return failure instanceof Error
     ? failure
-    : new Error("Unable to save the work order.");
+    : new Error("Couldn't save the work order. Try again.");
 }
 
 function creationBody(input: WorkOrderInput): WorkOrderInput {

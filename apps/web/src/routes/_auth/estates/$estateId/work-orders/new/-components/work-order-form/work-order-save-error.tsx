@@ -26,7 +26,9 @@ export function WorkOrderSaveError({
   return (
     <Alert className="rounded-xl p-4" role="alert" variant="destructive">
       <AlertTitle>
-        {conflict ? "Source report changed" : "Unable to create work order"}
+        {conflict
+          ? "Source report changed"
+          : "Couldn't create work order. Try again."}
       </AlertTitle>
       <AlertDescription className="space-y-3 text-sm">
         <p>{error.message}</p>

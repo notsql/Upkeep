@@ -1,3 +1,4 @@
+import { MailOpen } from "lucide-react";
 import { useCallback } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
@@ -30,6 +31,7 @@ export function PendingInvitations({
         <div className="my-4">
           <EmptyState
             description="Estate invitations appear here"
+            icon={MailOpen}
             title="No pending invitations"
           />
         </div>

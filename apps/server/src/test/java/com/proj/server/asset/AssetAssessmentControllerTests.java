@@ -189,7 +189,7 @@ class AssetAssessmentControllerTests {
         // Two days ahead is in the future in every time zone.
         mvc.perform(record(body("GOOD", LocalDate.now().plusDays(2), "Fine")))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("The assessment date cannot be in the future."));
+                .andExpect(jsonPath("$.message").value("The date can't be in the future."));
         verify(repository, never()).create(any(), any(), any(), any(), any());
     }
 

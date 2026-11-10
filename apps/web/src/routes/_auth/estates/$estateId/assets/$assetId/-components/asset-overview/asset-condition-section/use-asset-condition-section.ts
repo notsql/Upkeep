@@ -24,7 +24,7 @@ export function useAssetConditionSection(estateId: string, assetId: string) {
     async (values: AssessmentInput) => {
       await recordAssessment.mutateAsync(values);
       setRecording(false);
-      toast.success("Assessment recorded.");
+      toast.success("Condition check recorded.");
     },
     [recordAssessment.mutateAsync]
   );

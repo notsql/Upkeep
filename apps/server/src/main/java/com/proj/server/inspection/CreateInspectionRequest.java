@@ -13,6 +13,9 @@ public record CreateInspectionRequest(
         @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
         LocalDate inspectedOn,
 
+        @io.swagger.v3.oas.annotations.media.Schema(
+                description = "Up to 2,000 characters. Required (not blank) when outcome is FAIL: what is wrong.")
         String notes,
+
         @NotNull UUID expectedLocationId,
         List<MultipartFile> photos) {}

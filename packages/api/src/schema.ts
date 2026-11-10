@@ -490,6 +490,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/inspection-requests": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Send one person to inspect the equipment this month */
+    post: operations["requestInspection"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/inspections": {
     parameters: {
       query?: never;
@@ -530,6 +547,23 @@ export interface paths {
       cookie?: never;
     };
     get: operations["getInspectionPhoto"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/assets/{assetId}/open-work-order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The asset's work order that is not closed, if any */
+    get: operations["getOpenWorkOrder"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1088,6 +1122,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/inspectors": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["listInspectors"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/invitation-roles": {
     parameters: {
       query?: never;
@@ -1606,6 +1656,23 @@ export interface paths {
     put: operations["update"];
     post?: never;
     delete: operations["delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/who-can-help": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The roles in this estate whose members can do an action */
+    get: operations["whoCanHelp"];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2530,7 +2597,12 @@ export interface components {
       /** Format: uuid */
       id: string;
       /** @enum {string} */
-      type: "ANOMALY" | "SERVICE_DUE" | "REPAIR_PREDICTED";
+      type:
+        | "ANOMALY"
+        | "SERVICE_DUE"
+        | "REPAIR_PREDICTED"
+        | "CHECK_REQUESTED"
+        | "CHECK_FAILED";
       /** Format: uuid */
       estateId: string;
       estateName: string;
@@ -2549,6 +2621,11 @@ export interface components {
       anomaly: components["schemas"]["AnomalyAlertDetails"] | null;
       serviceDue: components["schemas"]["ServiceDueDetails"] | null;
       repairPredicted: components["schemas"]["RepairPredictedDetails"] | null;
+      /**
+       * Format: uuid
+       * @description The failed inspection result; set only for CHECK_FAILED
+       */
+      inspectionResultId: string | null;
     };
     RepairPredictedDetails: {
       /** @enum {string} */
@@ -2852,13 +2929,17 @@ export interface components {
       /** Format: date */
       dueOn: string;
       /** @enum {string} */
-      dueBasis: "PREDICTION" | "INTERVAL" | "NEVER_INSPECTED";
+      dueBasis: "PREDICTION" | "INTERVAL" | "NEVER_INSPECTED" | "REQUESTED";
       interval: components["schemas"]["ServiceInterval"] | null;
       /** @enum {string|null} */
       intervalSource: "ASSET" | "CATEGORY" | null;
       /** @enum {string} */
       status: "OVERDUE" | "DUE" | "DONE";
       result: components["schemas"]["CheckResultResponse"] | null;
+      /** @description Who sent crew; set only for REQUESTED checks */
+      requestedByName: string | null;
+      /** @description Who was sent to inspect; set only for REQUESTED checks */
+      assignedToName: string | null;
     };
     InspectionListResponse: {
       /**
@@ -3115,6 +3196,7 @@ export interface components {
       outcome: "PASS" | "FAIL";
       /** Format: date */
       inspectedOn: string;
+      /** @description Up to 2,000 characters. Required (not blank) when outcome is FAIL: what is wrong. */
       notes?: string;
       /** Format: uuid */
       expectedLocationId: string;
@@ -3151,6 +3233,10 @@ export interface components {
       /** Format: uuid */
       id: string;
       reference: string;
+    };
+    InspectionRequest: {
+      /** @description Must be able to record inspections */
+      assignedToUserId: string;
     };
     CreateAssetEventRequest: {
       /** @enum {string} */
@@ -3602,6 +3688,20 @@ export interface components {
       items: components["schemas"]["WorkOrderAssetOptionResponse"][];
       nextCursor?: string;
     };
+    /** @enum {string} */
+    HelpAction:
+      | "REPLACE_SENSOR"
+      | "PAUSE_SENSOR_WARNINGS"
+      | "GENERATE_CONNECTION_KEY"
+      | "RECORD_CONDITION"
+      | "ACKNOWLEDGE_ALERT"
+      | "REVIEW_DUPLICATE"
+      | "SEND_CREW"
+      | "SEND_CONTRACTOR";
+    WhoCanHelpResponse: {
+      action: components["schemas"]["HelpAction"];
+      roles: string[];
+    };
     EstateIssueReportPageResponse: {
       items: components["schemas"]["EstateIssueReportSummaryResponse"][];
       nextCursor: string | null;
@@ -3791,6 +3891,11 @@ export interface components {
       /** Format: int32 */
       customRoleVersion: number | null;
       permissions: components["schemas"]["EstatePermissionResponse"][] | null;
+    };
+    InspectorResponse: {
+      userId: string;
+      name: string;
+      roleName: string;
     };
     InspectionAssetPageResponse: {
       items: components["schemas"]["InspectionAssetResponse"][];
@@ -4215,6 +4320,11 @@ export interface components {
        * @description Pass as before for the next page; absent when there are no older readings
        */
       nextBefore?: string;
+    };
+    OpenWorkOrderResponse: {
+      /** Format: uuid */
+      id: string;
+      reference: string;
     };
     InspectionResultPageResponse: {
       items: components["schemas"]["InspectionResultResponse"][];
@@ -8615,6 +8725,83 @@ export interface operations {
       };
     };
   };
+  getOpenWorkOrder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The open work order */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["OpenWorkOrderResponse"];
+        };
+      };
+      /** @description No open work order */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["OpenWorkOrderResponse"];
+        };
+      };
+      /** @description Invalid request or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Membership lacks permission */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing or inaccessible estate or related record */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   getOrganizationRoles: {
     parameters: {
       query?: never;
@@ -11175,6 +11362,55 @@ export interface operations {
       };
     };
   };
+  listInspectors: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Members who can record inspections, sorted by name */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectorResponse"][];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listLocations: {
     parameters: {
       query?: {
@@ -12995,6 +13231,87 @@ export interface operations {
         };
       };
       /** @description Duplicate identifier, an inactive estate, asset or location, or a deactivated device */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  requestInspection: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InspectionRequest"];
+      };
+    };
+    responses: {
+      /** @description The equipment's open check, which already existed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionCheckResponse"];
+        };
+      };
+      /** @description Check opened and the person notified */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["InspectionCheckResponse"];
+        };
+      };
+      /** @description Person missing or unable to record inspections here */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Resident membership does not grant management access */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate not found or not managed by the caller */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, retired equipment, or already inspected this month */
       409: {
         headers: {
           [name: string]: unknown;
@@ -14859,6 +15176,44 @@ export interface operations {
         content: {
           "*/*": components["schemas"]["EstateError"];
         };
+      };
+    };
+  };
+  whoCanHelp: {
+    parameters: {
+      query: {
+        action: components["schemas"]["HelpAction"];
+      };
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Role names, the estate owner last; empty when nobody can */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["WhoCanHelpResponse"];
+        };
+      };
+      /** @description Unknown action */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Not a member of the estate */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

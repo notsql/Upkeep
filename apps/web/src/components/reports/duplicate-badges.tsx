@@ -1,16 +1,21 @@
 import type { components } from "@proj/api/schema";
 import { Badge } from "@proj/ui/components/badge";
+import { badgeVariantFor, duplicateReportTone } from "@/lib/status-tone";
 
 type DuplicateState = components["schemas"]["DuplicateOf"]["state"];
 type EstateReportSummary =
   components["schemas"]["EstateIssueReportSummaryResponse"];
 
-/** "Possible duplicate" for a suspected link, "Duplicate" for a confirmed one. */
+/** "May already be reported" for a suspected link, "Already reported" for a confirmed one. */
 export function DuplicateStateBadge({ state }: { state: DuplicateState }) {
   return state === "CONFIRMED" ? (
-    <Badge variant="secondary">Duplicate</Badge>
+    <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
+      Already reported
+    </Badge>
   ) : (
-    <Badge variant="outline">Possible duplicate</Badge>
+    <Badge variant={badgeVariantFor(duplicateReportTone.SUSPECTED)}>
+      May already be reported
+    </Badge>
   );
 }
 
@@ -24,12 +29,14 @@ export function DuplicateBadges({ report }: { report: EstateReportSummary }) {
   return (
     <div className="flex flex-wrap gap-1">
       {confirmed > 0 ? (
-        <Badge variant="secondary">
-          {confirmed} {confirmed === 1 ? "duplicate" : "duplicates"}
+        <Badge variant={badgeVariantFor(duplicateReportTone.CONFIRMED)}>
+          {confirmed} {confirmed === 1 ? "repeat report" : "repeat reports"}
         </Badge>
       ) : null}
       {suspected > 0 ? (
-        <Badge variant="outline">{suspected} to review</Badge>
+        <Badge variant={badgeVariantFor(duplicateReportTone.SUSPECTED)}>
+          {suspected} to review
+        </Badge>
       ) : null}
       {report.duplicateOf ? (
         <DuplicateStateBadge state={report.duplicateOf.state} />

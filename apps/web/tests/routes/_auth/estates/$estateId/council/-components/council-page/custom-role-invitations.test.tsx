@@ -210,7 +210,7 @@ it("keeps custom-role changes and confirmation available on later member-table p
   table.getByRole("cell", { name: definition.name });
   await chooseOption(
     table.getByRole("combobox", { name: "Role for Other 21" }),
-    "Council member"
+    "Council"
   );
   const dialog = await screen.findByRole("dialog", {
     name: "Change estate role?",

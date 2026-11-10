@@ -73,7 +73,7 @@ export function useEstateReportList(
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to load reports.",
+          error?.message ?? "Couldn't load reports. Try again.",
           response?.status ?? 500
         );
       }
@@ -128,7 +128,7 @@ export function useEstateReportLocations(estateId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to load locations.",
+          error?.message ?? "Couldn't load locations. Try again.",
           response?.status ?? 500
         );
       }
@@ -158,7 +158,7 @@ export function useEstateReportImage(
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to load an image.",
+          error?.message ?? "Couldn't load an image. Try again.",
           response?.status ?? 500
         );
       }
@@ -177,7 +177,7 @@ export function useRelocateEstateReport(estateId: string, reportId: string) {
     ) => {
       if (!canRelocate) {
         throw new ReportRequestError(
-          "Location correction is unavailable.",
+          "You can't change this report's location.",
           403
         );
       }
@@ -190,7 +190,7 @@ export function useRelocateEstateReport(estateId: string, reportId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to change location.",
+          error?.message ?? "Couldn't change location. Try again.",
           response?.status ?? 500
         );
       }
@@ -253,7 +253,8 @@ export function useReviewEstateReportDuplicate(
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to update the duplicate link.",
+          error?.message ??
+            "Couldn't update the link to the earlier report. Try again.",
           response?.status ?? 500
         );
       }
@@ -279,7 +280,7 @@ export function useLinkEstateReportDuplicate(
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to link the report.",
+          error?.message ?? "Couldn't link the report. Try again.",
           response?.status ?? 500
         );
       }
@@ -310,7 +311,7 @@ export function useChangeEstateReportUrgency(
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to change urgency.",
+          error?.message ?? "Couldn't change urgency. Try again.",
           response?.status ?? 500
         );
       }

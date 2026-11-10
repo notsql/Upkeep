@@ -37,10 +37,10 @@ function validate(
     errors.condition = "Condition is required.";
   }
   if (!values.assessedOn) {
-    errors.assessedOn = "Assessment date is required.";
+    errors.assessedOn = "The date checked is required.";
   } else if (values.assessedOn > today) {
     // ISO dates compare correctly as strings.
-    errors.assessedOn = "The assessment date cannot be in the future.";
+    errors.assessedOn = "The date can't be in the future.";
   }
   if (!values.notes.trim()) {
     errors.notes = "Notes are required.";
@@ -100,7 +100,7 @@ export function useAssessmentForm(
         setError(
           cause instanceof Error
             ? cause.message
-            : "Unable to record the assessment. Please try again."
+            : "Couldn't record the condition check. Try again."
         );
       } finally {
         setPending(false);

@@ -7,6 +7,7 @@ package com.proj.server.db.tables;
 import com.proj.server.db.Indexes;
 import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
+import com.proj.server.db.tables.Assetinspectionresult.AssetinspectionresultPath;
 import com.proj.server.db.tables.Estate.EstatePath;
 import com.proj.server.db.tables.Notificationread.NotificationreadPath;
 import com.proj.server.db.tables.records.NotificationRecord;
@@ -200,6 +201,16 @@ public class Notification extends TableImpl<NotificationRecord> {
      */
     public final TableField<NotificationRecord, Integer> FAILURESOBSERVED = createField(DSL.name("failuresObserved"), SQLDataType.INTEGER, this, "");
 
+    /**
+     * The column <code>public.Notification.inspectionResultId</code>.
+     */
+    public final TableField<NotificationRecord, UUID> INSPECTIONRESULTID = createField(DSL.name("inspectionResultId"), SQLDataType.UUID, this, "");
+
+    /**
+     * The column <code>public.Notification.recipientUserId</code>.
+     */
+    public final TableField<NotificationRecord, String> RECIPIENTUSERID = createField(DSL.name("recipientUserId"), SQLDataType.VARCHAR(255), this, "");
+
     private Notification(Name alias, Table<NotificationRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -269,7 +280,7 @@ public class Notification extends TableImpl<NotificationRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.NOTIFICATION_ASSETID_TYPE_CREATEDAT_IDX, Indexes.NOTIFICATION_ESTATEID_CREATEDAT_ID_IDX, Indexes.NOTIFICATION_ONE_OPEN_PER_ASSET_TYPE);
+        return Arrays.asList(Indexes.NOTIFICATION_ASSETID_TYPE_CREATEDAT_IDX, Indexes.NOTIFICATION_ESTATEID_CREATEDAT_ID_IDX, Indexes.NOTIFICATION_ONE_OPEN_PER_ASSET_TYPE, Indexes.NOTIFICATION_RECIPIENTUSERID_IDX);
     }
 
     @Override
@@ -279,7 +290,7 @@ public class Notification extends TableImpl<NotificationRecord> {
 
     @Override
     public List<ForeignKey<NotificationRecord, ?>> getReferences() {
-        return Arrays.asList(Keys.NOTIFICATION__NOTIFICATION_ESTATEID_FKEY);
+        return Arrays.asList(Keys.NOTIFICATION__NOTIFICATION_ESTATEID_FKEY, Keys.NOTIFICATION__NOTIFICATION_INSPECTIONRESULTID_FKEY);
     }
 
     private transient EstatePath _estate;
@@ -292,6 +303,19 @@ public class Notification extends TableImpl<NotificationRecord> {
             _estate = new EstatePath(this, Keys.NOTIFICATION__NOTIFICATION_ESTATEID_FKEY, null);
 
         return _estate;
+    }
+
+    private transient AssetinspectionresultPath _assetinspectionresult;
+
+    /**
+     * Get the implicit join path to the
+     * <code>public.AssetInspectionResult</code> table.
+     */
+    public AssetinspectionresultPath assetinspectionresult() {
+        if (_assetinspectionresult == null)
+            _assetinspectionresult = new AssetinspectionresultPath(this, Keys.NOTIFICATION__NOTIFICATION_INSPECTIONRESULTID_FKEY, null);
+
+        return _assetinspectionresult;
     }
 
     private transient NotificationreadPath _notificationread;
@@ -311,10 +335,12 @@ public class Notification extends TableImpl<NotificationRecord> {
     public List<Check<NotificationRecord>> getChecks() {
         return Arrays.asList(
             Internal.createCheck(this, DSL.name("Notification_anomaly_check"), "(((((type)::text = 'ANOMALY'::text) = (condition IS NOT NULL)) AND (((type)::text <> 'ANOMALY'::text) OR (((condition)::text = ANY ((ARRAY['NEEDS_ATTENTION'::character varying, 'FAULTY'::character varying])::text[])) AND ((\"medianScore\" >= (0)::numeric) AND (\"medianScore\" <= (1)::numeric)) AND ((\"maxScore\" >= (0)::numeric) AND (\"maxScore\" <= (1)::numeric)) AND (\"firstDetectedAt\" IS NOT NULL) AND (\"lastDetectedAt\" IS NOT NULL) AND (explanation IS NOT NULL) AND ((response)::text = ANY ((ARRAY['NONE'::character varying, 'ACKNOWLEDGED'::character varying, 'DISMISSED'::character varying])::text[])) AND (((response)::text = 'NONE'::text) = (\"respondedAt\" IS NULL)) AND ((\"respondedAt\" IS NULL) = (\"respondedByUserId\" IS NULL)) AND (((response)::text <> 'DISMISSED'::text) OR (length(btrim((\"responseReason\")::text)) > 0))))))", true),
+            Internal.createCheck(this, DSL.name("Notification_check_failed_check"), "((((type)::text = 'CHECK_FAILED'::text) = (\"inspectionResultId\" IS NOT NULL)))", true),
+            Internal.createCheck(this, DSL.name("Notification_check_requested_check"), "((((type)::text = 'CHECK_REQUESTED'::text) = (\"recipientUserId\" IS NOT NULL)))", true),
             Internal.createCheck(this, DSL.name("Notification_repair_predicted_check"), "(((((type)::text = 'REPAIR_PREDICTED'::text) = (\"recommendedTimeframe\" IS NOT NULL)) AND (((type)::text <> 'REPAIR_PREDICTED'::text) OR (((\"recommendedTimeframe\")::text = ANY ((ARRAY['WITHIN_30_DAYS'::character varying, 'WITHIN_60_DAYS'::character varying, 'WITHIN_90_DAYS'::character varying])::text[])) AND ((probability >= (0)::numeric) AND (probability <= (1)::numeric)) AND ((basis)::text = ANY ((ARRAY['SERVICE_INTERVAL'::character varying, 'ASSET_HISTORY'::character varying])::text[])) AND (\"failuresObserved\" >= 0)))))", true),
             Internal.createCheck(this, DSL.name("Notification_resolved_check"), "(((\"resolvedAt\" IS NULL) OR (\"resolvedAt\" >= \"createdAt\")))", true),
             Internal.createCheck(this, DSL.name("Notification_service_due_check"), "(((((type)::text = 'SERVICE_DUE'::text) = (\"dueOn\" IS NOT NULL)) AND (((type)::text <> 'SERVICE_DUE'::text) OR (((\"intervalSource\")::text = ANY ((ARRAY['ASSET'::character varying, 'CATEGORY'::character varying])::text[])) AND ((((\"intervalUnit\")::text = 'DAY'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 3650))) OR (((\"intervalUnit\")::text = 'MONTH'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 120))) OR (((\"intervalUnit\")::text = 'YEAR'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 10))))))))", true),
-            Internal.createCheck(this, DSL.name("Notification_type_check"), "(((type)::text = ANY ((ARRAY['ANOMALY'::character varying, 'SERVICE_DUE'::character varying, 'REPAIR_PREDICTED'::character varying])::text[])))", true)
+            Internal.createCheck(this, DSL.name("Notification_type_check"), "(((type)::text = ANY ((ARRAY['ANOMALY'::character varying, 'SERVICE_DUE'::character varying, 'REPAIR_PREDICTED'::character varying, 'CHECK_REQUESTED'::character varying, 'CHECK_FAILED'::character varying])::text[])))", true)
         );
     }
 

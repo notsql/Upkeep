@@ -33,7 +33,7 @@ describe("ReadingFilterControls", () => {
       <ReadingFilterControls filters={{}} onFiltersChange={vi.fn()} />
     );
     const flags = screen.getByRole("group", { name: "Flags" });
-    within(flags).getByRole("checkbox", { name: "Suspect only" });
-    within(flags).getByRole("checkbox", { name: "Anomalous only" });
+    within(flags).getByRole("checkbox", { name: "Possibly wrong only" });
+    within(flags).getByRole("checkbox", { name: "Unusual readings only" });
   });
 });

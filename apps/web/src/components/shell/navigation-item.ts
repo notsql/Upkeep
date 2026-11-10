@@ -15,7 +15,6 @@ export type Destination =
   | "/estates/$estateId/documents"
   | "/estates/$estateId/council"
   | "/estates/$estateId/roles"
-  | "/estates/$estateId/asset-categories"
   | "/estates/$estateId/notification-settings"
   | "/estates/$estateId/edit";
 

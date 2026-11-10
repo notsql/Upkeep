@@ -56,24 +56,24 @@ function field(name: string) {
 
 it("shows the estate's current settings", () => {
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
-  expect(field("Anomaly score threshold").value).toBe("0.51");
-  expect(field("Service reminder lead time (days)").value).toBe("14");
+  expect(field("How sure before we warn you (%)").value).toBe("51");
+  expect(field("Days of notice before a service is due").value).toBe("14");
   expect(
-    screen.getByRole("combobox", { name: "Repair prediction lead time" })
+    screen.getByRole("combobox", { name: "Notice before an expected repair" })
       .textContent
   ).toContain("30 days");
 });
 
 it("saves changed settings", async () => {
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
-  fireEvent.change(field("Anomaly score threshold"), {
-    target: { value: "0.8" },
+  fireEvent.change(field("How sure before we warn you (%)"), {
+    target: { value: "80" },
   });
-  fireEvent.change(field("Service reminder lead time (days)"), {
+  fireEvent.change(field("Days of notice before a service is due"), {
     target: { value: "7" },
   });
   await chooseOption(
-    screen.getByRole("combobox", { name: "Repair prediction lead time" }),
+    screen.getByRole("combobox", { name: "Notice before an expected repair" }),
     "90 days"
   );
   fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
@@ -90,15 +90,23 @@ it("saves changed settings", async () => {
 });
 
 it.each([
-  ["Anomaly score threshold", "0.5", "Enter a threshold from 0.51 to 1.00."],
-  ["Anomaly score threshold", "0.555", "Enter a threshold from 0.51 to 1.00."],
   [
-    "Service reminder lead time (days)",
+    "How sure before we warn you (%)",
+    "50",
+    "Enter a whole number from 51 to 100.",
+  ],
+  [
+    "How sure before we warn you (%)",
+    "55.5",
+    "Enter a whole number from 51 to 100.",
+  ],
+  [
+    "Days of notice before a service is due",
     "400",
     "Enter a whole number of days from 0 to 365.",
   ],
   [
-    "Service reminder lead time (days)",
+    "Days of notice before a service is due",
     "1.5",
     "Enter a whole number of days from 0 to 365.",
   ],
@@ -126,7 +134,7 @@ it("locks the form on an inactive estate", () => {
   state.deactivatedAt = "2026-11-01T00:00:00Z";
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
   screen.getByText(
-    "This estate is inactive, so its notification settings cannot be changed."
+    "This estate is inactive, so you can't change these settings."
   );
   expect(
     screen

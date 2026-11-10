@@ -19,7 +19,7 @@ export function useContractors(estateId: string) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to load contractors.",
+          error?.message ?? "Couldn't load contractors. Try again.",
           response?.status ?? 500
         );
       }
@@ -42,7 +42,7 @@ export function useSaveContractor(estateId: string, type: EquipmentType) {
       );
       if (error || !data) {
         throw new ReportRequestError(
-          error?.message ?? "Unable to save the contractor.",
+          error?.message ?? "Couldn't save the contractor. Try again.",
           response?.status ?? 500
         );
       }
@@ -67,7 +67,7 @@ export function useRemoveContractor(estateId: string, type: EquipmentType) {
       );
       if (error) {
         throw new ReportRequestError(
-          error.message ?? "Unable to remove the contractor.",
+          error.message ?? "Couldn't remove the contractor. Try again.",
           response?.status ?? 500
         );
       }
