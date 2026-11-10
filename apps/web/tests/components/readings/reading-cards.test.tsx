@@ -1,4 +1,4 @@
-import { renderWithProviders, screen } from "@tests/test-utils";
+import { renderWithProviders, screen, within } from "@tests/test-utils";
 import { describe, expect, it } from "vitest";
 import { ReadingCards } from "@/components/readings/reading-cards";
 import { formatDateTime } from "@/lib/format";
@@ -16,6 +16,34 @@ const reading = {
 } as unknown as AssetReading;
 
 describe("ReadingCards", () => {
+  it("renders each reading as a list item with the value as the title", () => {
+    renderWithProviders(
+      <ReadingCards
+        items={[
+          {
+            ...reading,
+            assetName: "Water pump",
+            assetReference: "PUMP-001",
+          } as unknown as AssetReading,
+        ]}
+      />
+    );
+    const item = within(
+      within(screen.getByRole("list", { name: "Readings" })).getByRole(
+        "listitem"
+      )
+    );
+    expect(
+      item.getByText("2.5 bar").closest("[data-slot=item-title]")
+    ).not.toBeNull();
+    item.getByText("Pressure");
+    item.getByText("Water pump");
+    item.getByText("PUMP-001");
+    item.getByText("Sensor");
+    item.getByText("PUMP-01");
+    expect(document.querySelector("[data-slot=card]")).toBeNull();
+  });
+
   it("formats the measured time with the shared Intl helper and keeps the exact value", () => {
     renderWithProviders(<ReadingCards items={[reading]} />);
     screen.getByText("2.5 bar");

@@ -1,7 +1,5 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
-import { buttonVariants } from "@proj/ui/components/button";
-import { Link } from "@tanstack/react-router";
-import { LayoutDashboard, Settings } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
 import { LifecycleStatusBadge } from "@/components/badges/lifecycle-status-badge";
 import { PageHeader } from "@/components/page/page-header";
 import { PageLayout } from "@/components/page/page-layout";
@@ -34,18 +32,6 @@ export function EstateDetailsPage({ estateId }: { estateId: string }) {
       {estate.data ? (
         <>
           <PageHeader
-            actions={
-              canEditDetails ? (
-                <Link
-                  className={buttonVariants({ variant: "outline" })}
-                  params={{ estateId }}
-                  to="/estates/$estateId/edit"
-                >
-                  <Settings aria-hidden="true" />
-                  Estate settings
-                </Link>
-              ) : undefined
-            }
             description={estate.data.description || undefined}
             icon={LayoutDashboard}
             status={

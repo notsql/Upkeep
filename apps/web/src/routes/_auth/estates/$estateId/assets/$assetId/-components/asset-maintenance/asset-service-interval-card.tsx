@@ -1,16 +1,9 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@proj/ui/components/card";
 import { CalendarClock, History } from "lucide-react";
-import { useCallback, useId, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { SectionHeading } from "@/components/page/section-heading";
+import { PageSection } from "@/components/page/section-card";
 import { ServiceIntervalDialog } from "@/components/service-intervals/service-interval-dialog";
 import { LoadingState } from "@/components/states/loading-state";
 import {
@@ -46,7 +39,6 @@ export function AssetServiceIntervalCard({
   /** Why the override cannot be changed; unset when it can. */
   locked?: string;
 }) {
-  const headingId = useId();
   const interval = useAssetServiceInterval(estateId, assetId);
   const setOverride = useSetAssetServiceInterval(estateId, assetId);
   const [editing, setEditing] = useState(false);
@@ -80,82 +72,74 @@ export function AssetServiceIntervalCard({
   const overridden = Boolean(data?.override);
 
   return (
-    <section aria-labelledby={headingId}>
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <SectionHeading icon={CalendarClock} id={headingId}>
-              Service interval
-            </SectionHeading>
-          </CardTitle>
-          <CardDescription>Manufacturer's recommended interval</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {interval.isPending ? (
-            <LoadingState label="Loading service interval…" rows={2} />
-          ) : null}
-          {interval.error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{interval.error.message}</AlertDescription>
-            </Alert>
-          ) : null}
-          {data ? (
-            <>
-              <div className="grid gap-1">
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="text-2xl font-semibold">
-                    {formatInterval(data.effective)}
-                  </p>
-                  <SourceBadge interval={data} />
-                </div>
-                <p className="text-muted-foreground text-sm">
-                  {explanation(data)}
+    <PageSection
+      description="Manufacturer's recommended interval"
+      icon={CalendarClock}
+      title="Service interval"
+    >
+      <div className="grid gap-3">
+        {interval.isPending ? (
+          <LoadingState label="Loading service interval…" rows={2} />
+        ) : null}
+        {interval.error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{interval.error.message}</AlertDescription>
+          </Alert>
+        ) : null}
+        {data ? (
+          <>
+            <div className="grid gap-1">
+              <div className="flex flex-wrap items-center gap-3">
+                <p className="text-2xl font-semibold">
+                  {formatInterval(data.effective)}
                 </p>
+                <SourceBadge interval={data} />
               </div>
-              {change ? (
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                  <History aria-hidden="true" className="size-3.5 shrink-0" />
-                  <span>
-                    Custom interval last changed by{" "}
-                    {change.changedByName ?? "Unknown user"} ·{" "}
-                    {new Date(change.changedAt).toLocaleString()}
-                  </span>
-                </p>
-              ) : null}
-              {locked ? (
-                <p className="text-muted-foreground text-sm" role="note">
-                  {locked}
-                </p>
-              ) : null}
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
-              <div className="flex flex-wrap gap-2">
+              <p className="text-muted-foreground text-sm">
+                {explanation(data)}
+              </p>
+            </div>
+            {change ? (
+              <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                <History aria-hidden="true" className="size-3.5 shrink-0" />
+                <span>
+                  Custom interval last changed by{" "}
+                  {change.changedByName ?? "Unknown user"} ·{" "}
+                  {new Date(change.changedAt).toLocaleString()}
+                </span>
+              </p>
+            ) : null}
+            {locked ? (
+              <p className="text-muted-foreground text-sm" role="note">
+                {locked}
+              </p>
+            ) : null}
+            {error ? (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                disabled={Boolean(locked) || setOverride.isPending}
+                onClick={open}
+                variant="outline"
+              >
+                {overridden ? "Edit custom interval" : "Set a custom interval"}
+              </Button>
+              {overridden ? (
                 <Button
                   disabled={Boolean(locked) || setOverride.isPending}
-                  onClick={open}
+                  onClick={remove}
                   variant="outline"
                 >
-                  {overridden
-                    ? "Edit custom interval"
-                    : "Set a custom interval"}
+                  Remove override
                 </Button>
-                {overridden ? (
-                  <Button
-                    disabled={Boolean(locked) || setOverride.isPending}
-                    onClick={remove}
-                    variant="outline"
-                  >
-                    Remove override
-                  </Button>
-                ) : null}
-              </div>
-            </>
-          ) : null}
-        </CardContent>
-      </Card>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      </div>
       {editing && data ? (
         <ServiceIntervalDialog
           description={`How often this asset should be serviced. It replaces the ${data.categoryLabel.toLowerCase()} interval for this asset only.`}
@@ -165,6 +149,6 @@ export function AssetServiceIntervalCard({
           title="Set a custom interval"
         />
       ) : null}
-    </section>
+    </PageSection>
   );
 }

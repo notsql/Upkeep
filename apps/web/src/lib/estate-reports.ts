@@ -1,5 +1,10 @@
 import type { components, paths } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 
@@ -44,12 +49,13 @@ export function useEstateReportAccess(estateId: string) {
 export function useEstateReportList(
   estateId: string,
   filters: EstateReportFilters,
-  cursor?: string
+  cursor?: string,
+  enabled = true
 ) {
   const { userId, canView } = useEstateReportAccess(estateId);
   return useQuery({
     queryKey: [userId, "estate-reports", estateId, "list", filters, cursor, 20],
-    enabled: canView,
+    enabled: canView && enabled,
     retry: false,
     refetchOnWindowFocus: true,
     queryFn: async ({ signal }) => {
@@ -71,6 +77,45 @@ export function useEstateReportList(
       }
       return data;
     },
+  });
+}
+
+/** The same list as `useEstateReportList`, page after page, for phones. */
+export function useEstateReportFeed(
+  estateId: string,
+  filters: EstateReportFilters,
+  enabled: boolean
+) {
+  const { userId, canView } = useEstateReportAccess(estateId);
+  return useInfiniteQuery({
+    queryKey: [userId, "estate-reports", estateId, "feed", filters, 20],
+    enabled: canView && enabled,
+    retry: false,
+    refetchOnWindowFocus: true,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["EstateIssueReportPageResponse"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/reports",
+        {
+          params: {
+            path: { estateId },
+            query: { ...filters, cursor: pageParam, limit: 20 },
+          },
+          signal,
+        }
+      );
+      if (error || !data) {
+        throw new ReportRequestError(
+          error?.message ?? "Couldn't load reports. Try again.",
+          response?.status ?? 500
+        );
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
 }
 

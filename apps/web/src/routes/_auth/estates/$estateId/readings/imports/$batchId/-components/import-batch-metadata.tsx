@@ -1,7 +1,8 @@
 import { env } from "@proj/env/web";
 import { Button } from "@proj/ui/components/button";
 import type { MouseEvent } from "react";
-import { SectionCard } from "@/components/page/section-card";
+import { DetailList } from "@/components/page/detail-list";
+import { PageSection } from "@/components/page/section-card";
 import type { ReadingImportBatch } from "@/lib/reading-imports";
 
 export function ImportBatchMetadata({
@@ -22,8 +23,8 @@ export function ImportBatchMetadata({
   onShowRevert: () => void;
 }) {
   return (
-    <SectionCard title="Batch metadata">
-      <dl className="grid gap-3 sm:grid-cols-2">
+    <PageSection title="Batch metadata">
+      <DetailList>
         <div>
           <dt>Source</dt>
           <dd>{batch.sourceLabel}</dd>
@@ -44,13 +45,13 @@ export function ImportBatchMetadata({
             problems · {batch.warningRows} with warnings
           </dd>
         </div>
-      </dl>
+      </DetailList>
       {batch.status === "REVERTED" ? (
         <p>
           {batch.removedCount} readings removed · {batch.rollbackReason}
         </p>
       ) : null}
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3">
         <Button
           disabled={downloading}
           render={
@@ -70,11 +71,11 @@ export function ImportBatchMetadata({
         ) : null}
       </div>
       {canRevert ? null : (
-        <p className="text-muted-foreground mt-3 text-sm">
+        <p className="text-muted-foreground text-sm">
           Rollback is unavailable while the estate is inactive or access is
           restricted.
         </p>
       )}
-    </SectionCard>
+    </PageSection>
   );
 }

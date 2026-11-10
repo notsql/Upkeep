@@ -1,17 +1,21 @@
-import { Card, CardContent } from "@proj/ui/components/card";
 import { Link } from "@tanstack/react-router";
+import { Package } from "lucide-react";
+import { Fragment, type ReactNode } from "react";
 import { LifecycleStatusBadge } from "@/components/badges/lifecycle-status-badge";
+import { ListRow, ListRows } from "@/components/list/list-row";
 import type { AssetBlockGroup } from "@/lib/asset-monitoring";
 import type { Asset } from "@/lib/assets";
 import { type AssetCategoryOption, categoryLabel } from "@/lib/catalogue";
 import {
   DeviceSummary,
   type MonitoringColumns,
+  type MonitoringSource,
   RiskFlag,
 } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-monitoring-cells";
 import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
 
-export function AssetRegisterCards({
+/** The phone view of the register: one linked list item per asset. */
+export function AssetRegisterList({
   assets,
   categories,
   estateId,
@@ -27,11 +31,10 @@ export function AssetRegisterCards({
 }) {
   if (!groups) {
     return (
-      <AssetCardList
+      <AssetItemList
         assets={assets}
         categories={categories}
         estateId={estateId}
-        grouped={false}
         label="Assets"
         monitoring={monitoring}
       />
@@ -49,11 +52,10 @@ export function AssetRegisterCards({
                   {level.name}
                 </h3>
               )}
-              <AssetCardList
+              <AssetItemList
                 assets={level.assets}
                 categories={categories}
                 estateId={estateId}
-                grouped
                 label={
                   level.name === null
                     ? `${block.name} assets`
@@ -69,90 +71,111 @@ export function AssetRegisterCards({
   );
 }
 
-function AssetCardList({
+function AssetItemList({
   assets,
   categories,
   estateId,
-  grouped,
   label,
   monitoring,
 }: {
   assets: Asset[];
   categories: AssetCategoryOption[] | undefined;
   estateId: string;
-  grouped: boolean;
   label: string;
   monitoring: MonitoringColumns;
 }) {
-  const Name = grouped ? "h4" : "h2";
   return (
-    <ul aria-label={label} className="grid gap-3">
+    <ListRows label={label}>
       {assets.map((asset) => (
-        <li key={asset.id}>
-          <Link
-            aria-label={`${asset.name} (${asset.reference})`}
-            className="group focus-visible:ring-ring block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
-            params={{ estateId, assetId: asset.id }}
-            to="/estates/$estateId/assets/$assetId"
-          >
-            <Card className="group-hover:bg-accent/40 group-hover:ring-primary/40 group-focus-visible:bg-accent/40 group-focus-visible:ring-primary/40 group-active:bg-accent group-active:ring-primary/40 h-full transition-[background-color,box-shadow] group-hover:shadow-sm motion-reduce:transition-none">
-              <CardContent className="grid gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <Name className="font-semibold break-words underline">
-                      {asset.name}
-                    </Name>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      {asset.reference}
-                    </p>
-                  </div>
-                  <LifecycleStatusBadge
-                    inactive={Boolean(asset.deactivatedAt)}
-                    inactiveLabel="Out of use"
-                  />
-                </div>
-                <dl className="grid gap-2 text-sm">
-                  <div>
-                    <dt className="text-muted-foreground">Category</dt>
-                    <dd>{categoryLabel(categories, asset.category)}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Location</dt>
-                    <dd className="break-words">{asset.locationPath}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground mb-1">
-                      Current condition
-                    </dt>
-                    <dd>
-                      <ConditionBadge condition={asset.currentCondition} />
-                    </dd>
-                  </div>
-                  {monitoring.devices ? (
-                    <div>
-                      <dt className="text-muted-foreground">Sensors</dt>
-                      <dd>
-                        <DeviceSummary
-                          assetId={asset.id}
-                          source={monitoring.devices}
-                        />
-                      </dd>
-                    </div>
-                  ) : null}
-                  {monitoring.risk ? (
-                    <div>
-                      <dt className="text-muted-foreground mb-1">Risk</dt>
-                      <dd>
-                        <RiskFlag assetId={asset.id} source={monitoring.risk} />
-                      </dd>
-                    </div>
-                  ) : null}
-                </dl>
-              </CardContent>
-            </Card>
-          </Link>
-        </li>
+        <AssetItem
+          asset={asset}
+          categories={categories}
+          estateId={estateId}
+          key={asset.id}
+          monitoring={monitoring}
+        />
       ))}
-    </ul>
+    </ListRows>
   );
+}
+
+function AssetItem({
+  asset,
+  categories,
+  estateId,
+  monitoring,
+}: {
+  asset: Asset;
+  categories: AssetCategoryOption[] | undefined;
+  estateId: string;
+  monitoring: MonitoringColumns;
+}) {
+  const monitoringParts = [
+    monitoring.devices ? (
+      <DeviceSummary
+        assetId={asset.id}
+        key="devices"
+        source={monitoring.devices}
+      />
+    ) : null,
+    monitoring.risk && hasValue(monitoring.risk, asset.id) ? (
+      <RiskFlag assetId={asset.id} key="risk" source={monitoring.risk} />
+    ) : null,
+  ];
+  return (
+    <ListRow
+      icon={Package}
+      meta={
+        <Parts
+          parts={[
+            asset.reference,
+            categoryLabel(categories, asset.category),
+            asset.locationPath,
+          ]}
+        />
+      }
+      render={
+        <Link
+          aria-label={`${asset.name} (${asset.reference})`}
+          params={{ estateId, assetId: asset.id }}
+          to="/estates/$estateId/assets/$assetId"
+        />
+      }
+      title={asset.name}
+      trailing={
+        <div className="flex flex-col items-end gap-1">
+          <LifecycleStatusBadge
+            inactive={Boolean(asset.deactivatedAt)}
+            inactiveLabel="Out of use"
+          />
+          <ConditionBadge condition={asset.currentCondition} />
+        </div>
+      }
+    >
+      {monitoringParts.some(Boolean) ? (
+        <p className="text-muted-foreground truncate text-xs">
+          <Parts parts={monitoringParts} />
+        </p>
+      ) : null}
+    </ListRow>
+  );
+}
+
+/** Risk shows on the phone only when it is loading, failed or flagged. */
+function hasValue(source: MonitoringSource, assetId: string): boolean {
+  return source.pending || source.failed || source.valueFor(assetId) !== null;
+}
+
+/** Non-empty parts joined with " · ", each in its own span. */
+function Parts({ parts }: { parts: ReactNode[] }) {
+  const present = parts.filter(
+    (part) => part !== null && part !== undefined && part !== ""
+  );
+  return present.map((part, index) => (
+    // biome-ignore lint/suspicious/noArrayIndexKey: parts are a fixed, ordered set
+    <Fragment key={index}>
+      {index > 0 ? " · " : null}
+      <span>{part}</span>
+    </Fragment>
+  ));
 }

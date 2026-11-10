@@ -3,7 +3,7 @@ import { SearchX, Users } from "lucide-react";
 import { SectionHeading } from "@/components/page/section-heading";
 import { EmptyState } from "@/components/states/empty-state";
 import type { AdminUsersListProps } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-list-props";
-import { AdminUsersMemberCards } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-member-cards";
+import { AdminUsersMemberList } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-member-list";
 import { AdminUsersTable } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-table";
 
 export function AdminUsersMembers({
@@ -36,7 +36,7 @@ export function AdminUsersMembers({
       </div>
 
       {mobile ? (
-        <AdminUsersMemberCards {...list} />
+        <AdminUsersMemberList {...list} />
       ) : (
         <AdminUsersTable {...list} />
       )}

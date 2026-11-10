@@ -43,13 +43,12 @@ server enforces it.
 
 | Route folder | What it shows |
 | --- | --- |
-| `estates/$estateId/reports/index.tsx` | `-components/estate-reports-page/estate-reports-results.tsx` passes `<DuplicateBadges>` into each `ReportCard`'s `badges` slot. |
+| `estates/$estateId/reports/index.tsx` | `-components/estate-reports-page/estate-reports-results.tsx` passes `<DuplicateBadges>` into each `ReportRow`'s `badges` slot (trailing), inside flat `ListRows` "Reports". |
 | `estates/$estateId/reports/$reportId/index.tsx` | `-components/duplicate-section/duplicate-section.tsx` below the report card (details below). |
 | `estates/$estateId/work-orders/` list | `-components/work-order-list-page/duplicate-count-badge.tsx` puts an "N duplicate(s)" Badge beside the priority in the table and mobile cards when `sourceReportConfirmedDuplicateCount > 0`. |
 | `estates/$estateId/work-orders/$workOrderId` | `-components/work-order-detail-page/work-order-detail-summary.tsx` adds "Duplicate reports: N confirmed duplicate(s)" when the count is above 0. |
 
-`duplicate-section/duplicate-section.tsx` renders up to three labelled `<section>` regions, each a
-shadcn Card:
+`duplicate-section/duplicate-section.tsx` renders up to three `PageSection`s (labelled `<section>` regions, no card):
 
 - **Duplicate** (the report has a link):
   - "May be the same problem as" or "Duplicate of", then a Link to the original;
@@ -82,5 +81,6 @@ metadata. Duplicate mutations retain these fields when updating detail caches;
 urgency saves retain duplicate counts, links and controls. Queue sorting and
 urgency editing are documented in [estate-reports.md](estate-reports.md).
 
-The detail page's Duplicate, Duplicates and Mark as duplicate cards title
-with `SectionHeading` and the `Copy` icon.
+The detail page's Already reported, Repeat reports and Mark as duplicate
+sections title with the `PageSection` heading and the `Copy` icon; Repeat
+reports puts its count Badges in the section's actions slot.

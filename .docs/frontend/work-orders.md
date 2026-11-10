@@ -328,7 +328,7 @@ remain decimal strings, and downtime 0 remains zero. Why you're changing it is r
 (max 500); mutations use the generated CorrectWorkOrderCompletionRequest. A save
 keeps the job Closed and preserves its original closer/time. CompletionOutcome
 shows Edited author/time in both detail and Maintenance. The Outcome corrections
-card loads revisions with reason/actor/time and a keyboard-accessible View before
+section loads revisions with reason/actor/time and a keyboard-accessible View before
 and after button exposing both saved snapshots. Crew can read this audit.
 
 Hooks in `lib/work-orders.ts`:
@@ -383,13 +383,16 @@ See [inspection screens](inspections.md) for routes, query keys and failure stat
 ## Responsive work-order list
 
 Below 768px, `-components/work-order-list-page/work-order-table.tsx` uses the existing `useMobile`
-hook to render `work-order-cards.tsx` and `work-order-sort-controls.tsx` instead
-of the table. The single `Work orders` list shows reference/detail link,
-description, priority, readable status/category and created time using shadcn
-Cards. The shadcn Select labelled Sort work orders by offers Reference, Category,
+hook to render `work-order-items.tsx` and `work-order-sort-controls.tsx` instead
+of the table. `WorkOrderItems` is flat `ListRows` labelled `Work orders` of `ListRow`s
+(`Wrench` tile; design-system "List rows"; no cards); each whole row is the link to
+the detail page with accessible name = the reference. Title: the description
+with `WorkOrderStatusBadge` trailing. Meta (muted, truncated):
+reference · asset reference · location (empty parts omitted). Under it: priority
+`Badge`, repeat-report count, category and created time. The shadcn Select labelled Sort work orders by offers Reference, Category,
 Priority and Created; Reverse sort direction invokes the same sort callback as
 a repeated desktop header click. Filters, cursor trail, scroll preservation and
-the server's stable priority tie order are unchanged. Cards expose refreshing
+the server's stable priority tie order are unchanged. The list exposes refreshing
 busy state and retain previous data while the request is pending. Desktop at
 >=768px keeps the sortable table; only one presentation is mounted.
 
@@ -421,8 +424,8 @@ locations / Retry source are `outline`. New: access/source/location loads use `L
   is collapsed until toggled (open on load when filters are in the URL).
   `countWorkOrderFilters` (in `work-order-filters.tsx`) gives `activeCount`.
   Load failure: `ErrorState` "Couldn't load work orders. Try again.".
-- Detail (`work-order-detail-page.tsx`; the description/details card is
-  `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
+- Detail (`work-order-detail-page.tsx`; the description and details, a plain
+  `DetailList` with no card, are `work-order-detail-summary.tsx`): `DetailPageHeader` with breadcrumbs,
   `icon={Wrench}`, status `WorkOrderStatusBadge` and `meta` "Opened <date>"; not-found uses `ErrorState`.
   `work-order-progress.tsx` and `work-order-documents.tsx` use `ErrorState`
   ("Retry history", "Retry corrections", "Retry documents"). The completion
@@ -450,16 +453,16 @@ Tones come from `lib/status-tone.ts` (decision 0046).
 - Status: `components/work-orders/work-order-status-badge.tsx`
   (`WorkOrderStatusBadge`) renders the `workOrderStatusLabel`, so "Open"
   instead of `OPEN`. Variants: Open is outline, Assigned is info, In progress
-  is warning and Closed is success. The list table, the mobile cards and the
+  is warning and Closed is success. The list table, the mobile list items and the
   detail header all use it. Status history keeps its plain text.
-- Priority: the list table, the mobile cards and the detail summary show a
+- Priority: the list table, the mobile list items and the detail summary show a
   Badge with the raw enum text, toned by `reportUrgencyTone`. LOW is outline,
   MEDIUM is info, HIGH is warning and URGENT is destructive.
 - Empty states: "No work orders yet" uses `Wrench` and "No matching work
   orders" uses `SearchX`.
-- Detail cards use `SectionHeading` icons: Completion outcome
-  (`CircleCheck`), Status history (`History`) and Outcome corrections
-  (`FilePenLine`).
+- Detail sections are `PageSection`s (no cards), split by `Separator`s, with
+  icons: Completion outcome (`CircleCheck`, "Edit outcome" in its actions),
+  Status history (`History`) and Outcome corrections (`FilePenLine`).
 - The stale-data "Refresh work order" and "Couldn't refresh. Try again." Alerts use
   `variant="warning"`.
 
@@ -470,3 +473,7 @@ form in for replacing that equipment (source "Maintenance recommendation", the
 equipment and its location, the reference note and description); see
 [equipment-dispatch.md](equipment-dispatch.md). `useAsset` gained an optional
 `enabled` argument for this.
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Work order pages (`useWorkOrderFeed`, key `[userId, "work-orders", estateId, "feed", filters+sort]`); the URL `cursor` is left alone.

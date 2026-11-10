@@ -9,6 +9,7 @@ export function NoChecks({ generated }: { generated: boolean }) {
           ? "Nothing due this month"
           : "Generate the list to see due checks"
       }
+      fill
       icon={ClipboardCheck}
       title="No checks this month"
     />

@@ -476,7 +476,7 @@ it("shows members in a table with bounded pages and clamps after the roster shri
     queryKey: ["owner", "estate-members", "estate-id"],
   });
   await table.findByText("Member 1");
-  screen.getByText("1–20 of 20 members");
+  expect(screen.queryByRole("navigation", { name: "Member pages" })).toBeNull();
 });
 
 it("resets the member page when switching estates", async () => {

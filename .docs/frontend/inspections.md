@@ -5,9 +5,9 @@ Routes use folder-based files under
 
 | Route file | Screen |
 | --- | --- |
-| `index.tsx` | Existing owner asset register, or `-components/inspection-asset-list.tsx` for permitted Managers/Crew |
+| `index.tsx` | Existing owner asset register, or `-components/inspection-asset-list.tsx` for permitted Managers/Crew: flat `ListRows` "Assets to inspect" of linked `ListRow`s at every size (`ClipboardList` tile, title name, meta "reference · location", note "Available for inspection" or "Past record only · can't record a new inspection", trailing chevron; no cards) |
 | `$assetId/_details/route.tsx` | Layout: owner asset frame (`AssetDetailsLayout`) or, for inspection-only viewers, `$assetId/-components/inspection-asset-page.tsx` (`DetailPageHeader`, limited context, `ErrorState` on failure) |
-| `$assetId/_details/records/index.tsx` | The asset's Records sub-page: Inspections first (`-components/inspection-history-table/inspection-history-table.tsx`, mounted with `offerCreate`, so its "Inspection records" `SectionCard` header carries a `sectionActionClassName` "New inspection" link (`Plus`) to `inspections/new` when `useInspectionAccess().canCreate` and the estate, asset and location are all active), then Maintenance and Documents. With the asset header's actions removed, this "New inspection" link and the layout's attention banner ("File an inspection") are where owners/managers create one. The inspection-only page also mounts the table, without `offerCreate` (its header already has Create inspection record) |
+| `$assetId/_details/records/index.tsx` | The asset's Records sub-page: Inspections first (`-components/inspection-history-table/inspection-history-table.tsx`, mounted with `offerCreate`, so its "Inspection records" `PageSection` header carries a `sectionActionClassName` "New inspection" link (`Plus`) to `inspections/new` when `useInspectionAccess().canCreate` and the estate, asset and location are all active), then Maintenance and Documents. With the asset header's actions removed, this "New inspection" link and the layout's attention banner ("File an inspection") are where owners/managers create one. The inspection-only page also mounts the table, without `offerCreate` (its header already has Create inspection record) |
 | `$assetId/_details/inspections/index.tsx` | Redirect (replace) to `…/records`; the guard admits both paths for inspection viewers |
 | `$assetId/inspections/new/index.tsx` | `-components/inspection-form/inspection-form.tsx`: required explicit outcome/date, optional notes and private photos |
 | `$assetId/inspections/$inspectionId/index.tsx` | `-components/inspection-detail/inspection-detail.tsx`: immutable result, evidence and follow-up |
@@ -73,7 +73,12 @@ screen and limited Manager/Crew screen show **Inspection records** when
 `$assetId/-components/inspection-history-table/inspection-history-table.tsx`.
 
 The five columns are Inspection date, Outcome, Follow-up / work order,
-Inspector and View record. The table preserves the API order (inspection date,
+Inspector and View record. Below 768px (`useMobile`) the table becomes an "Inspection records" list
+(`inspection-history-item.tsx`) of shadcn `Item size="sm"` rows divided by
+`ItemSeparator`: title = the inspection date, linking to the record; muted line
+= Inspector · follow-up (Closed, the work-order reference/link, or Create work
+order; omitted when empty); trailing = the Pass/Fail outcome `Badge`.
+The table preserves the API order (inspection date,
 recording timestamp and ID descending), including separate same-day records.
 Dates display the saved calendar date. Pass shows Closed; an unlinked Fail
 shows only the default-style Create work order action when eligible, otherwise
@@ -81,7 +86,7 @@ its follow-up cell is empty. A linked Fail retains its failed outcome and shows
 the work-order reference, linked only with independent work-order read access.
 View record opens the immutable detail with notes and photos.
 
-The table (a `SectionCard` "Inspection records", `ListChecks`) uses `useInspectionResults`, loading twenty records per page with
+The table (a `PageSection` "Inspection records", no card, `ListChecks`) uses `useInspectionResults`, loading twenty records per page with
 opaque cursor navigation through the shared `Pagination` ("Inspection history pages": Previous page / Next page). The first/last controls are disabled;
 page changes replace rows. Its inner page component is keyed by user, estate
 and asset, resetting cursor history when identity changes. No other asset's
@@ -203,7 +208,11 @@ location review is open; Cancel navigates to the asset). After saving,
 `saved-inspection-notice.tsx` is a `FormPage` "Inspection saved" with a
 `FormCard` holding the "View saved inspection" link, and the record page
 (`inspection-detail.tsx`) uses `DetailPageHeader` with the Pass/Fail `Badge` as
-`status` and "<reference> · <name>" as `meta` (no estate-name fallback). Asset
+`status` and "<reference> · <name>" as `meta` (no estate-name fallback). Its
+date/location/inspector details are a `DetailList` (no card), then Notes and
+Follow-up, split by `Separator`s, then Photos. The asset inspection page shows
+the asset's reference/category/location/installation as a `DetailList`, also
+without a card. Asset
 and record load failures use `ErrorState` ("Retry asset", "Retry inspection").
 
 ## A Fail needs a note (equipment dispatch)
@@ -211,3 +220,7 @@ and record load failures use `ErrorState` ("Retry asset", "Retry inspection").
 With Fail chosen the notes field is labelled "Notes: what's wrong?" and is
 required; saving it blank shows "Say what's wrong so the manager knows what to
 fix." and sends nothing. See [equipment-dispatch.md](equipment-dispatch.md).
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Inspection history (`useInspectionResultFeed`, key `[userId, "inspection-results", estateId, assetId, "feed"]`) and the inspection asset list (`useInspectionAssetFeed`, key `[userId, "inspection-assets", estateId, "feed", q]`).

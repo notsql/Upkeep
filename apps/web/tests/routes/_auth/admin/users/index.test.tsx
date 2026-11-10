@@ -131,17 +131,19 @@ it("opens a member's estate access", async () => {
   );
 });
 
-it("shows all member information and role controls on mobile cards", async () => {
+it("shows all member information and role controls as list items on a phone", async () => {
   mockMobileViewport();
   renderWithProviders(<Page />);
   await chooseOption(
     await screen.findByRole("combobox", { name: "Estate" }),
     "Acme"
   );
-  const cards = await screen.findByRole("list", { name: "Members" });
-  expect(cards.textContent).toContain("Casey Doe");
-  expect(cards.textContent).toContain("casey@example.com");
-  expect(cards.textContent).toContain("2026");
+  const list = await screen.findByRole("list", { name: "Admin users" });
+  const item = within(list).getByRole("listitem");
+  within(item).getByText("Casey Doe");
+  within(item).getByText("casey@example.com · Viewer");
+  within(item).getByText("Joined", { exact: false });
+  expect(item.textContent).toContain("2026");
   screen.getByRole("combobox", { name: "Role for Casey Doe" });
   expect(screen.queryByRole("table")).toBeNull();
   fireEvent.click(

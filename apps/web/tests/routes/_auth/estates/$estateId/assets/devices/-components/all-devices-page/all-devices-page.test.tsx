@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { mockMobileViewport } from "@tests/mock-viewport";
 import {
   renderWithProviders,
   screen,
@@ -313,6 +314,56 @@ describe("AllDevicesPage", () => {
     expect(screen.queryByRole("link", { name: "Replace sensor" })).toBeNull();
   });
 
+  it("lists sensors as items on a phone, worst first, with the asset and status", async () => {
+    const resize = mockMobileViewport();
+    renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
+    const list = within(
+      await screen.findByRole("list", { name: "All sensors" })
+    );
+    expect(screen.queryByRole("table", { name: "All sensors" })).toBeNull();
+    const items = list
+      .getAllByRole("listitem")
+      .filter(
+        (item) =>
+          item.parentElement?.getAttribute("aria-label") === "All sensors"
+      );
+    expect(items).toHaveLength(5);
+    const first = within(items[0]);
+    first.getByText("FLAT-1");
+    expect(
+      first.getByRole("link", { name: "Boiler" }).getAttribute("href")
+    ).toBe(`/estates/${ESTATE}/assets/asset-FLAT-1`);
+    first.getByText("Online");
+    first.getByText("Sensor may not be working");
+    within(items[4]).getByText("Turned off");
+    resize(false);
+  });
+
+  it("sums up measurements without warning limits in one line", async () => {
+    const unset = (id: string, metric: MonitoredSensor["metric"]) => ({
+      ...sensor(id, "Boiler", "NOT_CONFIGURED"),
+      metric,
+      thresholdMinutes: null,
+    });
+    entries = [
+      unset("WAIT-1", "TEMPERATURE"),
+      unset("WAIT-1", "PRESSURE"),
+      sensor("ONLINE-1", "Boiler", "MONITORING"),
+      unset("ONLINE-1", "PRESSURE"),
+    ];
+    const resize = mockMobileViewport();
+    renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
+    const list = within(
+      await screen.findByRole("list", { name: "All sensors" })
+    );
+    await list.findByText("No warning limits set · 2 measurements");
+    list.getByText("No warning limits on 1 other measurement");
+    list.getByText("Working");
+    expect(list.queryByText("No warning set")).toBeNull();
+    expect(list.queryByText("Last seen Never")).toBeNull();
+    resize(false);
+  });
+
   it("opens When to warn in a dialog listing every measurement", async () => {
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
     fireEvent.click(
@@ -333,6 +384,27 @@ describe("AllDevicesPage", () => {
     });
     within(form).getByLabelText("Warn after");
     within(form).getByLabelText("Allowed change (u)");
+  });
+
+  it("lists When to warn as items on a phone", async () => {
+    const resize = mockMobileViewport();
+    renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "When to warn" })
+    );
+    const dialog = await screen.findByRole("dialog", { name: "When to warn" });
+    const list = within(
+      await within(dialog).findByRole("list", { name: "When to warn" })
+    );
+    const items = list.getAllByRole("listitem");
+    expect(items).toHaveLength(3);
+    expect(list.getAllByRole("separator")).toHaveLength(2);
+    const first = within(items[0]);
+    first.getByText("Temperature");
+    first.getByText("No warning set");
+    first.getByText("Not set");
+    first.getByRole("button", { name: "Set up temperature warning" });
+    resize(false);
   });
 
   it("shows By location and All sensors tabs to a register viewer", async () => {

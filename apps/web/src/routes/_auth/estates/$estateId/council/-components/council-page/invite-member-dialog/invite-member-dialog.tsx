@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@proj/ui/components/dialog";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import { useSearch } from "@tanstack/react-router";
 import { UserPlus } from "lucide-react";
 
@@ -17,10 +18,20 @@ export function InviteMemberDialog({ estateId }: { estateId: string }) {
   const search: { inviteRole?: unknown } = useSearch({ strict: false });
   const inviteRole =
     typeof search.inviteRole === "string" ? search.inviteRole : undefined;
+  // Icon-only on mobile, like CreateButton; the aria-label keeps the name.
+  const mobile = useIsMobile();
   return (
     <Dialog defaultOpen={Boolean(inviteRole)}>
-      <DialogTrigger render={<Button />}>
-        <UserPlus aria-hidden="true" /> Invite member
+      <DialogTrigger
+        render={
+          <Button
+            aria-label={mobile ? "Invite member" : undefined}
+            size={mobile ? "icon" : "default"}
+          />
+        }
+      >
+        <UserPlus aria-hidden="true" />
+        {mobile ? null : " Invite member"}
       </DialogTrigger>
       <DialogContent className="p-6 sm:max-w-md">
         <DialogHeader>

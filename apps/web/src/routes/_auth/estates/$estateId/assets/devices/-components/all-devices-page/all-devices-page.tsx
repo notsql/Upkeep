@@ -51,6 +51,7 @@ function AllDevicesResults({
       {page.rows?.length === 0 && !(page.devicesError && page.reviewError) ? (
         <EmptyState
           description="Add a sensor from an asset's Sensors page."
+          fill
           icon={Cpu}
           title="No sensors yet"
         />
@@ -108,6 +109,7 @@ export function AllDevicesPage({ estateId }: { estateId: string }) {
       {access.pending || access.review ? null : (
         <EmptyState
           description="Your role can't see sensors in this estate."
+          fill
           icon={Cpu}
           title="No sensors to show"
         />

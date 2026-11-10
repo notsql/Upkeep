@@ -1,3 +1,4 @@
+import { ItemGroup, ItemSeparator } from "@proj/ui/components/item";
 import {
   Table,
   TableBody,
@@ -6,14 +7,22 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { FileText } from "lucide-react";
-import { useCallback, useState } from "react";
-import { SectionCard } from "@/components/page/section-card";
+import { Fragment, useCallback, useState } from "react";
+import { PageSection } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
-import { useAssetDocuments, useDocumentAsset } from "@/lib/asset-documents";
+import {
+  useAssetDocumentFeed,
+  useAssetDocuments,
+  useDocumentAsset,
+} from "@/lib/asset-documents";
 import { type EstateDocument, useDownloadDocument } from "@/lib/documents";
+import { asPagedList } from "@/lib/infinite-list";
+import { useMobile } from "@/lib/use-mobile";
+import { AssetDocumentItem } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-documents-section/asset-document-item";
 import { DocumentAssetDialog } from "@/routes/_auth/estates/$estateId/documents/-components/document-asset-dialog/document-asset-dialog";
 import { DocumentRow } from "@/routes/_auth/estates/$estateId/documents/-components/document-row";
 
@@ -26,10 +35,13 @@ export function AssetDocumentsContent({
   assetId: string;
   canWrite: boolean;
 }) {
+  const mobile = useMobile();
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const cursor = cursors.at(-1);
   const [selected, setSelected] = useState<EstateDocument>();
-  const documents = useAssetDocuments(estateId, assetId, cursor);
+  const paged = useAssetDocuments(estateId, assetId, cursor, !mobile);
+  const feed = asPagedList(useAssetDocumentFeed(estateId, assetId, mobile));
+  const documents = mobile ? feed : paged;
   const association = useDocumentAsset(estateId, selected?.id ?? "");
   const download = useDownloadDocument(estateId);
   const close = useCallback(() => setSelected(undefined), []);
@@ -56,14 +68,14 @@ export function AssetDocumentsContent({
     [association.refetch]
   );
   return (
-    <SectionCard icon={FileText} title="Documents">
+    <PageSection icon={FileText} title="Documents">
       <div className="min-w-0 space-y-4">
         {documents.isPending ? (
           <LoadingState label="Loading documents…" rows={2} />
         ) : null}
         {documents.isError ? (
           <ErrorState
-            message={documents.error.message}
+            message={documents.error?.message ?? "Couldn't load documents."}
             onRetry={retry}
             retryLabel="Retry documents"
           />
@@ -76,7 +88,25 @@ export function AssetDocumentsContent({
             title="No documents yet"
           />
         ) : null}
-        {documents.data?.items.length ? (
+        {mobile && documents.data?.items.length ? (
+          <>
+            <ItemGroup aria-label="Documents" className="gap-0">
+              {documents.data.items.map((document, index) => (
+                <Fragment key={document.id}>
+                  {index > 0 ? <ItemSeparator className="my-0" /> : null}
+                  <AssetDocumentItem
+                    document={document}
+                    downloading={download.isPending}
+                    onDownload={downloadDocument}
+                    onUnlink={canWrite ? setSelected : undefined}
+                  />
+                </Fragment>
+              ))}
+            </ItemGroup>
+            <LoadMore {...feed.more} />
+          </>
+        ) : null}
+        {!mobile && documents.data?.items.length ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -100,7 +130,7 @@ export function AssetDocumentsContent({
             </TableBody>
           </Table>
         ) : null}
-        {nextCursor || cursors.length > 1 ? (
+        {!mobile && (nextCursor || cursors.length > 1) ? (
           <Pagination
             canNext={Boolean(nextCursor)}
             canPrevious={cursors.length > 1}
@@ -131,6 +161,6 @@ export function AssetDocumentsContent({
           />
         ) : null}
       </div>
-    </SectionCard>
+    </PageSection>
   );
 }

@@ -18,6 +18,7 @@ export function ReportsEmpty({
           </Button>
         }
         description="Try other filters"
+        fill
         icon={SearchX}
         title="No matching reports"
       />
@@ -26,6 +27,7 @@ export function ReportsEmpty({
   return (
     <EmptyState
       description="Resident reports appear here"
+      fill
       icon={ClipboardList}
       title="No reports yet"
     />

@@ -125,20 +125,16 @@ function renderShell() {
 }
 
 describe("app shell", () => {
-  it("opens the estate sidebar as a sheet on mobile without a duplicate estate menu", async () => {
+  it("replaces the sidebar with a bottom bar on mobile", async () => {
     window.innerWidth = 375;
     renderShell();
+    const bar = within(
+      await screen.findByRole("navigation", { name: "Estate sections" })
+    );
+    await bar.findByRole("link", { name: "Assets" });
     expect(screen.queryByRole("navigation", { name: "Sidebar" })).toBeNull();
-    expect(
-      screen.queryByRole("navigation", { name: "Estate navigation" })
-    ).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Toggle Sidebar" }));
-    const nav = await sidebar();
-    await nav.findByRole("link", { name: "Assets" });
-    expect(nav.queryByRole("link", { name: "Home" })).toBeNull();
-    expect(
-      screen.queryByRole("navigation", { name: "Estate navigation" })
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Toggle Sidebar" })).toBeNull();
+    expect(screen.getAllByRole("link", { name: "UpKeep" })).toHaveLength(1);
   });
   it("shows the estate sidebar and header switcher inside an estate", async () => {
     renderShell();

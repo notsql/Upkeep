@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Activity, Cpu, Plus, RadioTower } from "lucide-react";
 import { useCallback, useMemo } from "react";
+import { ListRows } from "@/components/list/list-row";
 import {
   PageSection,
   sectionActionClassName,
@@ -86,7 +87,7 @@ export function AssetDevicesSection({
             />
           </div>
         ) : null}
-        <ul aria-label="Sensors" className="divide-y">
+        <ListRows label="Sensors">
           {devices.data?.map((device) => (
             <DeviceItem
               assetId={assetId}
@@ -98,7 +99,7 @@ export function AssetDevicesSection({
               locationPath={paths.get(device.locationId)}
             />
           ))}
-        </ul>
+        </ListRows>
       </div>
     </PageSection>
   );

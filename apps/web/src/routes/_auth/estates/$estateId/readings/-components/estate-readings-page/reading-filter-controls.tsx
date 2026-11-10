@@ -18,8 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import { X } from "lucide-react";
 import { type ReactNode, useCallback } from "react";
+import { FilterSheet } from "@/components/filters/filter-bar";
 import { DateTimePicker } from "@/components/forms/date-time-picker";
 import { deviceMetrics } from "@/lib/devices";
 import type { ReadingSearch } from "@/lib/reading-filters";
@@ -44,18 +46,22 @@ export function countReadingFilters(filters: ReadingSearch): number {
 function ReadingFilterPanel({
   id,
   open,
+  onOpenChange,
   onClear,
   children,
 }: {
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onClear?: () => void;
   children: ReactNode;
 }) {
+  const mobile = useIsMobile();
+  const sheet = mobile && open !== undefined;
   const panel = (
     <search
       aria-label="Reading filters"
-      className="rounded-lg border p-3"
+      className={sheet ? "" : "rounded-lg border p-3"}
       // biome-ignore lint/a11y/noRedundantRoles: jsdom does not yet map <search> to the search role.
       role="search"
     >
@@ -79,6 +85,13 @@ function ReadingFilterPanel({
   if (open === undefined) {
     return id ? <div id={id}>{panel}</div> : panel;
   }
+  if (sheet) {
+    return (
+      <FilterSheet id={id} onOpenChange={onOpenChange} open={open}>
+        {panel}
+      </FilterSheet>
+    );
+  }
   return (
     <Collapsible open={open}>
       <CollapsibleContent id={id}>{panel}</CollapsibleContent>
@@ -95,6 +108,7 @@ export function ReadingFilterControls({
   onFiltersChange,
   id,
   open,
+  onOpenChange,
 }: {
   filters: ReadingSearch;
   error?: string;
@@ -106,6 +120,7 @@ export function ReadingFilterControls({
   /** From `useFilterPanel(...).barProps`; omit to always show the panel. */
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const change = useCallback(
     (next: Partial<ReadingSearch>) =>
@@ -138,6 +153,7 @@ export function ReadingFilterControls({
     <ReadingFilterPanel
       id={id}
       onClear={activeCount > 0 ? clear : undefined}
+      onOpenChange={onOpenChange}
       open={open}
     >
       {estateId && onChoose ? (

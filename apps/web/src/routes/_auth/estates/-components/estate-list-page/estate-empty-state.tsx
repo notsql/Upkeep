@@ -23,6 +23,7 @@ export function EstateEmptyState({
       description={
         filtersActive ? emptyMessage : "Use Create to add the first estate"
       }
+      fill
       icon={filtersActive ? SearchX : Building2}
       title={filtersActive ? "No matching estates" : emptyMessage}
     />

@@ -5,6 +5,7 @@ import {
   Breadcrumb as BreadcrumbRoot,
   BreadcrumbSeparator,
 } from "@proj/ui/components/breadcrumb";
+import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
@@ -38,6 +39,7 @@ export function PageHeader({
   actions,
   status,
   meta,
+  inlineActions,
 }: {
   icon?: LucideIcon;
   title: string;
@@ -47,12 +49,20 @@ export function PageHeader({
   breadcrumbs?: Breadcrumb[];
   actions?: ReactNode;
   status?: ReactNode;
+  /** Keep the actions on the title's row instead of wrapping below it. */
+  inlineActions?: boolean;
 }) {
   return (
-    <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+    <header
+      className={cn(
+        "mb-4 flex items-start",
+        inlineActions ? "flex-nowrap" : "flex-wrap",
+        "justify-between gap-2 md:mb-5 md:gap-3"
+      )}
+    >
       <div className="min-w-0">
         {breadcrumbs?.length ? (
-          <BreadcrumbRoot aria-label="Breadcrumbs" className="mb-4">
+          <BreadcrumbRoot aria-label="Breadcrumbs" className="mb-3 md:mb-4">
             <BreadcrumbList>
               {breadcrumbs.map((item, index) => (
                 <Fragment key={`${item.label}-${item.to ?? "current"}`}>
@@ -82,13 +92,15 @@ export function PageHeader({
             </BreadcrumbList>
           </BreadcrumbRoot>
         ) : null}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           {Icon ? (
             <span className="bg-brand-1/15 text-brand-3 flex size-9 shrink-0 items-center justify-center rounded-lg">
               <Icon aria-hidden="true" className="size-5" />
             </span>
           ) : null}
-          <h1 className="text-3xl font-semibold break-words">{title}</h1>
+          <h1 className="text-2xl font-semibold break-words md:text-3xl">
+            {title}
+          </h1>
           {status}
         </div>
         {meta ? (
@@ -101,7 +113,14 @@ export function PageHeader({
         ) : null}
       </div>
       {actions ? (
-        <div className="flex flex-wrap items-center gap-3">{actions}</div>
+        <div
+          className={cn(
+            "flex items-center gap-2 md:gap-3",
+            inlineActions ? "shrink-0" : "flex-wrap"
+          )}
+        >
+          {actions}
+        </div>
       ) : null}
     </header>
   );

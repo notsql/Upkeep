@@ -1,5 +1,10 @@
 import type { components, paths } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
@@ -66,13 +71,14 @@ function useRequestError(userId: string | undefined) {
 export function useWorkOrderList(
   estateId: string,
   filters: Omit<WorkOrderListSearch, "cursor"> = {},
-  cursor?: string
+  cursor?: string,
+  enabled = true
 ) {
   const { userId, canView } = useWorkOrderAccess(estateId);
   const fail = useRequestError(userId);
   return useQuery<components["schemas"]["WorkOrderPageResponse"]>({
     queryKey: [userId, "work-orders", estateId, "list", filters, cursor],
-    enabled: canView,
+    enabled: canView && enabled,
     retry: false,
     refetchOnWindowFocus: true,
     placeholderData: (previous, previousQuery) => {
@@ -112,6 +118,45 @@ export function useWorkOrderList(
       }
       return data;
     },
+  });
+}
+/** The same list as `useWorkOrderList`, page after page, for phone widths. */
+export function useWorkOrderFeed(
+  estateId: string,
+  filters: Omit<WorkOrderListSearch, "cursor">,
+  enabled: boolean
+) {
+  const { userId, canView } = useWorkOrderAccess(estateId);
+  const fail = useRequestError(userId);
+  return useInfiniteQuery({
+    queryKey: [userId, "work-orders", estateId, "feed", filters],
+    enabled: canView && enabled,
+    retry: false,
+    refetchOnWindowFocus: true,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["WorkOrderPageResponse"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/work-orders",
+        {
+          params: {
+            path: { estateId },
+            query: { ...filters, cursor: pageParam, limit: 20 },
+          },
+          signal,
+        }
+      );
+      if (error || !data) {
+        return fail(
+          error?.message ?? "Couldn't load work orders. Try again.",
+          response.status
+        );
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
 }
 export function useWorkOrder(estateId: string, workOrderId: string) {

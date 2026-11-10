@@ -1,8 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { useFilterPanel } from "@/components/filters/filter-bar";
+import { asPagedList } from "@/lib/infinite-list";
+import { useMobile } from "@/lib/use-mobile";
 import {
   type WorkOrderFilters as Filters,
   useWorkOrderAccess,
+  useWorkOrderFeed,
   useWorkOrderList,
   type WorkOrderListSearch,
 } from "@/lib/work-orders";
@@ -47,7 +50,10 @@ export function useWorkOrderListPage(
   const activeCount = countWorkOrderFilters(filters);
   const filtered = activeCount > 0;
   const panel = useFilterPanel(activeCount);
-  const orders = useWorkOrderList(estateId, options, cursor);
+  const mobile = useMobile();
+  const page = useWorkOrderList(estateId, options, cursor, !mobile);
+  const feed = asPagedList(useWorkOrderFeed(estateId, options, mobile));
+  const orders = mobile ? feed : page;
   const changeFilters = useCallback(
     (values: Filters) => {
       setTrail({ scope: "", cursors: [] });

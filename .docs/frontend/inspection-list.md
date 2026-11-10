@@ -50,6 +50,10 @@ e.g. "November 2026"), then:
   **Due**, green **Done · Pass/Fail**), and an unlabelled action column: **Record inspection**
   (ID-85's `/estates/$estateId/assets/$assetId/inspections/new`, only with `canCreate`) or **View
   result** (`/estates/$estateId/assets/$assetId/inspections/$inspectionId`) for Done.
+  Below 768px (`useMobile`) each group is instead a `ul` labelled `Checks` of shadcn `Item`s
+  (divided by `ItemSeparator`): title = asset name linked to the asset with the Status badge
+  trailing; line 1 "<reference> · <category>"; line 2 "Due <date> · <basis>"; then the same
+  end-of-life send action and Record inspection / View result links.
 - When `flaggedCategoryCount` is 0, an `Alert` with `role="note"` and the accessible name "No
   flagged categories": "No equipment has regular checks turned on yet, so nothing is due." It has
   an outline **Turn on regular checks** link to `/estates/$estateId/inspections/schedules`. It is

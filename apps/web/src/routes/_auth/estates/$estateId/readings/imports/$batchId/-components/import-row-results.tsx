@@ -1,5 +1,12 @@
 import { Badge } from "@proj/ui/components/badge";
-import { Card, CardContent } from "@proj/ui/components/card";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemSeparator,
+  ItemTitle,
+} from "@proj/ui/components/item";
 import {
   Table,
   TableBody,
@@ -39,30 +46,30 @@ export function ImportRowResults({ items }: { items: ReadingImportRow[] }) {
   }
   if (mobile) {
     return (
-      <ul aria-label="Import results" className="mt-5 space-y-3">
-        {items.map((row) => (
+      <ul aria-label="Import results" className="flex flex-col">
+        {items.map((row, index) => (
           <li key={row.recordNumber}>
-            <Card>
-              <CardContent>
-                <dl>
-                  <dt>Record</dt>
-                  <dd>{row.recordNumber}</dd>
-                  <dt>Starting line</dt>
-                  <dd>{row.startingLineNumber}</dd>
-                  <dt>Outcome</dt>
-                  <dd>
-                    <Badge
-                      variant={badgeVariantFor(
-                        readingImportOutcomeTone[row.outcome]
-                      )}
-                    >
-                      {importOutcomeLabels[row.outcome]}
-                    </Badge>
-                  </dd>
-                </dl>
-                <RowIssues row={row} />
-              </CardContent>
-            </Card>
+            {index > 0 ? <ItemSeparator className="my-0" /> : null}
+            <Item size="sm">
+              <ItemContent className="min-w-0">
+                <ItemTitle>Record {row.recordNumber}</ItemTitle>
+                <ItemDescription className="[overflow-wrap:anywhere]">
+                  {[
+                    `Line ${row.startingLineNumber}`,
+                    ...row.issues.map((issue) => issue.reason),
+                  ].join(" · ")}
+                </ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Badge
+                  variant={badgeVariantFor(
+                    readingImportOutcomeTone[row.outcome]
+                  )}
+                >
+                  {importOutcomeLabels[row.outcome]}
+                </Badge>
+              </ItemActions>
+            </Item>
           </li>
         ))}
       </ul>
@@ -71,7 +78,7 @@ export function ImportRowResults({ items }: { items: ReadingImportRow[] }) {
   return (
     <section
       aria-label="Import results table"
-      className="mt-5 max-w-full overflow-x-auto" // biome-ignore lint/a11y/noNoninteractiveTabindex: This named overflow region needs keyboard scrolling.
+      className="max-w-full overflow-x-auto" // biome-ignore lint/a11y/noNoninteractiveTabindex: This named overflow region needs keyboard scrolling.
       tabIndex={0}
     >
       <Table aria-label="Import results">

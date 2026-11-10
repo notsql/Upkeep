@@ -24,6 +24,8 @@ vi.mock("@/lib/devices", () => ({
 }));
 vi.mock("@/lib/inspections", () => ({
   useInspectionAccess: () => ({ pending: false, canView: true }),
+  // Desktop only: the phone feed stays idle.
+  useInspectionAssetFeed: () => ({}),
   useInspectionAssets: (_estate: string, _query: string, cursor?: string) => {
     state.cursors.push(cursor);
     return {

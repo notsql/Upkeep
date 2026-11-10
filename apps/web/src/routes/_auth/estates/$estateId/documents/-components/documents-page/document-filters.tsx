@@ -27,12 +27,14 @@ export function DocumentFiltersForm({
   onSearch,
   id,
   open,
+  onOpenChange,
 }: {
   filters: DocumentFilters;
   onSearch: (filters: DocumentFilters) => void;
   /** From `useFilterPanel(...).barProps`; omit to always show the bar. */
   id?: string;
   open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
   const [value, setValue] = useState(filters.filename ?? "");
   const changeValue = useCallback(
@@ -77,6 +79,7 @@ export function DocumentFiltersForm({
         id={id}
         label="Filter documents"
         onClear={clear}
+        onOpenChange={onOpenChange}
         open={open}
         search={
           <div className="grid gap-2">

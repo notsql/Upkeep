@@ -1,8 +1,8 @@
 import { Badge } from "@proj/ui/components/badge";
-import { Card, CardContent } from "@proj/ui/components/card";
+import { Separator } from "@proj/ui/components/separator";
 import { ClipboardCheck } from "lucide-react";
 import { useCallback } from "react";
-import { DetailCard } from "@/components/page/detail-card";
+import { DetailList } from "@/components/page/detail-list";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
@@ -73,55 +73,53 @@ export function InspectionDetail({
         status={<Badge>{record.outcome === "PASS" ? "Pass" : "Fail"}</Badge>}
         title="Inspection record"
       />
-      <Card>
-        <CardContent className="space-y-5 pt-6">
-          <DetailCard>
-            <div>
-              <dt>Inspection date</dt>
-              <dd>
-                <time dateTime={record.inspectedOn}>{record.inspectedOn}</time>
-              </dd>
-            </div>
-            <div>
-              <dt>Recorded location</dt>
-              <dd>{record.locationPath}</dd>
-            </div>
-            <div>
-              <dt>Inspector</dt>
-              <dd>{record.recordedByName ?? "Inspector unavailable"}</dd>
-            </div>
-            <div>
-              <dt>Recorded at</dt>
-              <dd>
-                <time dateTime={record.createdAt}>
-                  {new Intl.DateTimeFormat("en-SG", {
-                    timeZone: "Asia/Singapore",
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(record.createdAt))}{" "}
-                  (Singapore)
-                </time>
-              </dd>
-            </div>
-          </DetailCard>
-          <div>
-            <h2 className="font-semibold">Notes</h2>
-            <p className="whitespace-pre-wrap">
-              {record.notes ?? "No notes recorded."}
-            </p>
-          </div>
-          <div className="space-y-3">
-            <h2 className="font-semibold">Follow-up</h2>
-            <InspectionFollowUp
-              active={!!active}
-              canCreate={access.canCreateWorkOrders}
-              estateId={estateId}
-              pending={asset.isPending}
-              record={record}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <DetailList>
+        <div>
+          <dt>Inspection date</dt>
+          <dd>
+            <time dateTime={record.inspectedOn}>{record.inspectedOn}</time>
+          </dd>
+        </div>
+        <div>
+          <dt>Recorded location</dt>
+          <dd>{record.locationPath}</dd>
+        </div>
+        <div>
+          <dt>Inspector</dt>
+          <dd>{record.recordedByName ?? "Inspector unavailable"}</dd>
+        </div>
+        <div>
+          <dt>Recorded at</dt>
+          <dd>
+            <time dateTime={record.createdAt}>
+              {new Intl.DateTimeFormat("en-SG", {
+                timeZone: "Asia/Singapore",
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(new Date(record.createdAt))}{" "}
+              (Singapore)
+            </time>
+          </dd>
+        </div>
+      </DetailList>
+      <Separator />
+      <div>
+        <h2 className="font-semibold">Notes</h2>
+        <p className="whitespace-pre-wrap">
+          {record.notes ?? "No notes recorded."}
+        </p>
+      </div>
+      <div className="space-y-3">
+        <h2 className="font-semibold">Follow-up</h2>
+        <InspectionFollowUp
+          active={!!active}
+          canCreate={access.canCreateWorkOrders}
+          estateId={estateId}
+          pending={asset.isPending}
+          record={record}
+        />
+      </div>
+      <Separator />
       <section aria-label="Inspection photos" className="space-y-4">
         <h2 className="text-xl font-semibold">Photos</h2>
         {record.photos.length === 0 ? (

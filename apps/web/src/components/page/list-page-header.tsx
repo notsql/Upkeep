@@ -22,6 +22,7 @@ export function ListPageHeader({
   filters,
   create,
   actions,
+  inlineActions,
 }: {
   icon?: LucideIcon;
   title: string;
@@ -29,6 +30,8 @@ export function ListPageHeader({
   filters?: FilterToggleProps;
   create?: CreateButtonProps;
   actions?: ReactNode;
+  /** Keep the actions on the title's row (icon-only actions only). */
+  inlineActions?: boolean;
 }) {
   const hasActions = Boolean(filters || create || actions);
   return (
@@ -44,6 +47,7 @@ export function ListPageHeader({
       }
       description={description}
       icon={icon}
+      inlineActions={inlineActions}
       title={title}
     />
   );

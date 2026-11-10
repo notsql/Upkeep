@@ -1,7 +1,7 @@
 import { Button } from "@proj/ui/components/button";
 import { Archive, ScrollText } from "lucide-react";
 import { useCallback, useState } from "react";
-import { SectionCard } from "@/components/page/section-card";
+import { PageSection } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -23,7 +23,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
   const openRestoration = useCallback(() => setMode("restore"), []);
   const openCorrection = useCallback(() => setMode("edit"), []);
   return (
-    <SectionCard icon={ScrollText} title="Lifecycle history">
+    <PageSection icon={ScrollText} title="Lifecycle history">
       <div className="space-y-3">
         {asset.deactivatedAt ? (
           <>
@@ -95,6 +95,6 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
           <Restoration asset={asset} onClose={closeDialog} />
         ) : null}
       </div>
-    </SectionCard>
+    </PageSection>
   );
 }

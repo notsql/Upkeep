@@ -1,27 +1,38 @@
-import { BellRing } from "lucide-react";
-import { PageHeader } from "@/components/page/page-header";
-import { PageLayout } from "@/components/page/page-layout";
+import { Building2 } from "lucide-react";
+import { FormPage } from "@/components/page/form-page";
+import {
+  EstateSettingsViews,
+  SETTINGS_TITLE,
+} from "@/components/settings/estate-settings-views";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { useAppAccess } from "@/lib/access";
 import { useEstate } from "@/lib/estates";
 import { useNotificationSettings } from "@/lib/notifications";
 import { NotificationSettingsForm } from "@/routes/_auth/estates/$estateId/notification-settings/-components/notification-settings-page/notification-settings-form";
 
-/** An estate's notification thresholds (spec notifications.md, "Notification settings"). */
+/** An estate's notification thresholds (spec notifications.md, "Notification settings"), the Notifications tab of Estate settings. */
 export function NotificationSettingsPage({ estateId }: { estateId: string }) {
   const settings = useNotificationSettings(estateId);
   const estate = useEstate(estateId);
+  const access = useAppAccess();
   const inactive = Boolean(estate.data?.deactivatedAt);
 
   return (
-    <PageLayout>
-      <PageHeader
-        breadcrumbs={[{ label: estate.data?.name ?? "Estate" }]}
-        description="When we warn this estate's managers about unusual readings, services and expected repairs"
-        icon={BellRing}
-        title="Notification settings"
+    <FormPage
+      breadcrumbs={[]}
+      description="When we warn this estate's managers about unusual readings, services and expected repairs"
+      icon={Building2}
+      title={SETTINGS_TITLE}
+    >
+      <EstateSettingsViews
+        estateId={estateId}
+        owned={estate.data?.owned}
+        permission={access.data?.estates.find(
+          (assignment) => assignment.estateId === estateId
+        )}
       />
-      <div className="mt-6 max-w-xl">
+      <div className="max-w-xl">
         {settings.error ? (
           <ErrorState
             message={settings.error.message}
@@ -39,6 +50,6 @@ export function NotificationSettingsPage({ estateId }: { estateId: string }) {
           <LoadingState label="Loading notification settings" variant="list" />
         )}
       </div>
-    </PageLayout>
+    </FormPage>
   );
 }

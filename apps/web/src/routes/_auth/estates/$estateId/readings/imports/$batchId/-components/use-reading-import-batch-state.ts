@@ -9,14 +9,17 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useAppAccess } from "@/lib/access";
+import { asPagedList } from "@/lib/infinite-list";
 import {
   downloadImportReport,
   type ReadingImportOutcome,
   readingImportMessage,
   useReadingImport,
+  useReadingImportRowFeed,
   useReadingImportRows,
   useRevertReadingImport,
 } from "@/lib/reading-imports";
+import { useMobile } from "@/lib/use-mobile";
 
 export function useReadingImportBatchState({
   estateId,
@@ -38,7 +41,18 @@ export function useReadingImportBatchState({
   const detail = useReadingImport(estateId, batchId, allowed);
   const [page, setPage] = useState(0);
   const [outcome, setOutcome] = useState<ReadingImportOutcome>();
-  const rows = useReadingImportRows(estateId, batchId, page, outcome, allowed);
+  const mobile = useMobile();
+  const paged = useReadingImportRows(
+    estateId,
+    batchId,
+    page,
+    outcome,
+    allowed && !mobile
+  );
+  const feed = asPagedList(
+    useReadingImportRowFeed(estateId, batchId, outcome, allowed && mobile)
+  );
+  const rows = mobile ? feed : paged;
   const rollback = useRevertReadingImport(estateId, batchId);
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");

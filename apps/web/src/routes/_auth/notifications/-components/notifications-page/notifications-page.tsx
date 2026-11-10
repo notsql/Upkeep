@@ -7,20 +7,27 @@ import { PageLayout } from "@/components/page/page-layout";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
+import { asPagedList } from "@/lib/infinite-list";
 import {
   NOTIFICATION_PAGE_SIZE,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
+  useNotificationFeed,
   useNotifications,
   useUnreadNotificationCount,
 } from "@/lib/notifications";
+import { useMobile } from "@/lib/use-mobile";
 import { NotificationItem } from "@/routes/_auth/notifications/-components/notifications-page/notification-item";
 
 /** The caller's notifications across the estates they manage (ID-100). */
 export function NotificationsPage() {
   const [page, setPage] = useState(0);
-  const notifications = useNotifications(page);
+  const mobile = useMobile();
+  const paged = useNotifications(page, !mobile);
+  const feed = asPagedList(useNotificationFeed(mobile));
+  const notifications = mobile ? feed : paged;
   const count = useUnreadNotificationCount(true);
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
@@ -65,7 +72,10 @@ export function NotificationsPage() {
           onOpen={open}
           onRetry={notifications.refetch}
         />
-        {data && data.total > NOTIFICATION_PAGE_SIZE ? (
+        {mobile && data && data.total > NOTIFICATION_PAGE_SIZE ? (
+          <LoadMore {...feed.more} />
+        ) : null}
+        {!mobile && data && data.total > NOTIFICATION_PAGE_SIZE ? (
           <Pagination
             canNext={page + 1 < pages}
             canPrevious={page > 0}
@@ -101,6 +111,7 @@ function NotificationList({
     return (
       <EmptyState
         description="You'll be told here when an asset needs attention."
+        fill
         icon={Bell}
         title="No notifications yet"
       />

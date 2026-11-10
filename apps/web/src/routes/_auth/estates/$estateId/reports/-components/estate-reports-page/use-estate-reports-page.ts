@@ -3,9 +3,12 @@ import { useFilterPanel } from "@/components/filters/filter-bar";
 import {
   type EstateReportFilters,
   useEstateReportAccess,
+  useEstateReportFeed,
   useEstateReportList,
   useEstateReportLocations,
 } from "@/lib/estate-reports";
+import { asPagedList } from "@/lib/infinite-list";
+import { useMobile } from "@/lib/use-mobile";
 import type { EstateReportsSearch } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-search";
 import { countReportFilters } from "@/routes/_auth/estates/$estateId/reports/-components/report-filters/report-filters";
 
@@ -32,7 +35,10 @@ export function useEstateReportsPage(
   const filtered = activeCount > 0;
   const panel = useFilterPanel(activeCount);
   const access = useEstateReportAccess(estateId);
-  const reports = useEstateReportList(estateId, filters, cursor);
+  const mobile = useMobile();
+  const page = useEstateReportList(estateId, filters, cursor, !mobile);
+  const feed = asPagedList(useEstateReportFeed(estateId, filters, mobile));
+  const reports = mobile ? feed : page;
   const locations = useEstateReportLocations(estateId);
   const filter = useCallback(
     (values: EstateReportFilters) => onSearch(values),

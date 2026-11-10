@@ -73,7 +73,8 @@ never the only signal.
 
 ## `AssetServiceIntervalCard` (`assets/$assetId/-components/asset-maintenance/asset-service-interval-card.tsx`)
 
-A `section` labelled by its "Service interval" heading, in a `Card`:
+A `PageSection` "Service interval" (`CalendarClock`, description "Manufacturer's recommended
+interval"; no card), after a `Separator` below the Maintenance section:
 
 - the effective interval as the headline (`formatInterval(effective)` in large semibold text, a
   `<p>`), next to a source `Badge`: `warning` **Override** (`ASSET`, via `badgeVariantFor("warning")`), `secondary` **From
@@ -94,5 +95,5 @@ A `section` labelled by its "Service interval" heading, in a `Card`:
 
 Loading shows "Loading service interval…"; a load error shows a destructive `Alert`.
 
-shadcn: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `Badge`, `Button`,
+shadcn: `Badge`, `Button`,
 `Alert`, `AlertDescription`.

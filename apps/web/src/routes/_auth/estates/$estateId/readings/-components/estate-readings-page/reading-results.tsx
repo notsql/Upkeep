@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
 import { Activity } from "lucide-react";
@@ -6,8 +7,9 @@ import { PossiblyWrongNote } from "@/components/readings/possibly-wrong-note";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
+import type { PagedList } from "@/lib/infinite-list";
 import type { ReadingSearch } from "@/lib/reading-filters";
-import type { useEstateReadings } from "@/lib/readings";
 import { ReadingPagination } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-pagination";
 import { ReadingTable } from "@/routes/_auth/estates/$estateId/readings/-components/estate-readings-page/reading-table";
 
@@ -46,7 +48,7 @@ export function ReadingResults({
   filters,
   onFiltersChange,
 }: {
-  readings: ReturnType<typeof useEstateReadings>;
+  readings: PagedList<components["schemas"]["EstateReadingPage"]>;
   validationError?: string;
   assetsPending: boolean;
   assetTotal?: number;
@@ -120,13 +122,17 @@ export function ReadingResults({
       {readings.isFetching ? <p role="status">Refreshing readings…</p> : null}
       <PossiblyWrongNote readings={data.items} />
       <ReadingTable items={data.items} refreshing={readings.isFetching} />
-      <ReadingPagination
-        filters={filters}
-        onChange={onFiltersChange}
-        placeholder={readings.isPlaceholderData}
-        size={data.size}
-        total={data.totalItems}
-      />
+      {readings.more ? (
+        <LoadMore {...readings.more} />
+      ) : (
+        <ReadingPagination
+          filters={filters}
+          onChange={onFiltersChange}
+          placeholder={readings.isPlaceholderData}
+          size={data.size}
+          total={data.totalItems}
+        />
+      )}
     </>
   );
 }

@@ -48,7 +48,13 @@ or description; "1 active" and the bar's ghost Clear filters). Then
 LoadingState (`table`) -> `ErrorState` "Retry roles" -> EmptyState "No custom
 roles yet" ("Use Create to add the first custom role" when the user can
 create; no action) -> "No matching roles" EmptyState (outline Clear filters) or Table "Custom roles"
-(Role, Permissions, Actions). Inactive estate: Alert "Estate inactive · roles
+(Role, Permissions, Actions). Below 768px (`useMobile`) the table becomes a
+flat `ListRows` "Custom roles" of `ListRow`s (`ShieldCheck` tile; design-system
+"List rows"): title = role name, one truncated muted line "N permissions · A, B, …"
+(full list in its `title` tooltip), an optional small
+note (own role read-only / reassign before deleting), and a trailing "Actions
+for {role}" `DropdownMenu` with Edit (link to the edit page) and Delete (same
+confirmation; disabled when blocked). Inactive estate: Alert "Estate inactive · roles
 read-only".
 
 New-role page: `FormPageHeader` "Create role" (description "Name the role and

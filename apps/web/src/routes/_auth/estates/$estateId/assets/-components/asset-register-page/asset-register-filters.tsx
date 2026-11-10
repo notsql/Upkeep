@@ -18,7 +18,11 @@ export function AssetRegisterFilters({
   search,
 }: {
   activeCount: number;
-  barProps: { id: string; open: boolean };
+  barProps: {
+    id: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  };
   filters: AssetFilters;
   locationOptions: Record<string, string>;
   mobile: boolean;

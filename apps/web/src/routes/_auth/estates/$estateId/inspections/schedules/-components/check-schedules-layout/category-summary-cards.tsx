@@ -33,7 +33,7 @@ export function CategorySummaryCards({
   const missing = categories.filter((category) => !category.serviceInterval);
   const set = categories.length - missing.length;
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       <SummaryCard
         icon={EyeOff}
         title="Regular checks on"

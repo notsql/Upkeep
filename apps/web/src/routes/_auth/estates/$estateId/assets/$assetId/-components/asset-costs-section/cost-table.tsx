@@ -1,4 +1,13 @@
 import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemSeparator,
+  ItemTitle,
+} from "@proj/ui/components/item";
+import {
   Table,
   TableBody,
   TableCell,
@@ -8,6 +17,8 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { Fragment } from "react";
+import { useMobile } from "@/lib/use-mobile";
 
 export interface CostRow {
   at: string;
@@ -47,6 +58,82 @@ function hasUnknownCost(row: CostRow): boolean {
   return row.labour === null || row.parts === null || row.other === null;
 }
 
+function rowKey(row: CostRow): string {
+  return `${row.workOrder ? "work" : "manual"}-${row.id}`;
+}
+
+function breakdown(row: CostRow): string {
+  const parts = [
+    `Labour ${row.labour ?? "unknown"}`,
+    `Parts ${row.parts ?? "unknown"}`,
+  ];
+  if (!row.workOrder) {
+    parts.push(`Other ${row.other ?? "unknown"}`);
+  }
+  return parts.join(" · ");
+}
+
+function CostItemBody({ row }: { row: CostRow }) {
+  return (
+    <>
+      <ItemContent className="min-w-0">
+        <ItemTitle className="line-clamp-none [overflow-wrap:anywhere]">
+          {row.label}
+        </ItemTitle>
+        <ItemDescription className="text-xs">{row.date}</ItemDescription>
+        <ItemDescription className="text-xs">{breakdown(row)}</ItemDescription>
+      </ItemContent>
+      <ItemActions className="flex-col items-end gap-0">
+        <span className="font-semibold tabular-nums">
+          {row.total ?? "Unknown"}
+        </span>
+        <span className="text-muted-foreground text-xs">SGD</span>
+      </ItemActions>
+    </>
+  );
+}
+
+function CostList({
+  canView,
+  estateId,
+  rows,
+}: {
+  canView: boolean;
+  estateId: string;
+  rows: CostRow[];
+}) {
+  return (
+    <ItemGroup aria-label="Cost entries" className="gap-0">
+      {rows.map((row, index) => (
+        <Fragment key={rowKey(row)}>
+          {index > 0 ? <ItemSeparator className="my-0" /> : null}
+          {/* biome-ignore lint/a11y/useSemanticElements: ItemGroup is a div with role="list", so a bare li would be invalid. */}
+          <div role="listitem">
+            {row.workOrder && canView ? (
+              <Item
+                className="flex-nowrap items-start"
+                render={
+                  <Link
+                    params={{ estateId, workOrderId: row.workOrder.id }}
+                    to="/estates/$estateId/work-orders/$workOrderId"
+                  />
+                }
+                size="sm"
+              >
+                <CostItemBody row={row} />
+              </Item>
+            ) : (
+              <Item className="flex-nowrap items-start" size="sm">
+                <CostItemBody row={row} />
+              </Item>
+            )}
+          </div>
+        </Fragment>
+      ))}
+    </ItemGroup>
+  );
+}
+
 export function CostTable({
   canView,
   estateId,
@@ -56,6 +143,7 @@ export function CostTable({
   estateId: string;
   rows: CostRow[];
 }) {
+  const mobile = useMobile();
   const unknown = rows.filter(hasUnknownCost).length;
   const labour = sum(rows.map((row) => row.labour));
   const parts = sum(rows.map((row) => row.parts));
@@ -81,55 +169,59 @@ export function CostTable({
         </dl>
         <p className="text-muted-foreground mt-1 text-xs">Amounts in SGD</p>
       </section>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Date</TableHead>
-            <TableHead>Entry</TableHead>
-            <TableHead>Labour (SGD)</TableHead>
-            <TableHead>Parts (SGD)</TableHead>
-            <TableHead>Other (SGD)</TableHead>
-            <TableHead>Total (SGD)</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={`${row.workOrder ? "work" : "manual"}-${row.id}`}>
-              <TableCell>{row.date}</TableCell>
-              <TableCell>
-                {row.workOrder && canView ? (
-                  <Link
-                    className="text-primary underline underline-offset-4"
-                    params={{ estateId, workOrderId: row.workOrder.id }}
-                    to="/estates/$estateId/work-orders/$workOrderId"
-                  >
-                    {row.label}
-                  </Link>
-                ) : (
-                  row.label
-                )}
-              </TableCell>
-              <TableCell>{row.labour ?? "Unknown"}</TableCell>
-              <TableCell>{row.parts ?? "Unknown"}</TableCell>
-              <TableCell>
-                {row.workOrder ? "Not applicable" : (row.other ?? "Unknown")}
-              </TableCell>
-              <TableCell>{row.total ?? "Unknown"}</TableCell>
+      {mobile ? (
+        <CostList canView={canView} estateId={estateId} rows={rows} />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Entry</TableHead>
+              <TableHead>Labour (SGD)</TableHead>
+              <TableHead>Parts (SGD)</TableHead>
+              <TableHead>Other (SGD)</TableHead>
+              <TableHead>Total (SGD)</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableHead colSpan={2} scope="row">
-              {unknown ? "Known costs" : "Total"}
-            </TableHead>
-            <TableCell>{formatCents(labour)}</TableCell>
-            <TableCell>{formatCents(parts)}</TableCell>
-            <TableCell>{formatCents(other)}</TableCell>
-            <TableCell>{formatCents(labour + parts + other)}</TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => (
+              <TableRow key={rowKey(row)}>
+                <TableCell>{row.date}</TableCell>
+                <TableCell>
+                  {row.workOrder && canView ? (
+                    <Link
+                      className="text-primary underline underline-offset-4"
+                      params={{ estateId, workOrderId: row.workOrder.id }}
+                      to="/estates/$estateId/work-orders/$workOrderId"
+                    >
+                      {row.label}
+                    </Link>
+                  ) : (
+                    row.label
+                  )}
+                </TableCell>
+                <TableCell>{row.labour ?? "Unknown"}</TableCell>
+                <TableCell>{row.parts ?? "Unknown"}</TableCell>
+                <TableCell>
+                  {row.workOrder ? "Not applicable" : (row.other ?? "Unknown")}
+                </TableCell>
+                <TableCell>{row.total ?? "Unknown"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableHead colSpan={2} scope="row">
+                {unknown ? "Known costs" : "Total"}
+              </TableHead>
+              <TableCell>{formatCents(labour)}</TableCell>
+              <TableCell>{formatCents(parts)}</TableCell>
+              <TableCell>{formatCents(other)}</TableCell>
+              <TableCell>{formatCents(labour + parts + other)}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      )}
       {unknown ? (
         <p className="text-muted-foreground mt-2">
           {unknown === 1 ? "1 entry has" : `${unknown} entries have`} unknown

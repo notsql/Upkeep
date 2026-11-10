@@ -1,14 +1,18 @@
 import { ClipboardList } from "lucide-react";
 import { useCallback, useState } from "react";
+import { ListRows } from "@/components/list/list-row";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import type { CreateButtonProps } from "@/components/page/page-actions";
 import { PageLayout } from "@/components/page/page-layout";
-import { ReportCard } from "@/components/reports/report-card";
+import { ReportRow } from "@/components/reports/report-row";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
-import { useReportList } from "@/lib/reports";
+import { asPagedList } from "@/lib/infinite-list";
+import { useReportFeed, useReportList } from "@/lib/reports";
+import { useMobile } from "@/lib/use-mobile";
 
 export interface HistoryProps {
   estateId?: string;
@@ -17,7 +21,10 @@ export interface HistoryProps {
 export function ReportHistory({ estateId }: HistoryProps) {
   const [cursor, setCursor] = useState<string>();
   const [previous, setPrevious] = useState<(string | undefined)[]>([]);
-  const reports = useReportList(cursor, estateId);
+  const mobile = useMobile();
+  const page = useReportList(cursor, estateId, !mobile);
+  const feed = asPagedList(useReportFeed(estateId, mobile));
+  const reports = mobile ? feed : page;
   const retry = useCallback(() => reports.refetch(), [reports.refetch]);
   const goPrevious = useCallback(() => {
     setCursor(previous.at(-1));
@@ -52,34 +59,41 @@ export function ReportHistory({ estateId }: HistoryProps) {
       {reports.data && (reports.data.items?.length ?? 0) === 0 ? (
         <EmptyState
           description="Use Create to report the first fault"
+          fill
           icon={ClipboardList}
           title={estateId ? "No reports for this estate yet" : "No reports yet"}
         />
       ) : null}
-      <div className="grid gap-4">
-        {reports.data?.items?.map((report) => (
-          <ReportCard
-            key={report.id}
-            report={report}
-            title={
-              <a
-                href={`/reports/${report.id}${estateId ? `?estateId=${encodeURIComponent(estateId)}` : ""}`}
-              >
-                {report.title}
-              </a>
-            }
-          />
-        ))}
-      </div>
+      {reports.data?.items?.length ? (
+        <ListRows label="Reports">
+          {reports.data.items.map((report) => (
+            <ReportRow
+              key={report.id}
+              report={report}
+              title={
+                <a
+                  href={`/reports/${report.id}${estateId ? `?estateId=${encodeURIComponent(estateId)}` : ""}`}
+                >
+                  {report.title}
+                </a>
+              }
+            />
+          ))}
+        </ListRows>
+      ) : null}
       {reports.data?.items?.length ? (
         <div className="mt-4">
-          <Pagination
-            canNext={Boolean(reports.data.nextCursor)}
-            canPrevious={previous.length > 0}
-            label="Report pages"
-            onNext={goNext}
-            onPrevious={goPrevious}
-          />
+          {mobile ? (
+            <LoadMore {...feed.more} />
+          ) : (
+            <Pagination
+              canNext={Boolean(reports.data.nextCursor)}
+              canPrevious={previous.length > 0}
+              label="Report pages"
+              onNext={goNext}
+              onPrevious={goPrevious}
+            />
+          )}
         </div>
       ) : null}
     </PageLayout>

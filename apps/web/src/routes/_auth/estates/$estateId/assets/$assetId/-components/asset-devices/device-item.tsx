@@ -3,16 +3,24 @@ import { Button } from "@proj/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@proj/ui/components/dropdown-menu";
-import { cn } from "@proj/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { KeyRound, MoreHorizontal, PowerOff, Replace } from "lucide-react";
+import {
+  KeyRound,
+  MoreHorizontal,
+  PowerOff,
+  RadioTower,
+  Replace,
+} from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DeviceStatusBadge } from "@/components/badges/device-status-badge";
+import { ListRow } from "@/components/list/list-row";
 import {
   type Device,
   deviceMetrics,
@@ -20,7 +28,6 @@ import {
   useDeactivateDevice,
 } from "@/lib/devices";
 import { formatDateTime, formatRelative } from "@/lib/format";
-import { deviceStatusTone, statusDotClassName } from "@/lib/status-tone";
 import { DeactivateDeviceDialog } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices/deactivate-device-dialog";
 import {
   DeviceCredentialDialogs,
@@ -55,14 +62,21 @@ function DeviceActions({
       >
         <MoreHorizontal aria-hidden="true" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <DropdownMenuItem
-          disabled={credential.pending}
-          onClick={credential.start}
-        >
-          <KeyRound aria-hidden="true" />
-          {credential.actionLabel}
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal">
+            {device.credentialIssuedAt
+              ? `Key created ${formatDateTime(device.credentialIssuedAt)}`
+              : "No connection key yet"}
+          </DropdownMenuLabel>
+          <DropdownMenuItem
+            disabled={credential.pending}
+            onClick={credential.start}
+          >
+            <KeyRound aria-hidden="true" />
+            {credential.actionLabel}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
         <DropdownMenuItem
           render={
             <Link
@@ -84,9 +98,22 @@ function DeviceActions({
   );
 }
 
+const MEASURES_SHOWN = 3;
+
+function measuresSummary(device: Device): string {
+  const names = device.metrics.map(({ metric }) =>
+    deviceMetrics[metric].name.toLowerCase()
+  );
+  const shown = names.slice(0, MEASURES_SHOWN).join(", ");
+  const extra = names.length - MEASURES_SHOWN;
+  return extra > 0 ? `Measures ${shown} +${extra} more` : `Measures ${shown}`;
+}
+
 /**
- * One device as a row: status dot, name and meta, metric chips, status and
- * last seen, and (while it and the asset are active) a "more" menu.
+ * One device as a calm row: name, one status badge and (while it and the
+ * asset are active) a "more" menu; then one muted meta line, a short
+ * measures summary, and a single actionable warning when it has never
+ * reported. Connection-key details live in the menu.
  * Deactivated devices keep their details but lose every action (ID-45).
  */
 export function DeviceItem({
@@ -127,89 +154,68 @@ export function DeviceItem({
     ? identifiers.get(device.replacedByDeviceId)
     : undefined;
   return (
-    <li className="grid gap-2 py-4 first:pt-0 last:pb-0">
-      <div className="flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className={cn(
-            "mt-2 size-2 shrink-0 rounded-full",
-            statusDotClassName[deviceStatusTone[status]]
-          )}
-        />
-        <div className="grid min-w-0 flex-1 gap-1">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h3 className="font-medium break-all">{device.identifier}</h3>
-            {device.deactivatedAt ? (
-              <Badge className="whitespace-normal" variant="secondary">
-                {`Turned off ${formatDateTime(device.deactivatedAt)}`}
-              </Badge>
-            ) : (
-              <DeviceStatusBadge status={device.status} />
-            )}
-            {device.lastSeenAt ? (
-              <span
-                className="text-muted-foreground text-xs"
-                title={formatDateTime(device.lastSeenAt)}
-              >
+    <ListRow
+      icon={RadioTower}
+      meta={
+        <>
+          <span>{device.model}</span>
+          {" · "}
+          <span>{locationPath ?? "Location unavailable"}</span>
+          {" · "}
+          <span>{formatInterval(device.reportingIntervalSeconds)}</span>
+          {device.lastSeenAt ? (
+            <>
+              {" · "}
+              <span title={formatDateTime(device.lastSeenAt)}>
                 {`Last seen ${formatRelative(device.lastSeenAt, new Date())}`}
               </span>
-            ) : null}
-          </div>
-          <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 text-sm">
-            <span className="break-words">{device.model}</span>
-            <span aria-hidden="true">·</span>
-            <span>{locationPath ?? "Location unavailable"}</span>
-            <span aria-hidden="true">·</span>
-            <span>{`Reports ${formatInterval(device.reportingIntervalSeconds).toLowerCase()}`}</span>
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {device.metrics.map(({ metric, unit }) => (
-              <Badge key={metric} variant="outline">
-                {`${deviceMetrics[metric].name} (${unit})`}
-              </Badge>
-            ))}
-          </div>
-          {status === "AWAITING_FIRST_READING" ? (
-            <div
-              aria-label="Sensor isn't sending readings yet"
-              className="text-sm"
-              role="note"
-            >
-              <p className="font-medium">Sensor isn't sending readings yet</p>
-              <p className="text-muted-foreground">
-                {`Added ${formatRelative(device.createdAt, new Date())}, nothing received. Make sure it's switched on and set up with its connection key.`}
-              </p>
-            </div>
+            </>
           ) : null}
-          {replaces ? (
-            <p className="text-muted-foreground text-sm">Replaces {replaces}</p>
-          ) : null}
-          {replacedBy ? (
-            <p className="text-muted-foreground text-sm">
-              Replaced by {replacedBy}
-            </p>
-          ) : null}
-          {active ? (
-            <p className="text-muted-foreground text-xs">
-              {device.credentialIssuedAt
-                ? `Connection key created ${formatDateTime(device.credentialIssuedAt)}`
-                : "No connection key"}
-            </p>
-          ) : null}
+        </>
+      }
+      title={<h3 className="break-all">{device.identifier}</h3>}
+      trailing={
+        <>
+          {device.deactivatedAt ? (
+            <Badge className="whitespace-normal" variant="secondary">
+              {`Turned off ${formatDateTime(device.deactivatedAt)}`}
+            </Badge>
+          ) : (
+            <DeviceStatusBadge status={device.status} />
+          )}
           {actionable ? (
-            <DeviceCredentialDialogs credential={credential} device={device} />
+            <DeviceActions
+              assetId={assetId}
+              credential={credential}
+              device={device}
+              estateId={estateId}
+              onDeactivate={openConfirmation}
+            />
           ) : null}
-        </div>
-        {actionable ? (
-          <DeviceActions
-            assetId={assetId}
-            credential={credential}
-            device={device}
-            estateId={estateId}
-            onDeactivate={openConfirmation}
-          />
-        ) : null}
-      </div>
+        </>
+      }
+    >
+      {device.metrics.length > 0 ? (
+        <p className="text-muted-foreground text-sm">
+          {measuresSummary(device)}
+        </p>
+      ) : null}
+      {status === "AWAITING_FIRST_READING" ? (
+        <p className="text-warning text-sm">
+          {`Nothing received since it was added ${formatRelative(device.createdAt, new Date())}. Check it's switched on and has its connection key.`}
+        </p>
+      ) : null}
+      {replaces ? (
+        <p className="text-muted-foreground text-sm">Replaces {replaces}</p>
+      ) : null}
+      {replacedBy ? (
+        <p className="text-muted-foreground text-sm">
+          Replaced by {replacedBy}
+        </p>
+      ) : null}
+      {actionable ? (
+        <DeviceCredentialDialogs credential={credential} device={device} />
+      ) : null}
       {confirming ? (
         <DeactivateDeviceDialog
           identifier={device.identifier}
@@ -217,6 +223,6 @@ export function DeviceItem({
           onConfirm={confirm}
         />
       ) : null}
-    </li>
+    </ListRow>
   );
 }

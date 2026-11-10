@@ -1,3 +1,4 @@
+import { useIsMobile } from "@proj/ui/hooks/use-mobile";
 import type { Asset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
 import { formatDate } from "@/lib/format";
@@ -42,12 +43,32 @@ function summaryItems(asset: Asset, category: string): SummaryItem[] {
   return items.filter((item): item is SummaryItem => item !== null);
 }
 
-/** One muted line of the asset's recorded details; unrecorded ones are left out. */
+/**
+ * The asset's recorded details; unrecorded ones are left out. One muted,
+ * dot-separated line on desktop; on mobile a two-column grid where every
+ * item carries its small label, so wrapping never strands a separator.
+ */
 export function AssetSummary({ asset }: { asset: Asset }) {
+  const mobile = useIsMobile();
   const categories = useAssetCategories();
   const category =
     categories.data?.find((item) => item.code === asset.category)?.label ??
     asset.category;
+  if (mobile) {
+    return (
+      <ul
+        aria-label="Asset details"
+        className="grid w-full grid-cols-2 gap-x-4 gap-y-2 text-sm"
+      >
+        {summaryItems(asset, category).map((item) => (
+          <li className="flex min-w-0 flex-col" key={item.label}>
+            <span className="text-muted-foreground text-xs">{item.label}</span>
+            <span className="text-foreground wrap-anywhere">{item.value}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul
       aria-label="Asset details"

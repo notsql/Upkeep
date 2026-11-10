@@ -36,8 +36,13 @@ Under `apps/web/src/routes/_auth/estates/$estateId/`:
 - `documents/-components/document-asset-dialog/use-document-asset-dialog.ts` owns the reviewed draft,
   in-flight guard and explicit conflict/network recovery.
 - `assets/$assetId/index.tsx` renders `asset-details-page.tsx` and its route-local
-  `-components/asset-documents-section/asset-documents-section.tsx`. The Documents card lists filename,
+  `-components/asset-documents-section/asset-documents-section.tsx`. The Documents `PageSection` (no card) lists filename,
   type, size, upload date and Download, with Unlink for current asset editors.
+  Below 768px (`useMobile`) the table becomes a `Documents` list
+  (`asset-document-item.tsx`): shadcn `Item size="sm"` rows divided by
+  `ItemSeparator`, title = filename, muted line = Type · Size · Uploaded,
+  trailing = an "Actions for <filename>" `DropdownMenu` (Download, Unlink) for
+  editors, or the single "Download <filename>" button otherwise.
   It loads the current association before showing unlink confirmation and pins
   that reviewed version. Attachment pagination uses opaque cursors.
 

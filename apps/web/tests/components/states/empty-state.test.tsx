@@ -40,3 +40,18 @@ it("draws an optional icon decoratively, beside the title", () => {
   expect(icon?.getAttribute("aria-hidden")).toBe("true");
   expect(status.textContent).toBe("No reports yet");
 });
+
+it("stays a bordered panel by default", () => {
+  renderWithProviders(<EmptyState title="Nothing" />);
+  const status = screen.getByRole("status");
+  expect(status.dataset.fill).toBeUndefined();
+  expect(status.className).not.toContain("max-md:min-h-");
+});
+
+it("fills the remaining mobile screen when it is the page's main content", () => {
+  renderWithProviders(<EmptyState fill title="No work orders yet" />);
+  const status = screen.getByRole("status");
+  expect(status.dataset.fill).toBe("true");
+  expect(status.className).toContain("max-md:border-0");
+  expect(status.className).toContain("max-md:min-h-");
+});

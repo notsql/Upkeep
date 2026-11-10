@@ -6,8 +6,8 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import type { AssetSort } from "@/lib/asset-sorting";
 import type { AssetFilters } from "@/lib/assets";
-import { AssetRegisterCards } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-register-cards";
 import { AssetRegisterFilters } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-register-filters";
+import { AssetRegisterList } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-register-list";
 import { AssetRegisterTable } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-register-table";
 import { AssetSortControls } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/asset-sort-controls";
 import { AssetsEmpty } from "@/routes/_auth/estates/$estateId/assets/-components/asset-register-page/assets-empty";
@@ -130,7 +130,7 @@ export function AssetRegisterPage({
       assets.data.length > 0 &&
       !locations.isPending &&
       mobile ? (
-        <AssetRegisterCards
+        <AssetRegisterList
           assets={sortedAssets}
           categories={categories}
           estateId={estateId}

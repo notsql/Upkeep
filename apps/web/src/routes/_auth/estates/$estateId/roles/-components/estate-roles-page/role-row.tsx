@@ -1,10 +1,17 @@
 import type { components } from "@proj/api/schema";
 import { Badge } from "@proj/ui/components/badge";
 import { Button, buttonVariants } from "@proj/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@proj/ui/components/dropdown-menu";
 import { TableCell, TableRow } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
-import { Pencil } from "lucide-react";
+import { MoreHorizontal, Pencil, ShieldCheck } from "lucide-react";
 import { useCallback } from "react";
+import { ListRow } from "@/components/list/list-row";
 import type {
   EstatePermission,
   EstateRoleDefinition,
@@ -92,5 +99,93 @@ export function RoleRow({
         </div>
       </TableCell>
     </TableRow>
+  );
+}
+
+function roleNote(
+  role: EstateRoleDefinition,
+  estate: components["schemas"]["EstateAccessResponse"]
+): string | null {
+  if (estate.customRoleId === role.id) {
+    return "Own role · read-only";
+  }
+  if (estate.canDeleteRoles && !role.canDelete) {
+    return "Reassign or remove the members holding this role before deleting it.";
+  }
+  return null;
+}
+
+/** The phone layout of a role: name, permissions summary and a menu of actions. */
+export function RoleItem({
+  role,
+  estate,
+  catalogue,
+  onDelete,
+}: {
+  role: EstateRoleDefinition;
+  estate: components["schemas"]["EstateAccessResponse"];
+  catalogue: EstatePermission[];
+  onDelete: (role: EstateRoleDefinition) => void;
+}) {
+  const remove = useCallback(() => onDelete(role), [onDelete, role]);
+  const labels = role.permissions.map(
+    (code) => catalogue.find((entry) => entry.code === code)?.label ?? code
+  );
+  const canEdit = estate.canEditRoles && role.canEdit;
+  const showDelete = estate.role === "MANAGER";
+  const deleteDisabled = !(estate.canDeleteRoles && role.canDelete);
+  const note = roleNote(role, estate);
+  const count = `${labels.length} ${labels.length === 1 ? "permission" : "permissions"}`;
+  const summary = labels.length ? `${count} · ${labels.join(", ")}` : count;
+  return (
+    <ListRow
+      icon={ShieldCheck}
+      meta={<span title={labels.join(", ")}>{summary}</span>}
+      title={role.name}
+      trailing={
+        canEdit || showDelete ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={`Actions for ${role.name}`}
+                  size="icon"
+                  variant="ghost"
+                />
+              }
+            >
+              <MoreHorizontal aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {canEdit ? (
+                <DropdownMenuItem
+                  aria-label={`Edit ${role.name}`}
+                  render={
+                    <Link
+                      params={{ estateId: role.estateId, roleId: role.id }}
+                      to="/estates/$estateId/roles/$roleId/edit"
+                    />
+                  }
+                >
+                  Edit
+                </DropdownMenuItem>
+              ) : null}
+              {showDelete ? (
+                <DropdownMenuItem
+                  aria-label={`Delete ${role.name}`}
+                  className="text-destructive"
+                  disabled={deleteDisabled}
+                  onClick={remove}
+                >
+                  Delete
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null
+      }
+    >
+      {note ? <p className="text-muted-foreground text-xs">{note}</p> : null}
+    </ListRow>
   );
 }

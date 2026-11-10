@@ -1,4 +1,5 @@
 import { fireEvent } from "@testing-library/react";
+import { intersect } from "@tests/intersection";
 import {
   chooseOption,
   renderWithProviders,
@@ -583,7 +584,7 @@ it.each([false, true])(
   }
 );
 
-it("shows mobile reading records with provenance and flags, retaining filter-aware numbered paging", async () => {
+it("shows mobile reading records with provenance and flags, scrolling filter-aware pages", async () => {
   const original = window.matchMedia;
   vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
     ...original(query),
@@ -614,10 +615,18 @@ it("shows mobile reading records with provenance and flags, retaining filter-awa
   expect(manual.queryByText("SENSOR-001")).toBeNull();
   within(records.getAllByRole("listitem")[1]).getByText("SENSOR-001");
   expect(screen.queryByRole("table", { name: "Readings" })).toBeNull();
-  fireEvent.click(screen.getByRole("button", { name: "Go to page 3" }));
-  expect(change).toHaveBeenLastCalledWith({
-    assetId: ASSET,
-    metric: "TEMPERATURE",
-    page: 2,
-  });
+  // Phones scroll instead of paging: the next page loads into the list.
+  expect(screen.queryByRole("button", { name: "Go to page 3" })).toBeNull();
+  intersect();
+  await waitFor(() =>
+    expect(
+      get.mock.calls.some(
+        ([path, request]) =>
+          path === READINGS &&
+          request?.params?.query?.page === 1 &&
+          request?.params?.query?.assetId === ASSET
+      )
+    ).toBe(true)
+  );
+  expect(change).not.toHaveBeenCalled();
 });

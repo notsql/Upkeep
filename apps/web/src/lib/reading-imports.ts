@@ -1,5 +1,10 @@
 import type { components } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { estateError, useEstateSession } from "@/lib/estates";
 
@@ -31,6 +36,43 @@ export function useReadingImports(
       }
       return data;
     },
+  });
+}
+function nextOffsetPage(page: {
+  page: number;
+  size: number;
+  totalItems: number;
+}) {
+  return (page.page + 1) * page.size < page.totalItems
+    ? page.page + 1
+    : undefined;
+}
+
+/** The same list as `useReadingImports`, page after page, for phones. */
+export function useReadingImportFeed(estateId: string, enabled: boolean) {
+  const { userId, ready } = useEstateSession();
+  return useInfiniteQuery({
+    queryKey: [userId, "reading-imports", estateId, "feed"],
+    enabled: ready && enabled,
+    retry: false,
+    initialPageParam: 0,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["ReadingImportBatchPage"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/readings/imports",
+        {
+          signal,
+          params: { path: { estateId }, query: { page: pageParam, size: 50 } },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    getNextPageParam: nextOffsetPage,
   });
 }
 export function useReadingImport(
@@ -113,6 +155,41 @@ function useRefreshImports(estateId: string) {
       }),
     ]);
   };
+}
+/** The same list as `useReadingImportRows`, page after page, for phones. */
+export function useReadingImportRowFeed(
+  estateId: string,
+  batchId: string,
+  outcome: ReadingImportOutcome | undefined,
+  enabled: boolean
+) {
+  const { userId, ready } = useEstateSession();
+  return useInfiniteQuery({
+    queryKey: [userId, "reading-imports", estateId, batchId, "feed", outcome],
+    enabled: ready && enabled,
+    retry: false,
+    initialPageParam: 0,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["ReadingImportRowPage"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/readings/imports/{batchId}/rows",
+        {
+          signal,
+          params: {
+            path: { estateId, batchId },
+            query: { page: pageParam, size: 50, outcome },
+          },
+        }
+      );
+      if (error || !data) {
+        throw estateError(error, response.status);
+      }
+      return data;
+    },
+    getNextPageParam: nextOffsetPage,
+  });
 }
 export function useImportReadings(estateId: string) {
   const refresh = useRefreshImports(estateId);

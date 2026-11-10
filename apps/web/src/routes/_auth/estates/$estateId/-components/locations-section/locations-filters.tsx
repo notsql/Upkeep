@@ -16,7 +16,11 @@ export function LocationsFilters({
   searching: boolean;
   onSearch: (event: ChangeEvent<HTMLInputElement>) => void;
   onClear: () => void;
-  barProps: { id: string; open: boolean };
+  barProps: {
+    id: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  };
 }) {
   return (
     <FilterBar

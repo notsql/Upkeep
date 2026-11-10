@@ -1,10 +1,24 @@
 import { useCallback, useState } from "react";
-import { useInspectionAsset, useInspectionResults } from "@/lib/inspections";
+import { asPagedList } from "@/lib/infinite-list";
+import {
+  useInspectionAsset,
+  useInspectionResultFeed,
+  useInspectionResults,
+} from "@/lib/inspections";
+import { useMobile } from "@/lib/use-mobile";
 import { useWorkOrderAccess } from "@/lib/work-orders";
 
 export function useInspectionHistoryPage(estateId: string, assetId: string) {
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
-  const history = useInspectionResults(estateId, assetId, cursors.at(-1));
+  const mobile = useMobile();
+  const paged = useInspectionResults(
+    estateId,
+    assetId,
+    cursors.at(-1),
+    !mobile
+  );
+  const feed = asPagedList(useInspectionResultFeed(estateId, assetId, mobile));
+  const history = mobile ? feed : paged;
   const asset = useInspectionAsset(estateId, assetId);
   const workAccess = useWorkOrderAccess(estateId);
   const active = !!(
@@ -29,7 +43,9 @@ export function useInspectionHistoryPage(estateId: string, assetId: string) {
     active,
     asset,
     cursors,
+    feed,
     history,
+    mobile,
     next,
     nextCursor,
     previous,

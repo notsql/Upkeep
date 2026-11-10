@@ -126,7 +126,6 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
     "Locations",
     "Documents",
     "People & access",
-    "Notification settings",
     "Estate settings",
   ]);
   expect(
@@ -156,11 +155,7 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   expect(
     nav.getByRole("link", { name: "Locations" }).getAttribute("href")
   ).toBe("/estates/pine/locations");
-  expect(
-    nav
-      .getByRole("link", { name: "Notification settings" })
-      .getAttribute("href")
-  ).toBe("/estates/pine/notification-settings");
+  expect(nav.queryByRole("link", { name: "Notification settings" })).toBeNull();
 });
 
 it("keeps the section active on nested pages and matches Overview exactly", async () => {
@@ -354,4 +349,24 @@ it("hides People & access when the user can open neither page", async () => {
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "Overview" });
   expect(nav.queryByRole("link", { name: "People & access" })).toBeNull();
+});
+
+it.each(["/estates/pine/edit", "/estates/pine/notification-settings"])(
+  "marks Estate settings active on %s",
+  async (path) => {
+    const nav = await setup(path);
+    const settings = await nav.findByRole("link", { name: "Estate settings" });
+    expect(settings.getAttribute("aria-current")).toBe("page");
+  }
+);
+
+it("links Estate settings to notifications for a Manager who cannot edit the estate", async () => {
+  state.owned = false;
+  estate({ canManageEstate: false });
+  const nav = await setup("/estates/pine");
+  await waitFor(() => expect(requestedPaths()).toContain("/estates/{id}"));
+  const settings = await nav.findByRole("link", { name: "Estate settings" });
+  expect(settings.getAttribute("href")).toBe(
+    "/estates/pine/notification-settings"
+  );
 });

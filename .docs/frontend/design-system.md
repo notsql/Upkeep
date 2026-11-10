@@ -57,7 +57,7 @@ custom CSS. Do not rely on colour alone for status or selected navigation.
 landmark. Public visitors and loading sessions get no sidebar. Home has one Create
 account action in its content; header/home authentication actions use Sign in.
 
-The sticky header: `SidebarTrigger` (sidebar routes, mobile only), "UpKeep"
+The sticky header: "UpKeep"
 brand -> `/` and "/" (omitted on desktop sidebar routes, where the brand tops the
 sidebar), the estate switcher (current estate name +
 role, or "Select estate" outside an estate), then `ThemeToggle` and the circular
@@ -75,15 +75,33 @@ Report a fault, My reports. Details in [shell.md](shell.md).
 | Width | Sidebar | Trigger |
 | --- | --- | --- |
 | >=768px | Always open (provider held open; no collapse) | None |
-| <768px | Same content in a `Sheet`; closes when a link is followed | `SidebarTrigger` ("Toggle Sidebar") in the header |
+| <768px | None: `BottomNavigation` - a fixed bottom bar of sections (Overview, Maintenance, Assets, Admin; residents: one button per page) plus an always-visible tab strip of the current section's pages when it has two or more | None |
 
-There is no bottom tab bar and no separate mobile section menu. Selected links
+See [shell.md](shell.md#bottom-bar-and-section-tabs-mobile). Selected links
 are `SidebarMenuButton isActive` plus `aria-current="page"`; the section whose
 route prefixes the pathname stays active on nested pages (Overview: exact
 match). Matching ignores search parameters.
 
 The skip link is an `<a href="#main-content">` styled with `buttonVariants` and
 `sr-only focus:not-sr-only focus:fixed ...`; it is the first focusable element.
+
+## Compact mobile layout (<768px)
+
+- `PageLayout`: `px-3 py-4` on mobile (`md:px-8 md:py-8` above).
+- Every `Card` uses the `sm` spacing and title size below `md` (`max-md:` in
+  `packages/ui` `card.tsx`), so call sites never set `size` for mobile.
+  `SectionCard` and `SummaryCard` also pass `size="sm"` on mobile (`useIsMobile`). `SummaryCard`'s value is
+  `text-2xl` on mobile (`md:text-3xl`); summary grids are `grid-cols-2` on
+  mobile (estate dashboard, inspections summary, check-schedule categories).
+- `PageHeader` (and so `DetailPageHeader` / `ListPageHeader`): title
+  `text-2xl md:text-3xl`, `mb-4 gap-2` on mobile (`md:mb-5 md:gap-3`),
+  breadcrumbs `mb-3 md:mb-4`.
+- `CreateButton` and `FilterToggle` are icon-only (`size="icon"`) on mobile,
+  named by `aria-label` ("Create", "Filters" / "Filters, N active"); the
+  filter count badge stays visible. Other route-supplied header actions are
+  unchanged.
+
+Tests: `tests/components/page/compact-layout.test.tsx`.
 
 ## Pages, actions and forms
 
@@ -103,10 +121,12 @@ Shared app pieces live in `apps/web/src/components/`:
   not a configurable component framework.
 
 - `PageLayout` (`page-layout.tsx`): the `<main>` wrapper every screen uses -
-  `mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 md:px-8 md:py-8`; pass `className`
+  `mx-auto w-full max-w-6xl px-3 py-4 md:px-8 md:py-8`; pass `className`
   (e.g. `max-w-3xl` for editors, `space-y-6`), merged with `cn`.
-- `DetailCard` (`detail-card.tsx`): a `Card` > `CardContent` > `dl` in a two-column
-  Tailwind grid at `sm`, for definition-list metadata.
+- `DetailList` (`detail-list.tsx`): a plain `dl` (no card) in a two-column
+  Tailwind grid at `sm`, row gap `gap-3 sm:gap-4`, muted `text-sm` terms and
+  `font-medium` values; `className?` merges with `cn`. Use for a page's
+  label/value details (account, inspection record, asset details, import batch).
 - `PageHeader` breadcrumbs use shadcn `Breadcrumb` / `BreadcrumbList` /
   `BreadcrumbItem` / `BreadcrumbLink` (rendering the router `Link`) /
   `BreadcrumbSeparator`. The current item is a plain `span aria-current="page"`,
@@ -131,7 +151,7 @@ Shared app pieces live in `apps/web/src/components/`:
   a work order; inspection did not fail) show an outline "View inspection" link
   to the source inspection instead of a back link.
 
-Independent sections on detail pages sit in `SectionCard`; forms follow
+Sections on detail pages are `PageSection`s (see [Cards](#cards-when-to-use-one)); forms follow
 [Forms](#forms-formpage-formcard-formactions). Avoid wrapping every field in a
 card. Action groups use `flex flex-wrap items-center gap-3`.
 
@@ -279,7 +299,7 @@ inside `PageLayout`. Pass `icon` (a `LucideIcon`, the same one the sidebar uses
 for that section) to show it in a `size-9 rounded-lg bg-brand-1/15 text-brand-3`
 tile beside the `h1` (the icon is `aria-hidden`). Headers have no background
 band or gradient. Never use a side border for emphasis. Sections inside a
-page use `Card` + `CardHeader`/`CardTitle` with an `h2`, never a second `h1`.
+page use `PageSection` (an `h2` `SectionHeading`), never a second `h1`.
 
 **Subtitle rule:** `description` never repeats the estate name (the header
 bar's estate switcher already shows it) or any other context the shell shows.
@@ -295,7 +315,7 @@ line under the title.
 
 | Variant | Use for | Props |
 | --- | --- | --- |
-| `ListPageHeader` | Top-level list pages (work orders, assets, roles, documents…) | `title`, `icon?`, `description?`, `filters?: FilterToggleProps`, `create?: CreateButtonProps`, `actions?` (extras, e.g. Export; rendered between Filters and Create) |
+| `ListPageHeader` | Top-level list pages (work orders, assets, roles, documents…) | `title`, `icon?`, `description?`, `filters?: FilterToggleProps`, `create?: CreateButtonProps`, `actions?` (extras, e.g. Export; rendered between Filters and Create), `inlineActions?` (keep icon-only actions on the title row instead of wrapping; used by People & access) |
 | `DetailPageHeader` | One record (work order, asset, report, inspection) | `breadcrumbs`, `title`, `icon?`, `status?` (badge), `meta?` (e.g. "Opened 3 Mar 2026 · Pump A"), `actions?` (outline Edit first, destructive last) |
 | `FormPageHeader` | Create/edit pages | `breadcrumbs`, `title`, `icon?`, `description?`; no actions (the form footer submits) |
 
@@ -346,6 +366,18 @@ order", "Record manual reading"): the label is always "Create".
   `ListFilter` and "Filters", a secondary `Badge` with the count when
   `activeCount > 0`, `aria-expanded`/`aria-controls`, and accessible name
   "Filters" or "Filters, N active". Spread `useFilterPanel(...).toggleProps`.
+- Mobile (below 768px, `useIsMobile`): a retractable `FilterBar` (given
+  `open`) renders inside `FilterSheet` (`components/filters/filter-bar.tsx`), a
+  shadcn `Sheet` with `side="bottom"`, titled "Filters" (`SheetTitle`, so the
+  dialog's accessible name is "Filters"), max 85svh and scrollable, with the
+  shadcn Close button. The bar drops its own "Filters" label and panel border
+  there; the "N active" / Clear filters row shows only while filtering.
+  `useFilterPanel`'s `barProps` now carry `onOpenChange` so the sheet can close
+  itself (wrappers that take `id`/`open` must pass `onOpenChange` through).
+  Closing only hides the controls; applied filters stay. On mobile the panel
+  always starts shut, even with filters active, so the sheet never pops up on
+  load; the toggle's count shows they are on. The readings filter panel
+  (`ReadingFilterPanel`) uses the same `FilterSheet`. Desktop is unchanged.
 
 ```tsx
 import { FilterToggle } from "@/components/filters/filter-toggle";
@@ -385,7 +417,7 @@ icon + text inside `CardTitle`.
 ### Empty: `EmptyState` (`components/states/empty-state.tsx`)
 
 Props: `title: string`, `icon?: LucideIcon`, `description?: ReactNode`,
-`action?: ReactNode`.
+`action?: ReactNode`, `fill?: boolean`.
 Renders shadcn `Empty` (`EmptyHeader` > optional `EmptyMedia variant="icon"`
 + `EmptyTitle` + muted
 `EmptyDescription`, then `EmptyContent` for the action) with `role="status"`
@@ -393,6 +425,15 @@ as a quiet panel: solid `rounded-lg border`, `px-6 py-10`, no background
 change. Inside a Card's content (`data-slot="card-content"`, e.g. every
 `SectionCard`) it drops the border and uses `py-6`, so it never reads as a
 card-in-a-card. There is no option for this; it is automatic.
+
+- **`fill` (mobile full-page).** Set `fill` only where the empty state is the
+  page's main content (a list page with nothing in it). Below `md` it drops
+  the border and takes `min-h-[calc(100dvh-20rem-env(safe-area-inset-bottom))]`
+  - the screen under the top bar, page header and sub-nav, clear of the bottom
+  navigation - with its content centred; it also sets `data-fill="true"`.
+  Desktop is unchanged. Leave it off inside cards, sections and tabs. Used by
+  the work-order, asset register, estate reports, checks, check schedules,
+  documents, estate list, notifications and my-reports empty states.
 
 - **Optional icon.** Pass `icon` to draw it decoratively (`aria-hidden`) in an
   `EmptyMedia variant="icon"` tile tinted `bg-brand-1/15 text-brand-2`; the
@@ -653,18 +694,78 @@ Use these instead of hand-rolling the pattern. Each repeats on 7+ screens.
   `onPrevious`, `onNext`, `disabled?`. Outline "Previous page"/"Next page".
   The caller owns offset or cursor state. Readings keep their numbered
   `ReadingPagination`.
+- **`LoadMore`** (`components/table/load-more.tsx`): the phone-width (below
+  `md`, `useMobile` from `lib/use-mobile.ts`) replacement for `Pagination`.
+  Props `hasNextPage`, `isFetchingNextPage`, `fetchNextPage`, `failed?`. An
+  `IntersectionObserver` sentinel (200px root margin) calls `fetchNextPage`
+  as the bottom nears, never while fetching, with no next page, or after a
+  failure. Shows a `Spinner` row "Loading more…" (`role="status"`), "That's
+  everything" at the end, and "Couldn't load more." + outline "Try again"
+  after a failed page. Every paged list uses it on phones: the list's lib file
+  has a `use<X>Feed(…, enabled)` `useInfiniteQuery` (same filters/sort, cursor
+  or offset as the endpoint pages, key = the desktop key's prefix + `"feed"`,
+  so existing invalidations cover it), and `asPagedList` (`lib/infinite-list.ts`)
+  flattens its pages into the same `{ data: { items, … } }` shape the desktop
+  page query has, plus `more` for `LoadMore`. The desktop page query is
+  disabled on phones and the feed on desktop. Phones ignore the URL `cursor`
+  /`page` param; changing a filter or sort changes the feed key, so it restarts
+  at page one. Desktop paging is unchanged.
 - **`SectionCard`** (`components/page/section-card.tsx`): `title`, `icon?`,
   `level?` (2), `description?`, `actions?` (header top right), `className?`,
   `contentClassName?`, `children`. Header actions use the exported
   `SECTION_ACTION` (`{ size: "sm", variant: "outline" }`, spread on `Button`) or
   `sectionActionClassName` (on a `Link`), and lead with an `aria-hidden` lucide icon. A `Card` holding a `section` labelled by its `SectionHeading`.
-  Use for every titled card section on detail pages instead of `Card` +
-  `CardHeader` + `SectionHeading` by hand. `icon` must not repeat the page icon.
+  Only for a self-contained panel with its own actions beside other panels
+  (see [Cards](#cards-when-to-use-one)); never around a lone table or list.
+  `icon` must not repeat the page icon.
 - **`PageSection`** (same file): `title`, `icon?`, `level?`, `description?`,
   `actions?`, `children`. The same header as `SectionCard` (labelled `section`,
-  actions top right) with no card: content sits straight on the page. Use when a
-  tab's only content is one list or table (asset Devices and Costs tabs), so it
-  never becomes card-in-card.
+  actions top right) with no card: content sits straight on the page. The
+  default for any titled page section; put a shadcn `Separator` between
+  consecutive sections where it reads better.
+
+### Cards: when to use one
+
+A `Card` frames **one distinct thing among siblings**: a dashboard count
+(`SummaryCard`, `CountCard`), an item in a card grid (estate, anomaly
+alert), or a
+self-contained panel with its own actions beside other panels (estate budget
+forecast and list panels, asset breakdown forecast, estate danger zone,
+signed-out home feature tiles). Everything else is page content: a
+`PageSection`, a `DetailList`, or plain content, with a `Separator` between
+consecutive sections where needed. A section whose only content is a table or
+list never gets a card, and list items never look like cards: they are
+`ListRow`s (below). No card is ever nested in another card.
+
+### List rows (`components/list/list-row.tsx`)
+
+The one list-row pattern for phone lists (and for lists with no desktop
+table, at every size). `ListRows` (`label`, optional `busy` for
+`aria-busy`) is a plain `ul`: no border, no `rounded-xl`, no `bg-card`, no
+shadow. Rows sit flat on the page with hairline dividers drawn between `li`s
+and inset to start after the icon tile (settings-app style). `ListRow`
+(built on shadcn `Item`/`ItemMedia`/`ItemContent`/`ItemTitle`/
+`ItemDescription`/`ItemActions`) renders its own `li` with:
+
+- a leading `size-9` rounded tile tinted `bg-brand-1/15 text-brand-2`
+  holding a lucide `icon` (or an `initial`, e.g. a person's first letter),
+  `aria-hidden`;
+- `title` (`text-base font-medium`, wraps);
+- at most one muted `meta` line (`text-sm`, truncates, never wraps);
+- `trailing` (badge, actions menu or chevron), centred with the row;
+- `children` under the title for a control or measurement (the tile then
+  aligns to the top);
+- `render` (a `Link`) makes the whole row tappable, with a `hover`/`active`
+  muted background. Rows are `py-3` minimum.
+
+Distinctness comes from the tile, type hierarchy and dividers, not borders.
+Icons in use: roles `ShieldCheck`, people an initial, assets `Package`,
+sensors `RadioTower`, work orders `Wrench`, inspection assets
+`ClipboardList`, reports `MessageSquareWarning`, readings `Gauge`. Desktop
+tables keep their bordered `rounded-xl border` wrapper. `LoadMore` sits
+beneath `ListRows` unchanged. Report lists use `ReportRow`
+(`components/reports/report-row.tsx`); `ReportCard` remains for a single
+report's detail page and the resident dashboard.
 - **`ConfirmDialog`** (`components/dialogs/confirm-dialog.tsx`): `open`, `title`,
   `description?` (the effect), `children?` (identify the target),
   `confirmLabel`, `pendingLabel?`, `cancelLabel?` ("Cancel"; e.g. "Keep
@@ -771,7 +872,7 @@ Use the shared shell/header/tokens, existing shadcn components and generated API
 hooks. Fetch no private data before session readiness. Preserve current permission
 checks, query keys and invalidations; visual work does not extend authorization.
 
-Automated tests cover navigation context/capabilities, selected links, the mobile sidebar sheet, the skip link,
+Automated tests cover navigation context/capabilities, selected links, the mobile bottom bar and section tabs, the skip link,
 theme storage, account-menu Account settings/Admin users/sign-out navigation, headers, form cancellation/pending behavior, table accessibility,
 missing-page recovery and retained estate/invitation/asset/admin workflows. Tests
 were observed failing before the new behavior was implemented. jsdom does not

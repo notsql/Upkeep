@@ -119,3 +119,7 @@ which navigates to `/reports` keeping `estateId` and sends nothing. `/reports/$r
 breadcrumbs `My reports › <report title>` (search keeps `estateId`) and the
 heading "Report details"; a failed load is `ErrorState` "Report not found or
 unavailable" + Retry. There is no back link.
+
+## Phones: infinite scroll
+
+Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of My reports (`useReportFeed`, key `[userId, "reports", "list", estateId, "feed"]`).

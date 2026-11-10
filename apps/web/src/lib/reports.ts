@@ -1,5 +1,10 @@
 import type { components } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 
@@ -102,11 +107,15 @@ export function useCreateReport() {
   });
 }
 
-export function useReportList(cursor?: string, estateId?: string) {
+export function useReportList(
+  cursor?: string,
+  estateId?: string,
+  enabled = true
+) {
   const userId = useResidentId();
   return useQuery({
     queryKey: [userId, "reports", "list", estateId, cursor],
-    enabled: !!userId,
+    enabled: !!userId && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error } = await api.GET("/resident/reports", {
@@ -122,6 +131,34 @@ export function useReportList(cursor?: string, estateId?: string) {
       }
       return data;
     },
+  });
+}
+
+/** The same list as `useReportList`, page after page, for phone widths. */
+export function useReportFeed(estateId: string | undefined, enabled: boolean) {
+  const userId = useResidentId();
+  return useInfiniteQuery({
+    queryKey: [userId, "reports", "list", estateId, "feed"],
+    enabled: !!userId && enabled,
+    retry: false,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+    }): Promise<components["schemas"]["ResidentReportPageResponse"]> => {
+      const { data, error } = await api.GET("/resident/reports", {
+        params: {
+          query: {
+            ...(pageParam ? { cursor: pageParam } : {}),
+            ...(estateId ? { estateId } : {}),
+          },
+        },
+      });
+      if (error || !data) {
+        throw reportError(error, "Couldn't load reports. Try again.");
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
   });
 }
 

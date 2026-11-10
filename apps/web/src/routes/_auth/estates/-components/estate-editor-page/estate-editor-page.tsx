@@ -5,6 +5,10 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormPage } from "@/components/page/form-page";
 import type { Breadcrumb } from "@/components/page/page-header";
+import {
+  EstateSettingsViews,
+  SETTINGS_TITLE,
+} from "@/components/settings/estate-settings-views";
 import { LoadingState } from "@/components/states/loading-state";
 import { useAppAccess } from "@/lib/access";
 import { useEstate, useSaveEstate } from "@/lib/estates";
@@ -22,7 +26,7 @@ function heading(editing: boolean): {
     ? {
         breadcrumbs: [],
         description: "Identity and address",
-        title: "Estate settings",
+        title: SETTINGS_TITLE,
       }
     : {
         breadcrumbs: [
@@ -66,6 +70,15 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
   }, [navigate, estateId]);
   return (
     <FormPage icon={Building2} {...heading(Boolean(estateId))}>
+      {estateId ? (
+        <EstateSettingsViews
+          estateId={estateId}
+          owned={estate.data?.owned}
+          permission={access.data?.estates.find(
+            (assignment) => assignment.estateId === estateId
+          )}
+        />
+      ) : null}
       {estateId && (estate.isPending || waitingForPermissions) ? (
         <LoadingState label="Loading estate…" rows={2} />
       ) : null}

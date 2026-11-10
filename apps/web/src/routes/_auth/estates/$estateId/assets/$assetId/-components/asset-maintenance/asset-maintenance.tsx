@@ -1,3 +1,4 @@
+import { Separator } from "@proj/ui/components/separator";
 import { useAsset } from "@/lib/assets";
 import { useEstate } from "@/lib/estates";
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-section";
@@ -36,14 +37,17 @@ export function AssetMaintenance({
         estateId={estateId}
       />
       {estate.data?.owned || estate.data?.canManageInvitationPermissions ? (
-        <AssetServiceIntervalCard
-          assetId={assetId}
-          estateId={estateId}
-          locked={intervalLock(
-            Boolean(estate.data.deactivatedAt),
-            Boolean(asset.data.deactivatedAt)
-          )}
-        />
+        <>
+          <Separator />
+          <AssetServiceIntervalCard
+            assetId={assetId}
+            estateId={estateId}
+            locked={intervalLock(
+              Boolean(estate.data.deactivatedAt),
+              Boolean(asset.data.deactivatedAt)
+            )}
+          />
+        </>
       ) : null}
     </>
   );

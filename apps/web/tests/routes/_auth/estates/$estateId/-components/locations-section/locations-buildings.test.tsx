@@ -1,6 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import { renderWithProviders, screen } from "@tests/test-utils";
-import { describe, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildLocationTree, type Location } from "@/lib/locations";
 import { locationSummaries } from "@/routes/_auth/estates/$estateId/-components/locations-section/location-tree";
 import { LocationsBuildings } from "@/routes/_auth/estates/$estateId/-components/locations-section/locations-buildings";
@@ -85,5 +85,24 @@ describe("estate canvas", () => {
       key: "+",
     });
     screen.getByText("100%");
+  });
+});
+
+describe("estate canvas on a phone", () => {
+  const desktopWidth = window.innerWidth;
+  afterEach(() => {
+    window.innerWidth = desktopWidth;
+  });
+
+  it("stretches down to the bottom bar on a phone", () => {
+    window.innerWidth = 375;
+    const canvas = draw();
+    expect(canvas.style.height).toContain("100dvh");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("keeps its fixed height on desktop", () => {
+    const canvas = draw();
+    expect(canvas.style.height).toBe("");
   });
 });

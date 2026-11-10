@@ -1,18 +1,25 @@
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
 import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import { Link } from "@tanstack/react-router";
-import { ClipboardList, Layers, Search } from "lucide-react";
+import { ChevronRight, ClipboardList, Layers, Search } from "lucide-react";
 import { type ChangeEvent, type FormEvent, useCallback, useState } from "react";
 import { FilterBar, useFilterPanel } from "@/components/filters/filter-bar";
+import { ListRow, ListRows } from "@/components/list/list-row";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
-import { useInspectionAccess, useInspectionAssets } from "@/lib/inspections";
+import { asPagedList } from "@/lib/infinite-list";
+import {
+  useInspectionAccess,
+  useInspectionAssetFeed,
+  useInspectionAssets,
+} from "@/lib/inspections";
+import { useMobile } from "@/lib/use-mobile";
 import { AssetViewsNav } from "@/routes/_auth/estates/$estateId/assets/-components/asset-views-nav";
 
 export function InspectionAssetList({ estateId }: { estateId: string }) {
@@ -21,7 +28,10 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
   const [query, setQuery] = useState("");
   const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
   const cursor = cursors.at(-1);
-  const assets = useInspectionAssets(estateId, query, cursor);
+  const mobile = useMobile();
+  const paged = useInspectionAssets(estateId, query, cursor, !mobile);
+  const feed = asPagedList(useInspectionAssetFeed(estateId, query, mobile));
+  const assets = mobile ? feed : paged;
   const panel = useFilterPanel(0);
   const find = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
@@ -94,32 +104,44 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
       ) : null}
       {assets.isError ? (
         <ErrorState
-          message={assets.error.message}
+          message={
+            assets.error?.message ?? "Inspection assets are unavailable."
+          }
           onRetry={retry}
           retryLabel="Retry assets"
         />
       ) : null}
-      <div className="grid gap-3 md:grid-cols-2">
-        {assets.data?.items.map((asset) => (
-          <Card key={asset.id}>
-            <CardContent className="space-y-2 pt-5">
-              <Link
-                className="font-semibold underline"
-                params={{ estateId, assetId: asset.id }}
-                to="/estates/$estateId/assets/$assetId"
-              >
-                {asset.reference} · {asset.name}
-              </Link>
-              <p>{asset.locationPath}</p>
-              <p className="text-muted-foreground text-sm">
+      {assets.data?.items.length ? (
+        <ListRows label="Assets to inspect">
+          {assets.data.items.map((asset) => (
+            <ListRow
+              icon={ClipboardList}
+              key={asset.id}
+              meta={`${asset.reference} · ${asset.locationPath}`}
+              render={
+                <Link
+                  aria-label={`${asset.reference} · ${asset.name}`}
+                  params={{ estateId, assetId: asset.id }}
+                  to="/estates/$estateId/assets/$assetId"
+                />
+              }
+              title={asset.name}
+              trailing={
+                <ChevronRight
+                  aria-hidden="true"
+                  className="text-muted-foreground size-4"
+                />
+              }
+            >
+              <p className="text-muted-foreground text-xs">
                 {asset.assetActive && asset.estateActive && asset.locationActive
                   ? "Available for inspection"
-                  : "Historical context · inspection recording unavailable"}
+                  : "Past record only · can't record a new inspection"}
               </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </ListRow>
+          ))}
+        </ListRows>
+      ) : null}
       {assets.data?.items.length === 0 ? (
         <EmptyState
           description={query ? "Try a different name or reference" : undefined}
@@ -127,7 +149,8 @@ export function InspectionAssetList({ estateId }: { estateId: string }) {
           title={query ? "No matching assets" : "No assets yet"}
         />
       ) : null}
-      {nextCursor || cursors.length > 1 ? (
+      {mobile && assets.data?.items.length ? <LoadMore {...feed.more} /> : null}
+      {!mobile && (nextCursor || cursors.length > 1) ? (
         <Pagination
           canNext={Boolean(nextCursor)}
           canPrevious={cursors.length > 1}

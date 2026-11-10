@@ -1,6 +1,6 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Button } from "@proj/ui/components/button";
-import { Card, CardContent } from "@proj/ui/components/card";
+import { Separator } from "@proj/ui/components/separator";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@workos/authkit-tanstack-react-start/client";
 import { Upload } from "lucide-react";
@@ -15,19 +15,23 @@ import { toast } from "sonner";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormPageHeader } from "@/components/page/form-page-header";
 import { PageLayout } from "@/components/page/page-layout";
-import { SectionCard } from "@/components/page/section-card";
+import { PageSection } from "@/components/page/section-card";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
 import { useAppAccess } from "@/lib/access";
+import { asPagedList } from "@/lib/infinite-list";
 import { importPreset, readImportSample } from "@/lib/reading-import-preview";
 import {
   type ReadingImportOptions,
   readingImportMessage,
   useImportReadings,
+  useReadingImportFeed,
   useReadingImports,
 } from "@/lib/reading-imports";
+import { useMobile } from "@/lib/use-mobile";
 import { ImportFormFields } from "@/routes/_auth/estates/$estateId/readings/imports/-components/import-form-fields";
 import { ImportHistory } from "@/routes/_auth/estates/$estateId/readings/imports/-components/import-history";
 
@@ -83,7 +87,10 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
   const allowed = Boolean(permission?.canImportReadings);
   const canRead = Boolean(allowed || permission?.role === "MANAGER");
   const [page, setPage] = useState(0);
-  const history = useReadingImports(estateId, page, canRead);
+  const mobile = useMobile();
+  const paged = useReadingImports(estateId, page, canRead && !mobile);
+  const feed = asPagedList(useReadingImportFeed(estateId, canRead && mobile));
+  const history = mobile ? feed : paged;
   const mutation = useImportReadings(estateId);
   const [file, setFile] = useState<File>();
   const [source, setSource] = useState("");
@@ -274,56 +281,46 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
         title="Import CSV"
       />
       {allowed ? (
-        <Card className="max-w-3xl">
-          <CardContent>
-            <form
-              aria-label="Import historical readings"
-              className="space-y-6"
-              noValidate
-              onSubmit={submit}
+        <form
+          aria-label="Import historical readings"
+          className="max-w-3xl space-y-6"
+          noValidate
+          onSubmit={submit}
+        >
+          <fieldset className="min-w-0 space-y-5" disabled={mutation.isPending}>
+            <ImportFormFields
+              error={error}
+              mapping={mapping}
+              mode={mode}
+              onChoose={choose}
+              sample={sample}
+              setMapping={setMapping}
+              setMode={setMode}
+              setSource={setSource}
+              source={source}
+            />
+          </fieldset>
+          {error ? (
+            <Alert id="import-error" variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="flex flex-wrap items-end gap-3">
+            <FormActions
+              label={mutation.isPending ? "Importing…" : "Import"}
+              pending={mutation.isPending}
+            />
+            <Button
+              disabled={mutation.isPending}
+              render={
+                <Link params={{ estateId }} to="/estates/$estateId/readings" />
+              }
+              variant="outline"
             >
-              <fieldset
-                className="min-w-0 space-y-5"
-                disabled={mutation.isPending}
-              >
-                <ImportFormFields
-                  error={error}
-                  mapping={mapping}
-                  mode={mode}
-                  onChoose={choose}
-                  sample={sample}
-                  setMapping={setMapping}
-                  setMode={setMode}
-                  setSource={setSource}
-                  source={source}
-                />
-              </fieldset>
-              {error ? (
-                <Alert id="import-error" variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
-              <div className="flex flex-wrap items-end gap-3">
-                <FormActions
-                  label={mutation.isPending ? "Importing…" : "Import"}
-                  pending={mutation.isPending}
-                />
-                <Button
-                  disabled={mutation.isPending}
-                  render={
-                    <Link
-                      params={{ estateId }}
-                      to="/estates/$estateId/readings"
-                    />
-                  }
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              Cancel
+            </Button>
+          </div>
+        </form>
       ) : (
         <Alert>
           <AlertDescription>
@@ -331,7 +328,8 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
           </AlertDescription>
         </Alert>
       )}
-      <SectionCard title="Batch history">
+      <Separator />
+      <PageSection title="Batch history">
         {history.isPending && canRead ? (
           <LoadingState label="Loading import history…" rows={3} />
         ) : null}
@@ -342,7 +340,8 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
           <EmptyState icon={Upload} title="No import batches yet" />
         ) : null}
         <ImportHistory estateId={estateId} items={history.data?.items ?? []} />
-        {history.data ? (
+        {mobile && history.data ? <LoadMore {...feed.more} /> : null}
+        {!mobile && history.data ? (
           <Pagination
             canNext={(page + 1) * history.data.size < history.data.totalItems}
             canPrevious={page > 0}
@@ -352,7 +351,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
             summary={`${history.data.totalItems} batches`}
           />
         ) : null}
-      </SectionCard>
+      </PageSection>
     </PageLayout>
   );
 }

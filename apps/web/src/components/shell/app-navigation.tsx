@@ -10,7 +10,6 @@ import {
 } from "@proj/ui/components/sidebar";
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  BellRing,
   Building2,
   ClipboardCheck,
   ClipboardList,
@@ -46,7 +45,7 @@ import { useEstate } from "@/lib/estates";
 
 const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
 
-interface NavigationGroup {
+export interface NavigationGroup {
   items: NavigationItem[];
   label?: string;
 }
@@ -142,6 +141,20 @@ function estateGroups(
       (section) => pathname === section || pathname.startsWith(`${section}/`)
     ),
   }));
+  const settings = item(
+    "Estate settings",
+    canOpenEstateSettings(permission, owned)
+      ? "/estates/$estateId/edit"
+      : "/estates/$estateId/notification-settings",
+    Settings,
+    canOpenEstateSettings(permission, owned) ||
+      canOpenNotificationSettings(permission)
+  ).map((entry) => ({
+    ...entry,
+    active: [`${base}/edit`, `${base}/notification-settings`].some(
+      (section) => pathname === section || pathname.startsWith(`${section}/`)
+    ),
+  }));
   return [
     {
       items: item(
@@ -199,26 +212,12 @@ function estateGroups(
     },
     {
       label: "Administration",
-      items: [
-        ...people,
-        ...item(
-          "Notification settings",
-          "/estates/$estateId/notification-settings",
-          BellRing,
-          canOpenNotificationSettings(permission)
-        ),
-        ...item(
-          "Estate settings",
-          "/estates/$estateId/edit",
-          Settings,
-          canOpenEstateSettings(permission, owned)
-        ),
-      ],
+      items: [...people, ...settings],
     },
   ];
 }
 
-function useNavigationGroups(): NavigationGroup[] {
+export function useNavigationGroups(): NavigationGroup[] {
   const { access, pathname, estateId, permission } = useCurrentEstate();
   // Ownership comes from the estate itself; only management roles may read it.
   const estate = useEstate(

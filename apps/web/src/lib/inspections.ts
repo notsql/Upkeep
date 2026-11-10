@@ -1,5 +1,10 @@
 import type { components } from "@proj/api/schema";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
@@ -83,13 +88,14 @@ export function useInspectionAsset(estateId: string, assetId: string) {
 export function useInspectionAssets(
   estateId: string,
   q?: string,
-  cursor?: string
+  cursor?: string,
+  enabled = true
 ) {
   const access = useInspectionAccess(estateId);
   const fail = useFailure(access.userId);
   const query = useQuery({
     queryKey: [access.userId, "inspection-assets", estateId, "list", q, cursor],
-    enabled: access.canView,
+    enabled: access.canView && enabled,
     retry: false,
     queryFn: async ({ signal }) => {
       const { data, error, response } = await api.GET(
@@ -113,6 +119,46 @@ export function useInspectionAssets(
     ...query,
     data: access.canView && !query.isError ? query.data : undefined,
   };
+}
+
+/** The same list as `useInspectionAssets`, page after page, for phones. */
+export function useInspectionAssetFeed(
+  estateId: string,
+  q: string | undefined,
+  enabled: boolean
+) {
+  const access = useInspectionAccess(estateId);
+  const fail = useFailure(access.userId);
+  return useInfiniteQuery({
+    queryKey: [access.userId, "inspection-assets", estateId, "feed", q],
+    enabled: access.canView && enabled,
+    retry: false,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["InspectionAssetPageResponse"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/inspection-assets",
+        {
+          params: {
+            path: { estateId },
+            query: { q, cursor: pageParam, limit: 20 },
+          },
+          signal,
+        }
+      );
+      if (error || !data) {
+        return fail(
+          error,
+          response.status,
+          "Inspection assets are unavailable."
+        );
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
 }
 
 export function useInspectionResults(
@@ -156,6 +202,46 @@ export function useInspectionResults(
     ...query,
     data: access.canView && !query.isError ? query.data : undefined,
   };
+}
+
+/** The same list as `useInspectionResults`, page after page, for phones. */
+export function useInspectionResultFeed(
+  estateId: string,
+  assetId: string,
+  enabled: boolean
+) {
+  const access = useInspectionAccess(estateId);
+  const fail = useFailure(access.userId);
+  return useInfiniteQuery({
+    queryKey: [access.userId, "inspection-results", estateId, assetId, "feed"],
+    enabled: enabled && access.canView && !!assetId,
+    retry: false,
+    initialPageParam: undefined as string | undefined,
+    queryFn: async ({
+      pageParam,
+      signal,
+    }): Promise<components["schemas"]["InspectionResultPageResponse"]> => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/assets/{assetId}/inspections",
+        {
+          params: {
+            path: { estateId, assetId },
+            query: { cursor: pageParam, limit: 20 },
+          },
+          signal,
+        }
+      );
+      if (error || !data) {
+        return fail(
+          error,
+          response.status,
+          "Inspection history is unavailable."
+        );
+      }
+      return data;
+    },
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
+  });
 }
 
 export function useInspectionResult(

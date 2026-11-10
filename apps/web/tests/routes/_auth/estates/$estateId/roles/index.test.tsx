@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { fireEvent } from "@testing-library/react";
 import { unassignedAccess } from "@tests/fixtures/access";
+import { mockMobileViewport } from "@tests/mock-viewport";
 import {
   renderWithProviders,
   screen,
@@ -297,6 +298,24 @@ it("lists custom roles in a table with a permissions summary and filters by sear
   screen.getByRole("button", { name: "Filters, 1 active" });
   fireEvent.click(filters.getByRole("button", { name: "Clear filters" }));
   await screen.findByRole("table", { name: "Custom roles" });
+});
+
+it("lists custom roles as items on a phone with edit and delete in a menu", async () => {
+  mockMobileViewport();
+  serve({ existing: true });
+  await openRoles();
+  const list = await screen.findByRole("list", { name: "Custom roles" });
+  expect(screen.queryByRole("table", { name: "Custom roles" })).toBeNull();
+  const item = within(list).getByRole("listitem");
+  within(item).getByText("Fault reviewer");
+  within(item).getByText("View fault reports", { exact: false });
+  fireEvent.click(
+    within(item).getByRole("button", { name: "Actions for Fault reviewer" })
+  );
+  const edit = await screen.findByRole("menuitem", { name: EDIT_REVIEWER });
+  expect(edit.getAttribute("href")).toBe(`${rolesPath}/${roleId}/edit`);
+  fireEvent.click(screen.getByRole("menuitem", { name: DELETE_REVIEWER }));
+  within(await screen.findByRole("dialog")).getByText(PERMANENT);
 });
 
 it("links Edit to the role's edit page", async () => {

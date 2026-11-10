@@ -51,7 +51,7 @@ vi.mock("@tanstack/react-router", () => ({
 const LAST_SEEN = /^Last seen /u;
 const ACTIONS_FOR = /^Actions for/u;
 const NOTHING_RECEIVED =
-  /^Added .*, nothing received\. Make sure it's switched on and set up with its connection key\.$/u;
+  /^Nothing received since it was added .*\. Check it's switched on and has its connection key\.$/u;
 const NOT_SHOWN_AGAIN = /We won't show it again/u;
 const STOPS_WORKING = /current key stops working straight away/u;
 const DEVICES_PATH = "/estates/{estateId}/assets/{assetId}/devices";
@@ -135,13 +135,13 @@ describe("AssetDevicesSection", () => {
     const item = within(await screen.findByRole("listitem"));
     item.getByRole("heading", { name: "PUMP-01" });
     item.getByText("Waiting for first reading");
-    item.getByRole("note", { name: "Sensor isn't sending readings yet" });
+    expect(item.queryByText("Sensor isn't sending readings yet")).toBeNull();
     item.getByText(NOTHING_RECEIVED);
     item.getByText("PT-100");
     item.getByText("Blk 101 › Plant room");
-    item.getByText("Temperature (°C)");
-    item.getByText("Pressure (bar)");
-    item.getByText("Reports every 60 seconds");
+    item.getByText("Measures temperature, pressure");
+    expect(item.queryByText("Pressure (bar)")).toBeNull();
+    item.getByText("Every 60 seconds");
     expect(api.GET).toHaveBeenCalledWith(DEVICES_PATH, {
       params: { path: { estateId: "estate-id", assetId: "asset-id" } },
     });
@@ -228,21 +228,21 @@ describe("AssetDevicesSection credentials", () => {
 
   it("says when a device has no credential", async () => {
     renderSection();
-    const item = within(await screen.findByRole("listitem"));
-    item.getByText("No connection key");
-    (await openActions()).getByRole("menuitem", {
-      name: "Get connection key",
-    });
+    const menu = await openActions();
+    menu.getByText("No connection key yet");
+    menu.getByRole("menuitem", { name: "Get connection key" });
   });
 
   it("shows when a device's credential was issued", async () => {
     devices = [{ ...device, credentialIssuedAt: issuedAt }];
     renderSection();
     const item = within(await screen.findByRole("listitem"));
-    item.getByText(`Connection key created ${formatDateTime(issuedAt)}`);
-    (await openActions()).getByRole("menuitem", {
-      name: "Replace connection key",
-    });
+    expect(
+      item.queryByText(`Key created ${formatDateTime(issuedAt)}`)
+    ).toBeNull();
+    const menu = await openActions();
+    menu.getByText(`Key created ${formatDateTime(issuedAt)}`);
+    menu.getByRole("menuitem", { name: "Replace connection key" });
   });
 
   it("hides credential actions on a retired asset", async () => {
@@ -288,9 +288,7 @@ describe("AssetDevicesSection credentials", () => {
     fireEvent.click(dialog.getByRole("button", { name: "Done" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(screen.queryByDisplayValue(apiKey)).toBeNull();
-    await screen.findByText(
-      `Connection key created ${formatDateTime(issuedAt)}`
-    );
+    (await openActions()).getByText(`Key created ${formatDateTime(issuedAt)}`);
   });
 
   it("asks before replacing a key, warning that the current one stops working", async () => {
