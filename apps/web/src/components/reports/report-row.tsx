@@ -10,11 +10,14 @@ export function ReportRow({
   title,
   badges,
   urgency,
+  children,
 }: {
   report: components["schemas"]["IssueReportSummaryResponse"];
   title: ReactNode;
   badges?: ReactNode;
   urgency?: ReactNode;
+  /** Extra content below the metadata, e.g. a routing badge. */
+  children?: ReactNode;
 }) {
   return (
     <ListRow
@@ -23,6 +26,7 @@ export function ReportRow({
       trailing={badges}
     >
       <ReportMetadata report={report} urgency={urgency} />
+      {children}
     </ListRow>
   );
 }

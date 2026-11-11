@@ -28,6 +28,7 @@ import { Tabs, TabsList, TabsTrigger } from "@proj/ui/components/tabs";
 import {
   type ChangeEvent,
   useCallback,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -38,19 +39,36 @@ import type { Mode } from "@/lib/readings";
 import type { Run, RunState } from "@/lib/run";
 import { runSimulation } from "@/lib/run";
 import { sendTelemetry } from "@/lib/send-telemetry";
+import { DEFAULT_SETTINGS, loadSettings, saveSettings } from "@/lib/settings";
 import { createWorkerSleep } from "@/lib/worker-timer";
 
 const STATUSES = ["CREATED", "ALREADY_STORED", "INVALID", "CONFLICT"] as const;
 
 export function SimulatorPage() {
-  const [apiUrl, setApiUrl] = useState("http://localhost:8080");
-  const [deviceKey, setDeviceKey] = useState("");
+  const [apiUrl, setApiUrl] = useState(DEFAULT_SETTINGS.apiUrl);
+  const [deviceKey, setDeviceKey] = useState(DEFAULT_SETTINGS.deviceKey);
   const [rows, setRows] = useState<CsvRow[]>([]);
   const [fileError, setFileError] = useState<string>();
   const [experiment, setExperiment] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>("backfill");
+  const [mode, setMode] = useState<Mode>(DEFAULT_SETTINGS.mode);
   const [runState, setRunState] = useState<RunState>();
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const run = useRef<Run>(null);
+
+  // Settings live in this browser's localStorage. Read after mount, not
+  // during render, so the server-rendered HTML matches the first client render.
+  useEffect(() => {
+    const saved = loadSettings();
+    setApiUrl(saved.apiUrl);
+    setDeviceKey(saved.deviceKey);
+    setMode(saved.mode);
+    setSettingsLoaded(true);
+  }, []);
+  useEffect(() => {
+    if (settingsLoaded) {
+      saveSettings({ apiUrl, deviceKey, mode });
+    }
+  }, [settingsLoaded, apiUrl, deviceKey, mode]);
 
   const list = useMemo(() => experiments(rows), [rows]);
   const selectedRows = useMemo(
@@ -119,7 +137,8 @@ export function SimulatorPage() {
           <CardTitle>Run</CardTitle>
           <CardDescription>
             Replays one experiment from the test-readings CSV to POST
-            /device-api/telemetry. The file never leaves this machine.
+            /device-api/telemetry. The file never leaves this machine; the API
+            URL, device key and mode are remembered in this browser.
           </CardDescription>
         </CardHeader>
         <CardContent>

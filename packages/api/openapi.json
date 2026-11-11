@@ -2965,9 +2965,16 @@
               }
             }
           },
-          "401": { "description": "Sign in required" },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "403": {
-            "description": "Estate permission required",
+            "description": "Work-order creation authority required",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -2975,7 +2982,7 @@
             }
           },
           "404": {
-            "description": "Estate or role not found",
+            "description": "Inaccessible estate, report or work order",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -2983,15 +2990,7 @@
             }
           },
           "409": {
-            "description": "Duplicate, stale version, inactive estate or assigned members",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "503": {
-            "description": "Storage unavailable",
+            "description": "Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -3016,54 +3015,39 @@
         "tags": ["routing-controller"],
         "summary": "Handle an escalated report without a contractor email",
         "operationId": "dismissReportRouting",
-          "200": {
-            "description": "Estate-scoped custom definitions",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["estate-role-controller"],
-        "operationId": "create_1",
         "parameters": [
           {
             "name": "estateId",
             "in": "path",
             "required": true,
             "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateEstateRoleRequest"
-              }
-            }
-          },
-          "required": true
-        },
         "responses": {
           "400": {
-            "description": "Invalid definition or identifier",
+            "description": "Invalid UUID, equipment type or priority",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "401": { "description": "Sign in required" },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
           "403": {
-            "description": "Estate permission required",
+            "description": "Work-order creation authority required",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -3071,7 +3055,7 @@
             }
           },
           "404": {
-            "description": "Estate or role not found",
+            "description": "Inaccessible estate, report or work order",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -3079,27 +3063,19 @@
             }
           },
           "409": {
-            "description": "Duplicate, stale version, inactive estate or assigned members",
+            "description": "Not awaiting review, no contractor for the type, already emailed, or not an open equipment-fault work order from a report",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "503": {
-            "description": "Storage unavailable",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "201": {
-            "description": "Custom role created",
+          "200": {
+            "description": "The report's routing, now dismissed",
             "content": {
               "*/*": {
                 "schema": {
-                  "$ref": "#/components/schemas/EstateRoleDefinitionResponse"
+                  "$ref": "#/components/schemas/ReportRoutingResponse"
                 }
               }
             }

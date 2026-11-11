@@ -18,8 +18,8 @@ Built from `packages/ui`: Card, Field/FieldLabel, Input, Select, Tabs
 (Backfill / Live mode), Button, Table and Alert.
 
 - **API URL** (`Input`, default `http://localhost:8080`).
-- **Device key** (`Input type="password"`). Held in component state only;
-  never stored, logged or rendered.
+- **Device key** (`Input type="password"`). Saved in this browser with the
+  other settings (below); never logged or rendered.
 - **CSV file** (`Input type="file"`). Parsed in the browser by
   `lib/csv.ts` `parseReadingsCsv`. The header must be exactly
   `experiment,timestamp,vibrationAcceleration,pressure,temperature,flowRate,power,anomaly`;
@@ -36,6 +36,15 @@ Built from `packages/ui`: Card, Field/FieldLabel, Input, Select, Tabs
 - **Start / Stop** (`Button`). While running: rows sent of total, counts of
   `CREATED`, `ALREADY_STORED`, `INVALID`, `CONFLICT` (`Table`), the first 10
   distinct `INVALID`/`CONFLICT` messages, and any stopping error (Alert).
+
+## Saved settings (`lib/settings.ts`)
+
+The API URL, device key and mode are kept in `localStorage` under
+`device-simulator:settings` as `{ apiUrl, deviceKey, mode }`. The page reads
+them after mount (`loadSettings`, so the server render matches the first
+client render) and writes on every change (`saveSettings`). Missing, malformed
+or blocked storage falls back to the defaults (`http://localhost:8080`, empty
+key, `backfill`) field by field. The CSV and selected experiment are not saved.
 
 ## Run logic (`lib/`)
 
@@ -74,5 +83,7 @@ No React Query: there is no cached server state, only one-shot sends.
 ## Tests
 
 `apps/device-simulator/tests/lib/`: `csv.test.ts`, `readings.test.ts`,
-`run.test.ts` (fake timers, injected sleep), `telemetry-outcome.test.ts`,
-`worker-timer.test.ts` (fake worker and timers).
+`run.test.ts` (fake timers, injected sleep), `settings.test.ts`,
+`telemetry-outcome.test.ts`, `worker-timer.test.ts` (fake worker and timers).
+`tests/routes/-components/simulator-page.test.tsx` checks settings survive a
+remount.

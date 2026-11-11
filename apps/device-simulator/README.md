@@ -19,8 +19,9 @@ Then open http://localhost:3002. It needs no secrets.
    (vibration acceleration, pressure, temperature, flow rate, power) and copy
    its device key.
 2. Enter the API URL (default `http://localhost:8080`) and the device key. The
-   key is a password field, held only in page memory and sent only with each
-   request. It is never stored or logged.
+   key is a password field, sent only with each request and never logged.
+   The API URL, device key and mode are remembered in this browser's
+   `localStorage`; clear the fields to forget them.
 3. Upload the CSV, pick an experiment and a mode:
    - **Backfill** shifts the experiment so its last row is now and sends it
      all at once, in batches of up to 500 readings.

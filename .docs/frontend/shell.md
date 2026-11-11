@@ -133,6 +133,7 @@ a group with no visible items is not rendered.
 | --- | --- | --- | --- |
 | (unlabelled) | Overview | `` (exact match) | `canOpenOverview`: `canViewEstateDetails ?? canViewManagement` |
 | Maintenance | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
+| Maintenance | Contractors | `/contractors` | `canOpenContractors`: `canCreateWorkOrders` |
 | Maintenance | Inspections | `/inspections` (also active on `/inspections/schedules/**`) | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
 | Maintenance | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
 | Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewAssetHistory \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |

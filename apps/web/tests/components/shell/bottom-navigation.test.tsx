@@ -128,10 +128,11 @@ describe("mobile bottom navigation", () => {
     const tabs = within(strip).getAllByRole("link");
     expect(tabs.map((link) => link.textContent)).toEqual([
       "Fault reports",
+      "Contractors",
       "Inspections",
       "Work orders",
     ]);
-    expect(tabs[2]?.getAttribute("aria-current")).toBe("page");
+    expect(tabs[3]?.getAttribute("aria-current")).toBe("page");
   });
 
   it("filters sections by permission and hides tabs for a one-page section", async () => {
