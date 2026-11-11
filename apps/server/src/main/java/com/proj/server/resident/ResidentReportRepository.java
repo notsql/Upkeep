@@ -63,25 +63,22 @@ public class ResidentReportRepository {
                 .fetch(row -> new ResidentContextResponse.EstateLabel(row.value1(), row.value2()));
     }
 
-    public Optional<ResidentContextResponse.EstateLabel> activeAssignment(String userId, UUID estateId, boolean lock) {
-        if (lock)
-            db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId)).forUpdate().fetch();
+    /** Any active estate, whatever the caller's memberships; {@code lock} holds the estate row. */
+    public Optional<ResidentContextResponse.EstateLabel> activeEstate(UUID estateId, boolean lock) {
         var query = db.select(ESTATE.ID, ESTATE.NAME)
-                .from(ESTATEUSER)
-                .join(ESTATE)
-                .on(ESTATE.ID.eq(ESTATEUSER.ESTATEID))
-                .where(ESTATEUSER
-                        .USERID
-                        .eq(userId)
-                        .and(ESTATEUSER.ESTATEID.eq(estateId))
-                        .and(ESTATEUSER.ROLE.eq("RESIDENT"))
-                        .and(ESTATE.DEACTIVATEDAT.isNull()));
-        return (lock ? query.forUpdate().of(ESTATEUSER).fetchOptional() : query.fetchOptional())
+                .from(ESTATE)
+                .where(ESTATE.ID.eq(estateId).and(ESTATE.DEACTIVATEDAT.isNull()));
+        return (lock ? query.forUpdate().fetchOptional() : query.fetchOptional())
                 .map(row -> new ResidentContextResponse.EstateLabel(row.value1(), row.value2()));
     }
 
-    public boolean hasResidentMembership(String userId) {
-        return db.fetchExists(ESTATEUSER, ESTATEUSER.USERID.eq(userId).and(ESTATEUSER.ROLE.eq("RESIDENT")));
+    public List<ResidentContextResponse.EstateLabel> searchActiveEstates(String query, int limit) {
+        return db.select(ESTATE.ID, ESTATE.NAME)
+                .from(ESTATE)
+                .where(ESTATE.DEACTIVATEDAT.isNull().and(ESTATE.NAME.containsIgnoreCase(query)))
+                .orderBy(ESTATE.NAME, ESTATE.ID)
+                .limit(limit)
+                .fetch(row -> new ResidentContextResponse.EstateLabel(row.value1(), row.value2()));
     }
 
     public List<ResidentLocationResponse> activeLocations(UUID estateId) {

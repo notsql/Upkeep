@@ -1,6 +1,9 @@
 # 0027 — Resident authority comes from current EstateUser rows
 
-**Status:** accepted on 2026-10-13
+**Status:** accepted on 2026-10-13. Partly superseded by
+[0053](0053-fault-reports-from-any-signed-in-user.md): RESIDENT no longer
+permits report creation, and deleting the membership no longer stops new
+submissions. The rest stands.
 
 Supersedes the WorkOS resident-role and ResidentAssignment decisions in 0026. Its image storage, retention and ownership decisions remain in effect.
 

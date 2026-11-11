@@ -20,6 +20,11 @@ broaden the resident's submitter-only history endpoints.
 The changes have not been implemented.
 **Owner:** unassigned
 
+> **Superseded in part (decision 0053):** report creation, `GET /resident/locations`
+> and the photo slot no longer require a RESIDENT membership. Any signed-in user
+> may report in any active estate; unknown or deactivated estates return 404.
+> See `fault-reports-from-any-signed-in-user.md`.
+
 ## Problem
 
 Residents need to report faults in their estate and follow their own reports

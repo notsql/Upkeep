@@ -1,6 +1,6 @@
 # Fault reports from any signed-in user
 
-**Status:** draft
+**Status:** agreed
 **Owner:** Ong Zheng Kai
 
 ## Problem

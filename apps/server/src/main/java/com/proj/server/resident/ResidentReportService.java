@@ -16,6 +16,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 public class ResidentReportService {
+    private static final int ESTATE_SEARCH_LIMIT = 20;
     private final ResidentReportRepository reports;
     private final ImageUploads images;
     private final TransactionTemplate transactions;
@@ -37,23 +38,25 @@ public class ResidentReportService {
 
     public ResidentContextResponse context(String userId) {
         var estates = reports.activeAssignments(userId);
-        return new ResidentContextResponse(estates, !estates.isEmpty());
+        return new ResidentContextResponse(estates, true);
+    }
+
+    /** Active estates whose name contains the trimmed query; anyone signed in may report into them. */
+    public List<ResidentContextResponse.EstateLabel> searchEstates(String query) {
+        var trimmed = query == null ? "" : query.trim();
+        if (trimmed.length() < 2) {
+            throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Type at least 2 letters to search.");
+        }
+        return reports.searchActiveEstates(trimmed, ESTATE_SEARCH_LIMIT);
     }
 
     public List<ResidentLocationResponse> locations(String userId, UUID estateId) {
-        if (!reports.hasResidentMembership(userId)) {
-            throw new ResidentReportException(HttpStatus.FORBIDDEN, "No resident estate assignment.");
-        }
-        return reports.activeAssignment(userId, estateId, false)
-                .map(estate -> reports.activeLocations(estate.id()))
-                .orElseThrow(() -> new ResidentReportException(
-                        HttpStatus.FORBIDDEN, "No active resident assignment in the selected estate."));
+        return reports.activeLocations(activeEstate(estateId, false).id());
     }
 
     /** A signed upload for one report photo; later photos pass the returned report id back. */
     public UploadSlotResponse imageSlot(String userId, UUID estateId, UUID reportId, String contentType, long size) {
-        reports.activeAssignment(userId, estateId, false)
-                .orElseThrow(() -> new ResidentReportException(HttpStatus.FORBIDDEN, "No active estate assignment."));
+        activeEstate(estateId, false);
         var id = reportId == null ? UUID.randomUUID() : reportId;
         return images.slot(prefix(id), contentType, size).forReport(id);
     }
@@ -76,8 +79,7 @@ public class ResidentReportService {
         if (locationId == null) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Choose a level or common area.");
         }
-        var estate = reports.activeAssignment(userId, estateId, false)
-                .orElseThrow(() -> new ResidentReportException(HttpStatus.FORBIDDEN, "No active estate assignment."));
+        var estate = activeEstate(estateId, false);
         if (!reports.activeReportLocation(estate.id(), locationId)) {
             throw new ResidentReportException(
                     HttpStatus.BAD_REQUEST, "Choose an active level or common area in your estate.");
@@ -95,12 +97,10 @@ public class ResidentReportService {
         var uploaded = images.confirm(keys, ids);
         try {
             var created = transactions.execute(ignored -> {
-                var current = reports.activeAssignment(userId, estateId, true)
-                        .orElseThrow(() ->
-                                new ResidentReportException(HttpStatus.FORBIDDEN, "No active estate assignment."));
+                var current = activeEstate(estateId, true);
                 if (!current.id().equals(estate.id()) || !reports.activeReportLocation(current.id(), locationId)) {
                     throw new ResidentReportException(
-                            HttpStatus.BAD_REQUEST, "The assignment or location changed. Reload and try again.");
+                            HttpStatus.BAD_REQUEST, "The location changed. Reload and try again.");
                 }
                 var reportDescription = description.trim();
                 reports.create(reportId, userId, current.id(), locationId, reportTitle, reportDescription);
@@ -181,5 +181,10 @@ public class ResidentReportService {
 
     private static String prefix(UUID reportId) {
         return "reports/" + reportId + "/";
+    }
+
+    private ResidentContextResponse.EstateLabel activeEstate(UUID estateId, boolean lock) {
+        return reports.activeEstate(estateId, lock)
+                .orElseThrow(() -> new ResidentReportException(HttpStatus.NOT_FOUND, "Estate not found."));
     }
 }

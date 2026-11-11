@@ -72,8 +72,8 @@ class ResidentReportServiceTests {
         var now = OffsetDateTime.now();
         var detail = new IssueReportDetailResponse(
                 UUID.randomUUID(), title, "Description", "Maple Estate", null, "SUBMITTED", now, now, List.of());
-        when(reports.activeAssignment("resident-a", estateId, false)).thenReturn(Optional.of(estate));
-        when(reports.activeAssignment("resident-a", estateId, true)).thenReturn(Optional.of(estate));
+        when(reports.activeEstate(estateId, false)).thenReturn(Optional.of(estate));
+        when(reports.activeEstate(estateId, true)).thenReturn(Optional.of(estate));
         when(reports.activeReportLocation(estateId, locationId)).thenReturn(true);
         when(reports.detail(eq("resident-a"), any())).thenReturn(Optional.of(detail));
         when(transactions.execute(any())).thenAnswer(call -> {
@@ -90,7 +90,7 @@ class ResidentReportServiceTests {
     }
 
     @Test
-    void anImageSlotIsATenMinuteSignedUploadUnderANewReportsKeyForAnAssignedResident() {
+    void anImageSlotIsATenMinuteSignedUploadUnderANewReportsKeyForAnySignedInUser() {
         assigned();
 
         var slot = service.imageSlot("resident-a", estateId, null, "image/png", 1_000);
@@ -108,9 +108,11 @@ class ResidentReportServiceTests {
     }
 
     @Test
-    void anImageSlotRefusesUnassignedResidentsOtherTypesAndOversizedFiles() {
-        when(reports.activeAssignment("resident-a", estateId, false)).thenReturn(Optional.empty());
-        assertEquals(HttpStatus.FORBIDDEN, slotError("image/png", 10).status());
+    void anImageSlotRefusesUnknownEstatesOtherTypesAndOversizedFiles() {
+        when(reports.activeEstate(estateId, false)).thenReturn(Optional.empty());
+        var missing = slotError("image/png", 10);
+        assertEquals(HttpStatus.NOT_FOUND, missing.status());
+        assertEquals("Estate not found.", missing.getMessage());
         assigned();
         assertEquals(
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE, slotError("image/gif", 10).status());
@@ -251,6 +253,87 @@ class ResidentReportServiceTests {
         assertTrue(storage.objects.containsKey(document));
     }
 
+    @Test
+    void contextAllowsSubmittingWithNoResidentEstates() {
+        when(reports.activeAssignments("visitor")).thenReturn(List.of());
+
+        var context = service.context("visitor");
+
+        assertTrue(context.estates().isEmpty());
+        assertTrue(context.canSubmit());
+    }
+
+    @Test
+    void locationsAreListedForAnyActiveEstateWithoutMembership() {
+        var location = new ResidentLocationResponse(locationId, "LEVEL", "Level 1", null, 0);
+        assigned();
+        when(reports.activeLocations(estateId)).thenReturn(List.of(location));
+
+        assertEquals(List.of(location), service.locations("visitor", estateId));
+    }
+
+    @Test
+    void locationsForAnUnknownOrDeactivatedEstateAreNotFound() {
+        when(reports.activeEstate(estateId, false)).thenReturn(Optional.empty());
+
+        var error = assertThrows(ResidentReportException.class, () -> service.locations("visitor", estateId));
+
+        assertEquals(HttpStatus.NOT_FOUND, error.status());
+        assertEquals("Estate not found.", error.getMessage());
+    }
+
+    @Test
+    void creatingForAnUnknownOrDeactivatedEstateIsNotFound() {
+        when(reports.activeEstate(estateId, false)).thenReturn(Optional.empty());
+
+        var error = assertThrows(
+                ResidentReportException.class,
+                () -> service.create("visitor", estateId, null, "Leak", "Water", locationId, List.of()));
+
+        assertEquals(HttpStatus.NOT_FOUND, error.status());
+        assertEquals("Estate not found.", error.getMessage());
+    }
+
+    @Test
+    void anEstateDeactivatedDuringSubmissionIsNotFound() {
+        assignedAndSaving();
+        when(reports.activeEstate(estateId, true)).thenReturn(Optional.empty());
+
+        var error = assertThrows(
+                ResidentReportException.class,
+                () -> service.create("visitor", estateId, null, "Leak", "Water", locationId, List.of()));
+
+        assertEquals(HttpStatus.NOT_FOUND, error.status());
+        verify(reports, never()).create(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void aUserWithNoMembershipCanSubmitAReport() {
+        assignedAndSaving();
+
+        service.create("visitor", estateId, null, "Leak", "Water", locationId, List.of());
+
+        verify(reports).create(any(), eq("visitor"), eq(estateId), eq(locationId), eq("Leak"), eq("Water"));
+    }
+
+    @Test
+    void estateSearchTrimsTheQueryAndReturnsMatches() {
+        var maple = new ResidentContextResponse.EstateLabel(estateId, "Maple Estate");
+        when(reports.searchActiveEstates("map", 20)).thenReturn(List.of(maple));
+
+        assertEquals(List.of(maple), service.searchEstates("  map  "));
+    }
+
+    @Test
+    void estateSearchNeedsAtLeastTwoCharacters() {
+        for (var query : new String[] {null, "", " ", " a "}) {
+            var error = assertThrows(ResidentReportException.class, () -> service.searchEstates(query));
+            assertEquals(HttpStatus.BAD_REQUEST, error.status());
+            assertEquals("Type at least 2 letters to search.", error.getMessage());
+        }
+        verifyNoInteractions(reports);
+    }
+
     private ResidentReportException slotError(String type, long size) {
         return assertThrows(
                 ResidentReportException.class, () -> service.imageSlot("resident-a", estateId, null, type, size));
@@ -263,17 +346,17 @@ class ResidentReportServiceTests {
     }
 
     private void assigned() {
-        when(reports.activeAssignment("resident-a", estateId, false))
+        when(reports.activeEstate(estateId, false))
                 .thenReturn(Optional.of(new ResidentContextResponse.EstateLabel(estateId, "Maple Estate")));
     }
 
     private void assignedAndSaving() {
         var estate = new ResidentContextResponse.EstateLabel(estateId, "Maple Estate");
         var now = OffsetDateTime.now();
-        when(reports.activeAssignment("resident-a", estateId, false)).thenReturn(Optional.of(estate));
-        when(reports.activeAssignment("resident-a", estateId, true)).thenReturn(Optional.of(estate));
+        when(reports.activeEstate(estateId, false)).thenReturn(Optional.of(estate));
+        when(reports.activeEstate(estateId, true)).thenReturn(Optional.of(estate));
         when(reports.activeReportLocation(estateId, locationId)).thenReturn(true);
-        when(reports.detail(eq("resident-a"), any()))
+        when(reports.detail(any(), any()))
                 .thenReturn(Optional.of(new IssueReportDetailResponse(
                         reportId, "Leak", "Water", "Maple Estate", null, "SUBMITTED", now, now, List.of())));
         when(transactions.execute(any())).thenAnswer(call -> {

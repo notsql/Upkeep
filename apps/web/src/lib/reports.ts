@@ -12,6 +12,11 @@ import { linkStaleTime, sendToStorage } from "@/lib/storage-upload";
 export type ResidentLocation =
   components["schemas"]["ResidentLocationResponse"];
 export type IssueReport = components["schemas"]["IssueReportDetailResponse"];
+export type ReportEstate = components["schemas"]["EstateLabel"];
+
+/** Shortest estate search the API accepts, after trimming. */
+export const ESTATE_SEARCH_MIN_LENGTH = 2;
+const ESTATE_CLOSED = "This estate is no longer taking reports.";
 
 function useResidentId() {
   const { userId, ready } = useAuthenticatedSession();
@@ -30,6 +35,37 @@ function reportError(error: unknown, fallback: string): Error {
   return new Error(fallback);
 }
 
+/** A 404 means the estate is unknown or deactivated: say so plainly. */
+function estateError(
+  error: unknown,
+  response: Response | undefined,
+  fallback: string
+): Error {
+  return response?.status === 404
+    ? new Error(ESTATE_CLOSED)
+    : reportError(error, fallback);
+}
+
+/** Active estates whose name contains the query; idle until it is long enough. */
+export function useEstateSearch(query: string) {
+  const userId = useResidentId();
+  const q = query.trim();
+  return useQuery({
+    queryKey: [userId, "resident-estates", q],
+    enabled: !!userId && q.length >= ESTATE_SEARCH_MIN_LENGTH,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await api.GET("/resident/estates", {
+        params: { query: { q } },
+      });
+      if (error || !data) {
+        throw reportError(error, "Couldn't search estates. Try again.");
+      }
+      return data;
+    },
+  });
+}
+
 export function useResidentContext() {
   const userId = useResidentId();
   return useQuery({
@@ -41,7 +77,7 @@ export function useResidentContext() {
       if (error || !data) {
         throw reportError(
           error,
-          "Couldn't load your estate assignment. Try again."
+          "Couldn't load your estates. Try again."
         );
       }
       return data;
@@ -56,11 +92,15 @@ export function useResidentLocations(estateId?: string) {
     enabled: !!userId && !!estateId,
     retry: false,
     queryFn: async () => {
-      const { data, error } = await api.GET("/resident/locations", {
+      const { data, error, response } = await api.GET("/resident/locations", {
         params: { query: { estateId: estateId ?? "" } },
       });
       if (error || !data) {
-        throw reportError(error, "Couldn't load locations. Try again.");
+        throw estateError(
+          error,
+          response,
+          "Couldn't load locations. Try again."
+        );
       }
       return data;
     },
@@ -98,13 +138,17 @@ export function useCreateReport() {
           },
         });
         if (slot.error || !slot.data) {
-          throw reportError(slot.error, "Couldn't send a photo. Try again.");
+          throw estateError(
+            slot.error,
+            slot.response,
+            "Couldn't send a photo. Try again."
+          );
         }
         reportId = slot.data.reportId ?? reportId;
         await sendToStorage(slot.data, image);
         imageKeys.push(slot.data.objectKey);
       }
-      const { data, error } = await api.POST("/resident/reports", {
+      const { data, error, response } = await api.POST("/resident/reports", {
         body: {
           estateId,
           title,
@@ -114,8 +158,9 @@ export function useCreateReport() {
         },
       });
       if (error || !data) {
-        throw reportError(
+        throw estateError(
           error,
+          response,
           "Couldn't submit the report. Check My reports before trying again."
         );
       }

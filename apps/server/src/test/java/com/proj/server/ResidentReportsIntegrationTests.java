@@ -227,22 +227,64 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void unassignedUserCanReadAnEmptyContextButCannotReadLocationsOrSubmit() throws Exception {
+    void aUserWithNoMembershipCanReadLocationsAndSubmitInAnyActiveEstate() throws Exception {
         var e = estate("UNASSIGNED", false);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates").isEmpty())
-                .andExpect(jsonPath("$.canSubmit").value(false));
-        mvc.perform(asUser(
-                        get("/resident/locations")
-                                .param(
-                                        "estateId",
-                                        selectedEstateId("resident-a").toString()),
-                        "resident-a"))
-                .andExpect(status().isForbidden());
-        mvc.perform(submission("resident-a", level, "Leaking pipe")).andExpect(status().isForbidden());
+                .andExpect(jsonPath("$.canSubmit").value(true));
+        mvc.perform(asUser(get("/resident/locations").param("estateId", e.toString()), "resident-a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '" + level + "')].type").value(hasItem("LEVEL")));
+        mvc.perform(submission("resident-a", level, "Leaking pipe")).andExpect(status().isCreated());
+        assertEquals(
+                0L, db.fetchValue("select count(*) from \"EstateUser\" where \"userId\"='resident-a'", Long.class));
+    }
+
+    @Test
+    void aStaffMemberOfOneEstateCanReportInAnotherWithoutGainingRightsThere() throws Exception {
+        var home = estate("STAFFHOME", false);
+        var other = estate("STAFFOTHER", false);
+        db.execute(
+                "insert into \"EstateUser\" (\"userId\", \"estateId\", role) values ('manager-a', ?, 'MANAGER')", home);
+        var block = location(other, "BLOCK", null, null, false);
+        var level = location(other, "LEVEL", block, "BLOCK", false);
+
+        mvc.perform(submission("manager-a", level, "Lift stuck")).andExpect(status().isCreated());
+        assertEquals(
+                0L,
+                db.fetchValue(
+                        "select count(*) from \"EstateUser\" where \"userId\"='manager-a' and \"estateId\"=?",
+                        Long.class,
+                        other));
+    }
+
+    @Test
+    void estateSearchFindsActiveEstatesByNameForAnySignedInUser() throws Exception {
+        var maple = estate("MAPLESEARCH", false);
+        estate("MAPLESEARCHGONE", true);
+        estate("OAKSEARCH", false);
+
+        mvc.perform(asUser(get("/resident/estates").param("q", "  maplesearch "), "visitor"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(maple.toString()))
+                .andExpect(jsonPath("$[0].name").value("MAPLESEARCH Estate"));
+        mvc.perform(asUser(get("/resident/estates").param("q", " m "), "visitor"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/resident/estates").param("q", "maple")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void estateSearchReturnsAtMostTwentyEstatesOrderedByName() throws Exception {
+        for (var i = 0; i < 21; i++) estate("CAPPED" + String.format("%02d", 20 - i), false);
+
+        mvc.perform(asUser(get("/resident/estates").param("q", "capped"), "visitor"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(20))
+                .andExpect(jsonPath("$[0].name").value("CAPPED00 Estate"));
     }
 
     @Test
@@ -333,7 +375,7 @@ class ResidentReportsIntegrationTests {
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates").isEmpty())
-                .andExpect(jsonPath("$.canSubmit").value(false));
+                .andExpect(jsonPath("$.canSubmit").value(true));
 
         mvc.perform(asUser(get("/resident/reports/" + oldReport), "resident-a"))
                 .andExpect(status().isOk())
@@ -341,7 +383,7 @@ class ResidentReportsIntegrationTests {
         mvc.perform(asUser(get("/resident/reports"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(oldReport.toString()));
-        mvc.perform(submission("resident-a", level, "New report")).andExpect(status().isForbidden());
+        mvc.perform(submission("resident-a", level, "New report")).andExpect(status().isCreated());
     }
 
     @Test
@@ -535,7 +577,7 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void anImageSlotIsATenMinuteSignedUploadForAssignedResidentsOnly() throws Exception {
+    void anImageSlotIsATenMinuteSignedUploadForAnySignedInUserInAnActiveEstate() throws Exception {
         var e = estate("SLOTS", false);
         assign("resident-a", e);
         var slot = mvc.perform(asUser(
@@ -560,7 +602,14 @@ class ResidentReportsIntegrationTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/png\",\"size\":1000}"),
                         "resident-b"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
+        mvc.perform(asUser(
+                        post("/resident/reports/image-slots")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"estateId\":\"" + UUID.randomUUID()
+                                        + "\",\"contentType\":\"image/png\",\"size\":1000}"),
+                        "resident-b"))
+                .andExpect(status().isNotFound());
         mvc.perform(asUser(
                         post("/resident/reports/image-slots")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -620,7 +669,7 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void aWorkosResidentClaimCannotSubstituteForADatabaseMembership() throws Exception {
+    void anyWorkosRoleCanSubmitWithoutADatabaseMembership() throws Exception {
         var e = estate("CLAIM", false);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
@@ -632,13 +681,13 @@ class ResidentReportsIntegrationTests {
                     .param("estateId", e.toString());
             request.with(jwt().jwt(token -> token.subject("unassigned").claim("role", role))
                     .authorities(new SimpleGrantedAuthority("ROLE_" + role)));
-            mvc.perform(request).andExpect(status().isForbidden());
+            mvc.perform(request).andExpect(status().isCreated());
         }
-        assertEquals(0L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
+        assertEquals(3L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
     }
 
     @Test
-    void anInactiveResidentEstateKeepsContextButBlocksNewReports() throws Exception {
+    void aDeactivatedEstateIsNotFoundForLocationsAndNewReports() throws Exception {
         var e = estate("INACTIVE", true);
         assign("resident-a", e);
         var block = location(e, "BLOCK", null, null, false);
@@ -646,14 +695,22 @@ class ResidentReportsIntegrationTests {
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates").isEmpty())
-                .andExpect(jsonPath("$.canSubmit").value(false));
+                .andExpect(jsonPath("$.canSubmit").value(true));
         mvc.perform(asUser(get("/resident/locations").param("estateId", e.toString()), "resident-a"))
-                .andExpect(status().isForbidden());
-        mvc.perform(submission("resident-a", level, "Inactive estate")).andExpect(status().isForbidden());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Estate not found."));
+        mvc.perform(asUser(
+                        get("/resident/locations")
+                                .param("estateId", UUID.randomUUID().toString()),
+                        "resident-a"))
+                .andExpect(status().isNotFound());
+        mvc.perform(submission("resident-a", level, "Inactive estate"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Estate not found."));
     }
 
     @Test
-    void sameTokenReflectsAssignmentAndDeletionWithoutChangingTheWorkosRole() throws Exception {
+    void deletingTheMembershipNoLongerStopsSubmissions() throws Exception {
         var e = estate("TOKEN", false);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
@@ -662,11 +719,11 @@ class ResidentReportsIntegrationTests {
 
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.canSubmit").value(false));
+                .andExpect(jsonPath("$.estates").isEmpty());
         assign("resident-a", e);
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.canSubmit").value(true));
+                .andExpect(jsonPath("$.estates[0].id").value(e.toString()));
         mvc.perform(StoredUploadSubmission.report(imageStore)
                         .param("title", "Fault title")
                         .param("description", "Assigned now")
@@ -677,14 +734,14 @@ class ResidentReportsIntegrationTests {
         db.execute("delete from \"EstateUser\" where \"userId\"='resident-a' and role='RESIDENT'");
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.canSubmit").value(false));
+                .andExpect(jsonPath("$.estates").isEmpty());
         mvc.perform(StoredUploadSubmission.report(imageStore)
                         .param("title", "Fault title")
                         .param("description", "Removed now")
                         .param("locationId", level.toString())
                         .param("estateId", e.toString())
                         .with(token))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -711,18 +768,18 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void removingTheMembershipAfterUploadBlocksTheReportAndLeavesThePhotoForTheSweep() throws Exception {
+    void deactivatingTheEstateAfterUploadBlocksTheReportAndLeavesThePhotoForTheSweep() throws Exception {
         var e = estate("UPLOADREVOKE", false);
         assign("resident-a", e);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
         var png = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", png);
-        var request = submission("resident-a", level, "Assignment removed during upload")
+        var request = submission("resident-a", level, "Estate deactivated during upload")
                 .file(new MockMultipartFile("images", "fault.png", "image/png", png.toByteArray()));
-        db.execute("delete from \"EstateUser\" where \"userId\"='resident-a' and role='RESIDENT'");
+        db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", e);
 
-        mvc.perform(request).andExpect(status().isForbidden());
+        mvc.perform(request).andExpect(status().isNotFound());
         assertEquals(0L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
         assertEquals(0L, db.fetchValue("select count(*) from \"IssueReportImage\"", Long.class));
         assertTrue(imageStore.objects.containsKey(request.keys().getFirst()));

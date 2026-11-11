@@ -1914,8 +1914,8 @@
               }
             }
           },
-          "403": {
-            "description": "Active resident membership required",
+          "404": {
+            "description": "Estate not found",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1988,8 +1988,8 @@
               }
             }
           },
-          "403": {
-            "description": "Active resident membership required",
+          "404": {
+            "description": "Estate not found",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -7179,7 +7179,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Active locations in the assigned estate",
+            "description": "Active locations in the estate",
             "content": {
               "*/*": {
                 "schema": {
@@ -7191,8 +7191,51 @@
               }
             }
           },
-          "403": {
-            "description": "Resident membership required",
+          "404": {
+            "description": "Estate not found",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resident/estates": {
+      "get": {
+        "tags": ["resident-report-controller"],
+        "operationId": "searchResidentEstates",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Up to 20 active estates whose name contains the query",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/EstateLabel" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Query shorter than 2 characters",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -7216,7 +7259,7 @@
         "operationId": "residentContext",
         "responses": {
           "200": {
-            "description": "Assigned resident estate",
+            "description": "Resident estates listed first in the estate picker",
             "content": {
               "*/*": {
                 "schema": {

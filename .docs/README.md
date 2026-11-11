@@ -44,7 +44,7 @@ same change as the code.
 - [Locations](api/locations.md): member/responder-readable hierarchy, owner/responder
   historical reads, independent custom creation/editing and owner-only deactivation.
 - [Access projection and retired global grants](api/access.md): per-estate capabilities, unassigned accounts, protected resident memberships and explicit business-route authorization.
-- [Resident fault reports](api/resident-reports.md): assignment context, locations, submission, own history and private images.
+- [Resident fault reports](api/resident-reports.md): resident context, estate search, locations, submission from any signed-in user, own history and private images.
 - [Estate fault reports](api/estate-reports.md): Manager/Crew/custom-permission report reads, urgency/Safety ordering, Manager urgency edits, latest-change metadata, location and routing-state filters, and correction.
 - [Duplicate fault reports](api/fault-report-duplicates.md): suggested duplicate links on submission, manager confirm/reject and manual linking, counts on reports and work orders.
 - [Report routing and contractor email](api/report-routing.md): ID-70 classification, automatic work orders, service-provider routes, Manager send/dismiss and work-order dispatch email.

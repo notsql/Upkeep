@@ -1,4 +1,3 @@
-import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import {
   FieldLegend,
@@ -10,6 +9,7 @@ import { useCallback } from "react";
 import { FormActions } from "@/components/forms/form-actions";
 import { FormCard } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
+import type { ReportEstate } from "@/lib/reports";
 import { ReportDetailsFields } from "@/routes/_auth/reports/new/-components/new-report-page/report-details-fields";
 import { ReportImagesField } from "@/routes/_auth/reports/new/-components/new-report-page/report-images-field";
 import { ReportLocationFields } from "@/routes/_auth/reports/new/-components/new-report-page/report-location-fields";
@@ -20,7 +20,7 @@ export function NewReportForm({
   estates,
   initialEstateId,
 }: {
-  estates: components["schemas"]["ResidentContextResponse"]["estates"];
+  estates: ReportEstate[];
   initialEstateId?: string;
 }) {
   const form = useNewReportForm(estates, initialEstateId);
@@ -41,14 +41,15 @@ export function NewReportForm({
         {form.locations.isError ? (
           <Alert variant="destructive">
             <AlertDescription>
-              Couldn't load locations. Try again.
+              {form.locations.error?.message ??
+                "Couldn't load locations. Try again."}
             </AlertDescription>
           </Alert>
         ) : null}
         <FieldSet>
           <FieldLegend>Where is the fault?</FieldLegend>
           <ResidentEstateSelector
-            estateId={form.estateId}
+            estate={form.estate}
             estates={estates}
             id={form.id}
             onChange={form.changeEstate}

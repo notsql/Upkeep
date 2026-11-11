@@ -2074,6 +2074,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/resident/estates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations["searchResidentEstates"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/resident/locations": {
     parameters: {
       query?: never;
@@ -6484,8 +6500,8 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Active resident membership required */
-      403: {
+      /** @description Estate not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -6562,8 +6578,8 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Active resident membership required */
-      403: {
+      /** @description Estate not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -13711,7 +13727,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Assigned resident estate */
+      /** @description Resident estates listed first in the estate picker */
       200: {
         headers: {
           [name: string]: unknown;
@@ -13742,7 +13758,7 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Active locations in the assigned estate */
+      /** @description Active locations in the estate */
       200: {
         headers: {
           [name: string]: unknown;
@@ -13760,8 +13776,8 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Resident membership required */
-      403: {
+      /** @description Estate not found */
+      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -14368,6 +14384,46 @@ export interface operations {
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  searchResidentEstates: {
+    parameters: {
+      query: {
+        q: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Up to 20 active estates whose name contains the query */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateLabel"][];
+        };
+      };
+      /** @description Query shorter than 2 characters */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
         headers: {
           [name: string]: unknown;
         };

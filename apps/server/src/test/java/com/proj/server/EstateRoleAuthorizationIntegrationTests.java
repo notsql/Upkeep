@@ -632,7 +632,8 @@ class EstateRoleAuthorizationIntegrationTests {
         mvc.perform(get("/estates/" + a).with(token)).andExpect(status().isOk());
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.canSubmit").value(false));
+                .andExpect(jsonPath("$.estates").isEmpty())
+                .andExpect(jsonPath("$.canSubmit").value(true));
         mvc.perform(get("/resident/reports/" + reportId).with(token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.description").value("Earlier fault"));

@@ -1,4 +1,3 @@
-import type { components } from "@proj/api/schema";
 import { useNavigate } from "@tanstack/react-router";
 import {
   type ChangeEvent,
@@ -8,24 +7,36 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCreateReport, useResidentLocations } from "@/lib/reports";
+import {
+  type ReportEstate,
+  useCreateReport,
+  useResidentLocations,
+} from "@/lib/reports";
 import type { SelectedReportImage } from "@/routes/_auth/reports/new/-components/new-report-page/selected-image";
 
+function initialEstate(
+  estates: ReportEstate[],
+  requestedId?: string
+): ReportEstate | undefined {
+  if (requestedId) {
+    return estates.find((own) => own.id === requestedId);
+  }
+  return estates.length === 1 ? estates[0] : undefined;
+}
+
 export function useNewReportForm(
-  estates: components["schemas"]["ResidentContextResponse"]["estates"],
+  estates: ReportEstate[],
   initialEstateId?: string
 ) {
   const id = useId();
   const navigate = useNavigate();
   const create = useCreateReport();
-  const [selectedEstateId, setSelectedEstateId] = useState<string | null>(
-    initialEstateId ?? null
+  // A requested estate is preselected only if it is one of the user's own.
+  const [estate, setEstate] = useState<ReportEstate | undefined>(() =>
+    initialEstate(estates, initialEstateId)
   );
-  const estateId =
-    selectedEstateId ?? (estates.length === 1 ? estates[0]?.id : undefined);
-  const estateName =
-    estates.find((estate) => estate.id === estateId)?.name ??
-    "Choose an estate";
+  const estateId = estate?.id;
+  const estateName = estate?.name ?? "Choose an estate";
   const locations = useResidentLocations(estateId);
   const [blockId, setBlockId] = useState<string | null>(null);
   const [levelId, setLevelId] = useState<string | null>(null);
@@ -91,17 +102,18 @@ export function useNewReportForm(
   );
 
   const changeEstate = useCallback(
-    (value: string | null) => {
-      setSelectedEstateId(value);
+    (value: ReportEstate | null) => {
+      setEstate(value ?? undefined);
       setBlockId(null);
       setLevelId(null);
       setCommonId(null);
-      navigate({
-        to: "/reports/new",
-        search: { estateId: value ?? undefined },
-      });
+      // Only the user's own estates live in the URL: the page remounts on it,
+      // and another estate's name could not be shown again after reload.
+      if (value && estates.some((own) => own.id === value.id)) {
+        navigate({ to: "/reports/new", search: { estateId: value.id } });
+      }
     },
-    [navigate]
+    [estates, navigate]
   );
   const changeBlock = useCallback((value: string | null) => {
     setBlockId(value);
@@ -162,6 +174,7 @@ export function useNewReportForm(
     create,
     description,
     error,
+    estate,
     estateId,
     estateName,
     id,

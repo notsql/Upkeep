@@ -31,7 +31,6 @@ const NO_ESTATE_ASSIGNED = /no estate assigned/iu;
 const IMAGES = /Images/iu;
 const IMAGE_PICKERS = /Images \(optional\)|Take photo/u;
 const REMOVE_FAULT_IMAGE = /Remove fault.png/iu;
-const ESTATE = /estate/iu;
 vi.mock("@/lib/api", () => ({ api: { GET: get, POST: post } }));
 vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@tanstack/react-router")>()),
@@ -139,8 +138,9 @@ it("uses the estate selected through context navigation instead of silently choo
   await screen.findByRole("heading", { name: REPORT_A_FAULT });
   await waitFor(() =>
     expect(
-      screen.getByRole("combobox", { name: "Estate" }).textContent
-    ).toContain("Other estate")
+      (screen.getByRole("combobox", { name: "Estate" }) as HTMLInputElement)
+        .value
+    ).toBe("Other estate")
   );
   expect(get).toHaveBeenCalledWith(
     "/resident/locations",
@@ -159,12 +159,18 @@ it("links back to the selected estate's reports through breadcrumbs", async () =
   ).toBe(`/reports?estateId=${estateId}`);
 });
 
-it("explains an unavailable selected estate without falling back to another assignment", async () => {
+it("asks for an estate rather than falling back to another when the selected one is not assigned", async () => {
   renderWithProviders(<NewReportPage requestedEstateId="inactive" />);
-  await screen.findByText(
-    "Reporting is unavailable for the selected estate. Choose an active Resident estate from the estate menu."
+  const estate = await screen.findByRole("combobox", { name: "Estate" });
+  expect((estate as HTMLInputElement).value).toBe("");
+  expect(
+    (screen.getByRole("button", { name: SUBMIT_REPORT }) as HTMLButtonElement)
+      .disabled
+  ).toBe(true);
+  expect(get).not.toHaveBeenCalledWith(
+    "/resident/locations",
+    expect.anything()
   );
-  expect(screen.queryByRole("button", { name: SUBMIT_REPORT })).toBeNull();
 });
 
 it("shows only the assigned estate and requires description and a level or common area", async () => {
@@ -197,19 +203,122 @@ it("shows only the assigned estate and requires description and a level or commo
   await waitFor(() => expect(navigate).toHaveBeenCalled());
 });
 
-it("explains missing assignment and prevents submission", async () => {
-  get.mockImplementation((path: string) => {
-    const responses: Record<string, unknown> = {
-      "/access/context": unassignedAccess,
-      "/resident/context": { estates: [], canSubmit: false },
-      "/resident/locations": [],
-    };
-    return Promise.resolve({ data: responses[path] });
+const otherId = "00000000-0000-0000-0000-000000000020";
+
+/** A user with no assigned estates whose search finds Oak Park. */
+function mockUnassignedSearch(found: { id: string; name: string }[]) {
+  const original = get.getMockImplementation();
+  get.mockImplementation((path: string, ...args: unknown[]) => {
+    if (path === "/access/context") {
+      return Promise.resolve({ data: unassignedAccess });
+    }
+    if (path === "/resident/context") {
+      return Promise.resolve({ data: { estates: [], canSubmit: true } });
+    }
+    if (path === "/resident/estates") {
+      return Promise.resolve({ data: found });
+    }
+    return original?.(path, ...args);
+  });
+}
+
+function searchEstates(text: string) {
+  fireEvent.change(screen.getByRole("combobox", { name: "Estate" }), {
+    target: { value: text },
+  });
+}
+
+it("lets someone with no assigned estate find any estate and report a fault there", async () => {
+  mockUnassignedSearch([{ id: otherId, name: "Oak Park" }]);
+  renderWithProviders(<Page />);
+  const estate = await screen.findByRole("combobox", { name: "Estate" });
+  expect(estate.getAttribute("placeholder")).toBe("Find your estate");
+  expect(screen.queryByText(NO_ESTATE_ASSIGNED)).toBeNull();
+
+  searchEstates("oak");
+  fireEvent.click(await screen.findByRole("option", { name: "Oak Park" }));
+  expect(get).toHaveBeenCalledWith("/resident/estates", {
+    params: { query: { q: "oak" } },
+  });
+  await chooseOption(
+    await screen.findByRole("combobox", { name: BLOCK }),
+    "Block A"
+  );
+  await chooseOption(screen.getByRole("combobox", { name: LEVEL }), "Level 2");
+  fireEvent.change(screen.getByRole("textbox", { name: DESCRIPTION }), {
+    target: { value: "Broken light" },
+  });
+  fireEvent.change(screen.getByRole("textbox", { name: TITLE }), {
+    target: { value: "Broken light" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: SUBMIT_REPORT }));
+  await waitFor(() => expect(post).toHaveBeenCalled());
+  expect(createBody().estateId).toBe(otherId);
+});
+
+it("waits for two letters before searching for an estate", async () => {
+  mockUnassignedSearch([{ id: otherId, name: "Oak Park" }]);
+  renderWithProviders(<Page />);
+  await screen.findByRole("combobox", { name: "Estate" });
+
+  searchEstates(" o ");
+  await screen.findByText("Type at least 2 letters of your estate's name.");
+  expect(get).not.toHaveBeenCalledWith("/resident/estates", expect.anything());
+});
+
+it("says when no estate matches the search", async () => {
+  mockUnassignedSearch([]);
+  renderWithProviders(<Page />);
+  await screen.findByRole("combobox", { name: "Estate" });
+
+  searchEstates("zz");
+  await screen.findByText("No estates match");
+});
+
+it("lists the user's own estates before other search results", async () => {
+  const original = get.getMockImplementation();
+  get.mockImplementation((path: string, ...args: unknown[]) =>
+    path === "/resident/estates"
+      ? Promise.resolve({
+          data: [
+            { id: otherId, name: "Maple Court" },
+            { id: estateId, name: "Maple Estate" },
+          ],
+        })
+      : original?.(path, ...args)
+  );
+  renderWithProviders(<Page />);
+  const estate = await screen.findByRole("combobox", { name: "Estate" });
+  await waitFor(() =>
+    expect((estate as HTMLInputElement).value).toBe("Maple Estate")
+  );
+
+  searchEstates("maple");
+  await screen.findByRole("option", { name: "Maple Court" });
+  expect(
+    screen.getAllByRole("option").map((option) => option.textContent)
+  ).toEqual(["Maple Estate", "Maple Court"]);
+});
+
+it("tells the user when the chosen estate is no longer taking reports", async () => {
+  post.mockResolvedValue({
+    error: { message: "Estate not found." },
+    response: { status: 404 },
   });
   renderWithProviders(<Page />);
-  await screen.findByText(NO_ESTATE_ASSIGNED);
-  expect(screen.queryByRole("button", { name: SUBMIT_REPORT })).toBeNull();
-  expect(post).not.toHaveBeenCalled();
+  await chooseOption(
+    await screen.findByRole("combobox", { name: BLOCK }),
+    "Block A"
+  );
+  await chooseOption(screen.getByRole("combobox", { name: LEVEL }), "Level 2");
+  fireEvent.change(screen.getByRole("textbox", { name: DESCRIPTION }), {
+    target: { value: "Leak" },
+  });
+  fireEvent.change(screen.getByRole("textbox", { name: TITLE }), {
+    target: { value: "Leak" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: SUBMIT_REPORT }));
+  await screen.findByText("This estate is no longer taking reports.");
 });
 
 it("reports only in the resident estate even when the account manages another estate", async () => {
@@ -230,7 +339,12 @@ it("reports only in the resident estate even when the account manages another es
   );
   renderWithProviders(<Page />);
   await screen.findByText("Maple Estate");
-  expect(screen.queryByRole("combobox", { name: ESTATE })).toBeNull();
+  await waitFor(() =>
+    expect(
+      (screen.getByRole("combobox", { name: "Estate" }) as HTMLInputElement)
+        .value
+    ).toBe("Maple Estate")
+  );
   expect(screen.queryByText("Oak Park")).toBeNull();
   await chooseOption(
     await screen.findByRole("combobox", { name: BLOCK }),
@@ -413,8 +527,11 @@ it("requires a nonblank title of at most 50 characters before submitting", async
 
 it("lets a multi-estate resident choose an estate and clears the old location selection", async () => {
   const original = get.getMockImplementation();
-  get.mockImplementation((path: string, options?: unknown) =>
-    path === "/resident/context"
+  get.mockImplementation((path: string, options?: unknown) => {
+    if (path === "/resident/estates") {
+      return Promise.resolve({ data: [] });
+    }
+    return path === "/resident/context"
       ? Promise.resolve({
           data: {
             estates: [
@@ -424,19 +541,19 @@ it("lets a multi-estate resident choose an estate and clears the old location se
             canSubmit: true,
           },
         })
-      : original?.(path, options)
-  );
+      : original?.(path, options);
+  });
   renderWithProviders(<Page />);
+  await screen.findByRole("combobox", { name: "Estate" });
+  searchEstates("Maple");
+  fireEvent.click(await screen.findByRole("option", { name: "Maple Estate" }));
   await chooseOption(
-    await screen.findByRole("combobox", { name: "Estate" }),
-    "Maple Estate"
+    await screen.findByRole("combobox", { name: BLOCK }),
+    "Block A"
   );
-  await chooseOption(screen.getByRole("combobox", { name: BLOCK }), "Block A");
   await chooseOption(screen.getByRole("combobox", { name: LEVEL }), "Level 2");
-  await chooseOption(
-    screen.getByRole("combobox", { name: "Estate" }),
-    "Other Estate"
-  );
+  searchEstates("Other");
+  fireEvent.click(await screen.findByRole("option", { name: "Other Estate" }));
   await waitFor(() =>
     expect(get).toHaveBeenCalledWith("/resident/locations", {
       params: { query: { estateId: "other" } },

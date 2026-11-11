@@ -84,6 +84,15 @@ class SecurityConfigTests {
     }
 
     @Test
+    void estateSearchIsOpenToAnySignedInUser() throws Exception {
+        mockMvc.perform(get("/resident/estates").param("q", "maple")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/resident/estates")
+                        .param("q", "maple")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_user"))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void accessContextIsReachableBeforeTheEstateRoleIsKnown() throws Exception {
         mockMvc.perform(get("/access/context")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/access/context").with(jwt().authorities(new SimpleGrantedAuthority("ROLE_user"))))
@@ -180,6 +189,7 @@ class SecurityConfigTests {
         @GetMapping({
             "/access/context",
             "/resident/context",
+            "/resident/estates",
             "/resident/locations",
             "/resident/reports",
             "/resident/reports/{reportId}",

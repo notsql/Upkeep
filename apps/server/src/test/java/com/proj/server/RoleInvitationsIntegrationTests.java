@@ -446,6 +446,6 @@ class RoleInvitationsIntegrationTests {
         mvc.perform(get("/resident/locations")
                         .param("estateId", UUID.randomUUID().toString())
                         .with(jwt().jwt(t -> t.subject("recipient"))))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
     }
 }

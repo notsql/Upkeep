@@ -40,7 +40,7 @@ public class ResidentReportController {
     @GetMapping("/context")
     @Operation(operationId = "residentContext")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Assigned resident estate"),
+        @ApiResponse(responseCode = "200", description = "Resident estates listed first in the estate picker"),
         @ApiResponse(
                 responseCode = "401",
                 description = "Sign in required",
@@ -50,13 +50,32 @@ public class ResidentReportController {
         return reports.context(subject(principal));
     }
 
+    @GetMapping("/estates")
+    @Operation(operationId = "searchResidentEstates")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Up to 20 active estates whose name contains the query"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Query shorter than 2 characters",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "Sign in required",
+                content = @Content(schema = @Schema(implementation = EstateError.class)))
+    })
+    public List<ResidentContextResponse.EstateLabel> estates(
+            @AuthenticationPrincipal Jwt principal, @RequestParam String q) {
+        subject(principal);
+        return reports.searchEstates(q);
+    }
+
     @GetMapping("/locations")
     @Operation(operationId = "residentLocations")
     @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Active locations in the assigned estate"),
+        @ApiResponse(responseCode = "200", description = "Active locations in the estate"),
         @ApiResponse(
-                responseCode = "403",
-                description = "Resident membership required",
+                responseCode = "404",
+                description = "Estate not found",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "401",
@@ -81,8 +100,8 @@ public class ResidentReportController {
                 description = "Sign in required",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
-                responseCode = "403",
-                description = "Active resident membership required",
+                responseCode = "404",
+                description = "Estate not found",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "413",
@@ -122,8 +141,8 @@ public class ResidentReportController {
                 description = "Sign in required",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
-                responseCode = "403",
-                description = "Active resident membership required",
+                responseCode = "404",
+                description = "Estate not found",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "413",

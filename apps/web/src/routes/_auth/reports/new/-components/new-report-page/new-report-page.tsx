@@ -1,4 +1,3 @@
-import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { ClipboardPenLine } from "lucide-react";
 import { useCallback } from "react";
 import { FormPage } from "@/components/page/form-page";
@@ -24,7 +23,7 @@ export function NewReportPage({
       <PageLayout className="max-w-3xl">
         {context.isError ? (
           <ErrorState
-            message="Couldn't load your estate assignment. Try again."
+            message="Couldn't load your estates. Try again."
             onRetry={retry}
           />
         ) : (
@@ -33,9 +32,6 @@ export function NewReportPage({
       </PageLayout>
     );
   }
-  const unavailable =
-    !!requestedEstateId &&
-    !context.data.estates.some((estate) => estate.id === requestedEstateId);
   return (
     <FormPage
       breadcrumbs={[
@@ -52,28 +48,10 @@ export function NewReportPage({
       icon={ClipboardPenLine}
       title="Report a fault"
     >
-      {unavailable ? (
-        <Alert>
-          <AlertDescription>
-            Reporting is unavailable for the selected estate. Choose an active
-            Resident estate from the estate menu.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-      {context.data.canSubmit || unavailable ? null : (
-        <Alert>
-          <AlertDescription>
-            You have no estate assigned. Contact your estate manager before
-            reporting a fault.
-          </AlertDescription>
-        </Alert>
-      )}
-      {context.data.canSubmit && !unavailable ? (
-        <NewReportForm
-          estates={context.data.estates}
-          initialEstateId={requestedEstateId}
-        />
-      ) : null}
+      <NewReportForm
+        estates={context.data.estates}
+        initialEstateId={requestedEstateId}
+      />
     </FormPage>
   );
 }
