@@ -114,11 +114,7 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
         uploadType("SERVICE_REPORT", "report.pdf");
         mvc.perform(as("crew", delete(documents() + "/" + deleted))).andExpect(status().isNoContent());
         UUID foreign = estate("owner");
-        mvc.perform(as(
-                        "owner",
-                        multipart("/estates/" + foreign + "/documents")
-                                .file(pdfFile("foreign.pdf"))
-                                .param("documentType", "INVOICE")))
+        mvc.perform(as("owner", submissionTo(foreign, "INVOICE", pdfFile("foreign.pdf"))))
                 .andExpect(status().isCreated());
         mvc.perform(as("crew", get(documents()).param("documentType", "INVOICE").param("limit", "1")))
                 .andExpect(status().isOk())

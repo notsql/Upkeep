@@ -126,6 +126,18 @@ function access() {
   };
 }
 
+/** The JSON body of the nth "save inspection" call. */
+function createBody(index = -1): Record<string, unknown> {
+  const calls = state.post.mock.calls.filter(
+    ([path]) => path === "/estates/{estateId}/assets/{assetId}/inspections"
+  );
+  const call = calls.at(index);
+  if (!call) {
+    throw new Error("The inspection was not saved");
+  }
+  return call[1].body;
+}
+
 async function setup(path = newPath) {
   const router = createRouter({
     routeTree,
@@ -147,11 +159,29 @@ beforeEach(() => {
   state.revoked = false;
   state.result = { ...inspection };
   state.context = { ...asset };
-  state.post.mockReset().mockImplementation(() =>
-    Promise.resolve({
-      data: state.result,
-      response: new Response(null, { status: 201 }),
-    })
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+  );
+  state.post.mockReset().mockImplementation((path: string) =>
+    Promise.resolve(
+      path.endsWith("/photo-slots")
+        ? {
+            data: {
+              objectKey: "inspections/photo-inspection/p1",
+              uploadUrl: "https://storage.example/photo",
+              contentType: "image/jpeg",
+              maxBytes: 5_242_880,
+              expiresAt: "2099-01-01T00:00:00Z",
+              inspectionId: "photo-inspection",
+            },
+            response: new Response(null, { status: 201 }),
+          }
+        : {
+            data: state.result,
+            response: new Response(null, { status: 201 }),
+          }
+    )
   );
   state.get
     .mockReset()
@@ -325,8 +355,24 @@ it("previews selected photos, removes evidence and submits only the remaining fi
     screen.getByRole("button", { name: "Save inspection record" })
   );
   await waitFor(() => expect(router.state.location.pathname).toBe(detailPath));
-  const body = state.post.mock.calls[0][1].body as FormData;
-  expect(body.getAll("photos")).toEqual([second]);
+  expect(state.post).toHaveBeenCalledWith(
+    "/estates/{estateId}/assets/{assetId}/inspections/photo-slots",
+    {
+      params: { path: { estateId, assetId } },
+      body: { contentType: "image/jpeg", size: second.size },
+    }
+  );
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenCalledWith(
+    "https://storage.example/photo",
+    expect.objectContaining({ method: "PUT", body: second })
+  );
+  expect(createBody()).toEqual(
+    expect.objectContaining({
+      inspectionId: "photo-inspection",
+      photoKeys: ["inspections/photo-inspection/p1"],
+    })
+  );
   expect(revokeObjectURL).toHaveBeenCalledWith("blob:second-photo");
 });
 
@@ -352,8 +398,7 @@ it("requires explicit confirmation of a refreshed location and preserves edits o
     screen.getByRole("button", { name: "Save inspection record" })
   );
   await screen.findByRole("alert");
-  const firstBody = state.post.mock.calls[0][1].body as FormData;
-  expect(firstBody.get("expectedLocationId")).toBe(locationId);
+  expect(createBody(0).expectedLocationId).toBe(locationId);
   state.context = {
     ...asset,
     locationId: updatedLocationId,
@@ -377,11 +422,12 @@ it("requires explicit confirmation of a refreshed location and preserves edits o
   fireEvent.click(save);
   await waitFor(() => expect(router.state.location.pathname).toBe(detailPath));
   expect(state.post).toHaveBeenCalledTimes(2);
-  const retryBody = state.post.mock.calls[1][1].body as FormData;
-  expect(retryBody.get("expectedLocationId")).toBe(updatedLocationId);
-  expect(retryBody.get("outcome")).toBe("PASS");
-  expect(retryBody.get("inspectedOn")).toBe("2026-10-01");
-  expect(retryBody.get("notes")).toBe("Keep these notes");
+  expect(createBody(1)).toEqual({
+    expectedLocationId: updatedLocationId,
+    outcome: "PASS",
+    inspectedOn: "2026-10-01",
+    notes: "Keep these notes",
+  });
 });
 
 it("offers the saved record without resubmission when navigation fails after saving", async () => {

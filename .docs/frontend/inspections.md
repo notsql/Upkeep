@@ -52,13 +52,12 @@ wrapped in React Query. Production API types alias generated schemas.
 | `useInspectionResult` | GET nested result detail | `[userId, "inspection-results", estateId, assetId, "detail", inspectionId]` |
 | `useInspectionSource` | GET `/estates/{estateId}/inspection-results/{inspectionId}` | `[userId, "inspection-source", estateId, inspectionId]` |
 | `useInspectionPhoto` | GET nested private photo | `[userId, "inspection-results", estateId, assetId, "photo", inspectionId, photoId]` |
-| `useCreateInspection` | POST multipart nested result collection | Mutation; no automatic retry |
+| `useCreateInspection` | POST `.../inspections/photo-slots` per photo, PUT to `uploadUrl`, then JSON POST nested result collection with `inspectionId` and `photoKeys` | Mutation; no automatic retry |
 
 Read hooks pass cancellation signals, throw API errors, and hide cached data
 when their capability is lost or the read fails. Authorization failures refresh
-`[userId, "app-access"]`. Photo reads use the generated client with
-`parseAs: "blob"`; browser object URLs are released on replacement, removal,
-permission loss and unmount.
+`[userId, "app-access"]`. Photo reads return a five-minute signed link (`{url, expiresAt}`), refetched
+30 s before expiry; the image loads `url` directly from storage.
 
 Saving seeds the result detail, invalidates that user's asset inspection list,
 limited asset context and existing owner asset-cache prefix. Work-order

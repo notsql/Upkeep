@@ -1,6 +1,6 @@
 # Object storage on Google Cloud Storage
 
-**Status:** draft
+**Status:** agreed
 **Owner:** Ong Zheng Kai
 
 ## Problem

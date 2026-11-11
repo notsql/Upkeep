@@ -92,7 +92,7 @@ Removing a link preserves the file and document record.
 
 ID-22-authorized deletion remains allowed while linked. Marked files disappear
 from attachment lists; association/history reads and future writes return 404.
-The internal link/audit survive because deletion retains the row. Physical R2
+The internal link/audit survive because deletion retains the row. Physical storage
 cleanup continues through ID-22. Concurrent linking/deletion serializes on the
 same locks and cannot resurrect platform file access.
 

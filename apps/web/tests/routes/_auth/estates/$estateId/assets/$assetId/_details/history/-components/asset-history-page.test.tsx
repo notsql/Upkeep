@@ -51,17 +51,13 @@ beforeEach(() => {
     async (path: string) =>
       ({
         data: path.endsWith("/content")
-          ? new Blob(["pdf"], { type: "application/pdf" })
+          ? {
+              url: "https://storage.example/history.pdf",
+              expiresAt: "2099-01-01T00:00:00Z",
+            }
           : historyPage,
         response: new Response(),
       }) as never
-  );
-  vi.stubGlobal(
-    "URL",
-    Object.assign(URL, {
-      createObjectURL: vi.fn(() => "blob:history"),
-      revokeObjectURL: vi.fn(),
-    })
   );
 });
 
@@ -144,12 +140,14 @@ describe("asset history", () => {
     const dialog = await screen.findByRole("dialog", {
       name: "Invoice: report.pdf",
     });
-    await within(dialog).findByTitle("Preview report.pdf");
+    const preview = await within(dialog).findByTitle("Preview report.pdf");
+    expect(preview.getAttribute("data")).toBe(
+      "https://storage.example/history.pdf"
+    );
     within(dialog).getByRole("button", { name: "Download" });
     fireEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await waitFor(() => expect(document.activeElement).toBe(open));
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:history");
     screen.getByRole("heading", { name: "Condition assessed" });
   });
 
@@ -172,7 +170,10 @@ describe("asset history", () => {
     const dialog = await screen.findByRole("dialog");
     await within(dialog).findByRole("alert");
     vi.mocked(api.GET).mockResolvedValue({
-      data: new Blob(["pdf"], { type: "application/pdf" }),
+      data: {
+        url: "https://storage.example/history.pdf",
+        expiresAt: "2099-01-01T00:00:00Z",
+      },
       response: new Response(),
     } as never);
     fireEvent.click(within(dialog).getByRole("button", { name: "Retry" }));
@@ -217,7 +218,6 @@ describe("asset history", () => {
     expect(
       screen.queryByRole("heading", { name: "Invoice uploaded" })
     ).toBeNull();
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:history");
   });
 
   it("clears inaccessible UI and stops reads after permission loss", async () => {
@@ -252,7 +252,6 @@ describe("asset history", () => {
     screen.getByText(
       "Document entries are hidden because you do not have document access."
     );
-    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:history");
   });
 
   it("explains empty recorded history and distinguishes it from loading and errors", async () => {

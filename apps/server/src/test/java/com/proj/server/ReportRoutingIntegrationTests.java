@@ -18,7 +18,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -26,8 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
-import com.proj.server.resident.ResidentImageStore;
-import com.proj.server.resident.ResidentReportException;
 import com.proj.server.routing.Classification;
 import com.proj.server.routing.ClassificationFailedException;
 import com.proj.server.routing.DispatchDeliveryJob;
@@ -36,6 +33,7 @@ import com.proj.server.routing.EmailSender;
 import com.proj.server.routing.FaultClassifier;
 import com.proj.server.routing.OutboundEmail;
 import com.proj.server.routing.ReportClassificationJob;
+import com.proj.server.storage.InMemoryObjectStorage;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -50,7 +48,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -90,8 +87,8 @@ class ReportRoutingIntegrationTests {
     @MockitoBean
     JwtDecoder decoder;
 
-    @MockitoBean
-    ResidentImageStore imageStore;
+    @Autowired
+    InMemoryObjectStorage imageStore;
 
     @MockitoBean
     FaultClassifier classifier;
@@ -104,6 +101,7 @@ class ReportRoutingIntegrationTests {
 
     @BeforeEach
     void modelIsConfigured() {
+        imageStore.reset();
         when(classifier.available()).thenReturn(true);
     }
 
@@ -203,7 +201,7 @@ class ReportRoutingIntegrationTests {
         member(estate, "resident-a", "RESIDENT");
         var level = level(estate);
 
-        var response = mvc.perform(multipart("/resident/reports")
+        var response = mvc.perform(StoredUploadSubmission.report(imageStore)
                         .param("title", "Lift stuck")
                         .param("description", "Doors won't open")
                         .param("locationId", level.toString())
@@ -234,7 +232,6 @@ class ReportRoutingIntegrationTests {
 
         var input = ArgumentCaptor.forClass(FaultClassifier.Report.class);
         verify(classifier).classify(input.capture());
-        verify(imageStore, never()).read(any());
         assertFalse(input.getValue().toString().contains("resident-a"));
 
         var order = workOrderFor(report);
@@ -346,8 +343,7 @@ class ReportRoutingIntegrationTests {
         var estate = estate();
         var report = queuedReport(estate);
         image(report, new byte[] {1});
-        when(imageStore.read(any()))
-                .thenThrow(new ResidentReportException(HttpStatus.SERVICE_UNAVAILABLE, "Image storage down"));
+        imageStore.unavailable = true;
         when(classifier.classify(any()))
                 .thenReturn(Classification.of("NOT_EQUIPMENT", "NONE", 0.9, "Not a water leak", MODEL));
 
@@ -581,7 +577,6 @@ class ReportRoutingIntegrationTests {
         contractor(estate, "LIFT");
         var report = reviewReport(estate);
         image(report, new byte[] {7, 7, 7});
-        when(imageStore.read(any())).thenReturn(new byte[] {7, 7, 7});
         mvc.perform(send(estate, report, "LIFT", "MEDIUM")).andExpect(status().isCreated());
         var order = workOrderFor(report);
 
@@ -638,9 +633,8 @@ class ReportRoutingIntegrationTests {
         contractor(estate, "LIFT");
         var report = reviewReport(estate);
         image(report, new byte[] {1});
-        when(imageStore.read(any()))
-                .thenThrow(new ResidentReportException(HttpStatus.SERVICE_UNAVAILABLE, "Image storage down"));
         mvc.perform(send(estate, report, "LIFT", "MEDIUM")).andExpect(status().isCreated());
+        imageStore.unavailable = true;
 
         assertTrue(delivery.deliverNext());
 
@@ -778,6 +772,7 @@ class ReportRoutingIntegrationTests {
                 insert into "IssueReportImage" (id, "reportId", "storageKey", "contentType", "sizeBytes")
                 values (?, ?, ?, 'image/jpeg', ?)
                 """, id, report, "private/" + id, bytes.length);
+        imageStore.upload("private/" + id, bytes, "image/jpeg");
     }
 
     private void makeDue() {

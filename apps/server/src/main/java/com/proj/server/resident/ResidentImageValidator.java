@@ -8,29 +8,37 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 @Component
 public class ResidentImageValidator {
-    private static final long MAX_BYTES = 5L * 1024 * 1024;
+    public static final long MAX_BYTES = 5L * 1024 * 1024;
     private static final int MAX_WIDTH = 4032;
     private static final int MAX_HEIGHT = 3024;
     private static final long MAX_PIXELS = (long) MAX_WIDTH * MAX_HEIGHT;
 
-    public ValidatedImage validate(MultipartFile file) {
-        String declared = file.getContentType();
-        String type = switch (declared == null ? "" : declared.toLowerCase()) {
+    /** The stored type for a declared image type; 415 for anything but JPEG or PNG. */
+    public String acceptedType(String declared) {
+        return switch (declared == null ? "" : declared.toLowerCase()) {
             case "image/jpeg", "image/jpg" -> "image/jpeg";
             case "image/png" -> "image/png";
             default -> throw new ResidentReportException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Use a JPEG or PNG image.");
         };
-        if (file.isEmpty()) {
+    }
+
+    public void checkSize(long size) {
+        if (size < 1) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "The selected image is empty.");
         }
-        if (file.getSize() > MAX_BYTES) {
+        if (size > MAX_BYTES) {
             throw new ResidentReportException(HttpStatus.PAYLOAD_TOO_LARGE, "Each image must be at most 5 MB.");
         }
-        try (var input = ImageIO.createImageInputStream(file.getInputStream())) {
+    }
+
+    /** Decodes the image, checks its pixels and re-encodes it without metadata. */
+    public ValidatedImage validate(String declared, byte[] bytes) {
+        String type = acceptedType(declared);
+        checkSize(bytes.length);
+        try (var input = ImageIO.createImageInputStream(new java.io.ByteArrayInputStream(bytes))) {
             if (input == null) {
                 throw invalid();
             }
@@ -73,11 +81,11 @@ public class ResidentImageValidator {
                 if (!ImageIO.write(clean, type.equals("image/jpeg") ? "jpeg" : "png", output)) {
                     throw invalid();
                 }
-                var bytes = output.toByteArray();
-                if (bytes.length > MAX_BYTES) {
+                var cleaned = output.toByteArray();
+                if (cleaned.length > MAX_BYTES) {
                     throw new ResidentReportException(HttpStatus.PAYLOAD_TOO_LARGE, "Each image must be at most 5 MB.");
                 }
-                return new ValidatedImage(type, bytes);
+                return new ValidatedImage(type, cleaned);
             } finally {
                 reader.dispose();
             }

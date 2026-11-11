@@ -1,7 +1,10 @@
 package com.proj.server.resident;
 
 import com.proj.server.estate.EstateError;
+import com.proj.server.storage.SignedDownloadResponse;
+import com.proj.server.storage.UploadSlotResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -14,18 +17,16 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/resident")
@@ -67,7 +68,48 @@ public class ResidentReportController {
         return reports.locations(subject(principal), estateId);
     }
 
-    @PostMapping(value = "/reports", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/reports/image-slots")
+    @Operation(operationId = "createResidentReportImageSlot")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Ten-minute upload link for one photo"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "Sign in required",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "Active resident membership required",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "413",
+                description = "Image larger than 5 MB",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "415",
+                description = "Unsupported image type",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "503",
+                description = "Image storage unavailable",
+                content = @Content(schema = @Schema(implementation = EstateError.class)))
+    })
+    public ResponseEntity<UploadSlotResponse> imageSlot(
+            @AuthenticationPrincipal Jwt principal, @Valid @RequestBody ReportImageSlotRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(reports.imageSlot(
+                        subject(principal),
+                        request.estateId(),
+                        request.reportId(),
+                        request.contentType(),
+                        request.size()));
+    }
+
+    @PostMapping("/reports")
     @Operation(operationId = "createResidentReport")
     @ApiResponses({
         @ApiResponse(responseCode = "201", description = "Report submitted"),
@@ -97,14 +139,15 @@ public class ResidentReportController {
                 content = @Content(schema = @Schema(implementation = EstateError.class)))
     })
     public ResponseEntity<IssueReportDetailResponse> create(
-            @AuthenticationPrincipal Jwt principal, @Valid @ModelAttribute CreateIssueReportRequest request) {
+            @AuthenticationPrincipal Jwt principal, @Valid @RequestBody CreateIssueReportRequest request) {
         var created = reports.create(
                 subject(principal),
                 request.estateId(),
+                request.reportId(),
                 request.title(),
                 request.description(),
                 request.locationId(),
-                request.images());
+                request.imageKeys());
         return ResponseEntity.created(URI.create("/resident/reports/" + created.id()))
                 .body(created);
     }
@@ -147,21 +190,10 @@ public class ResidentReportController {
         return reports.detail(subject(principal), reportId);
     }
 
-    @GetMapping(
-            value = "/reports/{reportId}/images/{imageId}",
-            produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE})
+    @GetMapping("/reports/{reportId}/images/{imageId}")
     @Operation(operationId = "getResidentReportImage")
     @ApiResponses({
-        @ApiResponse(
-                responseCode = "200",
-                content = {
-                    @Content(
-                            mediaType = MediaType.IMAGE_JPEG_VALUE,
-                            schema = @Schema(type = "string", format = "binary")),
-                    @Content(
-                            mediaType = MediaType.IMAGE_PNG_VALUE,
-                            schema = @Schema(type = "string", format = "binary"))
-                }),
+        @ApiResponse(responseCode = "200", description = "A five-minute link to the private image"),
         @ApiResponse(
                 responseCode = "401",
                 description = "Sign in required",
@@ -175,13 +207,11 @@ public class ResidentReportController {
                 description = "Image storage unavailable",
                 content = @Content(schema = @Schema(implementation = EstateError.class)))
     })
-    public ResponseEntity<byte[]> image(
+    public ResponseEntity<SignedDownloadResponse> image(
             @AuthenticationPrincipal Jwt principal, @PathVariable UUID reportId, @PathVariable UUID imageId) {
-        var image = reports.image(subject(principal), reportId, imageId);
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(image.contentType()))
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
-                .body(image.bytes());
+                .body(reports.image(subject(principal), reportId, imageId));
     }
 
     private static String subject(Jwt principal) {
@@ -193,12 +223,29 @@ public class ResidentReportController {
         return principal.getSubject();
     }
 
+    @Schema(requiredProperties = {"estateId", "contentType", "size"})
+    public record ReportImageSlotRequest(
+            @NotNull UUID estateId,
+
+            @Schema(description = "The report id from this report's first slot; omit for the first photo.")
+            UUID reportId,
+
+            @NotBlank String contentType,
+            @NotNull Long size) {}
+
     @Schema(requiredProperties = {"estateId", "title", "description", "locationId"})
     public record CreateIssueReportRequest(
+            @Schema(description = "The report id the photo slots returned; required when imageKeys is not empty.")
+            UUID reportId,
+
             @NotNull UUID estateId,
             @NotBlank @Schema(minLength = 1, maxLength = 50) String title,
 
             @NotBlank String description,
             @NotNull UUID locationId,
-            List<MultipartFile> images) {}
+
+            @ArraySchema(
+                    maxItems = 3,
+                    arraySchema = @Schema(description = "Object keys from the photo slots, uploaded already."))
+            List<String> imageKeys) {}
 }

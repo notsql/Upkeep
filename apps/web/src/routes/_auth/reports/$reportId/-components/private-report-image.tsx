@@ -9,5 +9,5 @@ export function PrivateReportImage({
   imageId: string;
 }) {
   const image = useReportImage(reportId, imageId);
-  return <ReportImage data={image.data} isError={image.isError} />;
+  return <ReportImage isError={image.isError} url={image.data?.url} />;
 }

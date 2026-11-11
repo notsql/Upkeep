@@ -1,26 +1,23 @@
 package com.proj.server;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
-import com.proj.server.resident.ResidentImageStore;
-import com.proj.server.resident.ResidentReportException;
+import com.proj.server.storage.InMemoryObjectStorage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -41,7 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -66,8 +62,13 @@ class FaultReportLocationsIntegrationTests {
     @MockitoBean
     JwtDecoder decoder;
 
-    @MockitoBean
-    ResidentImageStore imageStore;
+    @Autowired
+    InMemoryObjectStorage imageStore;
+
+    @org.junit.jupiter.api.BeforeEach
+    void emptyStorage() {
+        imageStore.reset();
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {"MANAGER", "CREW"})
@@ -119,7 +120,7 @@ class FaultReportLocationsIntegrationTests {
         mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image))).andExpect(status().isForbidden());
         mvc.perform(relocate(estate, report, level, level)).andExpect(status().isForbidden());
         assertEquals(before, reportRow(report));
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @Test
@@ -145,7 +146,7 @@ class FaultReportLocationsIntegrationTests {
                     .andExpect(status().isNotFound());
         }
         assertEquals(level, reportRow(report).get("locationId"));
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @Test
@@ -174,7 +175,7 @@ class FaultReportLocationsIntegrationTests {
         mvc.perform(relocate(first, secondReport, secondLevel, firstLevel)).andExpect(status().isNotFound());
         assertEquals(before, reportRow(firstReport));
         assertEquals(secondLevel, reportRow(secondReport).get("locationId"));
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @Test
@@ -192,7 +193,7 @@ class FaultReportLocationsIntegrationTests {
         mvc.perform(asStaff(get("/resident/reports/" + report))).andExpect(status().isNotFound());
         mvc.perform(asStaff(get("/resident/reports/" + report + "/images/" + image)))
                 .andExpect(status().isNotFound());
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @ParameterizedTest
@@ -283,7 +284,6 @@ class FaultReportLocationsIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(report.toString()));
         mvc.perform(asStaff(get(detail(estate, report)))).andExpect(status().isOk());
-        when(imageStore.read("private/" + image)).thenReturn(new byte[] {1, 2, 3});
         mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image))).andExpect(status().isOk());
         mvc.perform(relocate(estate, report, level, level)).andExpect(status().isOk());
         db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
@@ -663,7 +663,7 @@ class FaultReportLocationsIntegrationTests {
             assertEquals(originalImages, imageRows(report));
             current = destination;
         }
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
         db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='resident-a'", estate);
         mvc.perform(get("/resident/reports/" + report).with(identity("resident-a")))
                 .andExpect(status().isOk())
@@ -678,10 +678,9 @@ class FaultReportLocationsIntegrationTests {
         mvc.perform(asStaff(get(reports(estate)).param("locationId", blockB.toString())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(report.toString()));
-        when(imageStore.read("private/" + image)).thenReturn(new byte[] {1, 2, 3});
         mvc.perform(get("/resident/reports/" + report + "/images/" + image).with(identity("resident-a")))
                 .andExpect(status().isOk())
-                .andExpect(content().bytes(new byte[] {1, 2, 3}));
+                .andExpect(jsonPath("$.url").value(startsWith("memory://download/private/" + image)));
     }
 
     @Test
@@ -736,7 +735,7 @@ class FaultReportLocationsIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.location.id").value(level.toString()));
         assertEquals(before, reportRow(report));
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @Test
@@ -775,7 +774,7 @@ class FaultReportLocationsIntegrationTests {
         }
         mvc.perform(relocate(estate, report, level, lobby)).andExpect(status().isConflict());
         assertEquals(before, reportRow(report));
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @ParameterizedTest
@@ -845,7 +844,6 @@ class FaultReportLocationsIntegrationTests {
         var image = image(report);
         db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
         db.execute("update \"Location\" set \"deactivatedAt\"=now() where \"estateId\"=?", estate);
-        when(imageStore.read("private/" + image)).thenReturn(new byte[] {1, 2, 3});
 
         mvc.perform(asStaff(get(reports(estate)).param("locationId", block.toString())))
                 .andExpect(status().isOk())
@@ -857,7 +855,7 @@ class FaultReportLocationsIntegrationTests {
         mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(content().bytes(new byte[] {1, 2, 3}));
+                .andExpect(jsonPath("$.url").value(startsWith("memory://download/private/" + image)));
         mvc.perform(asStaff(get("/estates/" + estate + "/locations").param("includeInactive", "true")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].id", containsInAnyOrder(block.toString(), level.toString())));
@@ -891,21 +889,17 @@ class FaultReportLocationsIntegrationTests {
                 .andExpect(status().isNotFound());
         mvc.perform(asStaff(get(detail(estate, report) + "/images/" + UUID.randomUUID())))
                 .andExpect(status().isNotFound());
-        verifyNoInteractions(imageStore);
-        var bytes = new byte[] {1, 2, 3};
-        when(imageStore.read("private/" + image)).thenReturn(bytes);
-        var response = mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image)))
+        assertTrue(imageStore.signed.isEmpty());
+        mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image)))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "image/png"))
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andReturn();
-        assertArrayEquals(bytes, response.getResponse().getContentAsByteArray());
-        when(imageStore.read("private/" + image))
-                .thenThrow(new ResidentReportException(
-                        HttpStatus.SERVICE_UNAVAILABLE, "Image storage is temporarily unavailable."));
+                .andExpect(jsonPath("$.url").value(startsWith("memory://download/private/" + image)))
+                .andExpect(jsonPath("$.url").value(containsString("contentType=image%2Fpng")))
+                .andExpect(jsonPath("$.expiresAt").exists());
+        imageStore.unavailable = true;
         mvc.perform(asStaff(get(detail(estate, report) + "/images/" + image)))
                 .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.message").value("Image storage is temporarily unavailable."));
+                .andExpect(jsonPath("$.message").value("File storage is temporarily unavailable. Try again later."));
     }
 
     @Test
@@ -930,7 +924,7 @@ class FaultReportLocationsIntegrationTests {
                         .with(token))
                 .andExpect(status().isNotFound());
         assertEquals(before, reportRow(report));
-        verifyNoInteractions(imageStore);
+        assertTrue(imageStore.signed.isEmpty());
     }
 
     @Test
@@ -1071,7 +1065,7 @@ class FaultReportLocationsIntegrationTests {
                 });
                 assertEquals(change.equals("membership") ? 404 : 409, pending.get(10, TimeUnit.SECONDS));
                 assertEquals(before, reportRow(report));
-                verifyNoInteractions(imageStore);
+                assertTrue(imageStore.signed.isEmpty());
             }
         } finally {
             cleanupCommittedEstate(estate);

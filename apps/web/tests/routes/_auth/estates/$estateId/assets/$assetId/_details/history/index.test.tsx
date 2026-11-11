@@ -179,19 +179,15 @@ beforeEach(() => {
     }
     if (path === contentPath) {
       return Promise.resolve(
-        success(new Blob(["pdf"], { type: "application/pdf" }))
+        success({
+          url: "https://storage.example/date-history.pdf",
+          expiresAt: "2099-01-01T00:00:00Z",
+        })
       );
     }
     return Promise.reject(new Error(`Unexpected API request: ${path}`));
   });
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
-  vi.stubGlobal(
-    "URL",
-    Object.assign(URL, {
-      createObjectURL: vi.fn(() => "blob:date-history"),
-      revokeObjectURL: vi.fn(),
-    })
-  );
 });
 
 it("keeps draft dates unapplied until Apply dates and explains Singapore calendar days", async () => {
@@ -414,7 +410,6 @@ it("changing the applied range closes a loaded document viewer and releases its 
   await act(() => router.history.push(`${url}${aprilSearch}`));
   await screen.findByRole("heading", { name: "April invoice uploaded" });
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:date-history");
   expect(
     screen.queryByRole("heading", { name: "Condition assessed" })
   ).toBeNull();
@@ -483,10 +478,14 @@ it("aborts a pending file read and ignores its late result when the range change
   await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   expect(fileSignal?.aborted).toBe(true);
   await act(async () => {
-    file.resolve(success(new Blob(["late pdf"], { type: "application/pdf" })));
+    file.resolve(
+      success({
+        url: "https://storage.example/date-history.pdf",
+        expiresAt: "2099-01-01T00:00:00Z",
+      })
+    );
     await file.promise;
   });
-  expect(URL.createObjectURL).not.toHaveBeenCalled();
   expect(screen.queryByRole("dialog")).toBeNull();
 });
 

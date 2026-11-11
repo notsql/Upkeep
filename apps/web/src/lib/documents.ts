@@ -8,14 +8,13 @@ import {
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
+import { sendToStorage } from "@/lib/storage-upload";
 
 export type EstateDocument = components["schemas"]["DocumentResponse"];
 export type DocumentType = EstateDocument["documentType"];
 export type DocumentFilters = NonNullable<
   paths["/estates/{estateId}/documents"]["get"]["parameters"]["query"]
 >;
-
-const OBJECT_URL_LIFETIME = 1000;
 
 function documentError(error: unknown, fallback: string): Error {
   return new Error(
@@ -109,13 +108,29 @@ export function useUploadDocument(estateId: string) {
       documentType: DocumentType;
       file: File;
     }) => {
-      const body = new FormData();
-      body.append("documentType", documentType);
-      body.append("file", file);
+      const slot = await api.POST(
+        "/estates/{estateId}/documents/upload-slots",
+        {
+          params: { path: { estateId } },
+          body: {
+            fileName: file.name,
+            contentType: file.type,
+            size: file.size,
+          },
+        }
+      );
+      if (slot.error || !slot.data) {
+        throw documentError(slot.error, "Couldn't upload the file. Try again.");
+      }
+      await sendToStorage(slot.data, file);
       const result = await api
         .POST("/estates/{estateId}/documents", {
           params: { path: { estateId } },
-          body: body as never,
+          body: {
+            objectKey: slot.data.objectKey,
+            fileName: file.name,
+            documentType,
+          },
         })
         .catch((cause: unknown) => {
           throw new Error(
@@ -175,24 +190,22 @@ export function useDownloadDocument(estateId: string) {
         "/estates/{estateId}/documents/{documentId}/content",
         {
           params: { path: { estateId, documentId: document.id } },
-          parseAs: "blob",
         }
       );
       if (error || !data) {
         throw documentError(error, "Couldn't download the file. Try again.");
       }
-      const url = URL.createObjectURL(data);
+      // A fresh five-minute link is fetched on each click, so it never goes
+      // stale. Storage itself names the saved file and marks it a download.
       const link = window.document.createElement("a");
       try {
-        link.href = url;
+        link.href = data.url;
         link.download = document.originalFilename;
+        link.rel = "noopener";
         window.document.body.append(link);
         link.click();
       } finally {
         link.remove();
-        // Safari cancels the save if the URL is revoked in the same task as
-        // the click, so release it once the download has started.
-        window.setTimeout(() => URL.revokeObjectURL(url), OBJECT_URL_LIFETIME);
       }
     },
   });

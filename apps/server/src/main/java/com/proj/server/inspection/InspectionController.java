@@ -1,6 +1,8 @@
 package com.proj.server.inspection;
 
 import com.proj.server.estate.EstateError;
+import com.proj.server.storage.SignedDownloadResponse;
+import com.proj.server.storage.UploadSlotResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -10,7 +12,6 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -59,23 +60,38 @@ public class InspectionController {
         this.inspections = inspections;
     }
 
-    @PostMapping(value = "/assets/{assetId}/inspections", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/assets/{assetId}/inspections/photo-slots")
+    @ApiResponse(responseCode = "201", description = "Ten-minute upload link for one photo")
+    @Operation(operationId = "createInspectionPhotoSlot")
+    public ResponseEntity<UploadSlotResponse> photoSlot(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable UUID estateId,
+            @PathVariable UUID assetId,
+            @Valid @RequestBody InspectionPhotoSlotRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header("Cache-Control", "private, no-store")
+                .body(inspections.photoSlot(
+                        estateId, user(jwt), assetId, request.inspectionId(), request.contentType(), request.size()));
+    }
+
+    @PostMapping("/assets/{assetId}/inspections")
     @ApiResponse(responseCode = "201", description = "Inspection recorded; no work order is created automatically")
     @Operation(operationId = "createInspectionResult")
     public ResponseEntity<InspectionResultResponse> create(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID estateId,
             @PathVariable UUID assetId,
-            @Valid @ModelAttribute CreateInspectionRequest request) {
+            @Valid @RequestBody CreateInspectionRequest request) {
         var saved = inspections.create(
                 estateId,
                 user(jwt),
                 assetId,
+                request.inspectionId(),
                 request.outcome(),
                 request.inspectedOn(),
                 request.notes(),
                 request.expectedLocationId(),
-                request.photos());
+                request.photoKeys());
         return ResponseEntity.created(
                         URI.create("/estates/" + estateId + "/assets/" + assetId + "/inspections/" + saved.id()))
                 .header("Cache-Control", "private, no-store")
@@ -133,21 +149,16 @@ public class InspectionController {
         return privateResponse(inspections.source(estateId, user(jwt), inspectionId));
     }
 
-    @ApiResponse(responseCode = "200", description = "Authorised private inspection data")
+    @ApiResponse(responseCode = "200", description = "A five-minute link to the private photo")
     @GetMapping("/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}")
     @Operation(operationId = "getInspectionPhoto")
-    public ResponseEntity<byte[]> photo(
+    public ResponseEntity<SignedDownloadResponse> photo(
             @AuthenticationPrincipal Jwt jwt,
             @PathVariable UUID estateId,
             @PathVariable UUID assetId,
             @PathVariable UUID inspectionId,
             @PathVariable UUID photoId) {
-        var photo = inspections.photo(estateId, user(jwt), assetId, inspectionId, photoId);
-        return ResponseEntity.ok()
-                .header("Cache-Control", "private, no-store")
-                .header("X-Content-Type-Options", "nosniff")
-                .contentType(MediaType.parseMediaType(photo.contentType()))
-                .body(photo.bytes());
+        return privateResponse(inspections.photo(estateId, user(jwt), assetId, inspectionId, photoId));
     }
 
     private static <T> ResponseEntity<T> privateResponse(T body) {

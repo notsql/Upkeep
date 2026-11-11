@@ -70,12 +70,12 @@ replace the new scope. Date controls stack on mobile and share a row on wide scr
 ## Document viewer
 
 Selecting a document opens a labelled shadcn Dialog with filename/type/upload time.
-Only then does the generated client fetch the authenticated content endpoint in blob
-mode. PDF previews use the native browser PDF object viewer; images use an image
+Only then does the generated client fetch the authenticated content endpoint, which
+returns a five-minute signed link (`{url, expiresAt}`); previews load that `url`
+directly from storage. PDF previews use the native browser PDF object viewer; images use an image
 preview. Unsupported/failed previews retain Download and a manual fallback control.
 File errors show Retry while the timeline remains loaded. Heading focus on open and
-entry focus on close preserve keyboard use and scroll position. Object URLs are
-revoked on replacement, close and scope change. Unmounted reads are aborted; late
+entry focus on close preserve keyboard use and scroll position. Unmounted reads are aborted; late
 results cannot replace another document's viewer.
 
 ## Hooks, cache and refresh
@@ -86,17 +86,17 @@ queries/errors and Singapore formatting. Keys:
 - History: `[userId, "asset-history", estateId, assetId, from, to]`, with absent
   bounds normalized to empty strings in the key.
 - Directory: `[userId, "asset-history", estateId, "list", q, status, cursor]`.
-- Open blob: `[userId, "asset-history", estateId, assetId, "document", documentId]`.
+- Open document link: `[userId, "asset-history", estateId, assetId, "document", documentId]`.
 
 Reads throw API errors. 401/403/404 invalidate app access and hide inaccessible data.
-Account/estate/asset changes isolate cache and remount viewer state. Blob queries
+Account/estate/asset changes isolate cache and remount viewer state. Document link queries
 have zero garbage-collection time. History refetches stale data on return/window focus.
 Applied date changes also remount timeline/viewer state. The Apply/Clear action
 resets the destination range's cached pages before navigation; browser history
 restores each range through its own query key. The estate refresh prefix still
 resets all date variants after source writes.
 Revoking document access immediately hides cached document entries, closes the
-viewer and revokes its object URL while leaving other recorded activity readable.
+viewer while leaving other recorded activity readable.
 
 `refreshAssetHistory` resets the user's estate history prefix after maintenance,
 condition, inspection, asset creation/edit/lifecycle, work-order creation/progress/

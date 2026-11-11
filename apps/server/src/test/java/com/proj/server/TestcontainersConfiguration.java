@@ -1,5 +1,6 @@
 package com.proj.server;
 
+import com.proj.server.storage.InMemoryObjectStorage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,6 +10,7 @@ import java.util.stream.Stream;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.MountableFile;
 
@@ -21,6 +23,13 @@ import org.testcontainers.utility.MountableFile;
 class TestcontainersConfiguration {
 
     private static final Path MIGRATIONS = Path.of("packages", "db", "prisma", "migrations");
+
+    /** Every context test stores files in memory; no bucket or emulator is involved (decision 0050). */
+    @Bean
+    @Primary
+    InMemoryObjectStorage objectStorage() {
+        return new InMemoryObjectStorage();
+    }
 
     @Bean
     @ServiceConnection

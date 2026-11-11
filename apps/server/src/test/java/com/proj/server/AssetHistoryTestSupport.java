@@ -4,14 +4,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.proj.server.document.DocumentStore;
 import com.proj.server.workorder.WorkOrderStatus;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import tools.jackson.databind.JsonNode;
@@ -19,9 +17,6 @@ import tools.jackson.databind.JsonNode;
 /** Tests the agreed HTTP contract before history DTOs and generated API types exist. */
 abstract class AssetHistoryTestSupport extends CustomEstateRoleTestSupport {
     static final String RECORDED_AT = "2026-10-15T04:00:00Z";
-
-    @MockitoBean
-    DocumentStore storage;
 
     UUID assetId;
     UUID locationId;

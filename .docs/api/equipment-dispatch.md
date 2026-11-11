@@ -64,7 +64,7 @@ already has this month's check, so a requested check is never duplicated.
 - `DueBasis` gains `REQUESTED`.
 - `InspectionCheckResponse` gains `requestedByName: string | null` (the sender,
   set only for `REQUESTED`) and `assignedToName: string | null`.
-- `POST /estates/{estateId}/assets/{assetId}/inspections` (multipart): `outcome`
+- `POST /estates/{estateId}/assets/{assetId}/inspections` (JSON): `outcome`
   `FAIL` with blank or whitespace-only `notes` returns **400** "Say what's wrong
   so the manager knows what to fix." Pass keeps notes optional. Existing results
   are untouched.

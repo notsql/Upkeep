@@ -89,7 +89,7 @@ to another asset requires unlink then link; direct replacement returns 409.
 Both asset and work-order association writes reject different non-null document
 and work-order asset IDs. Either absent asset is allowed, and linking never
 assigns an asset to the work order. Unlinking retains the file, metadata and
-work-order link. No association action touches R2, equipment fields, condition,
+work-order link. No association action touches file storage, equipment fields, condition,
 maintenance/cost records or work-order state/completion.
 
 Relocation and retirement retain links by UUID. Existing authorized soft deletion

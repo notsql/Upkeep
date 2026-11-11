@@ -17,7 +17,11 @@ public class DocumentExceptionHandler {
                 .body(new EstateError(error.getReason()));
     }
 
-    @ExceptionHandler({BindException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+        BindException.class,
+        MethodArgumentTypeMismatchException.class,
+        org.springframework.http.converter.HttpMessageNotReadableException.class
+    })
     ResponseEntity<EstateError> invalid() {
         return ResponseEntity.badRequest()
                 .body(new EstateError("Choose one file and a valid document type, search, cursor or page size."));

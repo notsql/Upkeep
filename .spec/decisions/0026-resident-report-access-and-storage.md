@@ -1,5 +1,7 @@
 # 0026 Resident report access and storage
 
+> **Superseded in part by [0050](0050-object-storage-moves-to-gcs-with-signed-urls.md):** files now live in Google Cloud Storage, not Cloudflare R2, and the browser uploads and downloads them through short-lived signed URLs instead of through Spring.
+
 ## Decision
 
 A WorkOS account has exactly one organization role. The existing role-update flow rejects zero or multiple roles. A `resident` role is allowed only the explicit `/resident` reporting endpoint list plus public infrastructure. The JWT subject identifies the submitter, and a manually provisioned `ResidentAssignment` identifies one active estate for new reports. Estate membership does not imply resident access. Historical reports remain readable by their submitter after assignment changes.

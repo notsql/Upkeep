@@ -14,9 +14,7 @@ public class DocumentMultipartExceptionHandler {
     ResponseEntity<EstateError> oversized(HttpServletRequest request) {
         String message = request.getRequestURI().matches("/estates/[^/]+/readings/imports")
                 ? "Choose a CSV no larger than 25 MiB."
-                : request.getRequestURI().endsWith("/documents")
-                        ? "Choose exactly one file no larger than 5 MB."
-                        : "The upload is larger than 17 MB.";
+                : "The upload is too large.";
         return ResponseEntity.status(413).body(new EstateError(message));
     }
 }

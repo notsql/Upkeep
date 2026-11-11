@@ -555,6 +555,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/assets/{assetId}/inspections/photo-slots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createInspectionPhotoSlot"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/assets/{assetId}/open-work-order": {
     parameters: {
       query?: never;
@@ -972,6 +988,22 @@ export interface paths {
     get: operations["getDocumentWorkOrderHistory"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/documents/upload-slots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createDocumentUploadSlot"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2106,6 +2138,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/resident/reports/image-slots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations["createResidentReportImageSlot"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2548,13 +2596,19 @@ export interface components {
       message: string;
     };
     CreateIssueReportRequest: {
+      /**
+       * Format: uuid
+       * @description The report id the photo slots returned; required when imageKeys is not empty.
+       */
+      reportId?: string;
       /** Format: uuid */
       estateId: string;
       title: string;
       description: string;
       /** Format: uuid */
       locationId: string;
-      images?: string[];
+      /** @description Object keys from the photo slots, uploaded already. */
+      imageKeys?: string[];
     };
     IssueReportDetailResponse: {
       /** Format: uuid */
@@ -2569,6 +2623,37 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
       images: components["schemas"]["ReportImage"][];
+    };
+    ReportImageSlotRequest: {
+      /** Format: uuid */
+      estateId: string;
+      /**
+       * Format: uuid
+       * @description The report id from this report's first slot; omit for the first photo.
+       */
+      reportId?: string;
+      contentType: string;
+      /** Format: int64 */
+      size: number;
+    };
+    UploadSlotResponse: {
+      objectKey: string;
+      uploadUrl: string;
+      contentType: string;
+      /** Format: int64 */
+      maxBytes: number;
+      /** Format: date-time */
+      expiresAt: string;
+      /**
+       * Format: uuid
+       * @description Set on inspection photo slots; pass it to later slots and to the create call.
+       */
+      inspectionId?: string;
+      /**
+       * Format: uuid
+       * @description Set on report image slots; pass it to later slots and to the create call.
+       */
+      reportId?: string;
     };
     DismissAlertRequest: {
       /** @description 1 to 500 characters after trimming */
@@ -2981,11 +3066,12 @@ export interface components {
       assetName: string;
       categoryLabel: string;
     };
-    UploadDocumentRequest: {
+    CreateDocumentRequest: {
+      /** @description The key from the upload slot, after the file was uploaded. */
+      objectKey: string;
+      fileName: string;
       /** @enum {string} */
       documentType: "INVOICE" | "SERVICE_REPORT";
-      /** Format: binary */
-      file: string;
     };
     DocumentResponse: {
       /** Format: uuid */
@@ -3001,6 +3087,12 @@ export interface components {
       /** Format: date-time */
       createdAt: string;
       canDelete: boolean;
+    };
+    DocumentUploadSlotRequest: {
+      fileName: string;
+      contentType: string;
+      /** Format: int64 */
+      size: number;
     };
     CreateFlatlinePauseRequest: {
       /** Format: int32 */
@@ -3192,6 +3284,11 @@ export interface components {
       conditionRecorded?: "GOOD" | "NEEDS_ATTENTION" | "FAULTY" | null;
     };
     CreateInspectionRequest: {
+      /**
+       * Format: uuid
+       * @description The inspection id the photo slots returned; required when photoKeys is not empty.
+       */
+      inspectionId?: string;
       /** @enum {string} */
       outcome: "PASS" | "FAIL";
       /** Format: date */
@@ -3200,7 +3297,8 @@ export interface components {
       notes?: string;
       /** Format: uuid */
       expectedLocationId: string;
-      photos?: string[];
+      /** @description Object keys from the photo slots, uploaded already. */
+      photoKeys?: string[];
     };
     InspectionPhotoResponse: {
       /** Format: uuid */
@@ -3233,6 +3331,16 @@ export interface components {
       /** Format: uuid */
       id: string;
       reference: string;
+    };
+    InspectionPhotoSlotRequest: {
+      /**
+       * Format: uuid
+       * @description The inspection id from this inspection's first slot; omit for the first photo.
+       */
+      inspectionId?: string;
+      contentType: string;
+      /** Format: int64 */
+      size: number;
     };
     InspectionRequest: {
       /** @description Must be able to record inspections */
@@ -3587,6 +3695,11 @@ export interface components {
       items: components["schemas"]["IssueReportSummaryResponse"][];
       nextCursor: string | null;
       counts: components["schemas"]["ReportCounts"];
+    };
+    SignedDownloadResponse: {
+      url: string;
+      /** Format: date-time */
+      expiresAt: string;
     };
     ResidentLocationResponse: {
       /** Format: uuid */
@@ -5880,6 +5993,212 @@ export interface operations {
       };
     };
   };
+  createDocumentUploadSlot: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DocumentUploadSlotRequest"];
+      };
+    };
+    responses: {
+      /** @description Ten-minute upload link for one file */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["UploadSlotResponse"];
+        };
+      };
+      /** @description Invalid document request, upload, search, cursor or limit */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate document permission required; deletion also requires uploader or Manager */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate or document unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Estate inactive */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description File exceeds 5,000,000 bytes */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Use a PDF, JPEG or PNG with a matching extension and media type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document metadata operation failed */
+      500: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Document storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  createInspectionPhotoSlot: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        assetId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InspectionPhotoSlotRequest"];
+      };
+    };
+    responses: {
+      /** @description Ten-minute upload link for one photo */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["UploadSlotResponse"];
+        };
+      };
+      /** @description Invalid fields or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inspection authority required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Related record unavailable */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive resource or changed location */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Photo too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported photo format */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Storage or persistence unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   createInspectionResult: {
     parameters: {
       query?: never;
@@ -5890,9 +6209,9 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: {
+    requestBody: {
       content: {
-        "multipart/form-data": components["schemas"]["CreateInspectionRequest"];
+        "application/json": components["schemas"]["CreateInspectionRequest"];
       };
     };
     responses: {
@@ -6137,9 +6456,9 @@ export interface operations {
       path?: never;
       cookie?: never;
     };
-    requestBody?: {
+    requestBody: {
       content: {
-        "multipart/form-data": components["schemas"]["CreateIssueReportRequest"];
+        "application/json": components["schemas"]["CreateIssueReportRequest"];
       };
     };
     responses: {
@@ -6180,6 +6499,84 @@ export interface operations {
         };
       };
       /** @description Upload too large */
+      413: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Unsupported image type */
+      415: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Image storage unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  createResidentReportImageSlot: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ReportImageSlotRequest"];
+      };
+    };
+    responses: {
+      /** @description Ten-minute upload link for one photo */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["UploadSlotResponse"];
+        };
+      };
+      /** @description Invalid request */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Active resident membership required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Image larger than 5 MB */
       413: {
         headers: {
           [name: string]: unknown;
@@ -6655,7 +7052,7 @@ export interface operations {
         };
         content?: never;
       };
-      /** @description Invalid document request, file, search, cursor or limit */
+      /** @description Invalid document request, upload, search, cursor or limit */
       400: {
         headers: {
           [name: string]: unknown;
@@ -6925,18 +7322,16 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Private attachment */
+      /** @description A five-minute link that downloads the file */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "application/pdf": string;
-          "image/jpeg": string;
-          "image/png": string;
+          "*/*": components["schemas"]["SignedDownloadResponse"];
         };
       };
-      /** @description Invalid document request, file, search, cursor or limit */
+      /** @description Invalid document request, upload, search, cursor or limit */
       400: {
         headers: {
           [name: string]: unknown;
@@ -8160,14 +8555,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Private image bytes */
+      /** @description A five-minute link to the private image */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": string;
-          "image/png": string;
+          "*/*": components["schemas"]["SignedDownloadResponse"];
         };
       };
       /** @description Invalid UUID, request or pagination */
@@ -8176,8 +8570,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
       /** @description Sign in required */
@@ -8186,8 +8579,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
       /** @description Responder membership required (manager membership to review or link duplicates) */
@@ -8196,8 +8588,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
       /** @description Inaccessible estate, report, location or image */
@@ -8206,8 +8597,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
       /** @description Private image storage unavailable */
@@ -8216,8 +8606,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
     };
@@ -8380,13 +8769,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description Authorised private inspection data */
+      /** @description A five-minute link to the private photo */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "*/*": string;
+          "*/*": components["schemas"]["SignedDownloadResponse"];
         };
       };
       /** @description Invalid fields or cursor */
@@ -8991,14 +9380,13 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description OK */
+      /** @description A five-minute link to the private image */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": string;
-          "image/png": string;
+          "*/*": components["schemas"]["SignedDownloadResponse"];
         };
       };
       /** @description Sign in required */
@@ -9007,8 +9395,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
       /** @description Report image not found */
@@ -9017,8 +9404,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
       /** @description Image storage unavailable */
@@ -9027,8 +9413,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "image/jpeg": components["schemas"]["EstateError"];
-          "image/png": components["schemas"]["EstateError"];
+          "*/*": components["schemas"]["EstateError"];
         };
       };
     };
@@ -10761,7 +11146,7 @@ export interface operations {
           "*/*": components["schemas"]["DocumentPageResponse"];
         };
       };
-      /** @description Invalid document request, file, search, cursor or limit */
+      /** @description Invalid document request, upload, search, cursor or limit */
       400: {
         headers: {
           [name: string]: unknown;
@@ -15081,13 +15466,13 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: {
+    requestBody: {
       content: {
-        "multipart/form-data": components["schemas"]["UploadDocumentRequest"];
+        "application/json": components["schemas"]["CreateDocumentRequest"];
       };
     };
     responses: {
-      /** @description Document stored and indexed */
+      /** @description Uploaded file checked and indexed */
       201: {
         headers: {
           [name: string]: unknown;
@@ -15096,7 +15481,7 @@ export interface operations {
           "*/*": components["schemas"]["DocumentResponse"];
         };
       };
-      /** @description Invalid document request, file, search, cursor or limit */
+      /** @description Invalid document request, upload, search, cursor or limit */
       400: {
         headers: {
           [name: string]: unknown;
@@ -15141,7 +15526,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description File exceeds 5,000,000 bytes or multipart request exceeds servlet limits */
+      /** @description Uploaded file exceeds 5,000,000 bytes */
       413: {
         headers: {
           [name: string]: unknown;

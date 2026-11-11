@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.proj.server.db.tables.records.EstateRecord;
 import com.proj.server.estate.EstatePermissionCode;
-import com.proj.server.resident.ResidentImageStore;
+import com.proj.server.resident.ImageUploads;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.resident.ResidentReportRepository;
 import java.util.UUID;
@@ -21,7 +21,7 @@ class EstateReportAuthorizationTests {
     private final EstateReportService service = new EstateReportService(
             repository,
             mock(ResidentReportRepository.class),
-            mock(ResidentImageStore.class),
+            mock(ImageUploads.class),
             mock(DuplicateRepository.class),
             mock(ReportUrgencyRepository.class),
             mock(com.proj.server.routing.RoutingRepository.class));

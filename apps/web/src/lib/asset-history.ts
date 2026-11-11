@@ -275,7 +275,6 @@ export function useHistoryDocument(
         "/estates/{estateId}/documents/{documentId}/content",
         {
           params: { path: { estateId, documentId } },
-          parseAs: "blob",
           signal,
         }
       );

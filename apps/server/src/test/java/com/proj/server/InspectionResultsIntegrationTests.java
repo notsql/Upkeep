@@ -270,7 +270,7 @@ class InspectionResultsIntegrationTests extends InspectionTestSupport {
     @Test
     void expectedLocationIsRequiredAndForeignAssetsAreHiddenEvenWhenBothEstatesAreOwned() throws Exception {
         var data = asset();
-        mvc.perform(multipart(inspections(data))
+        mvc.perform(StoredUploadSubmission.inspection(inspections(data), null)
                         .param("outcome", "PASS")
                         .param("inspectedOn", today().toString())
                         .with(jwt().jwt(t -> t.subject(OWNER))))

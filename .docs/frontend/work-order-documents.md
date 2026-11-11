@@ -37,7 +37,7 @@ Below 768px (`useMobile`) the table becomes a `ul` labelled `Documents` of shadc
 title = filename, line 1 "Invoice/Service report · 1,234 bytes", line 2
 "Uploaded <time>", trailing Download button (same handler as the table).
 It mounts only with document read permission and work-order access; its instance
-is scoped to user/estate/order. It reuses ID-22's typed Blob download hook. Deleted
+is scoped to user/estate/order. It reuses ID-22's signed-link download hook. Deleted
 files disappear on refetch/invalidation; no document blob cache or public file URL
 is introduced.
 

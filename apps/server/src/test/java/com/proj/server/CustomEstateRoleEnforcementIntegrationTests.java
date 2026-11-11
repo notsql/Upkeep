@@ -83,7 +83,6 @@ class CustomEstateRoleEnforcementIntegrationTests extends CustomEstateRoleTestSu
         var level = location(estateId, "LEVEL", block, "Level 1", 1);
         var report = report(estateId, level, "resident");
         var image = image(report);
-        when(imageStore.read("private/" + image)).thenReturn(new byte[] {1, 2, 3});
         mvc.perform(as("member", get(path() + "/reports")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(report.toString()));
@@ -94,7 +93,7 @@ class CustomEstateRoleEnforcementIntegrationTests extends CustomEstateRoleTestSu
         mvc.perform(as("member", get(path() + "/reports/" + report + "/images/" + image)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(content().bytes(new byte[] {1, 2, 3}));
+                .andExpect(jsonPath("$.url").exists());
         db.update(LOCATION)
                 .set(LOCATION.DEACTIVATEDAT, OffsetDateTime.now())
                 .where(LOCATION.ID.eq(level))

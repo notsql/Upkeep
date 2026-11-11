@@ -2,38 +2,36 @@ package com.proj.server.inspection;
 
 import com.proj.server.db.tables.records.AssetinspectionresultRecord;
 import com.proj.server.inspectionlist.InspectionListRepository;
-import com.proj.server.resident.ResidentImageValidator;
+import com.proj.server.resident.ImageUploads;
+import com.proj.server.storage.SignedDownloadResponse;
+import com.proj.server.storage.UploadSlotResponse;
 import com.proj.server.workos.WorkOSService;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class InspectionService {
     private final InspectionRepository repository;
-    private final ResidentImageValidator validator;
-    private final InspectionImageStore images;
+    private final ImageUploads images;
     private final TransactionTemplate transactions;
     private final WorkOSService identity;
     private final InspectionListRepository checks;
 
     public InspectionService(
             InspectionRepository repository,
-            ResidentImageValidator validator,
-            InspectionImageStore images,
+            ImageUploads images,
             TransactionTemplate transactions,
             WorkOSService identity,
             InspectionListRepository checks) {
         this.repository = repository;
-        this.validator = validator;
         this.images = images;
         this.transactions = transactions;
         this.identity = identity;
@@ -78,15 +76,27 @@ public class InspectionService {
         return context;
     }
 
+    /** A signed upload for one inspection photo; later photos pass the returned inspection id back. */
+    public UploadSlotResponse photoSlot(
+            UUID estate, String user, UUID asset, UUID inspectionId, String contentType, long size) {
+        authorize(estate, user, true, false);
+        var context = requireAsset(estate, asset);
+        if (!context.estateActive() || !context.assetActive() || !context.locationActive())
+            throw error(HttpStatus.CONFLICT, "The estate, asset or location is inactive or retired.");
+        var id = inspectionId == null ? UUID.randomUUID() : inspectionId;
+        return images.slot(prefix(id), contentType, size).forInspection(id);
+    }
+
     public InspectionResultResponse create(
             UUID estate,
             String user,
             UUID asset,
+            UUID requestedId,
             InspectionOutcome outcome,
             LocalDate date,
             String notes,
             UUID expectedLocation,
-            List<MultipartFile> selected) {
+            List<String> photoKeys) {
         authorize(estate, user, true, false);
         writableAsset(estate, asset, expectedLocation, date);
         String text = notes == null || notes.isBlank() ? null : notes.trim();
@@ -94,18 +104,15 @@ public class InspectionService {
             throw error(HttpStatus.BAD_REQUEST, "Say what's wrong so the manager knows what to fix.");
         if (text != null && text.length() > 2000)
             throw error(HttpStatus.BAD_REQUEST, "Notes must be at most 2,000 trimmed characters.");
-        var files = selected == null ? List.<MultipartFile>of() : selected;
-        if (files.size() > 3) throw error(HttpStatus.BAD_REQUEST, "Choose at most three photos.");
-        var validated = files.stream().map(validator::validate).toList();
+        var keys = photoKeys == null ? List.<String>of() : photoKeys;
+        if (keys.size() > 3) throw error(HttpStatus.BAD_REQUEST, "Choose at most three photos.");
+        if (!keys.isEmpty() && requestedId == null)
+            throw error(HttpStatus.BAD_REQUEST, "A photo was not uploaded properly. Add it again and resubmit.");
+        var id = requestedId == null ? UUID.randomUUID() : requestedId;
+        var ids = images.requireIssued(prefix(id), keys, repository::hasStorageKey);
         var name = identity.findDisplayName(user).orElse(null);
-        var id = UUID.randomUUID();
-        var uploaded = new ArrayList<UploadedPhoto>();
+        var uploaded = images.confirm(keys, ids);
         try {
-            for (var image : validated) {
-                var photo = UUID.randomUUID();
-                uploaded.add(new UploadedPhoto(
-                        photo, images.upload(id, photo, image), image.contentType(), image.bytes().length));
-            }
             return transactions.execute(ignored -> {
                 authorize(estate, user, true, true);
                 var current = writableAsset(estate, asset, expectedLocation, date);
@@ -114,11 +121,11 @@ public class InspectionService {
                 checks.complete(asset, id);
                 if (outcome == InspectionOutcome.FAIL) checks.notifyFailed(estate, asset, id, summary(text));
                 for (var photo : uploaded)
-                    repository.photo(photo.id(), estate, id, photo.key(), photo.type(), photo.size());
+                    repository.photo(photo.id(), estate, id, photo.key(), photo.contentType(), photo.size());
                 return repository.response(repository.result(estate, id));
             });
         } catch (RuntimeException error) {
-            for (var photo : uploaded) images.deleteQuietly(photo.key());
+            images.deleteQuietly(keys);
             throw error;
         }
     }
@@ -175,13 +182,23 @@ public class InspectionService {
                 found.size() > limit ? encode("assets|" + estate, page.getLast().id()) : null);
     }
 
-    public ImageBytes photo(UUID estate, String user, UUID asset, UUID resultId, UUID photoId) {
+    public SignedDownloadResponse photo(UUID estate, String user, UUID asset, UUID resultId, UUID photoId) {
         authorize(estate, user, false, false);
         if (!result(estate, resultId).getAssetid().equals(asset))
             throw error(HttpStatus.NOT_FOUND, "Inspection photo not found.");
         var photo = repository.photo(estate, resultId, photoId);
         if (photo == null) throw error(HttpStatus.NOT_FOUND, "Inspection photo not found.");
-        return new ImageBytes(images.read(photo.getStoragekey()), photo.getContenttype());
+        return images.download(photo.getStoragekey(), photo.getContenttype());
+    }
+
+    /** Removes inspection photos uploaded more than a day ago but never saved with a result. */
+    @Scheduled(fixedDelay = 3_600_000, initialDelay = 3_600_000)
+    public synchronized void cleanupOrphans() {
+        images.sweep("inspections/", repository::hasStorageKey);
+    }
+
+    private static String prefix(UUID inspectionId) {
+        return "inspections/" + inspectionId + "/";
     }
 
     /** The inspector's note, shortened to fit a notification. */
@@ -220,8 +237,4 @@ public class InspectionService {
     private static InspectionException error(HttpStatus status, String message) {
         return new InspectionException(status, message);
     }
-
-    public record ImageBytes(byte[] bytes, String contentType) {}
-
-    private record UploadedPhoto(UUID id, String key, String type, int size) {}
 }

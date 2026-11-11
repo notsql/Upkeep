@@ -1,12 +1,12 @@
 package com.proj.server.report;
 
 import com.proj.server.estate.EstatePermissionCode;
-import com.proj.server.resident.ResidentImageStore;
+import com.proj.server.resident.ImageUploads;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.resident.ResidentReportRepository;
-import com.proj.server.resident.ResidentReportService.ImageBytes;
 import com.proj.server.routing.RoutingRepository;
 import com.proj.server.routing.RoutingState;
+import com.proj.server.storage.SignedDownloadResponse;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class EstateReportService {
     private final EstateReportRepository repository;
     private final ResidentReportRepository reports;
-    private final ResidentImageStore images;
+    private final ImageUploads images;
     private final DuplicateRepository duplicates;
     private final ReportUrgencyRepository urgency;
     private final RoutingRepository routing;
@@ -27,7 +27,7 @@ public class EstateReportService {
     public EstateReportService(
             EstateReportRepository repository,
             ResidentReportRepository reports,
-            ResidentImageStore images,
+            ImageUploads images,
             DuplicateRepository duplicates,
             ReportUrgencyRepository urgency,
             RoutingRepository routing) {
@@ -123,11 +123,11 @@ public class EstateReportService {
         return find(estateId, reportId);
     }
 
-    public ImageBytes image(UUID estateId, String user, UUID reportId, UUID imageId) {
+    public SignedDownloadResponse image(UUID estateId, String user, UUID reportId, UUID imageId) {
         authorize(estateId, user, EstatePermissionCode.VIEW_FAULT_REPORTS, false);
         var image = reports.estateImage(estateId, reportId, imageId)
                 .orElseThrow(() -> error(HttpStatus.NOT_FOUND, "Report image not found."));
-        return new ImageBytes(images.read(image.key()), image.contentType());
+        return images.download(image.key(), image.contentType());
     }
 
     @Transactional

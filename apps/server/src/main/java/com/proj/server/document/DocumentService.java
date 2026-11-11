@@ -5,55 +5,94 @@ import static com.proj.server.estate.EstatePermissionCode.VIEW_DOCUMENTS;
 
 import com.proj.server.db.tables.records.DocumentRecord;
 import com.proj.server.estate.EstatePermissions;
+import com.proj.server.storage.ObjectStorage;
+import com.proj.server.storage.SignedDownloadResponse;
+import com.proj.server.storage.StorageUnavailableException;
+import com.proj.server.storage.UploadSlotResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.UUID;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DocumentService {
+    static final Duration UPLOAD_TTL = Duration.ofMinutes(10);
+    static final Duration DOWNLOAD_TTL = Duration.ofMinutes(5);
     private final DocumentRepository repository;
     private final DocumentValidator validator;
-    private final DocumentStore store;
+    private final ObjectStorage storage;
     private final TransactionTemplate transactions;
-    private String cleanupCursor;
 
     public DocumentService(
             DocumentRepository repository,
             DocumentValidator validator,
-            DocumentStore store,
+            ObjectStorage storage,
             PlatformTransactionManager manager) {
         this.repository = repository;
         this.validator = validator;
-        this.store = store;
+        this.storage = storage;
         this.transactions = new TransactionTemplate(manager);
     }
 
-    public DocumentResponse upload(UUID estate, String user, DocumentType type, MultipartFile file) {
+    /** A signed upload for one file; the browser PUTs it straight to storage, then calls {@link #upload}. */
+    public UploadSlotResponse uploadSlot(UUID estate, String user, String fileName, String contentType, long size) {
         repository.authority(estate, user, EDIT_DOCUMENTS, false).requireActive();
-        var validated = validator.validate(file);
-        UUID id = UUID.randomUUID();
-        String key = "documents/" + estate + "/" + id;
+        var declared = validator.declared(fileName, contentType, size);
+        String key = "documents/" + estate + "/" + UUID.randomUUID();
+        return UploadSlotResponse.of(
+                key,
+                declared.contentType(),
+                DocumentValidator.MAX_BYTES,
+                storage.signUpload(key, declared.contentType(), DocumentValidator.MAX_BYTES, UPLOAD_TTL));
+    }
+
+    /** Confirms an uploaded file: checks it, then writes its row. The document id is the one in the key. */
+    public DocumentResponse upload(UUID estate, String user, DocumentType type, String key, String fileName) {
+        repository.authority(estate, user, EDIT_DOCUMENTS, false).requireActive();
+        UUID id = issuedId(estate, key);
         try {
-            store.upload(key, validated);
+            var metadata = storage.metadata(key).orElseThrow(DocumentService::notUploaded);
+            validator.declared(fileName, metadata.contentType(), metadata.size());
+            var object = storage.get(key).orElseThrow(DocumentService::notUploaded);
+            var validated = validator.validate(fileName, object.contentType(), object.bytes());
             return transactions.execute(transaction -> {
                 var access = repository.authority(estate, user, EDIT_DOCUMENTS, true);
                 access.requireActive();
                 return response(repository.insert(estate, id, type, user, validated, key), access, user);
             });
         } catch (RuntimeException error) {
-            store.delete(key);
+            storage.delete(key);
             throw error;
         }
+    }
+
+    /** The id in a key Spring issued for this estate; 400 without touching storage for any other key. */
+    private UUID issuedId(UUID estate, String key) {
+        String prefix = "documents/" + estate + "/";
+        try {
+            if (key != null && key.startsWith(prefix)) {
+                var id = UUID.fromString(key.substring(prefix.length()));
+                if (key.equals(prefix + id) && !repository.references(key)) return id;
+            }
+        } catch (IllegalArgumentException ignored) {
+            // Not a key Spring issued.
+        }
+        throw notUploaded();
+    }
+
+    private static ResponseStatusException notUploaded() {
+        return new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "The file was not uploaded properly. Choose it again and retry.");
     }
 
     public DocumentPageResponse list(
@@ -95,11 +134,17 @@ public class DocumentService {
                 page.stream().map(row -> response(row, access, user)).toList(), next);
     }
 
-    public Content download(UUID estate, UUID id, String user) {
+    /** A five-minute link that saves the file under its original name. */
+    public SignedDownloadResponse download(UUID estate, UUID id, String user) {
         repository.authority(estate, user, VIEW_DOCUMENTS, false);
         var row = repository.find(estate, id, false);
         if (row.getDeletedat() != null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found.");
-        return new Content(row.getOriginalfilename(), row.getContenttype(), store.read(row.getStoragekey()));
+        String disposition = ContentDisposition.attachment()
+                .filename(row.getOriginalfilename(), StandardCharsets.UTF_8)
+                .build()
+                .toString();
+        return SignedDownloadResponse.of(
+                storage.signDownload(row.getStoragekey(), DOWNLOAD_TTL, row.getContenttype(), disposition));
     }
 
     public void delete(UUID estate, UUID id, String user) {
@@ -117,7 +162,7 @@ public class DocumentService {
 
     private void removeStorage(DocumentRecord row) {
         try {
-            if (store.delete(row.getStoragekey())) repository.storageRemoved(row.getId());
+            if (storage.delete(row.getStoragekey())) repository.storageRemoved(row.getId());
         } catch (RuntimeException ignored) {
             // The committed deletion marker remains available to the next scheduled retry.
         }
@@ -128,17 +173,11 @@ public class DocumentService {
         for (var row : repository.pendingDeletion()) removeStorage(row);
         var cutoff = Instant.now().minus(24, ChronoUnit.HOURS);
         try {
-            for (int page = 0; page < 5; page++) {
-                var objects = store.list(cleanupCursor);
-                for (var object : objects.contents()) {
-                    if (object.lastModified().isBefore(cutoff) && !repository.references(object.key()))
-                        store.delete(object.key());
-                }
-                cleanupCursor = objects.nextContinuationToken();
-                if (cleanupCursor == null) return;
-            }
-        } catch (ResponseStatusException ignored) {
-            // Missing configuration or a provider outage is retried on the next sweep.
+            for (var object : storage.list("documents/"))
+                if (object.lastModified().isBefore(cutoff) && !repository.references(object.key()))
+                    storage.delete(object.key());
+        } catch (StorageUnavailableException ignored) {
+            // A provider outage is retried on the next sweep.
         }
     }
 
@@ -161,6 +200,4 @@ public class DocumentService {
     private static ResponseStatusException invalidPage() {
         return new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid filename search, cursor or page size.");
     }
-
-    public record Content(String filename, String contentType, byte[] bytes) {}
 }

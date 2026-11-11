@@ -247,8 +247,10 @@ beforeEach(() => {
         children: [],
       },
     ],
-    "/estates/{estateId}/documents/{documentId}/content": () =>
-      new Blob(["%PDF-test"], { type: "application/pdf" }),
+    "/estates/{estateId}/documents/{documentId}/content": () => ({
+      url: "https://storage.example/asset-document",
+      expiresAt: "2099-01-01T00:00:00Z",
+    }),
     "/estates/{estateId}/documents/{documentId}/work-order": () => ({
       documentId,
       workOrderId: null,

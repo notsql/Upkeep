@@ -102,6 +102,10 @@ const otherEstateId = "00000000-0000-0000-0000-000000000003";
 const documentsPath = "/estates/{estateId}/documents";
 const contentPath = "/estates/{estateId}/documents/{documentId}/content";
 const deletionPath = "/estates/{estateId}/documents/{documentId}";
+const slotPath = "/estates/{estateId}/documents/upload-slots";
+const objectKey = `documents/${estateId}/00000000-0000-0000-0000-0000000000aa`;
+const uploadUrl = "https://storage.example/upload?signature=1";
+const downloadUrl = "https://storage.example/download?signature=2";
 const filename = "April Invoice.pdf";
 const saved = {
   id: documentId,
@@ -265,11 +269,31 @@ beforeEach(() => {
       ) as never;
     }
     if (String(path) === contentPath) {
-      return Promise.resolve(success(new Blob(["private document"]))) as never;
+      return Promise.resolve(
+        success({ url: downloadUrl, expiresAt: "2099-01-01T00:00:00Z" })
+      ) as never;
     }
     return Promise.resolve(failure("Unexpected endpoint", 404)) as never;
   });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.resolve(new Response(null, { status: 200 })))
+  );
   apiPost.mockImplementation((path) => {
+    if (String(path) === slotPath) {
+      return Promise.resolve(
+        success(
+          {
+            objectKey,
+            uploadUrl,
+            contentType: "application/pdf",
+            maxBytes: 5_000_000,
+            expiresAt: "2099-01-01T00:00:00Z",
+          },
+          201
+        )
+      ) as never;
+    }
     if (String(path) !== documentsPath) {
       return Promise.resolve(failure("Unexpected endpoint", 404)) as never;
     }
@@ -333,7 +357,7 @@ it("shows accepted formats, the 5 MB cap and a single-file chooser", async () =>
   expect(fileInput().multiple).toBe(false);
 });
 
-it("uploads one file and document type through the generated client", async () => {
+it("sends the file straight to storage, then records it with its storage key", async () => {
   await openDocuments();
   await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
   const file = selectedFile();
@@ -341,22 +365,34 @@ it("uploads one file and document type through the generated client", async () =
   fireEvent.click(screen.getByRole("button", { name: UPLOAD_FILE }));
 
   await screen.findByText(UPLOAD_SUCCESS);
-  const [request] = apiPost.mock.calls;
-  expect(request?.[0]).toBe(documentsPath);
-  const options: unknown = request?.[1];
-  expect(options).toEqual(
-    expect.objectContaining({ params: { path: { estateId } } })
-  );
-  if (!(options && typeof options === "object" && "body" in options)) {
-    throw new Error("Expected multipart request options");
-  }
-  const { body } = options;
-  expect(body).toBeInstanceOf(FormData);
-  if (!(body instanceof FormData)) {
-    throw new Error("Expected multipart document data");
-  }
-  expect(body.get("documentType")).toBe("INVOICE");
-  expect(body.getAll("file")).toEqual([file]);
+  expect(apiPost).toHaveBeenNthCalledWith(1, slotPath, {
+    params: { path: { estateId } },
+    body: { fileName: file.name, contentType: file.type, size: file.size },
+  });
+  expect(fetch).toHaveBeenCalledWith(uploadUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/pdf",
+      "x-goog-content-length-range": "0,5000000",
+    },
+    body: file,
+  });
+  expect(apiPost).toHaveBeenNthCalledWith(2, documentsPath, {
+    params: { path: { estateId } },
+    body: { objectKey, fileName: file.name, documentType: "INVOICE" },
+  });
+});
+
+it("records nothing when the file cannot reach storage", async () => {
+  vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 403 }));
+  await openDocuments();
+  await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
+  await chooseFile();
+  fireEvent.click(screen.getByRole("button", { name: UPLOAD_FILE }));
+
+  await screen.findByRole("alert");
+  expect(apiPost).toHaveBeenCalledTimes(1);
+  expect(apiPost).toHaveBeenCalledWith(slotPath, expect.anything());
 });
 
 it("shows pending feedback and prevents duplicate upload submissions", async () => {
@@ -376,6 +412,7 @@ it("shows pending feedback and prevents duplicate upload submissions", async () 
   ).toBe(true);
   fireEvent.click(pending);
   expect(apiPost).toHaveBeenCalledTimes(1);
+  expect(apiPost).toHaveBeenCalledWith(slotPath, expect.anything());
   await act(async () => upload.resolve(success(saved, 201)));
 });
 
@@ -426,7 +463,12 @@ it("retains the selection and shows an actionable server upload error", async ()
 });
 
 it("explains uncertain completion without automatically resubmitting", async () => {
-  apiPost.mockRejectedValue(new TypeError("Failed to fetch"));
+  const slot = apiPost.getMockImplementation();
+  apiPost.mockImplementation((path, options) =>
+    String(path) === documentsPath
+      ? Promise.reject(new TypeError("Failed to fetch"))
+      : (slot?.(path, options) as never)
+  );
   await openDocuments();
   await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
   await chooseFile();
@@ -434,7 +476,7 @@ it("explains uncertain completion without automatically resubmitting", async () 
 
   await screen.findByRole("alert");
   screen.getByText(UNCERTAIN_UPLOAD);
-  expect(apiPost).toHaveBeenCalledTimes(1);
+  expect(apiPost).toHaveBeenCalledTimes(2);
   expect(screen.queryByText(ANY_UPLOAD_SUCCESS)).toBeNull();
 });
 
@@ -631,63 +673,31 @@ it("retains the delete dialog and file after a denied deletion", async () => {
   expect(apiDelete).toHaveBeenCalledTimes(1);
 });
 
-it("downloads through the authenticated client and releases the temporary object URL", async () => {
+it("downloads by following a short-lived storage link, not by streaming the file", async () => {
   const createObjectURL = vi.fn(() => "blob:document-download");
-  const revokeObjectURL = vi.fn();
   vi.stubGlobal(
     "URL",
     class extends URL {
       static createObjectURL = createObjectURL;
-      static revokeObjectURL = revokeObjectURL;
     }
   );
-  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-    () => undefined
-  );
-  await openDocuments();
-  fireEvent.click(
-    await screen.findByRole("button", { name: DOWNLOAD_INVOICE })
-  );
-
-  await waitFor(() =>
-    expect(apiGet).toHaveBeenCalledWith(
-      contentPath,
-      expect.objectContaining({
-        params: { path: { estateId, documentId } },
-        parseAs: "blob",
-      })
-    )
-  );
-  expect(createObjectURL).toHaveBeenCalledWith(expect.any(Blob));
-  await waitFor(
-    () =>
-      expect(revokeObjectURL).toHaveBeenCalledWith("blob:document-download"),
-    { timeout: 3000 }
-  );
-});
-
-it("keeps the object URL alive after the download click so Safari can save it", async () => {
-  const revokeObjectURL = vi.fn();
-  vi.stubGlobal(
-    "URL",
-    class extends URL {
-      static createObjectURL = vi.fn(() => "blob:document-download");
-      static revokeObjectURL = revokeObjectURL;
-    }
-  );
-  const click = vi
-    .spyOn(HTMLAnchorElement.prototype, "click")
-    .mockImplementation(() => undefined);
-  await openDocuments();
-  fireEvent.click(
-    await screen.findByRole("button", { name: DOWNLOAD_INVOICE })
-  );
-
-  await waitFor(() => expect(click).toHaveBeenCalled());
-  await act(async () => {
-    await Promise.resolve();
+  const clicked: { href: string; download: string }[] = [];
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+    this: HTMLAnchorElement
+  ) {
+    clicked.push({ href: this.href, download: this.download });
   });
-  expect(revokeObjectURL).not.toHaveBeenCalled();
+  await openDocuments();
+  fireEvent.click(
+    await screen.findByRole("button", { name: DOWNLOAD_INVOICE })
+  );
+
+  await waitFor(() => expect(clicked).toHaveLength(1));
+  expect(apiGet).toHaveBeenCalledWith(contentPath, {
+    params: { path: { estateId, documentId } },
+  });
+  expect(clicked[0]).toEqual({ href: downloadUrl, download: filename });
+  expect(createObjectURL).not.toHaveBeenCalled();
 });
 
 it("removes write controls after edit permission is revoked", async () => {

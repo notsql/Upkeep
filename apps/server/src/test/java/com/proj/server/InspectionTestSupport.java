@@ -2,16 +2,17 @@ package com.proj.server;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import com.proj.server.storage.InMemoryObjectStorage;
 import com.proj.server.workos.WorkOSService;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -20,18 +21,10 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 /** Exercise the proposed HTTP contract without depending on ungenerated Java/API types. */
-@SpringBootTest(
-        properties = {
-            "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
-            "app.r2.endpoint=",
-            "app.r2.access-id=",
-            "app.r2.secret-access-key=",
-            "app.r2.bucket-name="
-        })
+@SpringBootTest(properties = "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 @Transactional
@@ -50,6 +43,14 @@ abstract class InspectionTestSupport {
 
     @MockitoBean
     WorkOSService identity;
+
+    @Autowired
+    InMemoryObjectStorage storage;
+
+    @BeforeEach
+    void emptyStorage() {
+        storage.reset();
+    }
 
     UUID[] asset() {
         return new DeviceTestData(db).estateWithAsset(OWNER);
@@ -78,12 +79,13 @@ abstract class InspectionTestSupport {
     }
 
     /** A Fail must say what is wrong (spec equipment-dispatch.md), so one gets a default note. */
-    MockMultipartHttpServletRequestBuilder submission(UUID[] data, String outcome, String date) {
+    StoredUploadSubmission submission(UUID[] data, String outcome, String date) {
         return submission(data, outcome, date, "FAIL".equals(outcome) ? "Not working" : null);
     }
 
-    MockMultipartHttpServletRequestBuilder submission(UUID[] data, String outcome, String date, String notes) {
-        var request = multipart(inspections(data)).param("expectedLocationId", data[1].toString());
+    StoredUploadSubmission submission(UUID[] data, String outcome, String date, String notes) {
+        var request = StoredUploadSubmission.inspection(inspections(data), storage)
+                .param("expectedLocationId", data[1].toString());
         if (outcome != null) request.param("outcome", outcome);
         if (date != null) request.param("inspectedOn", date);
         if (notes != null) request.param("notes", notes);

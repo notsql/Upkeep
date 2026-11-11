@@ -1,7 +1,7 @@
 package com.proj.server.routing;
 
-import com.proj.server.resident.ResidentImageStore;
-import com.proj.server.resident.ResidentReportException;
+import com.proj.server.resident.ImageUploads;
+import com.proj.server.storage.StorageUnavailableException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -26,7 +26,7 @@ public class DispatchDeliveryJob {
 
     private final RoutingRepository routing;
     private final ObjectProvider<EmailSender> sender;
-    private final ResidentImageStore images;
+    private final ImageUploads images;
     private final TransactionTemplate transactions;
     private final Clock clock;
 
@@ -34,7 +34,7 @@ public class DispatchDeliveryJob {
     public DispatchDeliveryJob(
             RoutingRepository routing,
             ObjectProvider<EmailSender> sender,
-            ResidentImageStore images,
+            ImageUploads images,
             TransactionTemplate transactions,
             Clock clock) {
         this.routing = routing;
@@ -68,7 +68,7 @@ public class DispatchDeliveryJob {
             mail.send(email(delivery));
         } catch (EmailSendException error) {
             failure = error.code();
-        } catch (ResidentReportException error) {
+        } catch (StorageUnavailableException error) {
             failure = "IMAGE_STORAGE";
         } catch (RuntimeException error) {
             failure = "UNEXPECTED";

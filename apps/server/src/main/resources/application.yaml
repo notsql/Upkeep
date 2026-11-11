@@ -66,11 +66,11 @@ app:
     from: ${APP_MAIL_FROM:}
     # Blank: no reply-to.
     reply-to: ${APP_MAIL_REPLY_TO:}
-  r2:
-    endpoint: ${S3_ENDPOINT:}
-    access-id: ${R2_ACCESS_ID:}
-    secret-access-key: ${R2_SECRET_ACCESS_KEY:}
-    bucket-name: ${R2_BUCKET_NAME:}
+  # Google Cloud Storage, through Application Default Credentials (decision 0050).
+  # A blank bucket leaves storage off: uploads and file links answer 503.
+  storage:
+    bucket: ${GCS_BUCKET_NAME:}
+    project-id: ${GCS_PROJECT_ID:}
 
 # WorkOS AuthKit is intentionally NOT configured here, and the issuer must not
 # be given an empty default: Spring's resource-server auto-configuration keys

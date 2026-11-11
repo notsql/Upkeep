@@ -1,5 +1,5 @@
 import { Button } from "@proj/ui/components/button";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { useInspectionPhoto } from "@/lib/inspections";
 
 export function InspectionPhoto({
@@ -16,16 +16,7 @@ export function InspectionPhoto({
   number: number;
 }) {
   const image = useInspectionPhoto(estateId, assetId, inspectionId, photoId);
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    if (!image.data) {
-      setUrl(undefined);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(image.data);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [image.data]);
+  const url = image.data?.url;
   const retry = useCallback(() => image.refetch(), [image.refetch]);
   if (image.isError) {
     return (
@@ -37,7 +28,7 @@ export function InspectionPhoto({
       </div>
     );
   }
-  if (!(url && image.data)) {
+  if (!url) {
     return <p role="status">Loading photo {number}…</p>;
   }
   return (

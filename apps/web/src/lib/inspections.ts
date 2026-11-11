@@ -8,6 +8,11 @@ import {
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
+import {
+  linkStaleTime,
+  type SignedLink,
+  sendToStorage,
+} from "@/lib/storage-upload";
 
 export type InspectionResult =
   components["schemas"]["InspectionResultResponse"];
@@ -321,19 +326,46 @@ export function useCreateInspection(estateId: string, assetId: string) {
       if (!access.canCreate) {
         return fail(undefined, 403, "Inspection recording is unavailable.");
       }
-      const body = new FormData();
-      body.append("outcome", input.outcome);
-      body.append("inspectedOn", input.inspectedOn);
-      body.append("expectedLocationId", input.expectedLocationId);
-      if (input.notes?.trim()) {
-        body.append("notes", input.notes.trim());
-      }
+      // Each photo goes straight to storage; the first slot names the inspection.
+      let inspectionId: string | undefined;
+      const photoKeys: string[] = [];
       for (const photo of input.photos) {
-        body.append("photos", photo);
+        // biome-ignore lint/performance/noAwaitInLoops: later slots reuse the id the first slot returns
+        const slot = await api.POST(
+          "/estates/{estateId}/assets/{assetId}/inspections/photo-slots",
+          {
+            params: { path: { estateId, assetId } },
+            body: {
+              ...(inspectionId ? { inspectionId } : {}),
+              contentType: photo.type,
+              size: photo.size,
+            },
+          }
+        );
+        if (slot.error || !slot.data) {
+          return fail(
+            slot.error,
+            slot.response.status,
+            "Couldn't send a photo. Try again."
+          );
+        }
+        inspectionId = slot.data.inspectionId ?? inspectionId;
+        await sendToStorage(slot.data, photo);
+        photoKeys.push(slot.data.objectKey);
       }
+      const notes = input.notes?.trim();
       const { data, error, response } = await api.POST(
         "/estates/{estateId}/assets/{assetId}/inspections",
-        { params: { path: { estateId, assetId } }, body: body as never }
+        {
+          params: { path: { estateId, assetId } },
+          body: {
+            outcome: input.outcome,
+            inspectedOn: input.inspectedOn,
+            expectedLocationId: input.expectedLocationId,
+            ...(notes ? { notes } : {}),
+            ...(inspectionId ? { inspectionId, photoKeys } : {}),
+          },
+        }
       );
       if (error || !data) {
         return fail(
@@ -386,7 +418,7 @@ export function useInspectionPhoto(
 ) {
   const access = useInspectionAccess(estateId);
   const fail = useFailure(access.userId);
-  const query = useQuery({
+  const query = useQuery<SignedLink>({
     queryKey: [
       access.userId,
       "inspection-results",
@@ -396,6 +428,9 @@ export function useInspectionPhoto(
       inspectionId,
       photoId,
     ],
+    // Each link lasts five minutes; fetch a new one just before it expires.
+    staleTime: (current) => linkStaleTime(current.state.data),
+    refetchInterval: (current) => linkStaleTime(current.state.data) || false,
     enabled: access.canView,
     retry: false,
     queryFn: async ({ signal }) => {
@@ -403,7 +438,6 @@ export function useInspectionPhoto(
         "/estates/{estateId}/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}",
         {
           params: { path: { estateId, assetId, inspectionId, photoId } },
-          parseAs: "blob",
           signal,
         }
       );

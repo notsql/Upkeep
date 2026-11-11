@@ -16,7 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.proj.server.estate.CouncilIdentity;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateRequest;
-import com.proj.server.resident.ResidentImageStore;
+import com.proj.server.storage.InMemoryObjectStorage;
 import com.proj.server.workos.WorkOSService;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -74,8 +74,9 @@ abstract class CustomEstateRoleTestSupport {
     @MockitoBean
     WorkOSService identity;
 
-    @MockitoBean
-    ResidentImageStore imageStore;
+    /** The in-memory file storage every context test shares (decision 0050). */
+    @Autowired
+    InMemoryObjectStorage storage;
 
     final ObjectMapper json = new ObjectMapper();
     final Map<String, JwtRequestPostProcessor> tokens = new java.util.concurrent.ConcurrentHashMap<>();
@@ -83,6 +84,7 @@ abstract class CustomEstateRoleTestSupport {
 
     @BeforeEach
     void createEstateAndPeople() {
+        storage.reset();
         estateId = estate("owner");
         member(estateId, "manager", "MANAGER");
         member(estateId, "member", "COUNCIL");

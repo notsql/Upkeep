@@ -45,7 +45,7 @@ new submission constraints are documented in [resident-reports.md](resident-repo
 | GET `/estates/{estateId}/reports/{reportId}` | UUID paths | 200 `EstateIssueReportDetailResponse` | 400; 401; 403; 404 |
 | PATCH `/estates/{estateId}/reports/{reportId}/location` | JSON `RelocateReportRequest` | 200 updated `EstateIssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid UUID/body or block-only destination; 401; 403; 404; 409 |
 | PATCH `/estates/{estateId}/reports/{reportId}/urgency` | JSON `ChangeReportUrgencyRequest` | 200 updated `EstateIssueReportDetailResponse` (unchanged on a valid no-op) | 400 invalid body or Safety below Urgent; 401; 403; 404; 409 stale version or inactive estate |
-| GET `/estates/{estateId}/reports/{reportId}/images/{imageId}` | UUID paths | 200 private JPEG/PNG bytes with the stored content type | 400; 401; 403; 404; 503 storage unavailable |
+| GET `/estates/{estateId}/reports/{reportId}/images/{imageId}` | UUID paths | 200 `SignedDownloadResponse { url, expiresAt }`: a five-minute link to the private image, served with its stored content type | 400; 401; 403; 404; 503 storage unavailable |
 
 403 means known estate access without responder authority, including conflicting
 owner/Resident membership. 404 hides inaccessible/missing estates, reports outside

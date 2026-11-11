@@ -1,9 +1,6 @@
 package com.proj.server;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -14,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 class AssetHistoryDocumentsIntegrationTests extends AssetHistoryTestSupport {
     @Test
@@ -127,9 +122,7 @@ class AssetHistoryDocumentsIntegrationTests extends AssetHistoryTestSupport {
     @Test
     void metadataRemainsReadableDuringStorageOutageAndTheAuthenticatedFileCanBeRetried() throws Exception {
         UUID document = document("INVOICE", assetId, null, "2026-01-01T02:00:00Z");
-        when(storage.read(anyString()))
-                .thenThrow(new ResponseStatusException(
-                        HttpStatus.SERVICE_UNAVAILABLE, "Document storage is temporarily unavailable."));
+        storage.unavailable = true;
         assertEquals(
                 List.of(document.toString()),
                 values(page("member", history(assetId)).path("items"), "sourceId"));
@@ -137,12 +130,12 @@ class AssetHistoryDocumentsIntegrationTests extends AssetHistoryTestSupport {
         read("member", get(contentPath))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.message").isNotEmpty());
-        doReturn(DocumentTestSupport.pdf()).when(storage).read(anyString());
+        storage.unavailable = false;
         read("member", get(contentPath))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(content().contentType("application/pdf"))
-                .andExpect(content().bytes(DocumentTestSupport.pdf()));
+                .andExpect(
+                        jsonPath("$.url").value(org.hamcrest.Matchers.containsString("contentType=application%2Fpdf")));
         assertEquals(
                 List.of(document.toString()),
                 values(page("member", history(assetId)).path("items"), "sourceId"));
@@ -151,7 +144,6 @@ class AssetHistoryDocumentsIntegrationTests extends AssetHistoryTestSupport {
     @Test
     void contentRechecksMembershipEvenWhenTheReaderAlreadyHasTimelineMetadata() throws Exception {
         UUID document = document("INVOICE", assetId, null, "2026-01-01T02:00:00Z");
-        when(storage.read(anyString())).thenReturn(DocumentTestSupport.pdf());
         page("member", history(assetId));
         String contentPath = path() + "/documents/" + document + "/content";
         read("member", get(contentPath)).andExpect(status().isOk());

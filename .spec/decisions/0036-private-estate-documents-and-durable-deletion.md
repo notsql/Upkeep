@@ -1,5 +1,7 @@
 # 0036 — Private estate documents and durable deletion
 
+> **Superseded in part by [0050](0050-object-storage-moves-to-gcs-with-signed-urls.md):** files now live in Google Cloud Storage, not Cloudflare R2, and the browser uploads and downloads them through short-lived signed URLs instead of through Spring.
+
 Date: 2026-10-25. Status: accepted through the invoice/service-report spec and
 implementation request.
 

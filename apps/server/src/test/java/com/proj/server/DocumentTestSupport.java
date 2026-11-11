@@ -1,9 +1,8 @@
 package com.proj.server;
 
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.awt.image.BufferedImage;
@@ -17,32 +16,24 @@ import javax.imageio.ImageIO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.scheduling.annotation.ScheduledAnnotationBeanPostProcessor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.JsonNode;
 
-/** Commit real HTTP operations so storage callbacks and deletion retries observe committed data. */
+/**
+ * Commit real HTTP operations so deletion retries observe committed data. Files are "uploaded" by putting them into
+ * the shared in-memory storage under an issued key, as the browser's PUT would (decision 0050).
+ */
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
-    static final DocumentR2Stub STORAGE = new DocumentR2Stub();
     private final List<UUID> fixtureEstates = new ArrayList<>();
 
     @Autowired
     ScheduledAnnotationBeanPostProcessor scheduler;
-
-    @DynamicPropertySource
-    static void storageProperties(DynamicPropertyRegistry properties) {
-        properties.add("app.r2.endpoint", STORAGE::endpoint);
-        properties.add("app.r2.access-id", () -> "document-test-access-id");
-        properties.add("app.r2.secret-access-key", () -> "document-test-secret");
-        properties.add("app.r2.bucket-name", () -> DocumentR2Stub.BUCKET);
-    }
 
     @Override
     UUID estate(String owner) {
@@ -53,7 +44,7 @@ abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
 
     @BeforeEach
     void documentPeopleAndStorage() {
-        STORAGE.reset();
+        storage.reset();
         member(estateId, "crew", "CREW");
         member(estateId, "second-crew", "CREW");
         member(estateId, "resident", "RESIDENT");
@@ -75,7 +66,7 @@ abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
             db.execute("delete from \"EstateRoleDefinition\" where \"estateId\"=?", estate);
             db.execute("delete from \"Estate\" where id=?", estate);
         }
-        STORAGE.reset();
+        storage.reset();
     }
 
     String documents() {
@@ -86,16 +77,33 @@ abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
         return documents() + "/" + id + "/content";
     }
 
-    MockMultipartHttpServletRequestBuilder submission(String type, MockMultipartFile... files) {
-        var request = multipart(documents());
-        if (type != null) request.param("documentType", type);
-        for (var file : files) request.file(file);
-        return request;
+    MockHttpServletRequestBuilder submission(String type, MockMultipartFile... files) throws Exception {
+        return submissionTo(estateId, type, files);
     }
 
-    MockMultipartHttpServletRequestBuilder as(String user, MockMultipartHttpServletRequestBuilder request) {
-        return request.with(jwt().jwt(token -> token.subject(user).claim("role", "admin"))
-                .authorities(new SimpleGrantedAuthority("ROLE_admin")));
+    /** Uploads the file (if any) under a key issued for {@code estate}, then builds the JSON create call. */
+    MockHttpServletRequestBuilder submissionTo(UUID estate, String type, MockMultipartFile... files) throws Exception {
+        var body = json.createObjectNode();
+        if (type != null) body.put("documentType", type);
+        if (files.length > 0) {
+            var key = "documents/" + estate + "/" + UUID.randomUUID();
+            storage.upload(key, files[0].getBytes(), files[0].getContentType());
+            body.put("objectKey", key);
+            body.put("fileName", files[0].getOriginalFilename());
+        }
+        return post("/estates/" + estate + "/documents")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(body));
+    }
+
+    MockHttpServletRequestBuilder slot(String fileName, String contentType, long size) throws Exception {
+        var body = json.createObjectNode()
+                .put("fileName", fileName)
+                .put("contentType", contentType)
+                .put("size", size);
+        return post(documents() + "/upload-slots")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsString(body));
     }
 
     MockMultipartFile pdfFile(String filename) {
@@ -156,7 +164,6 @@ abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
     }
 
     void ageObject(String key, Instant time) {
-        var object = STORAGE.objects.get(key);
-        STORAGE.objects.put(key, new DocumentR2Stub.StoredObject(object.bytes(), object.contentType(), time));
+        storage.age(key, time);
     }
 }

@@ -1,39 +1,37 @@
 package com.proj.server;
 
 import static org.hamcrest.Matchers.hasItem;
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.proj.server.resident.ResidentImageStore;
+import com.proj.server.storage.InMemoryObjectStorage;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.util.HashSet;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import org.jooq.DSLContext;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 /** HTTP and database behavior for two manually assigned residents. */
@@ -51,8 +49,13 @@ class ResidentReportsIntegrationTests {
     @MockitoBean
     JwtDecoder decoder;
 
-    @MockitoBean
-    ResidentImageStore imageStore;
+    @Autowired
+    InMemoryObjectStorage imageStore;
+
+    @BeforeEach
+    void emptyStorage() {
+        imageStore.reset();
+    }
 
     private MockHttpServletRequestBuilder asUser(MockHttpServletRequestBuilder request, String userId) {
         return request.with(jwt().jwt(token -> token.subject(userId).claim("role", "user"))
@@ -104,8 +107,8 @@ class ResidentReportsIntegrationTests {
         return id;
     }
 
-    private MockMultipartHttpServletRequestBuilder submission(String userId, UUID locationId, String description) {
-        var request = multipart("/resident/reports");
+    private StoredUploadSubmission submission(String userId, UUID locationId, String description) {
+        var request = StoredUploadSubmission.report(imageStore);
         var selectedEstate = db.fetchValue(
                 "select \"estateId\" from \"EstateUser\" where \"userId\"=? and role='RESIDENT' limit 1", userId);
         if (selectedEstate == null)
@@ -134,7 +137,7 @@ class ResidentReportsIntegrationTests {
         var bytes = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", bytes);
         for (var title : new String[] {null, "", "   ", "x".repeat(51)}) {
-            var request = multipart("/resident/reports")
+            var request = StoredUploadSubmission.report(imageStore)
                     .param("description", "Leaking pipe")
                     .param("locationId", level.toString())
                     .param("estateId", e.toString())
@@ -145,7 +148,7 @@ class ResidentReportsIntegrationTests {
                     .andExpect(status().isBadRequest());
         }
         assertEquals(0L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
-        verifyNoInteractions(imageStore);
+        assertEquals(4, imageStore.objects.size(), "refused reports leave their photos for the sweep");
     }
 
     @Test
@@ -155,7 +158,7 @@ class ResidentReportsIntegrationTests {
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
         for (var title : new String[] {"Leaking pipe", "x".repeat(50)}) {
-            var response = mvc.perform(multipart("/resident/reports")
+            var response = mvc.perform(StoredUploadSubmission.report(imageStore)
                             .param("title", "  " + title + "  ")
                             .param("description", "Water pooling near the lift")
                             .param("locationId", level.toString())
@@ -283,7 +286,7 @@ class ResidentReportsIntegrationTests {
         }
         mvc.perform(submission("resident-a", validLevel, "   ")).andExpect(status().isBadRequest());
         mvc.perform(submission("resident-a", validLevel, "x".repeat(2501))).andExpect(status().isBadRequest());
-        var missingLocation = multipart("/resident/reports");
+        var missingLocation = StoredUploadSubmission.report(imageStore);
         missingLocation.param("title", "Fault title");
         missingLocation.param("description", "Leaking pipe");
         missingLocation.with(
@@ -515,6 +518,69 @@ class ResidentReportsIntegrationTests {
         }
         mvc.perform(fourImages).andExpect(status().isBadRequest());
         assertEquals(0L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
+        assertEquals(4, imageStore.objects.size(), "only the four never-checked photos remain, for the sweep");
+        mvc.perform(submission("resident-a", level, "Leaking pipe").missingFile())
+                .andExpect(status().isBadRequest());
+        var foreign = "reports/" + UUID.randomUUID() + "/" + UUID.randomUUID();
+        imageStore.upload(foreign, png, "image/png");
+        mvc.perform(post("/resident/reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"estateId\":\"" + e + "\",\"reportId\":\"" + UUID.randomUUID()
+                                + "\",\"title\":\"Fault title\",\"description\":\"Leaking pipe\",\"locationId\":\""
+                                + level + "\",\"imageKeys\":[\"" + foreign + "\"]}")
+                        .with(jwt().jwt(token -> token.subject("resident-a"))))
+                .andExpect(status().isBadRequest());
+        assertTrue(imageStore.objects.containsKey(foreign), "a key from another report is left alone");
+        assertEquals(0L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
+    }
+
+    @Test
+    void anImageSlotIsATenMinuteSignedUploadForAssignedResidentsOnly() throws Exception {
+        var e = estate("SLOTS", false);
+        assign("resident-a", e);
+        var slot = mvc.perform(asUser(
+                        post("/resident/reports/image-slots")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/png\",\"size\":1000}"),
+                        "resident-a"))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.contentType").value("image/png"))
+                .andExpect(jsonPath("$.maxBytes").value(5 * 1024 * 1024))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String reportId = com.jayway.jsonpath.JsonPath.read(slot, "$.reportId");
+        String key = com.jayway.jsonpath.JsonPath.read(slot, "$.objectKey");
+        assertTrue(key.startsWith("reports/" + reportId + "/"));
+        assertTrue(
+                com.jayway.jsonpath.JsonPath.<String>read(slot, "$.uploadUrl").startsWith("memory://upload/" + key));
+        mvc.perform(asUser(
+                        post("/resident/reports/image-slots")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/png\",\"size\":1000}"),
+                        "resident-b"))
+                .andExpect(status().isForbidden());
+        mvc.perform(asUser(
+                        post("/resident/reports/image-slots")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/gif\",\"size\":1000}"),
+                        "resident-a"))
+                .andExpect(status().isUnsupportedMediaType());
+        mvc.perform(asUser(
+                        post("/resident/reports/image-slots")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/png\",\"size\":5242881}"),
+                        "resident-a"))
+                .andExpect(status().isPayloadTooLarge());
+        imageStore.unavailable = true;
+        mvc.perform(asUser(
+                        post("/resident/reports/image-slots")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/png\",\"size\":1000}"),
+                        "resident-a"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("File storage is temporarily unavailable. Try again later."));
     }
 
     @Test
@@ -559,7 +625,7 @@ class ResidentReportsIntegrationTests {
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
         for (var role : new String[] {"resident", "admin", "user"}) {
-            var request = multipart("/resident/reports")
+            var request = StoredUploadSubmission.report(imageStore)
                     .param("title", "Fault title")
                     .param("description", "Not assigned")
                     .param("locationId", level.toString())
@@ -601,7 +667,7 @@ class ResidentReportsIntegrationTests {
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.canSubmit").value(true));
-        mvc.perform(multipart("/resident/reports")
+        mvc.perform(StoredUploadSubmission.report(imageStore)
                         .param("title", "Fault title")
                         .param("description", "Assigned now")
                         .param("locationId", level.toString())
@@ -612,7 +678,7 @@ class ResidentReportsIntegrationTests {
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.canSubmit").value(false));
-        mvc.perform(multipart("/resident/reports")
+        mvc.perform(StoredUploadSubmission.report(imageStore)
                         .param("title", "Fault title")
                         .param("description", "Removed now")
                         .param("locationId", level.toString())
@@ -629,52 +695,59 @@ class ResidentReportsIntegrationTests {
         var level = location(e, "LEVEL", block, "BLOCK", false);
         var reportId = report("resident-a", e, level, "Earlier photographed fault");
         var imageId = UUID.randomUUID();
-        var bytes = new byte[] {1, 2, 3};
         db.execute(
                 "insert into \"IssueReportImage\" (id, \"reportId\", \"storageKey\", \"contentType\", \"sizeBytes\") values (?, ?, 'private/history-image', 'image/png', 3)",
                 imageId,
                 reportId);
-        when(imageStore.read("private/history-image")).thenReturn(bytes);
         db.execute("delete from \"EstateUser\" where \"userId\"='resident-a'");
 
-        var response = mvc.perform(asUser(get("/resident/reports/" + reportId + "/images/" + imageId), "resident-a"))
+        mvc.perform(asUser(get("/resident/reports/" + reportId + "/images/" + imageId), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Type", "image/png"))
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andReturn();
-        assertArrayEquals(bytes, response.getResponse().getContentAsByteArray());
+                .andExpect(jsonPath("$.url").value(startsWith("memory://download/private/history-image")))
+                .andExpect(jsonPath("$.expiresAt").exists());
         mvc.perform(asUser(get("/resident/reports/" + reportId + "/images/" + imageId), "resident-b"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
-    void deletionDuringImageUploadAbortsTheReportAndRemovesStagedObjects() throws Exception {
+    void removingTheMembershipAfterUploadBlocksTheReportAndLeavesThePhotoForTheSweep() throws Exception {
         var e = estate("UPLOADREVOKE", false);
         assign("resident-a", e);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
-        var objects = new HashSet<String>();
-        when(imageStore.upload(any(), any(), any())).thenAnswer(call -> {
-            objects.add("staged/image");
-            db.execute("delete from \"EstateUser\" where \"userId\"='resident-a' and role='RESIDENT'");
-            return "staged/image";
-        });
-        doAnswer(call -> {
-                    objects.remove(call.getArgument(0, String.class));
-                    return null;
-                })
-                .when(imageStore)
-                .deleteQuietly(any());
         var png = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", png);
+        var request = submission("resident-a", level, "Assignment removed during upload")
+                .file(new MockMultipartFile("images", "fault.png", "image/png", png.toByteArray()));
+        db.execute("delete from \"EstateUser\" where \"userId\"='resident-a' and role='RESIDENT'");
 
-        mvc.perform(submission("resident-a", level, "Assignment removed during upload")
-                        .file(new MockMultipartFile("images", "fault.png", "image/png", png.toByteArray())))
-                .andExpect(status().isForbidden());
-        assertEquals(
-                0L, db.fetchValue("select count(*) from \"EstateUser\" where \"userId\"='resident-a'", Long.class));
+        mvc.perform(request).andExpect(status().isForbidden());
         assertEquals(0L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
         assertEquals(0L, db.fetchValue("select count(*) from \"IssueReportImage\"", Long.class));
-        assertEquals(java.util.Set.of(), objects);
+        assertTrue(imageStore.objects.containsKey(request.keys().getFirst()));
+    }
+
+    @Test
+    void aSubmittedPhotoIsStoredAsACleanCopyAndAFailedCheckDeletesIt() throws Exception {
+        var e = estate("CONFIRM", false);
+        assign("resident-a", e);
+        var block = location(e, "BLOCK", null, null, false);
+        var level = location(e, "LEVEL", block, "BLOCK", false);
+        var png = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", png);
+        var ok = submission("resident-a", level, "Photo").file("image/png", png.toByteArray());
+        mvc.perform(ok)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.images.length()").value(1));
+        assertEquals(
+                ok.keys().getFirst(),
+                db.fetchValue("select \"storageKey\" from \"IssueReportImage\" where \"reportId\"=?", ok.id()));
+        assertNotNull(ImageIO.read(new java.io.ByteArrayInputStream(
+                imageStore.objects.get(ok.keys().getFirst()).bytes())));
+
+        var broken = submission("resident-a", level, "Broken").file("image/png", new byte[] {1, 2, 3});
+        mvc.perform(broken).andExpect(status().isBadRequest());
+        assertFalse(imageStore.objects.containsKey(broken.keys().getFirst()));
     }
 }

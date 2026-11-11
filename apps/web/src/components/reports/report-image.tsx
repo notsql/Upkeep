@@ -1,24 +1,15 @@
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
+/** A submitted fault photo, shown straight from its short-lived storage link. */
 export function ReportImage({
-  data,
+  url,
   isError,
   loading = null,
 }: {
-  data: Blob | undefined;
+  url: string | undefined;
   isError: boolean;
   loading?: ReactNode;
 }) {
-  const [url, setUrl] = useState<string>();
-  useEffect(() => {
-    if (!data) {
-      setUrl(undefined);
-      return;
-    }
-    const objectUrl = URL.createObjectURL(data);
-    setUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
-  }, [data]);
   if (isError) {
     return <p role="alert">Couldn't load an image. Try again.</p>;
   }

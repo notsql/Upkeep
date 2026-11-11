@@ -7,7 +7,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.proj.server.resident.ResidentImageStore;
 import com.proj.server.routing.Classification;
 import com.proj.server.routing.FaultClassifier;
 import com.proj.server.routing.ReportClassificationJob;
@@ -39,9 +38,6 @@ class ReportRoutingConcurrencyTests {
 
     @MockitoBean
     JwtDecoder decoder;
-
-    @MockitoBean
-    ResidentImageStore imageStore;
 
     @MockitoBean
     FaultClassifier classifier;

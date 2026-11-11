@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@proj/ui/components/dialog";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import {
@@ -33,7 +33,6 @@ export function HistoryDocumentDialog({
   const file = useHistoryDocument(estateId, assetId, document.id);
   const download = useDownloadDocument(estateId);
   const title = useRef<HTMLHeadingElement>(null);
-  const [object, setObject] = useState<{ blob: Blob; url: string }>();
   const [previewFailed, setPreviewFailed] = useState(false);
   const preview = useRef<Element | null>(null);
   const failPreview = useCallback(() => setPreviewFailed(true), []);
@@ -62,16 +61,7 @@ export function HistoryDocumentDialog({
     () => download.mutate(document),
     [download.mutate, document]
   );
-  useEffect(() => {
-    if (!file.data || file.isError) {
-      return;
-    }
-    const url = URL.createObjectURL(file.data);
-    setObject({ blob: file.data, url });
-    return () => URL.revokeObjectURL(url);
-  }, [file.data, file.isError]);
-  const url =
-    !file.isError && file.data === object?.blob ? object?.url : undefined;
+  const url = file.isError ? undefined : file.data?.url;
   const pdf =
     document.contentType === "application/pdf" &&
     navigator.pdfViewerEnabled !== false;

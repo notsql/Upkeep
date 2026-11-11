@@ -3,6 +3,7 @@ package com.proj.server.report;
 import com.proj.server.estate.EstateError;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.routing.RoutingState;
+import com.proj.server.storage.SignedDownloadResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -12,7 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -152,31 +152,19 @@ public class EstateReportController {
         return privateResponse(reports.link(estateId, subject(principal), reportId, request));
     }
 
-    @GetMapping(
-            value = "/{reportId}/images/{imageId}",
-            produces = {MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE})
+    @GetMapping("/{reportId}/images/{imageId}")
     @Operation(operationId = "getEstateReportImage")
-    @ApiResponse(
-            responseCode = "200",
-            description = "Private image bytes",
-            content = {
-                @Content(mediaType = MediaType.IMAGE_JPEG_VALUE, schema = @Schema(type = "string", format = "binary")),
-                @Content(mediaType = MediaType.IMAGE_PNG_VALUE, schema = @Schema(type = "string", format = "binary"))
-            })
+    @ApiResponse(responseCode = "200", description = "A five-minute link to the private image")
     @ApiResponse(
             responseCode = "503",
             description = "Private image storage unavailable",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
-    public ResponseEntity<byte[]> image(
+    public ResponseEntity<SignedDownloadResponse> image(
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @PathVariable UUID reportId,
             @PathVariable UUID imageId) {
-        var image = reports.image(estateId, subject(principal), reportId, imageId);
-        return ResponseEntity.ok()
-                .header("Cache-Control", "private, no-store")
-                .contentType(MediaType.parseMediaType(image.contentType()))
-                .body(image.bytes());
+        return privateResponse(reports.image(estateId, subject(principal), reportId, imageId));
     }
 
     private static <T> ResponseEntity<T> privateResponse(T body) {

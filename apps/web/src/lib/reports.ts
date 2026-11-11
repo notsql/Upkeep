@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
+import { linkStaleTime, sendToStorage } from "@/lib/storage-upload";
 
 export type ResidentLocation =
   components["schemas"]["ResidentLocationResponse"];
@@ -77,21 +78,40 @@ export function useCreateReport() {
       description,
       locationId,
       images,
-    }: Omit<components["schemas"]["CreateIssueReportRequest"], "images"> & {
+    }: Omit<
+      components["schemas"]["CreateIssueReportRequest"],
+      "imageKeys" | "reportId"
+    > & {
       images: File[];
     }) => {
-      const body = new FormData();
-      body.append("estateId", estateId);
-      body.append("title", title);
-      body.append("description", description);
-      body.append("locationId", locationId);
+      // Each photo goes straight to storage; the first slot names the report.
+      let reportId: string | undefined;
+      const imageKeys: string[] = [];
       for (const image of images) {
-        body.append("images", image);
+        // biome-ignore lint/performance/noAwaitInLoops: later slots reuse the id the first slot returns
+        const slot = await api.POST("/resident/reports/image-slots", {
+          body: {
+            estateId,
+            ...(reportId ? { reportId } : {}),
+            contentType: image.type,
+            size: image.size,
+          },
+        });
+        if (slot.error || !slot.data) {
+          throw reportError(slot.error, "Couldn't send a photo. Try again.");
+        }
+        reportId = slot.data.reportId ?? reportId;
+        await sendToStorage(slot.data, image);
+        imageKeys.push(slot.data.objectKey);
       }
-      // The generated schema describes multipart parts as strings; the client
-      // accepts FormData at runtime and supplies its boundary automatically.
       const { data, error } = await api.POST("/resident/reports", {
-        body: body as never,
+        body: {
+          estateId,
+          title,
+          description,
+          locationId,
+          ...(reportId ? { reportId, imageKeys } : {}),
+        },
       });
       if (error || !data) {
         throw reportError(
@@ -185,6 +205,9 @@ export function useReportImage(reportId: string, imageId: string) {
   const userId = useResidentId();
   return useQuery({
     queryKey: [userId, "reports", reportId, "image", imageId],
+    // Each link lasts five minutes; fetch a new one just before it expires.
+    staleTime: (current) => linkStaleTime(current.state.data),
+    refetchInterval: (current) => linkStaleTime(current.state.data) || false,
     enabled: !!userId && !!reportId && !!imageId,
     retry: false,
     queryFn: async () => {
@@ -192,7 +215,6 @@ export function useReportImage(reportId: string, imageId: string) {
         "/resident/reports/{reportId}/images/{imageId}",
         {
           params: { path: { reportId, imageId } },
-          parseAs: "blob",
         }
       );
       if (error || !data) {

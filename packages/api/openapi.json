@@ -1879,12 +1879,13 @@
         "operationId": "createResidentReport",
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateIssueReportRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -1923,6 +1924,80 @@
           },
           "413": {
             "description": "Upload too large",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported image type",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Image storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/resident/reports/image-slots": {
+      "post": {
+        "tags": ["resident-report-controller"],
+        "operationId": "createResidentReportImageSlot",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportImageSlotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Ten-minute upload link for one photo",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/UploadSlotResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Active resident membership required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "413": {
+            "description": "Image larger than 5 MB",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -3981,7 +4056,7 @@
         ],
         "responses": {
           "400": {
-            "description": "Invalid document request, file, search, cursor or limit",
+            "description": "Invalid document request, upload, search, cursor or limit",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -4053,14 +4128,15 @@
         ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
-              "schema": { "$ref": "#/components/schemas/UploadDocumentRequest" }
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreateDocumentRequest" }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
-            "description": "Document stored and indexed",
+            "description": "Uploaded file checked and indexed",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/DocumentResponse" }
@@ -4076,7 +4152,7 @@
             }
           },
           "413": {
-            "description": "File exceeds 5,000,000 bytes or multipart request exceeds servlet limits",
+            "description": "Uploaded file exceeds 5,000,000 bytes",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -4092,7 +4168,113 @@
             }
           },
           "400": {
-            "description": "Invalid document request, file, search, cursor or limit",
+            "description": "Invalid document request, upload, search, cursor or limit",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Estate document permission required; deletion also requires uploader or Manager",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Estate or document unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "500": {
+            "description": "Document metadata operation failed",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Document storage unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/documents/upload-slots": {
+      "post": {
+        "tags": ["document-controller"],
+        "operationId": "createDocumentUploadSlot",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DocumentUploadSlotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Ten-minute upload link for one file",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/UploadSlotResponse" }
+              }
+            }
+          },
+          "409": {
+            "description": "Estate inactive",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "413": {
+            "description": "File exceeds 5,000,000 bytes",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "415": {
+            "description": "Use a PDF, JPEG or PNG with a matching extension and media type",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid document request, upload, search, cursor or limit",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -4963,12 +5145,13 @@
         ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateInspectionRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "400": {
@@ -5042,6 +5225,110 @@
                 "schema": {
                   "$ref": "#/components/schemas/InspectionResultResponse"
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/assets/{assetId}/inspections/photo-slots": {
+      "post": {
+        "tags": ["inspection-controller"],
+        "operationId": "createInspectionPhotoSlot",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InspectionPhotoSlotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid fields or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Inspection authority required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Related record unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive resource or changed location",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "413": {
+            "description": "Photo too large",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "415": {
+            "description": "Unsupported photo format",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or persistence unavailable",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "Ten-minute upload link for one photo",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/UploadSlotResponse" }
               }
             }
           }
@@ -6842,23 +7129,19 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "A five-minute link to the private image",
             "content": {
-              "image/jpeg": {
-                "schema": { "type": "string", "format": "binary" }
-              },
-              "image/png": {
-                "schema": { "type": "string", "format": "binary" }
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedDownloadResponse"
+                }
               }
             }
           },
           "401": {
             "description": "Sign in required",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -6866,10 +7149,7 @@
           "404": {
             "description": "Report image not found",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -6877,10 +7157,7 @@
           "503": {
             "description": "Image storage unavailable",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -7865,23 +8142,19 @@
         ],
         "responses": {
           "200": {
-            "description": "Private image bytes",
+            "description": "A five-minute link to the private image",
             "content": {
-              "image/jpeg": {
-                "schema": { "type": "string", "format": "binary" }
-              },
-              "image/png": {
-                "schema": { "type": "string", "format": "binary" }
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedDownloadResponse"
+                }
               }
             }
           },
           "503": {
             "description": "Private image storage unavailable",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -7889,10 +8162,7 @@
           "400": {
             "description": "Invalid UUID, request or pagination",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -7900,10 +8170,7 @@
           "401": {
             "description": "Sign in required",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -7911,10 +8178,7 @@
           "403": {
             "description": "Responder membership required (manager membership to review or link duplicates)",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -7922,10 +8186,7 @@
           "404": {
             "description": "Inaccessible estate, report, location or image",
             "content": {
-              "image/jpeg": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              },
-              "image/png": {
+              "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
@@ -9526,7 +9787,7 @@
         ],
         "responses": {
           "400": {
-            "description": "Invalid document request, file, search, cursor or limit",
+            "description": "Invalid document request, upload, search, cursor or limit",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -9574,16 +9835,12 @@
             }
           },
           "200": {
-            "description": "Private attachment",
+            "description": "A five-minute link that downloads the file",
             "content": {
-              "application/pdf": {
-                "schema": { "type": "string", "format": "binary" }
-              },
-              "image/jpeg": {
-                "schema": { "type": "string", "format": "binary" }
-              },
-              "image/png": {
-                "schema": { "type": "string", "format": "binary" }
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedDownloadResponse"
+                }
               }
             }
           }
@@ -10598,9 +10855,13 @@
             }
           },
           "200": {
-            "description": "Authorised private inspection data",
+            "description": "A five-minute link to the private photo",
             "content": {
-              "*/*": { "schema": { "type": "string", "format": "byte" } }
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignedDownloadResponse"
+                }
+              }
             }
           }
         }
@@ -11436,7 +11697,7 @@
         ],
         "responses": {
           "400": {
-            "description": "Invalid document request, file, search, cursor or limit",
+            "description": "Invalid document request, upload, search, cursor or limit",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -12416,13 +12677,20 @@
       "CreateIssueReportRequest": {
         "type": "object",
         "properties": {
+          "reportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The report id the photo slots returned; required when imageKeys is not empty."
+          },
           "estateId": { "type": "string", "format": "uuid" },
           "title": { "type": "string", "maxLength": 50, "minLength": 1 },
           "description": { "type": "string", "minLength": 1 },
           "locationId": { "type": "string", "format": "uuid" },
-          "images": {
+          "imageKeys": {
             "type": "array",
-            "items": { "type": "string", "format": "binary" }
+            "description": "Object keys from the photo slots, uploaded already.",
+            "items": { "type": "string" },
+            "maxItems": 3
           }
         },
         "required": ["description", "estateId", "locationId", "title"]
@@ -12453,6 +12721,47 @@
           "status",
           "title",
           "updatedAt"
+        ]
+      },
+      "ReportImageSlotRequest": {
+        "type": "object",
+        "properties": {
+          "estateId": { "type": "string", "format": "uuid" },
+          "reportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The report id from this report's first slot; omit for the first photo."
+          },
+          "contentType": { "type": "string", "minLength": 1 },
+          "size": { "type": "integer", "format": "int64" }
+        },
+        "required": ["contentType", "estateId", "size"]
+      },
+      "UploadSlotResponse": {
+        "type": "object",
+        "properties": {
+          "objectKey": { "type": "string" },
+          "uploadUrl": { "type": "string" },
+          "contentType": { "type": "string" },
+          "maxBytes": { "type": "integer", "format": "int64" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "inspectionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Set on inspection photo slots; pass it to later slots and to the create call."
+          },
+          "reportId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Set on report image slots; pass it to later slots and to the create call."
+          }
+        },
+        "required": [
+          "contentType",
+          "expiresAt",
+          "maxBytes",
+          "objectKey",
+          "uploadUrl"
         ]
       },
       "DismissAlertRequest": {
@@ -13167,16 +13476,21 @@
         },
         "required": ["assetId", "assetName", "assetReference", "categoryLabel"]
       },
-      "UploadDocumentRequest": {
+      "CreateDocumentRequest": {
         "type": "object",
         "properties": {
+          "objectKey": {
+            "type": "string",
+            "description": "The key from the upload slot, after the file was uploaded.",
+            "minLength": 1
+          },
+          "fileName": { "type": "string", "maxLength": 255, "minLength": 1 },
           "documentType": {
             "type": "string",
             "enum": ["INVOICE", "SERVICE_REPORT"]
-          },
-          "file": { "type": "string", "format": "binary" }
+          }
         },
-        "required": ["documentType", "file"]
+        "required": ["documentType", "fileName", "objectKey"]
       },
       "DocumentResponse": {
         "type": "object",
@@ -13203,6 +13517,15 @@
           "originalFilename",
           "sizeBytes"
         ]
+      },
+      "DocumentUploadSlotRequest": {
+        "type": "object",
+        "properties": {
+          "fileName": { "type": "string", "maxLength": 255, "minLength": 1 },
+          "contentType": { "type": "string", "minLength": 1 },
+          "size": { "type": "integer", "format": "int64" }
+        },
+        "required": ["contentType", "fileName", "size"]
       },
       "CreateFlatlinePauseRequest": {
         "type": "object",
@@ -13511,6 +13834,11 @@
       "CreateInspectionRequest": {
         "type": "object",
         "properties": {
+          "inspectionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The inspection id the photo slots returned; required when photoKeys is not empty."
+          },
           "outcome": { "type": "string", "enum": ["PASS", "FAIL"] },
           "inspectedOn": { "type": "string", "format": "date" },
           "notes": {
@@ -13518,9 +13846,11 @@
             "description": "Up to 2,000 characters. Required (not blank) when outcome is FAIL: what is wrong."
           },
           "expectedLocationId": { "type": "string", "format": "uuid" },
-          "photos": {
+          "photoKeys": {
             "type": "array",
-            "items": { "type": "string", "format": "binary" }
+            "description": "Object keys from the photo slots, uploaded already.",
+            "items": { "type": "string" },
+            "maxItems": 3
           }
         },
         "required": ["expectedLocationId", "inspectedOn", "outcome"]
@@ -13581,6 +13911,19 @@
           "reference": { "type": "string" }
         },
         "required": ["id", "reference"]
+      },
+      "InspectionPhotoSlotRequest": {
+        "type": "object",
+        "properties": {
+          "inspectionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The inspection id from this inspection's first slot; omit for the first photo."
+          },
+          "contentType": { "type": "string", "minLength": 1 },
+          "size": { "type": "integer", "format": "int64" }
+        },
+        "required": ["contentType", "size"]
       },
       "InspectionRequest": {
         "type": "object",
@@ -14213,6 +14556,14 @@
           "counts": { "$ref": "#/components/schemas/ReportCounts" }
         },
         "required": ["counts", "items", "nextCursor"]
+      },
+      "SignedDownloadResponse": {
+        "type": "object",
+        "properties": {
+          "url": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["expiresAt", "url"]
       },
       "ResidentLocationResponse": {
         "type": "object",

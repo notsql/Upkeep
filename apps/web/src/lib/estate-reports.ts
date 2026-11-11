@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
+import { linkStaleTime, type SignedLink } from "@/lib/storage-upload";
 
 export type EstateReportFilters = Pick<
   NonNullable<
@@ -188,8 +189,11 @@ export function useEstateReportImage(
   imageId: string
 ) {
   const { userId, canView } = useEstateReportAccess(estateId);
-  return useQuery({
+  return useQuery<SignedLink>({
     queryKey: [userId, "estate-reports", estateId, "image", reportId, imageId],
+    // Each link lasts five minutes; fetch a new one just before it expires.
+    staleTime: (current) => linkStaleTime(current.state.data),
+    refetchInterval: (current) => linkStaleTime(current.state.data) || false,
     enabled: canView && !!reportId && !!imageId,
     retry: false,
     queryFn: async ({ signal }) => {
@@ -197,7 +201,6 @@ export function useEstateReportImage(
         "/estates/{estateId}/reports/{reportId}/images/{imageId}",
         {
           params: { path: { estateId, reportId, imageId } },
-          parseAs: "blob",
           signal,
         }
       );

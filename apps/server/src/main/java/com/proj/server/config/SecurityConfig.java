@@ -71,7 +71,7 @@ public class SecurityConfig {
                                 "/resident/reports/{reportId}",
                                 "/resident/reports/{reportId}/images/{imageId}")
                         .authenticated()
-                        .requestMatchers(HttpMethod.POST, "/resident/reports")
+                        .requestMatchers(HttpMethod.POST, "/resident/reports", "/resident/reports/image-slots")
                         .authenticated()
                         .requestMatchers("/resident/**")
                         .denyAll()
@@ -160,11 +160,13 @@ public class SecurityConfig {
                                 HttpMethod.POST,
                                 "/council-invitations/accept",
                                 "/estates/{estateId}/documents",
+                                "/estates/{estateId}/documents/upload-slots",
                                 "/estates/{estateId}/readings/manual",
                                 "/estates/{estateId}/readings/imports",
                                 "/estates/{estateId}/readings/imports/{batchId}/revert",
                                 "/estates/{estateId}/work-orders",
                                 "/estates/{estateId}/assets/{assetId}/inspections",
+                                "/estates/{estateId}/assets/{assetId}/inspections/photo-slots",
                                 "/estates/{estateId}/inspection-list/generate",
                                 "/estates/{estateId}/assets/{assetId}/inspection-requests",
                                 "/notifications/{notificationId}/read",

@@ -76,18 +76,14 @@ beforeEach(() => {
   get.mockImplementation((path: string) => {
     if (path.endsWith("/images/{imageId}")) {
       return Promise.resolve({
-        data: new Blob(["image bytes"], { type: "image/png" }),
+        data: {
+          url: "https://storage.example/resident-image",
+          expiresAt: "2099-01-01T00:00:00Z",
+        },
       });
     }
     return Promise.resolve({ data: detail });
   });
-  vi.stubGlobal(
-    "URL",
-    class extends URL {
-      static createObjectURL = vi.fn(() => "blob:resident-image");
-      static revokeObjectURL = vi.fn();
-    }
-  );
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -104,7 +100,10 @@ it("labels report metadata and gives the complete description and images their o
   get.mockImplementation((path: string) =>
     Promise.resolve({
       data: path.endsWith("/images/{imageId}")
-        ? new Blob(["image bytes"], { type: "image/png" })
+        ? {
+            url: "https://storage.example/resident-image",
+            expiresAt: "2099-01-01T00:00:00Z",
+          }
         : { ...detail, description },
     })
   );
@@ -184,7 +183,7 @@ it("shows the resident's report text, location and initial status as text", asyn
   expect(screen.queryByText(INTERNAL_NOTE)).toBeNull();
 });
 
-it("loads private image bytes through the authenticated API client", async () => {
+it("shows each private image from the short-lived link the API returns", async () => {
   renderWithProviders(<Page />);
   await screen.findByRole("img");
 
@@ -195,7 +194,7 @@ it("loads private image bytes through the authenticated API client", async () =>
     })
   );
   expect(screen.getByRole("img").getAttribute("src")).toBe(
-    "blob:resident-image"
+    "https://storage.example/resident-image"
   );
 });
 
@@ -209,7 +208,7 @@ it("shows an inaccessible or missing report as unavailable", async () => {
   expect(screen.queryByText("Leaking pipe")).toBeNull();
 });
 
-it("removes the previous user's image and revokes its blob URL on an account change", async () => {
+it("removes the previous user's image on an account change", async () => {
   const original = get.getMockImplementation();
   get.mockImplementation((path: string) =>
     auth.user.id === "resident-a"
@@ -230,7 +229,6 @@ it("removes the previous user's image and revokes its blob URL on an account cha
   await screen.findByText(REPORT_NOT_FOUND);
   expect(screen.queryByRole("img")).toBeNull();
   expect(screen.queryByText(detail.description)).toBeNull();
-  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:resident-image");
 });
 
 it("returns to the selected estate's report history through My reports breadcrumbs", async () => {

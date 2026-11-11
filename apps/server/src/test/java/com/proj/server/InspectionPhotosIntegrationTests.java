@@ -1,81 +1,39 @@
 package com.proj.server;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.jayway.jsonpath.JsonPath;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpServer;
 import jakarta.servlet.ServletException;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 import org.jooq.ExecuteContext;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DefaultExecuteListener;
 import org.jooq.impl.DefaultExecuteListenerProvider;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
-/** A local S3 HTTP boundary avoids choosing an inspection storage class before implementation. */
+/** Photos are put into the in-memory storage under issued keys, as the browser's direct upload would (decision 0050). */
 class InspectionPhotosIntegrationTests extends InspectionTestSupport {
-    private static final Map<String, byte[]> OBJECTS = new ConcurrentHashMap<>();
-    private static HttpServer storage;
-    private static volatile int acceptedUploads;
-    private static volatile int failAfter;
-    private static volatile CountDownLatch uploaded;
-    private static volatile CountDownLatch finishUpload;
-    private static volatile boolean rejectDeletes;
-
-    @DynamicPropertySource
-    static void storage(DynamicPropertyRegistry properties) throws IOException {
-        storage = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        storage.createContext("/", InspectionPhotosIntegrationTests::objectRequest);
-        storage.start();
-        properties.add(
-                "app.r2.endpoint",
-                () -> "http://127.0.0.1:" + storage.getAddress().getPort());
-        properties.add("app.r2.access-id", () -> "test-access");
-        properties.add("app.r2.secret-access-key", () -> "test-secret");
-        properties.add("app.r2.bucket-name", () -> "inspection-tests");
-    }
-
-    @BeforeEach
-    void resetStorage() {
-        OBJECTS.clear();
-        acceptedUploads = 0;
-        failAfter = Integer.MAX_VALUE;
-        uploaded = null;
-        finishUpload = null;
-        rejectDeletes = false;
-    }
-
-    @AfterAll
-    static void stopStorage() {
-        if (storage != null) storage.stop(0);
-    }
+    @org.springframework.beans.factory.annotation.Autowired
+    com.proj.server.inspection.InspectionService inspectionService;
 
     @Test
     void threePrivatePhotosPersistAndAreReadableByCurrentEstateInspectorsOnly() throws Exception {
@@ -94,26 +52,31 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        assertEquals(3, OBJECTS.size());
+        assertEquals(3, storage.objects.size());
+        storage.signed.clear();
         String photoId = JsonPath.read(body, "$.photos[0].id");
         String url = inspections(data) + "/" + id(body) + "/photos/" + photoId;
         for (String user : new String[] {OWNER, "manager", "crew"}) {
-            var image = read(url, user)
+            read(url, user)
                     .andExpect(status().isOk())
                     .andExpect(header().string("Cache-Control", "private, no-store"))
-                    .andExpect(content().contentType("image/png"))
-                    .andReturn()
-                    .getResponse()
-                    .getContentAsByteArray();
-            var decoded = ImageIO.read(new ByteArrayInputStream(image));
-            assertNotNull(decoded);
-            assertEquals(2, decoded.getWidth());
+                    .andExpect(jsonPath("$.url").value(startsWith("memory://download/inspections/" + id(body) + "/")))
+                    .andExpect(jsonPath("$.url").value(containsString("contentType=image%2Fpng")))
+                    .andExpect(jsonPath("$.expiresAt").isNotEmpty());
         }
+        assertEquals(3, storage.signed.size());
+        String key = storage.signed.getFirst();
+        var decoded =
+                ImageIO.read(new ByteArrayInputStream(storage.objects.get(key).bytes()));
+        assertNotNull(decoded);
+        assertEquals(2, decoded.getWidth());
         member(data[0], "resident", "RESIDENT");
+        storage.signed.clear();
         read(url, "resident").andExpect(status().isForbidden());
         read(url, "stranger").andExpect(status().isNotFound());
         db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='crew'", data[0]);
         read(url, "crew").andExpect(status().isNotFound());
+        assertTrue(storage.signed.isEmpty(), "refused readers never get a link");
         db.execute(
                 "update \"Asset\" set \"deactivatedAt\"=now(),\"retiredOn\"=current_date,\"retirementReason\"='Retired' where id=?",
                 data[2]);
@@ -149,29 +112,72 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
                 .andExpect(jsonPath("$.photos[0].contentType").value("image/" + format));
     }
 
+    @Test
+    void aPhotoSlotIsATenMinuteSignedUploadForInspectorsOnly() throws Exception {
+        var data = asset();
+        member(data[0], "resident", "RESIDENT");
+        var slot = mvc.perform(slot(data, null, "image/png", 1000).with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.maxBytes").value(5 * 1024 * 1024))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        String inspectionId = JsonPath.read(slot, "$.inspectionId");
+        String key = JsonPath.read(slot, "$.objectKey");
+        assertTrue(key.startsWith("inspections/" + inspectionId + "/"));
+        assertTrue(JsonPath.<String>read(slot, "$.uploadUrl").startsWith("memory://upload/" + key));
+        var minutes = Duration.between(Instant.now(), Instant.parse(JsonPath.read(slot, "$.expiresAt")))
+                .toMinutes();
+        assertTrue(minutes >= 9 && minutes <= 10);
+        var second = mvc.perform(slot(data, UUID.fromString(inspectionId), "image/jpeg", 1000)
+                        .with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertEquals(inspectionId, JsonPath.read(second, "$.inspectionId"));
+
+        storage.signed.clear();
+        mvc.perform(slot(data, null, "image/png", 1000).with(jwt().jwt(t -> t.subject("resident"))))
+                .andExpect(status().isForbidden());
+        mvc.perform(slot(data, null, "image/png", 1000).with(jwt().jwt(t -> t.subject("stranger"))))
+                .andExpect(status().isNotFound());
+        assertTrue(storage.signed.isEmpty());
+        mvc.perform(slot(data, null, "image/gif", 1000).with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isUnsupportedMediaType());
+        mvc.perform(slot(data, null, "image/png", 5 * 1024 * 1024 + 1).with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isPayloadTooLarge());
+        storage.unavailable = true;
+        mvc.perform(slot(data, null, "image/png", 1000).with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("File storage is temporarily unavailable. Try again later."));
+    }
+
     @ParameterizedTest
     @CsvSource({"4033,1", "1,3025"})
-    void oversizedDimensionsAreRejectedBeforeUploading(int width, int height) throws Exception {
+    void oversizedDimensionsAreRejectedAndThePhotoDeleted(int width, int height) throws Exception {
         var data = asset();
         mvc.perform(submission(data, "PASS", today().toString())
                         .file(photo("png", width, height))
                         .with(jwt().jwt(t -> t.subject(OWNER))))
                 .andExpect(status().isBadRequest());
-        assertTrue(OBJECTS.isEmpty());
+        assertTrue(storage.objects.isEmpty());
         assertEquals(0, count("AssetInspectionResult", data[0]));
     }
 
     @Test
-    void aFourthPhotoAndFilesOverFiveMegabytesAreRejectedBeforeUploading() throws Exception {
+    void aFourthPhotoIsRefusedAndFilesOverFiveMegabytesAreDeleted() throws Exception {
         var data = asset();
         var request = submission(data, "PASS", today().toString());
         for (int i = 0; i < 4; i++) request.file(photo("png", 1, 1));
         mvc.perform(request.with(jwt().jwt(t -> t.subject(OWNER)))).andExpect(status().isBadRequest());
+        storage.reset();
         mvc.perform(submission(data, "PASS", today().toString())
                         .file(new MockMultipartFile("photos", "large.png", "image/png", new byte[5 * 1024 * 1024 + 1]))
                         .with(jwt().jwt(t -> t.subject(OWNER))))
                 .andExpect(status().isPayloadTooLarge());
-        assertTrue(OBJECTS.isEmpty());
+        assertTrue(storage.objects.isEmpty());
         assertEquals(0, count("AssetInspectionResult", data[0]));
     }
 
@@ -183,12 +189,12 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
                         .file(new MockMultipartFile("photos", "exact-limit.png", "image/png", bytes))
                         .with(jwt().jwt(t -> t.subject(OWNER))))
                 .andExpect(status().isCreated());
-        assertEquals(1, OBJECTS.size());
+        assertEquals(1, storage.objects.size());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"text", "empty", "mismatched", "unsupported", "truncated"})
-    void serverValidatesContentRatherThanTrustingFilenameOrMimeType(String invalid) throws Exception {
+    void serverValidatesContentRatherThanTrustingTheDeclaredType(String invalid) throws Exception {
         var data = asset();
         byte[] bytes = switch (invalid) {
             case "empty" -> new byte[0];
@@ -197,61 +203,55 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
             default -> "not an image".getBytes(StandardCharsets.UTF_8);
         };
         mvc.perform(submission(data, "FAIL", today().toString())
-                        .file(new MockMultipartFile(
-                                "photos",
-                                "pretend.png",
-                                invalid.equals("unsupported") ? "image/gif" : "image/png",
-                                bytes))
+                        .file(invalid.equals("unsupported") ? "image/gif" : "image/png", bytes)
                         .with(jwt().jwt(t -> t.subject(OWNER))))
                 .andExpect(status().is(invalid.equals("unsupported") ? 415 : 400));
-        assertTrue(OBJECTS.isEmpty());
+        assertTrue(storage.objects.isEmpty(), "a photo that fails its checks is deleted");
         assertEquals(0, count("AssetInspectionResult", data[0]));
     }
 
     @Test
-    void authorizationIsCheckedBeforeUploadingEvidence() throws Exception {
+    void keysNotIssuedForThisInspectionAreRefusedAndLeftAlone() throws Exception {
+        var data = asset();
+        String foreign = "inspections/" + UUID.randomUUID() + "/" + UUID.randomUUID();
+        storage.upload(foreign, photo("png", 1, 1).getBytes(), "image/png");
+        var body = "{\"inspectionId\":\"" + UUID.randomUUID() + "\",\"outcome\":\"PASS\",\"inspectedOn\":\"" + today()
+                + "\",\"expectedLocationId\":\"" + data[1] + "\",\"photoKeys\":[\"" + foreign + "\"]}";
+        mvc.perform(post(inspections(data))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)
+                        .with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isBadRequest());
+        assertTrue(storage.objects.containsKey(foreign));
+        mvc.perform(submission(data, "PASS", today().toString()).missingFile().with(jwt().jwt(t -> t.subject(OWNER))))
+                .andExpect(status().isBadRequest());
+        assertEquals(0, count("AssetInspectionResult", data[0]));
+    }
+
+    @Test
+    void authorizationIsCheckedBeforeStorageIsTouched() throws Exception {
         var data = asset();
         member(data[0], "resident", "RESIDENT");
-        mvc.perform(submission(data, "FAIL", today().toString())
-                        .file(photo("png", 1, 1))
-                        .with(jwt().jwt(t -> t.subject("resident"))))
-                .andExpect(status().isForbidden());
-        assertTrue(OBJECTS.isEmpty());
-    }
-
-    @Test
-    void laterUploadFailureCleansUpEarlierObjectsAndLeavesNoSubmittedResult() throws Exception {
-        var data = asset();
-        failAfter = 1;
-        mvc.perform(submission(data, "FAIL", today().toString())
-                        .file(photo("png", 1, 1))
-                        .file(photo("png", 1, 1))
-                        .with(jwt().jwt(t -> t.subject(OWNER))))
-                .andExpect(status().isServiceUnavailable());
-        assertTrue(OBJECTS.isEmpty());
+        var request = submission(data, "FAIL", today().toString()).file(photo("png", 1, 1));
+        mvc.perform(request.with(jwt().jwt(t -> t.subject("resident")))).andExpect(status().isForbidden());
+        assertTrue(storage.objects.containsKey(request.keys().getFirst()), "left for the hourly sweep");
         assertEquals(0, count("AssetInspectionResult", data[0]));
-        assertEquals(0, count("AssetInspectionPhoto", data[0]));
     }
 
     @Test
-    void unavailableStorageDoesNotBlockPhotoFreeResultsOrExposeProviderErrors() throws Exception {
+    void unavailableStorageDoesNotBlockPhotoFreeResults() throws Exception {
         var data = asset();
-        failAfter = 0;
-        var error = mvc.perform(submission(data, "FAIL", today().toString())
-                        .file(photo("png", 1, 1))
-                        .with(jwt().jwt(t -> t.subject(OWNER))))
+        var request = submission(data, "FAIL", today().toString()).file(photo("png", 1, 1));
+        storage.unavailable = true;
+        mvc.perform(request.with(jwt().jwt(t -> t.subject(OWNER))))
                 .andExpect(status().isServiceUnavailable())
-                .andExpect(jsonPath("$.message").isString())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        assertFalse(error.contains("private-provider-detail"));
+                .andExpect(jsonPath("$.message").value("File storage is temporarily unavailable. Try again later."));
         save(data, OWNER, "PASS").andExpect(status().isCreated());
         assertEquals(1, count("AssetInspectionResult", data[0]));
     }
 
     @Test
-    void failedDatabasePersistenceCleansUpUploadedEvidenceWithoutReportingSuccess() throws Exception {
+    void failedDatabasePersistenceDeletesUploadedEvidenceWithoutReportingSuccess() throws Exception {
         var data = asset();
         var previous = db.configuration().executeListenerProviders();
         var providers = Arrays.copyOf(previous, previous.length + 1);
@@ -279,74 +279,62 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
         } finally {
             db.configuration().set(previous);
         }
-        assertEquals(1, acceptedUploads);
-        assertTrue(OBJECTS.isEmpty());
+        assertTrue(storage.objects.isEmpty());
         assertEquals(0, count("AssetInspectionResult", data[0]));
         assertEquals(0, count("AssetInspectionPhoto", data[0]));
     }
 
-    @Test
-    void cleanupFailureStillReportsFailureAndLeavesNoSubmittedDatabaseRecord() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"estate", "membership", "asset"})
+    void stateChangesAfterUploadAreCheckedBeforeAnythingIsSaved(String change) throws Exception {
         var data = asset();
-        failAfter = 1;
-        rejectDeletes = true;
-        var body = mvc.perform(submission(data, "FAIL", today().toString())
-                        .file(photo("png", 1, 1))
-                        .file(photo("png", 1, 1))
-                        .with(jwt().jwt(t -> t.subject(OWNER))))
-                .andExpect(status().isServiceUnavailable())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        assertFalse(body.contains("private-provider-detail"));
-        assertEquals(1, OBJECTS.size());
+        member(data[0], "uploading-crew", "CREW");
+        var request = submission(data, "FAIL", today().toString()).file(photo("png", 1, 1));
+        switch (change) {
+            case "estate" -> db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", data[0]);
+            case "asset" ->
+                db.execute(
+                        "update \"Asset\" set \"deactivatedAt\"=now(),\"retiredOn\"=current_date,\"retirementReason\"='Retired' where id=?",
+                        data[2]);
+            case "membership" ->
+                db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='uploading-crew'", data[0]);
+            default -> throw new IllegalArgumentException(change);
+        }
+        mvc.perform(request.with(jwt().jwt(t -> t.subject("uploading-crew"))))
+                .andExpect(status().is(change.equals("membership") ? 404 : 409));
         assertEquals(0, count("AssetInspectionResult", data[0]));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"estate", "membership", "asset"})
-    @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    void stateChangesDuringUploadAreRecheckedBeforePersistenceAndEvidenceIsCleanedUp(String change) throws Exception {
+    @Test
+    void theSweepDeletesOnlyUnsavedPhotosOlderThanADay() throws Exception {
         var data = asset();
-        uploaded = new CountDownLatch(1);
-        finishUpload = new CountDownLatch(1);
-        try (var requests = Executors.newVirtualThreadPerTaskExecutor()) {
-            member(data[0], "uploading-crew", "CREW");
-            var pending = requests.submit(() -> mvc.perform(submission(data, "FAIL", today().toString())
-                            .file(photo("png", 1, 1))
-                            .with(jwt().jwt(t -> t.subject("uploading-crew"))))
-                    .andReturn()
-                    .getResponse()
-                    .getStatus());
-            try {
-                assertTrue(uploaded.await(5, TimeUnit.SECONDS), "The photo must upload before the state mutation");
-                db.transaction(configuration -> {
-                    var mutation = org.jooq.impl.DSL.using(configuration);
-                    mutation.execute("set local lock_timeout='5s'");
-                    switch (change) {
-                        case "estate" ->
-                            mutation.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", data[0]);
-                        case "asset" ->
-                            mutation.execute(
-                                    "update \"Asset\" set \"deactivatedAt\"=now(),\"retiredOn\"=current_date,\"retirementReason\"='Retired' where id=?",
-                                    data[2]);
-                        case "membership" ->
-                            mutation.execute(
-                                    "delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='uploading-crew'",
-                                    data[0]);
-                        default -> throw new IllegalArgumentException(change);
-                    }
-                });
-            } finally {
-                finishUpload.countDown();
-            }
-            assertEquals(change.equals("membership") ? 404 : 409, pending.get(10, TimeUnit.SECONDS));
-            assertTrue(OBJECTS.isEmpty());
-            assertEquals(0, count("AssetInspectionResult", data[0]));
-        } finally {
-            finishUpload.countDown();
-            cleanup(data[0]);
-        }
+        String body = upload(data);
+        String kept = db.fetchValue(
+                        "select \"storageKey\" from \"AssetInspectionPhoto\" where \"inspectionResultId\"=?",
+                        UUID.fromString(id(body)))
+                .toString();
+        String old = "inspections/" + UUID.randomUUID() + "/" + UUID.randomUUID();
+        String fresh = "inspections/" + UUID.randomUUID() + "/" + UUID.randomUUID();
+        storage.upload(old, new byte[] {1}, "image/png");
+        storage.upload(fresh, new byte[] {1}, "image/png");
+        var yesterday = Instant.now().minus(Duration.ofHours(25));
+        storage.age(old, yesterday);
+        storage.age(kept, yesterday);
+
+        inspectionService.cleanupOrphans();
+
+        assertFalse(storage.objects.containsKey(old));
+        assertTrue(storage.objects.containsKey(fresh));
+        assertTrue(storage.objects.containsKey(kept));
+    }
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder slot(
+            UUID[] data, UUID inspectionId, String type, long size) {
+        var body = "{" + (inspectionId == null ? "" : "\"inspectionId\":\"" + inspectionId + "\",")
+                + "\"contentType\":\"" + type + "\",\"size\":" + size + "}";
+        return post(inspections(data) + "/photo-slots")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body);
     }
 
     private String upload(UUID[] data) throws Exception {
@@ -363,80 +351,5 @@ class InspectionPhotosIntegrationTests extends InspectionTestSupport {
         var bytes = new ByteArrayOutputStream();
         ImageIO.write(new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB), format, bytes);
         return new MockMultipartFile("photos", "inspection." + format, "image/" + format, bytes.toByteArray());
-    }
-
-    private static String etag(byte[] bytes) throws IOException {
-        try {
-            return java.util.HexFormat.of()
-                    .formatHex(java.security.MessageDigest.getInstance("MD5").digest(bytes));
-        } catch (java.security.NoSuchAlgorithmException error) {
-            throw new IOException(error);
-        }
-    }
-
-    private static void objectRequest(HttpExchange exchange) throws IOException {
-        try (exchange) {
-            String path = exchange.getRequestURI().getPath();
-            switch (exchange.getRequestMethod()) {
-                case "PUT" -> {
-                    if (acceptedUploads >= failAfter) {
-                        byte[] error =
-                                "<Error><Code>ServiceUnavailable</Code><Message>private-provider-detail</Message></Error>"
-                                        .getBytes(StandardCharsets.UTF_8);
-                        exchange.sendResponseHeaders(503, error.length);
-                        exchange.getResponseBody().write(error);
-                        return;
-                    }
-                    byte[] bytes = exchange.getRequestBody().readAllBytes();
-                    if (String.valueOf(exchange.getRequestHeaders().getFirst("Content-Encoding"))
-                            .contains("aws-chunked")) {
-                        var clean = new ByteArrayOutputStream();
-                        int offset = 0;
-                        while (offset < bytes.length) {
-                            int end = offset;
-                            while (end + 1 < bytes.length && !(bytes[end] == '\r' && bytes[end + 1] == '\n')) end++;
-                            String size =
-                                    new String(bytes, offset, end - offset, StandardCharsets.US_ASCII).split(";", 2)[0];
-                            int length = Integer.parseInt(size, 16);
-                            if (length == 0) break;
-                            clean.write(bytes, end + 2, length);
-                            offset = end + 2 + length + 2;
-                        }
-                        bytes = clean.toByteArray();
-                    }
-                    OBJECTS.put(path, bytes);
-                    acceptedUploads++;
-                    if (uploaded != null) uploaded.countDown();
-                    if (finishUpload != null) {
-                        try {
-                            if (!finishUpload.await(15, TimeUnit.SECONDS))
-                                throw new IOException("Upload was not released");
-                        } catch (InterruptedException error) {
-                            Thread.currentThread().interrupt();
-                            throw new IOException(error);
-                        }
-                    }
-                    exchange.getResponseHeaders().set("ETag", "\"" + etag(bytes) + "\"");
-                    exchange.sendResponseHeaders(200, -1);
-                }
-                case "GET" -> {
-                    byte[] bytes = OBJECTS.get(path);
-                    if (bytes == null) exchange.sendResponseHeaders(404, -1);
-                    else {
-                        exchange.sendResponseHeaders(200, bytes.length);
-                        exchange.getResponseBody().write(bytes);
-                    }
-                }
-                case "DELETE" -> {
-                    if (rejectDeletes) {
-                        exchange.sendResponseHeaders(503, -1);
-                        return;
-                    }
-                    OBJECTS.remove(path);
-                    exchange.sendResponseHeaders(204, -1);
-                }
-                default -> exchange.sendResponseHeaders(405, -1);
-            }
-        }
     }
 }

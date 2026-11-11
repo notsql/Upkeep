@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,10 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(
         properties = {
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
-            "app.r2.endpoint=",
-            "app.r2.access-id=",
-            "app.r2.secret-access-key=",
-            "app.r2.bucket-name="
         })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -120,7 +115,8 @@ class EquipmentDispatchIntegrationTests {
     }
 
     ResultActions record(String user, UUID asset, String outcome, String notes) throws Exception {
-        var request = multipart("/estates/" + estateId + "/assets/" + asset + "/inspections")
+        var request = StoredUploadSubmission.inspection(
+                        "/estates/" + estateId + "/assets/" + asset + "/inspections", null)
                 .param("expectedLocationId", blockA.toString())
                 .param("outcome", outcome)
                 .param("inspectedOn", TODAY.toString());

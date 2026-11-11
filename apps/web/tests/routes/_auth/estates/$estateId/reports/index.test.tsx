@@ -170,7 +170,10 @@ function serve(path: string) {
   }
   if (path.endsWith("/images/{imageId}")) {
     return Promise.resolve({
-      data: new Blob(["image"], { type: "image/png" }),
+      data: {
+        url: "https://storage.example/staff-report-image",
+        expiresAt: "2099-01-01T00:00:00Z",
+      },
     });
   }
   if (path.endsWith("/reports/{reportId}")) {
@@ -231,13 +234,6 @@ beforeEach(() => {
     },
   });
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
-  vi.stubGlobal(
-    "URL",
-    class extends URL {
-      static createObjectURL = vi.fn(() => "blob:staff-report-image");
-      static revokeObjectURL = vi.fn();
-    }
-  );
 });
 
 afterEach(() => vi.unstubAllGlobals());
@@ -624,7 +620,7 @@ it("keeps Retry when no page cursor needs recovery", async () => {
   ).toBeNull();
 });
 
-it("loads detail and private images through responder endpoints and revokes image URLs on unmount", async () => {
+it("loads detail and private images through responder endpoints", async () => {
   const { unmount } = await setup(`${basePath}/${reportId}`);
   await screen.findByRole("heading", { name: report.title });
   screen.getByText(report.description);
@@ -633,7 +629,7 @@ it("loads detail and private images through responder endpoints and revokes imag
     (await screen.findByRole("img", { name: "Submitted fault" })).getAttribute(
       "src"
     )
-  ).toBe("blob:staff-report-image");
+  ).toBe("https://storage.example/staff-report-image");
   expect(get).toHaveBeenCalledWith(
     "/estates/{estateId}/reports/{reportId}/images/{imageId}",
     expect.objectContaining({
@@ -644,7 +640,6 @@ it("loads detail and private images through responder endpoints and revokes imag
     false
   );
   unmount();
-  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:staff-report-image");
 });
 
 it("lets staff change block, level and common area while preserving the report text and images", async () => {
@@ -817,7 +812,6 @@ it("discards another account's report text and images when the session changes",
     expect(screen.queryByText(report.description)).toBeNull();
     expect(screen.queryByRole("img")).toBeNull();
   });
-  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:staff-report-image");
   await screen.findByText(UNAVAILABLE);
 });
 

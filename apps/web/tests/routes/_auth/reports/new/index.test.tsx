@@ -59,7 +59,17 @@ const estateId = "00000000-0000-0000-0000-000000000001";
 const blockId = "00000000-0000-0000-0000-000000000002";
 const levelId = "00000000-0000-0000-0000-000000000003";
 
+/** The JSON body of the final "submit report" call. */
+function createBody(): Record<string, unknown> {
+  const call = post.mock.calls.find(([path]) => path === "/resident/reports");
+  if (!call) {
+    throw new Error("The report was not submitted");
+  }
+  return call[1].body;
+}
+
 beforeEach(() => {
+  vi.unstubAllGlobals();
   vi.spyOn(Route, "useSearch").mockReturnValue({});
   auth.role = "user";
   get.mockReset();
@@ -178,11 +188,12 @@ it("shows only the assigned estate and requires description and a level or commo
   await chooseOption(screen.getByRole("combobox", { name: LEVEL }), "Level 2");
   fireEvent.click(submit);
   await waitFor(() => expect(post).toHaveBeenCalled());
-  const body = post.mock.calls[0][1].body as FormData;
-  expect(body.get("description")).toBe("Leaking pipe");
-  expect(body.get("title")).toBe("Leaking pipe");
-  expect(body.get("locationId")).toBe(levelId);
-  expect(body.get("estateId")).toBe(estateId);
+  expect(createBody()).toEqual({
+    estateId,
+    title: "Leaking pipe",
+    description: "Leaking pipe",
+    locationId: levelId,
+  });
   await waitFor(() => expect(navigate).toHaveBeenCalled());
 });
 
@@ -234,9 +245,7 @@ it("reports only in the resident estate even when the account manages another es
   });
   fireEvent.click(screen.getByRole("button", { name: SUBMIT_REPORT }));
   await waitFor(() => expect(post).toHaveBeenCalled());
-  expect((post.mock.calls[0][1].body as FormData).get("locationId")).toBe(
-    levelId
-  );
+  expect(createBody().locationId).toBe(levelId);
 });
 
 it("keeps entered text and selected location after an upload failure", async () => {
@@ -311,10 +320,70 @@ it("adds gallery selections and subsequent camera photos through the same picker
   const camera = new File(["camera"], "camera.jpg", { type: "image/jpeg" });
   fireEvent.change(input, { target: { files: [gallery] } });
   fireEvent.change(input, { target: { files: [camera] } });
+  const reportId = "00000000-0000-0000-0000-0000000000r1";
+  const slots = [
+    {
+      objectKey: `reports/${reportId}/a`,
+      uploadUrl: "https://storage.example/a",
+    },
+    {
+      objectKey: `reports/${reportId}/b`,
+      uploadUrl: "https://storage.example/b",
+    },
+  ];
+  post.mockImplementation(
+    (path: string, options: { body: { contentType?: string } }) =>
+      Promise.resolve(
+        path === "/resident/reports/image-slots"
+          ? {
+              data: {
+                ...slots[post.mock.calls.length === 1 ? 0 : 1],
+                contentType: options.body.contentType,
+                maxBytes: 5_242_880,
+                expiresAt: "2099-01-01T00:00:00Z",
+                reportId,
+              },
+            }
+          : { data: { id: "00000000-0000-0000-0000-000000000010" } }
+      )
+  );
+  const put = vi.fn(() => Promise.resolve(new Response(null, { status: 200 })));
+  vi.stubGlobal("fetch", put);
   fireEvent.click(screen.getByRole("button", { name: SUBMIT_REPORT }));
-  await waitFor(() => expect(post).toHaveBeenCalled());
-  const body = post.mock.calls[0][1].body as FormData;
-  expect(body.getAll("images")).toEqual([gallery, camera]);
+  await waitFor(() => expect(navigate).toHaveBeenCalled());
+  expect(post.mock.calls[0]).toEqual([
+    "/resident/reports/image-slots",
+    { body: { estateId, contentType: "image/png", size: gallery.size } },
+  ]);
+  expect(post.mock.calls[1]).toEqual([
+    "/resident/reports/image-slots",
+    {
+      body: {
+        estateId,
+        reportId,
+        contentType: "image/jpeg",
+        size: camera.size,
+      },
+    },
+  ]);
+  expect(put).toHaveBeenCalledWith("https://storage.example/a", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "image/png",
+      "x-goog-content-length-range": "0,5242880",
+    },
+    body: gallery,
+  });
+  expect(put).toHaveBeenCalledWith(
+    "https://storage.example/b",
+    expect.objectContaining({ body: camera })
+  );
+  expect(createBody()).toEqual(
+    expect.objectContaining({
+      reportId,
+      imageKeys: [slots[0].objectKey, slots[1].objectKey],
+    })
+  );
 });
 
 it("requires a nonblank title of at most 50 characters before submitting", async () => {
@@ -339,9 +408,7 @@ it("requires a nonblank title of at most 50 characters before submitting", async
   fireEvent.change(title, { target: { value: `  ${"x".repeat(50)}  ` } });
   fireEvent.click(screen.getByRole("button", { name: SUBMIT_REPORT }));
   await waitFor(() => expect(post).toHaveBeenCalled());
-  expect((post.mock.calls[0][1].body as FormData).get("title")).toBe(
-    "x".repeat(50)
-  );
+  expect(createBody().title).toBe("x".repeat(50));
 });
 
 it("lets a multi-estate resident choose an estate and clears the old location selection", async () => {

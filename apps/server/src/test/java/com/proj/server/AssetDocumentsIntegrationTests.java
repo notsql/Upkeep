@@ -48,7 +48,7 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
         UUID asset = asset(estateId, "TT-A0001");
         var equipment = db.fetchOne("select * from \"Asset\" where id=?", asset).intoMap();
         String key = storageKey(document);
-        byte[] bytes = STORAGE.objects.get(key).bytes();
+        byte[] bytes = storage.objects.get(key).bytes();
         mvc.perform(as("owner", get(association(document))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.documentId").value(document.toString()))
@@ -78,7 +78,8 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
                 .andExpect(jsonPath("$.items[0].storageKey").doesNotExist());
         mvc.perform(as("owner", get(downloadPath(document))))
                 .andExpect(status().isOk())
-                .andExpect(content().bytes(bytes));
+                .andExpect(jsonPath("$.url").value(org.hamcrest.Matchers.startsWith("memory://download/" + key)));
+        assertArrayEquals(bytes, storage.objects.get(key).bytes());
         assertEquals(key, storageKey(document));
         assertEquals(
                 equipment,
@@ -115,7 +116,7 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
                 .andExpect(jsonPath("$.workOrderId").value(order.toString()))
                 .andExpect(jsonPath("$.associationVersion").value(1));
         mvc.perform(as("crew", get(downloadPath(document)))).andExpect(status().isOk());
-        assertTrue(STORAGE.objects.containsKey(storageKey(document)));
+        assertTrue(storage.objects.containsKey(storageKey(document)));
         assertEquals(
                 work,
                 db.fetchOne("select * from \"WorkOrder\" where id=?", order).intoMap());
@@ -195,13 +196,13 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
     void storageOutageDoesNotPreventDatabaseOnlyLinkAndUnlinkActions() throws Exception {
         UUID document = id(upload("owner", "invoice.pdf"));
         UUID asset = asset(estateId, "TT-A0001");
-        STORAGE.unavailable = true;
+        storage.unavailable = true;
         associate(document, asset, 0, "owner").andExpect(status().isOk());
         mvc.perform(as("owner", get(attachments(asset))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(document.toString()));
         associate(document, null, 1, "owner").andExpect(status().isOk());
-        STORAGE.unavailable = false;
+        storage.unavailable = false;
         mvc.perform(as("owner", get(downloadPath(document)))).andExpect(status().isOk());
     }
 

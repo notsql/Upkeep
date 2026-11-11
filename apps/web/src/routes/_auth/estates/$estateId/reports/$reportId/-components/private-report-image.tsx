@@ -14,9 +14,9 @@ export function PrivateReportImage({
   const image = useEstateReportImage(estateId, reportId, imageId);
   return (
     <ReportImage
-      data={image.data}
       isError={image.isError}
       loading={<LoadingState label="Loading image…" rows={1} />}
+      url={image.data?.url}
     />
   );
 }

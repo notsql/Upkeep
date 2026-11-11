@@ -8,20 +8,17 @@ import java.util.Locale;
 import javax.imageio.ImageIO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class DocumentValidator {
-    public ValidatedDocument validate(MultipartFile file) {
-        String raw = file.getOriginalFilename();
-        if (raw == null || raw.codePoints().anyMatch(Character::isISOControl))
-            throw bad("Choose a file with a valid filename.");
-        String filename = raw.replace('\\', '/');
-        filename = filename.substring(filename.lastIndexOf('/') + 1);
-        if (filename.isBlank() || filename.length() > 255) throw bad("Choose a filename between 1 and 255 characters.");
-        if (file.isEmpty()) throw bad("Choose a non-empty file containing at least one byte.");
-        if (file.getSize() > 5_000_000)
+    public static final long MAX_BYTES = 5_000_000;
+
+    /** Checks what the browser declares before it uploads: name, type and size. Returns the stored media type. */
+    public Declared declared(String rawName, String contentType, long size) {
+        String filename = filename(rawName);
+        if (size < 1) throw bad("Choose a non-empty file containing at least one byte.");
+        if (size > MAX_BYTES)
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Choose a file no larger than 5 MB.");
         String extension = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
         String media = switch (extension) {
@@ -30,21 +27,36 @@ public class DocumentValidator {
             case "png" -> "image/png";
             default -> throw unsupported();
         };
-        if (!media.equals(file.getContentType())) throw unsupported();
+        if (!media.equals(contentType)) throw unsupported();
+        return new Declared(filename, media);
+    }
+
+    /** Checks the uploaded bytes match the declared type by signature, and that images decode. */
+    public ValidatedDocument validate(String rawName, String contentType, byte[] bytes) {
+        var declared = declared(rawName, contentType, bytes.length);
+        String media = declared.contentType();
+        byte[] signature = switch (media) {
+            case "application/pdf" -> "%PDF-".getBytes(StandardCharsets.US_ASCII);
+            case "image/jpeg" -> new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff};
+            default -> new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10};
+        };
+        if (bytes.length < signature.length || !Arrays.equals(signature, Arrays.copyOf(bytes, signature.length)))
+            throw unsupported();
         try {
-            byte[] bytes = file.getBytes();
-            byte[] signature = switch (media) {
-                case "application/pdf" -> "%PDF-".getBytes(StandardCharsets.US_ASCII);
-                case "image/jpeg" -> new byte[] {(byte) 0xff, (byte) 0xd8, (byte) 0xff};
-                default -> new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10};
-            };
-            if (bytes.length < signature.length || !Arrays.equals(signature, Arrays.copyOf(bytes, signature.length)))
-                throw unsupported();
             if (!media.equals("application/pdf")) validateImage(bytes);
-            return new ValidatedDocument(filename, media, bytes);
         } catch (IOException error) {
             throw bad("The file could not be read. Choose a readable PDF, JPEG or PNG file.");
         }
+        return new ValidatedDocument(declared.filename(), media, bytes);
+    }
+
+    private static String filename(String raw) {
+        if (raw == null || raw.codePoints().anyMatch(Character::isISOControl))
+            throw bad("Choose a file with a valid filename.");
+        String filename = raw.replace('\\', '/');
+        filename = filename.substring(filename.lastIndexOf('/') + 1);
+        if (filename.isBlank() || filename.length() > 255) throw bad("Choose a filename between 1 and 255 characters.");
+        return filename;
     }
 
     private static void validateImage(byte[] bytes) throws IOException {
@@ -75,6 +87,8 @@ public class DocumentValidator {
                 HttpStatus.UNSUPPORTED_MEDIA_TYPE,
                 "Use a PDF, JPEG or PNG file with a matching extension and media type.");
     }
+
+    public record Declared(String filename, String contentType) {}
 
     public record ValidatedDocument(String filename, String contentType, byte[] bytes) {}
 }

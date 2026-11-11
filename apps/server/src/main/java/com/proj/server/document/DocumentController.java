@@ -1,26 +1,24 @@
 package com.proj.server.document;
 
 import com.proj.server.estate.EstateError;
+import com.proj.server.storage.SignedDownloadResponse;
+import com.proj.server.storage.UploadSlotResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -28,7 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 @ApiResponses({
     @ApiResponse(
             responseCode = "400",
-            description = "Invalid document request, file, search, cursor or limit",
+            description = "Invalid document request, upload, search, cursor or limit",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "401",
@@ -58,17 +56,44 @@ public class DocumentController {
         this.documents = documents;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(operationId = "uploadDocument")
+    @PostMapping("/upload-slots")
+    @Operation(operationId = "createDocumentUploadSlot")
     @ApiResponses({
-        @ApiResponse(responseCode = "201", description = "Document stored and indexed"),
+        @ApiResponse(responseCode = "201", description = "Ten-minute upload link for one file"),
         @ApiResponse(
                 responseCode = "409",
                 description = "Estate inactive",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "413",
-                description = "File exceeds 5,000,000 bytes or multipart request exceeds servlet limits",
+                description = "File exceeds 5,000,000 bytes",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "415",
+                description = "Use a PDF, JPEG or PNG with a matching extension and media type",
+                content = @Content(schema = @Schema(implementation = EstateError.class)))
+    })
+    public ResponseEntity<UploadSlotResponse> uploadSlot(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @Valid @RequestBody DocumentUploadSlotRequest body) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+                .body(documents.uploadSlot(
+                        estateId, subject(principal), body.fileName(), body.contentType(), body.size()));
+    }
+
+    @PostMapping
+    @Operation(operationId = "uploadDocument")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Uploaded file checked and indexed"),
+        @ApiResponse(
+                responseCode = "409",
+                description = "Estate inactive",
+                content = @Content(schema = @Schema(implementation = EstateError.class))),
+        @ApiResponse(
+                responseCode = "413",
+                description = "Uploaded file exceeds 5,000,000 bytes",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "415",
@@ -78,17 +103,9 @@ public class DocumentController {
     public ResponseEntity<DocumentResponse> upload(
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
-            @Valid @ModelAttribute UploadDocumentRequest body,
-            MultipartHttpServletRequest request) {
-        String user = subject(principal);
-        var files = request.getMultiFileMap();
-        if (files.size() != 1
-                || files.get("file") == null
-                || files.get("file").size() != 1
-                || request.getParameterValues("documentType") == null
-                || request.getParameterValues("documentType").length != 1)
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose exactly one file and one document type.");
-        var created = documents.upload(estateId, user, body.documentType(), body.file());
+            @Valid @RequestBody CreateDocumentRequest body) {
+        var created =
+                documents.upload(estateId, subject(principal), body.documentType(), body.objectKey(), body.fileName());
         return ResponseEntity.created(URI.create("/estates/" + estateId + "/documents/" + created.id() + "/content"))
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
                 .body(created);
@@ -112,28 +129,12 @@ public class DocumentController {
 
     @GetMapping("/{documentId}/content")
     @Operation(operationId = "downloadDocument")
-    @ApiResponse(
-            responseCode = "200",
-            description = "Private attachment",
-            content = {
-                @Content(mediaType = "application/pdf", schema = @Schema(type = "string", format = "binary")),
-                @Content(mediaType = "image/jpeg", schema = @Schema(type = "string", format = "binary")),
-                @Content(mediaType = "image/png", schema = @Schema(type = "string", format = "binary"))
-            })
-    public ResponseEntity<byte[]> download(
+    @ApiResponse(responseCode = "200", description = "A five-minute link that downloads the file")
+    public ResponseEntity<SignedDownloadResponse> download(
             @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID documentId) {
-        var file = documents.download(estateId, documentId, subject(principal));
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(file.contentType()))
-                .header(
-                        HttpHeaders.CONTENT_DISPOSITION,
-                        ContentDisposition.attachment()
-                                .filename(file.filename(), StandardCharsets.UTF_8)
-                                .build()
-                                .toString())
-                .header("X-Content-Type-Options", "nosniff")
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
-                .body(file.bytes());
+                .body(documents.download(estateId, documentId, subject(principal)));
     }
 
     @DeleteMapping("/{documentId}")
@@ -158,10 +159,17 @@ public class DocumentController {
         return principal.getSubject();
     }
 
-    @Schema(requiredProperties = {"documentType", "file"})
-    public record UploadDocumentRequest(
-            @NotNull DocumentType documentType,
+    @Schema(requiredProperties = {"fileName", "contentType", "size"})
+    public record DocumentUploadSlotRequest(
+            @NotBlank @Schema(maxLength = 255) String fileName,
+            @NotBlank String contentType,
+            @NotNull Long size) {}
 
-            @NotNull @Schema(type = "string", format = "binary")
-            MultipartFile file) {}
+    @Schema(requiredProperties = {"objectKey", "fileName", "documentType"})
+    public record CreateDocumentRequest(
+            @NotBlank @Schema(description = "The key from the upload slot, after the file was uploaded.")
+            String objectKey,
+
+            @NotBlank @Schema(maxLength = 255) String fileName,
+            @NotNull DocumentType documentType) {}
 }

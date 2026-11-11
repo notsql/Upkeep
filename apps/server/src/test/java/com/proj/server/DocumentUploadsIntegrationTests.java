@@ -54,7 +54,8 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         String key = storageKey(document);
 
         assertEquals("documents/" + estateId + "/" + document, key);
-        assertArrayEquals(bytes, STORAGE.objects.get(key).bytes());
+        assertArrayEquals(bytes, storage.objects.get(key).bytes());
+        storage.signed.clear();
         assertEquals(
                 "crew",
                 db.fetchOne("select \"uploadedByUserId\" from \"Document\" where id=?", document)
@@ -62,12 +63,13 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         response.andExpect(header().string("Location", endsWith(downloadPath(document))));
         mvc.perform(as("member", get(downloadPath(document))))
                 .andExpect(status().isOk())
-                .andExpect(content().bytes(bytes))
-                .andExpect(header().string("Content-Type", mediaType))
-                .andExpect(
-                        header().string("Content-Disposition", allOf(startsWith("attachment;"), containsString(name))))
-                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(jsonPath("$.url", startsWith("memory://download/" + key + "?")))
+                .andExpect(jsonPath("$.url", containsString("contentType=" + mediaType.replace("/", "%2F"))))
+                .andExpect(jsonPath("$.url", containsString("disposition=attachment")))
+                .andExpect(jsonPath("$.url", containsString(name)))
+                .andExpect(jsonPath("$.expiresAt").isNotEmpty())
                 .andExpect(header().string("Cache-Control", "private, no-store"));
+        assertEquals(List.of(key), storage.signed);
     }
 
     @ParameterizedTest
@@ -85,9 +87,84 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
     @ParameterizedTest
     @ValueSource(strings = {"resident", "legacy-member"})
     void estateMembershipWithoutDocumentAuthorityIsInsufficient(String user) throws Exception {
+        mvc.perform(as(user, slot("invoice.pdf", "application/pdf", 100))).andExpect(status().isForbidden());
         mvc.perform(as(user, submission("INVOICE", pdfFile("invoice.pdf")))).andExpect(status().isForbidden());
         mvc.perform(as(user, get(documents()))).andExpect(status().isForbidden());
-        assertTrue(STORAGE.objects.isEmpty());
+        assertTrue(storage.signed.isEmpty(), "no upload link is issued");
+        assertEquals(0, documentList("crew").get("items").size());
+    }
+
+    @Test
+    void anUploadSlotIsATenMinuteLinkBoundToTheFilesTypeAndSize() throws Exception {
+        var slot = body(mvc.perform(as("crew", slot("invoice.pdf", "application/pdf", 1234)))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.contentType").value("application/pdf"))
+                .andExpect(jsonPath("$.maxBytes").value(5_000_000)));
+        String key = slot.get("objectKey").asText();
+        assertTrue(key.startsWith("documents/" + estateId + "/"));
+        assertTrue(slot.get("uploadUrl")
+                .asText()
+                .startsWith("memory://upload/" + key + "?contentType=application%2Fpdf&maxBytes=5000000"));
+        var minutes = java.time.Duration.between(
+                        Instant.now(), Instant.parse(slot.get("expiresAt").asText()))
+                .toMinutes();
+        assertTrue(minutes >= 9 && minutes <= 10);
+
+        mvc.perform(as("crew", slot("notes.txt", "text/plain", 10))).andExpect(status().isUnsupportedMediaType());
+        mvc.perform(as("crew", slot("big.pdf", "application/pdf", 5_000_001))).andExpect(status().isPayloadTooLarge());
+        inactive();
+        mvc.perform(as("crew", slot("late.pdf", "application/pdf", 10))).andExpect(status().isConflict());
+    }
+
+    @Test
+    void anUploadedFileIsConfirmedUnderItsSlotKey() throws Exception {
+        var slot = body(mvc.perform(as("crew", slot("invoice.pdf", "application/pdf", pdf().length)))
+                .andExpect(status().isCreated()));
+        String key = slot.get("objectKey").asText();
+        storage.upload(key, pdf(), "application/pdf");
+        var create = json.createObjectNode()
+                .put("objectKey", key)
+                .put("fileName", "invoice.pdf")
+                .put("documentType", "INVOICE");
+
+        var document = body(mvc.perform(as(
+                        "crew",
+                        post(documents())
+                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                .content(json.writeValueAsString(create))))
+                .andExpect(status().isCreated()));
+
+        assertEquals(key, storageKey(id(document)));
+        assertEquals(key, "documents/" + estateId + "/" + id(document));
+        mvc.perform(as(
+                        "crew",
+                        post(documents())
+                                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                .content(json.writeValueAsString(create))))
+                .andExpect(status().isBadRequest());
+        assertTrue(storage.objects.containsKey(key), "a second confirm leaves the file with the first document");
+    }
+
+    @Test
+    void aKeyFromAnotherEstateOrWithNothingBehindItIsRejected() throws Exception {
+        var foreign = estate("foreign-owner");
+        String foreignKey = "documents/" + foreign + "/" + UUID.randomUUID();
+        storage.upload(foreignKey, pdf(), "application/pdf");
+        for (String key : List.of(foreignKey, "documents/" + estateId + "/" + UUID.randomUUID(), "reports/x/y")) {
+            var create = json.createObjectNode()
+                    .put("objectKey", key)
+                    .put("fileName", "invoice.pdf")
+                    .put("documentType", "INVOICE");
+            mvc.perform(as(
+                            "crew",
+                            post(documents())
+                                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                                    .content(json.writeValueAsString(create))))
+                    .andExpect(status().isBadRequest());
+        }
+        assertTrue(storage.objects.containsKey(foreignKey), "another estate's file is left alone");
+        assertEquals(0, documentList("crew").get("items").size());
     }
 
     @Test
@@ -102,19 +179,16 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         mvc.perform(as("foreign-manager", get(downloadPath(id(document))))).andExpect(status().isNotFound());
         mvc.perform(as("foreign-manager", delete(documents() + "/" + id(document))))
                 .andExpect(status().isNotFound());
-        assertEquals(1, STORAGE.objects.size());
+        assertEquals(1, documentList("crew").get("items").size());
     }
 
     @Test
     void foreignDocumentIdsCannotBeReadOrDeletedThroughAnAuthorizedEstate() throws Exception {
         upload("crew", "local.pdf");
         var foreign = estate("foreign-owner");
-        var foreignDocument = body(mvc.perform(as(
-                        "foreign-owner",
-                        multipart("/estates/" + foreign + "/documents")
-                                .param("documentType", "INVOICE")
-                                .file(pdfFile("foreign.pdf"))))
-                .andExpect(status().isCreated()));
+        var foreignDocument =
+                body(mvc.perform(as("foreign-owner", submissionTo(foreign, "INVOICE", pdfFile("foreign.pdf"))))
+                        .andExpect(status().isCreated()));
 
         mvc.perform(as("manager", get(downloadPath(id(foreignDocument))))).andExpect(status().isNotFound());
         mvc.perform(as("manager", delete(documents() + "/" + id(foreignDocument))))
@@ -122,7 +196,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         mvc.perform(as("manager", get(documents()).param("filename", "foreign")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isEmpty());
-        assertEquals(2, STORAGE.objects.size());
+        assertEquals(2, storage.objects.size());
     }
 
     @Test
@@ -160,7 +234,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
                         submission("INVOICE", new MockMultipartFile("file", "large.pdf", "application/pdf", bytes))))
                 .andExpect(status().isPayloadTooLarge())
                 .andExpect(jsonPath("$.message", containsString("5 MB")));
-        assertEquals(1, STORAGE.objects.size());
+        assertEquals(1, storage.objects.size());
         assertEquals(1, documentList("crew").get("items").size());
     }
 
@@ -168,23 +242,14 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
     @ValueSource(strings = {"", "   ", "OTHER"})
     void invalidDocumentTypesDoNotSaveAFile(String type) throws Exception {
         mvc.perform(as("crew", submission(type, pdfFile("invoice.pdf")))).andExpect(status().isBadRequest());
-        assertTrue(STORAGE.objects.isEmpty());
+        assertEquals(0, documentList("crew").get("items").size());
     }
 
     @Test
-    void missingTypeMissingFileMultipleFilesAndUnexpectedFilePartsAreRejected() throws Exception {
+    void missingTypeAndMissingFileAreRejected() throws Exception {
         mvc.perform(as("crew", submission(null, pdfFile("invoice.pdf")))).andExpect(status().isBadRequest());
         mvc.perform(as("crew", submission("INVOICE"))).andExpect(status().isBadRequest());
-        mvc.perform(as("crew", submission("INVOICE", pdfFile("a.pdf"), pdfFile("b.pdf"))))
-                .andExpect(status().isBadRequest());
-        mvc.perform(as(
-                        "crew",
-                        submission(
-                                "INVOICE",
-                                pdfFile("a.pdf"),
-                                new MockMultipartFile("extra", "b.pdf", "application/pdf", pdf()))))
-                .andExpect(status().isBadRequest());
-        assertTrue(STORAGE.objects.isEmpty());
+        assertEquals(0, documentList("crew").get("items").size());
     }
 
     static Stream<Arguments> unsupportedFiles() throws Exception {
@@ -205,7 +270,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         mvc.perform(as("crew", submission("INVOICE", new MockMultipartFile("file", filename, type, bytes))))
                 .andExpect(status().isUnsupportedMediaType())
                 .andExpect(jsonPath("$.message").isNotEmpty());
-        assertTrue(STORAGE.objects.isEmpty());
+        assertTrue(storage.objects.isEmpty());
     }
 
     @Test
@@ -226,7 +291,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
                                 "SERVICE_REPORT",
                                 new MockMultipartFile("file", "large.png", "image/png", image("png", 5000, 2500)))))
                 .andExpect(status().isBadRequest());
-        assertTrue(STORAGE.objects.isEmpty());
+        assertTrue(storage.objects.isEmpty());
     }
 
     @Test
@@ -258,7 +323,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
     @ValueSource(strings = {"", "   ", "bad\r\nname.pdf"})
     void invalidFilenamesDoNotSaveAFile(String filename) throws Exception {
         mvc.perform(as("crew", submission("INVOICE", pdfFile(filename)))).andExpect(status().isBadRequest());
-        assertTrue(STORAGE.objects.isEmpty());
+        assertEquals(0, documentList("crew").get("items").size());
     }
 
     @Test
@@ -267,7 +332,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
                 .andExpect(status().isCreated());
         mvc.perform(as("crew", submission("INVOICE", pdfFile("a".repeat(252) + ".pdf"))))
                 .andExpect(status().isBadRequest());
-        assertEquals(1, STORAGE.objects.size());
+        assertEquals(1, storage.objects.size());
     }
 
     @Test
@@ -276,36 +341,42 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         var second = upload("crew", "invoice.pdf");
 
         assertNotEquals(id(first), id(second));
-        assertEquals(2, STORAGE.objects.size());
+        assertEquals(2, storage.objects.size());
         assertEquals(2, documentList("crew").get("items").size());
     }
 
     @Test
     void storageFailureReturnsAnErrorWithoutIndexedMetadata() throws Exception {
-        STORAGE.unavailable = true;
+        var request = submission("INVOICE", pdfFile("invoice.pdf"));
+        storage.unavailable = true;
 
-        mvc.perform(as("crew", submission("INVOICE", pdfFile("invoice.pdf"))))
+        mvc.perform(as("crew", slot("invoice.pdf", "application/pdf", 100)))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.message").value("File storage is temporarily unavailable. Try again later."));
+        mvc.perform(as("crew", request))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.message").isNotEmpty());
+        storage.unavailable = false;
         assertEquals(0, documentList("crew").get("items").size());
-        assertTrue(STORAGE.objects.isEmpty());
     }
 
     @Test
-    void revokedMembershipDuringUploadPreventsTheMetadataCommitAndCleansTheObject() throws Exception {
-        STORAGE.afterWrite.set(() -> revoke("crew"));
+    void revokedMembershipAfterUploadPreventsTheMetadataCommitAndLeavesTheObjectForTheSweep() throws Exception {
+        var request = submission("INVOICE", pdfFile("invoice.pdf"));
+        revoke("crew");
 
-        mvc.perform(as("crew", submission("INVOICE", pdfFile("invoice.pdf")))).andExpect(status().isNotFound());
-        assertTrue(STORAGE.objects.isEmpty());
+        mvc.perform(as("crew", request)).andExpect(status().isNotFound());
+        assertEquals(1, storage.objects.size());
         assertEquals(0, documentList("manager").get("items").size());
     }
 
     @Test
-    void estateDeactivationDuringUploadPreventsTheMetadataCommitAndCleansTheObject() throws Exception {
-        STORAGE.afterWrite.set(this::inactive);
+    void estateDeactivationAfterUploadPreventsTheMetadataCommitAndLeavesTheObjectForTheSweep() throws Exception {
+        var request = submission("INVOICE", pdfFile("invoice.pdf"));
+        inactive();
 
-        mvc.perform(as("crew", submission("INVOICE", pdfFile("invoice.pdf")))).andExpect(status().isConflict());
-        assertTrue(STORAGE.objects.isEmpty());
+        mvc.perform(as("crew", request)).andExpect(status().isConflict());
+        assertEquals(1, storage.objects.size());
         assertEquals(0, documentList("manager").get("items").size());
     }
 
@@ -317,7 +388,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
 
         mvc.perform(as("crew", submission("SERVICE_REPORT", pdfFile("report.pdf"))))
                 .andExpect(status().isInternalServerError());
-        assertEquals(1, STORAGE.objects.size());
+        assertEquals(1, storage.objects.size());
         assertEquals(1, documentList("crew").get("items").size());
     }
 
@@ -438,7 +509,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
                 db.fetchOne("select \"deletedByUserId\" from \"Document\" where id=?", id(document))
                         .get(0, String.class));
         runCleanup();
-        assertFalse(STORAGE.objects.containsKey(key));
+        assertFalse(storage.objects.containsKey(key));
     }
 
     @ParameterizedTest
@@ -454,7 +525,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].canDelete").value(true));
         assertEquals(1, documentList("crew").get("items").size());
-        assertEquals(1, STORAGE.objects.size());
+        assertEquals(1, storage.objects.size());
     }
 
     @Test
@@ -470,17 +541,17 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
     void deletionRemovesSearchResultsAndRetriesStorageFailureWithoutLosingItsAudit() throws Exception {
         var document = upload("crew", "invoice.pdf");
         String key = storageKey(id(document));
-        STORAGE.deletionUnavailable = true;
+        storage.deletionUnavailable = true;
 
         mvc.perform(as("crew", delete(documents() + "/" + id(document)))).andExpect(status().isNoContent());
         mvc.perform(as("manager", get(documents()).param("filename", "invoice")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isEmpty());
-        assertTrue(STORAGE.objects.containsKey(key));
+        assertTrue(storage.objects.containsKey(key));
         mvc.perform(as("manager", get(downloadPath(id(document))))).andExpect(status().isNotFound());
-        STORAGE.deletionUnavailable = false;
+        storage.deletionUnavailable = false;
         runCleanup();
-        assertFalse(STORAGE.objects.containsKey(key));
+        assertFalse(storage.objects.containsKey(key));
         assertNotNull(db.fetchValue("select \"storageDeletedAt\" from \"Document\" where id=?", id(document)));
         mvc.perform(as("manager", delete(documents() + "/" + id(document)))).andExpect(status().isNoContent());
         assertEquals(
@@ -497,7 +568,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
                 "alter table \"Document\" add constraint document_test_write_failure check (\"deletedAt\" is null) not valid");
 
         mvc.perform(as("crew", delete(documents() + "/" + id(document)))).andExpect(status().isInternalServerError());
-        assertTrue(STORAGE.objects.containsKey(key));
+        assertTrue(storage.objects.containsKey(key));
         assertEquals(1, documentList("crew").get("items").size());
         mvc.perform(as("crew", get(downloadPath(id(document))))).andExpect(status().isOk());
     }
@@ -533,16 +604,18 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
         String recentOrphan = "documents/" + estateId + "/" + UUID.randomUUID();
         var yesterday = Instant.now().minus(25, ChronoUnit.HOURS);
         ageObject(referenced, yesterday);
-        STORAGE.objects.put(oldOrphan, new DocumentR2Stub.StoredObject(pdf(), "application/pdf", yesterday));
-        STORAGE.objects.put(recentOrphan, new DocumentR2Stub.StoredObject(pdf(), "application/pdf", Instant.now()));
-        STORAGE.objects.put(
-                "reports/keep-private-image", new DocumentR2Stub.StoredObject(new byte[] {1}, "image/png", yesterday));
+        storage.upload(oldOrphan, pdf(), "application/pdf");
+        storage.age(oldOrphan, yesterday);
+        storage.upload(recentOrphan, pdf(), "application/pdf");
+        // Objects outside documents/ belong to other features' sweeps.
+        storage.upload("elsewhere/keep-private-file", new byte[] {1}, "image/png");
+        storage.age("elsewhere/keep-private-file", yesterday);
 
         runCleanup();
 
-        assertFalse(STORAGE.objects.containsKey(oldOrphan));
-        assertTrue(STORAGE.objects.containsKey(recentOrphan));
-        assertTrue(STORAGE.objects.containsKey(referenced));
-        assertTrue(STORAGE.objects.containsKey("reports/keep-private-image"));
+        assertFalse(storage.objects.containsKey(oldOrphan));
+        assertTrue(storage.objects.containsKey(recentOrphan));
+        assertTrue(storage.objects.containsKey(referenced));
+        assertTrue(storage.objects.containsKey("elsewhere/keep-private-file"));
     }
 }

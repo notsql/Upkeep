@@ -26,18 +26,35 @@ Paths below have base `/estates/{estateId}`, where all path IDs are UUIDs.
 | --- | --- | --- | --- |
 | GET | `/inspection-assets` | Optional `q: string` (maximum 200), `cursor: string`, `limit: integer` (default 20, 1–50) | 200 `InspectionAssetPageResponse` |
 | GET | `/inspection-assets/{assetId}` | Path IDs | 200 `InspectionAssetResponse` |
-| POST | `/assets/{assetId}/inspections` | Multipart `CreateInspectionRequest` | 201 `InspectionResultResponse`; `Location` is its nested detail path |
+| POST | `/assets/{assetId}/inspections/photo-slots` | JSON `InspectionPhotoSlotRequest` | 201 `UploadSlotResponse` (ten-minute upload link for one photo) |
+| POST | `/assets/{assetId}/inspections` | JSON `CreateInspectionRequest` | 201 `InspectionResultResponse`; `Location` is its nested detail path |
 | GET | `/assets/{assetId}/inspections` | Optional `cursor: string`, `limit: integer` (default 20, 1–50) | 200 `InspectionResultPageResponse` |
 | GET | `/assets/{assetId}/inspections/{inspectionId}` | Path IDs; validates the complete estate/asset/result relationship | 200 `InspectionResultResponse` |
 | GET | `/inspection-results/{inspectionId}` | Estate and result IDs | 200 `InspectionResultResponse`; authorised source lookup for the work-order conversion URL |
-| GET | `/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}` | Full relationship checked before storage reads | 200 private JPEG/PNG bytes, validated `Content-Type`, `X-Content-Type-Options: nosniff` |
+| GET | `/assets/{assetId}/inspections/{inspectionId}/photos/{photoId}` | Full relationship checked before a link is signed | 200 `SignedDownloadResponse { url, expiresAt }`, a five-minute link to the private photo |
 
 No result/photo update or deletion endpoint exists. Unsupported methods and
 nested actions are denied by the configured JWT security chain.
 
 ## DTOs
 
-`CreateInspectionRequest`, multipart:
+`InspectionPhotoSlotRequest` (POST `/assets/{assetId}/inspections/photo-slots`,
+201 `UploadSlotResponse`, see [documents.md](documents.md)):
+
+- `contentType: string`, required; JPEG or PNG, else 415.
+- `size: int64`, required; 1 byte to 5 MiB, else 400/413.
+- `inspectionId?: UUID`; omit for the first photo. The response's
+  `inspectionId` names the inspection; pass it to later slots and to the create
+  call so every key sits under `inspections/{inspectionId}/`.
+
+Slots need the same authority as recording (403/404 otherwise, 409 when the
+estate, asset or location is inactive) and storage (503). The browser PUTs each
+photo to `uploadUrl` within ten minutes.
+
+`CreateInspectionRequest`, JSON:
+
+- `inspectionId?: UUID`, required when `photoKeys` is not empty; the id from the
+  slots becomes the result's id.
 
 - `outcome: "PASS" | "FAIL"`, required; no inferred/default outcome.
 - `inspectedOn: string` (ISO date), required; no later than Singapore today or
@@ -46,9 +63,12 @@ nested actions are denied by the configured JWT security chain.
   A moved asset returns 409 and requires review.
 - `notes?: string`; trimmed, maximum 2,000 characters after trimming; blank is
   stored as null.
-- `photos?: binary[]`; repeated multipart files, at most three. Each must be
-  JPEG/PNG, at most 5 MiB, maximum 4,032 by 3,024 pixels. The server checks actual
-  content and dimensions and re-encodes the image before storage.
+- `photoKeys?: string[]`; object keys from the slots, at most three, already
+  uploaded. A key with nothing behind it, outside this inspection's prefix, or
+  already saved is 400 (a foreign key's object is left alone). Each stored photo
+  must be JPEG/PNG, at most 5 MiB, maximum 4,032 by 3,024 pixels; the server
+  checks its real size, type, content and dimensions, re-encodes it and replaces
+  the upload with the clean copy. A photo that fails is deleted (413/415/400).
 
 `InspectionAssetResponse` contains `id`, `estateId`, `locationId: UUID`;
 `reference`, `name`, `category`, `locationPath: string`;
@@ -84,12 +104,13 @@ closure never rewrites the historical Fail.
 
 ## Transactions and private evidence
 
-Authority and input validation happen before uploads. Optional inspector-name
-lookup and R2 uploads run outside the write transaction. The transaction locks
+Authority, input and key checks happen before storage is touched. Optional
+inspector-name lookup and the photo checks run outside the write transaction. The transaction locks
 the estate first, rechecks current membership/activity/location, and writes
-one result and its evidence metadata together. Failure cleans up uploaded
-objects. Failed cleanup is logged, and a bounded hourly sweep retries orphan
-objects older than 24 hours under the private `inspections/` prefix. Photo-free
+one result and its evidence metadata together. A failed commit deletes the
+uploaded photos. An hourly sweep deletes objects under the private
+`inspections/` prefix that are older than 24 hours and saved with no result,
+which also covers uploads that were never confirmed. Photo-free
 submissions work without configured storage. Resident-report APIs cannot read
 inspection evidence; no keys or public bucket URLs appear in DTOs.
 

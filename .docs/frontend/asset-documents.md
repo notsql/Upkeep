@@ -65,7 +65,7 @@ selection uses checkboxes, and the modal supplies keyboard/focus behavior.
 The picker uses existing `useAssets` keys
 `["estates", userId, "assets", estateId, "list", filters]`, `useLocations` and
 `useAssetCategories`. Downloads reuse `useDownloadDocument` and the authenticated
-document content endpoint, including its temporary object URL cleanup.
+document content endpoint's signed link.
 
 Successful writes invalidate `[userId, "documents", estateId]`, covering document
 searches and former/new asset attachment pages. Deletion already invalidates that

@@ -2,35 +2,33 @@ package com.proj.server.resident;
 
 import com.proj.server.report.DuplicateService;
 import com.proj.server.routing.RoutingRepository;
+import com.proj.server.storage.SignedDownloadResponse;
+import com.proj.server.storage.UploadSlotResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ResidentReportService {
     private final ResidentReportRepository reports;
-    private final ResidentImageValidator validator;
-    private final ResidentImageStore images;
+    private final ImageUploads images;
     private final TransactionTemplate transactions;
     private final DuplicateService duplicates;
     private final RoutingRepository routing;
 
     public ResidentReportService(
             ResidentReportRepository reports,
-            ResidentImageValidator validator,
-            ResidentImageStore images,
+            ImageUploads images,
             TransactionTemplate transactions,
             DuplicateService duplicates,
             RoutingRepository routing) {
         this.reports = reports;
-        this.validator = validator;
         this.images = images;
         this.transactions = transactions;
         this.duplicates = duplicates;
@@ -52,13 +50,22 @@ public class ResidentReportService {
                         HttpStatus.FORBIDDEN, "No active resident assignment in the selected estate."));
     }
 
+    /** A signed upload for one report photo; later photos pass the returned report id back. */
+    public UploadSlotResponse imageSlot(String userId, UUID estateId, UUID reportId, String contentType, long size) {
+        reports.activeAssignment(userId, estateId, false)
+                .orElseThrow(() -> new ResidentReportException(HttpStatus.FORBIDDEN, "No active estate assignment."));
+        var id = reportId == null ? UUID.randomUUID() : reportId;
+        return images.slot(prefix(id), contentType, size).forReport(id);
+    }
+
     public IssueReportDetailResponse create(
             String userId,
             UUID estateId,
+            UUID requestedReportId,
             String title,
             String description,
             UUID locationId,
-            List<MultipartFile> selectedImages) {
+            List<String> imageKeys) {
         String reportTitle = title == null ? "" : title.trim();
         if (reportTitle.isBlank() || reportTitle.length() > 50) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Enter a title in 1 to 50 characters.");
@@ -75,19 +82,18 @@ public class ResidentReportService {
             throw new ResidentReportException(
                     HttpStatus.BAD_REQUEST, "Choose an active level or common area in your estate.");
         }
-        var files = selectedImages == null ? List.<MultipartFile>of() : selectedImages;
-        if (files.size() > 3) {
+        var keys = imageKeys == null ? List.<String>of() : imageKeys;
+        if (keys.size() > 3) {
             throw new ResidentReportException(HttpStatus.BAD_REQUEST, "Choose at most three images.");
         }
-        var validated = files.stream().map(validator::validate).toList();
-        var reportId = UUID.randomUUID();
-        var uploaded = new ArrayList<UploadedImage>();
+        if (!keys.isEmpty() && requestedReportId == null) {
+            throw new ResidentReportException(
+                    HttpStatus.BAD_REQUEST, "A photo was not uploaded properly. Add it again and resubmit.");
+        }
+        var reportId = requestedReportId == null ? UUID.randomUUID() : requestedReportId;
+        var ids = images.requireIssued(prefix(reportId), keys, reports::hasStorageKey);
+        var uploaded = images.confirm(keys, ids);
         try {
-            for (var image : validated) {
-                var imageId = UUID.randomUUID();
-                var key = images.upload(reportId, imageId, image);
-                uploaded.add(new UploadedImage(imageId, key, image.contentType(), image.bytes().length));
-            }
             var created = transactions.execute(ignored -> {
                 var current = reports.activeAssignment(userId, estateId, true)
                         .orElseThrow(() ->
@@ -107,9 +113,7 @@ public class ResidentReportService {
             });
             return created;
         } catch (RuntimeException error) {
-            for (var image : uploaded) {
-                images.deleteQuietly(image.key());
-            }
+            images.deleteQuietly(keys);
             throw error;
         }
     }
@@ -163,13 +167,19 @@ public class ResidentReportService {
                 .orElseThrow(() -> new ResidentReportException(HttpStatus.NOT_FOUND, "Report not found."));
     }
 
-    public ImageBytes image(String userId, UUID reportId, UUID imageId) {
+    public SignedDownloadResponse image(String userId, UUID reportId, UUID imageId) {
         var stored = reports.image(userId, reportId, imageId)
                 .orElseThrow(() -> new ResidentReportException(HttpStatus.NOT_FOUND, "Report image not found."));
-        return new ImageBytes(images.read(stored.key()), stored.contentType());
+        return images.download(stored.key(), stored.contentType());
     }
 
-    public record ImageBytes(byte[] bytes, String contentType) {}
+    /** Removes report photos uploaded more than a day ago but never submitted. */
+    @Scheduled(fixedDelay = 3_600_000, initialDelay = 3_600_000)
+    public synchronized void cleanupOrphans() {
+        images.sweep("reports/", reports::hasStorageKey);
+    }
 
-    private record UploadedImage(UUID id, String key, String contentType, int size) {}
+    private static String prefix(UUID reportId) {
+        return "reports/" + reportId + "/";
+    }
 }

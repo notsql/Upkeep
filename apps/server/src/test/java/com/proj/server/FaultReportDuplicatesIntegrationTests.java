@@ -5,14 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
-import com.proj.server.resident.ResidentImageStore;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -51,9 +49,6 @@ class FaultReportDuplicatesIntegrationTests {
 
     @MockitoBean
     JwtDecoder decoder;
-
-    @MockitoBean
-    ResidentImageStore imageStore;
 
     // ---- Detection on submission -------------------------------------------------------------
 
@@ -900,9 +895,8 @@ class FaultReportDuplicatesIntegrationTests {
         return db.fetchOne("select * from \"IssueReportDuplicate\" where \"reportId\"=?", report);
     }
 
-    private org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder submission(
-            Fixture f, UUID location, String title, String description) {
-        var request = multipart("/resident/reports");
+    private StoredUploadSubmission submission(Fixture f, UUID location, String title, String description) {
+        var request = StoredUploadSubmission.report(null); // No photos, so nothing is stored.
         request.param("estateId", f.estate.toString());
         request.param("title", title);
         request.param("description", description);

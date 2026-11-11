@@ -56,18 +56,14 @@ it("keeps the Size header aligned with the shared attachment row", async () => {
   row.getByRole("cell", { name: "100 bytes" });
 });
 
-it("shows linked document metadata and downloads from the authenticated content endpoint after a reload", async () => {
+it("shows linked document metadata and downloads through a short-lived storage link after a reload", async () => {
   linked();
-  vi.stubGlobal(
-    "URL",
-    class extends URL {
-      static createObjectURL = vi.fn(() => "blob:asset-document");
-      static revokeObjectURL = vi.fn();
-    }
-  );
-  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
-    () => undefined
-  );
+  const opened: string[] = [];
+  vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+    this: HTMLAnchorElement
+  ) {
+    opened.push(this.href);
+  });
   const { unmount } = await openAssetDocuments("asset");
   await screen.findByRole("heading", { name: DOCUMENTS_HEADING });
   const row = within(
@@ -79,11 +75,11 @@ it("shows linked document metadata and downloads from the authenticated content 
   await waitFor(() =>
     expect(apiGet).toHaveBeenCalledWith(
       "/estates/{estateId}/documents/{documentId}/content",
-      expect.objectContaining({
-        params: { path: { estateId, documentId } },
-        parseAs: "blob",
-      })
+      { params: { path: { estateId, documentId } } }
     )
+  );
+  await waitFor(() =>
+    expect(opened).toEqual(["https://storage.example/asset-document"])
   );
   unmount();
   await openAssetDocuments("asset");

@@ -41,10 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(
         properties = {
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
-            "app.r2.endpoint=",
-            "app.r2.access-id=",
-            "app.r2.secret-access-key=",
-            "app.r2.bucket-name="
         })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)

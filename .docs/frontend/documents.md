@@ -60,8 +60,8 @@ asks the user to refresh the list before retrying. No upload auto-retries.
 | --- | --- | --- |
 | `useDocumentAccess` | GET `/access/context` via `useAppAccess` | `[userId, "app-access"]`; derives estate label/read/upload capability |
 | `useDocuments` | GET `/estates/{estateId}/documents` | `[userId, "documents", estateId, filters]`, filename/documentType/cursor query, abort signal, no retry |
-| `useUploadDocument` | POST `/estates/{estateId}/documents` | FormData `documentType` + one `file`; accepts only confirmed 201; no retry |
-| `useDownloadDocument` | GET `/estates/{estateId}/documents/{documentId}/content` | `parseAs: "blob"`, authenticated client, temporary object URL clicked then revoked 1 s later (Safari cancels the save if revoked in the same task); no retry |
+| `useUploadDocument` | POST `/estates/{estateId}/documents/upload-slots`, PUT to `uploadUrl`, POST `/estates/{estateId}/documents` | Slot, direct storage PUT (`sendToStorage` in `lib/storage-upload.ts`), then JSON `objectKey`/`fileName`/`documentType`; accepts only confirmed 201; no retry |
+| `useDownloadDocument` | GET `/estates/{estateId}/documents/{documentId}/content` | Authenticated client returns a five-minute signed link; an anchor to `url` is clicked (storage sends it as an attachment with the original filename); no retry |
 | `useDeleteDocument` | DELETE `/estates/{estateId}/documents/{documentId}` | Requires confirmed 204, no retry |
 
 Upload and deletion invalidate `[userId, "documents", estateId]`, covering every
@@ -91,7 +91,7 @@ is true; inactivity alone does not remove an otherwise authorized delete action.
 Confirmation names the file; Cancel sends no request. Pending confirmation
 disables duplicate submission. Denial/failure stays in the dialog for explicit
 retry. Confirmed deletion announces/toasts `"{filename}" removed` and closes the
-dialog, without claiming immediate physical erasure from R2.
+dialog, without claiming immediate physical erasure from storage.
 
 The sidebar shows Assets › Documents based on `canViewDocuments`. There is
 no global Documents chooser; the header feature switcher preserves document context when possible and

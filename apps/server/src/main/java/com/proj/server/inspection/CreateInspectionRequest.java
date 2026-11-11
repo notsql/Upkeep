@@ -1,21 +1,26 @@
 package com.proj.server.inspection;
 
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.multipart.MultipartFile;
 
+@Schema(requiredProperties = {"outcome", "inspectedOn", "expectedLocationId"})
 public record CreateInspectionRequest(
+        @Schema(description = "The inspection id the photo slots returned; required when photoKeys is not empty.")
+        UUID inspectionId,
+
         @NotNull InspectionOutcome outcome,
+        @NotNull LocalDate inspectedOn,
 
-        @NotNull @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-        LocalDate inspectedOn,
-
-        @io.swagger.v3.oas.annotations.media.Schema(
-                description = "Up to 2,000 characters. Required (not blank) when outcome is FAIL: what is wrong.")
+        @Schema(description = "Up to 2,000 characters. Required (not blank) when outcome is FAIL: what is wrong.")
         String notes,
 
         @NotNull UUID expectedLocationId,
-        List<MultipartFile> photos) {}
+
+        @ArraySchema(
+                maxItems = 3,
+                arraySchema = @Schema(description = "Object keys from the photo slots, uploaded already."))
+        List<String> photoKeys) {}

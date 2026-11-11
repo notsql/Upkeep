@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -36,10 +35,6 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest(
         properties = {
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
-            "app.r2.endpoint=",
-            "app.r2.access-id=",
-            "app.r2.secret-access-key=",
-            "app.r2.bucket-name="
         })
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
@@ -158,12 +153,13 @@ class InspectionListIntegrationTests {
     }
 
     ResultActions record(UUID asset, UUID location, String outcome) throws Exception {
-        return mvc.perform(multipart("/estates/" + estateId + "/assets/" + asset + "/inspections")
-                .param("expectedLocationId", location.toString())
-                .param("outcome", outcome)
-                .param("inspectedOn", TODAY.toString())
-                .param("notes", "FAIL".equals(outcome) ? "Not working" : "")
-                .with(jwt().jwt(j -> j.subject("owner"))));
+        return mvc.perform(
+                StoredUploadSubmission.inspection("/estates/" + estateId + "/assets/" + asset + "/inspections", null)
+                        .param("expectedLocationId", location.toString())
+                        .param("outcome", outcome)
+                        .param("inspectedOn", TODAY.toString())
+                        .param("notes", "FAIL".equals(outcome) ? "Not working" : "")
+                        .with(jwt().jwt(j -> j.subject("owner"))));
     }
 
     int checks() {

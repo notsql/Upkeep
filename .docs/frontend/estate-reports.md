@@ -12,7 +12,7 @@ shared Description and Images sections. Estate detail opts into Updated and
 supplies Change location only when permitted. Route-specific hooks, links,
 filters and pagination remain in the estate routes. The adjacent
 `-components/private-report-image.tsx` wraps the responder image query and
-delegates blob presentation and URL cleanup to `ReportImage`, supplying the
+passes the signed link's `url` to `ReportImage`, supplying the
 existing "Loading image…" status.
 
 Routes are folder-based under `apps/web/src/routes/_auth/estates/$estateId/reports/`.
@@ -111,8 +111,8 @@ Detail/list and access refetch on focus. Successful correction updates detail
 from the server response, invalidates the estate's report lists and affected
 detail, and invalidates current-user personal report queries (including when the
 responder is also the submitter). Other sessions observe corrections on refetch.
-Session changes cancel/remove old-user queries. Blob URLs are revoked when image
-data, identity or component lifetime changes; image requests use responder URLs.
+Session changes cancel/remove old-user queries. Image queries return a five-minute signed link and refetch 30 s before it expires;
+image requests use responder URLs.
 
 Fault reports appears in desktop/contextual estate navigation for Manager/Crew/custom report readers,
 including inactive-estate reads. Crew-only accounts land on assigned reports.
