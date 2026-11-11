@@ -1,7 +1,9 @@
 package com.proj.server.notification;
 
+import com.proj.server.anomaly.AnomalyModel;
 import com.proj.server.asset.AssetCondition;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,10 +14,13 @@ import org.springframework.stereotype.Service;
 public class AnomalyAlerts {
     private final NotificationRepository repository;
     private final NotificationSettingsService settings;
+    private final ApplicationEventPublisher events;
 
-    public AnomalyAlerts(NotificationRepository repository, NotificationSettingsService settings) {
+    public AnomalyAlerts(
+            NotificationRepository repository, NotificationSettingsService settings, ApplicationEventPublisher events) {
         this.repository = repository;
         this.settings = settings;
+        this.events = events;
     }
 
     /** A batch whose longest abnormal run is too short: the pump is back to normal. */
@@ -23,16 +28,24 @@ public class AnomalyAlerts {
         repository.resolveOpen(assetId, NotificationType.ANOMALY);
     }
 
-    /** A batch with a long enough abnormal run; it raises or updates an alert only when it qualifies. */
+    /**
+     * A batch with a long enough abnormal run; it raises or updates an alert only when it reaches the model's
+     * threshold and the estate's switch is on. A newly raised alert is announced for email after commit.
+     */
     public void abnormal(UUID estateId, UUID assetId, AbnormalRun run) {
-        var threshold = settings.forEstate(estateId).anomalyScoreThreshold().doubleValue();
-        if (run.suspect() || run.medianScore() < threshold) {
+        if (run.suspect()
+                || run.medianScore() < AnomalyModel.DECISION_THRESHOLD
+                || !settings.forEstate(estateId).anomalyEnabled()) {
             return;
         }
         var summary = summary(run.condition());
         var open = repository.lockOpen(assetId, NotificationType.ANOMALY);
-        if (open.isEmpty() && repository.insertAnomaly(estateId, assetId, summary, run)) {
-            return;
+        if (open.isEmpty()) {
+            var raised = repository.insertAnomaly(estateId, assetId, summary, run);
+            if (raised.isPresent()) {
+                events.publishEvent(new AnomalyAlertRaised(raised.get(), estateId, assetId));
+                return;
+            }
         }
         // Either already open, or another check opened it between the lock and the insert.
         var id = open.orElseGet(

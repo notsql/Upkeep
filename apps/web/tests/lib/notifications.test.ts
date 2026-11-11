@@ -60,14 +60,20 @@ function ReadAll() {
 function Settings() {
   const settings = useNotificationSettings("e-1");
   return settings.data
-    ? createElement("output", null, String(settings.data.serviceLeadDays))
+    ? createElement(
+        "output",
+        null,
+        settings.data.serviceDueEnabled ? "on" : "off"
+      )
     : null;
 }
 
 const SAVED = {
-  anomalyScoreThreshold: 0.8,
-  serviceLeadDays: 7,
-  repairLeadDays: 60,
+  anomalyEnabled: true,
+  serviceDueEnabled: true,
+  repairPredictedEnabled: false,
+  checkRequestedEnabled: true,
+  checkFailedEnabled: true,
 } as const;
 
 function SaveSettings() {
@@ -163,11 +169,11 @@ describe("notification settings hooks", () => {
 
   it("loads an estate's settings under the user's key", async () => {
     vi.mocked(api.GET).mockResolvedValue({
-      data: { ...SAVED, serviceLeadDays: 14 },
+      data: { ...SAVED, serviceDueEnabled: false },
       response: new Response(),
     } as never);
     const { queryClient } = renderWithProviders(createElement(Settings));
-    await screen.findByText("14");
+    await screen.findByText("off");
     expect(api.GET).toHaveBeenCalledWith(
       "/estates/{estateId}/notification-settings",
       { params: { path: { estateId: "e-1" } } }

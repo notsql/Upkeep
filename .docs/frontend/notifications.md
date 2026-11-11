@@ -72,11 +72,24 @@ renders `-components/notification-settings-page/notification-settings-page.tsx` 
   then `EstateSettingsViews` (`components/settings/estate-settings-views.tsx`): a `SubNav`
   `nav aria-label="Settings views"` with **Details** (`/edit`, `canOpenEstateSettings`) and
   **Notifications** (this page), each shown only to those who can open it; hidden when empty.
-- A form straight on the page (no card): "How sure before we warn you (%)" whole-number input (51-100, saved as 0.51-1.00), "Days of notice
-  before a service is due" number input (0-365), "Notice before an expected repair" `Select` (30/60/90 days),
-  each with a `FieldDescription`; invalid values show a `FieldError` and set `aria-invalid`.
-  **Save settings** shows "Settings saved." (`role="status"`); a refused save shows a destructive
-  `Alert`. An inactive estate shows a warning `Alert` and disables the form.
+- A form straight on the page (no card): the helper line "Choose which messages this estate's team
+  gets. All are on to start with.", then a `FieldGroup` of one horizontal `Field` per type, each a
+  `FieldLabel` and `FieldDescription` beside a shadcn `Switch` (`@proj/ui/components/switch`,
+  `role="switch"`, named by its label via `aria-labelledby`, described by the helper text):
+
+  | Switch (field) | Label | Helper text |
+  | --- | --- | --- |
+  | `anomalyEnabled` | Unusual readings | Tell us when a sensor shows something out of the ordinary. |
+  | `serviceDueEnabled` | Service due | Remind us 90, 60, 30 and 14 days before a service is due. |
+  | `repairPredictedEnabled` | Expected repair | Warn us when something is likely to need repair in the next 90, 60 or 30 days. |
+  | `checkRequestedEnabled` | Check requested | Tell a staff member when they are asked to check something. |
+  | `checkFailedEnabled` | Check failed | Tell managers when a check finds a problem. |
+
+  **Save settings** sends every switch and shows "Settings saved." (`role="status"`); a refused save
+  shows a destructive `Alert`. An inactive estate shows a warning `Alert` and disables the switches
+  and the button. There is no confidence percentage and no lead-time field (decision 0052).
+- Notification list items show the server `summary`, which already names the reminder milestone in
+  words ("Service due in 30 days (on 12 Dec 2026)"); the raw `milestoneDays` is never shown.
 
 ## Data (`src/lib/notifications.ts`)
 

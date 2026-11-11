@@ -3,6 +3,7 @@ package com.proj.server.inspectionlist;
 import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Assetinspectionresult.ASSETINSPECTIONRESULT;
 import static com.proj.server.db.tables.Estate.ESTATE;
+import static com.proj.server.db.tables.Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Inspectioncheck.INSPECTIONCHECK;
 import static com.proj.server.db.tables.Inspectionlistrun.INSPECTIONLISTRUN;
@@ -28,6 +29,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record1;
+import org.jooq.SelectConditionStep;
 import org.jooq.impl.DSL;
 import org.springframework.stereotype.Repository;
 
@@ -238,27 +242,52 @@ public class InspectionListRepository {
         return id;
     }
 
-    /** Tells the one person sent to inspect; nobody else sees it. */
+    /** Tells the one person sent to inspect; nobody else sees it. Nothing when the estate switched it off. */
     void notifyAssignee(UUID estateId, UUID assetId, String assigneeId, String summary) {
-        db.insertInto(NOTIFICATION)
-                .set(NOTIFICATION.ID, UUID.randomUUID())
-                .set(NOTIFICATION.ESTATEID, estateId)
-                .set(NOTIFICATION.ASSETID, assetId)
-                .set(NOTIFICATION.TYPE, NotificationType.CHECK_REQUESTED.name())
-                .set(NOTIFICATION.SUMMARY, summary)
-                .set(NOTIFICATION.RECIPIENTUSERID, assigneeId)
+        db.insertInto(
+                        NOTIFICATION,
+                        NOTIFICATION.ID,
+                        NOTIFICATION.ESTATEID,
+                        NOTIFICATION.ASSETID,
+                        NOTIFICATION.TYPE,
+                        NOTIFICATION.SUMMARY,
+                        NOTIFICATION.RECIPIENTUSERID)
+                .select(DSL.select(
+                                DSL.val(UUID.randomUUID()),
+                                DSL.val(estateId),
+                                DSL.val(assetId),
+                                DSL.val(NotificationType.CHECK_REQUESTED.name()),
+                                DSL.val(summary),
+                                DSL.val(assigneeId))
+                        .whereNotExists(switchedOff(estateId, ESTATENOTIFICATIONSETTINGS.CHECKREQUESTEDENABLED)))
                 .execute();
     }
 
-    /** Tells the estate's managers an inspection failed. */
+    /** Tells the estate's managers an inspection failed. Nothing when the estate switched it off. */
     public void notifyFailed(UUID estateId, UUID assetId, UUID resultId, String summary) {
-        db.insertInto(NOTIFICATION)
-                .set(NOTIFICATION.ID, UUID.randomUUID())
-                .set(NOTIFICATION.ESTATEID, estateId)
-                .set(NOTIFICATION.ASSETID, assetId)
-                .set(NOTIFICATION.TYPE, NotificationType.CHECK_FAILED.name())
-                .set(NOTIFICATION.SUMMARY, summary)
-                .set(NOTIFICATION.INSPECTIONRESULTID, resultId)
+        db.insertInto(
+                        NOTIFICATION,
+                        NOTIFICATION.ID,
+                        NOTIFICATION.ESTATEID,
+                        NOTIFICATION.ASSETID,
+                        NOTIFICATION.TYPE,
+                        NOTIFICATION.SUMMARY,
+                        NOTIFICATION.INSPECTIONRESULTID)
+                .select(DSL.select(
+                                DSL.val(UUID.randomUUID()),
+                                DSL.val(estateId),
+                                DSL.val(assetId),
+                                DSL.val(NotificationType.CHECK_FAILED.name()),
+                                DSL.val(summary),
+                                DSL.val(resultId))
+                        .whereNotExists(switchedOff(estateId, ESTATENOTIFICATIONSETTINGS.CHECKFAILEDENABLED)))
                 .execute();
+    }
+
+    /** The estate's saved settings row, if it turns this switch off. No row means every switch is on. */
+    private SelectConditionStep<Record1<Integer>> switchedOff(UUID estateId, Field<Boolean> enabled) {
+        return DSL.selectOne()
+                .from(ESTATENOTIFICATIONSETTINGS)
+                .where(ESTATENOTIFICATIONSETTINGS.ESTATEID.eq(estateId).and(enabled.isFalse()));
     }
 }

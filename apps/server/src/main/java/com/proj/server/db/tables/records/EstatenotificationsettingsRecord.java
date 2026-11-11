@@ -112,6 +112,84 @@ public class EstatenotificationsettingsRecord extends UpdatableRecordImpl<Estate
         return (String) get(5);
     }
 
+    /**
+     * Setter for <code>public.EstateNotificationSettings.anomalyEnabled</code>.
+     */
+    public void setAnomalyenabled(Boolean value) {
+        set(6, value);
+    }
+
+    /**
+     * Getter for <code>public.EstateNotificationSettings.anomalyEnabled</code>.
+     */
+    public Boolean getAnomalyenabled() {
+        return (Boolean) get(6);
+    }
+
+    /**
+     * Setter for
+     * <code>public.EstateNotificationSettings.checkFailedEnabled</code>.
+     */
+    public void setCheckfailedenabled(Boolean value) {
+        set(7, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.EstateNotificationSettings.checkFailedEnabled</code>.
+     */
+    public Boolean getCheckfailedenabled() {
+        return (Boolean) get(7);
+    }
+
+    /**
+     * Setter for
+     * <code>public.EstateNotificationSettings.checkRequestedEnabled</code>.
+     */
+    public void setCheckrequestedenabled(Boolean value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.EstateNotificationSettings.checkRequestedEnabled</code>.
+     */
+    public Boolean getCheckrequestedenabled() {
+        return (Boolean) get(8);
+    }
+
+    /**
+     * Setter for
+     * <code>public.EstateNotificationSettings.repairPredictedEnabled</code>.
+     */
+    public void setRepairpredictedenabled(Boolean value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.EstateNotificationSettings.repairPredictedEnabled</code>.
+     */
+    public Boolean getRepairpredictedenabled() {
+        return (Boolean) get(9);
+    }
+
+    /**
+     * Setter for
+     * <code>public.EstateNotificationSettings.serviceDueEnabled</code>.
+     */
+    public void setServicedueenabled(Boolean value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.EstateNotificationSettings.serviceDueEnabled</code>.
+     */
+    public Boolean getServicedueenabled() {
+        return (Boolean) get(10);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -135,7 +213,7 @@ public class EstatenotificationsettingsRecord extends UpdatableRecordImpl<Estate
     /**
      * Create a detached, initialised EstatenotificationsettingsRecord
      */
-    public EstatenotificationsettingsRecord(UUID estateid, BigDecimal anomalyscorethreshold, Integer serviceleaddays, Integer repairleaddays, OffsetDateTime updatedat, String updatedbyuserid) {
+    public EstatenotificationsettingsRecord(UUID estateid, BigDecimal anomalyscorethreshold, Integer serviceleaddays, Integer repairleaddays, OffsetDateTime updatedat, String updatedbyuserid, Boolean anomalyenabled, Boolean checkfailedenabled, Boolean checkrequestedenabled, Boolean repairpredictedenabled, Boolean servicedueenabled) {
         super(Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS);
 
         setEstateid(estateid);
@@ -144,6 +222,11 @@ public class EstatenotificationsettingsRecord extends UpdatableRecordImpl<Estate
         setRepairleaddays(repairleaddays);
         setUpdatedat(updatedat);
         setUpdatedbyuserid(updatedbyuserid);
+        setAnomalyenabled(anomalyenabled);
+        setCheckfailedenabled(checkfailedenabled);
+        setCheckrequestedenabled(checkrequestedenabled);
+        setRepairpredictedenabled(repairpredictedenabled);
+        setServicedueenabled(servicedueenabled);
         resetTouchedOnNotNull();
     }
 }

@@ -565,7 +565,7 @@
             }
           },
           "400": {
-            "description": "A setting is missing or out of range",
+            "description": "A switch is missing",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -12288,46 +12288,35 @@
       "NotificationSettingsRequest": {
         "type": "object",
         "properties": {
-          "anomalyScoreThreshold": {
-            "type": "number",
-            "description": "0.51 to 1.00, at most two decimal places",
-            "maximum": 1.0,
-            "minimum": 0.51
-          },
-          "serviceLeadDays": {
-            "type": "integer",
-            "format": "int32",
-            "description": "Whole days, 0 to 365",
-            "maximum": 365,
-            "minimum": 0
-          },
-          "repairLeadDays": {
-            "type": "integer",
-            "format": "int32",
-            "description": "30, 60 or 90"
-          }
+          "anomalyEnabled": { "type": "boolean" },
+          "serviceDueEnabled": { "type": "boolean" },
+          "repairPredictedEnabled": { "type": "boolean" },
+          "checkRequestedEnabled": { "type": "boolean" },
+          "checkFailedEnabled": { "type": "boolean" }
         },
         "required": [
-          "anomalyScoreThreshold",
-          "repairLeadDays",
-          "serviceLeadDays"
+          "anomalyEnabled",
+          "checkFailedEnabled",
+          "checkRequestedEnabled",
+          "repairPredictedEnabled",
+          "serviceDueEnabled"
         ]
       },
       "NotificationSettingsResponse": {
         "type": "object",
         "properties": {
-          "anomalyScoreThreshold": { "type": "number" },
-          "serviceLeadDays": { "type": "integer", "format": "int32" },
-          "repairLeadDays": {
-            "type": "integer",
-            "format": "int32",
-            "description": "30, 60 or 90"
-          }
+          "anomalyEnabled": { "type": "boolean" },
+          "serviceDueEnabled": { "type": "boolean" },
+          "repairPredictedEnabled": { "type": "boolean" },
+          "checkRequestedEnabled": { "type": "boolean" },
+          "checkFailedEnabled": { "type": "boolean" }
         },
         "required": [
-          "anomalyScoreThreshold",
-          "repairLeadDays",
-          "serviceLeadDays"
+          "anomalyEnabled",
+          "checkFailedEnabled",
+          "checkRequestedEnabled",
+          "repairPredictedEnabled",
+          "serviceDueEnabled"
         ]
       },
       "UpdateEstateRoleRequest": {
@@ -12853,6 +12842,11 @@
             "type": ["string", "null"],
             "format": "uuid",
             "description": "The failed inspection result; set only for CHECK_FAILED"
+          },
+          "milestoneDays": {
+            "type": ["integer", "null"],
+            "format": "int32",
+            "description": "The reminder milestone in days (90, 60, 30, or 14 for SERVICE_DUE); set only for SERVICE_DUE and REPAIR_PREDICTED"
           }
         },
         "required": [
@@ -12865,6 +12859,7 @@
           "estateName",
           "id",
           "inspectionResultId",
+          "milestoneDays",
           "read",
           "repairPredicted",
           "resolvedAt",

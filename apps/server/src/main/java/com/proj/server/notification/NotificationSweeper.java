@@ -25,7 +25,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Raises and resolves date-driven notifications once per estate per Singapore day, on the first read of a manager's
+ * Raises and resolves date-driven reminders once per estate per Singapore day, on the first read of a manager's
  * notifications (spec notifications.md, Decision 3). Each estate is swept in a savepoint, so a failing sweep is
  * rolled back, retried on the next read, and never fails the read itself.
  */
@@ -78,18 +78,19 @@ public class NotificationSweeper {
 
     private void sweepEstate(UUID estateId, LocalDate today) {
         var assets = repository.activeAssets(estateId);
-        var estateSettings = settings.forEstate(estateId);
+        var switches = settings.forEstate(estateId);
         var busy = repository.assetsWithOpenWorkOrders(estateId);
-        sweepServiceDue(estateId, today, assets, estateSettings.serviceLeadDays(), busy);
-        sweepRepairPredicted(estateId, today, assets, estateSettings.repairLeadDays(), busy);
+        sweepServiceDue(estateId, today, assets, switches.serviceDueEnabled(), busy);
+        sweepRepairPredicted(estateId, today, assets, switches.repairPredictedEnabled(), busy);
     }
 
-    /** ID-103: the asset's interval due date is within the lead days. */
+    /** ID-103: one reminder per milestone (90, 60, 30, 14 days) before the asset's interval due date. */
     private void sweepServiceDue(
-            UUID estateId, LocalDate today, List<AssetRecord> assets, int leadDays, Set<UUID> busy) {
+            UUID estateId, LocalDate today, List<AssetRecord> assets, boolean enabled, Set<UUID> busy) {
         var effective = intervals.effectiveForEstate(estateId, assets);
         var inspected = repository.lastInspections(estateId);
-        var open = repository.openAssets(estateId, NotificationType.SERVICE_DUE);
+        var open = repository.openReminders(estateId, NotificationType.SERVICE_DUE);
+        var fired = repository.firedServiceMilestones(estateId);
         var qualifying = new HashSet<UUID>();
         for (var asset : assets) {
             var interval = effective.get(asset.getId());
@@ -98,23 +99,40 @@ public class NotificationSweeper {
                 continue;
             }
             var dueOn = interval.interval().after(base);
-            if (today.isBefore(dueOn.minusDays(leadDays))) {
+            var milestone = NotificationMilestones.serviceDue(dueOn, today);
+            if (milestone == null) {
                 continue;
             }
             qualifying.add(asset.getId());
-            if (!open.contains(asset.getId())) {
-                repository.insertServiceDue(estateId, asset.getId(), serviceSummary(dueOn, today), dueOn, interval);
+            var current = open.get(asset.getId());
+            var step = NotificationMilestones.serviceStep(
+                    current, fired.contains(new ServiceMilestone(asset.getId(), dueOn, milestone)), milestone, enabled);
+            switch (step) {
+                case BACKFILL -> repository.markMilestone(current.id(), milestone);
+                case RAISE -> {
+                    if (current != null) {
+                        repository.resolve(current.id());
+                    }
+                    repository.insertServiceDue(
+                            estateId,
+                            asset.getId(),
+                            serviceSummary(dueOn, today, milestone),
+                            dueOn,
+                            interval,
+                            milestone);
+                }
+                case KEEP -> {}
             }
         }
         repository.resolveExcept(estateId, NotificationType.SERVICE_DUE, qualifying);
     }
 
-    /** ID-101: the breakdown forecast (ID-32) falls within the repair lead window. */
+    /** ID-101: one reminder per forecast window (90, 60, 30 days), only ever moving nearer. */
     private void sweepRepairPredicted(
-            UUID estateId, LocalDate today, List<AssetRecord> assets, int leadDays, Set<UUID> busy) {
+            UUID estateId, LocalDate today, List<AssetRecord> assets, boolean enabled, Set<UUID> busy) {
         var history =
                 events.listForEstate(estateId).stream().collect(Collectors.groupingBy(AsseteventRecord::getAssetid));
-        var open = repository.openAssets(estateId, NotificationType.REPAIR_PREDICTED);
+        var open = repository.openReminders(estateId, NotificationType.REPAIR_PREDICTED);
         var qualifying = new HashSet<UUID>();
         for (var asset : assets) {
             if (!FailureRiskConstants.SILENT_FAILURE_CATEGORIES.contains(asset.getCategory())
@@ -128,14 +146,22 @@ public class NotificationSweeper {
                             .toList(),
                     today);
             var window = windowDays(forecast);
-            if (window == null || window > leadDays) {
+            if (window == null) {
                 continue;
             }
             qualifying.add(asset.getId());
-            if (!open.contains(asset.getId())) {
-                var probability = probability(forecast);
-                repository.insertRepairPredicted(
-                        estateId, asset.getId(), repairSummary(window, probability), forecast, probability);
+            var current = open.get(asset.getId());
+            switch (NotificationMilestones.repairStep(current, window, enabled)) {
+                case BACKFILL -> repository.markMilestone(current.id(), window);
+                case RAISE -> {
+                    if (current != null) {
+                        repository.resolve(current.id());
+                    }
+                    var probability = probability(forecast);
+                    repository.insertRepairPredicted(
+                            estateId, asset.getId(), repairSummary(window, probability), forecast, probability, window);
+                }
+                case KEEP -> {}
             }
         }
         repository.resolveExcept(estateId, NotificationType.REPAIR_PREDICTED, qualifying);
@@ -169,9 +195,16 @@ public class NotificationSweeper {
         return "Repair likely within " + window + " days (" + Math.round(probability * 100) + "% chance)";
     }
 
-    static String serviceSummary(LocalDate dueOn, LocalDate today) {
-        return dueOn.isBefore(today)
-                ? "Service overdue since " + DATE.format(dueOn)
-                : "Service due on " + DATE.format(dueOn);
+    static String serviceSummary(LocalDate dueOn, LocalDate today, int milestone) {
+        if (dueOn.isBefore(today)) {
+            return "Service overdue since " + DATE.format(dueOn);
+        }
+        if (milestone <= 14) {
+            return "Service due on " + DATE.format(dueOn);
+        }
+        return "Service due in " + milestone + " days (on " + DATE.format(dueOn) + ")";
     }
+
+    /** A service reminder already raised (open or resolved) for one asset, due date and milestone. */
+    record ServiceMilestone(UUID assetId, LocalDate dueOn, int milestoneDays) {}
 }

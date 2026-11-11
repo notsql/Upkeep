@@ -12,7 +12,8 @@ Cloud Run service account needs no keys: it holds `roles/storage.objectAdmin`
 on the bucket and Token Creator on itself so it can sign through IAM
 `signBlob`. A blank `GCS_BUCKET_NAME` leaves storage off: slots, file-carrying
 creates and links answer 503, deletes and sweeps do nothing. Signing failures
-are 503 too, never 500.
+are 503 too, never 500. Locally, a non-blank `GCS_CREDENTIALS_JSON` (inline
+service-account key, dev only) replaces ADC so signing works without impersonation.
 
 File bytes no longer pass through Spring on the way in or out. Uploads take
 three steps: the browser asks Spring for a slot (same permission checks as the

@@ -149,11 +149,10 @@ class AnomalyAlertIntegrationTests {
         return alerts.getFirst();
     }
 
-    void threshold(String value) {
+    void anomalySwitchedOff() {
         db.execute(
-                "insert into \"EstateNotificationSettings\" (\"estateId\", \"anomalyScoreThreshold\", \"serviceLeadDays\", \"repairLeadDays\", \"updatedByUserId\") values (?, ?::numeric, 14, 30, 'owner')",
-                estateId,
-                value);
+                "insert into \"EstateNotificationSettings\" (\"estateId\", \"anomalyEnabled\", \"updatedByUserId\") values (?, false, 'owner')",
+                estateId);
     }
 
     static double number(Record record, String field) {
@@ -215,15 +214,22 @@ class AnomalyAlertIntegrationTests {
     }
 
     @Test
-    void aRunBelowTheEstatesThresholdRaisesNothing() throws Exception {
-        threshold("0.90");
-        score(scores(0, 10, 0.89, 0));
+    void aRunBelowTheModelThresholdRaisesNothing() throws Exception {
+        score(scores(0, 10, 0.50, 0));
         check(batch(START, 10)).andExpect(status().isOk());
         assertEquals(0, alerts().size());
 
-        score(scores(0, 10, 0.90, 0));
+        score(scores(0, 10, 0.51, 0));
         check(batch(START.plusSeconds(60), 10));
         assertEquals(1, alerts().size());
+    }
+
+    @Test
+    void anEstateWithUnusualReadingsSwitchedOffGetsNoAlert() throws Exception {
+        anomalySwitchedOff();
+        score(scores(0, 10, 0.99, 0));
+        check(batch(START, 10)).andExpect(status().isOk());
+        assertEquals(0, alerts().size());
     }
 
     @Test
@@ -319,10 +325,7 @@ class AnomalyAlertIntegrationTests {
         score(scores(0, 10, 0.95, 0));
         check(batch(START, 10));
         var before = alert();
-        threshold("0.96");
 
-        score(scores(0, 10, 0.7, 0));
-        check(batch(START.plusSeconds(60), 10));
         score(scores(5, 10, 0.99, 5));
         check(batch(START.plusSeconds(120), 20, 7));
 

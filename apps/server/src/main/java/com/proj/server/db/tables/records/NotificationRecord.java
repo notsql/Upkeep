@@ -429,6 +429,20 @@ public class NotificationRecord extends UpdatableRecordImpl<NotificationRecord> 
         return (String) get(28);
     }
 
+    /**
+     * Setter for <code>public.Notification.milestoneDays</code>.
+     */
+    public void setMilestonedays(Integer value) {
+        set(29, value);
+    }
+
+    /**
+     * Getter for <code>public.Notification.milestoneDays</code>.
+     */
+    public Integer getMilestonedays() {
+        return (Integer) get(29);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -452,7 +466,7 @@ public class NotificationRecord extends UpdatableRecordImpl<NotificationRecord> 
     /**
      * Create a detached, initialised NotificationRecord
      */
-    public NotificationRecord(UUID id, UUID estateid, UUID assetid, String type, String summary, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime resolvedat, String condition, BigDecimal medianscore, BigDecimal maxscore, OffsetDateTime firstdetectedat, OffsetDateTime lastdetectedat, String explanation, String response, String respondedbyuserid, String respondedbyname, OffsetDateTime respondedat, String responsereason, LocalDate dueon, Integer intervalvalue, String intervalunit, String intervalsource, String recommendedtimeframe, BigDecimal probability, String basis, Integer failuresobserved, UUID inspectionresultid, String recipientuserid) {
+    public NotificationRecord(UUID id, UUID estateid, UUID assetid, String type, String summary, OffsetDateTime createdat, OffsetDateTime updatedat, OffsetDateTime resolvedat, String condition, BigDecimal medianscore, BigDecimal maxscore, OffsetDateTime firstdetectedat, OffsetDateTime lastdetectedat, String explanation, String response, String respondedbyuserid, String respondedbyname, OffsetDateTime respondedat, String responsereason, LocalDate dueon, Integer intervalvalue, String intervalunit, String intervalsource, String recommendedtimeframe, BigDecimal probability, String basis, Integer failuresobserved, UUID inspectionresultid, String recipientuserid, Integer milestonedays) {
         super(Notification.NOTIFICATION);
 
         setId(id);
@@ -484,6 +498,7 @@ public class NotificationRecord extends UpdatableRecordImpl<NotificationRecord> 
         setFailuresobserved(failuresobserved);
         setInspectionresultid(inspectionresultid);
         setRecipientuserid(recipientuserid);
+        setMilestonedays(milestonedays);
         resetTouchedOnNotNull();
     }
 }

@@ -47,3 +47,4 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0049 - Fault classification uses a trained water leak model](0049-fault-classification-uses-a-trained-water-leak-model.md)
 - [0050 - Object storage moves to GCS with signed URLs](0050-object-storage-moves-to-gcs-with-signed-urls.md)
 - [0051 - Transactional email goes through Resend](0051-transactional-email-via-resend.md)
+- [0052 - Notification switches and fixed milestone reminders](0052-notification-switches-and-milestone-reminders.md)

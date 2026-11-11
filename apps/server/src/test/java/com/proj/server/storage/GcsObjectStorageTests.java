@@ -6,19 +6,23 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.HttpMethod;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageException;
 import java.net.URI;
+import java.security.KeyPairGenerator;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -114,6 +118,32 @@ class GcsObjectStorageTests {
         assertThrows(StorageUnavailableException.class, () -> storage.metadata("down"));
     }
 
+    @Test
+    void anInlineServiceAccountKeyBecomesTheClientCredentials() throws Exception {
+        var key = KeyPairGenerator.getInstance("RSA");
+        key.initialize(2048);
+        var pem = "-----BEGIN PRIVATE KEY-----\n"
+                + Base64.getMimeEncoder(64, "\n".getBytes())
+                        .encodeToString(key.generateKeyPair().getPrivate().getEncoded())
+                + "\n-----END PRIVATE KEY-----\n";
+        var json = "\n  {\"type\": \"service_account\", \"project_id\": \"p\", \"private_key_id\": \"k\","
+                + " \"private_key\": \"" + pem.replace("\n", "\\n") + "\","
+                + " \"client_email\": \"sa@p.iam.gserviceaccount.com\", \"client_id\": \"1\","
+                + " \"token_uri\": \"https://oauth2.googleapis.com/token\"}\n";
+
+        var credentials = GcsObjectStorage.options("", json).getCredentials();
+
+        var account = assertInstanceOf(ServiceAccountCredentials.class, credentials);
+        assertEquals("sa@p.iam.gserviceaccount.com", account.getClientEmail());
+    }
+
+    @Test
+    void aMalformedInlineKeyAnswersUnavailableInsteadOfFailingStartup() {
+        var broken = new GcsObjectStorage("bucket", "", "{not json", clock);
+
+        assertThrows(StorageUnavailableException.class, () -> broken.get("documents/a/b"));
+    }
+
     /** SignUrlOption has no equals, so compare each option's name and value. */
     private static List<String> described(List<Storage.SignUrlOption[]> calls) {
         return calls.stream()
@@ -128,7 +158,10 @@ class GcsObjectStorageTests {
             var value = Storage.SignUrlOption.class.getDeclaredMethod("getValue");
             name.setAccessible(true);
             value.setAccessible(true);
-            return name.invoke(option) + "=" + value.invoke(option);
+            var raw = value.invoke(option);
+            // Map.of iterates in a per-JVM random order, so compare map values by sorted key.
+            var normalised = raw instanceof Map<?, ?> map ? new TreeMap<>(map) : raw;
+            return name.invoke(option) + "=" + normalised;
         } catch (ReflectiveOperationException error) {
             throw new IllegalStateException(error);
         }

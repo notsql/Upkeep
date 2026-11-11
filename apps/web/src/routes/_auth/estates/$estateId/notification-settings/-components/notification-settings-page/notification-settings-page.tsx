@@ -11,7 +11,7 @@ import { useEstate } from "@/lib/estates";
 import { useNotificationSettings } from "@/lib/notifications";
 import { NotificationSettingsForm } from "@/routes/_auth/estates/$estateId/notification-settings/-components/notification-settings-page/notification-settings-form";
 
-/** An estate's notification thresholds (spec notifications.md, "Notification settings"), the Notifications tab of Estate settings. */
+/** An estate's notification switches (spec notification-switches-and-milestone-reminders.md), the Notifications tab of Estate settings. */
 export function NotificationSettingsPage({ estateId }: { estateId: string }) {
   const settings = useNotificationSettings(estateId);
   const estate = useEstate(estateId);
@@ -21,7 +21,7 @@ export function NotificationSettingsPage({ estateId }: { estateId: string }) {
   return (
     <FormPage
       breadcrumbs={[]}
-      description="When we warn this estate's managers about unusual readings, services and expected repairs"
+      description="Which messages this estate's team gets"
       icon={Building2}
       title={SETTINGS_TITLE}
     >

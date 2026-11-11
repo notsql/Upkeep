@@ -89,7 +89,10 @@ object. An auth or inactivity failure before the checks leaves the object for
 the hourly sweep. Duplicate filenames create separate IDs. Storage is configured
 by `app.storage.bucket` (`GCS_BUCKET_NAME`) and optional
 `app.storage.project-id` (`GCS_PROJECT_ID`), authenticated by Application
-Default Credentials; the bucket stays private.
+Default Credentials; the bucket stays private. In dev only,
+`app.storage.credentials-json` (`GCS_CREDENTIALS_JSON`, Infisical `/apps/server`)
+holds an inline service-account key that replaces ADC and signs URLs locally;
+prod leaves it unset and uses the Cloud Run identity. A malformed key answers 503.
 
 Deletion locks estate then document and commits `deletedAt`/`deletedByUserId`
 before attempting storage removal. Repeated authorized deletion preserves its first

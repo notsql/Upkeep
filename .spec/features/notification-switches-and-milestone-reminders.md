@@ -1,6 +1,6 @@
 # Notification switches and milestone reminders
 
-**Status:** draft
+**Status:** agreed
 **Owner:** Ong Zheng Kai
 
 Changes the estate notification settings from `.spec/features/notifications.md`

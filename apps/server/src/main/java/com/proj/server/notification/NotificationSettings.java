@@ -1,8 +1,11 @@
 package com.proj.server.notification;
 
-import java.math.BigDecimal;
-
-/** An estate's notification thresholds; {@link #DEFAULTS} when it has saved none. */
-public record NotificationSettings(BigDecimal anomalyScoreThreshold, int serviceLeadDays, int repairLeadDays) {
-    public static final NotificationSettings DEFAULTS = new NotificationSettings(new BigDecimal("0.51"), 14, 30);
+/** An estate's on/off switch per notification type; {@link #DEFAULTS} (all on) when it has saved none. */
+public record NotificationSettings(
+        boolean anomalyEnabled,
+        boolean serviceDueEnabled,
+        boolean repairPredictedEnabled,
+        boolean checkRequestedEnabled,
+        boolean checkFailedEnabled) {
+    public static final NotificationSettings DEFAULTS = new NotificationSettings(true, true, true, true, true);
 }

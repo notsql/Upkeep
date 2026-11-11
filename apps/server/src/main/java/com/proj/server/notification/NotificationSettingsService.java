@@ -2,17 +2,14 @@ package com.proj.server.notification;
 
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Per-estate notification thresholds, editable by the estate's managers. */
+/** Per-estate notification switches, editable by the estate's managers. */
 @Service
 public class NotificationSettingsService {
-    private static final Set<Integer> REPAIR_LEAD_DAYS = Set.of(30, 60, 90);
-
     private final EstateRepository estates;
     private final NotificationSettingsRepository repository;
 
@@ -39,11 +36,7 @@ public class NotificationSettingsService {
             throw new NotificationException(
                     HttpStatus.CONFLICT, "This estate is inactive. Its notification settings cannot be changed.");
         }
-        if (!REPAIR_LEAD_DAYS.contains(request.repairLeadDays())) {
-            throw new NotificationException(HttpStatus.BAD_REQUEST, "repairLeadDays: must be 30, 60 or 90.");
-        }
-        var settings = new NotificationSettings(
-                request.anomalyScoreThreshold(), request.serviceLeadDays(), request.repairLeadDays());
+        var settings = request.settings();
         repository.save(estateId, settings, user);
         repository.forgetSweep(estateId, NotificationDays.today());
         return NotificationSettingsResponse.of(settings);

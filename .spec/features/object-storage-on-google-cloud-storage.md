@@ -82,6 +82,8 @@ Credentials (ADC), with no access keys.
   service-account key file (which signs locally), or the developer runs
   `gcloud auth application-default login` while impersonating a service
   account they hold Token Creator on. Plain user credentials cannot sign.
+  In dev, Infisical's `GCS_CREDENTIALS_JSON` (`app.storage.credentials-json`)
+  carries the key inline and takes precedence over ADC; prod never sets it.
 
 **Server-side reads stay on the port.** `routing/DispatchDeliveryJob` attaches
 report images to contractor work-order emails, and it reads them with

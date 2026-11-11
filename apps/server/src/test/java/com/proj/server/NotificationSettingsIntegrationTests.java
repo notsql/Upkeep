@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Per-estate notification settings (spec notifications.md, "Notification settings"). */
+/** Per-estate notification switches (spec notification-switches-and-milestone-reminders.md). */
 @SpringBootTest(
         properties = {
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
@@ -37,7 +37,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class NotificationSettingsIntegrationTests {
     static final LocalDate TODAY = LocalDate.now(ZoneId.of("Asia/Singapore"));
-    static final String VALID = "{\"anomalyScoreThreshold\":0.75,\"serviceLeadDays\":7,\"repairLeadDays\":60}";
+    static final String VALID =
+            "{\"anomalyEnabled\":false,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":false,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":false}";
 
     @Autowired
     MockMvc mvc;
@@ -85,33 +86,46 @@ class NotificationSettingsIntegrationTests {
     }
 
     @Test
-    void anUnsavedEstateUsesTheDefaults() throws Exception {
+    void anUnsavedEstateHasEverySwitchOn() throws Exception {
         read("owner")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.anomalyScoreThreshold").value(0.51))
-                .andExpect(jsonPath("$.serviceLeadDays").value(14))
-                .andExpect(jsonPath("$.repairLeadDays").value(30));
+                .andExpect(jsonPath("$.anomalyEnabled").value(true))
+                .andExpect(jsonPath("$.serviceDueEnabled").value(true))
+                .andExpect(jsonPath("$.repairPredictedEnabled").value(true))
+                .andExpect(jsonPath("$.checkRequestedEnabled").value(true))
+                .andExpect(jsonPath("$.checkFailedEnabled").value(true))
+                .andExpect(jsonPath("$.anomalyScoreThreshold").doesNotExist())
+                .andExpect(jsonPath("$.serviceLeadDays").doesNotExist())
+                .andExpect(jsonPath("$.repairLeadDays").doesNotExist());
     }
 
     @Test
-    void theOwnerSavesSettings() throws Exception {
+    void theOwnerSavesSwitches() throws Exception {
         save("owner", VALID)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.anomalyScoreThreshold").value(0.75))
-                .andExpect(jsonPath("$.serviceLeadDays").value(7))
-                .andExpect(jsonPath("$.repairLeadDays").value(60));
-        read("owner").andExpect(jsonPath("$.anomalyScoreThreshold").value(0.75));
-        save("owner", "{\"anomalyScoreThreshold\":1,\"serviceLeadDays\":0,\"repairLeadDays\":90}")
+                .andExpect(jsonPath("$.anomalyEnabled").value(false))
+                .andExpect(jsonPath("$.serviceDueEnabled").value(true))
+                .andExpect(jsonPath("$.repairPredictedEnabled").value(false))
+                .andExpect(jsonPath("$.checkRequestedEnabled").value(true))
+                .andExpect(jsonPath("$.checkFailedEnabled").value(false));
+        read("owner")
+                .andExpect(jsonPath("$.anomalyEnabled").value(false))
+                .andExpect(jsonPath("$.checkFailedEnabled").value(false));
+    }
+
+    @Test
+    void oldFieldsAreIgnored() throws Exception {
+        var body = VALID.replace("}", ",\"anomalyScoreThreshold\":0.9,\"serviceLeadDays\":7}");
+        save("owner", body)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.anomalyScoreThreshold").value(1.0))
-                .andExpect(jsonPath("$.serviceLeadDays").value(0));
+                .andExpect(jsonPath("$.serviceLeadDays").doesNotExist());
     }
 
     @Test
     void aManagerCanChangeThem() throws Exception {
         membership("manager", "MANAGER");
         save("manager", VALID).andExpect(status().isOk());
-        read("manager").andExpect(jsonPath("$.repairLeadDays").value(60));
+        read("manager").andExpect(jsonPath("$.repairPredictedEnabled").value(false));
     }
 
     @ParameterizedTest
@@ -132,23 +146,19 @@ class NotificationSettingsIntegrationTests {
     @ParameterizedTest
     @ValueSource(
             strings = {
-                "{\"anomalyScoreThreshold\":0.50,\"serviceLeadDays\":7,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":1.01,\"serviceLeadDays\":7,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.555,\"serviceLeadDays\":7,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.75,\"serviceLeadDays\":-1,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.75,\"serviceLeadDays\":366,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.75,\"serviceLeadDays\":1.5,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.75,\"serviceLeadDays\":7,\"repairLeadDays\":45}",
-                "{\"serviceLeadDays\":7,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.75,\"repairLeadDays\":30}",
-                "{\"anomalyScoreThreshold\":0.75,\"serviceLeadDays\":7}",
+                "{\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkFailedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true}",
+                "{\"anomalyEnabled\":null,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
                 "not json"
             })
-    void rejectsInvalidSettings(String body) throws Exception {
+    void rejectsAMissingSwitch(String body) throws Exception {
         save("owner", body)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").isNotEmpty());
-        read("owner").andExpect(jsonPath("$.serviceLeadDays").value(14));
+        read("owner").andExpect(jsonPath("$.anomalyEnabled").value(true));
     }
 
     @Test

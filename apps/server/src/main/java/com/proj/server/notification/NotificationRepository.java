@@ -172,10 +172,11 @@ public class NotificationRepository {
                 .execute();
     }
 
-    /** False when another open anomaly alert for the asset won the race (partial unique index). */
-    boolean insertAnomaly(UUID estateId, UUID assetId, String summary, AbnormalRun run) {
-        return db.insertInto(NOTIFICATION)
-                        .set(NOTIFICATION.ID, UUID.randomUUID())
+    /** The new alert's ID; empty when another open anomaly alert for the asset won the race (partial unique index). */
+    Optional<UUID> insertAnomaly(UUID estateId, UUID assetId, String summary, AbnormalRun run) {
+        var id = UUID.randomUUID();
+        var inserted = db.insertInto(NOTIFICATION)
+                        .set(NOTIFICATION.ID, id)
                         .set(NOTIFICATION.ESTATEID, estateId)
                         .set(NOTIFICATION.ASSETID, assetId)
                         .set(NOTIFICATION.TYPE, NotificationType.ANOMALY.name())
@@ -190,7 +191,22 @@ public class NotificationRepository {
                         .onConflictDoNothing()
                         .execute()
                 == 1;
+        return inserted ? Optional.of(id) : Optional.empty();
     }
+
+    /** The estate and asset names an alert email needs; empty when the notification is gone. */
+    Optional<AlertNames> alertNames(UUID notificationId) {
+        return db.select(ESTATE.NAME, ASSET.NAME)
+                .from(NOTIFICATION)
+                .join(ESTATE)
+                .on(ESTATE.ID.eq(NOTIFICATION.ESTATEID))
+                .join(ASSET)
+                .on(ASSET.ID.eq(NOTIFICATION.ASSETID))
+                .where(NOTIFICATION.ID.eq(notificationId))
+                .fetchOptional(row -> new AlertNames(row.get(ESTATE.NAME), row.get(ASSET.NAME)));
+    }
+
+    record AlertNames(String estateName, String assetName) {}
 
     /** Latest scores and explanation; the first-detected and creation times stay, last-detected only moves forward. */
     void updateAnomaly(UUID id, String summary, AbnormalRun run) {
@@ -270,7 +286,8 @@ public class NotificationRepository {
                                 FailureRiskBasis.valueOf(n.getBasis()),
                                 n.getFailuresobserved())
                         : null,
-                n.getInspectionresultid());
+                n.getInspectionresultid(),
+                n.getMilestonedays());
     }
 
     private static double number(BigDecimal value) {

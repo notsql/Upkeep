@@ -21,22 +21,30 @@ public class NotificationSettingsRepository {
         return db.selectFrom(ESTATENOTIFICATIONSETTINGS)
                 .where(ESTATENOTIFICATIONSETTINGS.ESTATEID.eq(estateId))
                 .fetchOptional(row -> new NotificationSettings(
-                        row.getAnomalyscorethreshold(), row.getServiceleaddays(), row.getRepairleaddays()))
+                        row.getAnomalyenabled(),
+                        row.getServicedueenabled(),
+                        row.getRepairpredictedenabled(),
+                        row.getCheckrequestedenabled(),
+                        row.getCheckfailedenabled()))
                 .orElse(NotificationSettings.DEFAULTS);
     }
 
     void save(UUID estateId, NotificationSettings settings, String user) {
         db.insertInto(ESTATENOTIFICATIONSETTINGS)
                 .set(ESTATENOTIFICATIONSETTINGS.ESTATEID, estateId)
-                .set(ESTATENOTIFICATIONSETTINGS.ANOMALYSCORETHRESHOLD, settings.anomalyScoreThreshold())
-                .set(ESTATENOTIFICATIONSETTINGS.SERVICELEADDAYS, settings.serviceLeadDays())
-                .set(ESTATENOTIFICATIONSETTINGS.REPAIRLEADDAYS, settings.repairLeadDays())
+                .set(ESTATENOTIFICATIONSETTINGS.ANOMALYENABLED, settings.anomalyEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.SERVICEDUEENABLED, settings.serviceDueEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.REPAIRPREDICTEDENABLED, settings.repairPredictedEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.CHECKREQUESTEDENABLED, settings.checkRequestedEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.CHECKFAILEDENABLED, settings.checkFailedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.UPDATEDBYUSERID, user)
                 .onConflict(ESTATENOTIFICATIONSETTINGS.ESTATEID)
                 .doUpdate()
-                .set(ESTATENOTIFICATIONSETTINGS.ANOMALYSCORETHRESHOLD, settings.anomalyScoreThreshold())
-                .set(ESTATENOTIFICATIONSETTINGS.SERVICELEADDAYS, settings.serviceLeadDays())
-                .set(ESTATENOTIFICATIONSETTINGS.REPAIRLEADDAYS, settings.repairLeadDays())
+                .set(ESTATENOTIFICATIONSETTINGS.ANOMALYENABLED, settings.anomalyEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.SERVICEDUEENABLED, settings.serviceDueEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.REPAIRPREDICTEDENABLED, settings.repairPredictedEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.CHECKREQUESTEDENABLED, settings.checkRequestedEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.CHECKFAILEDENABLED, settings.checkFailedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.UPDATEDBYUSERID, user)
                 .set(ESTATENOTIFICATIONSETTINGS.UPDATEDAT, DSL.currentOffsetDateTime())
                 .execute();

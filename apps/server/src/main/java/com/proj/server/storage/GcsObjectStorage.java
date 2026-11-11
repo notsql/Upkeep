@@ -1,10 +1,15 @@
 package com.proj.server.storage;
 
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.HttpMethod;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -18,7 +23,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * {@link ObjectStorage} on Google Cloud Storage, authenticated by Application Default Credentials. On Cloud Run
+ * {@link ObjectStorage} on Google Cloud Storage, authenticated by an inline service-account key when
+ * {@code app.storage.credentials-json} is set (local dev), else Application Default Credentials. On Cloud Run
  * signing goes through IAM signBlob, so the runtime account needs Token Creator on itself (decision 0050). The
  * client is built on first use, so missing credentials answer 503 instead of stopping the app.
  */
@@ -33,8 +39,9 @@ public class GcsObjectStorage implements ObjectStorage {
     public GcsObjectStorage(
             @Value("${app.storage.bucket:}") String bucket,
             @Value("${app.storage.project-id:}") String projectId,
+            @Value("${app.storage.credentials-json:}") String credentialsJson,
             Clock clock) {
-        this(bucket, () -> client(projectId), clock);
+        this(bucket, () -> options(projectId, credentialsJson).getService(), clock);
     }
 
     GcsObjectStorage(String bucket, Supplier<Storage> factory, Clock clock) {
@@ -43,10 +50,19 @@ public class GcsObjectStorage implements ObjectStorage {
         this.clock = clock;
     }
 
-    private static Storage client(String projectId) {
+    static StorageOptions options(String projectId, String credentialsJson) {
         var options = StorageOptions.newBuilder();
-        if (!projectId.isBlank()) options.setProjectId(projectId);
-        return options.build().getService();
+        if (projectId != null && !projectId.isBlank()) options.setProjectId(projectId);
+        var json = credentialsJson == null ? "" : credentialsJson.trim();
+        if (!json.isEmpty()) {
+            try {
+                options.setCredentials(ServiceAccountCredentials.fromStream(
+                        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))));
+            } catch (IOException error) {
+                throw new UncheckedIOException("Storage credentials are not a valid service-account key.", error);
+            }
+        }
+        return options.build();
     }
 
     @Override

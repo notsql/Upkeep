@@ -576,6 +576,9 @@ model Notification {
   basis                String?  @db.VarChar(17)
   failuresObserved     Int?
 
+  // SERVICE_DUE (90, 60, 30, 14) and REPAIR_PREDICTED (90, 60, 30): the reminder milestone, in days.
+  milestoneDays Int?
+
   // CHECK_FAILED: the failed result. CHECK_REQUESTED: the one user it is addressed to.
   inspectionResultId String? @db.Uuid
   recipientUserId    String? @db.VarChar(255)
@@ -587,6 +590,7 @@ model Notification {
 
   @@index([estateId, createdAt(sort: Desc), id])
   @@index([assetId, type, createdAt])
+  @@index([assetId, type, milestoneDays])
   @@index([recipientUserId])
 }
 
@@ -602,14 +606,22 @@ model NotificationRead {
   @@index([userId])
 }
 
-/// Per-estate notification thresholds; an estate without a row uses the defaults.
+/// Per-estate on/off switch per notification type; an estate without a row has every switch on.
 model EstateNotificationSettings {
   estateId              String   @id @db.Uuid
-  anomalyScoreThreshold Decimal  @db.Decimal(3, 2)
-  serviceLeadDays       Int
-  repairLeadDays        Int
-  updatedAt             DateTime @default(now()) @db.Timestamptz(6)
-  updatedByUserId       String   @db.VarChar(255)
+  /// Retired: anomaly alerts use the model's fixed threshold. Dropped in a later PR.
+  anomalyScoreThreshold  Decimal? @db.Decimal(3, 2)
+  /// Retired: service reminders are fixed at 90, 60, 30 and 14 days. Dropped in a later PR.
+  serviceLeadDays        Int?
+  /// Retired: repair reminders follow the forecast windows. Dropped in a later PR.
+  repairLeadDays         Int?
+  anomalyEnabled         Boolean  @default(true)
+  serviceDueEnabled      Boolean  @default(true)
+  repairPredictedEnabled Boolean  @default(true)
+  checkRequestedEnabled  Boolean  @default(true)
+  checkFailedEnabled     Boolean  @default(true)
+  updatedAt              DateTime @default(now()) @db.Timestamptz(6)
+  updatedByUserId        String   @db.VarChar(255)
 
   estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 }

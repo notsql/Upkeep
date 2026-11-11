@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-/** An estate's notification thresholds (spec notifications.md, "Notification settings"). */
+/** An estate's notification switches (spec notification-switches-and-milestone-reminders.md, "Notification settings"). */
 @RestController
 @ApiResponses({
     @ApiResponse(
@@ -53,7 +53,7 @@ public class NotificationSettingsController {
         @ApiResponse(responseCode = "200", description = "The saved settings"),
         @ApiResponse(
                 responseCode = "400",
-                description = "A setting is missing or out of range",
+                description = "A switch is missing",
                 content = @Content(schema = @Schema(implementation = EstateError.class))),
         @ApiResponse(
                 responseCode = "409",

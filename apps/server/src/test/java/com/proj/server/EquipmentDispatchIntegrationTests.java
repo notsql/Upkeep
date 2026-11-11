@@ -315,6 +315,28 @@ class EquipmentDispatchIntegrationTests {
         as("manager", "/notifications").andExpect(jsonPath("$.items[?(@.resolvedAt == null)]", hasSize(0)));
     }
 
+    void switchedOff(String column) {
+        db.execute(
+                "insert into \"EstateNotificationSettings\" (\"estateId\", \"" + column
+                        + "\", \"updatedByUserId\") values (?, false, 'owner')",
+                estateId);
+    }
+
+    @Test
+    void checkRequestedSwitchedOffSendsNoMessageButStillAssignsTheCheck() throws Exception {
+        switchedOff("checkRequestedEnabled");
+        sendTo("crew").andExpect(status().isCreated());
+        assertEquals(0, count("select count(*) from \"Notification\" where \"estateId\" = ?"));
+        as("manager", "/estates/" + estateId + "/inspection-list").andExpect(jsonPath("$.checks", hasSize(1)));
+    }
+
+    @Test
+    void checkFailedSwitchedOffSendsNoMessage() throws Exception {
+        switchedOff("checkFailedEnabled");
+        record("crew", pump, "FAIL", "Leaking").andExpect(status().isCreated());
+        assertEquals(0, count("select count(*) from \"Notification\" where \"estateId\" = ?"));
+    }
+
     @Test
     void aPassSendsNoNotification() throws Exception {
         record("crew", pump, "PASS", "All good").andExpect(status().isCreated());

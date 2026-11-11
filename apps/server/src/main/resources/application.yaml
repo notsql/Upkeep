@@ -71,6 +71,8 @@ app:
   storage:
     bucket: ${GCS_BUCKET_NAME:}
     project-id: ${GCS_PROJECT_ID:}
+    # Dev only: an inline service-account key from Infisical. Blank uses ADC (prod's Cloud Run identity).
+    credentials-json: ${GCS_CREDENTIALS_JSON:}
 
 # WorkOS AuthKit is intentionally NOT configured here, and the issuer must not
 # be given an empty default: Spring's resource-server auto-configuration keys

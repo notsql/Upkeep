@@ -2409,28 +2409,18 @@ export interface components {
       createdAt: string;
     };
     NotificationSettingsRequest: {
-      /** @description 0.51 to 1.00, at most two decimal places */
-      anomalyScoreThreshold: number;
-      /**
-       * Format: int32
-       * @description Whole days, 0 to 365
-       */
-      serviceLeadDays: number;
-      /**
-       * Format: int32
-       * @description 30, 60 or 90
-       */
-      repairLeadDays: number;
+      anomalyEnabled: boolean;
+      serviceDueEnabled: boolean;
+      repairPredictedEnabled: boolean;
+      checkRequestedEnabled: boolean;
+      checkFailedEnabled: boolean;
     };
     NotificationSettingsResponse: {
-      anomalyScoreThreshold: number;
-      /** Format: int32 */
-      serviceLeadDays: number;
-      /**
-       * Format: int32
-       * @description 30, 60 or 90
-       */
-      repairLeadDays: number;
+      anomalyEnabled: boolean;
+      serviceDueEnabled: boolean;
+      repairPredictedEnabled: boolean;
+      checkRequestedEnabled: boolean;
+      checkFailedEnabled: boolean;
     };
     UpdateEstateRoleRequest: {
       /** @enum {string} */
@@ -2711,6 +2701,11 @@ export interface components {
        * @description The failed inspection result; set only for CHECK_FAILED
        */
       inspectionResultId: string | null;
+      /**
+       * Format: int32
+       * @description The reminder milestone in days (90, 60, 30, or 14 for SERVICE_DUE); set only for SERVICE_DUE and REPAIR_PREDICTED
+       */
+      milestoneDays: number | null;
     };
     RepairPredictedDetails: {
       /** @enum {string} */
@@ -14254,7 +14249,7 @@ export interface operations {
           "*/*": components["schemas"]["NotificationSettingsResponse"];
         };
       };
-      /** @description A setting is missing or out of range */
+      /** @description A switch is missing */
       400: {
         headers: {
           [name: string]: unknown;

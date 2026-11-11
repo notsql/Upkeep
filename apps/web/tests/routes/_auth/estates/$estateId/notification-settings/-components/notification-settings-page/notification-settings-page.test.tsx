@@ -1,7 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import { ownerEstateAccess, workspaceAccess } from "@tests/fixtures/access";
 import {
-  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -21,9 +20,11 @@ const state = vi.hoisted(() => ({
 
 beforeEach(() => {
   state.settings = {
-    anomalyScoreThreshold: 0.51,
-    serviceLeadDays: 14,
-    repairLeadDays: 30,
+    anomalyEnabled: true,
+    serviceDueEnabled: true,
+    repairPredictedEnabled: false,
+    checkRequestedEnabled: true,
+    checkFailedEnabled: true,
   };
   state.error = null;
   state.deactivatedAt = null;
@@ -76,8 +77,29 @@ vi.mock("@/lib/estates", async (importOriginal) => ({
   }),
 }));
 
-function field(name: string) {
-  return screen.getByRole<HTMLInputElement>("spinbutton", { name });
+const SWITCHES = [
+  [
+    "Unusual readings",
+    "Tell us when a sensor shows something out of the ordinary.",
+  ],
+  ["Service due", "Remind us 90, 60, 30 and 14 days before a service is due."],
+  [
+    "Expected repair",
+    "Warn us when something is likely to need repair in the next 90, 60 or 30 days.",
+  ],
+  [
+    "Check requested",
+    "Tell a staff member when they are asked to check something.",
+  ],
+  ["Check failed", "Tell managers when a check finds a problem."],
+] as const;
+
+function toggle(name: string) {
+  return screen.getByRole("switch", { name });
+}
+
+function isOn(name: string) {
+  return toggle(name).getAttribute("aria-checked") === "true";
 }
 
 it("sits under Estate settings with Details and Notifications tabs", () => {
@@ -103,34 +125,39 @@ it("hides the Details tab from a Manager who cannot edit the estate", () => {
   ]);
 });
 
-it("shows the estate's current settings", () => {
+it("explains the switches in plain words", () => {
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
-  expect(field("How sure before we warn you (%)").value).toBe("51");
-  expect(field("Days of notice before a service is due").value).toBe("14");
-  expect(
-    screen.getByRole("combobox", { name: "Notice before an expected repair" })
-      .textContent
-  ).toContain("30 days");
+  screen.getByText(
+    "Choose which messages this estate's team gets. All are on to start with."
+  );
+  for (const [name, help] of SWITCHES) {
+    toggle(name);
+    screen.getByText(help);
+  }
+  expect(screen.queryByRole("spinbutton")).toBeNull();
+  expect(screen.queryByRole("combobox")).toBeNull();
 });
 
-it("saves changed settings", async () => {
+it("shows each switch as the estate saved it", () => {
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
-  fireEvent.change(field("How sure before we warn you (%)"), {
-    target: { value: "80" },
-  });
-  fireEvent.change(field("Days of notice before a service is due"), {
-    target: { value: "7" },
-  });
-  await chooseOption(
-    screen.getByRole("combobox", { name: "Notice before an expected repair" }),
-    "90 days"
-  );
+  expect(isOn("Unusual readings")).toBe(true);
+  expect(isOn("Expected repair")).toBe(false);
+});
+
+it("saves the switches", async () => {
+  renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
+  fireEvent.click(toggle("Unusual readings"));
+  fireEvent.click(toggle("Expected repair"));
+  fireEvent.click(toggle("Check failed"));
+  expect(isOn("Unusual readings")).toBe(false);
   fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
   await waitFor(() =>
     expect(state.save).toHaveBeenCalledWith({
-      anomalyScoreThreshold: 0.8,
-      serviceLeadDays: 7,
-      repairLeadDays: 90,
+      anomalyEnabled: false,
+      serviceDueEnabled: true,
+      repairPredictedEnabled: true,
+      checkRequestedEnabled: true,
+      checkFailedEnabled: false,
     })
   );
   expect((await screen.findByRole("status")).textContent).toContain(
@@ -138,44 +165,14 @@ it("saves changed settings", async () => {
   );
 });
 
-it.each([
-  [
-    "How sure before we warn you (%)",
-    "50",
-    "Enter a whole number from 51 to 100.",
-  ],
-  [
-    "How sure before we warn you (%)",
-    "55.5",
-    "Enter a whole number from 51 to 100.",
-  ],
-  [
-    "Days of notice before a service is due",
-    "400",
-    "Enter a whole number of days from 0 to 365.",
-  ],
-  [
-    "Days of notice before a service is due",
-    "1.5",
-    "Enter a whole number of days from 0 to 365.",
-  ],
-])("refuses %s of %s", (name, value, message) => {
-  renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
-  fireEvent.change(field(name), { target: { value } });
-  fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
-  screen.getByText(message);
-  expect(field(name).getAttribute("aria-invalid")).toBe("true");
-  expect(state.save).not.toHaveBeenCalled();
-});
-
 it("shows a refused save", async () => {
   state.save = vi.fn(() =>
-    Promise.reject(new Error("repairLeadDays: must be 30, 60 or 90."))
+    Promise.reject(new Error("Couldn't save the settings. Try again."))
   );
   renderWithProviders(<NotificationSettingsPage estateId="e-1" />);
   fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
   expect((await screen.findByRole("alert")).textContent).toContain(
-    "repairLeadDays: must be 30, 60 or 90."
+    "Couldn't save the settings. Try again."
   );
 });
 
@@ -190,6 +187,7 @@ it("locks the form on an inactive estate", () => {
       .getByRole("button", { name: "Save settings" })
       .hasAttribute("disabled")
   ).toBe(true);
+  expect(toggle("Service due").hasAttribute("data-disabled")).toBe(true);
 });
 
 it("shows a load error", () => {

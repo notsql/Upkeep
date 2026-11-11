@@ -79,16 +79,51 @@ public class NotificationSweepRepository {
                 .fetch(WORKORDER.ASSETID));
     }
 
-    /** Assets of the estate with an open notification of this type. */
-    Set<UUID> openAssets(UUID estateId, NotificationType type) {
-        return new HashSet<>(db.select(NOTIFICATION.ASSETID)
+    /** The estate's open reminders of this type, by asset (at most one each: partial unique index). */
+    Map<UUID, NotificationMilestones.Open> openReminders(UUID estateId, NotificationType type) {
+        return db.select(NOTIFICATION.ASSETID, NOTIFICATION.ID, NOTIFICATION.MILESTONEDAYS)
                 .from(NOTIFICATION)
                 .where(NOTIFICATION
                         .ESTATEID
                         .eq(estateId)
                         .and(NOTIFICATION.TYPE.eq(type.name()))
                         .and(NOTIFICATION.RESOLVEDAT.isNull()))
-                .fetch(NOTIFICATION.ASSETID));
+                .fetchMap(
+                        NOTIFICATION.ASSETID,
+                        row -> new NotificationMilestones.Open(
+                                row.get(NOTIFICATION.ID), row.get(NOTIFICATION.MILESTONEDAYS)));
+    }
+
+    /** Every service reminder milestone the estate has raised, open or resolved. */
+    Set<NotificationSweeper.ServiceMilestone> firedServiceMilestones(UUID estateId) {
+        return new HashSet<>(db.select(NOTIFICATION.ASSETID, NOTIFICATION.DUEON, NOTIFICATION.MILESTONEDAYS)
+                .from(NOTIFICATION)
+                .where(NOTIFICATION
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(NOTIFICATION.TYPE.eq(NotificationType.SERVICE_DUE.name()))
+                        .and(NOTIFICATION.MILESTONEDAYS.isNotNull()))
+                .fetch(row -> new NotificationSweeper.ServiceMilestone(
+                        row.get(NOTIFICATION.ASSETID),
+                        row.get(NOTIFICATION.DUEON),
+                        row.get(NOTIFICATION.MILESTONEDAYS))));
+    }
+
+    /** Records which milestone an open reminder from before milestones stands for. */
+    void markMilestone(UUID id, int milestoneDays) {
+        db.update(NOTIFICATION)
+                .set(NOTIFICATION.MILESTONEDAYS, milestoneDays)
+                .where(NOTIFICATION.ID.eq(id))
+                .execute();
+    }
+
+    /** Resolves one open reminder, replaced by a nearer milestone. */
+    void resolve(UUID id) {
+        db.update(NOTIFICATION)
+                .set(NOTIFICATION.RESOLVEDAT, DSL.currentOffsetDateTime())
+                .set(NOTIFICATION.UPDATEDAT, DSL.currentOffsetDateTime())
+                .where(NOTIFICATION.ID.eq(id).and(NOTIFICATION.RESOLVEDAT.isNull()))
+                .execute();
     }
 
     /** Resolves the estate's open notifications of this type whose asset no longer qualifies. */
@@ -105,7 +140,8 @@ public class NotificationSweepRepository {
                 .execute();
     }
 
-    void insertRepairPredicted(UUID estateId, UUID assetId, String summary, Forecast forecast, double probability) {
+    void insertRepairPredicted(
+            UUID estateId, UUID assetId, String summary, Forecast forecast, double probability, int milestoneDays) {
         db.insertInto(NOTIFICATION)
                 .set(NOTIFICATION.ID, UUID.randomUUID())
                 .set(NOTIFICATION.ESTATEID, estateId)
@@ -118,11 +154,18 @@ public class NotificationSweepRepository {
                 .set(NOTIFICATION.PROBABILITY, BigDecimal.valueOf(probability).setScale(4, RoundingMode.HALF_UP))
                 .set(NOTIFICATION.BASIS, forecast.basis().name())
                 .set(NOTIFICATION.FAILURESOBSERVED, forecast.failuresObserved())
+                .set(NOTIFICATION.MILESTONEDAYS, milestoneDays)
                 .onConflictDoNothing()
                 .execute();
     }
 
-    void insertServiceDue(UUID estateId, UUID assetId, String summary, LocalDate dueOn, EffectiveInterval interval) {
+    void insertServiceDue(
+            UUID estateId,
+            UUID assetId,
+            String summary,
+            LocalDate dueOn,
+            EffectiveInterval interval,
+            int milestoneDays) {
         db.insertInto(NOTIFICATION)
                 .set(NOTIFICATION.ID, UUID.randomUUID())
                 .set(NOTIFICATION.ESTATEID, estateId)
@@ -133,6 +176,7 @@ public class NotificationSweepRepository {
                 .set(NOTIFICATION.INTERVALVALUE, interval.interval().value())
                 .set(NOTIFICATION.INTERVALUNIT, interval.interval().unit().name())
                 .set(NOTIFICATION.INTERVALSOURCE, interval.source().name())
+                .set(NOTIFICATION.MILESTONEDAYS, milestoneDays)
                 .onConflictDoNothing()
                 .execute();
     }

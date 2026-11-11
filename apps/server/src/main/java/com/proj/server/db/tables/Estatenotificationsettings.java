@@ -70,18 +70,18 @@ public class Estatenotificationsettings extends TableImpl<Estatenotificationsett
      * The column
      * <code>public.EstateNotificationSettings.anomalyScoreThreshold</code>.
      */
-    public final TableField<EstatenotificationsettingsRecord, BigDecimal> ANOMALYSCORETHRESHOLD = createField(DSL.name("anomalyScoreThreshold"), SQLDataType.NUMERIC(3, 2).nullable(false), this, "");
+    public final TableField<EstatenotificationsettingsRecord, BigDecimal> ANOMALYSCORETHRESHOLD = createField(DSL.name("anomalyScoreThreshold"), SQLDataType.NUMERIC(3, 2), this, "");
 
     /**
      * The column
      * <code>public.EstateNotificationSettings.serviceLeadDays</code>.
      */
-    public final TableField<EstatenotificationsettingsRecord, Integer> SERVICELEADDAYS = createField(DSL.name("serviceLeadDays"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<EstatenotificationsettingsRecord, Integer> SERVICELEADDAYS = createField(DSL.name("serviceLeadDays"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>public.EstateNotificationSettings.repairLeadDays</code>.
      */
-    public final TableField<EstatenotificationsettingsRecord, Integer> REPAIRLEADDAYS = createField(DSL.name("repairLeadDays"), SQLDataType.INTEGER.nullable(false), this, "");
+    public final TableField<EstatenotificationsettingsRecord, Integer> REPAIRLEADDAYS = createField(DSL.name("repairLeadDays"), SQLDataType.INTEGER, this, "");
 
     /**
      * The column <code>public.EstateNotificationSettings.updatedAt</code>.
@@ -93,6 +93,35 @@ public class Estatenotificationsettings extends TableImpl<Estatenotificationsett
      * <code>public.EstateNotificationSettings.updatedByUserId</code>.
      */
     public final TableField<EstatenotificationsettingsRecord, String> UPDATEDBYUSERID = createField(DSL.name("updatedByUserId"), SQLDataType.VARCHAR(255).nullable(false), this, "");
+
+    /**
+     * The column <code>public.EstateNotificationSettings.anomalyEnabled</code>.
+     */
+    public final TableField<EstatenotificationsettingsRecord, Boolean> ANOMALYENABLED = createField(DSL.name("anomalyEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column
+     * <code>public.EstateNotificationSettings.checkFailedEnabled</code>.
+     */
+    public final TableField<EstatenotificationsettingsRecord, Boolean> CHECKFAILEDENABLED = createField(DSL.name("checkFailedEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column
+     * <code>public.EstateNotificationSettings.checkRequestedEnabled</code>.
+     */
+    public final TableField<EstatenotificationsettingsRecord, Boolean> CHECKREQUESTEDENABLED = createField(DSL.name("checkRequestedEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column
+     * <code>public.EstateNotificationSettings.repairPredictedEnabled</code>.
+     */
+    public final TableField<EstatenotificationsettingsRecord, Boolean> REPAIRPREDICTEDENABLED = createField(DSL.name("repairPredictedEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
+
+    /**
+     * The column
+     * <code>public.EstateNotificationSettings.serviceDueEnabled</code>.
+     */
+    public final TableField<EstatenotificationsettingsRecord, Boolean> SERVICEDUEENABLED = createField(DSL.name("serviceDueEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
 
     private Estatenotificationsettings(Name alias, Table<EstatenotificationsettingsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);

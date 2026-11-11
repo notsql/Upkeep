@@ -96,6 +96,12 @@ These six stories share one inbox:
 
 ### Notification settings
 
+> **Superseded (settings):** see
+> `.spec/features/notification-switches-and-milestone-reminders.md` and decision 0052. Settings are
+> now one on/off switch per type; anomaly alerts use the fixed `AnomalyModel.DECISION_THRESHOLD`;
+> service reminders fire at 90/60/30/14 days and repair reminders at the 90/60/30 windows. The text
+> below is kept as the original plan.
+
 - Each estate has three settings. An estate without a saved row uses the
   defaults.
 
@@ -112,6 +118,12 @@ These six stories share one inbox:
   estate details page links there for users who manage the estate.
 
 ### Anomaly alerts (ID-105, ID-106)
+
+> **Superseded (threshold):** see
+> `.spec/features/notification-switches-and-milestone-reminders.md` and decision 0052. Settings are
+> now one on/off switch per type; anomaly alerts use the fixed `AnomalyModel.DECISION_THRESHOLD`;
+> service reminders fire at 90/60/30/14 days and repair reminders at the 90/60/30 windows. The text
+> below is kept as the original plan.
 
 These rules run inside the existing `POST .../readings/anomaly-check`, after
 scoring. They run in the same transaction as any assessment it records.
@@ -182,6 +194,12 @@ scoring. They run in the same transaction as any assessment it records.
   inactive estate.
 
 ### Due notifications: the daily sweep (ID-103, ID-101)
+
+> **Superseded (lead times):** see
+> `.spec/features/notification-switches-and-milestone-reminders.md` and decision 0052. Settings are
+> now one on/off switch per type; anomaly alerts use the fixed `AnomalyModel.DECISION_THRESHOLD`;
+> service reminders fire at 90/60/30/14 days and repair reminders at the 90/60/30 windows. The text
+> below is kept as the original plan.
 
 Service-due dates and forecasts are derived on read (decision 0027-device-status,
 failure-risk spec). Nothing in the system changes when a date simply arrives,

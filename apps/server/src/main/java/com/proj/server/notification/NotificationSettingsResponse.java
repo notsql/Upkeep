@@ -1,16 +1,28 @@
 package com.proj.server.notification;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.math.BigDecimal;
 
-@Schema(requiredProperties = {"anomalyScoreThreshold", "serviceLeadDays", "repairLeadDays"})
+@Schema(
+        requiredProperties = {
+            "anomalyEnabled",
+            "serviceDueEnabled",
+            "repairPredictedEnabled",
+            "checkRequestedEnabled",
+            "checkFailedEnabled"
+        })
 public record NotificationSettingsResponse(
-        BigDecimal anomalyScoreThreshold,
-        int serviceLeadDays,
-        @Schema(description = "30, 60 or 90") int repairLeadDays) {
+        boolean anomalyEnabled,
+        boolean serviceDueEnabled,
+        boolean repairPredictedEnabled,
+        boolean checkRequestedEnabled,
+        boolean checkFailedEnabled) {
 
     static NotificationSettingsResponse of(NotificationSettings settings) {
         return new NotificationSettingsResponse(
-                settings.anomalyScoreThreshold(), settings.serviceLeadDays(), settings.repairLeadDays());
+                settings.anomalyEnabled(),
+                settings.serviceDueEnabled(),
+                settings.repairPredictedEnabled(),
+                settings.checkRequestedEnabled(),
+                settings.checkFailedEnabled());
     }
 }

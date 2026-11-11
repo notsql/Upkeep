@@ -28,7 +28,8 @@ import java.util.UUID;
             "anomaly",
             "serviceDue",
             "repairPredicted",
-            "inspectionResultId"
+            "inspectionResultId",
+            "milestoneDays"
         })
 public record NotificationResponse(
         UUID id,
@@ -48,7 +49,13 @@ public record NotificationResponse(
         RepairPredicted repairPredicted,
 
         @Schema(nullable = true, description = "The failed inspection result; set only for CHECK_FAILED")
-        UUID inspectionResultId) {
+        UUID inspectionResultId,
+
+        @Schema(
+                nullable = true,
+                description = "The reminder milestone in days (90, 60, 30, or 14 for SERVICE_DUE); set only for"
+                        + " SERVICE_DUE and REPAIR_PREDICTED")
+        Integer milestoneDays) {
 
     @Schema(
             name = "AnomalyAlertDetails",

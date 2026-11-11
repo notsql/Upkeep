@@ -36,7 +36,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.annotation.Transactional;
 
-/** The daily sweep and service-due notifications (ID-103, spec notifications.md, "The daily sweep"). */
+/** The daily sweep and milestone reminders (ID-103, ID-101, spec notification-switches-and-milestone-reminders.md). */
 @SpringBootTest(
         properties = {
             "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app",
@@ -236,22 +236,29 @@ class NotificationSweepIntegrationTests {
         assertEquals(1, sweeps());
     }
 
-    @Test
-    void savingSettingsSweepsAgainOnTheNextRead() throws Exception {
-        lampDueOn("L-1", TODAY.plusDays(20));
-        count("owner").andExpect(jsonPath("$.unread").value(0));
+    void switches(boolean serviceDue, boolean repairPredicted) throws Exception {
         mvc.perform(put("/estates/" + estateId + "/notification-settings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"anomalyScoreThreshold\":0.51,\"serviceLeadDays\":30,\"repairLeadDays\":30}")
+                        .content("{\"anomalyEnabled\":true,\"serviceDueEnabled\":" + serviceDue
+                                + ",\"repairPredictedEnabled\":" + repairPredicted
+                                + ",\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}")
                         .with(jwt().jwt(j -> j.subject("owner"))))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void savingSettingsSweepsAgainOnTheNextRead() throws Exception {
+        switches(false, true);
+        lampDueOn("L-1", TODAY.plusDays(20));
+        count("owner").andExpect(jsonPath("$.unread").value(0));
+        switches(true, true);
         count("owner").andExpect(jsonPath("$.unread").value(1));
     }
 
     // ---- SERVICE_DUE (ID-103) ----------------------------------------------------------------------------------
 
     @Test
-    void anAssetWithinTheLeadWindowIsNotified() throws Exception {
+    void anAssetAtTheFourteenDayMilestoneIsNotified() throws Exception {
         var lamp = lampDueOn("L-1", TODAY.plusDays(14));
         count("owner");
         var notification = open().getFirst();
@@ -261,34 +268,111 @@ class NotificationSweepIntegrationTests {
         assertEquals("MONTH", notification.get("intervalUnit"));
         assertEquals("CATEGORY", notification.get("intervalSource"));
         assertEquals("Service due on " + DATE.format(TODAY.plusDays(14)), notification.get("summary"));
+        assertEquals(14, notification.get("milestoneDays", Integer.class));
     }
 
     static final java.time.format.DateTimeFormatter DATE =
             java.time.format.DateTimeFormatter.ofPattern("d MMM yyyy", java.util.Locale.ENGLISH);
 
     @Test
-    void anAssetOutsideTheLeadWindowIsNot() throws Exception {
-        lampDueOn("L-1", TODAY.plusDays(15));
+    void nothingIsRaisedMoreThan90DaysAhead() throws Exception {
+        lampDueOn("L-1", TODAY.plusDays(91));
         count("owner").andExpect(jsonPath("$.unread").value(0));
     }
 
     @Test
-    void theEstatesLeadDaysApply() throws Exception {
+    void theNinetyDayReminderSaysSo() throws Exception {
+        lampDueOn("L-1", TODAY.plusDays(90));
+        count("owner").andExpect(jsonPath("$.unread").value(1));
+        var notification = open().getFirst();
+        assertEquals(90, notification.get("milestoneDays", Integer.class));
+        assertEquals(
+                "Service due in 90 days (on " + DATE.format(TODAY.plusDays(90)) + ")", notification.get("summary"));
+        list("owner").andExpect(jsonPath("$.items[0].milestoneDays").value(90));
+    }
+
+    /** A service reminder raised before today, as an earlier sweep would have. */
+    UUID earlierReminder(UUID asset, LocalDate dueOn, Integer milestone, boolean resolved) {
+        var id = UUID.randomUUID();
         db.execute(
-                "insert into \"EstateNotificationSettings\" (\"estateId\", \"anomalyScoreThreshold\", \"serviceLeadDays\", \"repairLeadDays\", \"updatedByUserId\") values (?, 0.51, 0, 30, 'owner')",
-                estateId);
-        lampDueOn("L-1", TODAY.plusDays(1));
-        lampDueOn("L-2", TODAY);
+                "insert into \"Notification\" (id, \"estateId\", \"assetId\", type, summary, \"dueOn\", \"intervalValue\", \"intervalUnit\", \"intervalSource\", \"milestoneDays\", \"resolvedAt\") values (?, ?, ?, 'SERVICE_DUE', 'Earlier', ?, 6, 'MONTH', 'CATEGORY', ?, "
+                        + (resolved ? "now()" : "null") + ")",
+                id,
+                estateId,
+                asset,
+                dueOn,
+                milestone);
+        return id;
+    }
+
+    @Test
+    void onlyTheNearestMilestoneFires() throws Exception {
+        lampDueOn("L-1", TODAY.plusDays(20));
+        count("owner");
+        assertEquals(1, due().size());
+        assertEquals(30, open().getFirst().get("milestoneDays", Integer.class));
+    }
+
+    @Test
+    void reachingANearerMilestoneReplacesTheOpenReminder() throws Exception {
+        var lamp = lampDueOn("L-1", TODAY.plusDays(20));
+        var earlier = earlierReminder(lamp, TODAY.plusDays(20), 60, false);
+        count("owner").andExpect(jsonPath("$.unread").value(1));
+        assertEquals(2, due().size());
+        assertEquals(30, open().getFirst().get("milestoneDays", Integer.class));
+        assertNotNull(db.fetchValue("select \"resolvedAt\" from \"Notification\" where id = ?", earlier));
+    }
+
+    @Test
+    void aMilestoneIsNeverSentTwiceForTheSameDueDate() throws Exception {
+        var lamp = lampDueOn("L-1", TODAY.plusDays(20));
+        earlierReminder(lamp, TODAY.plusDays(20), 30, true);
+        count("owner").andExpect(jsonPath("$.unread").value(0));
+        assertEquals(1, due().size());
+    }
+
+    @Test
+    void aNewDueDateStartsTheMilestonesAgain() throws Exception {
+        var lamp = lampDueOn("L-1", TODAY.plusDays(20));
+        earlierReminder(lamp, TODAY.minusMonths(6).plusDays(20), 30, true);
         count("owner").andExpect(jsonPath("$.unread").value(1));
     }
 
     @Test
-    void anOverdueAssetIsNotifiedAsOverdue() throws Exception {
+    void anOpenReminderFromBeforeMilestonesIsMarkedNotResent() throws Exception {
+        var lamp = lampDueOn("L-1", TODAY.plusDays(20));
+        var earlier = earlierReminder(lamp, TODAY.plusDays(20), null, false);
+        count("owner");
+        assertEquals(1, due().size());
+        assertEquals(
+                30,
+                ((Number) db.fetchValue("select \"milestoneDays\" from \"Notification\" where id = ?", earlier))
+                        .intValue());
+    }
+
+    @Test
+    void switchedOffServiceRemindersAreNotRaisedButStillResolve() throws Exception {
+        var lamp = lampDueOn("L-1", TODAY.plusDays(5));
+        lampDueOn("L-2", TODAY.plusDays(5));
+        earlierReminder(lamp, TODAY.plusDays(5), 14, false);
+        switches(false, true);
+        count("owner");
+        assertEquals(1, due().size());
+        assertNull(open().getFirst().get("resolvedAt"));
+        inspected(lamp, TODAY);
+        nextDay();
+        count("owner");
+        assertEquals(0, open().size());
+    }
+
+    @Test
+    void anOverdueAssetIsNotifiedAsOverdueAtTheFourteenDayMilestone() throws Exception {
         lampDueOn("L-1", TODAY.minusDays(3));
         count("owner");
         assertEquals(
                 "Service overdue since " + DATE.format(TODAY.minusDays(3)),
                 open().getFirst().get("summary"));
+        assertEquals(14, open().getFirst().get("milestoneDays", Integer.class));
     }
 
     @Test
@@ -423,13 +507,16 @@ class NotificationSweepIntegrationTests {
         return pump;
     }
 
-    void repairLead(int days) throws Exception {
-        mvc.perform(put("/estates/" + estateId + "/notification-settings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"anomalyScoreThreshold\":0.51,\"serviceLeadDays\":14,\"repairLeadDays\":" + days
-                                + "}")
-                        .with(jwt().jwt(j -> j.subject("owner"))))
-                .andExpect(status().isOk());
+    /** An open repair reminder raised before today at this milestone. */
+    UUID earlierPrediction(UUID asset, Integer milestone) {
+        var id = UUID.randomUUID();
+        db.execute(
+                "insert into \"Notification\" (id, \"estateId\", \"assetId\", type, summary, \"recommendedTimeframe\", probability, basis, \"failuresObserved\", \"milestoneDays\") values (?, ?, ?, 'REPAIR_PREDICTED', 'Earlier', 'WITHIN_90_DAYS', 0.3, 'ASSET_HISTORY', 4, ?)",
+                id,
+                estateId,
+                asset,
+                milestone);
+        return id;
     }
 
     List<Record> predicted() {
@@ -453,17 +540,16 @@ class NotificationSweepIntegrationTests {
         assertEquals(
                 "Repair likely within 30 days (" + Math.round(probability * 100) + "% chance)",
                 notification.get("summary"));
+        assertEquals(30, notification.get("milestoneDays", Integer.class));
     }
 
     @Test
-    void aLaterWindowNeedsALongerLead() throws Exception {
+    void aSixtyDayWindowIsNotifiedAtSixtyDays() throws Exception {
         pumpWithin60Days("P-1");
-        count("owner");
-        assertEquals(0, predicted().size());
-        repairLead(60);
         count("owner");
         var notification = predicted().getFirst();
         assertEquals("WITHIN_60_DAYS", notification.get("recommendedTimeframe"));
+        assertEquals(60, notification.get("milestoneDays", Integer.class));
         assertEquals(
                 0.20,
                 notification.get("probability", java.math.BigDecimal.class).doubleValue(),
@@ -471,14 +557,43 @@ class NotificationSweepIntegrationTests {
     }
 
     @Test
-    void leavingTheWindowResolvesIt() throws Exception {
-        repairLead(60);
-        pumpWithin60Days("P-1");
+    void aNearerWindowReplacesTheOpenReminder() throws Exception {
+        var pump = pumpWithin30Days("P-1");
+        earlierPrediction(pump, 60);
         count("owner");
-        repairLead(30);
+        assertEquals(2, predicted().size());
+        assertEquals(30, predicted().getFirst().get("milestoneDays", Integer.class));
+        assertNull(predicted().getFirst().get("resolvedAt"));
+        assertNotNull(predicted().get(1).get("resolvedAt"));
+    }
+
+    @Test
+    void aRepairReminderNeverStepsBackwards() throws Exception {
+        var pump = pumpWithin60Days("P-1");
+        earlierPrediction(pump, 30);
+        count("owner");
+        assertEquals(1, predicted().size());
+        assertEquals(30, predicted().getFirst().get("milestoneDays", Integer.class));
+        assertNull(predicted().getFirst().get("resolvedAt"));
+    }
+
+    @Test
+    void leavingTheWindowResolvesIt() throws Exception {
+        var pump = pumpWithin60Days("P-1");
+        count("owner");
+        workOrder(pump, "OPEN");
+        nextDay();
         count("owner");
         assertEquals(1, predicted().size());
         assertNotNull(predicted().getFirst().get("resolvedAt"));
+    }
+
+    @Test
+    void switchedOffRepairRemindersAreNotRaised() throws Exception {
+        switches(true, false);
+        pumpWithin30Days("P-1");
+        count("owner");
+        assertEquals(0, predicted().size());
     }
 
     @Test
