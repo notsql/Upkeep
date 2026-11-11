@@ -48,9 +48,14 @@ endpoints. Errors are `EstateError { message }`; responses are
 6. `DispatchDeliveryJob` emails `PENDING` dispatches. On success the dispatch
    is `SENT` with `sentAt`. On failure it retries with backoff (30 s × 4ⁿ, at
    most 1 h) and becomes `FAILED` after 5 attempts. `lastErrorCode` is internal:
-   `MAIL_NOT_CONFIGURED`, `SMTP_AUTH`, `MESSAGE_TOO_LARGE`, `SMTP_ERROR`,
+   `MAIL_NOT_CONFIGURED`, `AUTH`, `MESSAGE_TOO_LARGE`, `PROVIDER_ERROR`,
    `MESSAGE_INVALID`, `IMAGE_STORAGE` or `UNEXPECTED`. Sending never changes the
-   work order's status. Delivery is at least once.
+   work order's status. Delivery is at least once. Email goes through Resend's
+   HTTP API (decision 0051): 401/403 → `AUTH`; 413, or a 422 saying an
+   attachment or the payload is too large → `MESSAGE_TOO_LARGE`; other 422
+   (bad address, unverified from domain) → `MESSAGE_INVALID`; 429, 5xx,
+   timeouts and network failures → `PROVIDER_ERROR`. Rows written before 0051
+   may still carry the old `SMTP_AUTH` and `SMTP_ERROR`.
 
 Creating a work order from a report through ID-36's
 `POST /estates/{estateId}/work-orders` while the report is `NEEDS_REVIEW` moves
@@ -129,5 +134,6 @@ row.
 
 | Setting | Purpose |
 | --- | --- |
-| `SPRING_MAIL_HOST` (`smtp.gmail.com`), `SPRING_MAIL_PORT` (587), `SPRING_MAIL_USERNAME` (the `csd.upkeep` Gmail address), `SPRING_MAIL_PASSWORD` (a Google app password) | Gmail SMTP with STARTTLS required. Without a host there is no sender, and dispatches fail with `MAIL_NOT_CONFIGURED`. |
-| `APP_MAIL_FROM`, `APP_MAIL_REPLY_TO` | Optional; blank means the SMTP account and no Reply-To. |
+| `RESEND_API_KEY` (`app.mail.resend-api-key`) | Resend API key. Unset or blank means there is no sender, and dispatches fail with `MAIL_NOT_CONFIGURED`. |
+| `APP_MAIL_FROM` | Required when `RESEND_API_KEY` is set (startup fails otherwise). An address on a Resend-verified domain, bare or `Name <address>`. |
+| `APP_MAIL_REPLY_TO` | Optional; blank means no reply-to. |

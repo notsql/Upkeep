@@ -36,11 +36,6 @@ Submitting
 - The submitted report has `submittedByUserId` = the caller's WorkOS `sub`,
   as today. Duplicate detection, routing and classification run as today; they
   are keyed on the estate, not the submitter.
-- **Submission cap (proposed, can be struck):** a user who has already
-  submitted 20 reports in the past 60 minutes (counted across all estates by
-  `IssueReport.submittedByUserId` and `createdAt`) gets 429 "You have sent a
-  lot of reports. Try again later." and no report is created. The count is
-  checked inside the create transaction.
 
 Picking an estate
 
@@ -84,9 +79,7 @@ What still depends on RESIDENT
 ## Data
 
 No Prisma change. `IssueReport` already stores `estateId`, `locationId` and
-`submittedByUserId` with no foreign key to `EstateUser`. The submission cap
-counts existing `IssueReport` rows; if the count turns out slow, an index on
-`(submittedByUserId, createdAt)` is a later, separate change.
+`submittedByUserId` with no foreign key to `EstateUser`.
 
 ## API
 
@@ -95,7 +88,7 @@ counts existing `IssueReport` rows; if the count turns out slow, an index on
 | GET | `/resident/estates` (new) | required `q: string` query (2+ chars after trim) | 200 `ResidentEstateResponse[]` (max 20); 400 short `q`; 401 | signed in |
 | GET | `/resident/context` (changed meaning) | none | 200 `ResidentContextResponse` - same shape; `estates` = active RESIDENT estates; `canSubmit` always `true` | signed in |
 | GET | `/resident/locations` (changed) | required `estateId: UUID` query | 200 `ResidentLocationResponse[]`; 404 deactivated/unknown estate; 401 | signed in |
-| POST | `/resident/reports` (changed) | unchanged `multipart/form-data` (`estateId`, `title`, `description`, `locationId`, `images`) | 201 `IssueReportDetailResponse`; 400; 401; 404 deactivated/unknown estate; 413; 415; 429 cap reached; 503 | signed in |
+| POST | `/resident/reports` (changed) | unchanged `multipart/form-data` (`estateId`, `title`, `description`, `locationId`, `images`) | 201 `IssueReportDetailResponse`; 400; 401; 404 deactivated/unknown estate; 413; 415; 503 | signed in |
 
 `ResidentEstateResponse`: `id: UUID`, `name: string` (both required). Same
 shape as `ResidentContextResponse.EstateLabel`; reuse that record if it reads
@@ -121,13 +114,9 @@ updated with the change.
 - Search with no matches: empty list, the form shows "No estates match".
 - Two estates with the same name: both appear; ordered by name then ID. No
   extra detail (address) is shown - see Open questions.
-- Abuse: the only gate is a WorkOS sign-in plus the input limits and, if kept,
-  the 20-per-hour cap. Anyone who signs up can report into any estate and can
+- Abuse: the only gate is a WorkOS sign-in plus the input limits. Anyone who signs up can report into any estate and can
   enumerate estate names 20 at a time. Staff can already mark reports as
   duplicates; there is no "reject as spam" action.
-- The cap counts reports in all estates, so heavy legitimate users (e.g. a
-  council member logging many faults) could hit it; 20/hour is meant to be well
-  above normal use.
 - SSR: `/reports/new` still needs only a session; the estate search query is
   keyed by user ID and `q`.
 
@@ -141,7 +130,8 @@ updated with the change.
   reporter to staff.
 - Self-service "join this estate as a resident" from the report form.
 - A spam/reject status for staff.
-- Rate limiting anywhere other than report creation.
+- Per-user submission caps / rate limiting. Sign-in plus the existing input
+  limits are the only guard for now.
 
 ## Open questions
 
@@ -152,7 +142,6 @@ updated with the change.
 - Should search results show more than the name (e.g. town or address) to tell
   same-named estates apart? `Estate` has no address field today that I relied
   on - confirm.
-- Keep the 20-per-hour cap, change the number, or drop it?
 - Should staff be told the reporter is not a resident of the estate (a
   "visitor" badge)? Not proposed, as staff see no reporter today.
 - Should the resident home (`hasResidentMembership`) also open to non-members

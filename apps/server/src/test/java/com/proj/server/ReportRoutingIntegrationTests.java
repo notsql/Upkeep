@@ -31,11 +31,11 @@ import com.proj.server.resident.ResidentReportException;
 import com.proj.server.routing.Classification;
 import com.proj.server.routing.ClassificationFailedException;
 import com.proj.server.routing.DispatchDeliveryJob;
+import com.proj.server.routing.EmailSendException;
+import com.proj.server.routing.EmailSender;
 import com.proj.server.routing.FaultClassifier;
+import com.proj.server.routing.OutboundEmail;
 import com.proj.server.routing.ReportClassificationJob;
-import com.proj.server.routing.WorkOrderEmail;
-import com.proj.server.routing.WorkOrderEmailSender;
-import com.proj.server.routing.WorkOrderSendException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -97,7 +97,7 @@ class ReportRoutingIntegrationTests {
     FaultClassifier classifier;
 
     @MockitoBean
-    WorkOrderEmailSender sender;
+    EmailSender sender;
 
     @MockitoBean
     com.proj.server.workos.WorkOSService workOS;
@@ -587,14 +587,14 @@ class ReportRoutingIntegrationTests {
 
         assertTrue(delivery.deliverNext());
 
-        var email = ArgumentCaptor.forClass(WorkOrderEmail.class);
+        var email = ArgumentCaptor.forClass(OutboundEmail.class);
         verify(sender).send(email.capture());
         assertEquals("lift@contractor.example", email.getValue().to());
         assertEquals(
                 "Work order " + order.get("reference") + ": Lift fault at Maple Estate",
                 email.getValue().subject());
-        assertTrue(email.getValue().body().contains("Doors won't open at level 3"));
-        assertFalse(email.getValue().body().contains("resident-a"));
+        assertTrue(email.getValue().text().contains("Doors won't open at level 3"));
+        assertFalse(email.getValue().text().contains("resident-a"));
         assertArrayEquals(
                 new byte[] {7, 7, 7}, email.getValue().attachments().getFirst().bytes());
         var dispatch = dispatchFor((UUID) order.get("id"));
@@ -611,9 +611,7 @@ class ReportRoutingIntegrationTests {
         var report = reviewReport(estate);
         mvc.perform(send(estate, report, "LIFT", "MEDIUM")).andExpect(status().isCreated());
         var order = (UUID) workOrderFor(report).get("id");
-        doThrow(new WorkOrderSendException("SMTP_AUTH", "rejected"))
-                .when(sender)
-                .send(any());
+        doThrow(new EmailSendException("AUTH", "rejected")).when(sender).send(any());
 
         for (int attempt = 1; attempt <= 5; attempt++) {
             assertTrue(delivery.deliverNext());
@@ -621,7 +619,7 @@ class ReportRoutingIntegrationTests {
         }
 
         assertEquals("FAILED", dispatchFor(order).get("status"));
-        assertEquals("SMTP_AUTH", dispatchFor(order).get("lastErrorCode"));
+        assertEquals("AUTH", dispatchFor(order).get("lastErrorCode"));
         assertEquals("ASSIGNED", workOrderFor(report).get("status"));
         assertFalse(delivery.deliverNext());
         mvc.perform(as("estate-owner", post(workOrders(estate) + "/" + order + "/dispatch/retry")))
@@ -663,7 +661,7 @@ class ReportRoutingIntegrationTests {
 
         assertTrue(delivery.deliverNext());
 
-        var email = ArgumentCaptor.forClass(WorkOrderEmail.class);
+        var email = ArgumentCaptor.forClass(OutboundEmail.class);
         verify(sender).send(email.capture());
         assertEquals("lift@contractor.example", email.getValue().to());
         assertTrue(email.getValue().subject().startsWith("Work order "));

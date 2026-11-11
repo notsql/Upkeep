@@ -25,15 +25,15 @@ public class DispatchDeliveryJob {
     private static final Logger log = LoggerFactory.getLogger(DispatchDeliveryJob.class);
 
     private final RoutingRepository routing;
-    private final ObjectProvider<WorkOrderEmailSender> sender;
+    private final ObjectProvider<EmailSender> sender;
     private final ResidentImageStore images;
     private final TransactionTemplate transactions;
     private final Clock clock;
 
-    /** The sender exists only when SMTP is configured (see MailConfig); without it every send fails. */
+    /** The sender exists only when a Resend API key is set (see MailConfig); without it every send fails. */
     public DispatchDeliveryJob(
             RoutingRepository routing,
-            ObjectProvider<WorkOrderEmailSender> sender,
+            ObjectProvider<EmailSender> sender,
             ResidentImageStore images,
             TransactionTemplate transactions,
             Clock clock) {
@@ -64,9 +64,9 @@ public class DispatchDeliveryJob {
         String failure = null;
         try {
             var mail = sender.getIfAvailable();
-            if (mail == null) throw new WorkOrderSendException("MAIL_NOT_CONFIGURED", "No SMTP host is configured.");
+            if (mail == null) throw new EmailSendException("MAIL_NOT_CONFIGURED", "No email provider is configured.");
             mail.send(email(delivery));
-        } catch (WorkOrderSendException error) {
+        } catch (EmailSendException error) {
             failure = error.code();
         } catch (ResidentReportException error) {
             failure = "IMAGE_STORAGE";
@@ -89,7 +89,7 @@ public class DispatchDeliveryJob {
         return true;
     }
 
-    private WorkOrderEmail email(RoutingRepository.Delivery delivery) {
+    private OutboundEmail email(RoutingRepository.Delivery delivery) {
         var source = routing.source(delivery.reportId()).orElseThrow();
         var photos = source.images().stream()
                 .map(image -> new WorkOrderEmail.Image(images.read(image.key()), image.contentType()))

@@ -33,6 +33,8 @@ Who and what
   `MANAGER` or `CREW` (Owners count as Manager), or a contractor in the
   estate's contractor directory. Anything else is 422.
 - Assigning a `CLOSED` order is 409.
+- Crew cannot pick up an unassigned order themselves; only an Owner or
+  Manager can assign anyone, including the caller.
 
 Status effects
 
@@ -204,8 +206,14 @@ Example: `PUT .../work-orders/9f.../assignee` with
 Plain-English copy throughout; no ids, enums or status codes on screen.
 
 - `_auth/estates/$estateId/work-orders/$workOrderId/` detail: an "Assigned to"
-  row with a "Assign" / "Change" / "Remove" control (shadcn `Dialog` +
-  `Command` combobox grouped "Your team" and "Contractors"). Copy: "Who should
+  row with a "Assign" / "Change" / "Remove" control. The picker is a
+  searchable dropdown (shadcn Combobox pattern: `Command` inside `Popover`),
+  grouped "Your team" and "Contractors", placeholder "Search by name or
+  email". Type-ahead filters client-side by name and email over the
+  `assignees` response; no `?q=` on the endpoint (one estate's team and
+  contractors is small). `popover.tsx` exists in `packages/ui`; `command.tsx`
+  does not and must be added with
+  `pnpm dlx shadcn@latest add command -c packages/ui`. Copy: "Who should
   do this job?", "We'll email Ace Plumbing the job details.", "Priya will see
   this in her notifications." Replaces `work-order-contractor-email.tsx`; the
   email status line ("Email sent", "Email didn't go through - Try again")
@@ -256,11 +264,7 @@ Plain-English copy throughout; no ids, enums or status codes on screen.
 
 ## Open questions
 
-1. Should Crew be able to *take* an unassigned order themselves ("I'll do
-   this")? Assumed no.
-2. Should unassigning an `IN_PROGRESS` order instead return it to `OPEN`?
+1. Should unassigning an `IN_PROGRESS` order instead return it to `OPEN`?
    Assumed it stays `IN_PROGRESS` (work may already be under way).
-3. Do Owners appear in the member candidate list? Assumed yes, labelled
+2. Do Owners appear in the member candidate list? Assumed yes, labelled
    "Manager".
-4. Is the "superseded" cancellation of a pending email to the old contractor
-   worth building now, or acceptable to drop?

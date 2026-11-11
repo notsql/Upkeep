@@ -44,6 +44,7 @@ safety stories follow and reuse what is built here.
   confirms this shape with the ID-37 owner.
 - **Delivery:** email over SMTP through the Gmail account `csd.upkeep`, with
   the resident's photos attached. From and Reply-To are unset for now.
+  (Superseded for transport by decision 0051: email now goes through Resend.)
 - **Manager approval** is needed only when the system escalates.
 - **Confidence threshold:** a fixed constant of `0.8`.
 - **"Water dripping near lift lobby"** is inconclusive. The model escalates

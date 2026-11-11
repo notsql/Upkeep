@@ -3,6 +3,7 @@ package com.proj.server.routing;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.OffsetDateTime;
@@ -15,10 +16,10 @@ class WorkOrderEmailTests {
 
     @Test
     void theEmailIsAddressedToTheCopiedContractorAndNamesTheWorkOrder() {
-        var email = WorkOrderEmail.build(content("Lift stuck", "Doors won't open\nat level 3"));
+        OutboundEmail email = WorkOrderEmail.build(content("Lift stuck", "Doors won't open\nat level 3"));
 
         assertEquals("faults@acmelifts.example", email.to());
-        assertEquals("Acme Lifts", email.toName());
+        assertNull(email.replyTo());
         assertEquals("Work order WO-000042: Lift fault at Maple Estate", email.subject());
     }
 
@@ -26,14 +27,14 @@ class WorkOrderEmailTests {
     void theBodyCarriesTheResidentsWordsVerbatimAndWhereAndWhen() {
         var email = WorkOrderEmail.build(content("Lift stuck", "Doors won't open\nat level 3"));
 
-        assertTrue(email.body().contains("Work order: WO-000042"));
-        assertTrue(email.body().contains("Equipment: Lift"));
-        assertTrue(email.body().contains("Estate: Maple Estate, 1 Maple Road, 123456"));
-        assertTrue(email.body().contains("Location: Block A › Level 4 › Lift lobby"));
-        assertTrue(email.body().contains("Reported: 2026-10-26 06:05 UTC"));
-        assertTrue(email.body().contains("Lift stuck"));
-        assertTrue(email.body().contains("Doors won't open\nat level 3"));
-        assertTrue(email.body().contains("Photos attached: 2"));
+        assertTrue(email.text().contains("Work order: WO-000042"));
+        assertTrue(email.text().contains("Equipment: Lift"));
+        assertTrue(email.text().contains("Estate: Maple Estate, 1 Maple Road, 123456"));
+        assertTrue(email.text().contains("Location: Block A › Level 4 › Lift lobby"));
+        assertTrue(email.text().contains("Reported: 2026-10-26 06:05 UTC"));
+        assertTrue(email.text().contains("Lift stuck"));
+        assertTrue(email.text().contains("Doors won't open\nat level 3"));
+        assertTrue(email.text().contains("Photos attached: 2"));
     }
 
     @Test
@@ -68,16 +69,15 @@ class WorkOrderEmailTests {
         assertFalse(email.subject().contains("\n"));
         assertFalse(email.subject().contains("\r"));
         assertEquals("Work order WO-000042: Lift fault at Maple Estate", email.subject());
-        assertEquals("Acme  Bcc: someone@example.com", email.toName());
     }
 
     @Test
     void theEmailOmitsTheResidentsIdentityAndTheModelsJudgement() {
         var email = WorkOrderEmail.build(content("Lift stuck", "Doors"));
 
-        assertFalse(email.body().contains("resident-a"));
-        assertFalse(email.body().toLowerCase().contains("confidence"));
-        assertFalse(email.body().contains("private/"));
+        assertFalse(email.text().contains("resident-a"));
+        assertFalse(email.text().toLowerCase().contains("confidence"));
+        assertFalse(email.text().contains("private/"));
     }
 
     @Test
@@ -97,7 +97,7 @@ class WorkOrderEmailTests {
                 List.of()));
 
         assertTrue(email.attachments().isEmpty());
-        assertTrue(email.body().contains("Photos attached: none"));
+        assertTrue(email.text().contains("Photos attached: none"));
         assertEquals("Work order WO-000042: Common-area light fault at Maple Estate", email.subject());
     }
 

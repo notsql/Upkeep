@@ -75,6 +75,66 @@ Estate managers cannot make sense of the Notification settings screen today.
 - `AnomalyAlerts.abnormal()` stops reading `NotificationSettings`' threshold;
   it reads only the `anomalyEnabled` switch.
 
+### Email for a new unusual-readings alert
+
+Depends on `.spec/features/transactional-email-via-resend.md` for the
+`EmailSender` port (`void send(OutboundEmail)`; `OutboundEmail` has one `to`,
+`subject`, `text`, optional `replyTo`; the `ResendEmailSender` bean exists only
+when Resend is configured).
+
+- When `AnomalyAlerts.abnormal()` inserts a NEW open `ANOMALY` notification
+  (`insertAnomaly` returns true) and the estate's `anomalyEnabled` switch is
+  on, one email per recipient is sent for that alert.
+- No email when the alert is updated (`updateAnomaly`), resolved, or lost the
+  insert race to another check.
+- No email when the switch is off (no notification is created either).
+- No email, and no error, when no `EmailSender` bean exists (mail not
+  configured). The listener takes `ObjectProvider<EmailSender>` and returns if
+  it is absent.
+- Recipients: the estate owner (`Estate.ownerUserId`) and every current
+  MANAGER, as listed by `CouncilRepository.members(estateId)` (which already
+  adds the owner as MANAGER). Each address is sent once even if listed twice.
+- Where addresses come from: nowhere in our database. `EstateUser` holds only
+  `userId`; `EstateInvitation.email` is the invited address, not a reliable
+  current one. Addresses are resolved at send time through
+  `CouncilIdentity.user(userId).email()` (implemented by
+  `workos/WorkOSService`), the same call member listings use. No email cache
+  is added.
+- A recipient whose lookup fails, whose email is blank or unverified
+  (`Person.verified == false`) is skipped and logged at WARN; the others still
+  get the email.
+- A send failure is logged at WARN with the notification ID and is not
+  retried.
+- Email never blocks or fails the anomaly check: it runs after commit, off
+  the scoring thread.
+- Mechanism: `AnomalyAlerts` publishes `AnomalyAlertRaised(notificationId,
+  estateId, assetId)` inside the transaction; a `@TransactionalEventListener`
+  (default `AFTER_COMMIT`) hands it to a `TaskExecutor`, the same pattern as
+  `AnomalyScoringScheduler.readingsStored`. If the transaction rolls back, no
+  email. Chosen over an outbox: the only outbox (`WorkOrderDispatch` /
+  `DispatchDeliveryJob`) is specific to work orders and records contractor
+  delivery; a general one would be a new table, status machine and job for a
+  best-effort alert whose in-app notification is already the record. Cost
+  accepted: an email lost to a crash between commit and send is not re-sent.
+- Copy (plain English, no scores or codes):
+  - Subject: `Unusual readings: <asset name> at <estate name>`
+  - Body:
+    ```
+    Hello,
+
+    The readings from <asset name> at <estate name> look unusual. It may need
+    a check.
+
+    See the asset: <web origin>/estates/<estateId>/assets/<assetId>
+
+    You are getting this because you manage <estate name>. A manager can turn
+    these messages off under the estate's Notification settings.
+    ```
+- The web origin is the first entry of the existing `app.cors.allowed-origins`
+  property (env `CORS_ALLOWED_ORIGINS`, default `http://localhost:3001`). No
+  new property or secret is added; the human has confirmed the first CORS
+  origin is the web app's public address in every environment.
+
 ### Service due milestones
 
 - Milestones are fixed: 90, 60, 30 and 14 days before `dueOn`. Not
@@ -266,13 +326,23 @@ client wording needed beyond the summary. Update
   milestone sequence; the old open row resolves or is replaced.
 - Switch off then on with no change in date: a milestone that fired before
   is not resent (dedupe covers resolved rows).
+- Anomaly email: WorkOS slow or down, so lookups fail. The alert is
+  committed already; the email is skipped for those recipients and logged.
+- Anomaly email: a manager removed between commit and send is not emailed,
+  as membership is read at send time.
+- Anomaly email: estate with no verified manager address: no email, logged.
 - Existing rows with old thresholds: ignored; an estate that set 0.80 now gets
   alerts at 0.51. Say so in release notes.
 
 ## Out of scope
 
 - Per-user notification preferences.
-- Email, SMS or push delivery.
+- Email for any type other than a new `ANOMALY` alert (follow-up: service
+  due, expected repair, check failed, work order assigned).
+- SMS or push delivery.
+- Per-user email opt-out (the estate switch is the only control).
+- Retries or an outbox for alert email.
+- Caching member email addresses.
 - Custom milestone lists or per-estate milestones.
 - Quiet hours or digests.
 - A 14-day repair reminder or a predicted repair date (needs failure-risk
@@ -281,10 +351,8 @@ client wording needed beyond the summary. Update
 
 ## Open questions
 
-1. Repair dedupe episode: is "per window, reset only when the asset leaves
-   all windows" right, or should a repair reminder reset after a repair
-   event? The proposal resets when no `REPAIR_PREDICTED` is open for the
-   asset after a sweep.
+1. Resolved: repair milestones are 90/60/30 only, reset when the asset
+   leaves all windows.
 2. Should overdue services get one more reminder (e.g. on the due day), or is
    the 14-day one, which stays open while overdue, enough?
 3. Should managers be able to turn off Check requested for staff, given it is
@@ -300,6 +368,8 @@ client wording needed beyond the summary. Update
   per-estate tuning, and repair milestones follow forecast windows.
 - Tests first: `NotificationSweeper` milestone tests (each milestone, nearest
   only, no repeat, reset on new `dueOn`, switch off skips insert but resolves),
-  `AnomalyAlerts` fixed threshold, check insert sites honour switches,
+  `AnomalyAlerts` fixed threshold, anomaly email listener (sent once on
+  insert, not on update, not when switch off, not without a sender, skips
+  failed lookups), check insert sites honour switches,
   settings controller 400 on missing switch, web form renders switches by
   label and saves.

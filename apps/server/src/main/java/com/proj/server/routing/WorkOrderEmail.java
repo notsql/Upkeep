@@ -7,13 +7,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The plain-text email that carries a work order to its contractor: the resident's own words and photos, never
+ * Builds the plain-text email that carries a work order to its contractor: the resident's own words and photos, never
  * their identity or the model's judgement.
  */
-public record WorkOrderEmail(String to, String toName, String subject, String body, List<Attachment> attachments) {
+public final class WorkOrderEmail {
     private static final DateTimeFormatter REPORTED = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm 'UTC'");
-
-    public record Attachment(String filename, String contentType, byte[] bytes) {}
 
     public record Image(byte[] bytes, String contentType) {}
 
@@ -30,7 +28,7 @@ public record WorkOrderEmail(String to, String toName, String subject, String bo
             String description,
             List<Image> photos) {}
 
-    public static WorkOrderEmail build(Content content) {
+    public static OutboundEmail build(Content content) {
         var subject = "Work order %s: %s fault at %s"
                 .formatted(content.reference(), content.equipmentType().label(), oneLine(content.estateName()));
         var photos = content.photos().isEmpty()
@@ -65,16 +63,17 @@ public record WorkOrderEmail(String to, String toName, String subject, String bo
                 content.title(),
                 content.description(),
                 photos);
-        var attachments = new ArrayList<Attachment>();
+        var attachments = new ArrayList<OutboundEmail.Attachment>();
         for (int i = 0; i < content.photos().size(); i++) {
             var photo = content.photos().get(i);
             var extension = "image/png".equals(photo.contentType()) ? "png" : "jpg";
-            attachments.add(
-                    new Attachment("photo-%d.%s".formatted(i + 1, extension), photo.contentType(), photo.bytes()));
+            attachments.add(new OutboundEmail.Attachment(
+                    "photo-%d.%s".formatted(i + 1, extension), photo.contentType(), photo.bytes()));
         }
-        return new WorkOrderEmail(
-                content.contractorEmail(), oneLine(content.contractorName()), subject, body, List.copyOf(attachments));
+        return new OutboundEmail(content.contractorEmail(), subject, body, null, List.copyOf(attachments));
     }
+
+    private WorkOrderEmail() {}
 
     /** Header values must stay on one line, or a CR/LF could inject further headers. */
     private static String oneLine(String value) {

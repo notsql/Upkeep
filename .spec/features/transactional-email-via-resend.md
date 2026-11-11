@@ -1,6 +1,6 @@
 # Transactional email via Resend
 
-**Status:** draft
+**Status:** agreed
 **Owner:** Ong Zheng Kai
 
 ## Problem
