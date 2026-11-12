@@ -4,7 +4,8 @@ import { FormPage } from "@/components/page/form-page";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
-import { useResidentContext } from "@/lib/reports";
+import { useAppAccess } from "@/lib/access";
+import { type ReportEstate, useResidentContext } from "@/lib/reports";
 import { NewReportForm } from "@/routes/_auth/reports/new/-components/new-report-page/new-report-form";
 
 export function NewReportPage({
@@ -13,11 +14,15 @@ export function NewReportPage({
   requestedEstateId?: string;
 } = {}) {
   const context = useResidentContext();
+  const access = useAppAccess();
   const retry = useCallback(() => {
     context.refetch();
   }, [context]);
 
-  if (!context.data) {
+  const ownEstates = context.data?.estates;
+  const isOwn = ownEstates?.some((estate) => estate.id === requestedEstateId);
+  const needsStaffEstate = Boolean(requestedEstateId) && !isOwn;
+  if (!ownEstates || (needsStaffEstate && access.isPending)) {
     // Same column as FormPage; the header appears once the estate is known.
     return (
       <PageLayout className="max-w-3xl">
@@ -32,6 +37,17 @@ export function NewReportPage({
       </PageLayout>
     );
   }
+  const staffEstate = needsStaffEstate
+    ? access.data?.estates.find(
+        (estate) => estate.estateId === requestedEstateId
+      )
+    : undefined;
+  const estates: ReportEstate[] = staffEstate
+    ? [
+        ...ownEstates,
+        { id: staffEstate.estateId, name: staffEstate.estateName },
+      ]
+    : ownEstates;
   return (
     <FormPage
       breadcrumbs={[
@@ -48,10 +64,7 @@ export function NewReportPage({
       icon={ClipboardPenLine}
       title="Report a fault"
     >
-      <NewReportForm
-        estates={context.data.estates}
-        initialEstateId={requestedEstateId}
-      />
+      <NewReportForm estates={estates} initialEstateId={requestedEstateId} />
     </FormPage>
   );
 }

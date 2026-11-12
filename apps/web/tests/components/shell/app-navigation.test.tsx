@@ -120,18 +120,32 @@ it("groups an owner's destinations with no Workspace group or switcher", async (
   expect(names).toEqual([
     "Overview",
     "Fault reports",
-    "Contractors",
     "Inspections",
     "Work orders",
     "Assets",
     "Locations",
     "Documents",
     "People & access",
+    "Contractors",
     "Estate settings",
   ]);
   expect(
     nav.getAllByRole("group").map((group) => group.getAttribute("aria-label"))
   ).toEqual(["Maintenance", "Assets", "Administration"]);
+  const groupLinks = (label: string) =>
+    within(nav.getByRole("group", { name: label }))
+      .getAllByRole("link")
+      .map((link) => link.textContent);
+  expect(groupLinks("Maintenance")).toEqual([
+    "Fault reports",
+    "Inspections",
+    "Work orders",
+  ]);
+  expect(groupLinks("Administration")).toEqual([
+    "People & access",
+    "Contractors",
+    "Estate settings",
+  ]);
   for (const label of ["Operations", "Records"]) {
     expect(nav.queryByRole("group", { name: label })).toBeNull();
   }

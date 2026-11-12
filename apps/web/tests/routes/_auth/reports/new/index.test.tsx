@@ -362,6 +362,41 @@ it("reports only in the resident estate even when the account manages another es
   expect(createBody().locationId).toBe(levelId);
 });
 
+it("preselects a requested estate the account manages but does not live in", async () => {
+  const original = get.getMockImplementation();
+  get.mockImplementation((path: string, init?: unknown) => {
+    if (path === "/access/context") {
+      return Promise.resolve({ data: mixedAccess });
+    }
+    if (path === "/resident/context") {
+      return Promise.resolve({
+        data: {
+          estates: [{ id: "maple", name: "Maple Estate" }],
+          canSubmit: true,
+        },
+      });
+    }
+    return original?.(path, init);
+  });
+  renderWithProviders(<NewReportPage requestedEstateId="pine" />);
+  await waitFor(() =>
+    expect(
+      (screen.getByRole("combobox", { name: "Estate" }) as HTMLInputElement)
+        .value
+    ).toBe("Pine Estate")
+  );
+  await waitFor(() =>
+    expect(get).toHaveBeenCalledWith(
+      "/resident/locations",
+      expect.objectContaining({
+        params: expect.objectContaining({
+          query: expect.objectContaining({ estateId: "pine" }),
+        }),
+      })
+    )
+  );
+});
+
 it("keeps entered text and selected location after an upload failure", async () => {
   post.mockResolvedValue({
     error: { message: "Storage unavailable" },

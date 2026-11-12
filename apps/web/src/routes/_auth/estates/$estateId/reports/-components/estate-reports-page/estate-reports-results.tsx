@@ -1,17 +1,13 @@
 import type { components } from "@proj/api/schema";
-import { Badge } from "@proj/ui/components/badge";
-import { Link } from "@tanstack/react-router";
-import { ListRows } from "@/components/list/list-row";
-import { DuplicateBadges } from "@/components/reports/duplicate-badges";
-import { ReportRow } from "@/components/reports/report-row";
-import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { LoadMore } from "@/components/table/load-more";
 import { Pagination } from "@/components/table/pagination";
 import { ReportRequestError } from "@/lib/estate-reports";
 import type { PagedList } from "@/lib/infinite-list";
-import { routingStateLabel } from "@/lib/report-routing";
+import { useMobile } from "@/lib/use-mobile";
+import { EstateReportsItems } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/estate-reports-items";
+import { EstateReportsTable } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/estate-reports-table";
 import { ReportsEmpty } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/reports-empty";
 
 export function EstateReportsResults({
@@ -33,6 +29,13 @@ export function EstateReportsResults({
   onNext: () => void;
   onFirst: () => void;
 }) {
+  const mobile = useMobile();
+  const items = reports.data?.items ?? [];
+  const list = mobile ? (
+    <EstateReportsItems estateId={estateId} reports={items} />
+  ) : (
+    <EstateReportsTable estateId={estateId} reports={items} />
+  );
   const rejectedPage =
     !!cursor &&
     reports.error instanceof ReportRequestError &&
@@ -54,39 +57,7 @@ export function EstateReportsResults({
       {reports.data?.items.length === 0 ? (
         <ReportsEmpty filtered={filtered} onClear={onClear} />
       ) : null}
-      {reports.isError || !reports.data?.items.length ? null : (
-        <ListRows label="Reports">
-          {reports.data.items.map((report) => (
-            <ReportRow
-              badges={<DuplicateBadges report={report} />}
-              key={report.id}
-              report={report}
-              title={
-                <Link
-                  params={{ estateId, reportId: report.id }}
-                  to="/estates/$estateId/reports/$reportId"
-                >
-                  {report.title}
-                </Link>
-              }
-              urgency={
-                <ReportUrgencyBadges
-                  isSafety={report.isSafety}
-                  urgency={report.urgency}
-                />
-              }
-            >
-              {report.routing ? (
-                <div>
-                  <Badge variant="outline">
-                    Routing: {routingStateLabel(report.routing.state)}
-                  </Badge>
-                </div>
-              ) : null}
-            </ReportRow>
-          ))}
-        </ListRows>
-      )}
+      {!reports.isError && items.length > 0 ? list : null}
       {reports.data && !reports.isError && reports.more ? (
         <LoadMore {...reports.more} />
       ) : null}

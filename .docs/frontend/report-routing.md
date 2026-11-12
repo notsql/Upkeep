@@ -34,7 +34,8 @@ created, Dismissed), `PRIORITIES`, `workOrderStatusLabel` and
   (`-components/contractor-row.tsx`) with labelled Inputs ("Lift contractor
   name" and "email"), "Save lift contractor", and a "Remove lift contractor"
   Dialog. The `_auth` guard returns Not Found without `canCreateWorkOrders`, and
-  navigation shows "Contractors" (HardHat icon) only with that capability.
+  navigation shows "Contractors" (HardHat icon) in the Administration group only
+  with that capability.
 - **Estate report list:** each card shows an outline Badge "Routing: <state>".
   A "Routing" Select (`-components/routing-state-filter.tsx`) keeps
   `routingState` in the URL alongside the block and level filters.

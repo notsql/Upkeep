@@ -176,12 +176,6 @@ function estateGroups(
           canOpenFaultReports(permission)
         ),
         ...item(
-          "Contractors",
-          "/estates/$estateId/contractors",
-          HardHat,
-          canOpenContractors(permission)
-        ),
-        ...item(
           "Inspections",
           "/estates/$estateId/inspections",
           ClipboardCheck,
@@ -220,7 +214,16 @@ function estateGroups(
     },
     {
       label: "Administration",
-      items: [...people, ...settings],
+      items: [
+        ...people,
+        ...item(
+          "Contractors",
+          "/estates/$estateId/contractors",
+          HardHat,
+          canOpenContractors(permission)
+        ),
+        ...settings,
+      ],
     },
   ];
 }

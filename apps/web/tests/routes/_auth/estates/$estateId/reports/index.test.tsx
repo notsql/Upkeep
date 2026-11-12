@@ -35,6 +35,9 @@ const { get, patch, auth, listeners } = vi.hoisted(() => ({
   auth: { user: { id: "crew-user" }, loading: false },
   listeners: new Set<() => void>(),
 }));
+// Desktop by default; line-item tests switch to mobile.
+const device = vi.hoisted(() => ({ mobile: false }));
+vi.mock("@/lib/use-mobile", () => ({ useMobile: () => device.mobile }));
 vi.mock("@/lib/api", () => ({ api: { GET: get, PATCH: patch } }));
 vi.mock("@/lib/access-server", () => ({
   getSessionIdentity: () => Promise.resolve(auth.user),
@@ -225,6 +228,7 @@ it("explains that no level requires a block common area", async () => {
 });
 
 beforeEach(() => {
+  device.mobile = false;
   auth.user = { id: "crew-user" };
   get.mockReset().mockImplementation(serve);
   patch.mockReset().mockResolvedValue({
@@ -261,7 +265,14 @@ it("shows no breadcrumbs on the top-level fault report list", async () => {
   expect(screen.queryByRole("navigation", { name: "Breadcrumbs" })).toBeNull();
 });
 
+it("links staff to the report form with this estate chosen", async () => {
+  await setup();
+  const create = await screen.findByRole("link", { name: "Create" });
+  expect(create.getAttribute("href")).toBe(`/reports/new?estateId=${estateId}`);
+});
+
 it("labels each estate report's metadata like the resident report cards", async () => {
+  device.mobile = true;
   await setup();
   await screen.findByRole("link", { name: report.title });
   for (const label of [
@@ -279,6 +290,7 @@ it("labels each estate report's metadata like the resident report cards", async 
 });
 
 it("shows estate reports with full location paths and links to estate-scoped detail", async () => {
+  device.mobile = true;
   await setup();
   const link = await screen.findByRole("link", { name: report.title });
   expect(link.getAttribute("href")).toBe(`${basePath}/${reportId}`);
@@ -1290,6 +1302,7 @@ it("shows the latest urgency change without exposing a full history interface", 
 });
 
 it("badges originals with duplicate counts and linked reports with their state", async () => {
+  device.mobile = true;
   const original = {
     ...report,
     id: "00000000-0000-0000-0000-000000000040",
@@ -1350,6 +1363,7 @@ it("badges originals with duplicate counts and linked reports with their state",
 });
 
 it("shows each report's routing state and filters the list by it", async () => {
+  device.mobile = true;
   get.mockImplementation((path: string) => {
     if (path.endsWith("/reports")) {
       return Promise.resolve({
@@ -1395,4 +1409,67 @@ it("shows each report's routing state and filters the list by it", async () => {
       })
     )
   );
+});
+
+function serveReports(items: unknown[]) {
+  get.mockImplementation((path: string) =>
+    path.endsWith("/reports")
+      ? Promise.resolve({ data: { items, nextCursor: null } })
+      : serve(path)
+  );
+}
+
+it("lists reports in a table on desktop", async () => {
+  await setup();
+  const table = await screen.findByRole("table", { name: "Reports" });
+  expect(
+    within(table)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent)
+  ).toEqual([
+    "Title",
+    "Location",
+    "Urgency",
+    "Duplicates",
+    "Routing",
+    "Submitted",
+  ]);
+  expect(within(table).getAllByRole("row")).toHaveLength(2);
+  const link = within(table).getByRole("link", { name: report.title });
+  expect(link.getAttribute("href")).toBe(`${basePath}/${reportId}`);
+  within(table).getByRole("cell", { name: report.location.label });
+});
+
+it("shows the routing label in the table, or a dash without routing", async () => {
+  serveReports([
+    {
+      ...report,
+      routing: {
+        state: "NEEDS_REVIEW",
+        reason: "Needs a check",
+        classification: null,
+        workOrder: null,
+        decidedAt: null,
+      },
+    },
+    { ...report, id: imageId, title: "Broken light", routing: null },
+  ]);
+  await setup();
+  const table = await screen.findByRole("table", { name: "Reports" });
+  const routed = within(table)
+    .getByRole("link", { name: report.title })
+    .closest("tr") as HTMLElement;
+  within(routed).getByText("Needs review");
+  const unrouted = within(table)
+    .getByRole("link", { name: "Broken light" })
+    .closest("tr") as HTMLElement;
+  within(unrouted).getByRole("cell", { name: "—" });
+});
+
+it("keeps report line items on mobile", async () => {
+  device.mobile = true;
+  await setup();
+  const list = await screen.findByRole("list", { name: "Reports" });
+  within(list).getByRole("link", { name: report.title });
+  expect(screen.queryByRole("table")).toBeNull();
 });

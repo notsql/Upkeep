@@ -62,6 +62,10 @@ silently chooses another estate. The form initializes that authorized estate,
 then uses the existing per-estate location query. Changing the form's Estate
 Select also updates URL estateId so the shell context stays synchronized. No API
 or mutation changes.
+If the requested estateId is not a resident estate but is in `useAppAccess()`'s
+`estates` (any staff role, e.g. via the staff Fault reports "Create" button),
+NewReportPage appends it as `{ id, name }` to the form's estates so it is
+preselected; it shows the loading state until access resolves.
 The shell estate dropdown includes all membership roles, even a sole Resident
 estate. The selected estate/role show in the header switcher with truncated text and full accessible names/descriptions. The opened menu wraps full names within viewport bounds. Resident entries label their destination as My reports during browsing or Report a fault during explicit creation; unavailable reporting only disables creation, while owned history remains readable.
 

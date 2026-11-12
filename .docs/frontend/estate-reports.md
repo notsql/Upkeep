@@ -31,7 +31,7 @@ supplies the existing report capabilities.
 
 | Route folder | Screen and components | API calls |
 | --- | --- | --- |
-| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, state in `use-estate-reports-page.ts`) | Flat `ListRows` "Reports" of `ReportRow`s (`components/reports/report-row.tsx`, design-system "List rows"; no cards) with linked `h2` title, labelled estate name, full location path, status Badge and submission time. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
+| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, which picks `estate-reports-table.tsx` (desktop) or `estate-reports-items.tsx` (mobile, below 768px) via `useMobile()`; state in `use-estate-reports-page.ts`) | Desktop: shadcn `Table` `aria-label="Reports"` with columns Title (link to the report, `max-w-sm whitespace-normal`), Location (full path, `location.label`), Urgency (`ReportUrgencyBadges`), Duplicates (`DuplicateBadges`, empty when none), Routing (outline Badge with `routingStateLabel`, or "—" when unrouted), Submitted (`<time>`, `toLocaleString()`); headers are not sortable, the sort/filter controls above are unchanged. Mobile: flat `ListRows` "Reports" of `ReportRow`s (`components/reports/report-row.tsx`, design-system "List rows"; no cards) with linked `h2` title, labelled estate name, full location path, status Badge, submission time and a "Routing: <state>" Badge. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
 | `reports/$reportId/index.tsx` → `/estates/{estateId}/reports/{reportId}` | Shared report Card/Badge and metadata, Updated timestamp, complete plain-text description, private images and empty/image-error states. Correction uses shadcn Dialog, Label, Select, Button and Alert in adjacent `-components/change-location-dialog/change-location-dialog.tsx`. The adjacent `-components/private-report-image.tsx` provides the responder query wrapper. | GET `/estates/{estateId}/reports/{reportId}`; GET `/estates/{estateId}/reports/{reportId}/images/{imageId}`; PATCH `/estates/{estateId}/reports/{reportId}/location`; locations for correction |
 
 The list's adjacent `-components/report-filters/report-filters.tsx` renders two filter groups:
@@ -154,8 +154,10 @@ dialog. List, detail, image and correction-location loads use `LoadingState`.
 
 ## Design-system pass
 
-The list uses `ListPageHeader` (`icon={ClipboardList}`, `filters` =
-`FilterToggle`; no create action). `ReportFilters` takes `id`/`open` from
+The list uses `ListPageHeader` titled "Fault reports" (`icon={ClipboardList}`, `filters` =
+`FilterToggle`; `create` = `{ to: "/reports/new", search: { estateId } }`,
+a "Create" link shown to everyone who can view the list - reporting is open to
+any signed-in user, decision 0053). `ReportFilters` takes `id`/`open` from
 `useFilterPanel(countReportFilters(filters)).barProps`, so the bar is collapsed
 until toggled (open on load when the URL has filters). The detail uses
 `DetailPageHeader` (breadcrumbs, `icon={ClipboardList}`) whose Create work order link has a
@@ -222,7 +224,7 @@ and Closed is success. An unknown status shows as-is, outlined.
 
 ## Routing (ID-70)
 
-The list shows a "Routing: <state>" Badge per report and a "Routing" filter
+The list shows each report's routing state (a Routing column on desktop, a "Routing: <state>" Badge on mobile) and a "Routing" filter
 (`routingState`). The detail page adds the routing card, with send, dismiss and
 retry for work-order creators, and polls every 5 s while classifying. See
 [report-routing.md](report-routing.md).

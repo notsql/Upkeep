@@ -28,6 +28,7 @@ export function EstateReportsPage({
   return (
     <PageLayout className="space-y-4">
       <ListPageHeader
+        create={{ search: { estateId }, to: "/reports/new" }}
         filters={{ activeCount, ...panel.toggleProps }}
         icon={ClipboardList}
         title="Fault reports"

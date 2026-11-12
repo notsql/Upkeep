@@ -133,13 +133,13 @@ a group with no visible items is not rendered.
 | --- | --- | --- | --- |
 | (unlabelled) | Overview | `` (exact match) | `canOpenOverview`: `canViewEstateDetails ?? canViewManagement` |
 | Maintenance | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
-| Maintenance | Contractors | `/contractors` | `canOpenContractors`: `canCreateWorkOrders` |
 | Maintenance | Inspections | `/inspections` (also active on `/inspections/schedules/**`) | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
 | Maintenance | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
 | Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewAssetHistory \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |
 | Assets | Locations | `/locations` | `canViewManagement` |
 | Assets | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
 | Administration | People & access | `/council` when `canOpenMembers`, else `/roles`; active on `/council/**` and `/roles/**` | `canOpenMembers \|\| canOpenRoles` (`canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions`; `canOpenRoles`: `canViewEstateRoles`) |
+| Administration | Contractors | `/contractors` | `canOpenContractors`: `canCreateWorkOrders` (decision 0055) |
 | Administration | Estate settings | `/edit`, else `/notification-settings` | `canOpenEstateSettings` (`owned \|\| canManageEstate`) or `canOpenNotificationSettings` (`role === "MANAGER"`); active on either path. The two pages are its Details and Notifications tabs (`EstateSettingsViews`). |
 
 There is no Devices, Readings, Device monitoring or Failure risk item: those
