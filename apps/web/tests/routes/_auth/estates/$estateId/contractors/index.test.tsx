@@ -108,6 +108,8 @@ async function setup() {
   return renderWithProviders(<RouterProvider router={router} />);
 }
 
+const WATER_LEAK = /water.leak/iu;
+
 beforeEach(() => {
   auth.user = { id: "manager" };
   state.role = "MANAGER";
@@ -205,7 +207,7 @@ it("sets the default contractor for an equipment type", async () => {
 
   await chooseOption(
     screen.getByRole("combobox", {
-      name: "Send new water-leak reports for gates to...",
+      name: "Send new reports of gate problems to...",
     }),
     "Bolt Electrical"
   );
@@ -236,3 +238,19 @@ it.each(["CREW", "COUNCIL"])(
     ).toBe(false);
   }
 );
+
+it("offers a default contractor for every type of problem, without assuming a water leak", async () => {
+  await setup();
+  await screen.findByRole("heading", { name: "Default contractors" });
+
+  screen.getByRole("combobox", {
+    name: "Send new reports of cleaning jobs to...",
+  });
+  screen.getByRole("combobox", {
+    name: "Send new reports of painting and repair jobs to...",
+  });
+  screen.getByRole("combobox", {
+    name: "Send new reports of security problems to...",
+  });
+  expect(screen.queryByText(WATER_LEAK)).toBeNull();
+});

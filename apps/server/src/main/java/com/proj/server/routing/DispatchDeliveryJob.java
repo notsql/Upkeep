@@ -99,6 +99,7 @@ public class DispatchDeliveryJob {
         return WorkOrderEmail.build(new WorkOrderEmail.Content(
                 delivery.reference(),
                 delivery.equipmentType(),
+                routing.currentCategory(delivery.reportId()).orElse(null),
                 delivery.name(),
                 delivery.email(),
                 source.estateName(),

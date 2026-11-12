@@ -15,12 +15,15 @@ import { EQUIPMENT_TYPES, type EquipmentType } from "@/lib/report-routing";
 
 const NOBODY = "none";
 
-const PLURALS: Record<EquipmentType, string> = {
-  PUMP: "pumps",
-  LIFT: "lifts",
-  GATE: "gates",
-  LIGHT: "common-area lights",
-  PLUMBING: "plumbing",
+const PROBLEMS: Record<EquipmentType, string> = {
+  PUMP: "pump problems",
+  LIFT: "lift problems",
+  GATE: "gate problems",
+  LIGHT: "common-area light problems",
+  PLUMBING: "plumbing problems",
+  CLEANING: "cleaning jobs",
+  REPAIRS: "painting and repair jobs",
+  SECURITY: "security problems",
 };
 
 function DefaultSelect({
@@ -54,9 +57,7 @@ function DefaultSelect({
   );
   return (
     <div className="grid gap-2">
-      <Label htmlFor={id}>
-        Send new water-leak reports for {PLURALS[type]} to...
-      </Label>
+      <Label htmlFor={id}>Send new reports of {PROBLEMS[type]} to...</Label>
       <Select
         disabled={save.isPending}
         items={items}
@@ -83,7 +84,7 @@ function DefaultSelect({
   );
 }
 
-/** One default contractor per kind of equipment, used when water-leak reports are sent on automatically. */
+/** One default contractor per type of problem, used when reports are sent on automatically. */
 export function DefaultContractors({
   estateId,
   contractors,
@@ -93,7 +94,7 @@ export function DefaultContractors({
 }) {
   return (
     <PageSection
-      description="When a resident reports a water leak, we can send the job straight to one of your contractors."
+      description="When a resident reports a problem, we can send the job straight to the contractor you choose for that type."
       icon={Settings2}
       title="Default contractors"
     >

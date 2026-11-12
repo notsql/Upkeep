@@ -1,4 +1,4 @@
-"""Fine-tunes MiniLM for the water leak classifier (notebooks 04 and 05)."""
+"""Fine-tunes MiniLM for the report classifiers (notebooks 04 to 07)."""
 
 import random
 
@@ -38,13 +38,14 @@ def train_model(
     learning_rate: float,
     class_weight: str,
     seed: int,
+    num_labels: int = 2,
 ):
-    """Trains a two-class model. Class 1 is WATER_LEAK."""
+    """Trains a classifier. With two labels, class 1 is WATER_LEAK."""
     set_seed(seed)
-    model = AutoModelForSequenceClassification.from_pretrained(BASE_MODEL, num_labels=2).to(device)
-    counts = np.bincount(train_labels, minlength=2)
-    balanced = len(train_labels) / (2 * counts)
-    weights = {"balanced": balanced, "sqrt": np.sqrt(balanced), "none": np.ones(2)}[class_weight]
+    model = AutoModelForSequenceClassification.from_pretrained(BASE_MODEL, num_labels=num_labels).to(device)
+    counts = np.bincount(train_labels, minlength=num_labels)
+    balanced = len(train_labels) / (num_labels * counts)
+    weights = {"balanced": balanced, "sqrt": np.sqrt(balanced), "none": np.ones(num_labels)}[class_weight]
     weights = torch.tensor(weights, dtype=torch.float32, device=device)
     loss_function = torch.nn.CrossEntropyLoss(weight=weights)
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=WEIGHT_DECAY)

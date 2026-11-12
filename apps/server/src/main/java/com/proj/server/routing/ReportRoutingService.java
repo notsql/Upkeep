@@ -66,6 +66,24 @@ public class ReportRoutingService {
         return routing.routings(List.of(reportId)).get(reportId);
     }
 
+    /**
+     * Records the category a person chose as the report's newest classification. Never routes, creates or emails a
+     * work order; choosing the current category writes nothing.
+     */
+    @Transactional
+    public ReportRoutingResponse changeCategory(UUID estateId, String user, UUID reportId, FaultCategory category) {
+        orders.authorize(estateId, user, true, true);
+        requireReport(estateId, reportId);
+        var state = routing.lockState(reportId);
+        if (state.isEmpty())
+            throw error(HttpStatus.CONFLICT, "This report was submitted before reports were sorted into types.");
+        if (state.get() == RoutingState.CLASSIFYING)
+            throw error(HttpStatus.CONFLICT, "This report is still being sorted. Try again in a minute.");
+        if (routing.currentCategory(reportId).orElse(null) != category)
+            routing.recordClassification(reportId, Classification.manual(category), user);
+        return routing.routings(List.of(reportId)).get(reportId);
+    }
+
     @Transactional
     public WorkOrderDispatchResponse dispatch(
             UUID estateId, String user, String name, UUID workOrderId, EquipmentType type) {

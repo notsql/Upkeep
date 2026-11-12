@@ -20,7 +20,7 @@ class WorkOrderEmailTests {
 
         assertEquals("faults@acmelifts.example", email.to());
         assertNull(email.replyTo());
-        assertEquals("Work order WO-000042: Lift fault at Maple Estate", email.subject());
+        assertEquals("Work order WO-000042: Lift at Maple Estate", email.subject());
     }
 
     @Test
@@ -28,7 +28,7 @@ class WorkOrderEmailTests {
         var email = WorkOrderEmail.build(content("Lift stuck", "Doors won't open\nat level 3"));
 
         assertTrue(email.text().contains("Work order: WO-000042"));
-        assertTrue(email.text().contains("Equipment: Lift"));
+        assertTrue(email.text().contains("Type of problem: Lift"));
         assertTrue(email.text().contains("Estate: Maple Estate, 1 Maple Road, 123456"));
         assertTrue(email.text().contains("Location: Block A › Level 4 › Lift lobby"));
         assertTrue(email.text().contains("Reported: 2026-10-26 06:05 UTC"));
@@ -56,6 +56,7 @@ class WorkOrderEmailTests {
         var email = WorkOrderEmail.build(new WorkOrderEmail.Content(
                 base.reference(),
                 base.equipmentType(),
+                base.category(),
                 "Acme\r\nBcc: someone@example.com",
                 base.contractorEmail(),
                 "Maple\nEstate",
@@ -68,7 +69,7 @@ class WorkOrderEmailTests {
 
         assertFalse(email.subject().contains("\n"));
         assertFalse(email.subject().contains("\r"));
-        assertEquals("Work order WO-000042: Lift fault at Maple Estate", email.subject());
+        assertEquals("Work order WO-000042: Lift at Maple Estate", email.subject());
     }
 
     @Test
@@ -86,6 +87,7 @@ class WorkOrderEmailTests {
         var email = WorkOrderEmail.build(new WorkOrderEmail.Content(
                 base.reference(),
                 EquipmentType.LIGHT,
+                null,
                 base.contractorName(),
                 base.contractorEmail(),
                 base.estateName(),
@@ -98,13 +100,36 @@ class WorkOrderEmailTests {
 
         assertTrue(email.attachments().isEmpty());
         assertTrue(email.text().contains("Photos attached: none"));
-        assertEquals("Work order WO-000042: Common-area light fault at Maple Estate", email.subject());
+        assertEquals("Work order WO-000042: Common-area light at Maple Estate", email.subject());
+    }
+
+    @Test
+    void aReportWithACategoryIsNamedByItInTheSubjectAndBody() {
+        var base = content("Bins overflowing", "Rubbish everywhere");
+        var email = WorkOrderEmail.build(new WorkOrderEmail.Content(
+                base.reference(),
+                EquipmentType.CLEANING,
+                FaultCategory.RUBBISH,
+                base.contractorName(),
+                base.contractorEmail(),
+                "ATTA",
+                base.estateAddress(),
+                base.locationLabel(),
+                base.reportedAt(),
+                base.title(),
+                base.description(),
+                base.photos()));
+
+        assertEquals("Work order WO-000042: Rubbish or litter at ATTA", email.subject());
+        assertTrue(email.text().contains("Type of problem: Rubbish or litter"));
+        assertFalse(email.text().contains("Equipment:"));
     }
 
     private static WorkOrderEmail.Content content(String title, String description) {
         return new WorkOrderEmail.Content(
                 "WO-000042",
                 EquipmentType.LIFT,
+                null,
                 "Acme Lifts",
                 "faults@acmelifts.example",
                 "Maple Estate",

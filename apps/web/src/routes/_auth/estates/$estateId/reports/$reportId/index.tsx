@@ -1,23 +1,32 @@
+import { Badge } from "@proj/ui/components/badge";
 import { buttonVariants } from "@proj/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ClipboardList, Plus } from "lucide-react";
 import { useCallback } from "react";
 import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
-import { ReportCard } from "@/components/reports/report-card";
-import { ReportDetails } from "@/components/reports/report-details";
-import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
+import { SectionCard } from "@/components/page/section-card";
+import { urgencyLabels } from "@/components/reports/urgency-labels";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
-import { useEstateReport, useEstateReportAccess } from "@/lib/estate-reports";
+import {
+  type EstateReport,
+  useEstateReport,
+  useEstateReportAccess,
+} from "@/lib/estate-reports";
 import { pageHead } from "@/lib/page-title";
+import { useRoutingAccess } from "@/lib/report-routing";
+import {
+  badgeVariantFor,
+  reportUrgencyTone,
+  workOrderStatusLabel,
+  workOrderStatusTone,
+} from "@/lib/status-tone";
 import { useWorkOrderAccess } from "@/lib/work-orders";
-import { ChangeLocationDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-location-dialog/change-location-dialog";
-import { ChangeUrgencyDialog } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/change-urgency-dialog/change-urgency-dialog";
+import { DetailsCard } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/details-card";
 import { DuplicateSection } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/duplicate-section/duplicate-section";
-import { LatestUrgencyChange } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/latest-urgency-change";
+import { NextStepCard } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/next-step-card";
 import { PrivateReportImage } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/private-report-image";
-import { RoutingCard } from "@/routes/_auth/estates/$estateId/reports/$reportId/-components/routing-card";
 
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/reports/$reportId/"
@@ -26,10 +35,95 @@ export const Route = createFileRoute(
   head: () => pageHead("Fault Report Details"),
 });
 
+/** A report status in plain words: "SUBMITTED" reads "Submitted". */
+function ReportStatusBadge({ status }: { status: string }) {
+  if (Object.hasOwn(workOrderStatusTone, status)) {
+    const known = status as keyof typeof workOrderStatusTone;
+    return (
+      <Badge variant={badgeVariantFor(workOrderStatusTone[known])}>
+        {workOrderStatusLabel[known]}
+      </Badge>
+    );
+  }
+  const words = status.toLowerCase().replaceAll("_", " ");
+  return (
+    <Badge variant="outline">
+      {words.charAt(0).toUpperCase() + words.slice(1)}
+    </Badge>
+  );
+}
+
+function HeaderAction({
+  estateId,
+  report,
+}: {
+  estateId: string;
+  report: EstateReport | undefined;
+}) {
+  const workOrders = useWorkOrderAccess(estateId);
+  const routed = report?.routing?.workOrder;
+  if (!report) {
+    return null;
+  }
+  if (routed) {
+    return workOrders.canView ? (
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        params={{ estateId, workOrderId: routed.id }}
+        to="/estates/$estateId/work-orders/$workOrderId"
+      >
+        View work order
+      </Link>
+    ) : null;
+  }
+  if (!workOrders.canCreate || report.duplicateOf) {
+    return null;
+  }
+  return (
+    <Link
+      className={buttonVariants()}
+      params={{ estateId }}
+      search={{ sourceReportId: report.id }}
+      to="/estates/$estateId/work-orders/new"
+    >
+      <Plus aria-hidden="true" />
+      Create work order
+    </Link>
+  );
+}
+
+function WhatWasReported({
+  estateId,
+  report,
+}: {
+  estateId: string;
+  report: EstateReport;
+}) {
+  return (
+    <SectionCard contentClassName="grid gap-3" title="What was reported">
+      <p className="wrap-anywhere whitespace-pre-wrap">{report.description}</p>
+      {report.images.length === 0 ? (
+        <p className="text-muted-foreground">No photos.</p>
+      ) : (
+        <div className="grid gap-3">
+          {report.images.map((image) => (
+            <PrivateReportImage
+              estateId={estateId}
+              imageId={image.id}
+              key={image.id}
+              reportId={report.id}
+            />
+          ))}
+        </div>
+      )}
+    </SectionCard>
+  );
+}
+
 function EstateReportDetailPage() {
   const { estateId, reportId } = Route.useParams();
   const access = useEstateReportAccess(estateId);
-  const workOrders = useWorkOrderAccess(estateId);
+  const routingAccess = useRoutingAccess(estateId);
   const report = useEstateReport(estateId, reportId);
   const reload = useCallback(async () => {
     const result = await report.refetch();
@@ -45,32 +139,37 @@ function EstateReportDetailPage() {
   return (
     <PageLayout className="space-y-4">
       <DetailPageHeader
-        actions={
-          workOrders.canCreate &&
-          report.data &&
-          !report.isError &&
-          !report.data.duplicateOf ? (
-            <Link
-              className={buttonVariants()}
-              params={{ estateId }}
-              search={{ sourceReportId: reportId }}
-              to="/estates/$estateId/work-orders/new"
-            >
-              <Plus aria-hidden="true" />
-              Create work order
-            </Link>
-          ) : null
-        }
+        actions={<HeaderAction estateId={estateId} report={loaded} />}
         breadcrumbs={[
           {
             label: "Fault reports",
             to: "/estates/$estateId/reports",
             params: { estateId },
           },
-          { label: report.data?.title ?? "Fault report" },
+          { label: loaded?.title ?? "Fault report" },
         ]}
         icon={ClipboardList}
-        title="Fault report details"
+        meta={
+          loaded?.createdAt
+            ? `Reported ${new Date(loaded.createdAt).toLocaleString()}`
+            : undefined
+        }
+        status={
+          loaded ? (
+            <div className="flex flex-wrap gap-2">
+              <ReportStatusBadge status={loaded.status} />
+              <Badge
+                variant={badgeVariantFor(reportUrgencyTone[loaded.urgency])}
+              >
+                {urgencyLabels[loaded.urgency]} urgency
+              </Badge>
+              {loaded.isSafety ? (
+                <Badge variant="destructive">Safety</Badge>
+              ) : null}
+            </div>
+          ) : null
+        }
+        title={loaded?.title ?? "Fault report"}
       />
       {report.isPending ? (
         <LoadingState label="Loading report…" rows={2} />
@@ -82,63 +181,38 @@ function EstateReportDetailPage() {
         />
       ) : null}
       {loaded ? (
-        <ReportCard
-          locationAction={
-            access.canRelocate || access.canChangeUrgency ? (
-              <div className="flex flex-wrap items-center gap-3">
-                {access.canRelocate ? (
-                  <ChangeLocationDialog
-                    estateId={estateId}
-                    reload={reload}
-                    report={loaded}
-                  />
-                ) : null}
-                {access.canChangeUrgency ? (
-                  <ChangeUrgencyDialog
-                    estateId={estateId}
-                    reload={reload}
-                    report={loaded}
-                  />
-                ) : null}
-              </div>
-            ) : null
-          }
-          report={loaded}
-          showUpdated
-          urgency={
-            <ReportUrgencyBadges
-              isSafety={loaded.isSafety}
-              urgency={loaded.urgency}
-            />
-          }
-        >
-          <LatestUrgencyChange change={loaded.lastUrgencyChange} />
-          <ReportDetails report={loaded}>
-            {loaded.images.map((image) => (
-              <PrivateReportImage
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="grid min-w-0 gap-4">
+            {loaded.routing ? (
+              <NextStepCard
                 estateId={estateId}
-                imageId={image.id}
-                key={image.id}
                 reportId={reportId}
+                routing={loaded.routing}
               />
-            ))}
-          </ReportDetails>
-        </ReportCard>
-      ) : null}
-      {loaded ? (
-        <DuplicateSection
-          canReview={access.canReviewDuplicates}
-          estateId={estateId}
-          reload={reload}
-          report={loaded}
-        />
-      ) : null}
-      {loaded?.routing ? (
-        <RoutingCard
-          estateId={estateId}
-          reportId={reportId}
-          routing={loaded.routing}
-        />
+            ) : null}
+            <WhatWasReported estateId={estateId} report={loaded} />
+          </div>
+          <div className="grid min-w-0 gap-4">
+            <DetailsCard
+              canChangeType={
+                routingAccess.canManage &&
+                !!loaded.routing &&
+                loaded.routing.state !== "CLASSIFYING"
+              }
+              canChangeUrgency={access.canChangeUrgency}
+              canRelocate={access.canRelocate}
+              estateId={estateId}
+              reload={reload}
+              report={loaded}
+            />
+            <DuplicateSection
+              canReview={access.canReviewDuplicates}
+              estateId={estateId}
+              reload={reload}
+              report={loaded}
+            />
+          </div>
+        </div>
       ) : null}
     </PageLayout>
   );

@@ -72,12 +72,12 @@ export function SendToContractorDialog({
         <DialogHeader>
           <DialogTitle>Send to contractor</DialogTitle>
           <DialogDescription>
-            Creates a work order from this report, assigns it to the equipment
-            type's contractor and emails them.
+            Creates a work order from this report, gives it to the contractor
+            you've set up for this type and emails them.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-2">
-          <Label htmlFor={typeId}>Equipment type</Label>
+          <Label htmlFor={typeId}>Contractor type</Label>
           <Select
             disabled={send.isPending}
             items={EQUIPMENT_TYPES}
@@ -85,7 +85,7 @@ export function SendToContractorDialog({
             value={type}
           >
             <SelectTrigger className="w-full" id={typeId}>
-              <SelectValue placeholder="Choose equipment type" />
+              <SelectValue placeholder="Choose contractor type" />
             </SelectTrigger>
             <SelectContent>
               {EQUIPMENT_TYPES.map((item) => (

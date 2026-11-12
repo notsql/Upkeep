@@ -215,7 +215,10 @@ public class SecurityConfig {
                                 "/estates/{estateId}/reports/{reportId}/duplicate",
                                 "/estates/{estateId}/reports/{reportId}/urgency")
                         .authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/estates/{estateId}/reports/{reportId}/duplicate")
+                        .requestMatchers(
+                                HttpMethod.PUT,
+                                "/estates/{estateId}/reports/{reportId}/duplicate",
+                                "/estates/{estateId}/reports/{reportId}/category")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PUT,

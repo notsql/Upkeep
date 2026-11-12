@@ -295,12 +295,18 @@ it("lets managers link an unlinked report to an original by hand", async () => {
     return Promise.resolve({ data: report });
   });
   await setup();
-  const link = await screen.findByRole("button", {
-    name: "Mark as same problem",
-  });
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Mark as duplicate" })
+  );
+  const outer = within(
+    await screen.findByRole("dialog", { name: "Mark as duplicate" })
+  );
+  const link = outer.getByRole("button", { name: "Mark as same problem" });
   expect(link.hasAttribute("disabled")).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Original report" }));
-  const dialog = within(await screen.findByRole("dialog"));
+  fireEvent.click(outer.getByRole("button", { name: "Original report" }));
+  const dialog = within(
+    await screen.findByRole("dialog", { name: "Choose original report" })
+  );
   expect(dialog.queryByRole("button", { name: "Water on floor" })).toBeNull();
   fireEvent.click(await dialog.findByRole("button", { name: "Leaking pipe" }));
   await waitFor(() => expect(link.hasAttribute("disabled")).toBe(false));
@@ -327,10 +333,15 @@ it("shows the server's reason when a manual link is refused", async () => {
   });
   await setup();
   fireEvent.click(
+    await screen.findByRole("button", { name: "Mark as duplicate" })
+  );
+  fireEvent.click(
     await screen.findByRole("button", { name: "Original report" })
   );
   fireEvent.click(
-    await within(await screen.findByRole("dialog")).findByRole("button", {
+    await within(
+      await screen.findByRole("dialog", { name: "Choose original report" })
+    ).findByRole("button", {
       name: "Leaking pipe",
     })
   );

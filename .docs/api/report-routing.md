@@ -1,7 +1,8 @@
 # Report routing and contractor email API (ID-70)
 
-Source of truth: `packages/api/openapi.json`. Spec:
-`.spec/features/equipment-fault-work-orders.md`. Decisions 0047 and 0048.
+Source of truth: `packages/api/openapi.json`. Specs:
+`.spec/features/equipment-fault-work-orders.md` and
+`.spec/features/fault-categories-and-report-page.md`. Decisions 0047 and 0048.
 Implementation: `com.proj.server.routing`, plus hooks in
 `com.proj.server.workorder` (see [work-orders.md](work-orders.md)).
 
@@ -25,13 +26,21 @@ endpoints. Errors are `EstateError { message }`; responses are
 2. `ReportClassificationJob` (every 15 s, first run after 30 s;
    `app.routing.poll-interval`, `app.routing.initial-delay`) claims a due row
    with `FOR UPDATE SKIP LOCKED` and a 3-minute lease. It calls
-   `FaultClassifier` (`OnnxFaultClassifier`, the in-process water leak model
-   `water-leak-minilm-v1`, decision 0049). The model sees the title and
+   `FaultClassifier` (`OnnxFaultClassifier` over `FaultCategoryModel`: TF-IDF +
+   logistic regression exported to ONNX, run in process by onnxruntime, version
+   `fault-category-tfidf-v1`). The model reads text only: the title and
    description joined by a space, never the photos, location or submitter.
+   Characters outside the Basic Multilingual Plane (emoji) and NUL become
+   spaces first, because onnxruntime's Java strings cannot carry them; they
+   are never part of a token anyway. The model loads once at startup and the
+   application does not start without it. It returns a calibrated probability
+   per category (see [Fault categories](#fault-categories)), mapped by
+   `Classification.fromProbabilities`.
 3. Writing the result locks the estate, then the routing row (lease checked).
    Each valid answer is stored in `ReportClassification`.
-4. **Automatic routing** needs `EQUIPMENT_FAULT`, a type, `confidence >= 0.80`
-   and an `EquipmentProviderRoute` for the type. It then:
+4. **Automatic routing** needs `EQUIPMENT_FAULT`, a type, `confidence >= 0.80`,
+   a category not in `RoutingDecision.NEVER_AUTOMATIC` and an
+   `EquipmentProviderRoute` for the type. It then:
    - creates an ID-36 work order through `WorkOrderService.createFromRoutedReport`
      (`EQUIPMENT_FAULT`, `MEDIUM`, `RESIDENT_REPORT` with `sourceReportId`, the
      report's location, the resident's description verbatim, no asset, creator
@@ -41,7 +50,7 @@ endpoints. Errors are `EstateError { message }`; responses are
    - sets routing to `WORK_ORDER` with `workOrderId`.
 5. Anything else goes to `NEEDS_REVIEW` with a reason. The reason is the
    model's own for `INCONCLUSIVE` and `NOT_EQUIPMENT`, or one of: `Confidence
-   below threshold`, `No <TYPE> contractor configured`, `The report's location
+   below threshold`, `<Category label> reports are always checked by a person`, `No <TYPE> contractor configured`, `The report's location
    is inactive` (ID-36's rules refused the order), `Estate is inactive`, or
    `Automatic classification unavailable` (3 failed attempts, retried after
    30 s and 2 min).
@@ -62,6 +71,44 @@ Creating a work order from a report through ID-36's
 its routing to `WORK_ORDER` with that order and the creator. No dispatch is
 made; a Manager can email it later.
 
+## Fault categories
+
+Each classification carries a `FaultCategory`, declared in the model's output
+order:
+
+| Category | Shown as | Contractor type |
+| --- | --- | --- |
+| `BROKEN_LIGHT` | Broken light | `LIGHT` |
+| `DRAINAGE` | Blocked drain | `PLUMBING` |
+| `GRAFFITI` | Graffiti or vandalism | `REPAIRS` |
+| `ILLEGAL_DUMPING` | Dumped items | `CLEANING` |
+| `NOISE` | Noise | `SECURITY` |
+| `OTHER` | Something else | none (always a Manager decision) |
+| `PARKING` | Parking | `SECURITY` |
+| `ROAD_DAMAGE` | Damaged road or path | `REPAIRS` |
+| `RUBBISH` | Rubbish or litter | `CLEANING` |
+| `WATER_LEAK` | Water leak | `PLUMBING` |
+
+The top category's probability `p` decides the outcome: `p >= 0.80` with a
+contractor type is `EQUIPMENT_FAULT` with that type; `p >= 0.80` without one
+is `NOT_EQUIPMENT`; anything else is `INCONCLUSIVE` with the top category's
+type (if any) as a suggestion. Confidence is `p` to two places. Reasons read
+`Water leak, 94% sure.`, `Something else, 91% sure.` or `Probably noise (62%
+sure). Needs a check.`
+
+`RoutingDecision.NEVER_AUTOMATIC` = `{ILLEGAL_DUMPING}`: in
+`fault-category-tfidf-v1` it reached 0.90 precision at 0.80 against a 0.95
+target, so it always waits for a Manager.
+
+**Changing the category.** `PUT .../reports/{reportId}/category` appends a
+`ReportClassification` row with the chosen category, confidence `1.00`, model
+`manual`, reason `<label>, chosen by hand.`, outcome and type derived as for a
+confident answer, and `classifiedByUserId`. The newest row is current. It
+never creates, changes or emails a work order and never moves the routing
+state. Choosing the current category is a no-op (200, no row). Allowed in any
+state except `CLASSIFYING`; reports from before routing (no routing row) get
+409 too. Classifications written by the old water leak model have no category.
+
 ## Endpoints
 
 | Method and path | Request | Success | Other statuses |
@@ -73,6 +120,7 @@ made; a Manager can email it later.
 | PUT `/estates/{estateId}/contractors/defaults/{equipmentType}` | `ContractorDefaultRequest { contractorId }` | 200 `ContractorResponse` (with its updated `defaultFor`) | 400 unknown type, 401, 403, 404 contractor not in estate, 409 inactive estate |
 | DELETE `/estates/{estateId}/contractors/defaults/{equipmentType}` | — | 204, also when there was none | 400, 401, 403, 404, 409 inactive estate |
 | POST `/estates/{estateId}/reports/{reportId}/work-order` | `SendToContractorRequest { equipmentType, priority }` | 201 `ReportRoutingResponse` (`WORK_ORDER`, order `ASSIGNED`, dispatch `MANAGER`) | 400, 401, 403, 404 report not in estate, 409 not `NEEDS_REVIEW`, no route for the type, or ID-36 rule (inactive location or estate) |
+| PUT `/estates/{estateId}/reports/{reportId}/category` | `ChangeCategoryRequest { category: FaultCategory }` | 200 `ReportRoutingResponse` with the new classification; owner or Manager | 400 unknown category, 401, 403, 404 report not in estate, 409 still `CLASSIFYING`, no routing, or inactive estate |
 | POST `/estates/{estateId}/reports/{reportId}/dismiss` | — | 200 `ReportRoutingResponse` (`DISMISSED`) | 400, 401, 403, 404, 409 not `NEEDS_REVIEW` |
 | GET `/estates/{estateId}/work-orders/{workOrderId}/dispatch` | — | 200 `WorkOrderDispatchStatusResponse { dispatch: WorkOrderDispatchResponse \| null }` | 400, 401, 403, 404 order not in estate |
 | POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch` | `DispatchRequest { equipmentType }` | 201 `WorkOrderDispatchResponse`; order becomes `ASSIGNED` | 400, 401, 403, 404, 409 not an `EQUIPMENT_FAULT` order from a resident report, already emailed, not `OPEN`, or no route for the type |
@@ -99,14 +147,16 @@ location and description, without photos.
 | DTO | Fields |
 | --- | --- |
 | `ContractorRequest` | `name` (1–200 after trimming), `email` (valid, ≤ 254) |
-| `ContractorResponse` | `id`, `name`, `email`, `defaultFor: (PUMP \| LIFT \| GATE \| LIGHT \| PLUMBING)[]` (sorted) |
+| `ContractorResponse` | `id`, `name`, `email`, `defaultFor: EquipmentType[]` (sorted) |
+| `EquipmentType` | `PUMP \| LIFT \| GATE \| LIGHT \| PLUMBING \| CLEANING \| REPAIRS \| SECURITY` (labels: Pump, Lift, Gate, Common-area light, Plumbing, Cleaning, Painting and repairs, Security) |
+| `ChangeCategoryRequest` | `category: FaultCategory` |
 | `ContractorDirectoryResponse` | `contractors: ContractorResponse[]` |
 | `ContractorDefaultRequest` | `contractorId` |
 | `SendToContractorRequest` | `equipmentType`, `priority: LOW \| MEDIUM \| HIGH \| URGENT` |
 | `DispatchRequest` | `equipmentType` |
 | `WorkOrderDispatchResponse` | `equipmentType \| null` (null for a job not about equipment), `contractorName`, `contractorEmail` (copied at dispatch), `approval: AUTOMATIC \| MANAGER`, `status: PENDING \| SENT \| FAILED`, `sentAt \| null`, `createdAt` |
 | `ReportRoutingResponse` | `state: CLASSIFYING \| NEEDS_REVIEW \| WORK_ORDER \| DISMISSED`, `reason \| null`, `classification \| null`, `workOrder: { id, reference, status, dispatch \| null } \| null`, `decidedAt \| null` |
-| `ClassificationResponse` | `outcome: EQUIPMENT_FAULT \| INCONCLUSIVE \| NOT_EQUIPMENT`, `equipmentType \| null`, `confidence` (0–1, two places), `reason`, `createdAt` |
+| `ClassificationResponse` | The newest classification. `outcome: EQUIPMENT_FAULT \| INCONCLUSIVE \| NOT_EQUIPMENT`, `equipmentType \| null`, `category: FaultCategory \| null` (null before fault categories), `confidence` (0–1, two places), `reason`, `manual: boolean` (a person chose it), `classifiedByName: string \| null` (WorkOS display name of who chose it, resolved on read; null for the model), `createdAt` |
 
 The estate report DTOs carry `routing` (see [estate-reports.md](estate-reports.md)).
 
@@ -127,9 +177,11 @@ POST /estates/<estate-uuid>/reports/<report-uuid>/work-order
 ## The email
 
 Plain text to the copied address. The subject is `Work order <ID-36
-reference>: <Pump|Lift|Gate|Common-area light|Plumbing> fault at <estate name>`, with
-control characters replaced. The body has the contractor name, reference,
-equipment, estate name and address, location label, submission time (UTC),
+reference>: <category label> at <estate name>` (for example `Rubbish or litter
+at ATTA`), using the report's current category and falling back to the
+contractor type's label when it has none, with control characters replaced.
+The body has the contractor name, reference, `Type of problem` (the same
+label), estate name and address, location label, submission time (UTC),
 the resident's title and description verbatim, and the photo count. Photos are
 attached as `photo-N.jpg|png` with their stored bytes. The email never includes
 the resident's identity, the model's judgement or storage keys.
@@ -142,7 +194,9 @@ Migration `20261109090000_report_routing_and_dispatch` only adds tables:
 - `EquipmentProviderRoute`: primary key `(estateId, equipmentType)`.
 - `ReportRouting`: primary key `reportId`, plus `estateId` and an optional
   `workOrderId`, both with composite keys.
-- `ReportClassification`: append-only.
+- `ReportClassification`: append-only. Migration
+  `20261112112010_report_classification_category` added nullable `category`
+  and `classifiedByUserId` (applied to Neon `dev`).
 - `WorkOrderDispatch`: unique `workOrderId`, with `providerId` (the
   assignment).
 

@@ -97,7 +97,7 @@ export function useRemoveContractor(estateId: string) {
   });
 }
 
-/** Sets (or, with null, clears) where new water-leak reports for one kind of equipment go. */
+/** Sets (or, with null, clears) where new reports of one type of problem go. */
 export function useSetDefaultContractor(estateId: string, type: EquipmentType) {
   const invalidate = useInvalidateContractors(estateId);
   return useMutation({

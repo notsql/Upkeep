@@ -1087,14 +1087,18 @@ model ReportRouting {
 
 // Every valid answer the model gave about a report. Append-only.
 model ReportClassification {
-  id            String   @id @default(uuid()) @db.Uuid
-  reportId      String   @db.Uuid
-  outcome       String   @db.VarChar(20)
-  equipmentType String?  @db.VarChar(20)
-  confidence    Decimal  @db.Decimal(3, 2)
-  reason        String   @db.VarChar(500)
-  model         String   @db.VarChar(100)
-  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  id                 String   @id @default(uuid()) @db.Uuid
+  reportId           String   @db.Uuid
+  outcome            String   @db.VarChar(20)
+  equipmentType      String?  @db.VarChar(20)
+  confidence         Decimal  @db.Decimal(3, 2)
+  reason             String   @db.VarChar(500)
+  model              String   @db.VarChar(100)
+  // FaultCategory; null on rows written by the water leak model.
+  category           String?  @db.VarChar(40)
+  // Set on manual reclassifications only.
+  classifiedByUserId String?  @db.VarChar(255)
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
 
   report IssueReport @relation(fields: [reportId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 

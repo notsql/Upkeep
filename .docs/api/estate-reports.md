@@ -23,7 +23,7 @@ Resident endpoints keep their original report DTOs unchanged.
 
 | DTO | Fields |
 | --- | --- |
-| `EstateIssueReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `urgencyVersion: integer`, `confirmedDuplicateCount: integer`, `suspectedDuplicateCount: integer`, `duplicateOf: DuplicateOf \| null`, `routing: ReportRoutingResponse \| null` (null for reports submitted before automatic routing) |
+| `EstateIssueReportSummaryResponse` | `id: UUID`, `title: string`, `description: string`, `estateName: string`, `location: ReportLocation`, `status: string`, `createdAt: date-time`, `updatedAt: date-time`, `urgency: LOW \| MEDIUM \| HIGH \| URGENT`, `isSafety: boolean`, `urgencyVersion: integer`, `confirmedDuplicateCount: integer`, `suspectedDuplicateCount: integer`, `duplicateOf: DuplicateOf \| null`, `routing: ReportRoutingResponse \| null` (null for reports submitted before automatic routing; `routing.classification.category` is the report's current type of problem, for the list's type badge) |
 | `ReportLocation` | `id: UUID`, `label: string` (full current path, e.g. `Block A › Level 4 › Lift lobby`) |
 | `EstateIssueReportDetailResponse` | Summary fields (including `routing`) plus `images: ReportImage[]`, `duplicates: LinkedDuplicate[]`, `lastUrgencyChange: ReportUrgencyChange \| null` |
 | `ReportImage` | `id: UUID`, `contentType: string` (`image/jpeg` or `image/png`) |
@@ -185,4 +185,6 @@ urgency or work-order priority.
 The estate DTOs are separate from the resident `IssueReport*Response` types, so
 `routing` never reaches residents. `routingState` filters before pagination and is part of the cursor scope,
 and reports without routing never match it. Relocation does not reclassify a
-report or change its work order. See [report-routing.md](report-routing.md).
+report or change its work order. A report's type of problem (`FaultCategory`) is
+changed with `PUT /estates/{estateId}/reports/{reportId}/category`, documented in
+[report-routing.md](report-routing.md#fault-categories).

@@ -10,10 +10,7 @@ import { useCallback, useId } from "react";
 import { ROUTING_STATES, type RoutingState } from "@/lib/report-routing";
 
 const ALL = "ALL";
-const OPTIONS = [
-  { value: ALL, label: "All routing states" },
-  ...ROUTING_STATES,
-];
+const OPTIONS = [{ value: ALL, label: "All" }, ...ROUTING_STATES];
 
 export function RoutingStateFilter({
   value,
@@ -30,7 +27,7 @@ export function RoutingStateFilter({
   );
   return (
     <div className="grid max-w-xs gap-2">
-      <Label htmlFor={id}>Routing</Label>
+      <Label htmlFor={id}>Next step</Label>
       <Select items={OPTIONS} onValueChange={change} value={value ?? ALL}>
         <SelectTrigger className="w-full" id={id}>
           <SelectValue />

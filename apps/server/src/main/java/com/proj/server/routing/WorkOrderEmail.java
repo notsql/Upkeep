@@ -18,6 +18,7 @@ public final class WorkOrderEmail {
     public record Content(
             String reference,
             EquipmentType equipmentType,
+            FaultCategory category,
             String contractorName,
             String contractorEmail,
             String estateName,
@@ -29,8 +30,10 @@ public final class WorkOrderEmail {
             List<Image> photos) {}
 
     public static OutboundEmail build(Content content) {
-        var subject = "Work order %s: %s fault at %s"
-                .formatted(content.reference(), content.equipmentType().label(), oneLine(content.estateName()));
+        var problem = content.category() == null
+                ? content.equipmentType().label()
+                : content.category().label();
+        var subject = "Work order %s: %s at %s".formatted(content.reference(), problem, oneLine(content.estateName()));
         var photos = content.photos().isEmpty()
                 ? "none"
                 : Integer.toString(content.photos().size());
@@ -40,7 +43,7 @@ public final class WorkOrderEmail {
                 A resident reported the fault below. Their words and photos are included unchanged.
 
                 Work order: %s
-                Equipment: %s
+                Type of problem: %s
                 Estate: %s, %s
                 Location: %s
                 Reported: %s
@@ -55,7 +58,7 @@ public final class WorkOrderEmail {
                 """.formatted(
                 content.contractorName(),
                 content.reference(),
-                content.equipmentType().label(),
+                problem,
                 content.estateName(),
                 content.estateAddress(),
                 content.locationLabel(),

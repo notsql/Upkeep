@@ -948,7 +948,7 @@ it("explains when no active destination is available without hiding report histo
     (dialog.getByRole("button", { name: SAVE }) as HTMLButtonElement).disabled
   ).toBe(true);
   // A modal removes background content from the accessibility tree while open.
-  screen.getByText(report.title, { selector: "h2" });
+  screen.getByText(report.title, { selector: "h1" });
   expect(patch).not.toHaveBeenCalled();
 });
 
@@ -963,7 +963,9 @@ it("leaves the report readable when its private image fails", async () => {
   );
   await setup(`${basePath}/${reportId}`);
   await screen.findByRole("heading", { name: report.title });
-  const images = await screen.findByRole("region", { name: "Images" });
+  const images = await screen.findByRole("region", {
+    name: "What was reported",
+  });
   await within(images).findByRole("alert");
   screen.getByText(report.description);
 });
@@ -977,8 +979,8 @@ it("renders report text as plain text and shows when there are no submitted imag
   );
   await setup(`${basePath}/${reportId}`);
   expect((await screen.findByText(description)).textContent).toBe(description);
-  const images = screen.getByRole("region", { name: "Images" });
-  within(images).getByText("No images submitted.");
+  const images = screen.getByRole("region", { name: "What was reported" });
+  within(images).getByText("No photos.");
   expect(within(images).queryByRole("img")).toBeNull();
 });
 
@@ -1387,10 +1389,10 @@ it("shows each report's routing state and filters the list by it", async () => {
     return serve(path);
   });
   const { router } = await setup();
-  await screen.findByText("Routing: Needs review");
+  await screen.findByText("Next step: Needs review");
 
   await chooseOption(
-    screen.getByRole("combobox", { name: "Routing" }),
+    screen.getByRole("combobox", { name: "Next step" }),
     "Needs review"
   );
 
@@ -1431,7 +1433,8 @@ it("lists reports in a table on desktop", async () => {
     "Location",
     "Urgency",
     "Duplicates",
-    "Routing",
+    "Type",
+    "Next step",
     "Submitted",
   ]);
   expect(within(table).getAllByRole("row")).toHaveLength(2);
@@ -1472,4 +1475,42 @@ it("keeps report line items on mobile", async () => {
   const list = await screen.findByRole("list", { name: "Reports" });
   within(list).getByRole("link", { name: report.title });
   expect(screen.queryByRole("table")).toBeNull();
+});
+
+const sorted = {
+  state: "NEEDS_REVIEW",
+  reason: "Needs a check",
+  classification: {
+    outcome: "INCONCLUSIVE",
+    equipmentType: "PLUMBING",
+    category: "WATER_LEAK",
+    confidence: 0.6,
+    reason: "Needs a check",
+    manual: false,
+    classifiedByName: null,
+    createdAt: "2026-10-01T00:00:00Z",
+  },
+  workOrder: null,
+  decidedAt: null,
+};
+
+it("shows each report's type in the table", async () => {
+  serveReports([{ ...report, routing: sorted }]);
+  await setup();
+  const table = await screen.findByRole("table", { name: "Reports" });
+  const row = within(table)
+    .getByRole("link", { name: report.title })
+    .closest("tr") as HTMLElement;
+
+  within(row).getByText("Water leak");
+  expect(within(row).queryByText("WATER_LEAK")).toBeNull();
+});
+
+it("shows each report's type on phones", async () => {
+  device.mobile = true;
+  serveReports([{ ...report, routing: sorted }]);
+  await setup();
+  const link = await screen.findByRole("link", { name: report.title });
+
+  within(link.closest("li") as HTMLElement).getByText("Water leak");
 });

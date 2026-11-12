@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ApiResponses({
     @ApiResponse(
             responseCode = "400",
-            description = "Invalid UUID, equipment type or priority",
+            description = "Invalid UUID, equipment type, category or priority",
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "401",
@@ -43,8 +44,8 @@ import org.springframework.web.bind.annotation.RestController;
             content = @Content(schema = @Schema(implementation = EstateError.class))),
     @ApiResponse(
             responseCode = "409",
-            description = "Not awaiting review, no contractor for the type, already emailed, or not an open "
-                    + "equipment-fault work order from a report",
+            description = "Not awaiting review, still being sorted, inactive estate, no contractor for the type, "
+                    + "already emailed, or not an open equipment-fault work order from a report",
             content = @Content(schema = @Schema(implementation = EstateError.class)))
 })
 public class RoutingController {
@@ -78,6 +79,19 @@ public class RoutingController {
     public ResponseEntity<ReportRoutingResponse> dismiss(
             @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID reportId) {
         return privateResponse(routing.dismiss(estateId, subject(principal), reportId));
+    }
+
+    @PutMapping("/reports/{reportId}/category")
+    @Operation(
+            operationId = "changeReportCategory",
+            summary = "Change the type of problem a report describes; never routes it by itself")
+    @ApiResponse(responseCode = "200", description = "The report's routing, with the chosen category")
+    public ResponseEntity<ReportRoutingResponse> changeCategory(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID reportId,
+            @Valid @RequestBody ChangeCategoryRequest request) {
+        return privateResponse(routing.changeCategory(estateId, subject(principal), reportId, request.category()));
     }
 
     @GetMapping("/work-orders/{workOrderId}/dispatch")

@@ -504,8 +504,11 @@ The contractors route (`_auth/estates/$estateId/contractors/index.tsx`) is now
 a directory: `contractor-table.tsx` (table "Contractors", with "Default for:
 Lift, Pump"), `contractor-dialog.tsx` (Add/Edit), `remove-contractor-dialog.tsx`
 (shows the server's "still has N open jobs" message) and
-`default-contractors.tsx` (one `Select` per equipment type, "Send new
-water-leak reports for gates to...", with "Nobody (we'll review them)"). Hooks
+`default-contractors.tsx` (one `Select` per contractor type, including
+Cleaning, Painting and repairs and Security: "Send new reports of gate
+problems to...", with "Nobody (we'll review them)"; the card says "When a
+resident reports a problem, we can send the job straight to the contractor you
+choose for that type."). Hooks
 live in `src/lib/contractors.ts`. The page stays managers-only.
 ## Phones: infinite scroll
 

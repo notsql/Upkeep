@@ -10,8 +10,8 @@ once, so that a sentence can never sit on both sides of a train/test split.
 Run from the repository root:
 
     ml-research/.venv/bin/python -m ml_research.water_leak_data \
-        ml-research/data/water-leak/municipal_training_set_1100.csv \
-        ml-research/data/water-leak
+        ml-research/data/report-classifier/municipal_training_set_1100.csv \
+        ml-research/data/report-classifier
 """
 
 import re

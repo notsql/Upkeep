@@ -15,6 +15,7 @@ import static org.jooq.impl.DSL.currentOffsetDateTime;
 
 import com.proj.server.db.tables.Location;
 import com.proj.server.workorder.WorkOrderStatus;
+import com.proj.server.workos.WorkOSService;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -35,9 +36,11 @@ public class RoutingRepository {
     private static final Field<String> LOCATION_LABEL = concatWs(" › ", GRANDPARENT.NAME, PARENT.NAME, LOCATION.NAME);
 
     private final DSLContext db;
+    private final WorkOSService workOS;
 
-    public RoutingRepository(DSLContext db) {
+    public RoutingRepository(DSLContext db, WorkOSService workOS) {
         this.db = db;
+        this.workOS = workOS;
     }
 
     /** Locks the estate row first, matching the order every work-order write uses. */
@@ -265,6 +268,11 @@ public class RoutingRepository {
     }
 
     public void recordClassification(UUID reportId, Classification classification) {
+        recordClassification(reportId, classification, null);
+    }
+
+    /** Appends a classification; {@code classifiedBy} is the person who chose it, null for the model. */
+    public void recordClassification(UUID reportId, Classification classification, String classifiedBy) {
         db.insertInto(REPORTCLASSIFICATION)
                 .set(REPORTCLASSIFICATION.ID, UUID.randomUUID())
                 .set(REPORTCLASSIFICATION.REPORTID, reportId)
@@ -277,7 +285,24 @@ public class RoutingRepository {
                 .set(REPORTCLASSIFICATION.CONFIDENCE, classification.confidence())
                 .set(REPORTCLASSIFICATION.REASON, classification.reason())
                 .set(REPORTCLASSIFICATION.MODEL, classification.model())
+                .set(
+                        REPORTCLASSIFICATION.CATEGORY,
+                        classification.category() == null
+                                ? null
+                                : classification.category().name())
+                .set(REPORTCLASSIFICATION.CLASSIFIEDBYUSERID, classifiedBy)
                 .execute();
+    }
+
+    /** The category of the report's newest classification; empty when it has none. */
+    public Optional<FaultCategory> currentCategory(UUID reportId) {
+        return db.select(REPORTCLASSIFICATION.CATEGORY)
+                .from(REPORTCLASSIFICATION)
+                .where(REPORTCLASSIFICATION.REPORTID.eq(reportId))
+                .orderBy(REPORTCLASSIFICATION.CREATEDAT.desc(), REPORTCLASSIFICATION.ID.desc())
+                .limit(1)
+                .fetchOptional(REPORTCLASSIFICATION.CATEGORY)
+                .map(FaultCategory::valueOf);
     }
 
     /** The current routing state, locked for a decision; empty for reports from before routing. */
@@ -580,13 +605,17 @@ public class RoutingRepository {
     public Map<UUID, ReportRoutingResponse> routings(Collection<UUID> reportIds) {
         if (reportIds.isEmpty()) return Map.of();
         var classifications = new HashMap<UUID, ReportRoutingResponse.ClassificationResponse>();
+        var names = new HashMap<String, String>();
         db.selectDistinct(
                         REPORTCLASSIFICATION.REPORTID,
                         REPORTCLASSIFICATION.OUTCOME,
                         REPORTCLASSIFICATION.EQUIPMENTTYPE,
                         REPORTCLASSIFICATION.CONFIDENCE,
                         REPORTCLASSIFICATION.REASON,
-                        REPORTCLASSIFICATION.CREATEDAT)
+                        REPORTCLASSIFICATION.CREATEDAT,
+                        REPORTCLASSIFICATION.CATEGORY,
+                        REPORTCLASSIFICATION.MODEL,
+                        REPORTCLASSIFICATION.CLASSIFIEDBYUSERID)
                 .on(REPORTCLASSIFICATION.REPORTID)
                 .from(REPORTCLASSIFICATION)
                 .where(REPORTCLASSIFICATION.REPORTID.in(reportIds))
@@ -600,8 +629,16 @@ public class RoutingRepository {
                         new ReportRoutingResponse.ClassificationResponse(
                                 ClassificationOutcome.valueOf(row.value2()),
                                 row.value3() == null ? null : EquipmentType.valueOf(row.value3()),
+                                row.value7() == null ? null : FaultCategory.valueOf(row.value7()),
                                 row.value4(),
                                 row.value5(),
+                                Classification.MANUAL.equals(row.value8()),
+                                row.value9() == null
+                                        ? null
+                                        : names.computeIfAbsent(
+                                                row.value9(),
+                                                user -> workOS.findDisplayName(user)
+                                                        .orElse(null)),
                                 row.value6())));
         var rows = db.select(
                         REPORTROUTING.REPORTID,

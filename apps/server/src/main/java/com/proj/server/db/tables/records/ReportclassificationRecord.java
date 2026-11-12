@@ -134,6 +134,34 @@ public class ReportclassificationRecord extends UpdatableRecordImpl<Reportclassi
         return (OffsetDateTime) get(7);
     }
 
+    /**
+     * Setter for <code>public.ReportClassification.category</code>.
+     */
+    public void setCategory(String value) {
+        set(8, value);
+    }
+
+    /**
+     * Getter for <code>public.ReportClassification.category</code>.
+     */
+    public String getCategory() {
+        return (String) get(8);
+    }
+
+    /**
+     * Setter for <code>public.ReportClassification.classifiedByUserId</code>.
+     */
+    public void setClassifiedbyuserid(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.ReportClassification.classifiedByUserId</code>.
+     */
+    public String getClassifiedbyuserid() {
+        return (String) get(9);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -157,7 +185,7 @@ public class ReportclassificationRecord extends UpdatableRecordImpl<Reportclassi
     /**
      * Create a detached, initialised ReportclassificationRecord
      */
-    public ReportclassificationRecord(UUID id, UUID reportid, String outcome, String equipmenttype, BigDecimal confidence, String reason, String model, OffsetDateTime createdat) {
+    public ReportclassificationRecord(UUID id, UUID reportid, String outcome, String equipmenttype, BigDecimal confidence, String reason, String model, OffsetDateTime createdat, String category, String classifiedbyuserid) {
         super(Reportclassification.REPORTCLASSIFICATION);
 
         setId(id);
@@ -168,6 +196,8 @@ public class ReportclassificationRecord extends UpdatableRecordImpl<Reportclassi
         setReason(reason);
         setModel(model);
         setCreatedat(createdat);
+        setCategory(category);
+        setClassifiedbyuserid(classifiedbyuserid);
         resetTouchedOnNotNull();
     }
 }

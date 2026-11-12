@@ -9,6 +9,12 @@ public final class RoutingDecision {
     /** Fixed by agreement (ID-70); not a setting. */
     public static final BigDecimal CONFIDENCE_THRESHOLD = new BigDecimal("0.80");
 
+    /**
+     * Categories whose model precision missed its target: they always wait for a Manager, however confident the
+     * model is. fault-category-tfidf-v1: dumped items reached 0.90 precision at 0.80 against a 0.95 target.
+     */
+    public static final Set<FaultCategory> NEVER_AUTOMATIC = Set.of(FaultCategory.ILLEGAL_DUMPING);
+
     private static final Duration FIRST_RETRY = Duration.ofSeconds(30);
     private static final Duration LONGEST_RETRY = Duration.ofHours(1);
 
@@ -21,10 +27,17 @@ public final class RoutingDecision {
     public record Review(String reason) implements Result {}
 
     public static Result decide(Classification classification, Set<EquipmentType> contractorTypes) {
+        return decide(classification, contractorTypes, NEVER_AUTOMATIC);
+    }
+
+    static Result decide(
+            Classification classification, Set<EquipmentType> contractorTypes, Set<FaultCategory> neverAutomatic) {
         if (classification.outcome() != ClassificationOutcome.EQUIPMENT_FAULT)
             return new Review(classification.reason());
         if (classification.confidence().compareTo(CONFIDENCE_THRESHOLD) < 0)
             return new Review("Confidence below threshold");
+        if (classification.category() != null && neverAutomatic.contains(classification.category()))
+            return new Review(classification.category().label() + " reports are always checked by a person");
         if (!contractorTypes.contains(classification.equipmentType()))
             return new Review("No " + classification.equipmentType() + " contractor configured");
         return new Route(classification.equipmentType());

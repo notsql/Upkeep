@@ -102,6 +102,16 @@ public class Reportclassification extends TableImpl<ReportclassificationRecord> 
      */
     public final TableField<ReportclassificationRecord, OffsetDateTime> CREATEDAT = createField(DSL.name("createdAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6).nullable(false).defaultValue(DSL.field(DSL.raw("CURRENT_TIMESTAMP"), SQLDataType.TIMESTAMPWITHTIMEZONE)), this, "");
 
+    /**
+     * The column <code>public.ReportClassification.category</code>.
+     */
+    public final TableField<ReportclassificationRecord, String> CATEGORY = createField(DSL.name("category"), SQLDataType.VARCHAR(40), this, "");
+
+    /**
+     * The column <code>public.ReportClassification.classifiedByUserId</code>.
+     */
+    public final TableField<ReportclassificationRecord, String> CLASSIFIEDBYUSERID = createField(DSL.name("classifiedByUserId"), SQLDataType.VARCHAR(255), this, "");
+
     private Reportclassification(Name alias, Table<ReportclassificationRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

@@ -2,6 +2,7 @@ package com.proj.server;
 
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,6 +31,7 @@ import com.proj.server.routing.ClassificationFailedException;
 import com.proj.server.routing.DispatchDeliveryJob;
 import com.proj.server.routing.EmailSendException;
 import com.proj.server.routing.EmailSender;
+import com.proj.server.routing.FaultCategory;
 import com.proj.server.routing.FaultClassifier;
 import com.proj.server.routing.OutboundEmail;
 import com.proj.server.routing.ReportClassificationJob;
@@ -578,6 +580,124 @@ class ReportRoutingIntegrationTests {
                 .andExpect(status().isBadRequest());
     }
 
+    // --- Fault categories (fault-categories-and-report-page.md) --------------------------------------------------
+
+    @Test
+    void theModelsCategoryIsStoredAndShownOnTheDetailAndTheList() throws Exception {
+        var estate = estate();
+        var report = queuedReport(estate);
+        var probabilities = new double[FaultCategory.values().length];
+        probabilities[FaultCategory.NOISE.ordinal()] = 0.62;
+        probabilities[FaultCategory.OTHER.ordinal()] = 0.38;
+        when(classifier.classify(any())).thenReturn(Classification.fromProbabilities(probabilities, MODEL));
+
+        assertTrue(classification.classifyNext());
+
+        assertEquals(
+                "NOISE", db.fetchValue("select category from \"ReportClassification\" where \"reportId\"=?", report));
+        mvc.perform(as("estate-owner", get(detail(estate, report))))
+                .andExpect(jsonPath("$.routing.state").value("NEEDS_REVIEW"))
+                .andExpect(jsonPath("$.routing.classification.category").value("NOISE"))
+                .andExpect(jsonPath("$.routing.classification.equipmentType").value("SECURITY"))
+                .andExpect(jsonPath("$.routing.classification.manual").value(false))
+                .andExpect(jsonPath("$.routing.classification.classifiedByName").value(nullValue()))
+                .andExpect(jsonPath("$.routing.reason").value("Probably noise (62% sure). Needs a check."));
+        mvc.perform(as("estate-owner", get(reports(estate))))
+                .andExpect(
+                        jsonPath("$.items[0].routing.classification.category").value("NOISE"));
+    }
+
+    @Test
+    void aManagerChangesTheCategoryWhichAppendsAManualRowAndRoutesNothing() throws Exception {
+        var estate = estate();
+        contractor(estate, "PLUMBING");
+        var report = reviewReport(estate);
+        when(workOS.findDisplayName("estate-owner")).thenReturn(java.util.Optional.of("Casey Doe"));
+
+        mvc.perform(changeCategory(estate, report, "DRAINAGE"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Cache-Control", "private, no-store"))
+                .andExpect(jsonPath("$.state").value("NEEDS_REVIEW"))
+                .andExpect(jsonPath("$.workOrder").value(nullValue()))
+                .andExpect(jsonPath("$.classification.category").value("DRAINAGE"))
+                .andExpect(jsonPath("$.classification.outcome").value("EQUIPMENT_FAULT"))
+                .andExpect(jsonPath("$.classification.equipmentType").value("PLUMBING"))
+                .andExpect(jsonPath("$.classification.confidence").value(1.0))
+                .andExpect(jsonPath("$.classification.manual").value(true))
+                .andExpect(jsonPath("$.classification.classifiedByName").value("Casey Doe"));
+
+        var row = db.fetchOne("select * from \"ReportClassification\" where \"reportId\"=?", report)
+                .intoMap();
+        assertEquals("manual", row.get("model"));
+        assertEquals("estate-owner", row.get("classifiedByUserId"));
+        assertEquals(0, count("WorkOrder", estate), "changing the type never creates a work order");
+
+        mvc.perform(changeCategory(estate, report, "DRAINAGE")).andExpect(status().isOk());
+        assertEquals(1, count("ReportClassification", report, "reportId"), "the same type is a no-op");
+
+        mvc.perform(changeCategory(estate, report, "OTHER"))
+                .andExpect(jsonPath("$.classification.category").value("OTHER"))
+                .andExpect(jsonPath("$.classification.outcome").value("NOT_EQUIPMENT"))
+                .andExpect(jsonPath("$.classification.equipmentType").value(nullValue()));
+        assertEquals(2, count("ReportClassification", report, "reportId"), "the history is kept");
+    }
+
+    @Test
+    void changingTheCategoryOfARoutedReportOnlyChangesItsLabel() throws Exception {
+        var estate = estate();
+        contractor(estate, "LIFT");
+        var report = reviewReport(estate);
+        mvc.perform(send(estate, report, "LIFT", "MEDIUM")).andExpect(status().isCreated());
+        var order = workOrderFor(report);
+
+        mvc.perform(changeCategory(estate, report, "WATER_LEAK"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("WORK_ORDER"))
+                .andExpect(jsonPath("$.workOrder.id").value(order.get("id").toString()));
+        assertEquals(order, workOrderFor(report));
+        assertEquals(1, count("WorkOrderDispatch", (UUID) order.get("id"), "workOrderId"));
+    }
+
+    @Test
+    void changingTheCategoryIsRefusedWhenItCannotApply() throws Exception {
+        var estate = estate();
+        member(estate, "crew", "CREW");
+        var review = reviewReport(estate);
+        var classifying = queuedReport(estate);
+        var foreign = reviewReport(estate());
+
+        mvc.perform(changeCategory(estate, classifying, "WATER_LEAK")).andExpect(status().isConflict());
+        mvc.perform(changeCategory(estate, foreign, "WATER_LEAK")).andExpect(status().isNotFound());
+        mvc.perform(changeCategory(estate, review, "ESCALATOR")).andExpect(status().isBadRequest());
+        mvc.perform(as(
+                        "crew",
+                        put(detail(estate, review) + "/category")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"category\":\"WATER_LEAK\"}")))
+                .andExpect(status().isForbidden());
+        db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
+        mvc.perform(changeCategory(estate, review, "WATER_LEAK")).andExpect(status().isConflict());
+        assertEquals(0, count("ReportClassification", review, "reportId"));
+    }
+
+    @Test
+    void theContractorEmailNamesTheReportsCategory() throws Exception {
+        var estate = estate();
+        contractor(estate, "CLEANING");
+        var report = reviewReport(estate);
+        mvc.perform(changeCategory(estate, report, "RUBBISH")).andExpect(status().isOk());
+        mvc.perform(send(estate, report, "CLEANING", "MEDIUM")).andExpect(status().isCreated());
+
+        assertTrue(delivery.deliverNext());
+
+        var email = ArgumentCaptor.forClass(OutboundEmail.class);
+        verify(sender).send(email.capture());
+        assertEquals(
+                "Work order " + workOrderFor(report).get("reference") + ": Rubbish or litter at Maple Estate",
+                email.getValue().subject());
+        assertTrue(email.getValue().text().contains("Type of problem: Rubbish or litter"));
+    }
+
     // --- Email delivery ----------------------------------------------------------------------------------------
 
     @Test
@@ -595,7 +715,7 @@ class ReportRoutingIntegrationTests {
         verify(sender).send(email.capture());
         assertEquals("lift@contractor.example", email.getValue().to());
         assertEquals(
-                "Work order " + order.get("reference") + ": Lift fault at Maple Estate",
+                "Work order " + order.get("reference") + ": Lift at Maple Estate",
                 email.getValue().subject());
         assertTrue(email.getValue().text().contains("Doors won't open at level 3"));
         assertFalse(email.getValue().text().contains("resident-a"));
@@ -883,6 +1003,14 @@ class ReportRoutingIntegrationTests {
                 post(detail(estate, report) + "/work-order")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"equipmentType\":\"" + type + "\",\"priority\":\"" + priority + "\"}"));
+    }
+
+    private static MockHttpServletRequestBuilder changeCategory(UUID estate, UUID report, String category) {
+        return as(
+                "estate-owner",
+                put(detail(estate, report) + "/category")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"category\":\"" + category + "\"}"));
     }
 
     private static MockHttpServletRequestBuilder dispatch(UUID estate, UUID order, String type) {

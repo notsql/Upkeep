@@ -2,6 +2,14 @@ import type { components } from "@proj/api/schema";
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@proj/ui/components/dialog";
 import { Link } from "@tanstack/react-router";
 import { Copy } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -194,6 +202,7 @@ function MarkDuplicateSection({
   estateId: string;
   reportId: string;
 }) {
+  const [open, setOpen] = useState(false);
   const [originalId, setOriginalId] = useState("");
   const link = useLinkEstateReportDuplicate(estateId, reportId);
   const choose = useCallback(
@@ -204,34 +213,51 @@ function MarkDuplicateSection({
     [link.reset]
   );
   const save = useCallback(
-    () => link.mutate({ originalReportId: originalId }),
+    () =>
+      link.mutate(
+        { originalReportId: originalId },
+        { onSuccess: () => setOpen(false) }
+      ),
     [link.mutate, originalId]
   );
   return (
-    <PageSection icon={Copy} title="Mark as duplicate">
-      <div className="grid gap-3">
-        <ReportSourcePicker
-          chooseLabel="Choose original report"
-          emptyText="No other reports match these filters."
-          estateId={estateId}
-          excludeId={reportId}
-          label="Original report"
-          onChange={choose}
-          value={originalId}
-        />
-        {link.error ? (
-          <Alert role="alert" variant="destructive">
-            <AlertDescription>{link.error.message}</AlertDescription>
-          </Alert>
-        ) : null}
-        <Button
-          className="w-fit"
-          disabled={!originalId || link.isPending}
-          onClick={save}
-        >
-          Mark as same problem
-        </Button>
-      </div>
+    <PageSection icon={Copy} title="Same problem as another report?">
+      <Dialog onOpenChange={setOpen} open={open}>
+        <DialogTrigger render={<Button className="w-fit" variant="outline" />}>
+          Mark as duplicate
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark as duplicate</DialogTitle>
+            <DialogDescription>
+              Choose the earlier report about the same problem.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <ReportSourcePicker
+              chooseLabel="Choose original report"
+              emptyText="No other reports match these filters."
+              estateId={estateId}
+              excludeId={reportId}
+              label="Original report"
+              onChange={choose}
+              value={originalId}
+            />
+            {link.error ? (
+              <Alert role="alert" variant="destructive">
+                <AlertDescription>{link.error.message}</AlertDescription>
+              </Alert>
+            ) : null}
+            <Button
+              className="w-fit"
+              disabled={!originalId || link.isPending}
+              onClick={save}
+            >
+              Mark as same problem
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </PageSection>
   );
 }

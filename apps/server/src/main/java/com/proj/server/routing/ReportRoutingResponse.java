@@ -14,13 +14,34 @@ public record ReportRoutingResponse(
         @Schema(nullable = true) ClassificationResponse classification,
         @Schema(nullable = true) RoutedWorkOrder workOrder,
         @Schema(nullable = true) OffsetDateTime decidedAt) {
-    /** The latest valid answer from the model. */
-    @Schema(requiredProperties = {"outcome", "equipmentType", "confidence", "reason", "createdAt"})
+    /** The newest classification: the model's answer, or a category a person chose. */
+    @Schema(
+            requiredProperties = {
+                "outcome",
+                "equipmentType",
+                "category",
+                "confidence",
+                "reason",
+                "manual",
+                "classifiedByName",
+                "createdAt"
+            })
     public record ClassificationResponse(
             ClassificationOutcome outcome,
             @Schema(nullable = true) EquipmentType equipmentType,
+
+            @Schema(nullable = true, description = "Null for reports classified before fault categories")
+            FaultCategory category,
+
             @Schema(minimum = "0", maximum = "1") BigDecimal confidence,
             String reason,
+
+            @Schema(description = "True when a person chose the category")
+            boolean manual,
+
+            @Schema(nullable = true, description = "Who chose the category; null for the model or an unknown name")
+            String classifiedByName,
+
             OffsetDateTime createdAt) {}
 
     /** The ID-36 work order routing created or resolved the review with. */

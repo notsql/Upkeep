@@ -47,6 +47,34 @@ class RoutingDecisionTests {
     }
 
     @Test
+    void dumpedItemsAreHeldBackBecauseTheModelMissedItsPrecisionTarget() {
+        // fault-category-tfidf-v1 metrics.json: ILLEGAL_DUMPING precision 0.90 at 0.80, below the 0.95 target.
+        assertEquals(Set.of(FaultCategory.ILLEGAL_DUMPING), RoutingDecision.NEVER_AUTOMATIC);
+        var dumped = Classification.fromProbabilities(oneHot(FaultCategory.ILLEGAL_DUMPING), "m");
+        assertEquals(
+                new RoutingDecision.Review("Dumped items reports are always checked by a person"),
+                RoutingDecision.decide(dumped, ALL));
+    }
+
+    @Test
+    void aCategoryMarkedNeverAutomaticGoesToReviewEvenWhenConfident() {
+        var noise = Classification.fromProbabilities(oneHot(FaultCategory.NOISE), "m");
+
+        assertEquals(
+                new RoutingDecision.Review("Noise reports are always checked by a person"),
+                RoutingDecision.decide(noise, ALL, Set.of(FaultCategory.NOISE)));
+        assertEquals(
+                new RoutingDecision.Route(EquipmentType.SECURITY),
+                RoutingDecision.decide(noise, ALL, Set.of(FaultCategory.PARKING)));
+    }
+
+    private static double[] oneHot(FaultCategory category) {
+        var values = new double[FaultCategory.values().length];
+        values[category.ordinal()] = 1;
+        return values;
+    }
+
+    @Test
     void retriesWaitLongerEachTimeUpToAnHour() {
         assertEquals(Duration.ofSeconds(30), RoutingDecision.backoff(1));
         assertEquals(Duration.ofMinutes(2), RoutingDecision.backoff(2));

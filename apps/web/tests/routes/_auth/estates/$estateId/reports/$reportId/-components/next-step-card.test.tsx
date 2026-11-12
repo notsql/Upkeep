@@ -56,7 +56,9 @@ const timestamp = "2026-10-01T00:00:00Z";
 const SEND = /Send to contractor/u;
 const DISMISS = /^Dismiss/u;
 const RETRY = /Retry sending/u;
-const ROUTING = /^Routing$/u;
+const NEXT_STEP = /^Next step$/u;
+const CONFIDENCE = /confidence/u;
+const ENUM_NAME = /PLUMBING/u;
 
 const dispatch = {
   equipmentType: "LIFT",
@@ -156,7 +158,7 @@ async function setup() {
 }
 
 async function routingCard() {
-  const heading = await screen.findByRole("heading", { name: ROUTING });
+  const heading = await screen.findByRole("heading", { name: NEXT_STEP });
   return within(heading.closest("[data-slot=card]") as HTMLElement);
 }
 
@@ -179,15 +181,69 @@ beforeEach(() => {
 
 afterEach(() => vi.useRealTimers());
 
-it("shows why the system escalated the report and the model's assessment", async () => {
+it("asks the manager to decide and says why", async () => {
   await setup();
   const card = await routingCard();
 
-  card.getByText("Needs review");
-  card.getByText("Water near the lift lobby needs an on-site check", {
-    selector: "dd",
-  });
-  card.getByText("Inconclusive · Lift · 62% confidence");
+  card.getByText("Waiting for you to decide");
+  card.getByText("Water near the lift lobby needs an on-site check");
+  expect(card.queryByText(CONFIDENCE)).toBeNull();
+});
+
+it("explains a missing contractor in plain words and links to set one up", async () => {
+  state.routing = { ...review, reason: "No PLUMBING contractor configured" };
+  await setup();
+  const card = await routingCard();
+
+  card.getByText("No plumbing contractor is set up for this estate.");
+  expect(card.queryByText(ENUM_NAME)).toBeNull();
+  expect(
+    card.getByRole("link", { name: "Set one up" }).getAttribute("href")
+  ).toBe(`/estates/${estateId}/contractors`);
+});
+
+it("explains low confidence in plain words", async () => {
+  state.routing = { ...review, reason: "Confidence below threshold" };
+  await setup();
+  const card = await routingCard();
+
+  card.getByText("We weren't sure enough what kind of problem this is.");
+});
+
+it("suggests the contractor type for the report's type", async () => {
+  state.routing = {
+    ...review,
+    classification: { ...review.classification, category: "WATER_LEAK" },
+  };
+  await setup();
+  const card = await routingCard();
+  fireEvent.click(card.getByRole("button", { name: SEND }));
+  const dialog = within(await screen.findByRole("dialog"));
+
+  expect(
+    dialog.getByRole("combobox", { name: "Contractor type" }).textContent
+  ).toContain("Plumbing");
+});
+
+it("says the report was dismissed", async () => {
+  state.routing = { ...review, state: "DISMISSED", decidedAt: timestamp };
+  await setup();
+  const card = await routingCard();
+
+  card.getByText("Dismissed");
+  expect(card.queryByRole("button", { name: SEND })).toBeNull();
+});
+
+it("offers View work order instead of Create work order once one exists", async () => {
+  state.routing = { ...review, state: "WORK_ORDER", workOrder };
+  await setup();
+  await routingCard();
+
+  const [view] = screen.getAllByRole("link", { name: "View work order" });
+  expect(view?.getAttribute("href")).toBe(
+    `/estates/${estateId}/work-orders/${workOrderId}`
+  );
+  expect(screen.queryByRole("link", { name: "Create work order" })).toBeNull();
 });
 
 it("lets a manager send the report to the contractor for the chosen type", async () => {
@@ -195,7 +251,7 @@ it("lets a manager send the report to the contractor for the chosen type", async
   const card = await routingCard();
   fireEvent.click(card.getByRole("button", { name: SEND }));
   const dialog = within(await screen.findByRole("dialog"));
-  const type = dialog.getByRole("combobox", { name: "Equipment type" });
+  const type = dialog.getByRole("combobox", { name: "Contractor type" });
   await chooseOption(type, "Lift");
   dialog.getByText(
     "Acme Lifts (faults@acmelifts.example) will receive the resident's words and photos."
@@ -222,7 +278,7 @@ it("lets a manager choose the work order's priority before sending", async () =>
   fireEvent.click(card.getByRole("button", { name: SEND }));
   const dialog = within(await screen.findByRole("dialog"));
   await chooseOption(
-    dialog.getByRole("combobox", { name: "Equipment type" }),
+    dialog.getByRole("combobox", { name: "Contractor type" }),
     "Lift"
   );
   await chooseOption(
@@ -250,7 +306,7 @@ it("says when no contractor is set up for the chosen type and does not send", as
   const dialog = within(await screen.findByRole("dialog"));
 
   await chooseOption(
-    dialog.getByRole("combobox", { name: "Equipment type" }),
+    dialog.getByRole("combobox", { name: "Contractor type" }),
     "Gate"
   );
 
@@ -271,7 +327,7 @@ it("links to contractor setup when the chosen type has no contractor", async () 
   const dialog = within(await screen.findByRole("dialog"));
 
   await chooseOption(
-    dialog.getByRole("combobox", { name: "Equipment type" }),
+    dialog.getByRole("combobox", { name: "Contractor type" }),
     "Gate"
   );
 
@@ -311,7 +367,7 @@ it("shows the work order and lets a manager retry one that failed to send", asyn
   await setup();
   const card = await routingCard();
 
-  card.getByText("Work order created");
+  card.getByText("Sent to a contractor");
   const link = card.getByRole("link", { name: "MG-W0042" });
   expect(link.getAttribute("href")).toBe(
     `/estates/${estateId}/work-orders/${workOrderId}`
@@ -367,12 +423,12 @@ it("shows crew the routing and the contractor but no decisions", async () => {
   expect(card.queryByRole("button", { name: DISMISS })).toBeNull();
 });
 
-it("shows no routing for a report submitted before routing existed", async () => {
+it("shows no next step for a report submitted before routing existed", async () => {
   state.routing = null;
   await setup();
   await screen.findByRole("heading", { name: "Water near lift" });
 
-  expect(screen.queryByRole("heading", { name: ROUTING })).toBeNull();
+  expect(screen.queryByRole("heading", { name: NEXT_STEP })).toBeNull();
 });
 
 it("checks again every few seconds while the report is being classified", async () => {
@@ -384,7 +440,7 @@ it("checks again every few seconds while the report is being classified", async 
   };
   await setup();
   const card = await routingCard();
-  card.getByText("Classifying");
+  card.getByText("Sorting this report…");
   const before = detailRequests();
 
   await waitFor(() => expect(detailRequests()).toBeGreaterThan(before), {

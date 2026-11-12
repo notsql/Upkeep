@@ -10,6 +10,8 @@ export type ReportRouting = components["schemas"]["ReportRoutingResponse"];
 export type RoutingState = ReportRouting["state"];
 export type WorkOrderDispatch =
   components["schemas"]["WorkOrderDispatchResponse"];
+export type FaultCategory =
+  components["schemas"]["ChangeCategoryRequest"]["category"];
 export type WorkOrderPriority =
   components["schemas"]["SendToContractorRequest"]["priority"];
 
@@ -19,10 +21,74 @@ export const EQUIPMENT_TYPES: { value: EquipmentType; label: string }[] = [
   { value: "GATE", label: "Gate" },
   { value: "LIGHT", label: "Common-area light" },
   { value: "PLUMBING", label: "Plumbing" },
+  { value: "CLEANING", label: "Cleaning" },
+  { value: "REPAIRS", label: "Painting and repairs" },
+  { value: "SECURITY", label: "Security" },
 ];
 
+/** The kinds of problem a report can be sorted into, in plain words, A to Z with "Something else" last. */
+export const FAULT_CATEGORIES: { value: FaultCategory; label: string }[] = [
+  { value: "BROKEN_LIGHT", label: "Broken light" },
+  { value: "DRAINAGE", label: "Blocked drain" },
+  { value: "ROAD_DAMAGE", label: "Damaged road or path" },
+  { value: "ILLEGAL_DUMPING", label: "Dumped items" },
+  { value: "GRAFFITI", label: "Graffiti or vandalism" },
+  { value: "NOISE", label: "Noise" },
+  { value: "PARKING", label: "Parking" },
+  { value: "RUBBISH", label: "Rubbish or litter" },
+  { value: "WATER_LEAK", label: "Water leak" },
+  { value: "OTHER", label: "Something else" },
+];
+
+/** Which contractor type handles each kind of problem (mirrors the server's FaultCategory). */
+export const CATEGORY_CONTRACTOR_TYPE: Record<
+  FaultCategory,
+  EquipmentType | null
+> = {
+  WATER_LEAK: "PLUMBING",
+  DRAINAGE: "PLUMBING",
+  BROKEN_LIGHT: "LIGHT",
+  RUBBISH: "CLEANING",
+  ILLEGAL_DUMPING: "CLEANING",
+  GRAFFITI: "REPAIRS",
+  ROAD_DAMAGE: "REPAIRS",
+  NOISE: "SECURITY",
+  PARKING: "SECURITY",
+  OTHER: null,
+};
+
+export function categoryLabel(category: FaultCategory): string {
+  return (
+    FAULT_CATEGORIES.find((item) => item.value === category)?.label ?? category
+  );
+}
+
+const MISSING_CONTRACTOR = /^No (?<type>\w+) contractor configured\.?$/u;
+
+/** Turns a routing reason from the server into plain words, and names the contractor type it is missing, if any. */
+export function explainReason(reason: string): {
+  text: string;
+  missingContractor: EquipmentType | null;
+} {
+  const missing = MISSING_CONTRACTOR.exec(reason)?.groups?.type;
+  const type = EQUIPMENT_TYPES.find((item) => item.value === missing);
+  if (type) {
+    return {
+      text: `No ${type.label.toLowerCase()} contractor is set up for this estate.`,
+      missingContractor: type.value,
+    };
+  }
+  if (reason.startsWith("Confidence below threshold")) {
+    return {
+      text: "We weren't sure enough what kind of problem this is.",
+      missingContractor: null,
+    };
+  }
+  return { text: reason, missingContractor: null };
+}
+
 export const ROUTING_STATES: { value: RoutingState; label: string }[] = [
-  { value: "CLASSIFYING", label: "Classifying" },
+  { value: "CLASSIFYING", label: "Sorting" },
   { value: "NEEDS_REVIEW", label: "Needs review" },
   { value: "WORK_ORDER", label: "Work order created" },
   { value: "DISMISSED", label: "Dismissed" },
@@ -106,6 +172,28 @@ export function useDismissReport(estateId: string, reportId: string) {
       if (error || !data) {
         throw new ReportRequestError(
           error?.message ?? "Couldn't dismiss the report. Try again.",
+          response?.status ?? 500
+        );
+      }
+      return data;
+    },
+    onSuccess: invalidate,
+  });
+}
+
+/** Puts the report under another kind of problem (owner or Manager only). Never sends anything by itself. */
+export function useChangeCategory(estateId: string, reportId: string) {
+  const invalidate = useInvalidateRouting(estateId);
+  return useMutation({
+    retry: false,
+    mutationFn: async (category: FaultCategory) => {
+      const { data, error, response } = await api.PUT(
+        "/estates/{estateId}/reports/{reportId}/category",
+        { params: { path: { estateId, reportId } }, body: { category } }
+      );
+      if (error || !data) {
+        throw new ReportRequestError(
+          error?.message ?? "Couldn't change the type. Try again.",
           response?.status ?? 500
         );
       }

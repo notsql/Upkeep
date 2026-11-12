@@ -11,7 +11,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
-import { routingStateLabel } from "@/lib/report-routing";
+import { categoryLabel, routingStateLabel } from "@/lib/report-routing";
 
 export type EstateReport =
   components["schemas"]["EstateIssueReportPageResponse"]["items"][number];
@@ -21,7 +21,8 @@ const columns = [
   "Location",
   "Urgency",
   "Duplicates",
-  "Routing",
+  "Type",
+  "Next step",
   "Submitted",
 ];
 
@@ -66,6 +67,13 @@ export function EstateReportsTable({
               </TableCell>
               <TableCell>
                 <DuplicateBadges report={report} />
+              </TableCell>
+              <TableCell>
+                {report.routing?.classification?.category ? (
+                  <Badge variant="secondary">
+                    {categoryLabel(report.routing.classification.category)}
+                  </Badge>
+                ) : null}
               </TableCell>
               <TableCell>
                 {report.routing ? (

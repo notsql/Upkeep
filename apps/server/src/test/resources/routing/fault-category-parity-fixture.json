@@ -1,0 +1,453 @@
+{
+  "model": "fault-category-tfidf-v1",
+  "categories": [
+    "BROKEN_LIGHT",
+    "DRAINAGE",
+    "GRAFFITI",
+    "ILLEGAL_DUMPING",
+    "NOISE",
+    "OTHER",
+    "PARKING",
+    "ROAD_DAMAGE",
+    "RUBBISH",
+    "WATER_LEAK"
+  ],
+  "tolerance": 1e-05,
+  "cases": [
+    {
+      "text": "About three lights are out on this entire block. It creates a major security risk for residents.",
+      "probabilities": [
+        0.9995394945144653,
+        2.980823592224624e-05,
+        1.1422878742450848e-05,
+        8.715123840374872e-06,
+        6.428358028642833e-05,
+        2.5709443434607238e-05,
+        1.931295446411241e-05,
+        0.00017105607548728585,
+        0.00011107597674708813,
+        1.9181621610186994e-05
+      ]
+    },
+    {
+      "text": "a large blockage in the storm drain is causing road safety concerns.",
+      "probabilities": [
+        7.67004894441925e-06,
+        0.9999514818191528,
+        4.619357696356019e-07,
+        7.989469850144815e-07,
+        4.227054432703881e-06,
+        2.233932036688202e-06,
+        3.4834160942409653e-06,
+        2.2005371647537686e-05,
+        4.789847935171565e-06,
+        2.897309741456411e-06
+      ]
+    },
+    {
+      "text": "Graffiti found on playground slide in local park.",
+      "probabilities": [
+        6.211139861989068e-06,
+        2.262292127852561e-06,
+        0.9998180270195007,
+        3.860654487652937e-06,
+        7.1402841967938e-06,
+        0.0001265328173758462,
+        2.642648723849561e-06,
+        8.807837730273604e-06,
+        2.0401954316184856e-05,
+        4.163016456004698e-06
+      ]
+    },
+    {
+      "text": "Abandoned mattress and bags of trash left beside the railroad tracks.",
+      "probabilities": [
+        1.3006689187022857e-05,
+        5.05066509504104e-06,
+        4.1406801756238565e-06,
+        0.9997072219848633,
+        1.5492725651711226e-05,
+        9.059166586666834e-06,
+        6.731911980750738e-06,
+        1.2875474567408673e-05,
+        0.00021922348241787404,
+        7.241867479024222e-06
+      ]
+    },
+    {
+      "text": "Bar behind our building plays music too loud late at night.",
+      "probabilities": [
+        0.00010845959332073107,
+        4.302934939914849e-06,
+        4.262102265784051e-06,
+        7.421670943585923e-06,
+        0.9997448325157166,
+        1.3929695342085324e-05,
+        2.5261274458898697e-06,
+        1.7868947907118127e-05,
+        8.318629988934845e-05,
+        1.3155383385310415e-05
+      ]
+    },
+    {
+      "text": "Bike rack loose and unstable in front of library.",
+      "probabilities": [
+        1.3703964214073494e-05,
+        9.98393716145074e-06,
+        4.370411261334084e-06,
+        1.039574999595061e-05,
+        1.0816943358804565e-05,
+        0.9998321533203125,
+        4.7600275138393044e-05,
+        1.1021256796084344e-05,
+        3.840748468064703e-05,
+        2.1508041754714213e-05
+      ]
+    },
+    {
+      "text": "a vehicle is blocking the sidewalk, forcing pedestrians into the street.",
+      "probabilities": [
+        4.457282045677857e-07,
+        1.6010163790269871e-06,
+        8.568981968437583e-08,
+        1.060924859075385e-07,
+        3.1761902619109605e-07,
+        1.2473194033191248e-07,
+        0.9999862909317017,
+        2.896121600315382e-07,
+        6.782367108826293e-06,
+        3.983073838753626e-06
+      ]
+    },
+    {
+      "text": "a dangerous crater forming on the side of the road.",
+      "probabilities": [
+        1.8513310351409018e-05,
+        3.344178185216151e-05,
+        0.0003043139586225152,
+        8.089917173492722e-06,
+        8.153141607181169e-06,
+        6.470736934716115e-06,
+        4.293846359360032e-05,
+        0.9995419979095459,
+        1.7432161257602274e-05,
+        1.8634611478773877e-05
+      ]
+    },
+    {
+      "text": "Broken glass and trash scattered along the curb. Not safe for pedestrians.",
+      "probabilities": [
+        0.00013824693451169878,
+        0.0002321138308616355,
+        4.516109584074002e-06,
+        9.535016943118535e-06,
+        1.9523933588061482e-05,
+        0.0001650345657253638,
+        2.3475015041185543e-05,
+        2.547195072111208e-05,
+        0.9993666410446167,
+        1.5439740309375338e-05
+      ]
+    },
+    {
+      "text": "A significant water leak near the school entrance is creating a large, slippery pond. It's wasting city resources and making it hard for kids to get to class.",
+      "probabilities": [
+        4.75118140457198e-05,
+        5.868750304216519e-05,
+        8.160352081176825e-06,
+        4.085177351953462e-06,
+        1.2180266821815167e-05,
+        8.181493285519537e-06,
+        1.2765309293172322e-05,
+        8.521108975401148e-05,
+        2.9761524274363182e-05,
+        0.9997334480285645
+      ]
+    },
+    {
+      "text": "Lift stuck between floors 5 and 6",
+      "probabilities": [
+        0.20552246272563934,
+        0.011655633337795734,
+        0.00026249958318658173,
+        0.0015565066132694483,
+        0.008096471428871155,
+        0.014156521297991276,
+        0.0005617382703348994,
+        0.007781779393553734,
+        0.7402065992355347,
+        0.01019986905157566
+      ]
+    },
+    {
+      "text": "The water pump is very noisy at night",
+      "probabilities": [
+        0.6165497899055481,
+        0.01359750796109438,
+        0.00014330823614727706,
+        0.0001166293877759017,
+        0.08731897175312042,
+        0.0004231093917042017,
+        0.0008080708212219179,
+        0.0016638566739857197,
+        0.0005886200233362615,
+        0.2787901759147644
+      ]
+    },
+    {
+      "text": "Gate won't close at the car park",
+      "probabilities": [
+        0.08289895206689835,
+        0.024730542674660683,
+        0.010759678669273853,
+        0.0009689585422165692,
+        0.040428634732961655,
+        0.6518337726593018,
+        0.03115970827639103,
+        0.047763511538505554,
+        0.08456135541200638,
+        0.024894915521144867
+      ]
+    },
+    {
+      "text": "Corridor light on level 3 keeps flickering",
+      "probabilities": [
+        0.9936667084693909,
+        0.0002712617570068687,
+        0.0011739212786778808,
+        0.00029912873287685215,
+        0.0008577733533456922,
+        0.0003034602850675583,
+        0.00014099245890974998,
+        0.0013229323085397482,
+        0.0008429987356066704,
+        0.0011208768701180816
+      ]
+    },
+    {
+      "text": "Rubbish chute is blocked and smelly",
+      "probabilities": [
+        0.17084501683712006,
+        0.38177427649497986,
+        0.0008768957341089845,
+        0.0013824983034282923,
+        0.0311965923756361,
+        0.20772890746593475,
+        0.0029942751862108707,
+        0.018531829118728638,
+        0.17351597547531128,
+        0.011153594590723515
+      ]
+    },
+    {
+      "text": "Someone sprayed paint on the void deck wall",
+      "probabilities": [
+        0.006828800309449434,
+        0.0033903110306710005,
+        0.9294721484184265,
+        0.0031204367987811565,
+        0.010191556997597218,
+        0.0012876394903287292,
+        0.0022710051853209734,
+        0.02276112511754036,
+        0.01856205053627491,
+        0.002114927861839533
+      ]
+    },
+    {
+      "text": "",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "   ",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "!!!???...",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "漏水了 水管爆了 💧💧",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "🚨🚨🚨",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "LIGHT!!! broken!!!",
+      "probabilities": [
+        0.4033631980419159,
+        0.0005521071143448353,
+        9.856772521743551e-05,
+        0.00014559004921466112,
+        0.00042651387047953904,
+        0.5926641225814819,
+        0.00010943883535219356,
+        0.00037604590761475265,
+        0.0016483666840940714,
+        0.0006160953198559582
+      ]
+    },
+    {
+      "text": "water-leak, ceiling; dripping.",
+      "probabilities": [
+        2.0647870258017065e-07,
+        1.7132842344835808e-07,
+        3.908754564463379e-08,
+        7.2795415917426e-08,
+        1.9806006434919254e-07,
+        9.943862977479512e-08,
+        4.6345771664846325e-08,
+        1.5569592903830198e-07,
+        1.7480539327152655e-07,
+        0.9999988079071045
+      ]
+    },
+    {
+      "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road pothole on the road",
+      "probabilities": [
+        2.42653698023787e-07,
+        2.3846000658522826e-06,
+        3.2573761927778833e-06,
+        7.104782895339667e-08,
+        1.1573560243505199e-07,
+        5.035921901708207e-08,
+        3.4817657024177606e-07,
+        0.9999930262565613,
+        3.0349650614880375e-07,
+        1.9627918845799286e-07
+      ]
+    },
+    {
+      "text": "Café naïve résumé",
+      "probabilities": [
+        0.1496172547340393,
+        0.022654982283711433,
+        0.015443176031112671,
+        0.023843998089432716,
+        0.16437509655952454,
+        0.06136802211403847,
+        0.01711415685713291,
+        0.3237453103065491,
+        0.17274107038974762,
+        0.049096930772066116
+      ]
+    },
+    {
+      "text": "1234 5678",
+      "probabilities": [
+        0.18304680287837982,
+        0.02769908867776394,
+        0.01799381524324417,
+        0.027362408116459846,
+        0.19453689455986023,
+        0.07159385085105896,
+        0.0211445651948452,
+        0.18704211711883545,
+        0.21067458391189575,
+        0.05890582874417305
+      ]
+    },
+    {
+      "text": "Car parked across two lots blocking the lane",
+      "probabilities": [
+        3.0009721740498208e-05,
+        1.4694468518428039e-05,
+        5.060003331891494e-06,
+        4.688833996624453e-06,
+        2.3273527403944172e-05,
+        4.389224159240257e-06,
+        0.9998254179954529,
+        2.2959713533055037e-05,
+        6.376609962899238e-05,
+        5.713114205718739e-06
+      ]
+    },
+    {
+      "text": "Drain is clogged and flooding the path",
+      "probabilities": [
+        0.0020042441319674253,
+        0.9859568476676941,
+        0.00013233961362857372,
+        0.00017955683870241046,
+        0.0013574656331911683,
+        0.0004260751011315733,
+        0.0007956324843689799,
+        0.0009305208222940564,
+        0.002452615648508072,
+        0.005764760542660952
+      ]
+    }
+  ]
+}

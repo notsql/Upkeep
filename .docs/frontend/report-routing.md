@@ -27,6 +27,16 @@ created, Dismissed), `PRIORITIES`, `workOrderStatusLabel` and
 `useEstateReport` (`lib/estate-reports.ts`) refetches every 5 s while
 `routing.state` is `CLASSIFYING`. `EstateReport` is `EstateReportDetailResponse`.
 
+`lib/report-routing.ts` also owns `FAULT_CATEGORIES` (value + plain label,
+"Something else" last), `categoryLabel`, `CATEGORY_CONTRACTOR_TYPE` (WATER_LEAK,
+DRAINAGE → PLUMBING; BROKEN_LIGHT → LIGHT; RUBBISH, ILLEGAL_DUMPING → CLEANING;
+GRAFFITI, ROAD_DAMAGE → REPAIRS; NOISE, PARKING → SECURITY; OTHER → none),
+`explainReason(reason)` and `useChangeCategory(estateId, reportId)`: PUT
+`/estates/{estateId}/reports/{reportId}/category` with `{ category }`,
+invalidating `[userId, "estate-reports", estateId]` (detail and list) and the
+estate's work orders. `EQUIPMENT_TYPES` includes Cleaning, Painting and repairs
+and Security. `ROUTING_STATES` labels `CLASSIFYING` "Sorting".
+
 ## Screens
 
 - **`/estates/$estateId/contractors`** (`routes/_auth/estates/$estateId/contractors/`):
@@ -36,20 +46,43 @@ created, Dismissed), `PRIORITIES`, `workOrderStatusLabel` and
   Dialog. The `_auth` guard returns Not Found without `canCreateWorkOrders`, and
   navigation shows "Contractors" (HardHat icon) in the Administration group only
   with that capability.
-- **Estate report list:** each card shows an outline Badge "Routing: <state>".
-  A "Routing" Select (`-components/routing-state-filter.tsx`) keeps
+- **Estate report list:** desktop adds a "Type" column (secondary Badge with
+  `categoryLabel`, empty when the report has no category) before a "Next step"
+  column (outline Badge with `routingStateLabel`, or "—"); mobile rows show the
+  type Badge and "Next step: <state>". A "Next step" Select
+  (`-components/routing-state-filter.tsx`, first option "All") keeps
   `routingState` in the URL alongside the block and level filters.
-- **Estate report detail:** `-components/routing-card.tsx` shows the state,
-  the reason, the model's assessment ("Inconclusive · Lift · 62% confidence"),
-  and the work order (reference linked to its detail when `canViewWorkOrders`,
-  plus status), contractor, email status and approval. With
-  `canCreateWorkOrders`, a report awaiting review offers:
-  - "Send to contractor" (`send-to-contractor-dialog.tsx`): Equipment type and
-    Priority Selects, the recipient named before sending, and "Send work order".
-    When the chosen type has no contractor, it says so and links "Set up
-    contractors" to `/estates/$estateId/contractors`;
-  - "Dismiss" (`dismiss-report-dialog.tsx`), confirmed with "Dismiss report";
-  - "Retry sending" when the email failed.
+- **Estate report detail** (`reports/$reportId/`): see
+  [estate-reports.md](estate-reports.md#report-detail-page). Routing shows in
+  `-components/next-step-card.tsx`, a "Next step" SectionCard by state:
+  - `CLASSIFYING`: "Sorting this report…" (the page polls every 5 s);
+  - `NEEDS_REVIEW`: "Waiting for you to decide" (crew: "Waiting for a
+    manager") and the reason via `explainReason`: "No PLUMBING contractor
+    configured" reads "No plumbing contractor is set up for this estate." with
+    a "Set one up" link to `/estates/$estateId/contractors` (managers only);
+    "Confidence below threshold" reads "We weren't sure enough what kind of
+    problem this is."; other reasons show as sent. With `canCreateWorkOrders`:
+    - "Send to contractor" (`send-to-contractor-dialog.tsx`): "Contractor type"
+      and "Priority" Selects, the type preselected from
+      `CATEGORY_CONTRACTOR_TYPE[category]` (falling back to the
+      classification's `equipmentType`; the dialog is keyed by it so a type
+      change re-suggests), the recipient named before sending, and "Send work
+      order". When the chosen type has no contractor it says so and links "Set
+      up contractors";
+    - "Dismiss" (`dismiss-report-dialog.tsx`), confirmed with "Dismiss report";
+  - `WORK_ORDER`: "Sent to a contractor" (or "Work order created" with no
+    email), the work order reference (linked when `canViewWorkOrders`) and
+    status, contractor, email status, approval, and "Retry sending" for
+    managers when the email failed;
+  - `DISMISSED`: "Dismissed" and "No contractor was emailed about this report."
+  The page header swaps "Create work order" for an outline "View work order"
+  link once `routing.workOrder` exists.
+- **Change type** (`-components/change-category-dialog.tsx`, in the Details
+  card's Type row): shown with `canCreateWorkOrders` when the report has
+  routing that is not `CLASSIFYING`. A Dialog with a shadcn `RadioGroup` "Type
+  of problem" of the ten `FAULT_CATEGORIES` and "Save type" (disabled until a
+  different type is chosen). Calls `useChangeCategory`; server errors (409
+  while sorting) show in an Alert inside the dialog. It never sends anything.
 - **Work-order detail:** the route (`$workOrderId/index.tsx`) passes a
   `sections` slot to `WorkOrderDetailPage`. For `EQUIPMENT_FAULT` orders from a
   resident report, the slot renders `-components/work-order-contractor-email.tsx`:

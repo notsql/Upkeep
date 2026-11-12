@@ -31,8 +31,8 @@ supplies the existing report capabilities.
 
 | Route folder | Screen and components | API calls |
 | --- | --- | --- |
-| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, which picks `estate-reports-table.tsx` (desktop) or `estate-reports-items.tsx` (mobile, below 768px) via `useMobile()`; state in `use-estate-reports-page.ts`) | Desktop: shadcn `Table` `aria-label="Reports"` with columns Title (link to the report, `max-w-sm whitespace-normal`), Location (full path, `location.label`), Urgency (`ReportUrgencyBadges`), Duplicates (`DuplicateBadges`, empty when none), Routing (outline Badge with `routingStateLabel`, or "—" when unrouted), Submitted (`<time>`, `toLocaleString()`); headers are not sortable, the sort/filter controls above are unchanged. Mobile: flat `ListRows` "Reports" of `ReportRow`s (`components/reports/report-row.tsx`, design-system "List rows"; no cards) with linked `h2` title, labelled estate name, full location path, status Badge, submission time and a "Routing: <state>" Badge. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
-| `reports/$reportId/index.tsx` → `/estates/{estateId}/reports/{reportId}` | Shared report Card/Badge and metadata, Updated timestamp, complete plain-text description, private images and empty/image-error states. Correction uses shadcn Dialog, Label, Select, Button and Alert in adjacent `-components/change-location-dialog/change-location-dialog.tsx`. The adjacent `-components/private-report-image.tsx` provides the responder query wrapper. | GET `/estates/{estateId}/reports/{reportId}`; GET `/estates/{estateId}/reports/{reportId}/images/{imageId}`; PATCH `/estates/{estateId}/reports/{reportId}/location`; locations for correction |
+| `reports/index.tsx` → `/estates/{estateId}/reports` (route only; the page is `-components/estate-reports-page/estate-reports-page.tsx`, composing `estate-reports-locations.tsx` and `estate-reports-results.tsx`, which picks `estate-reports-table.tsx` (desktop) or `estate-reports-items.tsx` (mobile, below 768px) via `useMobile()`; state in `use-estate-reports-page.ts`) | Desktop: shadcn `Table` `aria-label="Reports"` with columns Title (link to the report, `max-w-sm whitespace-normal`), Location (full path, `location.label`), Urgency (`ReportUrgencyBadges`), Duplicates (`DuplicateBadges`, empty when none), Type (secondary Badge with `categoryLabel`, empty without a category), Next step (outline Badge with `routingStateLabel`, or "—" when unrouted), Submitted (`<time>`, `toLocaleString()`); headers are not sortable, the sort/filter controls above are unchanged. Mobile: flat `ListRows` "Reports" of `ReportRow`s (`components/reports/report-row.tsx`, design-system "List rows"; no cards) with linked `h2` title, labelled estate name, full location path, status Badge, submission time, the type Badge and a "Next step: <state>" Badge. shadcn Card, Label, Combobox, Button and Alert. URL block/level-position filters, All blocks/clear, loading/retry, empty/no-matches and cursor pagination. | GET `/estates/{estateId}/reports`; GET `/estates/{estateId}/locations?includeInactive=true`; access context |
+| `reports/$reportId/index.tsx` → `/estates/{estateId}/reports/{reportId}` | See "Report detail page" below: Next step, What was reported, Details and duplicate cards (shadcn Card via `SectionCard`, Badge, Dialog, RadioGroup, Select, Button, Alert). Location correction stays in adjacent `-components/change-location-dialog/change-location-dialog.tsx`, opened from the Details card. The adjacent `-components/private-report-image.tsx` provides the responder query wrapper. | GET `/estates/{estateId}/reports/{reportId}`; GET `/estates/{estateId}/reports/{reportId}/images/{imageId}`; PATCH `/estates/{estateId}/reports/{reportId}/location`; locations for correction |
 
 The list's adjacent `-components/report-filters/report-filters.tsx` renders two filter groups:
 a searchable Block combobox and a Level position fieldset with Minimum position
@@ -224,10 +224,39 @@ and Closed is success. An unknown status shows as-is, outlined.
 
 ## Routing (ID-70)
 
-The list shows each report's routing state (a Routing column on desktop, a "Routing: <state>" Badge on mobile) and a "Routing" filter
-(`routingState`). The detail page adds the routing card, with send, dismiss and
-retry for work-order creators, and polls every 5 s while classifying. See
-[report-routing.md](report-routing.md).
+The list shows each report's type and routing state (Type and Next step
+columns on desktop, Badges on mobile) and a "Next step" filter
+(`routingState`). See [report-routing.md](report-routing.md).
+
+## Report detail page
+
+`reports/$reportId/index.tsx` is laid out around "what do I need to do with
+this report?" (spec `fault-categories-and-report-page.md`):
+
+- **Header** (`DetailPageHeader`): breadcrumbs Fault reports › title; the `h1`
+  is the report's title; status Badges in plain words (report status, e.g.
+  "Submitted", via a local `ReportStatusBadge`; "<Urgency> urgency"; "Safety");
+  meta "Reported <date>". Action: "Create work order" (work-order creators,
+  not a duplicate), replaced by an outline "View work order" link once
+  `routing.workOrder` exists.
+- **Grid:** `lg:grid-cols-[3fr_2fr]`, one column below with the left column
+  first. Left: **Next step** (`-components/next-step-card.tsx`, only when the
+  report has routing; see report-routing.md) then **What was reported**
+  (description as plain text, private photos or "No photos."). Right:
+  **Details** (`-components/details-card.tsx`, a `dl` of rows Estate,
+  Location + "Change location", Urgency (`ReportUrgencyBadges`,
+  `LatestUrgencyChange`) + "Change urgency", Type + "Change type" with
+  "Sorted automatically, N% sure" or "Changed by <name>, <date>" under it, or
+  "Not sorted into a type yet", Submitted, Updated), then the duplicate
+  section.
+- **Duplicates** (`-components/duplicate-section/`): an already-linked report
+  shows "Already reported" and an original shows "Repeat reports" as before.
+  Otherwise, reviewers see a compact "Same problem as another report?" card
+  whose "Mark as duplicate" button opens a Dialog ("Mark as duplicate") with
+  the `ReportSourcePicker` ("Original report", nested "Choose original report"
+  dialog) and "Mark as same problem"; it closes on success.
+- The change location, urgency, send-to-contractor and dismiss dialogs are the
+  existing components, placed in the rows and cards above.
 ## Phones: infinite scroll
 
 Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Report pages (`useEstateReportFeed`, key `[userId, "estate-reports", estateId, "feed", filters, 20]`).
