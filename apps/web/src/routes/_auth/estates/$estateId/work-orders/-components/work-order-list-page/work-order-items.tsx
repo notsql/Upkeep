@@ -44,6 +44,11 @@ export function WorkOrderItems({
               count={order.sourceReportConfirmedDuplicateCount}
             />
             <span>{order.category.replaceAll("_", " ")}</span>
+            <span>
+              {order.assignee
+                ? `Assigned to ${order.assignee.name}`
+                : "Nobody yet"}
+            </span>
             <time dateTime={order.createdAt}>
               {new Date(order.createdAt).toLocaleString()}
             </time>

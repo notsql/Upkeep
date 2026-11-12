@@ -139,6 +139,59 @@ it("lets Crew view work orders without creation or progress controls", async () 
   ).toBeNull();
 });
 
+it("shows Crew their own jobs first, with a switch to see every job", async () => {
+  state.crew = true;
+  const { router } = await setup();
+  await screen.findByRole("link", { name: "TEST-W0001" });
+  const lists = () =>
+    state.get.mock.calls.filter(
+      ([path]) => path === "/estates/{estateId}/work-orders"
+    );
+  expect(lists().at(-1)?.[1].params.query.assignedTo).toBe("me");
+
+  fireEvent.click(screen.getByRole("button", { name: "All jobs" }));
+
+  await waitFor(() =>
+    expect(router.state.location.search.assignedTo).toBe("all")
+  );
+  await waitFor(() =>
+    expect(lists().at(-1)?.[1].params.query.assignedTo).toBeUndefined()
+  );
+  screen.getByRole("button", { name: "My jobs" });
+});
+
+it("shows who has each job and gives managers no My jobs switch", async () => {
+  const serve = state.get.getMockImplementation();
+  state.get.mockImplementation((path: string, ...options: unknown[]) => {
+    if (path === "/estates/{estateId}/work-orders") {
+      return Promise.resolve({
+        data: {
+          items: [
+            {
+              ...order,
+              assignee: {
+                kind: "MEMBER",
+                id: "priya",
+                name: "Priya Tan",
+                email: null,
+                assignedAt: "2026-10-22T00:00:00Z",
+                inEstate: true,
+              },
+            },
+          ],
+          nextCursor: null,
+        },
+        response: new Response(),
+      });
+    }
+    return serve?.(path, ...options);
+  });
+  await setup();
+  await screen.findByRole("columnheader", { name: "Assigned to" });
+  screen.getByRole("cell", { name: "Priya Tan" });
+  expect(screen.queryByRole("button", { name: "My jobs" })).toBeNull();
+});
+
 it.each(["work-orders", "assets"])(
   "keeps the page scroll position when sorting %s",
   async (feature) => {

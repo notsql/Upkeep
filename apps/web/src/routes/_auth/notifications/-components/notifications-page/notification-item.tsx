@@ -75,6 +75,9 @@ function title(notification: Notification): string | undefined {
   if (notification.type === "CHECK_FAILED") {
     return `Crew found a problem with ${notification.assetName}`;
   }
+  if (notification.type === "WORK_ORDER_ASSIGNED") {
+    return `You've been given a job: ${notification.workOrderReference ?? "a work order"}`;
+  }
 }
 
 /** Where opening a row goes: the inspection form for someone sent to inspect. */
@@ -89,10 +92,23 @@ function RowLink({
 }) {
   const className =
     "hover:bg-accent/60 focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2";
-  const params = {
-    estateId: notification.estateId,
-    assetId: notification.assetId,
-  };
+  const { estateId, assetId, workOrderId } = notification;
+  if (notification.type === "WORK_ORDER_ASSIGNED" && workOrderId) {
+    return (
+      <Link
+        className={className}
+        onClick={onClick}
+        params={{ estateId, workOrderId }}
+        to="/estates/$estateId/work-orders/$workOrderId"
+      >
+        {children}
+      </Link>
+    );
+  }
+  if (!assetId) {
+    return <div className={className}>{children}</div>;
+  }
+  const params = { estateId, assetId };
   if (notification.type === "CHECK_REQUESTED") {
     return (
       <Link
@@ -177,8 +193,12 @@ export function NotificationItem({
           <p className="text-muted-foreground text-xs">{basis(notification)}</p>
         ) : null}
         <p className="text-muted-foreground text-xs">
-          <span>{`${notification.assetName} (${notification.assetReference})`}</span>
-          <span aria-hidden="true"> · </span>
+          {notification.assetName ? (
+            <>
+              <span>{`${notification.assetName} (${notification.assetReference})`}</span>
+              <span aria-hidden="true"> · </span>
+            </>
+          ) : null}
           <span>{notification.estateName}</span>
         </p>
       </RowLink>

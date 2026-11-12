@@ -5,7 +5,7 @@ import { api } from "@/lib/api";
 import { ReportRequestError } from "@/lib/estate-reports";
 
 export type EquipmentType =
-  components["schemas"]["EquipmentContractorResponse"]["equipmentType"];
+  components["schemas"]["ContractorResponse"]["defaultFor"][number];
 export type ReportRouting = components["schemas"]["ReportRoutingResponse"];
 export type RoutingState = ReportRouting["state"];
 export type WorkOrderDispatch =
@@ -134,30 +134,6 @@ export function useWorkOrderDispatch(estateId: string, workOrderId: string) {
       }
       return data.dispatch ?? null;
     },
-  });
-}
-
-export function useDispatchWorkOrder(estateId: string, workOrderId: string) {
-  const invalidate = useInvalidateRouting(estateId);
-  return useMutation({
-    retry: false,
-    mutationFn: async (equipmentType: EquipmentType) => {
-      const { data, error, response } = await api.POST(
-        "/estates/{estateId}/work-orders/{workOrderId}/dispatch",
-        {
-          params: { path: { estateId, workOrderId } },
-          body: { equipmentType },
-        }
-      );
-      if (error || !data) {
-        throw new ReportRequestError(
-          error?.message ?? "Couldn't email the contractor. Try again.",
-          response?.status ?? 500
-        );
-      }
-      return data;
-    },
-    onSuccess: invalidate,
   });
 }
 

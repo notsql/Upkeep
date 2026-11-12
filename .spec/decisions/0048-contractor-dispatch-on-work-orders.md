@@ -1,5 +1,7 @@
 # 0048 - Contractors are reached by email dispatch on ID-36 work orders
 
+> **Superseded in part** by [0054 - Work order assignment](0054-work-order-assignment.md).
+
 **Status:** accepted (ID-70). The SMTP transport is superseded by 0051 (Resend). Builds on 0032 (work-order creation), 0034
 (progress) and 0040 (Crew read-only). Supplies the minimal provider and
 assignment model that ID-37 extends.

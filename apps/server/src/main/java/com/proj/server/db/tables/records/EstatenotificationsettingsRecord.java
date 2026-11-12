@@ -190,6 +190,22 @@ public class EstatenotificationsettingsRecord extends UpdatableRecordImpl<Estate
         return (Boolean) get(10);
     }
 
+    /**
+     * Setter for
+     * <code>public.EstateNotificationSettings.workOrderAssignedEnabled</code>.
+     */
+    public void setWorkorderassignedenabled(Boolean value) {
+        set(11, value);
+    }
+
+    /**
+     * Getter for
+     * <code>public.EstateNotificationSettings.workOrderAssignedEnabled</code>.
+     */
+    public Boolean getWorkorderassignedenabled() {
+        return (Boolean) get(11);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -213,7 +229,7 @@ public class EstatenotificationsettingsRecord extends UpdatableRecordImpl<Estate
     /**
      * Create a detached, initialised EstatenotificationsettingsRecord
      */
-    public EstatenotificationsettingsRecord(UUID estateid, BigDecimal anomalyscorethreshold, Integer serviceleaddays, Integer repairleaddays, OffsetDateTime updatedat, String updatedbyuserid, Boolean anomalyenabled, Boolean checkfailedenabled, Boolean checkrequestedenabled, Boolean repairpredictedenabled, Boolean servicedueenabled) {
+    public EstatenotificationsettingsRecord(UUID estateid, BigDecimal anomalyscorethreshold, Integer serviceleaddays, Integer repairleaddays, OffsetDateTime updatedat, String updatedbyuserid, Boolean anomalyenabled, Boolean checkfailedenabled, Boolean checkrequestedenabled, Boolean repairpredictedenabled, Boolean servicedueenabled, Boolean workorderassignedenabled) {
         super(Estatenotificationsettings.ESTATENOTIFICATIONSETTINGS);
 
         setEstateid(estateid);
@@ -227,6 +243,7 @@ public class EstatenotificationsettingsRecord extends UpdatableRecordImpl<Estate
         setCheckrequestedenabled(checkrequestedenabled);
         setRepairpredictedenabled(repairpredictedenabled);
         setServicedueenabled(servicedueenabled);
+        setWorkorderassignedenabled(workorderassignedenabled);
         resetTouchedOnNotNull();
     }
 }

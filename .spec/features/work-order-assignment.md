@@ -1,6 +1,6 @@
 # Work order assignment
 
-**Status:** draft
+**Status:** agreed
 **Owner:** Ong Zheng Kai
 
 This is the long-deferred Jira **ID-37** scope ("assign a work order"). Earlier

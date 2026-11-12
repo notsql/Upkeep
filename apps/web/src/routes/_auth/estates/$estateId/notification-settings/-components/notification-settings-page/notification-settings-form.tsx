@@ -42,6 +42,11 @@ const SWITCHES: { name: SwitchName; label: string; help: string }[] = [
     label: "Check failed",
     help: "Tell managers when a check finds a problem.",
   },
+  {
+    name: "workOrderAssignedEnabled",
+    label: "Work order assigned",
+    help: "Tell a staff member when a job is given to them.",
+  },
 ];
 
 function SettingSwitch({

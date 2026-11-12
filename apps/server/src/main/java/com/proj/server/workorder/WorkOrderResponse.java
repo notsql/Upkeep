@@ -20,7 +20,9 @@ import java.util.UUID;
             "createdByUserId",
             "createdAt",
             "updatedAt",
-            "sourceReportConfirmedDuplicateCount"
+            "sourceReportConfirmedDuplicateCount",
+            "assignee",
+            "canProgress"
         })
 public record WorkOrderResponse(
         UUID id,
@@ -49,8 +51,22 @@ public record WorkOrderResponse(
         OffsetDateTime updatedAt,
 
         @Schema(description = "CONFIRMED duplicates of the source report; 0 without a source report.")
-        int sourceReportConfirmedDuplicateCount) {
+        int sourceReportConfirmedDuplicateCount,
+
+        @Schema(nullable = true, description = "Who has the job; null when nobody does.")
+        WorkOrderAssigneeResponse assignee,
+
+        @Schema(description = "Whether the caller may start or complete this order.")
+        boolean canProgress) {
     public WorkOrderResponse withCreatorName(String name) {
+        return copy(name, canProgress);
+    }
+
+    public WorkOrderResponse withCanProgress(boolean value) {
+        return copy(createdByName, value);
+    }
+
+    private WorkOrderResponse copy(String name, boolean progress) {
         return new WorkOrderResponse(
                 id,
                 estateId,
@@ -73,6 +89,8 @@ public record WorkOrderResponse(
                 name,
                 createdAt,
                 updatedAt,
-                sourceReportConfirmedDuplicateCount);
+                sourceReportConfirmedDuplicateCount,
+                assignee,
+                progress);
     }
 }

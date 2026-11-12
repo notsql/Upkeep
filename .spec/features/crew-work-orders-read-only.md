@@ -1,5 +1,7 @@
 # Crew read-only work-order access
 
+> **Superseded in part** by `work-order-assignment.md`: Crew may now start and complete orders assigned to them.
+
 **Status:** built and verified (2026-10-26; agreed before implementation)
 **Owner:** project team
 

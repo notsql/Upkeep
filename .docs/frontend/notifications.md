@@ -84,6 +84,7 @@ renders `-components/notification-settings-page/notification-settings-page.tsx` 
   | `repairPredictedEnabled` | Expected repair | Warn us when something is likely to need repair in the next 90, 60 or 30 days. |
   | `checkRequestedEnabled` | Check requested | Tell a staff member when they are asked to check something. |
   | `checkFailedEnabled` | Check failed | Tell managers when a check finds a problem. |
+  | `workOrderAssignedEnabled` | Work order assigned | Tell a staff member when a job is given to them. |
 
   **Save settings** sends every switch and shows "Settings saved." (`role="status"`); a refused save
   shows a destructive `Alert`. An inactive estate shows a warning `Alert` and disables the switches
@@ -121,3 +122,10 @@ shows for Crew. Type labels: "Please inspect", "Problem found". See
 ## Phones: infinite scroll
 
 Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Notification pages (`useNotificationFeed`, offset pages, key `[...notificationsQueryKey(userId), "feed"]`).
+
+## Work order assigned
+
+`WORK_ORDER_ASSIGNED` rows carry `workOrderId`/`workOrderReference` and no
+asset. They are labelled "New job for you", titled "You've been given a job:
+<reference>" and link to the work order. They resolve when the job is given to
+someone else.

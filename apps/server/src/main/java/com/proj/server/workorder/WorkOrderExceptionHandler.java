@@ -19,7 +19,8 @@ public class WorkOrderExceptionHandler {
     @ExceptionHandler({
         MethodArgumentNotValidException.class,
         MethodArgumentTypeMismatchException.class,
-        HttpMessageNotReadableException.class
+        HttpMessageNotReadableException.class,
+        org.springframework.web.bind.MissingServletRequestParameterException.class
     })
     ResponseEntity<EstateError> invalid() {
         return ResponseEntity.badRequest()

@@ -174,7 +174,25 @@ public class WorkOrderService {
         authorize(estateId, user, false, false);
         var order = repository.detail(estateId, id);
         if (order == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
-        return resolveCreatorName(order);
+        return present(estateId, user, order);
+    }
+
+    /** The order as this caller sees it: the creator's current name and whether they may progress it. */
+    public WorkOrderResponse present(UUID estateId, String user, WorkOrderResponse order) {
+        return resolveCreatorName(order).withCanProgress(canProgress(estateId, user, order));
+    }
+
+    private boolean canProgress(UUID estateId, String user, WorkOrderResponse order) {
+        var estate = repository.estate(estateId, false);
+        var role = repository.role(estateId, user);
+        boolean manager = estate != null && (user.equals(estate.getOwneruserid()) || "MANAGER".equals(role));
+        return canProgress(manager, role, user, order);
+    }
+
+    private static boolean canProgress(boolean manager, String role, String user, WorkOrderResponse order) {
+        var assignee = order.assignee();
+        var member = assignee != null && assignee.kind() == WorkOrderAssignment.Kind.MEMBER ? assignee.id() : null;
+        return WorkOrderAssignment.canProgress(order.status(), manager, role, member, user);
     }
 
     // Creation calls this after its transaction commits, so provider latency never holds the estate lock.
@@ -195,10 +213,13 @@ public class WorkOrderService {
             WorkOrderSort sortBy,
             WorkOrderSortDirection direction,
             String cursor,
-            Integer requestedLimit) {
-        authorize(estateId, user, false, false);
+            Integer requestedLimit,
+            String assignedTo) {
+        var estate = authorize(estateId, user, false, false);
         if (query != null && query.length() > 200)
             throw error(HttpStatus.BAD_REQUEST, "Reference search must be at most 200 characters.");
+        if (assignedTo != null && !"me".equals(assignedTo))
+            throw error(HttpStatus.BAD_REQUEST, "The only assignee filter is \"me\".");
         int limit = limit(requestedLimit);
         var id = orderCursor(cursor, sortBy, direction);
         var found = repository.list(
@@ -210,8 +231,14 @@ public class WorkOrderService {
                 sortBy,
                 direction,
                 id,
-                limit + 1);
-        var page = found.size() > limit ? found.subList(0, limit) : found;
+                limit + 1,
+                assignedTo == null ? null : user);
+        var role = repository.role(estateId, user);
+        boolean manager = user.equals(estate.getOwneruserid()) || "MANAGER".equals(role);
+        var page = (found.size() > limit ? found.subList(0, limit) : found)
+                .stream()
+                        .map(order -> order.withCanProgress(canProgress(manager, role, user, order)))
+                        .toList();
         var last = page.isEmpty() ? null : page.getLast();
         return new WorkOrderPageResponse(
                 page,

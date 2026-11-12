@@ -312,6 +312,14 @@ model WorkOrder {
   createdAt          DateTime @default(now()) @db.Timestamptz(6)
   updatedAt          DateTime @updatedAt @db.Timestamptz(6)
 
+  // Who is responsible (work-order-assignment.md): exactly one of a member or a contractor, or nobody.
+  // A check constraint in the migration enforces the pairing; the name is a snapshot.
+  assigneeUserId     String?   @db.VarChar(255)
+  assigneeName       String?   @db.VarChar(255)
+  assigneeProviderId String?   @db.Uuid
+  assignedAt         DateTime? @db.Timestamptz(6)
+  assignedByUserId   String?   @db.VarChar(255)
+
   estate       Estate       @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   location     Location     @relation(fields: [locationId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   asset        Asset?       @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
@@ -325,13 +333,17 @@ model WorkOrder {
   documentLinksFrom DocumentWorkOrderEvent[] @relation("DocumentLinkFrom")
   documentLinksTo   DocumentWorkOrderEvent[] @relation("DocumentLinkTo")
 
-  dispatch WorkOrderDispatch?
-  routing  ReportRouting?
+  assigneeProvider ServiceProvider? @relation(fields: [assigneeProviderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+
+  dispatches    WorkOrderDispatch[]
+  routing       ReportRouting?
+  notifications Notification[]
 
   @@unique([id, estateId])
   @@unique([estateId, reference])
   @@index([estateId, createdAt, id])
   @@index([estateId, sourceReportId])
+  @@index([estateId, assigneeUserId])
 }
 
 // Standalone, append-only asset inspection evidence. Follow-up is derived from the work-order link.
@@ -383,6 +395,9 @@ model WorkOrderStatusEvent {
   changedByName   String?   @db.VarChar(255)
   changedAt       DateTime  @default(now()) @db.Timestamptz(6)
   version         Int
+  // STATUS, ASSIGNED or UNASSIGNED; an assignment that also moves status is one ASSIGNED row.
+  kind            String    @default("STATUS") @db.VarChar(20)
+  assigneeName    String?   @db.VarChar(255)
   workOrder       WorkOrder @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
   @@unique([workOrderId, version])
@@ -547,8 +562,8 @@ model InspectionListRun {
 model Notification {
   id         String    @id @default(uuid()) @db.Uuid
   estateId   String    @db.Uuid
-  assetId    String    @db.Uuid
-  type       String    @db.VarChar(16)
+  assetId    String?   @db.Uuid
+  type       String    @db.VarChar(20)
   summary    String    @db.VarChar(300)
   createdAt  DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt  DateTime  @default(now()) @db.Timestamptz(6)
@@ -583,8 +598,12 @@ model Notification {
   inspectionResultId String? @db.Uuid
   recipientUserId    String? @db.VarChar(255)
 
+  // WORK_ORDER_ASSIGNED: the order given to recipientUserId.
+  workOrderId String? @db.Uuid
+
   estate           Estate                 @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
-  asset            Asset                  @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  workOrder        WorkOrder?             @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  asset            Asset?                 @relation(fields: [assetId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
   inspectionResult AssetInspectionResult? @relation(fields: [inspectionResultId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   reads            NotificationRead[]
 
@@ -608,20 +627,21 @@ model NotificationRead {
 
 /// Per-estate on/off switch per notification type; an estate without a row has every switch on.
 model EstateNotificationSettings {
-  estateId              String   @id @db.Uuid
+  estateId                 String   @id @db.Uuid
   /// Retired: anomaly alerts use the model's fixed threshold. Dropped in a later PR.
-  anomalyScoreThreshold  Decimal? @db.Decimal(3, 2)
+  anomalyScoreThreshold    Decimal? @db.Decimal(3, 2)
   /// Retired: service reminders are fixed at 90, 60, 30 and 14 days. Dropped in a later PR.
-  serviceLeadDays        Int?
+  serviceLeadDays          Int?
   /// Retired: repair reminders follow the forecast windows. Dropped in a later PR.
-  repairLeadDays         Int?
-  anomalyEnabled         Boolean  @default(true)
-  serviceDueEnabled      Boolean  @default(true)
-  repairPredictedEnabled Boolean  @default(true)
-  checkRequestedEnabled  Boolean  @default(true)
-  checkFailedEnabled     Boolean  @default(true)
-  updatedAt              DateTime @default(now()) @db.Timestamptz(6)
-  updatedByUserId        String   @db.VarChar(255)
+  repairLeadDays           Int?
+  anomalyEnabled           Boolean  @default(true)
+  serviceDueEnabled        Boolean  @default(true)
+  repairPredictedEnabled   Boolean  @default(true)
+  checkRequestedEnabled    Boolean  @default(true)
+  checkFailedEnabled       Boolean  @default(true)
+  workOrderAssignedEnabled Boolean  @default(true)
+  updatedAt                DateTime @default(now()) @db.Timestamptz(6)
+  updatedByUserId          String   @db.VarChar(255)
 
   estate Estate @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 }
@@ -1018,6 +1038,7 @@ model ServiceProvider {
   estate     Estate                   @relation(fields: [estateId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   routes     EquipmentProviderRoute[]
   dispatches WorkOrderDispatch[]
+  workOrders WorkOrder[]
 
   @@unique([id, estateId])
   @@unique([estateId, email])
@@ -1080,15 +1101,17 @@ model ReportClassification {
   @@index([reportId, createdAt])
 }
 
-// The email that carries a work order to its provider, and the assignment it
-// records. The provider's name and address are copied so later edits never
-// redirect it. Delivered through an outbox with retries.
+// The email that carries a work order to a contractor (an outbox record; the
+// assignment itself lives on WorkOrder, decision 0054). One per contractor
+// assignment, so an order may have many. The provider's name and address are
+// copied so later edits never redirect it; providerId is cleared when the
+// contractor is removed from the directory.
 model WorkOrderDispatch {
   id               String    @id @default(uuid()) @db.Uuid
-  workOrderId      String    @unique @db.Uuid
+  workOrderId      String    @db.Uuid
   estateId         String    @db.Uuid
-  providerId       String    @db.Uuid
-  equipmentType    String    @db.VarChar(20)
+  providerId       String?   @db.Uuid
+  equipmentType    String?   @db.VarChar(20)
   contractorName   String    @db.VarChar(200)
   contractorEmail  String    @db.VarChar(254)
   approvedByUserId String?   @db.VarChar(255)
@@ -1101,10 +1124,10 @@ model WorkOrderDispatch {
   createdAt        DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt        DateTime  @updatedAt @db.Timestamptz(6)
 
-  workOrder WorkOrder       @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  provider  ServiceProvider @relation(fields: [providerId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  workOrder WorkOrder        @relation(fields: [workOrderId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
+  provider  ServiceProvider? @relation(fields: [providerId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
 
-  @@unique([workOrderId, estateId])
+  @@index([estateId, workOrderId, createdAt])
   @@index([status, nextAttemptAt])
   @@index([providerId])
 }

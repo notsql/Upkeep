@@ -147,6 +147,34 @@ public class WorkorderstatuseventRecord extends UpdatableRecordImpl<Workordersta
         return (Integer) get(8);
     }
 
+    /**
+     * Setter for <code>public.WorkOrderStatusEvent.assigneeName</code>.
+     */
+    public void setAssigneename(String value) {
+        set(9, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrderStatusEvent.assigneeName</code>.
+     */
+    public String getAssigneename() {
+        return (String) get(9);
+    }
+
+    /**
+     * Setter for <code>public.WorkOrderStatusEvent.kind</code>.
+     */
+    public void setKind(String value) {
+        set(10, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrderStatusEvent.kind</code>.
+     */
+    public String getKind() {
+        return (String) get(10);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -170,7 +198,7 @@ public class WorkorderstatuseventRecord extends UpdatableRecordImpl<Workordersta
     /**
      * Create a detached, initialised WorkorderstatuseventRecord
      */
-    public WorkorderstatuseventRecord(UUID id, UUID estateid, UUID workorderid, String fromstatus, String tostatus, String changedbyuserid, String changedbyname, OffsetDateTime changedat, Integer version) {
+    public WorkorderstatuseventRecord(UUID id, UUID estateid, UUID workorderid, String fromstatus, String tostatus, String changedbyuserid, String changedbyname, OffsetDateTime changedat, Integer version, String assigneename, String kind) {
         super(Workorderstatusevent.WORKORDERSTATUSEVENT);
 
         setId(id);
@@ -182,6 +210,8 @@ public class WorkorderstatuseventRecord extends UpdatableRecordImpl<Workordersta
         setChangedbyname(changedbyname);
         setChangedat(changedat);
         setVersion(version);
+        setAssigneename(assigneename);
+        setKind(kind);
         resetTouchedOnNotNull();
     }
 }

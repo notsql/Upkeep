@@ -40,8 +40,14 @@ class ReportRoutingSecurityTests {
     @ParameterizedTest
     @CsvSource({
         "GET, /estates/estate/contractors",
-        "PUT, /estates/estate/contractors/LIFT",
-        "DELETE, /estates/estate/contractors/LIFT",
+        "POST, /estates/estate/contractors",
+        "PUT, /estates/estate/contractors/contractor",
+        "DELETE, /estates/estate/contractors/contractor",
+        "PUT, /estates/estate/contractors/defaults/LIFT",
+        "DELETE, /estates/estate/contractors/defaults/LIFT",
+        "GET, /estates/estate/work-orders/assignees",
+        "PUT, /estates/estate/work-orders/order/assignee",
+        "DELETE, /estates/estate/work-orders/order/assignee",
         "POST, /estates/estate/reports/report/work-order",
         "POST, /estates/estate/reports/report/dismiss",
         "GET, /estates/estate/work-orders/order/dispatch",
@@ -62,8 +68,14 @@ class ReportRoutingSecurityTests {
     @ParameterizedTest
     @CsvSource({
         "GET, /estates/estate/contractors",
-        "PUT, /estates/estate/contractors/LIFT",
-        "DELETE, /estates/estate/contractors/LIFT",
+        "POST, /estates/estate/contractors",
+        "PUT, /estates/estate/contractors/contractor",
+        "DELETE, /estates/estate/contractors/contractor",
+        "PUT, /estates/estate/contractors/defaults/LIFT",
+        "DELETE, /estates/estate/contractors/defaults/LIFT",
+        "GET, /estates/estate/work-orders/assignees",
+        "PUT, /estates/estate/work-orders/order/assignee",
+        "DELETE, /estates/estate/work-orders/order/assignee",
         "POST, /estates/estate/reports/report/work-order",
         "POST, /estates/estate/reports/report/dismiss",
         "GET, /estates/estate/work-orders/order/dispatch",
@@ -76,9 +88,10 @@ class ReportRoutingSecurityTests {
 
     @ParameterizedTest
     @CsvSource({
-        "POST, /estates/estate/contractors",
-        "GET, /estates/estate/contractors/LIFT",
-        "PATCH, /estates/estate/contractors/LIFT",
+        "GET, /estates/estate/contractors/contractor",
+        "PATCH, /estates/estate/contractors/contractor",
+        "GET, /estates/estate/contractors/defaults/LIFT",
+        "POST, /estates/estate/work-orders/order/assignee",
         "GET, /estates/estate/reports/report/work-order",
         "PUT, /estates/estate/reports/report/work-order",
         "DELETE, /estates/estate/reports/report/work-order",
@@ -93,22 +106,35 @@ class ReportRoutingSecurityTests {
 
     @RestController
     static class RoutingEndpoints {
-        @GetMapping({"/estates/{estateId}/contractors", "/estates/{estateId}/work-orders/{workOrderId}/dispatch"})
+        @GetMapping({
+            "/estates/{estateId}/contractors",
+            "/estates/{estateId}/work-orders/{workOrderId}/dispatch",
+            "/estates/{estateId}/work-orders/assignees"
+        })
         String list() {
             return "routing business authorization";
         }
 
-        @PutMapping("/estates/{estateId}/contractors/{equipmentType}")
+        @PutMapping({
+            "/estates/{estateId}/contractors/{contractorId}",
+            "/estates/{estateId}/contractors/defaults/{equipmentType}",
+            "/estates/{estateId}/work-orders/{workOrderId}/assignee"
+        })
         String save() {
             return "routing business authorization";
         }
 
-        @DeleteMapping("/estates/{estateId}/contractors/{equipmentType}")
+        @DeleteMapping({
+            "/estates/{estateId}/contractors/{contractorId}",
+            "/estates/{estateId}/contractors/defaults/{equipmentType}",
+            "/estates/{estateId}/work-orders/{workOrderId}/assignee"
+        })
         String remove() {
             return "routing business authorization";
         }
 
         @PostMapping({
+            "/estates/{estateId}/contractors",
             "/estates/{estateId}/reports/{reportId}/work-order",
             "/estates/{estateId}/reports/{reportId}/dismiss",
             "/estates/{estateId}/work-orders/{workOrderId}/dispatch",

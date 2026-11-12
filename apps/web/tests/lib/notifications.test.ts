@@ -74,6 +74,7 @@ const SAVED = {
   repairPredictedEnabled: false,
   checkRequestedEnabled: true,
   checkFailedEnabled: true,
+  workOrderAssignedEnabled: true,
 } as const;
 
 function SaveSettings() {

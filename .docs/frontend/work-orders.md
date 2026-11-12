@@ -474,13 +474,39 @@ equipment and its location, the reference note and description); see
 [equipment-dispatch.md](equipment-dispatch.md). `useAsset` gained an optional
 `enabled` argument for this.
 
-## Contractor email (ID-70)
+## Assignment (work-order-assignment)
 
-`$workOrderId/index.tsx` passes a `sections` slot to `WorkOrderDetailPage`,
-which renders it after the order Card. For `EQUIPMENT_FAULT` orders from a
-resident report, the slot shows the "Contractor email" Card. See
-[report-routing.md](report-routing.md). Status `ASSIGNED` can now be reached
-by emailing a contractor.
+Replaces the old "Contractor email" Card. `$workOrderId/index.tsx` renders
+`$workOrderId/-components/work-order-assignment.tsx` for every order:
+
+- Shows the assignee name or "Nobody yet", plus "(no longer in this estate)"
+  when `assignee.inEstate` is false. Managers/owners get **Assign**, **Change**
+  and **Remove** buttons; Crew see it read-only.
+- The picker is a shadcn `Popover` holding `Command` ("Who should do this
+  job?", search "Search by name or email", groups "Your team" and
+  "Contractors"), fed by `useWorkOrderAssignees` (`GET .../work-orders/assignees`).
+- A confirm step "Give job" says "We'll email X the job details." or
+  "X will see this in their notifications.", then `useAssignWorkOrder`
+  (`PUT`/`DELETE .../assignee?version=`), which invalidates the order, list,
+  dispatch and notifications queries.
+- For contractors it shows the latest email: "Email sent", "Sending email…" or
+  "Email didn't go through" with **Try again** (dispatch retry).
+
+`work-order-progress.tsx` shows **Start job** and **Mark as done** when the
+order's `canProgress` is true. `status-history.tsx` shows ASSIGNMENT events as
+"Assigned to X" or "Unassigned".
+
+The list has an "Assigned to" column (and a line on the phone cards). Crew get a
+`ToggleGroup` "My jobs / All jobs", default "My jobs", kept in the URL as
+`assignedTo` (`me` | `all`); only `me` is sent to the API.
+
+The contractors route (`_auth/estates/$estateId/contractors/index.tsx`) is now
+a directory: `contractor-table.tsx` (table "Contractors", with "Default for:
+Lift, Pump"), `contractor-dialog.tsx` (Add/Edit), `remove-contractor-dialog.tsx`
+(shows the server's "still has N open jobs" message) and
+`default-contractors.tsx` (one `Select` per equipment type, "Send new
+water-leak reports for gates to...", with "Nobody (we'll review them)"). Hooks
+live in `src/lib/contractors.ts`. The page stays managers-only.
 ## Phones: infinite scroll
 
 Below `md` the paged lists here scroll instead of paging: the shared `LoadMore` sentinel (see design-system.md) appends the next page of Work order pages (`useWorkOrderFeed`, key `[userId, "work-orders", estateId, "feed", filters+sort]`); the URL `cursor` is left alone.

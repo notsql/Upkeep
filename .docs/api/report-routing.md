@@ -66,24 +66,45 @@ made; a Manager can email it later.
 
 | Method and path | Request | Success | Other statuses |
 | --- | --- | --- | --- |
-| GET `/estates/{estateId}/contractors` | — | 200 `EquipmentContractorResponse[]` in PUMP, LIFT, GATE, LIGHT, PLUMBING order; types without a route are absent | 400, 401, 403, 404 |
-| PUT `/estates/{estateId}/contractors/{equipmentType}` | `EquipmentContractorRequest` | 200 `EquipmentContractorResponse` | 400 unknown type or invalid name/email (control characters included), 401, 403, 404, 409 inactive estate |
-| DELETE `/estates/{estateId}/contractors/{equipmentType}` | — | 204, also when there was none; the provider is kept | 400, 401, 403, 404 |
+| GET `/estates/{estateId}/contractors` | — | 200 `ContractorDirectoryResponse { contractors: ContractorResponse[] }` by name; owner, Manager or Crew | 400, 401, 403, 404 |
+| POST `/estates/{estateId}/contractors` | `ContractorRequest` | 201 `ContractorResponse` | 400 invalid name/email (control characters included), 401, 403, 404, 409 inactive estate or email already used in this estate (case-insensitive) |
+| PUT `/estates/{estateId}/contractors/{contractorId}` | `ContractorRequest` | 200 `ContractorResponse` | 400, 401, 403, 404 contractor not in estate, 409 inactive estate or duplicate email |
+| DELETE `/estates/{estateId}/contractors/{contractorId}` | — | 204; its defaults are cleared, closed orders and old emails keep the copied name but lose the link | 400, 401, 403, 404, 409 inactive estate or `"<name> still has N open jobs. Reassign them first."` |
+| PUT `/estates/{estateId}/contractors/defaults/{equipmentType}` | `ContractorDefaultRequest { contractorId }` | 200 `ContractorResponse` (with its updated `defaultFor`) | 400 unknown type, 401, 403, 404 contractor not in estate, 409 inactive estate |
+| DELETE `/estates/{estateId}/contractors/defaults/{equipmentType}` | — | 204, also when there was none | 400, 401, 403, 404, 409 inactive estate |
 | POST `/estates/{estateId}/reports/{reportId}/work-order` | `SendToContractorRequest { equipmentType, priority }` | 201 `ReportRoutingResponse` (`WORK_ORDER`, order `ASSIGNED`, dispatch `MANAGER`) | 400, 401, 403, 404 report not in estate, 409 not `NEEDS_REVIEW`, no route for the type, or ID-36 rule (inactive location or estate) |
 | POST `/estates/{estateId}/reports/{reportId}/dismiss` | — | 200 `ReportRoutingResponse` (`DISMISSED`) | 400, 401, 403, 404, 409 not `NEEDS_REVIEW` |
 | GET `/estates/{estateId}/work-orders/{workOrderId}/dispatch` | — | 200 `WorkOrderDispatchStatusResponse { dispatch: WorkOrderDispatchResponse \| null }` | 400, 401, 403, 404 order not in estate |
 | POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch` | `DispatchRequest { equipmentType }` | 201 `WorkOrderDispatchResponse`; order becomes `ASSIGNED` | 400, 401, 403, 404, 409 not an `EQUIPMENT_FAULT` order from a resident report, already emailed, not `OPEN`, or no route for the type |
-| POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry` | — | 200 `WorkOrderDispatchResponse` (`PENDING`, attempts reset) | 400, 401, 403, 404 no dispatch in this estate, 409 not `FAILED` |
+| POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry` | — | 200 `WorkOrderDispatchResponse` (`PENDING`, attempts reset) | 400, 401, 403, 404 no dispatch in this estate, 409 latest email not `FAILED` or failed only because it was superseded |
+
+Writes are owner/Manager only (`canCreateWorkOrders`). The old
+`PUT/DELETE /contractors/{equipmentType}` paths moved under `/contractors/defaults/`
+(work-order-assignment.md).
+
+Every contractor email is now created by the work-order assign operation
+(`WorkOrderAssignmentService`, see [work-orders.md](work-orders.md#assignment)):
+automatic routing, "Send to contractor", the dispatch endpoint above and the
+general Assign control. An order may have many `WorkOrderDispatch` rows (one
+per contractor assignment); `GET .../dispatch` and retry act on the newest. When
+an order is taken away from a contractor (reassigned or unassigned), that
+contractor's `PENDING` emails not currently leased by a sender are set to
+`FAILED` with `lastErrorCode = SUPERSEDED` and never go. A job that did not
+come from a resident report (or has no equipment type) is emailed with the
+subject `Work order <reference> at <estate>` and a body carrying the order's
+location and description, without photos.
 
 ## DTOs
 
 | DTO | Fields |
 | --- | --- |
-| `EquipmentContractorRequest` | `name` (1–200 after trimming), `email` (valid, ≤ 254) |
-| `EquipmentContractorResponse` | `equipmentType: PUMP \| LIFT \| GATE \| LIGHT \| PLUMBING`, `name`, `email`, `updatedAt` (the provider's) |
+| `ContractorRequest` | `name` (1–200 after trimming), `email` (valid, ≤ 254) |
+| `ContractorResponse` | `id`, `name`, `email`, `defaultFor: (PUMP \| LIFT \| GATE \| LIGHT \| PLUMBING)[]` (sorted) |
+| `ContractorDirectoryResponse` | `contractors: ContractorResponse[]` |
+| `ContractorDefaultRequest` | `contractorId` |
 | `SendToContractorRequest` | `equipmentType`, `priority: LOW \| MEDIUM \| HIGH \| URGENT` |
 | `DispatchRequest` | `equipmentType` |
-| `WorkOrderDispatchResponse` | `equipmentType`, `contractorName`, `contractorEmail` (copied at dispatch), `approval: AUTOMATIC \| MANAGER`, `status: PENDING \| SENT \| FAILED`, `sentAt \| null`, `createdAt` |
+| `WorkOrderDispatchResponse` | `equipmentType \| null` (null for a job not about equipment), `contractorName`, `contractorEmail` (copied at dispatch), `approval: AUTOMATIC \| MANAGER`, `status: PENDING \| SENT \| FAILED`, `sentAt \| null`, `createdAt` |
 | `ReportRoutingResponse` | `state: CLASSIFYING \| NEEDS_REVIEW \| WORK_ORDER \| DISMISSED`, `reason \| null`, `classification \| null`, `workOrder: { id, reference, status, dispatch \| null } \| null`, `decidedAt \| null` |
 | `ClassificationResponse` | `outcome: EQUIPMENT_FAULT \| INCONCLUSIVE \| NOT_EQUIPMENT`, `equipmentType \| null`, `confidence` (0–1, two places), `reason`, `createdAt` |
 

@@ -117,14 +117,16 @@ function serve(requested: string) {
   }
   if (requested === "/estates/{estateId}/contractors") {
     return Promise.resolve({
-      data: [
-        {
-          equipmentType: "LIFT",
-          name: "Acme Lifts",
-          email: "faults@acmelifts.example",
-          updatedAt: timestamp,
-        },
-      ],
+      data: {
+        contractors: [
+          {
+            id: "acme",
+            name: "Acme Lifts",
+            email: "faults@acmelifts.example",
+            defaultFor: ["LIFT"],
+          },
+        ],
+      },
     });
   }
   if (requested === "/estates/{estateId}/locations") {

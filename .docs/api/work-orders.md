@@ -15,7 +15,7 @@ Creation locks the estate row before checking current ownership, membership,
 active state, location, asset and source placement. Membership/estate/location/
 asset lifecycle writes use the same estate-first serialization. References use
 `<current estate code>-W0001`, counting existing orders under that lock, growing
-past four digits. Code changes never renumber saved orders. There is no delete, general order edit or assignment endpoint. Closed outcome
+past four digits. Code changes never renumber saved orders. There is no delete or general order edit endpoint; assignment is below. Closed outcome
 corrections use the dedicated operation below. Initial status is OPEN; progress/closure are described below.
 
 Assets are optional for every category. A newly linked asset must have exactly the
@@ -332,3 +332,38 @@ newest work order that is not `CLOSED` as `OpenWorkOrderResponse { id,
 reference }`, or 204 when there is none. Same readers as the work-order list.
 "Send a contractor" uses the existing create endpoint; see
 [equipment-dispatch.md](equipment-dispatch.md).
+
+## Assignment
+
+Spec: `.spec/features/work-order-assignment.md`; decision 0054. One operation
+(`WorkOrderAssignmentService`) gives an order to a Manager/Crew member of the
+estate or to a contractor from the estate's directory (see report-routing.md).
+
+| Method | Path | Request | Response |
+| --- | --- | --- | --- |
+| GET | `/estates/{estateId}/work-orders/assignees` | — | 200 `AssigneeCandidatesResponse { members: WorkOrderAssigneeResponse[], contractors: WorkOrderAssigneeResponse[] }`; owner/Manager/Crew |
+| PUT | `/estates/{estateId}/work-orders/{workOrderId}/assignee?version=` | `AssignWorkOrderRequest { type: MEMBER \| CONTRACTOR, id }` | 200 WorkOrderResponse |
+| DELETE | `/estates/{estateId}/work-orders/{workOrderId}/assignee?version=` | — | 200 WorkOrderResponse |
+
+Writes need creation authority (owner/Manager). `version` is required (400 if
+missing); a stale version, a CLOSED order or an inactive estate return 409; a
+member who is not Manager/Crew here or an unknown contractor return 404.
+Assigning sets status OPEN -> ASSIGNED; unassigning ASSIGNED -> OPEN
+(IN_PROGRESS stays). Each change appends a status-history event with
+`kind: ASSIGNMENT` and `assigneeName` (null = unassigned).
+
+Side effects: a contractor gets a new `WorkOrderDispatch` email row; a member
+gets a `WORK_ORDER_ASSIGNED` notification (if the estate switch
+`workOrderAssignedEnabled` is on). The previous contractor's unsent emails are
+superseded and the previous member's notification is resolved.
+
+DTO additions:
+
+- `WorkOrderAssigneeResponse`: `type: MEMBER | CONTRACTOR`, `id`, `name`,
+  `email | null`, `inEstate` (false when a member left or a contractor was removed).
+- `WorkOrderResponse`: `assignee: WorkOrderAssigneeResponse | null`,
+  `canProgress` (the caller may start/complete: owner/Manager, or the Crew
+  member it is assigned to).
+- `WorkOrderStatusEventResponse`: `kind: STATUS | ASSIGNMENT`, `assigneeName | null`.
+- List: `assignedTo?: me` filters to orders assigned to the caller; any other
+  value is 400.

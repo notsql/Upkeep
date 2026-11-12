@@ -9,7 +9,7 @@
     "/estates/{estateId}/work-orders/{workOrderId}/completion": {
       "put": {
         "tags": ["work-order-controller"],
-        "summary": "Close work with a recorded outcome; identical retries are idempotent",
+        "summary": "Close work with a recorded outcome as owner, Manager or the Crew member given the order; identical retries are idempotent",
         "operationId": "saveWorkOrderCompletion",
         "parameters": [
           {
@@ -165,6 +165,170 @@
           },
           "200": {
             "description": "Corrected work order, unchanged outcome or identical latest correction replay",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/work-orders/{workOrderId}/assignee": {
+      "put": {
+        "tags": ["work-order-controller"],
+        "summary": "Give a work order that is not closed to a team member or a contractor, as owner or Manager",
+        "operationId": "assignWorkOrder",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignWorkOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The order; assigning the current assignee again returns it unchanged",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Not exactly one of a Manager/Crew member or a contractor in this estate's directory",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["work-order-controller"],
+        "summary": "Take a work order back from whoever has it",
+        "operationId": "unassignWorkOrder",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "workOrderId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "version",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "integer", "format": "int32" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The order, now with nobody assigned",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/WorkOrderResponse" }
@@ -1232,11 +1396,152 @@
         }
       }
     },
-    "/estates/{estateId}/contractors/{equipmentType}": {
+    "/estates/{estateId}/contractors/{contractorId}": {
       "put": {
-        "tags": ["equipment-contractor-controller"],
-        "summary": "Create or replace the contractor for one equipment type",
-        "operationId": "saveEquipmentContractor",
+        "tags": ["contractor-controller"],
+        "summary": "Change a contractor's name or email",
+        "operationId": "editContractor",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "contractorId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ContractorRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Manager required to change the directory",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, duplicate email, or the contractor still has open jobs",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The saved contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ContractorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["contractor-controller"],
+        "summary": "Remove a contractor with no open jobs; its equipment defaults are cleared",
+        "operationId": "removeContractor",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          },
+          {
+            "name": "contractorId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Manager required to change the directory",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, duplicate email, or the contractor still has open jobs",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Removed" }
+        }
+      }
+    },
+    "/estates/{estateId}/contractors/defaults/{equipmentType}": {
+      "put": {
+        "tags": ["contractor-controller"],
+        "summary": "Send new water-leak reports for one equipment type to this contractor",
+        "operationId": "setDefaultContractor",
         "parameters": [
           {
             "name": "estateId",
@@ -1258,7 +1563,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EquipmentContractorRequest"
+                "$ref": "#/components/schemas/ContractorDefaultRequest"
               }
             }
           },
@@ -1282,7 +1587,7 @@
             }
           },
           "403": {
-            "description": "Work-order creation authority required",
+            "description": "Owner or Manager required to change the directory",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1290,7 +1595,15 @@
             }
           },
           "404": {
-            "description": "Inaccessible estate",
+            "description": "Inaccessible estate or contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, duplicate email, or the contractor still has open jobs",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1298,21 +1611,19 @@
             }
           },
           "200": {
-            "description": "The saved contractor",
+            "description": "The contractor, with its updated defaults",
             "content": {
               "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/EquipmentContractorResponse"
-                }
+                "schema": { "$ref": "#/components/schemas/ContractorResponse" }
               }
             }
           }
         }
       },
       "delete": {
-        "tags": ["equipment-contractor-controller"],
-        "summary": "Remove the contractor for one equipment type",
-        "operationId": "removeEquipmentContractor",
+        "tags": ["contractor-controller"],
+        "summary": "Stop sending one equipment type to a contractor",
+        "operationId": "clearDefaultContractor",
         "parameters": [
           {
             "name": "estateId",
@@ -1348,7 +1659,7 @@
             }
           },
           "403": {
-            "description": "Work-order creation authority required",
+            "description": "Owner or Manager required to change the directory",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
@@ -1356,14 +1667,22 @@
             }
           },
           "404": {
-            "description": "Inaccessible estate",
+            "description": "Inaccessible estate or contractor",
             "content": {
               "*/*": {
                 "schema": { "$ref": "#/components/schemas/EstateError" }
               }
             }
           },
-          "204": { "description": "Removed, or there was none" }
+          "409": {
+            "description": "Inactive estate, duplicate email, or the contractor still has open jobs",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "204": { "description": "Cleared, or there was none" }
         }
       }
     },
@@ -2503,6 +2822,13 @@
             "in": "query",
             "required": false,
             "schema": { "type": "integer", "format": "int32" }
+          },
+          {
+            "name": "assignedTo",
+            "in": "query",
+            "description": "\"me\" lists only orders given to the caller",
+            "required": false,
+            "schema": { "type": "string", "enum": ["me"] }
           }
         ],
         "responses": {
@@ -4607,6 +4933,144 @@
         }
       }
     },
+    "/estates/{estateId}/contractors": {
+      "get": {
+        "tags": ["contractor-controller"],
+        "summary": "The estate's contractors, by name, as owner, Manager or Crew",
+        "operationId": "listContractors",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Manager required to change the directory",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, duplicate email, or the contractor still has open jobs",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "The directory",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContractorDirectoryResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["contractor-controller"],
+        "summary": "Add a contractor to the directory",
+        "operationId": "addContractor",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ContractorRequest" }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "400": {
+            "description": "Invalid UUID, equipment type, name or email",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Owner or Manager required to change the directory",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Inaccessible estate or contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, duplicate email, or the contractor still has open jobs",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "201": {
+            "description": "The new contractor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/ContractorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/estates/{estateId}/assets": {
       "get": {
         "tags": ["asset-controller"],
@@ -6522,7 +6986,7 @@
     "/estates/{estateId}/work-orders/{workOrderId}/status": {
       "patch": {
         "tags": ["work-order-controller"],
-        "summary": "Start work as an active owner or Manager",
+        "summary": "Start work as an active owner or Manager, or as the Crew member given the order",
         "operationId": "changeWorkOrderStatus",
         "parameters": [
           {
@@ -7775,6 +8239,73 @@
                   "items": {
                     "$ref": "#/components/schemas/WorkOrderCompletionRevisionResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/estates/{estateId}/work-orders/assignees": {
+      "get": {
+        "tags": ["work-order-controller"],
+        "summary": "Who a work order can be given to: the team and the contractor directory, as owner or Manager",
+        "operationId": "listWorkOrderAssignees",
+        "parameters": [
+          {
+            "name": "estateId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "format": "uuid" }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Invalid request or cursor",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "401": {
+            "description": "Sign in required",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "403": {
+            "description": "Membership lacks permission",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "404": {
+            "description": "Missing or inaccessible estate or related record",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "409": {
+            "description": "Inactive estate, asset, location or ancestor; stale source placement",
+            "content": {
+              "*/*": {
+                "schema": { "$ref": "#/components/schemas/EstateError" }
+              }
+            }
+          },
+          "200": {
+            "description": "Team members and contractors, each by name",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssigneeCandidatesResponse"
                 }
               }
             }
@@ -10046,68 +10577,6 @@
         }
       }
     },
-    "/estates/{estateId}/contractors": {
-      "get": {
-        "tags": ["equipment-contractor-controller"],
-        "summary": "The estate's external contractor per equipment type",
-        "operationId": "listEquipmentContractors",
-        "parameters": [
-          {
-            "name": "estateId",
-            "in": "path",
-            "required": true,
-            "schema": { "type": "string", "format": "uuid" }
-          }
-        ],
-        "responses": {
-          "400": {
-            "description": "Invalid UUID, equipment type, name or email",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "403": {
-            "description": "Work-order creation authority required",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "404": {
-            "description": "Inaccessible estate",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "200": {
-            "description": "Contractors in equipment-type order; types without one are absent",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/EquipmentContractorResponse"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/estates/{estateId}/assets/{id}/lifecycle-events": {
       "get": {
         "tags": ["asset-controller"],
@@ -11906,6 +12375,30 @@
         },
         "required": ["expectedVersion", "findings", "workPerformed"]
       },
+      "WorkOrderAssigneeResponse": {
+        "type": "object",
+        "properties": {
+          "kind": { "type": "string", "enum": ["MEMBER", "CONTRACTOR"] },
+          "id": {
+            "type": ["string", "null"],
+            "description": "The member's user ID or the contractor's ID; null for a contractor since removed from the directory (closed orders only)"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name saved when the job was given"
+          },
+          "email": {
+            "type": ["string", "null"],
+            "description": "The contractor's email; null for a member"
+          },
+          "assignedAt": { "type": "string", "format": "date-time" },
+          "inEstate": {
+            "type": "boolean",
+            "description": "False when a member assignee has since left the estate or lost their staff role"
+          }
+        },
+        "required": ["assignedAt", "email", "id", "inEstate", "kind", "name"]
+      },
       "WorkOrderCompletionResponse": {
         "type": "object",
         "properties": {
@@ -11987,9 +12480,20 @@
             "type": "integer",
             "format": "int32",
             "description": "CONFIRMED duplicates of the source report; 0 without a source report."
+          },
+          "assignee": {
+            "type": "null",
+            "$ref": "#/components/schemas/WorkOrderAssigneeResponse",
+            "description": "Who has the job; null when nobody does."
+          },
+          "canProgress": {
+            "type": "boolean",
+            "description": "Whether the caller may start or complete this order."
           }
         },
         "required": [
+          "assignee",
+          "canProgress",
           "category",
           "createdAt",
           "createdByUserId",
@@ -12011,6 +12515,19 @@
         "type": "object",
         "properties": { "message": { "type": "string" } },
         "required": ["message"]
+      },
+      "AssignWorkOrderRequest": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": ["string", "null"],
+            "maxLength": 255,
+            "minLength": 0
+          },
+          "providerId": { "type": ["string", "null"], "format": "uuid" },
+          "version": { "type": "integer", "format": "int32", "minimum": 0 }
+        },
+        "required": ["version"]
       },
       "UpdateEstateRoleDefinitionRequest": {
         "type": "object",
@@ -12308,7 +12825,8 @@
         "type": "object",
         "properties": {
           "equipmentType": {
-            "type": "string",
+            "type": ["string", "null"],
+            "description": "Null for a job that is not about a piece of equipment",
             "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
           },
           "contractorName": { "type": "string" },
@@ -12335,14 +12853,16 @@
           "serviceDueEnabled": { "type": "boolean" },
           "repairPredictedEnabled": { "type": "boolean" },
           "checkRequestedEnabled": { "type": "boolean" },
-          "checkFailedEnabled": { "type": "boolean" }
+          "checkFailedEnabled": { "type": "boolean" },
+          "workOrderAssignedEnabled": { "type": "boolean" }
         },
         "required": [
           "anomalyEnabled",
           "checkFailedEnabled",
           "checkRequestedEnabled",
           "repairPredictedEnabled",
-          "serviceDueEnabled"
+          "serviceDueEnabled",
+          "workOrderAssignedEnabled"
         ]
       },
       "NotificationSettingsResponse": {
@@ -12352,14 +12872,16 @@
           "serviceDueEnabled": { "type": "boolean" },
           "repairPredictedEnabled": { "type": "boolean" },
           "checkRequestedEnabled": { "type": "boolean" },
-          "checkFailedEnabled": { "type": "boolean" }
+          "checkFailedEnabled": { "type": "boolean" },
+          "workOrderAssignedEnabled": { "type": "boolean" }
         },
         "required": [
           "anomalyEnabled",
           "checkFailedEnabled",
           "checkRequestedEnabled",
           "repairPredictedEnabled",
-          "serviceDueEnabled"
+          "serviceDueEnabled",
+          "workOrderAssignedEnabled"
         ]
       },
       "UpdateEstateRoleRequest": {
@@ -12522,7 +13044,7 @@
           "documentId"
         ]
       },
-      "EquipmentContractorRequest": {
+      "ContractorRequest": {
         "type": "object",
         "properties": {
           "name": { "type": "string", "maxLength": 200, "minLength": 0 },
@@ -12535,18 +13057,28 @@
         },
         "required": ["email", "name"]
       },
-      "EquipmentContractorResponse": {
+      "ContractorResponse": {
         "type": "object",
         "properties": {
-          "equipmentType": {
-            "type": "string",
-            "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
-          },
+          "id": { "type": "string", "format": "uuid" },
           "name": { "type": "string" },
           "email": { "type": "string" },
-          "updatedAt": { "type": "string", "format": "date-time" }
+          "defaultFor": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["PUMP", "LIFT", "GATE", "LIGHT", "PLUMBING"]
+            }
+          }
         },
-        "required": ["email", "equipmentType", "name", "updatedAt"]
+        "required": ["defaultFor", "email", "id", "name"]
+      },
+      "ContractorDefaultRequest": {
+        "type": "object",
+        "properties": {
+          "contractorId": { "type": "string", "format": "uuid" }
+        },
+        "required": ["contractorId"]
       },
       "ServiceInterval": {
         "type": "object",
@@ -12850,14 +13382,19 @@
               "SERVICE_DUE",
               "REPAIR_PREDICTED",
               "CHECK_REQUESTED",
-              "CHECK_FAILED"
+              "CHECK_FAILED",
+              "WORK_ORDER_ASSIGNED"
             ]
           },
           "estateId": { "type": "string", "format": "uuid" },
           "estateName": { "type": "string" },
-          "assetId": { "type": "string", "format": "uuid" },
-          "assetReference": { "type": "string" },
-          "assetName": { "type": "string" },
+          "assetId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "Null only for WORK_ORDER_ASSIGNED on a work order without an asset"
+          },
+          "assetReference": { "type": ["string", "null"] },
+          "assetName": { "type": ["string", "null"] },
           "summary": { "type": "string" },
           "createdAt": { "type": "string", "format": "date-time" },
           "updatedAt": { "type": "string", "format": "date-time" },
@@ -12890,6 +13427,15 @@
             "type": ["integer", "null"],
             "format": "int32",
             "description": "The reminder milestone in days (90, 60, 30, or 14 for SERVICE_DUE); set only for SERVICE_DUE and REPAIR_PREDICTED"
+          },
+          "workOrderId": {
+            "type": ["string", "null"],
+            "format": "uuid",
+            "description": "The work order given to the recipient; set only for WORK_ORDER_ASSIGNED"
+          },
+          "workOrderReference": {
+            "type": ["string", "null"],
+            "description": "That work order's reference; set only for WORK_ORDER_ASSIGNED"
           }
         },
         "required": [
@@ -12909,7 +13455,9 @@
           "serviceDue",
           "summary",
           "type",
-          "updatedAt"
+          "updatedAt",
+          "workOrderId",
+          "workOrderReference"
         ]
       },
       "RepairPredictedDetails": {
@@ -14699,12 +15247,22 @@
           "changedByUserId": { "type": "string" },
           "changedByName": { "type": "string" },
           "changedAt": { "type": "string", "format": "date-time" },
-          "version": { "type": "integer", "format": "int32" }
+          "version": { "type": "integer", "format": "int32" },
+          "kind": {
+            "type": "string",
+            "enum": ["STATUS", "ASSIGNED", "UNASSIGNED"]
+          },
+          "assigneeName": {
+            "type": ["string", "null"],
+            "description": "Who the job was given to; set only for ASSIGNED"
+          }
         },
         "required": [
+          "assigneeName",
           "changedAt",
           "changedByUserId",
           "id",
+          "kind",
           "toStatus",
           "version"
         ]
@@ -14757,6 +15315,44 @@
           "id",
           "version"
         ]
+      },
+      "AssigneeCandidateContractor": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "email": { "type": "string" }
+        },
+        "required": ["email", "id", "name"]
+      },
+      "AssigneeCandidateMember": {
+        "type": "object",
+        "properties": {
+          "userId": { "type": "string" },
+          "name": { "type": "string" },
+          "role": {
+            "type": "string",
+            "description": "Owners are listed as MANAGER",
+            "enum": ["MANAGER", "CREW"]
+          }
+        },
+        "required": ["name", "role", "userId"]
+      },
+      "AssigneeCandidatesResponse": {
+        "type": "object",
+        "properties": {
+          "members": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/AssigneeCandidateMember" }
+          },
+          "contractors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssigneeCandidateContractor"
+            }
+          }
+        },
+        "required": ["contractors", "members"]
       },
       "WorkOrderAssetOptionResponse": {
         "type": "object",
@@ -15525,6 +16121,16 @@
           "services": { "type": "integer", "format": "int32" }
         },
         "required": ["services", "total"]
+      },
+      "ContractorDirectoryResponse": {
+        "type": "object",
+        "properties": {
+          "contractors": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ContractorResponse" }
+          }
+        },
+        "required": ["contractors"]
       },
       "AssetLifecycleEventResponse": {
         "type": "object",

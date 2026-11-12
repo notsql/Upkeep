@@ -1,4 +1,6 @@
+import { ToggleGroup, ToggleGroupItem } from "@proj/ui/components/toggle-group";
 import { Wrench } from "lucide-react";
+import { useCallback } from "react";
 import { ListPageHeader } from "@/components/page/list-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { LoadingState } from "@/components/states/loading-state";
@@ -17,6 +19,16 @@ export function WorkOrderListPage({
   onChange: (search: WorkOrderListSearch) => void;
 }) {
   const page = useWorkOrderListPage(estateId, search, onChange);
+  const { changeJobs } = page;
+  const chooseJobs = useCallback(
+    (value: string[]) => {
+      const [next] = value;
+      if (next === "me" || next === "all") {
+        changeJobs(next);
+      }
+    },
+    [changeJobs]
+  );
   if (page.access.pending) {
     return <LoadingState label="Loading access…" rows={2} />;
   }
@@ -35,6 +47,19 @@ export function WorkOrderListPage({
         icon={Wrench}
         title="Work orders"
       />
+      {page.assignedTo ? (
+        <ToggleGroup
+          aria-label="Which jobs"
+          onValueChange={chooseJobs}
+          size="sm"
+          spacing={0}
+          value={[page.assignedTo]}
+          variant="outline"
+        >
+          <ToggleGroupItem value="me">My jobs</ToggleGroupItem>
+          <ToggleGroupItem value="all">All jobs</ToggleGroupItem>
+        </ToggleGroup>
+      ) : null}
       <WorkOrderFilters
         filters={page.filters}
         key={JSON.stringify(page.filters)}

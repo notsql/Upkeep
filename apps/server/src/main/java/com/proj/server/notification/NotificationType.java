@@ -8,5 +8,7 @@ public enum NotificationType {
     /** A manager sent one person to inspect; only that person sees it. */
     CHECK_REQUESTED,
     /** An inspection was recorded as Fail. */
-    CHECK_FAILED
+    CHECK_FAILED,
+    /** A manager gave a work order to one staff member; only that person sees it. */
+    WORK_ORDER_ASSIGNED
 }

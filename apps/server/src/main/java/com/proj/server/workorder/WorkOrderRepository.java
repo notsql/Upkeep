@@ -6,6 +6,7 @@ import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Issuereport.ISSUEREPORT;
 import static com.proj.server.db.tables.Issuereportduplicate.ISSUEREPORTDUPLICATE;
 import static com.proj.server.db.tables.Location.LOCATION;
+import static com.proj.server.db.tables.Serviceprovider.SERVICEPROVIDER;
 import static com.proj.server.db.tables.Workorder.WORKORDER;
 import static com.proj.server.db.tables.Workordercompletion.WORKORDERCOMPLETION;
 
@@ -131,8 +132,10 @@ public class WorkOrderRepository {
             WorkOrderSort sort,
             WorkOrderSortDirection direction,
             UUID id,
-            int limit) {
+            int limit,
+            String assignedToUser) {
         Condition condition = WORKORDER.ESTATEID.eq(estateId);
+        if (assignedToUser != null) condition = condition.and(WORKORDER.ASSIGNEEUSERID.eq(assignedToUser));
         if (status != null) condition = condition.and(WORKORDER.STATUS.eq(status.name()));
         if (category != null) condition = condition.and(WORKORDER.CATEGORY.eq(category.name()));
         if (priority != null) condition = condition.and(WORKORDER.PRIORITY.eq(priority.name()));
@@ -219,6 +222,9 @@ public class WorkOrderRepository {
                                         .and(ISSUEREPORTDUPLICATE.ESTATEID.eq(WORKORDER.ESTATEID))
                                         .and(ISSUEREPORTDUPLICATE.STATE.eq("CONFIRMED"))))
                         .as("sourceReportConfirmedDuplicateCount"))
+                .select(SERVICEPROVIDER.EMAIL.as("assigneeEmail"))
+                .select(DSL.field(assignableMember(WORKORDER.ESTATEID, WORKORDER.ASSIGNEEUSERID))
+                        .as("assigneeInEstate"))
                 .from(WORKORDER)
                 .join(LOCATION)
                 .on(LOCATION.ID.eq(WORKORDER.LOCATIONID).and(LOCATION.ESTATEID.eq(WORKORDER.ESTATEID)))
@@ -232,7 +238,86 @@ public class WorkOrderRepository {
                 .on(WORKORDERCOMPLETION
                         .WORKORDERID
                         .eq(WORKORDER.ID)
-                        .and(WORKORDERCOMPLETION.ESTATEID.eq(WORKORDER.ESTATEID)));
+                        .and(WORKORDERCOMPLETION.ESTATEID.eq(WORKORDER.ESTATEID)))
+                .leftJoin(SERVICEPROVIDER)
+                .on(SERVICEPROVIDER
+                        .ID
+                        .eq(WORKORDER.ASSIGNEEPROVIDERID)
+                        .and(SERVICEPROVIDER.ESTATEID.eq(WORKORDER.ESTATEID)));
+    }
+
+    /** The owner, or a Manager or Crew member: the people a work order can be given to. */
+    private static Condition assignableMember(Field<UUID> estateId, Field<String> user) {
+        return DSL.exists(DSL.selectOne()
+                        .from(ESTATEUSER)
+                        .where(ESTATEUSER
+                                .ESTATEID
+                                .eq(estateId)
+                                .and(ESTATEUSER.USERID.eq(user))
+                                .and(ESTATEUSER.ROLE.in("MANAGER", "CREW"))))
+                .or(DSL.exists(DSL.selectOne()
+                        .from(ESTATE)
+                        .where(ESTATE.ID.eq(estateId).and(ESTATE.OWNERUSERID.eq(user)))));
+    }
+
+    public boolean isAssignableMember(UUID estateId, String user) {
+        return db.fetchValue(DSL.select(DSL.field(assignableMember(DSL.val(estateId), DSL.val(user)))));
+    }
+
+    /** The owner and the Manager and Crew members, by user ID; the owner counts as a Manager. */
+    public java.util.Map<String, String> assignableMembers(UUID estateId) {
+        var members = new java.util.LinkedHashMap<String, String>(db.select(ESTATEUSER.USERID, ESTATEUSER.ROLE)
+                .from(ESTATEUSER)
+                .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.ROLE.in("MANAGER", "CREW")))
+                .fetchMap(ESTATEUSER.USERID, ESTATEUSER.ROLE));
+        var owner = db.select(ESTATE.OWNERUSERID)
+                .from(ESTATE)
+                .where(ESTATE.ID.eq(estateId))
+                .fetchOne(ESTATE.OWNERUSERID);
+        if (owner != null && !members.containsKey(owner) && role(estateId, owner) == null)
+            members.put(owner, "MANAGER");
+        return members;
+    }
+
+    public record Provider(UUID id, String name, String email) {}
+
+    public List<Provider> providers(UUID estateId) {
+        return db.select(SERVICEPROVIDER.ID, SERVICEPROVIDER.NAME, SERVICEPROVIDER.EMAIL)
+                .from(SERVICEPROVIDER)
+                .where(SERVICEPROVIDER.ESTATEID.eq(estateId))
+                .orderBy(SERVICEPROVIDER.NAME, SERVICEPROVIDER.ID)
+                .fetch(row -> new Provider(row.value1(), row.value2(), row.value3()));
+    }
+
+    public Provider provider(UUID estateId, UUID id) {
+        return db.select(SERVICEPROVIDER.ID, SERVICEPROVIDER.NAME, SERVICEPROVIDER.EMAIL)
+                .from(SERVICEPROVIDER)
+                .where(SERVICEPROVIDER.ESTATEID.eq(estateId).and(SERVICEPROVIDER.ID.eq(id)))
+                .fetchOne(row -> new Provider(row.value1(), row.value2(), row.value3()));
+    }
+
+    /** Sets or clears who has the order, its status and version in one write. */
+    public void updateAssignee(
+            UUID id,
+            String userId,
+            UUID providerId,
+            String name,
+            String assignedBy,
+            WorkOrderStatus status,
+            OffsetDateTime now,
+            int version) {
+        boolean someone = userId != null || providerId != null;
+        db.update(WORKORDER)
+                .set(WORKORDER.ASSIGNEEUSERID, userId)
+                .set(WORKORDER.ASSIGNEEPROVIDERID, providerId)
+                .set(WORKORDER.ASSIGNEENAME, name)
+                .set(WORKORDER.ASSIGNEDAT, someone ? now : null)
+                .set(WORKORDER.ASSIGNEDBYUSERID, someone ? assignedBy : null)
+                .set(WORKORDER.STATUS, status.name())
+                .set(WORKORDER.VERSION, version)
+                .set(WORKORDER.UPDATEDAT, now)
+                .where(WORKORDER.ID.eq(id))
+                .execute();
     }
 
     private SelectConditionStep<org.jooq.Record> orders(Condition condition) {
@@ -262,7 +347,31 @@ public class WorkOrderRepository {
                 null,
                 row.get(WORKORDER.CREATEDAT),
                 row.get(WORKORDER.UPDATEDAT),
-                row.get("sourceReportConfirmedDuplicateCount", Integer.class));
+                row.get("sourceReportConfirmedDuplicateCount", Integer.class),
+                assignee(row),
+                false);
+    }
+
+    private static WorkOrderAssigneeResponse assignee(org.jooq.Record row) {
+        var user = row.get(WORKORDER.ASSIGNEEUSERID);
+        var provider = row.get(WORKORDER.ASSIGNEEPROVIDERID);
+        var name = row.get(WORKORDER.ASSIGNEENAME);
+        if (name == null) return null;
+        if (user != null)
+            return new WorkOrderAssigneeResponse(
+                    WorkOrderAssignment.Kind.MEMBER,
+                    user,
+                    name,
+                    null,
+                    row.get(WORKORDER.ASSIGNEDAT),
+                    Boolean.TRUE.equals(row.get("assigneeInEstate", Boolean.class)));
+        return new WorkOrderAssigneeResponse(
+                WorkOrderAssignment.Kind.CONTRACTOR,
+                provider == null ? null : provider.toString(),
+                name,
+                row.get("assigneeEmail", String.class),
+                row.get(WORKORDER.ASSIGNEDAT),
+                provider != null);
     }
 
     public boolean hasActiveDuplicateLink(UUID estateId, UUID reportId) {
@@ -291,6 +400,20 @@ public class WorkOrderRepository {
             String name,
             OffsetDateTime now,
             int version) {
+        appendEvent(id, estate, from, to, user, name, now, version, WorkOrderStatusEventKind.STATUS, null);
+    }
+
+    public void appendEvent(
+            UUID id,
+            UUID estate,
+            WorkOrderStatus from,
+            WorkOrderStatus to,
+            String user,
+            String name,
+            OffsetDateTime now,
+            int version,
+            WorkOrderStatusEventKind kind,
+            String assigneeName) {
         var event = com.proj.server.db.tables.Workorderstatusevent.WORKORDERSTATUSEVENT;
         db.insertInto(event)
                 .set(event.ID, UUID.randomUUID())
@@ -302,6 +425,8 @@ public class WorkOrderRepository {
                 .set(event.CHANGEDBYNAME, name)
                 .set(event.CHANGEDAT, now)
                 .set(event.VERSION, version)
+                .set(event.KIND, kind.name())
+                .set(event.ASSIGNEENAME, assigneeName)
                 .execute();
     }
 
@@ -422,7 +547,9 @@ public class WorkOrderRepository {
                         row.getChangedbyuserid(),
                         row.getChangedbyname(),
                         row.getChangedat(),
-                        row.getVersion()));
+                        row.getVersion(),
+                        WorkOrderStatusEventKind.valueOf(row.getKind()),
+                        row.getAssigneename()));
     }
 
     public List<AssetWorkOrderCompletionResponse> completions(UUID estate, UUID asset) {

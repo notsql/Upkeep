@@ -49,3 +49,4 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0051 - Transactional email goes through Resend](0051-transactional-email-via-resend.md)
 - [0052 - Notification switches and fixed milestone reminders](0052-notification-switches-and-milestone-reminders.md)
 - [0053 - Fault reports from any signed-in user](0053-fault-reports-from-any-signed-in-user.md)
+- [0054 - Work order assignment](0054-work-order-assignment.md)

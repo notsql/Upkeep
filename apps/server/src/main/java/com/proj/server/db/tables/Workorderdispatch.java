@@ -74,12 +74,12 @@ public class Workorderdispatch extends TableImpl<WorkorderdispatchRecord> {
     /**
      * The column <code>public.WorkOrderDispatch.providerId</code>.
      */
-    public final TableField<WorkorderdispatchRecord, UUID> PROVIDERID = createField(DSL.name("providerId"), SQLDataType.UUID.nullable(false), this, "");
+    public final TableField<WorkorderdispatchRecord, UUID> PROVIDERID = createField(DSL.name("providerId"), SQLDataType.UUID, this, "");
 
     /**
      * The column <code>public.WorkOrderDispatch.equipmentType</code>.
      */
-    public final TableField<WorkorderdispatchRecord, String> EQUIPMENTTYPE = createField(DSL.name("equipmentType"), SQLDataType.VARCHAR(20).nullable(false), this, "");
+    public final TableField<WorkorderdispatchRecord, String> EQUIPMENTTYPE = createField(DSL.name("equipmentType"), SQLDataType.VARCHAR(20), this, "");
 
     /**
      * The column <code>public.WorkOrderDispatch.contractorName</code>.
@@ -172,7 +172,7 @@ public class Workorderdispatch extends TableImpl<WorkorderdispatchRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.WORKORDERDISPATCH_PROVIDERID_IDX, Indexes.WORKORDERDISPATCH_STATUS_NEXTATTEMPTAT_IDX, Indexes.WORKORDERDISPATCH_WORKORDERID_ESTATEID_KEY, Indexes.WORKORDERDISPATCH_WORKORDERID_KEY);
+        return Arrays.asList(Indexes.WORKORDERDISPATCH_ESTATEID_WORKORDERID_CREATEDAT_IDX, Indexes.WORKORDERDISPATCH_PROVIDERID_IDX, Indexes.WORKORDERDISPATCH_STATUS_NEXTATTEMPTAT_IDX);
     }
 
     @Override

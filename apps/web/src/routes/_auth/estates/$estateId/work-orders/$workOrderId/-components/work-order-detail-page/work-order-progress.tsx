@@ -80,17 +80,19 @@ export function WorkOrderProgress({
       );
     }
   }, [change.mutateAsync, order.version]);
+  // Owners, Managers and the Crew member given the job may start and finish it.
+  const { canProgress } = order;
   return (
     <>
-      {canUpdate ? (
+      {canProgress ? (
         <div className="flex flex-wrap gap-2">
           {order.status === "OPEN" || order.status === "ASSIGNED" ? (
             <Button disabled={change.isPending} onClick={start}>
-              Start work
+              Start job
             </Button>
           ) : null}
           {order.status === "IN_PROGRESS" ? (
-            <Button onClick={openCompletion}>Complete work order</Button>
+            <Button onClick={openCompletion}>Mark as done</Button>
           ) : null}
         </div>
       ) : null}
@@ -130,7 +132,7 @@ export function WorkOrderProgress({
           <OutcomeCorrections onRetry={retryRevisions} revisions={revisions} />
         </>
       ) : null}
-      {completing && canUpdate ? (
+      {completing && (canUpdate || canProgress) ? (
         <CompletionDialog
           estateId={estateId}
           onClose={closeCompletion}

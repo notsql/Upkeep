@@ -132,6 +132,7 @@ describe("status-to-tone mappings", () => {
       REPAIR_PREDICTED: "warning",
       CHECK_REQUESTED: "info",
       CHECK_FAILED: "danger",
+      WORK_ORDER_ASSIGNED: "info",
     });
     expectMapping(alertResponseTone, {
       NONE: "warning",

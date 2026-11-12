@@ -49,3 +49,18 @@ if (!("IntersectionObserver" in window)) {
     },
   });
 }
+
+// jsdom has no ResizeObserver or scrollIntoView; cmdk (the shadcn Command list) calls both.
+if (!("ResizeObserver" in window)) {
+  Object.defineProperty(window, "ResizeObserver", {
+    configurable: true,
+    value: function ResizeObserver() {
+      return {
+        observe: () => undefined,
+        unobserve: () => undefined,
+        disconnect: () => undefined,
+      };
+    },
+  });
+}
+Element.prototype.scrollIntoView ??= () => undefined;

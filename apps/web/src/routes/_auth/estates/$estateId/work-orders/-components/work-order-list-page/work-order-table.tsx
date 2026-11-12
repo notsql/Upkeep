@@ -24,6 +24,7 @@ const columns: { label: string; sortBy?: SortColumn }[] = [
   { label: "Category", sortBy: "CATEGORY" },
   { label: "Priority", sortBy: "PRIORITY" },
   { label: "Status" },
+  { label: "Assigned to" },
   { label: "Created", sortBy: "CREATED_AT" },
 ];
 export function WorkOrderTable({
@@ -104,6 +105,7 @@ export function WorkOrderTable({
             <TableCell>
               <WorkOrderStatusBadge status={order.status} />
             </TableCell>
+            <TableCell>{order.assignee?.name ?? "Nobody yet"}</TableCell>
             <TableCell>
               <time dateTime={order.createdAt}>
                 {new Date(order.createdAt).toLocaleString()}

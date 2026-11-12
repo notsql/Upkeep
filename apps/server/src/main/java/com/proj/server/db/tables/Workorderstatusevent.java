@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.Index;
@@ -101,6 +102,16 @@ public class Workorderstatusevent extends TableImpl<WorkorderstatuseventRecord> 
      */
     public final TableField<WorkorderstatuseventRecord, Integer> VERSION = createField(DSL.name("version"), SQLDataType.INTEGER.nullable(false), this, "");
 
+    /**
+     * The column <code>public.WorkOrderStatusEvent.assigneeName</code>.
+     */
+    public final TableField<WorkorderstatuseventRecord, String> ASSIGNEENAME = createField(DSL.name("assigneeName"), SQLDataType.VARCHAR(255), this, "");
+
+    /**
+     * The column <code>public.WorkOrderStatusEvent.kind</code>.
+     */
+    public final TableField<WorkorderstatuseventRecord, String> KIND = createField(DSL.name("kind"), SQLDataType.VARCHAR(20).nullable(false).defaultValue(DSL.field(DSL.raw("'STATUS'::character varying"), SQLDataType.VARCHAR)), this, "");
+
     private Workorderstatusevent(Name alias, Table<WorkorderstatuseventRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -145,6 +156,13 @@ public class Workorderstatusevent extends TableImpl<WorkorderstatuseventRecord> 
     @Override
     public UniqueKey<WorkorderstatuseventRecord> getPrimaryKey() {
         return Keys.WORKORDERSTATUSEVENT_PKEY;
+    }
+
+    @Override
+    public List<Check<WorkorderstatuseventRecord>> getChecks() {
+        return Arrays.asList(
+            Internal.createCheck(this, DSL.name("WorkOrderStatusEvent_kind_check"), "(((kind)::text = ANY ((ARRAY['STATUS'::character varying, 'ASSIGNED'::character varying, 'UNASSIGNED'::character varying])::text[])))", true)
+        );
     }
 
     @Override

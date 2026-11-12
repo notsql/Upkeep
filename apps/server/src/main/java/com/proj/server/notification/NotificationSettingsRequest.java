@@ -9,17 +9,24 @@ import jakarta.validation.constraints.NotNull;
             "serviceDueEnabled",
             "repairPredictedEnabled",
             "checkRequestedEnabled",
-            "checkFailedEnabled"
+            "checkFailedEnabled",
+            "workOrderAssignedEnabled"
         })
 public record NotificationSettingsRequest(
         @NotNull Boolean anomalyEnabled,
         @NotNull Boolean serviceDueEnabled,
         @NotNull Boolean repairPredictedEnabled,
         @NotNull Boolean checkRequestedEnabled,
-        @NotNull Boolean checkFailedEnabled) {
+        @NotNull Boolean checkFailedEnabled,
+        @NotNull Boolean workOrderAssignedEnabled) {
 
     NotificationSettings settings() {
         return new NotificationSettings(
-                anomalyEnabled, serviceDueEnabled, repairPredictedEnabled, checkRequestedEnabled, checkFailedEnabled);
+                anomalyEnabled,
+                serviceDueEnabled,
+                repairPredictedEnabled,
+                checkRequestedEnabled,
+                checkFailedEnabled,
+                workOrderAssignedEnabled);
     }
 }

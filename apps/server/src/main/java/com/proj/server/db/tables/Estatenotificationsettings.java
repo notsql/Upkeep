@@ -123,6 +123,12 @@ public class Estatenotificationsettings extends TableImpl<Estatenotificationsett
      */
     public final TableField<EstatenotificationsettingsRecord, Boolean> SERVICEDUEENABLED = createField(DSL.name("serviceDueEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
 
+    /**
+     * The column
+     * <code>public.EstateNotificationSettings.workOrderAssignedEnabled</code>.
+     */
+    public final TableField<EstatenotificationsettingsRecord, Boolean> WORKORDERASSIGNEDENABLED = createField(DSL.name("workOrderAssignedEnabled"), SQLDataType.BOOLEAN.nullable(false).defaultValue(DSL.field(DSL.raw("true"), SQLDataType.BOOLEAN)), this, "");
+
     private Estatenotificationsettings(Name alias, Table<EstatenotificationsettingsRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }

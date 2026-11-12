@@ -12,6 +12,7 @@ import {
   workspaceAccess,
 } from "@tests/fixtures/access";
 import {
+  chooseOption,
   renderWithProviders,
   screen,
   waitFor,
@@ -19,6 +20,9 @@ import {
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { routeTree } from "@/routeTree.gen";
+
+const ACE = /Ace Plumbing/u;
+const BOLT = /Bolt Electrical/u;
 
 vi.mock("@/routes/__root", async () => {
   const { createRootRouteWithContext, Outlet } = await import(
@@ -31,14 +35,17 @@ vi.mock("@/routes/__root", async () => {
   };
 });
 
-const { get, put, del, auth, state } = vi.hoisted(() => ({
+const { get, put, post, del, auth, state } = vi.hoisted(() => ({
   get: vi.fn(),
   put: vi.fn(),
+  post: vi.fn(),
   del: vi.fn(),
   auth: { user: { id: "manager" }, loading: false },
   state: { role: "MANAGER" },
 }));
-vi.mock("@/lib/api", () => ({ api: { GET: get, PUT: put, DELETE: del } }));
+vi.mock("@/lib/api", () => ({
+  api: { GET: get, PUT: put, POST: post, DELETE: del },
+}));
 vi.mock("@/lib/access-server", () => ({
   getSessionIdentity: () => Promise.resolve(auth.user),
   getSessionAccess: async () => {
@@ -52,19 +59,17 @@ vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
 
 const estateId = "00000000-0000-0000-0000-000000000001";
 const path = `/estates/${estateId}/contractors`;
-const LIFT_NAME = /Lift contractor name/u;
-const LIFT_EMAIL = /Lift contractor email/u;
-const PUMP_NAME = /Pump contractor name/u;
-const SAVE_LIFT = /Save lift contractor/u;
-const REMOVE_LIFT = /Remove lift contractor/u;
-const NO_LONGER_RECEIVES =
-  /Acme Lifts will no longer receive lift work orders/u;
-
-const lift = {
-  equipmentType: "LIFT",
-  name: "Acme Lifts",
-  email: "faults@acmelifts.example",
-  updatedAt: "2026-10-01T00:00:00Z",
+const ace = {
+  id: "ace",
+  name: "Ace Plumbing",
+  email: "jobs@ace.example",
+  defaultFor: ["LIFT", "PUMP"],
+};
+const bolt = {
+  id: "bolt",
+  name: "Bolt Electrical",
+  email: "hello@bolt.example",
+  defaultFor: [],
 };
 
 function serve(requested: string) {
@@ -83,7 +88,7 @@ function serve(requested: string) {
     });
   }
   if (requested === "/estates/{estateId}/contractors") {
-    return Promise.resolve({ data: [lift] });
+    return Promise.resolve({ data: { contractors: [ace, bolt] } });
   }
   return Promise.resolve({ data: [] });
 }
@@ -107,91 +112,111 @@ beforeEach(() => {
   auth.user = { id: "manager" };
   state.role = "MANAGER";
   get.mockReset().mockImplementation(serve);
-  put.mockReset().mockResolvedValue({ data: lift });
+  put.mockReset().mockResolvedValue({ data: ace });
+  post.mockReset().mockResolvedValue({ data: bolt });
   del.mockReset().mockResolvedValue({ data: undefined });
   vi.spyOn(window, "scrollTo").mockImplementation(() => undefined);
 });
 
-it("shows one row per equipment type, filled from the saved contractors", async () => {
+it("lists the estate's contractors with what they are the default for", async () => {
   await setup();
 
-  const name = (await screen.findByRole("textbox", {
-    name: LIFT_NAME,
-  })) as HTMLInputElement;
-  expect(name.value).toBe("Acme Lifts");
-  expect(
-    (screen.getByRole("textbox", { name: LIFT_EMAIL }) as HTMLInputElement)
-      .value
-  ).toBe("faults@acmelifts.example");
-  expect(
-    (screen.getByRole("textbox", { name: PUMP_NAME }) as HTMLInputElement).value
-  ).toBe("");
-  for (const type of [
-    "Pump",
-    "Lift",
-    "Gate",
-    "Common-area light",
-    "Plumbing",
-  ]) {
-    screen.getByRole("heading", { name: type });
-  }
+  const table = within(
+    await screen.findByRole("table", { name: "Contractors" })
+  );
+  const row = table.getByRole("row", { name: ACE });
+  within(row).getByText("jobs@ace.example");
+  within(row).getByText("Default for: Lift, Pump");
+  table.getByRole("row", { name: BOLT });
 });
 
-it("saves a contractor for its equipment type and reloads the list", async () => {
+it("adds a contractor", async () => {
   await setup();
-  const name = await screen.findByRole("textbox", { name: LIFT_NAME });
-  fireEvent.change(name, { target: { value: "Better Lifts" } });
-  fireEvent.change(screen.getByRole("textbox", { name: LIFT_EMAIL }), {
-    target: { value: "jobs@betterlifts.example" },
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Add contractor" })
+  );
+  const dialog = within(await screen.findByRole("dialog"));
+  fireEvent.change(dialog.getByRole("textbox", { name: "Name" }), {
+    target: { value: "Cool Air" },
   });
-  get.mockClear();
+  fireEvent.change(dialog.getByRole("textbox", { name: "Email" }), {
+    target: { value: "jobs@coolair.example" },
+  });
+  fireEvent.click(dialog.getByRole("button", { name: "Save" }));
 
-  fireEvent.click(screen.getByRole("button", { name: SAVE_LIFT }));
+  await waitFor(() =>
+    expect(post).toHaveBeenCalledWith("/estates/{estateId}/contractors", {
+      params: { path: { estateId } },
+      body: { name: "Cool Air", email: "jobs@coolair.example" },
+    })
+  );
+});
+
+it("edits a contractor", async () => {
+  await setup();
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Edit Ace Plumbing" })
+  );
+  const dialog = within(await screen.findByRole("dialog"));
+  const name = dialog.getByRole("textbox", {
+    name: "Name",
+  }) as HTMLInputElement;
+  expect(name.value).toBe("Ace Plumbing");
+  fireEvent.change(name, { target: { value: "Ace Plumbing Ltd" } });
+  fireEvent.click(dialog.getByRole("button", { name: "Save" }));
 
   await waitFor(() =>
     expect(put).toHaveBeenCalledWith(
-      "/estates/{estateId}/contractors/{equipmentType}",
+      "/estates/{estateId}/contractors/{contractorId}",
       {
-        params: { path: { estateId, equipmentType: "LIFT" } },
-        body: { name: "Better Lifts", email: "jobs@betterlifts.example" },
+        params: { path: { estateId, contractorId: "ace" } },
+        body: { name: "Ace Plumbing Ltd", email: "jobs@ace.example" },
       }
     )
   );
-  await waitFor(() =>
-    expect(get).toHaveBeenCalledWith(
-      "/estates/{estateId}/contractors",
-      expect.anything()
-    )
-  );
-  await screen.findByText("Lift contractor saved.");
 });
 
-it("shows the server's message when a contractor cannot be saved", async () => {
-  put.mockResolvedValue({
-    error: { message: "Enter a contractor name and a valid email address." },
-    response: new Response(null, { status: 400 }),
+it("explains when a contractor still has open jobs", async () => {
+  del.mockResolvedValue({
+    error: {
+      message: "Ace Plumbing still has 2 open jobs. Reassign them first.",
+    },
+    response: new Response(null, { status: 409 }),
   });
   await setup();
-  await screen.findByRole("textbox", { name: LIFT_NAME });
-
-  fireEvent.click(screen.getByRole("button", { name: SAVE_LIFT }));
-
-  await screen.findByText("Enter a contractor name and a valid email address.");
-});
-
-it("asks for confirmation before removing a contractor", async () => {
-  await setup();
-  fireEvent.click(await screen.findByRole("button", { name: REMOVE_LIFT }));
+  fireEvent.click(
+    await screen.findByRole("button", { name: "Remove Ace Plumbing" })
+  );
   const dialog = within(await screen.findByRole("dialog"));
-  dialog.getByText(NO_LONGER_RECEIVES);
-  expect(del).not.toHaveBeenCalled();
-
   fireEvent.click(dialog.getByRole("button", { name: "Remove" }));
 
+  await dialog.findByText(
+    "Ace Plumbing still has 2 open jobs. Reassign them first."
+  );
+  expect(del).toHaveBeenCalledWith(
+    "/estates/{estateId}/contractors/{contractorId}",
+    { params: { path: { estateId, contractorId: "ace" } } }
+  );
+});
+
+it("sets the default contractor for an equipment type", async () => {
+  await setup();
+  await screen.findByRole("heading", { name: "Default contractors" });
+
+  await chooseOption(
+    screen.getByRole("combobox", {
+      name: "Send new water-leak reports for gates to...",
+    }),
+    "Bolt Electrical"
+  );
+
   await waitFor(() =>
-    expect(del).toHaveBeenCalledWith(
-      "/estates/{estateId}/contractors/{equipmentType}",
-      { params: { path: { estateId, equipmentType: "LIFT" } } }
+    expect(put).toHaveBeenCalledWith(
+      "/estates/{estateId}/contractors/defaults/{equipmentType}",
+      {
+        params: { path: { estateId, equipmentType: "GATE" } },
+        body: { contractorId: "bolt" },
+      }
     )
   );
 });

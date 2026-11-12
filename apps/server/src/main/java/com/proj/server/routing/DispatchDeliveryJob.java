@@ -90,6 +90,8 @@ public class DispatchDeliveryJob {
     }
 
     private OutboundEmail email(RoutingRepository.Delivery delivery) {
+        if (delivery.reportId() == null || delivery.equipmentType() == null)
+            return WorkOrderEmail.job(routing.job(delivery).orElseThrow());
         var source = routing.source(delivery.reportId()).orElseThrow();
         var photos = source.images().stream()
                 .map(image -> new WorkOrderEmail.Image(images.read(image.key()), image.contentType()))

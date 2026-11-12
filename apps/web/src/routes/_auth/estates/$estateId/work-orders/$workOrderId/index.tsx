@@ -2,7 +2,7 @@ import type { components } from "@proj/api/schema";
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { pageHead } from "@/lib/page-title";
-import { WorkOrderContractorEmail } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-contractor-email";
+import { WorkOrderAssignment } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-assignment";
 import { WorkOrderDetailPage } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/work-order-detail-page";
 export const Route = createFileRoute(
   "/_auth/estates/$estateId/work-orders/$workOrderId/"
@@ -12,17 +12,14 @@ export const Route = createFileRoute(
 });
 function WorkOrderDetailRoute() {
   const { estateId, workOrderId } = Route.useParams();
-  // ID-70: equipment faults from a resident report can be emailed to a contractor.
   const sections = useCallback(
-    (order: components["schemas"]["WorkOrderResponse"], canCreate: boolean) =>
-      order.category === "EQUIPMENT_FAULT" &&
-      order.source === "RESIDENT_REPORT" ? (
-        <WorkOrderContractorEmail
-          canCreate={canCreate}
-          estateId={estateId}
-          order={order}
-        />
-      ) : null,
+    (order: components["schemas"]["WorkOrderResponse"], canCreate: boolean) => (
+      <WorkOrderAssignment
+        canAssign={canCreate}
+        estateId={estateId}
+        order={order}
+      />
+    ),
     [estateId]
   );
   return (

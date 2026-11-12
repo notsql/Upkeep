@@ -6,6 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Schema(requiredProperties = {"name", "email"})
-public record EquipmentContractorRequest(
+public record ContractorRequest(
         @NotBlank @Size(max = 200) String name,
         @NotBlank @Email @Size(max = 254) String email) {}

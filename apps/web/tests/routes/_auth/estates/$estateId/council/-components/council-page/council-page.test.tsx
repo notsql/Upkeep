@@ -297,13 +297,14 @@ it("tells the inviter that an existing account accepts on Invitations", async ()
 });
 
 it("confirms cancellation with the email before invalidating the pending list", async () => {
-  vi.mocked(api.DELETE).mockImplementation(() => {
+  // The mock stands in for every DELETE overload; its type is the first path's.
+  vi.mocked(api.DELETE).mockImplementation((() => {
     cancelled = true;
     return Promise.resolve({
       data: undefined,
       response: new Response(null, { status: 204 }),
     });
-  });
+  }) as never);
   renderWithProviders(<CouncilPage estateId="estate-id" view="invitations" />);
   fireEvent.click(
     await screen.findByRole("button", {
@@ -343,13 +344,14 @@ it("confirms cancellation with the email before invalidating the pending list", 
 });
 
 it("confirms member removal and refreshes the member list", async () => {
-  vi.mocked(api.DELETE).mockImplementation(() => {
+  // The mock stands in for every DELETE overload; its type is the first path's.
+  vi.mocked(api.DELETE).mockImplementation((() => {
     removed = true;
     return Promise.resolve({
       data: undefined,
       response: new Response(null, { status: 204 }),
     });
-  });
+  }) as never);
   renderWithProviders(<CouncilPage estateId="estate-id" />);
   fireEvent.click(
     await screen.findByRole("button", {

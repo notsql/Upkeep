@@ -28,4 +28,6 @@ export const anomalyAlert = {
   repairPredicted: null,
   inspectionResultId: null,
   milestoneDays: null,
+  workOrderId: null,
+  workOrderReference: null,
 };

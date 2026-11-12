@@ -8,6 +8,7 @@ import {
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { refreshAssetHistory } from "@/lib/asset-history";
+import { notificationsQueryKey } from "@/lib/notifications";
 
 export type WorkOrder = components["schemas"]["WorkOrderResponse"];
 export type WorkOrderInput = components["schemas"]["CreateWorkOrderRequest"];
@@ -20,7 +21,20 @@ export type WorkOrderFilters = Pick<
   WorkOrderListQuery,
   "priority" | "q" | "status" | "category"
 >;
-export type WorkOrderListSearch = Omit<WorkOrderListQuery, "limit">;
+export type WorkOrderAssignee =
+  components["schemas"]["WorkOrderAssigneeResponse"];
+export type AssigneeCandidates =
+  components["schemas"]["AssigneeCandidatesResponse"];
+/** {@code assignedTo} is "me" (only my jobs) or "all"; the API only knows "me". */
+export type WorkOrderListSearch = Omit<
+  WorkOrderListQuery,
+  "limit" | "assignedTo"
+> & { assignedTo?: "me" | "all" };
+
+function listQuery(filters: Omit<WorkOrderListSearch, "cursor">) {
+  const { assignedTo, ...rest } = filters;
+  return { ...rest, ...(assignedTo === "me" ? { assignedTo } : {}) };
+}
 export class WorkOrderRequestError extends Error {
   readonly status: number;
   constructor(message: string, status: number) {
@@ -91,6 +105,7 @@ export function useWorkOrderList(
         previousOptions?.priority === filters.priority &&
         previousOptions?.status === filters.status &&
         previousOptions?.category === filters.category &&
+        previousOptions?.assignedTo === filters.assignedTo &&
         previousOptions?.q === filters.q;
       const sortChanged =
         (previousOptions?.sortBy ?? "CREATED_AT") !==
@@ -105,7 +120,7 @@ export function useWorkOrderList(
         {
           params: {
             path: { estateId },
-            query: { ...filters, cursor, limit: 20 },
+            query: { ...listQuery(filters), cursor, limit: 20 },
           },
           signal,
         }
@@ -143,7 +158,7 @@ export function useWorkOrderFeed(
         {
           params: {
             path: { estateId },
-            query: { ...filters, cursor: pageParam, limit: 20 },
+            query: { ...listQuery(filters), cursor: pageParam, limit: 20 },
           },
           signal,
         }
@@ -366,20 +381,18 @@ function useProgressSuccess(estateId: string) {
   };
 }
 
+// Starting and completing are allowed by the order's canProgress (an assigned Crew member may); the server decides.
 export function useChangeWorkOrderStatus(
   estateId: string,
   workOrderId: string
 ) {
-  const { userId, canUpdate } = useWorkOrderAccess(estateId);
+  const { userId } = useWorkOrderAccess(estateId);
   const fail = useRequestError(userId);
   const onSuccess = useProgressSuccess(estateId);
   return useMutation({
     retry: false,
     onSuccess,
     mutationFn: async (body: WorkOrderStatusInput) => {
-      if (!canUpdate) {
-        return fail("Work-order updates are unavailable.", 403);
-      }
       const { data, error, response } = await api.PATCH(
         "/estates/{estateId}/work-orders/{workOrderId}/status",
         { params: { path: { estateId, workOrderId } }, body }
@@ -400,16 +413,13 @@ export function useSaveWorkOrderCompletion(
   estateId: string,
   workOrderId: string
 ) {
-  const { userId, canUpdate } = useWorkOrderAccess(estateId);
+  const { userId } = useWorkOrderAccess(estateId);
   const fail = useRequestError(userId);
   const onSuccess = useProgressSuccess(estateId);
   return useMutation({
     retry: false,
     onSuccess,
     mutationFn: async (body: WorkOrderCompletionInput) => {
-      if (!canUpdate) {
-        return fail("Work-order completion is unavailable.", 403);
-      }
       const { data, error, response } = await api.PUT(
         "/estates/{estateId}/work-orders/{workOrderId}/completion",
         { params: { path: { estateId, workOrderId } }, body }
@@ -490,6 +500,82 @@ export function useCorrectWorkOrderCompletion(
         );
       }
       return data;
+    },
+  });
+}
+
+/** The team and contractors a job can be given to; owners and Managers only. */
+export function useWorkOrderAssignees(estateId: string, enabled = true) {
+  const { userId, canCreate } = useWorkOrderAccess(estateId);
+  const fail = useRequestError(userId);
+  return useQuery({
+    queryKey: [userId, "work-orders", estateId, "assignees"],
+    enabled: canCreate && enabled,
+    retry: false,
+    queryFn: async ({ signal }) => {
+      const { data, error, response } = await api.GET(
+        "/estates/{estateId}/work-orders/assignees",
+        { params: { path: { estateId } }, signal }
+      );
+      if (error || !data) {
+        return fail(
+          error?.message ??
+            "Couldn't load your team and contractors. Try again.",
+          response.status
+        );
+      }
+      return data;
+    },
+  });
+}
+
+export type AssignTarget = { userId: string } | { providerId: string } | null;
+
+/** Gives the order to someone (or nobody, with null). Refreshes the order, the lists and notifications. */
+export function useAssignWorkOrder(estateId: string, workOrderId: string) {
+  const { userId } = useWorkOrderAccess(estateId);
+  const fail = useRequestError(userId);
+  const client = useQueryClient();
+  const onProgress = useProgressSuccess(estateId);
+  return useMutation({
+    retry: false,
+    mutationFn: async ({
+      target,
+      version,
+    }: {
+      target: AssignTarget;
+      version: number;
+    }) => {
+      const params = { path: { estateId, workOrderId } };
+      const { data, error, response } = target
+        ? await api.PUT(
+            "/estates/{estateId}/work-orders/{workOrderId}/assignee",
+            {
+              params,
+              body: { ...target, version },
+            }
+          )
+        : await api.DELETE(
+            "/estates/{estateId}/work-orders/{workOrderId}/assignee",
+            { params: { ...params, query: { version } } }
+          );
+      if (error || !data) {
+        return fail(
+          (error as { message?: string } | undefined)?.message ??
+            "Couldn't change who has this job. Try again.",
+          response.status
+        );
+      }
+      return data;
+    },
+    onSuccess: async (data) => {
+      await Promise.all([
+        onProgress(data),
+        client.invalidateQueries({
+          queryKey: [userId, "work-orders", estateId, "dispatch", data.id],
+        }),
+        client.invalidateQueries({ queryKey: notificationsQueryKey(userId) }),
+      ]);
     },
   });
 }

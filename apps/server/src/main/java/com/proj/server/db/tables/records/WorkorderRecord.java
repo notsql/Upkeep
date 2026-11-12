@@ -259,6 +259,76 @@ public class WorkorderRecord extends UpdatableRecordImpl<WorkorderRecord> {
         return (UUID) get(16);
     }
 
+    /**
+     * Setter for <code>public.WorkOrder.assignedAt</code>.
+     */
+    public void setAssignedat(OffsetDateTime value) {
+        set(17, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrder.assignedAt</code>.
+     */
+    public OffsetDateTime getAssignedat() {
+        return (OffsetDateTime) get(17);
+    }
+
+    /**
+     * Setter for <code>public.WorkOrder.assignedByUserId</code>.
+     */
+    public void setAssignedbyuserid(String value) {
+        set(18, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrder.assignedByUserId</code>.
+     */
+    public String getAssignedbyuserid() {
+        return (String) get(18);
+    }
+
+    /**
+     * Setter for <code>public.WorkOrder.assigneeName</code>.
+     */
+    public void setAssigneename(String value) {
+        set(19, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrder.assigneeName</code>.
+     */
+    public String getAssigneename() {
+        return (String) get(19);
+    }
+
+    /**
+     * Setter for <code>public.WorkOrder.assigneeProviderId</code>.
+     */
+    public void setAssigneeproviderid(UUID value) {
+        set(20, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrder.assigneeProviderId</code>.
+     */
+    public UUID getAssigneeproviderid() {
+        return (UUID) get(20);
+    }
+
+    /**
+     * Setter for <code>public.WorkOrder.assigneeUserId</code>.
+     */
+    public void setAssigneeuserid(String value) {
+        set(21, value);
+    }
+
+    /**
+     * Getter for <code>public.WorkOrder.assigneeUserId</code>.
+     */
+    public String getAssigneeuserid() {
+        return (String) get(21);
+    }
+
     // -------------------------------------------------------------------------
     // Primary key information
     // -------------------------------------------------------------------------
@@ -282,7 +352,7 @@ public class WorkorderRecord extends UpdatableRecordImpl<WorkorderRecord> {
     /**
      * Create a detached, initialised WorkorderRecord
      */
-    public WorkorderRecord(UUID id, UUID estateid, String reference, String description, UUID locationid, UUID assetid, String category, String priority, String source, UUID sourcereportid, String sourcereference, String status, String createdbyuserid, OffsetDateTime createdat, OffsetDateTime updatedat, Integer version, UUID sourceinspectionid) {
+    public WorkorderRecord(UUID id, UUID estateid, String reference, String description, UUID locationid, UUID assetid, String category, String priority, String source, UUID sourcereportid, String sourcereference, String status, String createdbyuserid, OffsetDateTime createdat, OffsetDateTime updatedat, Integer version, UUID sourceinspectionid, OffsetDateTime assignedat, String assignedbyuserid, String assigneename, UUID assigneeproviderid, String assigneeuserid) {
         super(Workorder.WORKORDER);
 
         setId(id);
@@ -302,6 +372,11 @@ public class WorkorderRecord extends UpdatableRecordImpl<WorkorderRecord> {
         setUpdatedat(updatedat);
         setVersion(version);
         setSourceinspectionid(sourceinspectionid);
+        setAssignedat(assignedat);
+        setAssignedbyuserid(assignedbyuserid);
+        setAssigneename(assigneename);
+        setAssigneeproviderid(assigneeproviderid);
+        setAssigneeuserid(assigneeuserid);
         resetTouchedOnNotNull();
     }
 }

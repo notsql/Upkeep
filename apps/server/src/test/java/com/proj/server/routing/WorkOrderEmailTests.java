@@ -115,4 +115,25 @@ class WorkOrderEmailTests {
                 description,
                 List.of(new WorkOrderEmail.Image(JPEG, "image/jpeg"), new WorkOrderEmail.Image(PNG, "image/png")));
     }
+
+    @Test
+    void aJobWithoutAResidentReportCarriesTheWorkOrderDescriptionInstead() {
+        var email = WorkOrderEmail.job(new WorkOrderEmail.Job(
+                "MPL-W0007",
+                "Ace Cleaning",
+                "jobs@ace.example",
+                "Maple Estate",
+                "1 Maple Road, 123456",
+                "Block A / Level 1 / Lobby",
+                "Clean the lobby\nafter renovation"));
+
+        assertEquals("jobs@ace.example", email.to());
+        assertEquals("Work order MPL-W0007 at Maple Estate", email.subject());
+        assertTrue(email.text().contains("Hello Ace Cleaning,"));
+        assertTrue(email.text().contains("Work order: MPL-W0007"));
+        assertTrue(email.text().contains("Location: Block A / Level 1 / Lobby"));
+        assertTrue(email.text().contains("Clean the lobby\nafter renovation"));
+        assertFalse(email.text().contains("resident"));
+        assertTrue(email.attachments().isEmpty());
+    }
 }

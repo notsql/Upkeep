@@ -73,6 +73,40 @@ public final class WorkOrderEmail {
         return new OutboundEmail(content.contractorEmail(), subject, body, null, List.copyOf(attachments));
     }
 
+    /** A job given to a contractor that did not come from a resident report (work-order-assignment.md). */
+    public record Job(
+            String reference,
+            String contractorName,
+            String contractorEmail,
+            String estateName,
+            String estateAddress,
+            String locationLabel,
+            String description) {}
+
+    public static OutboundEmail job(Job job) {
+        var subject = "Work order %s at %s".formatted(job.reference(), oneLine(job.estateName()));
+        var body = """
+                Hello %s,
+
+                You have been asked to carry out the job below.
+
+                Work order: %s
+                Estate: %s, %s
+                Location: %s
+
+                Job details
+                -----------
+                %s
+                """.formatted(
+                        job.contractorName(),
+                        job.reference(),
+                        job.estateName(),
+                        job.estateAddress(),
+                        job.locationLabel(),
+                        job.description());
+        return new OutboundEmail(job.contractorEmail(), subject, body, null, List.of());
+    }
+
     private WorkOrderEmail() {}
 
     /** Header values must stay on one line, or a CR/LF could inject further headers. */

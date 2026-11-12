@@ -75,10 +75,7 @@ export function useResidentContext() {
     queryFn: async () => {
       const { data, error } = await api.GET("/resident/context");
       if (error || !data) {
-        throw reportError(
-          error,
-          "Couldn't load your estates. Try again."
-        );
+        throw reportError(error, "Couldn't load your estates. Try again.");
       }
       return data;
     },

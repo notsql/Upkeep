@@ -79,12 +79,12 @@ public class Notification extends TableImpl<NotificationRecord> {
     /**
      * The column <code>public.Notification.assetId</code>.
      */
-    public final TableField<NotificationRecord, UUID> ASSETID = createField(DSL.name("assetId"), SQLDataType.UUID.nullable(false), this, "");
+    public final TableField<NotificationRecord, UUID> ASSETID = createField(DSL.name("assetId"), SQLDataType.UUID, this, "");
 
     /**
      * The column <code>public.Notification.type</code>.
      */
-    public final TableField<NotificationRecord, String> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR(16).nullable(false), this, "");
+    public final TableField<NotificationRecord, String> TYPE = createField(DSL.name("type"), SQLDataType.VARCHAR(20).nullable(false), this, "");
 
     /**
      * The column <code>public.Notification.summary</code>.
@@ -216,6 +216,11 @@ public class Notification extends TableImpl<NotificationRecord> {
      */
     public final TableField<NotificationRecord, Integer> MILESTONEDAYS = createField(DSL.name("milestoneDays"), SQLDataType.INTEGER, this, "");
 
+    /**
+     * The column <code>public.Notification.workOrderId</code>.
+     */
+    public final TableField<NotificationRecord, UUID> WORKORDERID = createField(DSL.name("workOrderId"), SQLDataType.UUID, this, "");
+
     private Notification(Name alias, Table<NotificationRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -339,14 +344,16 @@ public class Notification extends TableImpl<NotificationRecord> {
     @Override
     public List<Check<NotificationRecord>> getChecks() {
         return Arrays.asList(
-            Internal.createCheck(this, DSL.name("Notification_anomaly_check"), "(((((type)::text = 'ANOMALY'::text) = (condition IS NOT NULL)) AND (((type)::text <> 'ANOMALY'::text) OR (((condition)::text = ANY ((ARRAY['NEEDS_ATTENTION'::character varying, 'FAULTY'::character varying])::text[])) AND ((\"medianScore\" >= (0)::numeric) AND (\"medianScore\" <= (1)::numeric)) AND ((\"maxScore\" >= (0)::numeric) AND (\"maxScore\" <= (1)::numeric)) AND (\"firstDetectedAt\" IS NOT NULL) AND (\"lastDetectedAt\" IS NOT NULL) AND (explanation IS NOT NULL) AND ((response)::text = ANY ((ARRAY['NONE'::character varying, 'ACKNOWLEDGED'::character varying, 'DISMISSED'::character varying])::text[])) AND (((response)::text = 'NONE'::text) = (\"respondedAt\" IS NULL)) AND ((\"respondedAt\" IS NULL) = (\"respondedByUserId\" IS NULL)) AND (((response)::text <> 'DISMISSED'::text) OR (length(btrim((\"responseReason\")::text)) > 0))))))", true),
+            Internal.createCheck(this, DSL.name("Notification_anomaly_check"), "(((((type)::text = 'ANOMALY'::text) = (condition IS NOT NULL)) AND (((type)::text <> 'ANOMALY'::text) OR (((condition)::text = ANY (ARRAY[('NEEDS_ATTENTION'::character varying)::text, ('FAULTY'::character varying)::text])) AND ((\"medianScore\" >= (0)::numeric) AND (\"medianScore\" <= (1)::numeric)) AND ((\"maxScore\" >= (0)::numeric) AND (\"maxScore\" <= (1)::numeric)) AND (\"firstDetectedAt\" IS NOT NULL) AND (\"lastDetectedAt\" IS NOT NULL) AND (explanation IS NOT NULL) AND ((response)::text = ANY (ARRAY[('NONE'::character varying)::text, ('ACKNOWLEDGED'::character varying)::text, ('DISMISSED'::character varying)::text])) AND (((response)::text = 'NONE'::text) = (\"respondedAt\" IS NULL)) AND ((\"respondedAt\" IS NULL) = (\"respondedByUserId\" IS NULL)) AND (((response)::text <> 'DISMISSED'::text) OR (length(btrim((\"responseReason\")::text)) > 0))))))", true),
+            Internal.createCheck(this, DSL.name("Notification_asset_check"), "(((\"assetId\" IS NOT NULL) OR ((type)::text = 'WORK_ORDER_ASSIGNED'::text)))", true),
             Internal.createCheck(this, DSL.name("Notification_check_failed_check"), "((((type)::text = 'CHECK_FAILED'::text) = (\"inspectionResultId\" IS NOT NULL)))", true),
-            Internal.createCheck(this, DSL.name("Notification_check_requested_check"), "((((type)::text = 'CHECK_REQUESTED'::text) = (\"recipientUserId\" IS NOT NULL)))", true),
+            Internal.createCheck(this, DSL.name("Notification_check_requested_check"), "((((type)::text = ANY ((ARRAY['CHECK_REQUESTED'::character varying, 'WORK_ORDER_ASSIGNED'::character varying])::text[])) = (\"recipientUserId\" IS NOT NULL)))", true),
             Internal.createCheck(this, DSL.name("Notification_milestoneDays_check"), "(((\"milestoneDays\" IS NULL) OR (((type)::text = 'SERVICE_DUE'::text) AND (\"milestoneDays\" = ANY (ARRAY[90, 60, 30, 14]))) OR (((type)::text = 'REPAIR_PREDICTED'::text) AND (\"milestoneDays\" = ANY (ARRAY[90, 60, 30])))))", true),
-            Internal.createCheck(this, DSL.name("Notification_repair_predicted_check"), "(((((type)::text = 'REPAIR_PREDICTED'::text) = (\"recommendedTimeframe\" IS NOT NULL)) AND (((type)::text <> 'REPAIR_PREDICTED'::text) OR (((\"recommendedTimeframe\")::text = ANY ((ARRAY['WITHIN_30_DAYS'::character varying, 'WITHIN_60_DAYS'::character varying, 'WITHIN_90_DAYS'::character varying])::text[])) AND ((probability >= (0)::numeric) AND (probability <= (1)::numeric)) AND ((basis)::text = ANY ((ARRAY['SERVICE_INTERVAL'::character varying, 'ASSET_HISTORY'::character varying])::text[])) AND (\"failuresObserved\" >= 0)))))", true),
+            Internal.createCheck(this, DSL.name("Notification_repair_predicted_check"), "(((((type)::text = 'REPAIR_PREDICTED'::text) = (\"recommendedTimeframe\" IS NOT NULL)) AND (((type)::text <> 'REPAIR_PREDICTED'::text) OR (((\"recommendedTimeframe\")::text = ANY (ARRAY[('WITHIN_30_DAYS'::character varying)::text, ('WITHIN_60_DAYS'::character varying)::text, ('WITHIN_90_DAYS'::character varying)::text])) AND ((probability >= (0)::numeric) AND (probability <= (1)::numeric)) AND ((basis)::text = ANY (ARRAY[('SERVICE_INTERVAL'::character varying)::text, ('ASSET_HISTORY'::character varying)::text])) AND (\"failuresObserved\" >= 0)))))", true),
             Internal.createCheck(this, DSL.name("Notification_resolved_check"), "(((\"resolvedAt\" IS NULL) OR (\"resolvedAt\" >= \"createdAt\")))", true),
-            Internal.createCheck(this, DSL.name("Notification_service_due_check"), "(((((type)::text = 'SERVICE_DUE'::text) = (\"dueOn\" IS NOT NULL)) AND (((type)::text <> 'SERVICE_DUE'::text) OR (((\"intervalSource\")::text = ANY ((ARRAY['ASSET'::character varying, 'CATEGORY'::character varying])::text[])) AND ((((\"intervalUnit\")::text = 'DAY'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 3650))) OR (((\"intervalUnit\")::text = 'MONTH'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 120))) OR (((\"intervalUnit\")::text = 'YEAR'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 10))))))))", true),
-            Internal.createCheck(this, DSL.name("Notification_type_check"), "(((type)::text = ANY ((ARRAY['ANOMALY'::character varying, 'SERVICE_DUE'::character varying, 'REPAIR_PREDICTED'::character varying, 'CHECK_REQUESTED'::character varying, 'CHECK_FAILED'::character varying])::text[])))", true)
+            Internal.createCheck(this, DSL.name("Notification_service_due_check"), "(((((type)::text = 'SERVICE_DUE'::text) = (\"dueOn\" IS NOT NULL)) AND (((type)::text <> 'SERVICE_DUE'::text) OR (((\"intervalSource\")::text = ANY (ARRAY[('ASSET'::character varying)::text, ('CATEGORY'::character varying)::text])) AND ((((\"intervalUnit\")::text = 'DAY'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 3650))) OR (((\"intervalUnit\")::text = 'MONTH'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 120))) OR (((\"intervalUnit\")::text = 'YEAR'::text) AND ((\"intervalValue\" >= 1) AND (\"intervalValue\" <= 10))))))))", true),
+            Internal.createCheck(this, DSL.name("Notification_type_check"), "(((type)::text = ANY ((ARRAY['ANOMALY'::character varying, 'SERVICE_DUE'::character varying, 'REPAIR_PREDICTED'::character varying, 'CHECK_REQUESTED'::character varying, 'CHECK_FAILED'::character varying, 'WORK_ORDER_ASSIGNED'::character varying])::text[])))", true),
+            Internal.createCheck(this, DSL.name("Notification_work_order_check"), "((((type)::text = 'WORK_ORDER_ASSIGNED'::text) = (\"workOrderId\" IS NOT NULL)))", true)
         );
     }
 

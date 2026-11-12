@@ -46,7 +46,7 @@ export function SendToContractorDialog({
   const contractors = useContractors(estateId);
   const send = useSendToContractor(estateId, reportId);
   const contractor = contractors.data?.find(
-    (item) => item.equipmentType === type
+    (item) => !!type && item.defaultFor.includes(type)
   );
   const chooseType = useCallback(
     (value: EquipmentType | null) => setType(value),

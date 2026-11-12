@@ -7,8 +7,10 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { useContractors } from "@/lib/contractors";
 import { pageHead } from "@/lib/page-title";
-import { EQUIPMENT_TYPES, useRoutingAccess } from "@/lib/report-routing";
-import { ContractorRow } from "@/routes/_auth/estates/$estateId/contractors/-components/contractor-row";
+import { useRoutingAccess } from "@/lib/report-routing";
+import { ContractorDialog } from "@/routes/_auth/estates/$estateId/contractors/-components/contractor-dialog";
+import { ContractorTable } from "@/routes/_auth/estates/$estateId/contractors/-components/contractor-table";
+import { DefaultContractors } from "@/routes/_auth/estates/$estateId/contractors/-components/default-contractors";
 
 export const Route = createFileRoute("/_auth/estates/$estateId/contractors/")({
   component: ContractorsPage,
@@ -29,32 +31,28 @@ function ContractorsPage() {
   return (
     <PageLayout className="space-y-4">
       <ListPageHeader
-        description="When a resident reports a fault in this equipment, its contractor is assigned the work order and receives it by email with the resident's words and photos."
+        description="The firms you can give jobs to. We email them the job details."
         icon={HardHat}
         title="Contractors"
       />
+      <div>
+        <ContractorDialog estateId={estateId} />
+      </div>
       {contractors.isPending ? (
         <LoadingState label="Loading contractors…" />
       ) : null}
       {contractors.isError ? (
         <ErrorState message="Couldn't load contractors" onRetry={retry} />
       ) : null}
-      {contractors.data
-        ? EQUIPMENT_TYPES.map((type) => {
-            const contractor = contractors.data.find(
-              (item) => item.equipmentType === type.value
-            );
-            return (
-              <ContractorRow
-                contractor={contractor}
-                estateId={estateId}
-                key={`${type.value}:${contractor?.updatedAt ?? "none"}`}
-                label={type.label}
-                type={type.value}
-              />
-            );
-          })
-        : null}
+      {contractors.data ? (
+        <>
+          <ContractorTable contractors={contractors.data} estateId={estateId} />
+          <DefaultContractors
+            contractors={contractors.data}
+            estateId={estateId}
+          />
+        </>
+      ) : null}
     </PageLayout>
   );
 }

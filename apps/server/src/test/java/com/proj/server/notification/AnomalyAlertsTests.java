@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEventPublisher;
 class AnomalyAlertsTests {
     static final UUID ESTATE = UUID.randomUUID();
     static final UUID ASSET = UUID.randomUUID();
-    static final NotificationSettings OFF = new NotificationSettings(false, true, true, true, true);
+    static final NotificationSettings OFF = new NotificationSettings(false, true, true, true, true, true);
 
     NotificationRepository repository;
     NotificationSettingsService settings;

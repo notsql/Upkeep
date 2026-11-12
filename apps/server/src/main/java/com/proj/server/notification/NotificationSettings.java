@@ -6,6 +6,7 @@ public record NotificationSettings(
         boolean serviceDueEnabled,
         boolean repairPredictedEnabled,
         boolean checkRequestedEnabled,
-        boolean checkFailedEnabled) {
-    public static final NotificationSettings DEFAULTS = new NotificationSettings(true, true, true, true, true);
+        boolean checkFailedEnabled,
+        boolean workOrderAssignedEnabled) {
+    public static final NotificationSettings DEFAULTS = new NotificationSettings(true, true, true, true, true, true);
 }

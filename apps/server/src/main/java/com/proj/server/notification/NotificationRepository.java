@@ -4,6 +4,7 @@ import static com.proj.server.db.tables.Asset.ASSET;
 import static com.proj.server.db.tables.Estate.ESTATE;
 import static com.proj.server.db.tables.Notification.NOTIFICATION;
 import static com.proj.server.db.tables.Notificationread.NOTIFICATIONREAD;
+import static com.proj.server.db.tables.Workorder.WORKORDER;
 
 import com.proj.server.access.AccessService;
 import com.proj.server.asset.AssetCondition;
@@ -236,12 +237,15 @@ public class NotificationRepository {
                         ESTATE.NAME,
                         ASSET.REFERENCE,
                         ASSET.NAME,
+                        WORKORDER.REFERENCE,
                         DSL.field(readBy(user)).as("read"))
                 .from(NOTIFICATION)
                 .join(ESTATE)
                 .on(ESTATE.ID.eq(NOTIFICATION.ESTATEID))
-                .join(ASSET)
-                .on(ASSET.ID.eq(NOTIFICATION.ASSETID));
+                .leftJoin(ASSET)
+                .on(ASSET.ID.eq(NOTIFICATION.ASSETID))
+                .leftJoin(WORKORDER)
+                .on(WORKORDER.ID.eq(NOTIFICATION.WORKORDERID));
     }
 
     private static NotificationResponse map(Record r, String user) {
@@ -287,7 +291,9 @@ public class NotificationRepository {
                                 n.getFailuresobserved())
                         : null,
                 n.getInspectionresultid(),
-                n.getMilestonedays());
+                n.getMilestonedays(),
+                n.getWorkorderid(),
+                r.get(WORKORDER.REFERENCE));
     }
 
     private static double number(BigDecimal value) {

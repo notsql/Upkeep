@@ -24,6 +24,7 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   REPAIR_PREDICTED: "Repair expected",
   CHECK_REQUESTED: "Please inspect",
   CHECK_FAILED: "Problem found",
+  WORK_ORDER_ASSIGNED: "New job for you",
 };
 
 /** Every notification query of one user; mutations invalidate this prefix. */

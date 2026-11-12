@@ -1,8 +1,8 @@
 package com.proj.server.routing;
 
+import com.proj.server.workorder.WorkOrderAssignmentService;
 import com.proj.server.workorder.WorkOrderException;
 import com.proj.server.workorder.WorkOrderPriority;
-import com.proj.server.workorder.WorkOrderProgressService;
 import com.proj.server.workorder.WorkOrderService;
 import java.time.Clock;
 import java.time.Duration;
@@ -31,7 +31,7 @@ public class ReportClassificationJob {
     private final RoutingRepository routing;
     private final FaultClassifier classifier;
     private final WorkOrderService orders;
-    private final WorkOrderProgressService progress;
+    private final WorkOrderAssignmentService assignments;
     private final TransactionTemplate transactions;
     private final Clock clock;
 
@@ -39,13 +39,13 @@ public class ReportClassificationJob {
             RoutingRepository routing,
             FaultClassifier classifier,
             WorkOrderService orders,
-            WorkOrderProgressService progress,
+            WorkOrderAssignmentService assignments,
             TransactionTemplate transactions,
             Clock clock) {
         this.routing = routing;
         this.classifier = classifier;
         this.orders = orders;
-        this.progress = progress;
+        this.assignments = assignments;
         this.transactions = transactions;
         this.clock = clock;
     }
@@ -96,16 +96,13 @@ public class ReportClassificationJob {
                     try {
                         var workOrder = orders.createFromRoutedReport(
                                 estateId, reportId, WorkOrderService.AUTOMATIC_ROUTING_USER, WorkOrderPriority.MEDIUM);
-                        progress.assign(
+                        assignments.assignContractor(
                                 estateId,
                                 workOrder,
-                                WorkOrderService.AUTOMATIC_ROUTING_USER,
-                                WorkOrderService.AUTOMATIC_ROUTING_NAME);
-                        routing.createDispatch(
-                                workOrder,
-                                estateId,
+                                contractors.get(route.equipmentType()).providerId(),
                                 route.equipmentType(),
-                                contractors.get(route.equipmentType()),
+                                WorkOrderService.AUTOMATIC_ROUTING_USER,
+                                WorkOrderService.AUTOMATIC_ROUTING_NAME,
                                 null);
                         routing.decide(reportId, RoutingState.WORK_ORDER, null, workOrder);
                     } catch (WorkOrderException rejected) {

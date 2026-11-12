@@ -18,6 +18,9 @@ export function useWorkOrderListPage(
 ) {
   const access = useWorkOrderAccess(estateId);
   const { priority, q, status, category, cursor, sortBy, direction } = search;
+  // Crew start on the jobs given to them; owners and Managers see every job.
+  const crew = !access.canCreate;
+  const assignedTo = crew ? (search.assignedTo ?? "me") : undefined;
   const descending = (direction ?? "DESC") === "DESC";
   const filters = { priority, q, status, category };
   const options = useMemo(
@@ -26,10 +29,11 @@ export function useWorkOrderListPage(
       q,
       status,
       category,
+      ...(assignedTo ? { assignedTo } : {}),
       ...(sortBy ? { sortBy } : {}),
       ...(direction ? { direction } : {}),
     }),
-    [priority, q, status, category, sortBy, direction]
+    [priority, q, status, category, assignedTo, sortBy, direction]
   );
   const scope = JSON.stringify([access.userId, estateId, options]);
   const [trail, setTrail] = useState<{
@@ -59,11 +63,19 @@ export function useWorkOrderListPage(
       setTrail({ scope: "", cursors: [] });
       onChange({
         ...values,
+        ...(assignedTo ? { assignedTo } : {}),
         ...(sortBy ? { sortBy } : {}),
         ...(direction ? { direction } : {}),
       });
     },
-    [onChange, sortBy, direction]
+    [onChange, assignedTo, sortBy, direction]
+  );
+  const changeJobs = useCallback(
+    (value: "me" | "all") => {
+      setTrail({ scope: "", cursors: [] });
+      onChange({ ...options, assignedTo: value });
+    },
+    [onChange, options]
   );
   const changeSort = useCallback(
     (column: NonNullable<WorkOrderListSearch["sortBy"]>) => {
@@ -104,6 +116,8 @@ export function useWorkOrderListPage(
   return {
     access,
     activeCount,
+    assignedTo,
+    changeJobs,
     canPrevious,
     changeFilters,
     changeSort,

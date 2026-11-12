@@ -239,9 +239,10 @@ class NotificationSweepIntegrationTests {
     void switches(boolean serviceDue, boolean repairPredicted) throws Exception {
         mvc.perform(put("/estates/" + estateId + "/notification-settings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"anomalyEnabled\":true,\"serviceDueEnabled\":" + serviceDue
-                                + ",\"repairPredictedEnabled\":" + repairPredicted
-                                + ",\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}")
+                        .content(
+                                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":" + serviceDue
+                                        + ",\"repairPredictedEnabled\":" + repairPredicted
+                                        + ",\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true,\"workOrderAssignedEnabled\":true}")
                         .with(jwt().jwt(j -> j.subject("owner"))))
                 .andExpect(status().isOk());
     }

@@ -77,21 +77,103 @@ public class RoutingRepository {
         return found;
     }
 
-    /** One provider per email address in an estate; saving the same address again updates its name. */
-    public Contractor saveContractor(UUID estateId, EquipmentType type, String name, String email) {
-        var provider = db.insertInto(SERVICEPROVIDER)
-                .set(SERVICEPROVIDER.ID, UUID.randomUUID())
+    // --- The contractor directory (work-order-assignment.md) ---------------------------------------------------------
+
+    public record DirectoryEntry(UUID id, String name, String email, List<EquipmentType> defaultFor) {}
+
+    /** Every contractor in the estate's directory, by name, with the equipment types it is the default for. */
+    public List<DirectoryEntry> directory(UUID estateId) {
+        var defaults = new HashMap<UUID, List<EquipmentType>>();
+        db.select(EQUIPMENTPROVIDERROUTE.PROVIDERID, EQUIPMENTPROVIDERROUTE.EQUIPMENTTYPE)
+                .from(EQUIPMENTPROVIDERROUTE)
+                .where(EQUIPMENTPROVIDERROUTE.ESTATEID.eq(estateId))
+                .fetch()
+                .forEach(row -> defaults.computeIfAbsent(row.value1(), id -> new java.util.ArrayList<>())
+                        .add(EquipmentType.valueOf(row.value2())));
+        defaults.values().forEach(types -> types.sort(null));
+        return db.select(SERVICEPROVIDER.ID, SERVICEPROVIDER.NAME, SERVICEPROVIDER.EMAIL)
+                .from(SERVICEPROVIDER)
+                .where(SERVICEPROVIDER.ESTATEID.eq(estateId))
+                .orderBy(SERVICEPROVIDER.NAME, SERVICEPROVIDER.ID)
+                .fetch(row -> new DirectoryEntry(
+                        row.value1(),
+                        row.value2(),
+                        row.value3(),
+                        List.copyOf(defaults.getOrDefault(row.value1(), List.of()))));
+    }
+
+    public Optional<DirectoryEntry> directoryEntry(UUID estateId, UUID id) {
+        return directory(estateId).stream()
+                .filter(entry -> entry.id().equals(id))
+                .findFirst();
+    }
+
+    public boolean emailTaken(UUID estateId, String email, UUID except) {
+        var condition = SERVICEPROVIDER.ESTATEID.eq(estateId).and(SERVICEPROVIDER.EMAIL.equalIgnoreCase(email));
+        if (except != null) condition = condition.and(SERVICEPROVIDER.ID.ne(except));
+        return db.fetchExists(SERVICEPROVIDER, condition);
+    }
+
+    public UUID addContractor(UUID estateId, String name, String email) {
+        var id = UUID.randomUUID();
+        db.insertInto(SERVICEPROVIDER)
+                .set(SERVICEPROVIDER.ID, id)
                 .set(SERVICEPROVIDER.ESTATEID, estateId)
                 .set(SERVICEPROVIDER.NAME, name)
                 .set(SERVICEPROVIDER.EMAIL, email)
                 .set(SERVICEPROVIDER.UPDATEDAT, currentOffsetDateTime())
-                .onConflict(SERVICEPROVIDER.ESTATEID, SERVICEPROVIDER.EMAIL)
-                .doUpdate()
-                .set(SERVICEPROVIDER.NAME, name)
-                .set(SERVICEPROVIDER.UPDATEDAT, currentOffsetDateTime())
-                .returning(SERVICEPROVIDER.ID, SERVICEPROVIDER.UPDATEDAT)
-                .fetchOne();
-        var providerId = provider.get(SERVICEPROVIDER.ID);
+                .execute();
+        return id;
+    }
+
+    /** False when the contractor is not in this estate's directory. */
+    public boolean editContractor(UUID estateId, UUID id, String name, String email) {
+        return db.update(SERVICEPROVIDER)
+                        .set(SERVICEPROVIDER.NAME, name)
+                        .set(SERVICEPROVIDER.EMAIL, email)
+                        .set(SERVICEPROVIDER.UPDATEDAT, currentOffsetDateTime())
+                        .where(SERVICEPROVIDER.ID.eq(id).and(SERVICEPROVIDER.ESTATEID.eq(estateId)))
+                        .execute()
+                == 1;
+    }
+
+    /** Orders not yet closed that this contractor has. */
+    public int openAssignments(UUID estateId, UUID providerId) {
+        return db.fetchCount(
+                WORKORDER,
+                WORKORDER
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(WORKORDER.ASSIGNEEPROVIDERID.eq(providerId))
+                        .and(WORKORDER.STATUS.ne(WorkOrderStatus.CLOSED.name())));
+    }
+
+    /**
+     * Removes a contractor with no open orders. Its defaults go with it; closed orders and sent emails keep the copied
+     * name but lose the link.
+     */
+    public boolean removeContractor(UUID estateId, UUID providerId) {
+        db.deleteFrom(EQUIPMENTPROVIDERROUTE)
+                .where(EQUIPMENTPROVIDERROUTE
+                        .ESTATEID
+                        .eq(estateId)
+                        .and(EQUIPMENTPROVIDERROUTE.PROVIDERID.eq(providerId)))
+                .execute();
+        db.update(WORKORDER)
+                .setNull(WORKORDER.ASSIGNEEPROVIDERID)
+                .where(WORKORDER.ESTATEID.eq(estateId).and(WORKORDER.ASSIGNEEPROVIDERID.eq(providerId)))
+                .execute();
+        db.update(WORKORDERDISPATCH)
+                .setNull(WORKORDERDISPATCH.PROVIDERID)
+                .where(WORKORDERDISPATCH.ESTATEID.eq(estateId).and(WORKORDERDISPATCH.PROVIDERID.eq(providerId)))
+                .execute();
+        return db.deleteFrom(SERVICEPROVIDER)
+                        .where(SERVICEPROVIDER.ID.eq(providerId).and(SERVICEPROVIDER.ESTATEID.eq(estateId)))
+                        .execute()
+                == 1;
+    }
+
+    public void setDefault(UUID estateId, EquipmentType type, UUID providerId) {
         db.insertInto(EQUIPMENTPROVIDERROUTE)
                 .set(EQUIPMENTPROVIDERROUTE.ESTATEID, estateId)
                 .set(EQUIPMENTPROVIDERROUTE.EQUIPMENTTYPE, type.name())
@@ -102,11 +184,9 @@ public class RoutingRepository {
                 .set(EQUIPMENTPROVIDERROUTE.PROVIDERID, providerId)
                 .set(EQUIPMENTPROVIDERROUTE.UPDATEDAT, currentOffsetDateTime())
                 .execute();
-        return new Contractor(providerId, type, name, email, provider.get(SERVICEPROVIDER.UPDATEDAT));
     }
 
-    /** Removes the route only: the provider stays, because work orders may be assigned to it. */
-    public void removeContractor(UUID estateId, EquipmentType type) {
+    public void clearDefault(UUID estateId, EquipmentType type) {
         db.deleteFrom(EQUIPMENTPROVIDERROUTE)
                 .where(EQUIPMENTPROVIDERROUTE
                         .ESTATEID
@@ -300,16 +380,23 @@ public class RoutingRepository {
 
     // --- Dispatches ----------------------------------------------------------------------------------------------
 
+    /** Queues the email to a contractor just given the order; {@code type} is null for non-equipment jobs. */
     public void createDispatch(
-            UUID workOrderId, UUID estateId, EquipmentType type, Contractor contractor, String approvedBy) {
+            UUID workOrderId,
+            UUID estateId,
+            EquipmentType type,
+            UUID providerId,
+            String name,
+            String email,
+            String approvedBy) {
         db.insertInto(WORKORDERDISPATCH)
                 .set(WORKORDERDISPATCH.ID, UUID.randomUUID())
                 .set(WORKORDERDISPATCH.WORKORDERID, workOrderId)
                 .set(WORKORDERDISPATCH.ESTATEID, estateId)
-                .set(WORKORDERDISPATCH.PROVIDERID, contractor.providerId())
-                .set(WORKORDERDISPATCH.EQUIPMENTTYPE, type.name())
-                .set(WORKORDERDISPATCH.CONTRACTORNAME, contractor.name())
-                .set(WORKORDERDISPATCH.CONTRACTOREMAIL, contractor.email())
+                .set(WORKORDERDISPATCH.PROVIDERID, providerId)
+                .set(WORKORDERDISPATCH.EQUIPMENTTYPE, type == null ? null : type.name())
+                .set(WORKORDERDISPATCH.CONTRACTORNAME, name)
+                .set(WORKORDERDISPATCH.CONTRACTOREMAIL, email)
                 .set(WORKORDERDISPATCH.APPROVEDBYUSERID, approvedBy)
                 .set(WORKORDERDISPATCH.STATUS, DispatchStatus.PENDING.name())
                 .set(WORKORDERDISPATCH.UPDATEDAT, currentOffsetDateTime())
@@ -322,6 +409,23 @@ public class RoutingRepository {
 
     public boolean hasDispatch(UUID workOrderId) {
         return db.fetchExists(WORKORDERDISPATCH, WORKORDERDISPATCH.WORKORDERID.eq(workOrderId));
+    }
+
+    /** The reason recorded on an email that must never go because the contractor no longer has the job. */
+    public static final String SUPERSEDED = "SUPERSEDED";
+
+    /** Fails the order's pending emails that no worker is sending right now; a leased in-flight send may still go. */
+    public void supersedePending(UUID workOrderId, OffsetDateTime now) {
+        db.update(WORKORDERDISPATCH)
+                .set(WORKORDERDISPATCH.STATUS, DispatchStatus.FAILED.name())
+                .set(WORKORDERDISPATCH.LASTERRORCODE, SUPERSEDED)
+                .set(WORKORDERDISPATCH.UPDATEDAT, currentOffsetDateTime())
+                .where(WORKORDERDISPATCH
+                        .WORKORDERID
+                        .eq(workOrderId)
+                        .and(WORKORDERDISPATCH.STATUS.eq(DispatchStatus.PENDING.name()))
+                        .and(WORKORDERDISPATCH.LEASEUNTIL.isNull().or(WORKORDERDISPATCH.LEASEUNTIL.lt(now))))
+                .execute();
     }
 
     public Optional<UUID> claimDispatch(OffsetDateTime now, OffsetDateTime lease) {
@@ -344,8 +448,10 @@ public class RoutingRepository {
         return id;
     }
 
+    /** {@code reportId} is null for a job that did not come from a resident report; {@code equipmentType} may be. */
     public record Delivery(
             UUID id,
+            UUID workOrderId,
             String reference,
             UUID reportId,
             EquipmentType equipmentType,
@@ -356,6 +462,7 @@ public class RoutingRepository {
     public Optional<Delivery> delivery(UUID dispatchId) {
         return db.select(
                         WORKORDERDISPATCH.ID,
+                        WORKORDER.ID,
                         WORKORDER.REFERENCE,
                         WORKORDER.SOURCEREPORTID,
                         WORKORDERDISPATCH.EQUIPMENTTYPE,
@@ -370,10 +477,34 @@ public class RoutingRepository {
                         row.value1(),
                         row.value2(),
                         row.value3(),
-                        EquipmentType.valueOf(row.value4()),
-                        row.value5(),
+                        row.value4(),
+                        row.value5() == null ? null : EquipmentType.valueOf(row.value5()),
                         row.value6(),
-                        row.value7()));
+                        row.value7(),
+                        row.value8()));
+    }
+
+    /** What a contractor needs to know about a job that did not come from a resident report. */
+    public Optional<WorkOrderEmail.Job> job(Delivery delivery) {
+        return db.select(ESTATE.NAME, ESTATE.ADDRESS, ESTATE.POSTALCODE, LOCATION_LABEL, WORKORDER.DESCRIPTION)
+                .from(WORKORDER)
+                .join(ESTATE)
+                .on(ESTATE.ID.eq(WORKORDER.ESTATEID))
+                .join(LOCATION)
+                .on(LOCATION.ID.eq(WORKORDER.LOCATIONID))
+                .leftJoin(PARENT)
+                .on(PARENT.ID.eq(LOCATION.PARENTID))
+                .leftJoin(GRANDPARENT)
+                .on(GRANDPARENT.ID.eq(PARENT.PARENTID))
+                .where(WORKORDER.ID.eq(delivery.workOrderId()))
+                .fetchOptional(row -> new WorkOrderEmail.Job(
+                        delivery.reference(),
+                        delivery.name(),
+                        delivery.email(),
+                        row.value1(),
+                        row.value2() + ", " + row.value3(),
+                        row.value4(),
+                        row.value5()));
     }
 
     public boolean lockDispatchLease(UUID dispatchId, OffsetDateTime lease) {
@@ -412,16 +543,21 @@ public class RoutingRepository {
                 .execute();
     }
 
-    /** The dispatch status of a work order in this estate, locked for a retry. */
-    public Optional<DispatchStatus> lockDispatch(UUID estateId, UUID workOrderId) {
-        return db.select(WORKORDERDISPATCH.STATUS)
+    public record LatestDispatch(UUID id, DispatchStatus status, String lastErrorCode) {}
+
+    /** A work order's newest email in this estate, locked for a retry. */
+    public Optional<LatestDispatch> lockDispatch(UUID estateId, UUID workOrderId) {
+        return db.select(WORKORDERDISPATCH.ID, WORKORDERDISPATCH.STATUS, WORKORDERDISPATCH.LASTERRORCODE)
                 .from(WORKORDERDISPATCH)
                 .where(WORKORDERDISPATCH.WORKORDERID.eq(workOrderId).and(WORKORDERDISPATCH.ESTATEID.eq(estateId)))
+                .orderBy(WORKORDERDISPATCH.CREATEDAT.desc(), WORKORDERDISPATCH.ID.desc())
+                .limit(1)
                 .forUpdate()
-                .fetchOptional(row -> DispatchStatus.valueOf(row.value1()));
+                .fetchOptional(
+                        row -> new LatestDispatch(row.value1(), DispatchStatus.valueOf(row.value2()), row.value3()));
     }
 
-    public void requeue(UUID workOrderId) {
+    public void requeue(UUID dispatchId) {
         db.update(WORKORDERDISPATCH)
                 .set(WORKORDERDISPATCH.STATUS, DispatchStatus.PENDING.name())
                 .set(WORKORDERDISPATCH.ATTEMPTS, 0)
@@ -429,7 +565,7 @@ public class RoutingRepository {
                 .setNull(WORKORDERDISPATCH.LEASEUNTIL)
                 .setNull(WORKORDERDISPATCH.LASTERRORCODE)
                 .set(WORKORDERDISPATCH.UPDATEDAT, currentOffsetDateTime())
-                .where(WORKORDERDISPATCH.WORKORDERID.eq(workOrderId))
+                .where(WORKORDERDISPATCH.ID.eq(dispatchId))
                 .execute();
     }
 
@@ -504,7 +640,7 @@ public class RoutingRepository {
 
     private Map<UUID, WorkOrderDispatchResponse> dispatches(Condition condition) {
         var found = new HashMap<UUID, WorkOrderDispatchResponse>();
-        db.select(
+        db.selectDistinct(
                         WORKORDERDISPATCH.WORKORDERID,
                         WORKORDERDISPATCH.EQUIPMENTTYPE,
                         WORKORDERDISPATCH.CONTRACTORNAME,
@@ -513,13 +649,15 @@ public class RoutingRepository {
                         WORKORDERDISPATCH.STATUS,
                         WORKORDERDISPATCH.SENTAT,
                         WORKORDERDISPATCH.CREATEDAT)
+                .on(WORKORDERDISPATCH.WORKORDERID)
                 .from(WORKORDERDISPATCH)
                 .where(condition)
+                .orderBy(WORKORDERDISPATCH.WORKORDERID, WORKORDERDISPATCH.CREATEDAT.desc(), WORKORDERDISPATCH.ID.desc())
                 .fetch()
                 .forEach(row -> found.put(
                         row.value1(),
                         new WorkOrderDispatchResponse(
-                                EquipmentType.valueOf(row.value2()),
+                                row.value2() == null ? null : EquipmentType.valueOf(row.value2()),
                                 row.value3(),
                                 row.value4(),
                                 row.value5() == null

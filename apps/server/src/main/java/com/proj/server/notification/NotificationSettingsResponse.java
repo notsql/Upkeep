@@ -8,14 +8,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
             "serviceDueEnabled",
             "repairPredictedEnabled",
             "checkRequestedEnabled",
-            "checkFailedEnabled"
+            "checkFailedEnabled",
+            "workOrderAssignedEnabled"
         })
 public record NotificationSettingsResponse(
         boolean anomalyEnabled,
         boolean serviceDueEnabled,
         boolean repairPredictedEnabled,
         boolean checkRequestedEnabled,
-        boolean checkFailedEnabled) {
+        boolean checkFailedEnabled,
+        boolean workOrderAssignedEnabled) {
 
     static NotificationSettingsResponse of(NotificationSettings settings) {
         return new NotificationSettingsResponse(
@@ -23,6 +25,7 @@ public record NotificationSettingsResponse(
                 settings.serviceDueEnabled(),
                 settings.repairPredictedEnabled(),
                 settings.checkRequestedEnabled(),
-                settings.checkFailedEnabled());
+                settings.checkFailedEnabled(),
+                settings.workOrderAssignedEnabled());
     }
 }

@@ -25,6 +25,7 @@ beforeEach(() => {
     repairPredictedEnabled: false,
     checkRequestedEnabled: true,
     checkFailedEnabled: true,
+    workOrderAssignedEnabled: true,
   };
   state.error = null;
   state.deactivatedAt = null;
@@ -92,6 +93,7 @@ const SWITCHES = [
     "Tell a staff member when they are asked to check something.",
   ],
   ["Check failed", "Tell managers when a check finds a problem."],
+  ["Work order assigned", "Tell a staff member when a job is given to them."],
 ] as const;
 
 function toggle(name: string) {
@@ -149,6 +151,7 @@ it("saves the switches", async () => {
   fireEvent.click(toggle("Unusual readings"));
   fireEvent.click(toggle("Expected repair"));
   fireEvent.click(toggle("Check failed"));
+  fireEvent.click(toggle("Work order assigned"));
   expect(isOn("Unusual readings")).toBe(false);
   fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
   await waitFor(() =>
@@ -158,6 +161,7 @@ it("saves the switches", async () => {
       repairPredictedEnabled: true,
       checkRequestedEnabled: true,
       checkFailedEnabled: false,
+      workOrderAssignedEnabled: false,
     })
   );
   expect((await screen.findByRole("status")).textContent).toContain(

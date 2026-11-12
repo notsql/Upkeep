@@ -105,87 +105,96 @@ class ReportRoutingIntegrationTests {
         when(classifier.available()).thenReturn(true);
     }
 
-    // --- Contractors are service providers routed per equipment type -------------------------------------------
+    // --- The contractor directory, with a default contractor per equipment type -------------------------------
 
     @Test
-    void aManagerSavesReplacesListsAndRemovesContractorsPerEquipmentType() throws Exception {
+    void aManagerAddsEditsListsAndRemovesContractors() throws Exception {
         var estate = estate();
 
         mvc.perform(as("estate-owner", get(contractors(estate))))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(jsonPath("$.length()").value(0));
-        mvc.perform(saveContractor(estate, "LIFT", "  Acme Lifts  ", "faults@acmelifts.example"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.equipmentType").value("LIFT"))
+                .andExpect(jsonPath("$.contractors.length()").value(0));
+        var acme = id(mvc.perform(addContractor(estate, "  Acme Lifts  ", "faults@acmelifts.example"))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Acme Lifts"))
-                .andExpect(jsonPath("$.email").value("faults@acmelifts.example"));
-        mvc.perform(saveContractor(estate, "PUMP", "Pump Co", "pumps@example.com"))
-                .andExpect(status().isOk());
-        mvc.perform(saveContractor(estate, "LIFT", "Better Lifts", "jobs@betterlifts.example"))
-                .andExpect(status().isOk());
+                .andExpect(jsonPath("$.defaultFor.length()").value(0)));
+        mvc.perform(addContractor(estate, "Other", "faults@acmelifts.example")).andExpect(status().isConflict());
+        mvc.perform(as(
+                        "estate-owner",
+                        put(contractors(estate) + "/" + acme)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Better Lifts\",\"email\":\"jobs@betterlifts.example\"}")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("jobs@betterlifts.example"));
+        mvc.perform(setDefault(estate, "LIFT", acme)).andExpect(status().isOk());
+        mvc.perform(setDefault(estate, "PUMP", acme)).andExpect(jsonPath("$.defaultFor", contains("PUMP", "LIFT")));
 
+        mvc.perform(as("estate-owner", delete(contractors(estate) + "/defaults/PUMP")))
+                .andExpect(status().isNoContent());
         mvc.perform(as("estate-owner", get(contractors(estate))))
-                .andExpect(jsonPath("$[*].equipmentType", contains("PUMP", "LIFT")))
-                .andExpect(jsonPath("$[1].email").value("jobs@betterlifts.example"));
-
-        mvc.perform(as("estate-owner", delete(contractors(estate) + "/PUMP"))).andExpect(status().isNoContent());
-        mvc.perform(as("estate-owner", delete(contractors(estate) + "/PUMP"))).andExpect(status().isNoContent());
-        mvc.perform(as("estate-owner", get(contractors(estate))))
-                .andExpect(jsonPath("$[*].equipmentType", contains("LIFT")));
-        assertEquals(3, count("ServiceProvider", estate), "removing a route keeps its provider");
+                .andExpect(jsonPath("$.contractors[0].defaultFor", contains("LIFT")));
+        mvc.perform(as("estate-owner", delete(contractors(estate) + "/" + acme)))
+                .andExpect(status().isNoContent());
+        assertEquals(0, count("ServiceProvider", estate));
+        assertEquals(0, count("EquipmentProviderRoute", estate), "removing a contractor clears its defaults");
     }
 
     @Test
-    void oneFirmServingSeveralTypesIsOneProvider() throws Exception {
+    void aContractorWithOpenJobsCannotBeRemoved() throws Exception {
         var estate = estate();
+        contractor(estate, "LIFT");
+        var report = reviewReport(estate);
+        mvc.perform(send(estate, report, "LIFT", "MEDIUM")).andExpect(status().isCreated());
+        var provider = db.fetchOne("select id from \"ServiceProvider\" where \"estateId\"=?", estate)
+                .get(0, UUID.class);
 
-        mvc.perform(saveContractor(estate, "PUMP", "Fixit", "jobs@fixit.example"))
-                .andExpect(status().isOk());
-        mvc.perform(saveContractor(estate, "GATE", "Fixit Services", "jobs@fixit.example"))
-                .andExpect(status().isOk());
-
-        assertEquals(1, count("ServiceProvider", estate));
-        assertEquals(2, count("EquipmentProviderRoute", estate));
-        mvc.perform(as("estate-owner", get(contractors(estate))))
-                .andExpect(jsonPath("$[0].name").value("Fixit Services"))
-                .andExpect(jsonPath("$[1].name").value("Fixit Services"));
+        mvc.perform(as("estate-owner", delete(contractors(estate) + "/" + provider)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message", endsWith("Reassign them first.")));
     }
 
     @ParameterizedTest
     @CsvSource(
             delimiter = '|',
             value = {
-                "LIFT | '' | faults@acmelifts.example",
-                "LIFT | '   ' | faults@acmelifts.example",
-                "LIFT | Acme | not-an-email",
-                "LIFT | Acme | ''",
-                "LIFT | Acme | \"faults@acme.example\\r\\nBcc: x@example.com\"",
-                "ESCALATOR | Acme | faults@acmelifts.example"
+                "'' | faults@acmelifts.example",
+                "'   ' | faults@acmelifts.example",
+                "Acme | not-an-email",
+                "Acme | ''",
+                "Acme | \"faults@acme.example\\r\\nBcc: x@example.com\""
             })
-    void contractorDetailsAreValidated(String type, String name, String email) throws Exception {
+    void contractorDetailsAreValidated(String name, String email) throws Exception {
         var estate = estate();
 
-        mvc.perform(saveContractor(estate, type, name, email)).andExpect(status().isBadRequest());
+        mvc.perform(addContractor(estate, name, email)).andExpect(status().isBadRequest());
         assertEquals(0, count("ServiceProvider", estate));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "RESIDENT", "MEMBER"})
-    void onlyWorkOrderCreatorsCanReadOrChangeContractors(String role) throws Exception {
+    @Test
+    void crewMayReadTheDirectoryButNotChangeIt() throws Exception {
         var estate = estate();
-        member(estate, "staff", role);
+        member(estate, "staff", "CREW");
         contractor(estate, "LIFT");
 
-        mvc.perform(as("staff", get(contractors(estate)))).andExpect(status().isForbidden());
+        mvc.perform(as("staff", get(contractors(estate)))).andExpect(status().isOk());
         mvc.perform(as(
                         "staff",
-                        put(contractors(estate) + "/LIFT")
+                        post(contractors(estate))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"name\":\"X\",\"email\":\"x@example.com\"}")))
                 .andExpect(status().isForbidden());
-        mvc.perform(as("staff", delete(contractors(estate) + "/LIFT"))).andExpect(status().isForbidden());
+        mvc.perform(as("staff", delete(contractors(estate) + "/defaults/LIFT"))).andExpect(status().isForbidden());
         assertEquals(1, count("EquipmentProviderRoute", estate));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    void otherRolesCannotReadContractors(String role) throws Exception {
+        var estate = estate();
+        member(estate, "staff", role);
+
+        mvc.perform(as("staff", get(contractors(estate)))).andExpect(status().isForbidden());
     }
 
     @Test
@@ -650,8 +659,8 @@ class ReportRoutingIntegrationTests {
         contractor(estate, "LIFT");
         var report = reviewReport(estate);
         mvc.perform(send(estate, report, "LIFT", "MEDIUM")).andExpect(status().isCreated());
-        mvc.perform(saveContractor(estate, "LIFT", "New Lifts", "new@lifts.example"))
-                .andExpect(status().isOk());
+        var newer = id(mvc.perform(addContractor(estate, "New Lifts", "new@lifts.example")));
+        mvc.perform(setDefault(estate, "LIFT", newer)).andExpect(status().isOk());
 
         assertTrue(delivery.deliverNext());
 
@@ -843,12 +852,24 @@ class ReportRoutingIntegrationTests {
         return "/estates/" + estate + "/work-orders";
     }
 
-    private MockHttpServletRequestBuilder saveContractor(UUID estate, String type, String name, String email) {
+    private MockHttpServletRequestBuilder addContractor(UUID estate, String name, String email) {
         return as(
                 "estate-owner",
-                put(contractors(estate) + "/" + type)
+                post(contractors(estate))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":" + json(name) + ",\"email\":" + json(email) + "}"));
+    }
+
+    private MockHttpServletRequestBuilder setDefault(UUID estate, String type, String contractor) {
+        return as(
+                "estate-owner",
+                put(contractors(estate) + "/defaults/" + type)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"contractorId\":\"" + contractor + "\"}"));
+    }
+
+    private static String id(org.springframework.test.web.servlet.ResultActions result) throws Exception {
+        return JsonPath.read(result.andReturn().getResponse().getContentAsString(), "$.id");
     }
 
     private static String json(String value) {

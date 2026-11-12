@@ -25,7 +25,8 @@ public class NotificationSettingsRepository {
                         row.getServicedueenabled(),
                         row.getRepairpredictedenabled(),
                         row.getCheckrequestedenabled(),
-                        row.getCheckfailedenabled()))
+                        row.getCheckfailedenabled(),
+                        row.getWorkorderassignedenabled()))
                 .orElse(NotificationSettings.DEFAULTS);
     }
 
@@ -37,6 +38,7 @@ public class NotificationSettingsRepository {
                 .set(ESTATENOTIFICATIONSETTINGS.REPAIRPREDICTEDENABLED, settings.repairPredictedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.CHECKREQUESTEDENABLED, settings.checkRequestedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.CHECKFAILEDENABLED, settings.checkFailedEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.WORKORDERASSIGNEDENABLED, settings.workOrderAssignedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.UPDATEDBYUSERID, user)
                 .onConflict(ESTATENOTIFICATIONSETTINGS.ESTATEID)
                 .doUpdate()
@@ -45,6 +47,7 @@ public class NotificationSettingsRepository {
                 .set(ESTATENOTIFICATIONSETTINGS.REPAIRPREDICTEDENABLED, settings.repairPredictedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.CHECKREQUESTEDENABLED, settings.checkRequestedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.CHECKFAILEDENABLED, settings.checkFailedEnabled())
+                .set(ESTATENOTIFICATIONSETTINGS.WORKORDERASSIGNEDENABLED, settings.workOrderAssignedEnabled())
                 .set(ESTATENOTIFICATIONSETTINGS.UPDATEDBYUSERID, user)
                 .set(ESTATENOTIFICATIONSETTINGS.UPDATEDAT, DSL.currentOffsetDateTime())
                 .execute();

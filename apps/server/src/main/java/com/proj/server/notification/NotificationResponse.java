@@ -29,16 +29,21 @@ import java.util.UUID;
             "serviceDue",
             "repairPredicted",
             "inspectionResultId",
-            "milestoneDays"
+            "milestoneDays",
+            "workOrderId",
+            "workOrderReference"
         })
 public record NotificationResponse(
         UUID id,
         NotificationType type,
         UUID estateId,
         String estateName,
+
+        @Schema(nullable = true, description = "Null only for WORK_ORDER_ASSIGNED on a work order without an asset")
         UUID assetId,
-        String assetReference,
-        String assetName,
+
+        @Schema(nullable = true) String assetReference,
+        @Schema(nullable = true) String assetName,
         String summary,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
@@ -55,7 +60,15 @@ public record NotificationResponse(
                 nullable = true,
                 description = "The reminder milestone in days (90, 60, 30, or 14 for SERVICE_DUE); set only for"
                         + " SERVICE_DUE and REPAIR_PREDICTED")
-        Integer milestoneDays) {
+        Integer milestoneDays,
+
+        @Schema(
+                nullable = true,
+                description = "The work order given to the recipient; set only for WORK_ORDER_ASSIGNED")
+        UUID workOrderId,
+
+        @Schema(nullable = true, description = "That work order's reference; set only for WORK_ORDER_ASSIGNED")
+        String workOrderReference) {
 
     @Schema(
             name = "AnomalyAlertDetails",

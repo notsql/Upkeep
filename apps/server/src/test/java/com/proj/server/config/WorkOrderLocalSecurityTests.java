@@ -35,6 +35,9 @@ class WorkOrderLocalSecurityTests {
     @MockitoBean
     com.proj.server.workorder.WorkOrderProgressService progress;
 
+    @MockitoBean
+    com.proj.server.workorder.WorkOrderAssignmentService assignments;
+
     @Test
     void missingIdentityIsRejectedEvenWithoutConfiguredJwt() throws Exception {
         String base = "/estates/" + UUID.randomUUID();

@@ -42,10 +42,13 @@ import org.springframework.web.bind.annotation.*;
 public class WorkOrderController {
     private final WorkOrderService orders;
     private final WorkOrderProgressService progress;
+    private final WorkOrderAssignmentService assignments;
 
-    public WorkOrderController(WorkOrderService orders, WorkOrderProgressService progress) {
+    public WorkOrderController(
+            WorkOrderService orders, WorkOrderProgressService progress, WorkOrderAssignmentService assignments) {
         this.progress = progress;
         this.orders = orders;
+        this.assignments = assignments;
     }
 
     @PostMapping("/work-orders")
@@ -55,10 +58,11 @@ public class WorkOrderController {
             @AuthenticationPrincipal Jwt principal,
             @PathVariable UUID estateId,
             @Valid @RequestBody CreateWorkOrderRequest request) {
-        var order = orders.create(estateId, subject(principal), request);
+        var user = subject(principal);
+        var order = orders.create(estateId, user, request);
         return ResponseEntity.created(URI.create("/estates/" + estateId + "/work-orders/" + order.id()))
                 .header("Cache-Control", "private, no-store")
-                .body(orders.resolveCreatorName(order));
+                .body(orders.present(estateId, user, order));
     }
 
     @GetMapping("/work-orders")
@@ -81,9 +85,24 @@ public class WorkOrderController {
             @RequestParam(defaultValue = "CREATED_AT") WorkOrderSort sortBy,
             @RequestParam(defaultValue = "DESC") WorkOrderSortDirection direction,
             @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Integer limit) {
+            @RequestParam(required = false) Integer limit,
+            @io.swagger.v3.oas.annotations.Parameter(
+                            description = "\"me\" lists only orders given to the caller",
+                            schema = @Schema(allowableValues = {"me"}))
+                    @RequestParam(required = false)
+                    String assignedTo) {
         return privateResponse(orders.list(
-                estateId, subject(principal), priority, status, category, q, sortBy, direction, cursor, limit));
+                estateId,
+                subject(principal),
+                priority,
+                status,
+                category,
+                q,
+                sortBy,
+                direction,
+                cursor,
+                limit,
+                assignedTo));
     }
 
     @GetMapping("/work-orders/{workOrderId}")
@@ -92,6 +111,50 @@ public class WorkOrderController {
     public ResponseEntity<WorkOrderResponse> detail(
             @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId, @PathVariable UUID workOrderId) {
         return privateResponse(orders.detail(estateId, subject(principal), workOrderId));
+    }
+
+    @GetMapping("/work-orders/assignees")
+    @Operation(
+            operationId = "listWorkOrderAssignees",
+            summary = "Who a work order can be given to: the team and the contractor directory, as owner or Manager")
+    @ApiResponse(responseCode = "200", description = "Team members and contractors, each by name")
+    public ResponseEntity<AssigneeCandidatesResponse> assignees(
+            @AuthenticationPrincipal Jwt principal, @PathVariable UUID estateId) {
+        return privateResponse(assignments.assignees(estateId, subject(principal)));
+    }
+
+    @PutMapping("/work-orders/{workOrderId}/assignee")
+    @Operation(
+            operationId = "assignWorkOrder",
+            summary = "Give a work order that is not closed to a team member or a contractor, as owner or Manager")
+    @ApiResponse(
+            responseCode = "200",
+            description = "The order; assigning the current assignee again returns it unchanged")
+    @ApiResponse(
+            responseCode = "422",
+            description = "Not exactly one of a Manager/Crew member or a contractor in this estate's directory",
+            content = @Content(schema = @Schema(implementation = EstateError.class)))
+    public ResponseEntity<WorkOrderResponse> assign(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID workOrderId,
+            @Valid @RequestBody AssignWorkOrderRequest request) {
+        var user = subject(principal);
+        var order = assignments.assign(estateId, workOrderId, user, progress.actorName(user), request);
+        return privateResponse(orders.present(estateId, user, order));
+    }
+
+    @DeleteMapping("/work-orders/{workOrderId}/assignee")
+    @Operation(operationId = "unassignWorkOrder", summary = "Take a work order back from whoever has it")
+    @ApiResponse(responseCode = "200", description = "The order, now with nobody assigned")
+    public ResponseEntity<WorkOrderResponse> unassign(
+            @AuthenticationPrincipal Jwt principal,
+            @PathVariable UUID estateId,
+            @PathVariable UUID workOrderId,
+            @RequestParam int version) {
+        var user = subject(principal);
+        var order = assignments.unassign(estateId, workOrderId, user, progress.actorName(user), version);
+        return privateResponse(orders.present(estateId, user, order));
     }
 
     @GetMapping("/work-order-assets")
@@ -107,7 +170,9 @@ public class WorkOrderController {
     }
 
     @PatchMapping("/work-orders/{workOrderId}/status")
-    @Operation(operationId = "changeWorkOrderStatus", summary = "Start work as an active owner or Manager")
+    @Operation(
+            operationId = "changeWorkOrderStatus",
+            summary = "Start work as an active owner or Manager, or as the Crew member given the order")
     @ApiResponse(
             responseCode = "200",
             description = "Updated work order; current-version no-op returns unchanged order")
@@ -117,14 +182,15 @@ public class WorkOrderController {
             @PathVariable UUID workOrderId,
             @Valid @RequestBody ChangeWorkOrderStatusRequest request) {
         var user = subject(principal);
-        return privateResponse(orders.resolveCreatorName(
-                progress.change(estateId, workOrderId, user, progress.actorName(user), request)));
+        return privateResponse(orders.present(
+                estateId, user, progress.change(estateId, workOrderId, user, progress.actorName(user), request)));
     }
 
     @PutMapping("/work-orders/{workOrderId}/completion")
     @Operation(
             operationId = "saveWorkOrderCompletion",
-            summary = "Close work with a recorded outcome; identical retries are idempotent")
+            summary = "Close work with a recorded outcome as owner, Manager or the Crew member given the order;"
+                    + " identical retries are idempotent")
     @ApiResponse(
             responseCode = "201",
             description = "Completion created",
@@ -142,7 +208,7 @@ public class WorkOrderController {
         var result = progress.complete(estateId, workOrderId, user, progress.actorName(user), request);
         return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
                 .header("Cache-Control", "private, no-store")
-                .body(orders.resolveCreatorName(result.order()));
+                .body(orders.present(estateId, user, result.order()));
     }
 
     @PatchMapping("/work-orders/{workOrderId}/completion")
@@ -158,8 +224,8 @@ public class WorkOrderController {
             @PathVariable UUID workOrderId,
             @Valid @RequestBody CorrectWorkOrderCompletionRequest request) {
         var user = subject(principal);
-        return privateResponse(orders.resolveCreatorName(
-                progress.correct(estateId, workOrderId, user, progress.actorName(user), request)));
+        return privateResponse(orders.present(
+                estateId, user, progress.correct(estateId, workOrderId, user, progress.actorName(user), request)));
     }
 
     @GetMapping("/work-orders/{workOrderId}/completion-revisions")

@@ -36,18 +36,31 @@ public class WorkOrderProgressService {
     }
 
     /**
-     * Assigns an Open order to the provider ID-70 just emailed, through the same status history as other changes.
-     * The caller holds the estate lock and the transaction, and has already authorized the actor.
+     * Starting and completing: an owner or Manager on any order, or the Crew member it is assigned to
+     * (work-order-assignment.md, partly superseding decision 0040). Locks the estate, then the order.
      */
-    public void assign(UUID estate, UUID id, String user, String name) {
+    private com.proj.server.db.tables.records.WorkorderRecord authorizeProgress(UUID estate, String user, UUID id) {
+        var found = orders.authorize(estate, user, false, true);
+        boolean manager = estates.isManager(estate, user);
+        if (manager && found.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         var row = repository.lockOrder(estate, id);
-        if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
-        if (WorkOrderStatus.valueOf(row.getStatus()) != WorkOrderStatus.OPEN)
-            throw error(HttpStatus.CONFLICT, "Only an open work order can be assigned to a contractor.");
-        var now = OffsetDateTime.now(ZoneOffset.UTC);
-        int version = row.getVersion() + 1;
-        repository.updateStatus(id, WorkOrderStatus.ASSIGNED, now, version);
-        repository.appendStatus(id, estate, WorkOrderStatus.OPEN, WorkOrderStatus.ASSIGNED, user, name, now, version);
+        if (manager) {
+            if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
+            return row;
+        }
+        boolean assignee = row != null
+                && WorkOrderAssignment.canProgress(
+                        WorkOrderStatus.IN_PROGRESS,
+                        false,
+                        repository.role(estate, user),
+                        row.getAssigneeuserid(),
+                        user);
+        if (!assignee)
+            throw error(
+                    HttpStatus.FORBIDDEN,
+                    "Only the owner, a Manager or the Crew member given this job can update its progress.");
+        if (found.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
+        return row;
     }
 
     // Controllers resolve optional names before entering write transactions.
@@ -58,9 +71,7 @@ public class WorkOrderProgressService {
     @Transactional
     public WorkOrderResponse change(
             UUID estate, UUID id, String user, String name, ChangeWorkOrderStatusRequest request) {
-        authorizeUpdate(estate, user);
-        var row = repository.lockOrder(estate, id);
-        if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
+        var row = authorizeProgress(estate, user, id);
         if (request.targetStatus() != WorkOrderStatus.IN_PROGRESS)
             throw error(HttpStatus.BAD_REQUEST, "Start work here; assignment and closure use their own operations.");
         if (row.getVersion().intValue() != request.expectedVersion()) throw stale();
@@ -80,9 +91,7 @@ public class WorkOrderProgressService {
     @Transactional
     public CompletionResult complete(
             UUID estate, UUID id, String user, String name, SaveWorkOrderCompletionRequest request) {
-        authorizeUpdate(estate, user);
-        var row = repository.lockOrder(estate, id);
-        if (row == null) throw error(HttpStatus.NOT_FOUND, "Work order not found.");
+        var row = authorizeProgress(estate, user, id);
         var saved = repository.detail(estate, id);
         if (saved.status() == WorkOrderStatus.CLOSED) {
             if (sameOutcome(saved.completion(), request)) return new CompletionResult(saved, false);
@@ -171,7 +180,9 @@ public class WorkOrderProgressService {
                     order.createdByUserId(),
                     order.createdByName(),
                     order.createdAt(),
-                    0));
+                    0,
+                    WorkOrderStatusEventKind.STATUS,
+                    null));
         }
         if (!result.isEmpty()
                 && result.getFirst().version() == 0
@@ -186,7 +197,9 @@ public class WorkOrderProgressService {
                             created.changedByUserId(),
                             order.createdByName(),
                             created.changedAt(),
-                            created.version()));
+                            created.version(),
+                            created.kind(),
+                            created.assigneeName()));
         }
         return result;
     }

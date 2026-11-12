@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 class NotificationSettingsIntegrationTests {
     static final LocalDate TODAY = LocalDate.now(ZoneId.of("Asia/Singapore"));
     static final String VALID =
-            "{\"anomalyEnabled\":false,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":false,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":false}";
+            "{\"anomalyEnabled\":false,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":false,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":false,\"workOrderAssignedEnabled\":true}";
 
     @Autowired
     MockMvc mvc;
@@ -146,12 +146,12 @@ class NotificationSettingsIntegrationTests {
     @ParameterizedTest
     @ValueSource(
             strings = {
-                "{\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
-                "{\"anomalyEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
-                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
-                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkFailedEnabled\":true}",
+                "{\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true,\"workOrderAssignedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true,\"workOrderAssignedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true,\"workOrderAssignedEnabled\":true}",
+                "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkFailedEnabled\":true,\"workOrderAssignedEnabled\":true}",
                 "{\"anomalyEnabled\":true,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true}",
-                "{\"anomalyEnabled\":null,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true}",
+                "{\"anomalyEnabled\":null,\"serviceDueEnabled\":true,\"repairPredictedEnabled\":true,\"checkRequestedEnabled\":true,\"checkFailedEnabled\":true,\"workOrderAssignedEnabled\":true}",
                 "not json"
             })
     void rejectsAMissingSwitch(String body) throws Exception {

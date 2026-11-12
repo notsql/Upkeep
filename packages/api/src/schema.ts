@@ -774,17 +774,18 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    /** The estate's external contractor per equipment type */
-    get: operations["listEquipmentContractors"];
+    /** The estate's contractors, by name, as owner, Manager or Crew */
+    get: operations["listContractors"];
     put?: never;
-    post?: never;
+    /** Add a contractor to the directory */
+    post: operations["addContractor"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/estates/{estateId}/contractors/{equipmentType}": {
+  "/estates/{estateId}/contractors/{contractorId}": {
     parameters: {
       query?: never;
       header?: never;
@@ -792,11 +793,29 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Create or replace the contractor for one equipment type */
-    put: operations["saveEquipmentContractor"];
+    /** Change a contractor's name or email */
+    put: operations["editContractor"];
     post?: never;
-    /** Remove the contractor for one equipment type */
-    delete: operations["removeEquipmentContractor"];
+    /** Remove a contractor with no open jobs; its equipment defaults are cleared */
+    delete: operations["removeContractor"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/contractors/defaults/{equipmentType}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Send new water-leak reports for one equipment type to this contractor */
+    put: operations["setDefaultContractor"];
+    post?: never;
+    /** Stop sending one equipment type to a contractor */
+    delete: operations["clearDefaultContractor"];
     options?: never;
     head?: never;
     patch?: never;
@@ -1761,6 +1780,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/estates/{estateId}/work-orders/{workOrderId}/assignee": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Give a work order that is not closed to a team member or a contractor, as owner or Manager */
+    put: operations["assignWorkOrder"];
+    post?: never;
+    /** Take a work order back from whoever has it */
+    delete: operations["unassignWorkOrder"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/estates/{estateId}/work-orders/{workOrderId}/completion": {
     parameters: {
       query?: never;
@@ -1769,7 +1806,7 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Close work with a recorded outcome; identical retries are idempotent */
+    /** Close work with a recorded outcome as owner, Manager or the Crew member given the order; identical retries are idempotent */
     put: operations["saveWorkOrderCompletion"];
     post?: never;
     delete?: never;
@@ -1860,7 +1897,7 @@ export interface paths {
     delete?: never;
     options?: never;
     head?: never;
-    /** Start work as an active owner or Manager */
+    /** Start work as an active owner or Manager, or as the Crew member given the order */
     patch: operations["changeWorkOrderStatus"];
     trace?: never;
   };
@@ -1872,6 +1909,23 @@ export interface paths {
       cookie?: never;
     };
     get: operations["getWorkOrderStatusHistory"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/estates/{estateId}/work-orders/assignees": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Who a work order can be given to: the team and the contractor directory, as owner or Manager */
+    get: operations["listWorkOrderAssignees"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2190,6 +2244,20 @@ export interface components {
       /** Format: int32 */
       downtimeMinutes?: number;
     };
+    WorkOrderAssigneeResponse: {
+      /** @enum {string} */
+      kind: "MEMBER" | "CONTRACTOR";
+      /** @description The member's user ID or the contractor's ID; null for a contractor since removed from the directory (closed orders only) */
+      id: string | null;
+      /** @description The name saved when the job was given */
+      name: string;
+      /** @description The contractor's email; null for a member */
+      email: string | null;
+      /** Format: date-time */
+      assignedAt: string;
+      /** @description False when a member assignee has since left the estate or lost their staff role */
+      inEstate: boolean;
+    };
     WorkOrderCompletionResponse: {
       /** Format: uuid */
       id: string;
@@ -2256,9 +2324,20 @@ export interface components {
        * @description CONFIRMED duplicates of the source report; 0 without a source report.
        */
       sourceReportConfirmedDuplicateCount: number;
+      /** @description Who has the job; null when nobody does. */
+      assignee: components["schemas"]["WorkOrderAssigneeResponse"];
+      /** @description Whether the caller may start or complete this order. */
+      canProgress: boolean;
     };
     EstateError: {
       message: string;
+    };
+    AssignWorkOrderRequest: {
+      userId?: string | null;
+      /** Format: uuid */
+      providerId?: string | null;
+      /** Format: int32 */
+      version: number;
     };
     UpdateEstateRoleDefinitionRequest: {
       name: string;
@@ -2411,8 +2490,11 @@ export interface components {
       dispatch: components["schemas"]["WorkOrderDispatchResponse"];
     };
     WorkOrderDispatchResponse: {
-      /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
+      /**
+       * @description Null for a job that is not about a piece of equipment
+       * @enum {string|null}
+       */
+      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING" | null;
       contractorName: string;
       contractorEmail: string;
       /** @enum {string} */
@@ -2430,6 +2512,7 @@ export interface components {
       repairPredictedEnabled: boolean;
       checkRequestedEnabled: boolean;
       checkFailedEnabled: boolean;
+      workOrderAssignedEnabled: boolean;
     };
     NotificationSettingsResponse: {
       anomalyEnabled: boolean;
@@ -2437,6 +2520,7 @@ export interface components {
       repairPredictedEnabled: boolean;
       checkRequestedEnabled: boolean;
       checkFailedEnabled: boolean;
+      workOrderAssignedEnabled: boolean;
     };
     UpdateEstateRoleRequest: {
       /** @enum {string} */
@@ -2525,18 +2609,21 @@ export interface components {
       /** Format: date-time */
       changedAt: string | null;
     };
-    EquipmentContractorRequest: {
+    ContractorRequest: {
       name: string;
       /** Format: email */
       email: string;
     };
-    EquipmentContractorResponse: {
-      /** @enum {string} */
-      equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
+    ContractorResponse: {
+      /** Format: uuid */
+      id: string;
       name: string;
       email: string;
-      /** Format: date-time */
-      updatedAt: string;
+      defaultFor: ("PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING")[];
+    };
+    ContractorDefaultRequest: {
+      /** Format: uuid */
+      contractorId: string;
     };
     ServiceInterval: {
       /**
@@ -2693,14 +2780,18 @@ export interface components {
         | "SERVICE_DUE"
         | "REPAIR_PREDICTED"
         | "CHECK_REQUESTED"
-        | "CHECK_FAILED";
+        | "CHECK_FAILED"
+        | "WORK_ORDER_ASSIGNED";
       /** Format: uuid */
       estateId: string;
       estateName: string;
-      /** Format: uuid */
-      assetId: string;
-      assetReference: string;
-      assetName: string;
+      /**
+       * Format: uuid
+       * @description Null only for WORK_ORDER_ASSIGNED on a work order without an asset
+       */
+      assetId: string | null;
+      assetReference: string | null;
+      assetName: string | null;
       summary: string;
       /** Format: date-time */
       createdAt: string;
@@ -2722,6 +2813,13 @@ export interface components {
        * @description The reminder milestone in days (90, 60, 30, or 14 for SERVICE_DUE); set only for SERVICE_DUE and REPAIR_PREDICTED
        */
       milestoneDays: number | null;
+      /**
+       * Format: uuid
+       * @description The work order given to the recipient; set only for WORK_ORDER_ASSIGNED
+       */
+      workOrderId: string | null;
+      /** @description That work order's reference; set only for WORK_ORDER_ASSIGNED */
+      workOrderReference: string | null;
     };
     RepairPredictedDetails: {
       /** @enum {string} */
@@ -3776,6 +3874,10 @@ export interface components {
       changedAt: string;
       /** Format: int32 */
       version: number;
+      /** @enum {string} */
+      kind: "STATUS" | "ASSIGNED" | "UNASSIGNED";
+      /** @description Who the job was given to; set only for ASSIGNED */
+      assigneeName: string | null;
     };
     DocumentPageResponse: {
       items: components["schemas"]["DocumentResponse"][];
@@ -3798,6 +3900,25 @@ export interface components {
       changedAt: string;
       before: components["schemas"]["WorkOrderCompletionResponse"];
       after: components["schemas"]["WorkOrderCompletionResponse"];
+    };
+    AssigneeCandidateContractor: {
+      /** Format: uuid */
+      id: string;
+      name: string;
+      email: string;
+    };
+    AssigneeCandidateMember: {
+      userId: string;
+      name: string;
+      /**
+       * @description Owners are listed as MANAGER
+       * @enum {string}
+       */
+      role: "MANAGER" | "CREW";
+    };
+    AssigneeCandidatesResponse: {
+      members: components["schemas"]["AssigneeCandidateMember"][];
+      contractors: components["schemas"]["AssigneeCandidateContractor"][];
     };
     WorkOrderAssetOptionResponse: {
       /** Format: uuid */
@@ -4245,6 +4366,9 @@ export interface components {
       total: string;
       /** Format: int32 */
       services: number;
+    };
+    ContractorDirectoryResponse: {
+      contractors: components["schemas"]["ContractorResponse"][];
     };
     AssetLifecycleEventResponse: {
       /** Format: uuid */
@@ -4972,6 +5096,77 @@ export interface operations {
       };
     };
   };
+  addContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ContractorRequest"];
+      };
+    };
+    responses: {
+      /** @description The new contractor */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ContractorResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required to change the directory */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or contractor */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, duplicate email, or the contractor still has open jobs */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   addEstateUser: {
     parameters: {
       query?: never;
@@ -5097,6 +5292,87 @@ export interface operations {
       };
       /** @description Duplicate name or level position, inactive estate or location, or active children */
       409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  assignWorkOrder: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        workOrderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AssignWorkOrderRequest"];
+      };
+    };
+    responses: {
+      /** @description The order; assigning the current assignee again returns it unchanged */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["WorkOrderResponse"];
+        };
+      };
+      /** @description Invalid request or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Membership lacks permission */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing or inaccessible estate or related record */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Not exactly one of a Manager/Crew member or a contractor in this estate's directory */
+      422: {
         headers: {
           [name: string]: unknown;
         };
@@ -5633,6 +5909,72 @@ export interface operations {
       };
       /** @description The anomaly model is unavailable; nothing was recorded */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  clearDefaultContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cleared, or there was none */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required to change the directory */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or contractor */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, duplicate email, or the contractor still has open jobs */
+      409: {
         headers: {
           [name: string]: unknown;
         };
@@ -7489,6 +7831,78 @@ export interface operations {
         };
         content: {
           "text/csv": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  editContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        contractorId: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ContractorRequest"];
+      };
+    };
+    responses: {
+      /** @description The saved contractor */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ContractorResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required to change the directory */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or contractor */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, duplicate email, or the contractor still has open jobs */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
         };
       };
     };
@@ -11015,6 +11429,73 @@ export interface operations {
       };
     };
   };
+  listContractors: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The directory */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ContractorDirectoryResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required to change the directory */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or contractor */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, duplicate email, or the contractor still has open jobs */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listCostliestAssets: {
     parameters: {
       query?: never;
@@ -11204,64 +11685,6 @@ export interface operations {
       };
       /** @description Document storage unavailable */
       503: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  listEquipmentContractors: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Contractors in equipment-type order; types without one are absent */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EquipmentContractorResponse"][];
-        };
-      };
-      /** @description Invalid UUID, equipment type, name or email */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Work-order creation authority required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inaccessible estate */
-      404: {
         headers: {
           [name: string]: unknown;
         };
@@ -12431,6 +12854,73 @@ export interface operations {
       };
     };
   };
+  listWorkOrderAssignees: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Team members and contractors, each by name */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["AssigneeCandidatesResponse"];
+        };
+      };
+      /** @description Invalid request or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Membership lacks permission */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing or inaccessible estate or related record */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   listWorkOrders: {
     parameters: {
       query?: {
@@ -12443,6 +12933,8 @@ export interface operations {
         direction?: "ASC" | "DESC";
         cursor?: string;
         limit?: number;
+        /** @description "me" lists only orders given to the caller */
+        assignedTo?: "me";
       };
       header?: never;
       path: {
@@ -13361,19 +13853,19 @@ export interface operations {
       };
     };
   };
-  removeEquipmentContractor: {
+  removeContractor: {
     parameters: {
       query?: never;
       header?: never;
       path: {
         estateId: string;
-        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
+        contractorId: string;
       };
       cookie?: never;
     };
     requestBody?: never;
     responses: {
-      /** @description Removed, or there was none */
+      /** @description Removed */
       204: {
         headers: {
           [name: string]: unknown;
@@ -13398,7 +13890,7 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Work-order creation authority required */
+      /** @description Owner or Manager required to change the directory */
       403: {
         headers: {
           [name: string]: unknown;
@@ -13407,8 +13899,17 @@ export interface operations {
           "*/*": components["schemas"]["EstateError"];
         };
       };
-      /** @description Inaccessible estate */
+      /** @description Inaccessible estate or contractor */
       404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, duplicate email, or the contractor still has open jobs */
+      409: {
         headers: {
           [name: string]: unknown;
         };
@@ -14178,69 +14679,6 @@ export interface operations {
       };
     };
   };
-  saveEquipmentContractor: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        estateId: string;
-        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["EquipmentContractorRequest"];
-      };
-    };
-    responses: {
-      /** @description The saved contractor */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EquipmentContractorResponse"];
-        };
-      };
-      /** @description Invalid UUID, equipment type, name or email */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Work-order creation authority required */
-      403: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Inaccessible estate */
-      404: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
   saveNotificationSettings: {
     parameters: {
       query?: never;
@@ -14721,6 +15159,78 @@ export interface operations {
       };
     };
   };
+  setDefaultContractor: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        estateId: string;
+        equipmentType: "PUMP" | "LIFT" | "GATE" | "LIGHT" | "PLUMBING";
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ContractorDefaultRequest"];
+      };
+    };
+    responses: {
+      /** @description The contractor, with its updated defaults */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["ContractorResponse"];
+        };
+      };
+      /** @description Invalid UUID, equipment type, name or email */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Owner or Manager required to change the directory */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inaccessible estate or contractor */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, duplicate email, or the contractor still has open jobs */
+      409: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
   setPolicy: {
     parameters: {
       query?: never;
@@ -15039,6 +15549,76 @@ export interface operations {
       };
       /** @description Identity provider not configured */
       503: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+    };
+  };
+  unassignWorkOrder: {
+    parameters: {
+      query: {
+        version: number;
+      };
+      header?: never;
+      path: {
+        estateId: string;
+        workOrderId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The order, now with nobody assigned */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["WorkOrderResponse"];
+        };
+      };
+      /** @description Invalid request or cursor */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Sign in required */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Membership lacks permission */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Missing or inaccessible estate or related record */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "*/*": components["schemas"]["EstateError"];
+        };
+      };
+      /** @description Inactive estate, asset, location or ancestor; stale source placement */
+      409: {
         headers: {
           [name: string]: unknown;
         };

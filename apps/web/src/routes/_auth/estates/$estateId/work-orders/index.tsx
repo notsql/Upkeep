@@ -5,7 +5,7 @@ import type { WorkOrderListSearch } from "@/lib/work-orders";
 import { WorkOrderListPage } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/work-order-list-page";
 export const Route = createFileRoute("/_auth/estates/$estateId/work-orders/")({
   validateSearch: (search: Record<string, unknown>): WorkOrderListSearch => {
-    const { priority, q, cursor, sortBy, direction } = search;
+    const { priority, q, cursor, sortBy, direction, assignedTo } = search;
     const status = parseStatus(search.status);
     const category = parseCategory(search.category);
     if (
@@ -43,6 +43,7 @@ export const Route = createFileRoute("/_auth/estates/$estateId/work-orders/")({
       ...(priority ? { priority } : {}),
       ...(status ? { status } : {}),
       ...(category ? { category } : {}),
+      ...(assignedTo === "me" || assignedTo === "all" ? { assignedTo } : {}),
       ...(typeof q === "string" && q.trim() ? { q: q.trim() } : {}),
       ...(typeof cursor === "string" && cursor ? { cursor } : {}),
     };

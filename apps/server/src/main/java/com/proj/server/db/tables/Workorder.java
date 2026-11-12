@@ -16,6 +16,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.jooq.Check;
 import org.jooq.Condition;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
@@ -146,6 +147,31 @@ public class Workorder extends TableImpl<WorkorderRecord> {
      */
     public final TableField<WorkorderRecord, UUID> SOURCEINSPECTIONID = createField(DSL.name("sourceInspectionId"), SQLDataType.UUID, this, "");
 
+    /**
+     * The column <code>public.WorkOrder.assignedAt</code>.
+     */
+    public final TableField<WorkorderRecord, OffsetDateTime> ASSIGNEDAT = createField(DSL.name("assignedAt"), SQLDataType.TIMESTAMPWITHTIMEZONE(6), this, "");
+
+    /**
+     * The column <code>public.WorkOrder.assignedByUserId</code>.
+     */
+    public final TableField<WorkorderRecord, String> ASSIGNEDBYUSERID = createField(DSL.name("assignedByUserId"), SQLDataType.VARCHAR(255), this, "");
+
+    /**
+     * The column <code>public.WorkOrder.assigneeName</code>.
+     */
+    public final TableField<WorkorderRecord, String> ASSIGNEENAME = createField(DSL.name("assigneeName"), SQLDataType.VARCHAR(255), this, "");
+
+    /**
+     * The column <code>public.WorkOrder.assigneeProviderId</code>.
+     */
+    public final TableField<WorkorderRecord, UUID> ASSIGNEEPROVIDERID = createField(DSL.name("assigneeProviderId"), SQLDataType.UUID, this, "");
+
+    /**
+     * The column <code>public.WorkOrder.assigneeUserId</code>.
+     */
+    public final TableField<WorkorderRecord, String> ASSIGNEEUSERID = createField(DSL.name("assigneeUserId"), SQLDataType.VARCHAR(255), this, "");
+
     private Workorder(Name alias, Table<WorkorderRecord> aliased) {
         this(alias, aliased, (Field<?>[]) null, null);
     }
@@ -215,7 +241,7 @@ public class Workorder extends TableImpl<WorkorderRecord> {
 
     @Override
     public List<Index> getIndexes() {
-        return Arrays.asList(Indexes.WORKORDER_ESTATEID_CREATEDAT_ID_IDX, Indexes.WORKORDER_ESTATEID_REFERENCE_KEY, Indexes.WORKORDER_ESTATEID_SOURCEREPORTID_IDX, Indexes.WORKORDER_ID_ESTATEID_KEY, Indexes.WORKORDER_SOURCEINSPECTIONID_KEY);
+        return Arrays.asList(Indexes.WORKORDER_ESTATEID_ASSIGNEEUSERID_IDX, Indexes.WORKORDER_ESTATEID_CREATEDAT_ID_IDX, Indexes.WORKORDER_ESTATEID_REFERENCE_KEY, Indexes.WORKORDER_ESTATEID_SOURCEREPORTID_IDX, Indexes.WORKORDER_ID_ESTATEID_KEY, Indexes.WORKORDER_SOURCEINSPECTIONID_KEY);
     }
 
     @Override
@@ -238,6 +264,13 @@ public class Workorder extends TableImpl<WorkorderRecord> {
             _estate = new EstatePath(this, Keys.WORKORDER__WORKORDER_ESTATEID_FKEY, null);
 
         return _estate;
+    }
+
+    @Override
+    public List<Check<WorkorderRecord>> getChecks() {
+        return Arrays.asList(
+            Internal.createCheck(this, DSL.name("WorkOrder_assignee_check"), "(((NOT ((\"assigneeUserId\" IS NOT NULL) AND (\"assigneeProviderId\" IS NOT NULL))) AND (((\"assigneeUserId\" IS NOT NULL) OR (\"assigneeProviderId\" IS NOT NULL)) = (\"assigneeName\" IS NOT NULL)) AND (((\"assigneeUserId\" IS NOT NULL) OR (\"assigneeProviderId\" IS NOT NULL)) = (\"assignedAt\" IS NOT NULL))))", true)
+        );
     }
 
     @Override

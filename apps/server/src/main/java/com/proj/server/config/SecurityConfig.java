@@ -105,6 +105,7 @@ public class SecurityConfig {
                                 "/estates/{estateId}/work-orders/{workOrderId}/completion-revisions",
                                 "/estates/{estateId}/work-orders/{workOrderId}/dispatch",
                                 "/estates/{estateId}/contractors",
+                                "/estates/{estateId}/work-orders/assignees",
                                 "/estates/{estateId}/assets/{assetId}/work-order-completions",
                                 "/estates/{estateId}/work-order-assets",
                                 "/estates/{estateId}/inspection-assets",
@@ -196,7 +197,8 @@ public class SecurityConfig {
                                 "/estates/{estateId}/reports/{reportId}/work-order",
                                 "/estates/{estateId}/reports/{reportId}/dismiss",
                                 "/estates/{estateId}/work-orders/{workOrderId}/dispatch",
-                                "/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry")
+                                "/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry",
+                                "/estates/{estateId}/contractors")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.PATCH,
@@ -228,7 +230,9 @@ public class SecurityConfig {
                                 "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}/role",
                                 "/estates/{estateId}/flatline-policies/{metric}",
-                                "/estates/{estateId}/contractors/{equipmentType}")
+                                "/estates/{estateId}/contractors/{contractorId}",
+                                "/estates/{estateId}/contractors/defaults/{equipmentType}",
+                                "/estates/{estateId}/work-orders/{workOrderId}/assignee")
                         .authenticated()
                         .requestMatchers(
                                 HttpMethod.DELETE,
@@ -236,7 +240,9 @@ public class SecurityConfig {
                                 "/estates/{estateId}/roles/{roleId}",
                                 "/estates/{estateId}/members/{userId}",
                                 "/estates/{estateId}/council-invitations/{invitationId}",
-                                "/estates/{estateId}/contractors/{equipmentType}")
+                                "/estates/{estateId}/contractors/{contractorId}",
+                                "/estates/{estateId}/contractors/defaults/{equipmentType}",
+                                "/estates/{estateId}/work-orders/{workOrderId}/assignee")
                         .authenticated()
                         .anyRequest()
                         .denyAll())

@@ -18,6 +18,9 @@ export function NotificationDispatch({
     return null;
   }
   const { estateId, assetId, assetName, inspectionResultId } = notification;
+  if (!(assetId && assetName)) {
+    return null;
+  }
   if (notification.type === "CHECK_FAILED" && inspectionResultId) {
     return (
       <div className="px-4 pb-4">

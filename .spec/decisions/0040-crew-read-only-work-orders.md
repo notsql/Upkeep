@@ -1,5 +1,7 @@
 # 0040 — Crew have read-only work-order access
 
+> **Superseded in part** by [0054 - Work order assignment](0054-work-order-assignment.md).
+
 **Status:** accepted, 2026-10-26
 
 The user revised Crew work-order authority to read-only. This supersedes the

@@ -533,6 +533,71 @@ class WorkOrderProgressIntegrationTests {
         return JsonPath.read(response, "$.id");
     }
 
+    // --- Assignment (work-order-assignment.md) -----------------------------------------------------------------
+
+    @Test
+    void theCrewMemberGivenAJobMayStartAndCompleteItUntilItIsTakenAway() throws Exception {
+        var data = new DeviceTestData(db).estateWithAsset(owner);
+        member(data[0], "crew-priya", "CREW");
+        member(data[0], "crew-sam", "CREW");
+        String id = create(data, false);
+
+        assign(data, id, "crew-priya", 0, "crew-priya").andExpect(status().isForbidden());
+        assign(data, id, owner, 0, "crew-priya")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ASSIGNED"))
+                .andExpect(jsonPath("$.version").value(1))
+                .andExpect(jsonPath("$.assignee.kind").value("MEMBER"))
+                .andExpect(jsonPath("$.assignee.id").value("crew-priya"));
+        assign(data, id, owner, 1, "crew-priya").andExpect(jsonPath("$.version").value(1));
+        mvc.perform(get(base(data)).param("assignedTo", "me").with(jwt().jwt(t -> t.subject("crew-priya"))))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].canProgress").value(true));
+        progress(data, id, "crew-sam", "IN_PROGRESS", 1).andExpect(status().isForbidden());
+        progress(data, id, "crew-priya", "IN_PROGRESS", 1).andExpect(status().isOk());
+        assertEquals(
+                1,
+                db.fetchCount(
+                        org.jooq.impl.DSL.table("\"Notification\""),
+                        org.jooq.impl.DSL.field("\"recipientUserId\"").eq("crew-priya")));
+
+        assign(data, id, owner, 2, "crew-sam")
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.version").value(3));
+        completion(data, id, "crew-priya", 3, "\"partsCost\":\"0\"").andExpect(status().isForbidden());
+        completion(data, id, "crew-sam", 3, "\"partsCost\":\"0\"").andExpect(status().isCreated());
+        assign(data, id, owner, 4, "crew-priya").andExpect(status().isConflict());
+        mvc.perform(get(base(data) + "/" + id + "/status-history").with(jwt().jwt(t -> t.subject(owner))))
+                .andExpect(jsonPath("$[1].kind").value("ASSIGNED"))
+                .andExpect(jsonPath("$[1].fromStatus").value("OPEN"))
+                .andExpect(jsonPath("$[1].toStatus").value("ASSIGNED"));
+    }
+
+    @Test
+    void unassigningAnAssignedOrderReopensItAndAResidentCannotBeGivenAJob() throws Exception {
+        var data = new DeviceTestData(db).estateWithAsset(owner);
+        member(data[0], "crew-priya", "CREW");
+        member(data[0], "resident", "RESIDENT");
+        String id = create(data, false);
+
+        assign(data, id, owner, 0, "resident").andExpect(status().is(422));
+        assign(data, id, owner, 0, "crew-priya").andExpect(status().isOk());
+        mvc.perform(delete(base(data) + "/" + id + "/assignee")
+                        .param("version", "1")
+                        .with(jwt().jwt(t -> t.subject(owner))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("OPEN"))
+                .andExpect(jsonPath("$.assignee").isEmpty())
+                .andExpect(jsonPath("$.version").value(2));
+    }
+
+    private ResultActions assign(UUID[] data, String id, String user, int version, String assignee) throws Exception {
+        return mvc.perform(put(base(data) + "/" + id + "/assignee")
+                .with(jwt().jwt(t -> t.subject(user)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"userId\":\"" + assignee + "\",\"version\":" + version + "}"));
+    }
+
     private ResultActions progress(UUID[] data, String id, String user, String target, int version) throws Exception {
         return mvc.perform(patch(base(data) + "/" + id + "/status")
                 .with(jwt().jwt(t -> t.subject(user)))

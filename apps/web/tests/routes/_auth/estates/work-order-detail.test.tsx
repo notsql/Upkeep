@@ -48,6 +48,7 @@ const state = vi.hoisted(() => ({
     version: number;
   }[],
   refetchHistory: vi.fn(),
+  canProgress: undefined as boolean | undefined,
 }));
 vi.mock("@/lib/work-orders", () => ({
   useWorkOrderAccess: () => state.access,
@@ -73,6 +74,10 @@ vi.mock("@/lib/work-orders", () => ({
       createdByUserId: "manager",
       createdByName: state.creatorName,
       sourceReportConfirmedDuplicateCount: state.duplicates,
+      assignee: null,
+      canProgress:
+        state.canProgress ??
+        (state.access.canUpdate && state.status !== "CLOSED"),
     },
   }),
   useWorkOrderStatusHistory: () => ({
@@ -163,7 +168,7 @@ it("lets Managers explicitly start unassigned work using the observed version", 
   renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  fireEvent.click(screen.getByRole("button", { name: "Start work" }));
+  fireEvent.click(screen.getByRole("button", { name: "Start job" }));
   await waitFor(() =>
     expect(state.changeStatus).toHaveBeenCalledWith({
       targetStatus: "IN_PROGRESS",
@@ -199,23 +204,31 @@ it("refreshes stale status history and clears the conflict warning after recover
     view.rerender(<WorkOrderDetailPage estateId="oak" workOrderId="order" />);
     return Promise.resolve({});
   });
-  fireEvent.click(screen.getByRole("button", { name: "Start work" }));
+  fireEvent.click(screen.getByRole("button", { name: "Start job" }));
   fireEvent.click(
     await screen.findByRole("button", { name: "Refresh work order" })
   );
   await screen.findByText("OPEN → IN PROGRESS");
-  screen.getByRole("button", { name: "Complete work order" });
+  screen.getByRole("button", { name: "Mark as done" });
   await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
 });
-it("keeps Crew read-only even when an order is in progress", () => {
+it("lets the Crew member given the job start it", () => {
+  state.canProgress = true;
+  state.status = "ASSIGNED";
+  renderWithProviders(
+    <WorkOrderDetailPage estateId="oak" workOrderId="order" />
+  );
+  state.canProgress = undefined;
+  screen.getByRole("button", { name: "Start job" });
+  expect(screen.queryByRole("button", { name: "Edit outcome" })).toBeNull();
+});
+it("keeps Crew read-only on an in-progress order that is not theirs", () => {
   state.status = "IN_PROGRESS";
   renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  expect(screen.queryByRole("button", { name: "Start work" })).toBeNull();
-  expect(
-    screen.queryByRole("button", { name: "Complete work order" })
-  ).toBeNull();
+  expect(screen.queryByRole("button", { name: "Start job" })).toBeNull();
+  expect(screen.queryByRole("button", { name: "Mark as done" })).toBeNull();
 });
 it("records explicit zero costs and downtime while retaining unknown fields", async () => {
   state.access.canUpdate = true;
@@ -223,7 +236,7 @@ it("records explicit zero costs and downtime while retaining unknown fields", as
   renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  fireEvent.click(screen.getByRole("button", { name: "Complete work order" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
   const dialog = within(
     await screen.findByRole("dialog", { name: "Complete work order" })
   );
@@ -258,7 +271,7 @@ it("keeps completion input after a save failure", async () => {
   renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  fireEvent.click(screen.getByRole("button", { name: "Complete work order" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
   const dialog = within(
     await screen.findByRole("dialog", { name: "Complete work order" })
   );
@@ -361,7 +374,7 @@ it("keeps the reviewed version during background refresh and requires explicit r
   const view = renderWithProviders(
     <WorkOrderDetailPage estateId="oak" workOrderId="order" />
   );
-  fireEvent.click(screen.getByRole("button", { name: "Complete work order" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
   const dialog = within(
     await screen.findByRole("dialog", { name: "Complete work order" })
   );
@@ -635,7 +648,7 @@ it("keeps a completion dialog in completion mode when refresh reveals a saved ou
     view.rerender(<WorkOrderDetailPage estateId="oak" workOrderId="order" />);
     return Promise.resolve({});
   });
-  fireEvent.click(screen.getByRole("button", { name: "Complete work order" }));
+  fireEvent.click(screen.getByRole("button", { name: "Mark as done" }));
   const dialog = within(
     await screen.findByRole("dialog", { name: "Complete work order" })
   );
