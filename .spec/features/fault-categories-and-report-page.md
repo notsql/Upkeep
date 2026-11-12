@@ -175,6 +175,8 @@ The dataset lives in `ml-research/data/report-classifier/` (renamed from
   (`fault-category-tfidf-v1`, notebook 08, one ONNX file with a string
   input, no tokenizer in Java), for time. The MiniLM below is still trained
   and may replace it later.
+  The MiniLM results below are kept for comparison; its files stay in
+  `ml-research/artifacts/fault-category/` and are not in `apps/server`.
 - Same recipe as the leak model: `all-MiniLM-L6-v2`, fine-tuned with a
   multi-class head, square-root class weights, one temperature for
   calibration, int8 ONNX export.
@@ -186,6 +188,49 @@ The dataset lives in `ml-research/data/report-classifier/` (renamed from
 - Ships as `routing/fault-category-model.onnx` + tokenizer, version
   `fault-category-minilm-v1`, replacing the leak model. New parity fixture
   and model note.
+
+### Cross-validation result (2026-11-12, notebook 06)
+
+Five folds by sentence, stratified by category, 369 sentences; mean of seeds 42, 7 and 123
+at threshold 0.80. Six settings tried (epochs 5/8/12, learning rate 5e-5/1e-4/2e-4, sqrt
+class weights); the best three repeated across seeds. No setting met every precision
+target, so the one with the highest lowest-category precision was chosen: **epochs 5,
+lr 1e-4, sqrt weights, temperature 0.5758**.
+
+| Category | Precision | Recall | F1 | Meets 0.95 |
+| --- | --- | --- | --- | --- |
+| BROKEN_LIGHT | 1.000 | 1.000 | 1.000 | yes |
+| DRAINAGE | 0.923 | 0.833 | 0.876 | **no** |
+| GRAFFITI | 1.000 | 1.000 | 1.000 | yes |
+| ILLEGAL_DUMPING | 0.851 | 0.812 | 0.829 | **no** |
+| NOISE | 0.993 | 0.949 | 0.970 | yes |
+| OTHER | 0.961 | 0.712 | 0.817 | n/a (never routed) |
+| PARKING | 0.937 | 0.879 | 0.905 | **no** |
+| ROAD_DAMAGE | 0.981 | 0.975 | 0.978 | yes |
+| RUBBISH | 0.964 | 0.849 | 0.903 | yes |
+| WATER_LEAK | 0.978 | 0.943 | 0.960 | yes |
+
+- Macro F1 0.924 (target 0.85: met). TF-IDF + logistic regression reference: macro F1
+  0.887.
+- 93% of reports get a category at 0.80; 97.4% of those are right. ECE 0.016.
+- **`DRAINAGE`, `ILLEGAL_DUMPING` and `PARKING` miss precision 0.95 and are never
+  automatic in `RoutingDecision`.** Their errors are mostly overlapping dataset labels
+  (furniture dumping labelled `garbage`, leaks at storm drains, engine noise in car parks).
+  Tuning stopped there rather than fit to those few sentences.
+
+### Final model (2026-11-12, notebook 07)
+
+- `fault-category-minilm-v1`, trained on all 369 sentences with the settings above.
+- Shipped: `routing/fault-category-model.onnx` (int8, 23.6 MB),
+  `routing/fault-category-tokenizer.json` (0.47 MB), and
+  `test/resources/routing/fault-category-parity-fixture.json` (25 cases).
+- Export checks: PyTorch vs ONNX fp32 max difference 9e-7; fp32 vs int8 max 0.25 on one
+  probability; int8 changed 1 of 369 routing decisions and no top category.
+- Estate reports the model has never seen: lift door stuck -> `OTHER` 0.94, car-park gate
+  broken -> `OTHER` 0.95, **basement pump grinding noise -> `WATER_LEAK` 0.99** (would be
+  sent to a plumber automatically). Empty and punctuation-only reports come out below
+  0.35 and go to review.
+- Model note: `ml-research/artifacts/fault-category/README.md` (git-ignored).
 
 ## Edge cases
 
