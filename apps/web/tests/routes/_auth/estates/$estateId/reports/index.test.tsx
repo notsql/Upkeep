@@ -1463,7 +1463,10 @@ it("shows the routing label in the table, or a dash without routing", async () =
   const routed = within(table)
     .getByRole("link", { name: report.title })
     .closest("tr") as HTMLElement;
-  within(routed).getByText("Needs review");
+  // Needs review asks for a manager's attention, so it is amber.
+  expect(within(routed).getByText("Needs review").dataset.variant).toBe(
+    "warning"
+  );
   const unrouted = within(table)
     .getByRole("link", { name: "Broken light" })
     .closest("tr") as HTMLElement;

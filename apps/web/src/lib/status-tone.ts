@@ -77,6 +77,15 @@ export const reportStatusLabel = {
   SUBMITTED: "Submitted",
 } as const satisfies Record<keyof typeof reportStatusTone, string>;
 
+/** A fault report's routing: what it needs next. Needs review asks for a manager. */
+export type RoutingState = Schemas["ReportRoutingResponse"]["state"];
+export const routingStateTone = {
+  CLASSIFYING: "info",
+  NEEDS_REVIEW: "warning",
+  WORK_ORDER: "success",
+  DISMISSED: "muted",
+} as const satisfies Record<RoutingState, StatusTone>;
+
 /** `UNASSESSED` also stands in for a null condition. */
 export type AssetCondition =
   | Schemas["AnomalyAlertDetails"]["condition"]

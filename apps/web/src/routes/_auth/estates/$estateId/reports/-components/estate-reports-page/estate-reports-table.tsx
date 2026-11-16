@@ -13,6 +13,7 @@ import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import { formatDateTime } from "@/lib/format";
 import { categoryLabel, routingStateLabel } from "@/lib/report-routing";
+import { badgeVariantFor, routingStateTone } from "@/lib/status-tone";
 
 export type EstateReport =
   components["schemas"]["EstateIssueReportPageResponse"]["items"][number];
@@ -78,7 +79,11 @@ export function EstateReportsTable({
               </TableCell>
               <TableCell>
                 {report.routing ? (
-                  <Badge variant="outline">
+                  <Badge
+                    variant={badgeVariantFor(
+                      routingStateTone[report.routing.state]
+                    )}
+                  >
                     {routingStateLabel(report.routing.state)}
                   </Badge>
                 ) : (
