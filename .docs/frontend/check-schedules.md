@@ -63,14 +63,16 @@ Turn on/off checks):
   inactive, so its check schedules can't be changed." and every row action
   disabled;
 - a `Table` with no inline form controls: Equipment type (row header), Assets
-  (`activeAssetCount`), Regular checks (a `warning` "On" `Badge`, or "Off"),
+  (`activeAssetCount`), Regular checks (a `success` (green) "On" `Badge`, or "Off"),
   How often (`IntervalBadge`: "Every 3 months", or plain "No schedule"), Last
   changed ("Never changed" when neither `lastChange` nor `lastIntervalChange`
   is set, else "<name or Unknown user> · <local date-time>" of the more recent
   one) and right-aligned actions: **Change how often** (aria-label "Change how
   often <Label> is checked") and **Turn on checks** / **Turn off checks**
   (aria-label "Turn on regular checks for <Label>" / "Turn off regular checks
-  for <Label>"). Rows are sorted by label on the client.
+  for <Label>"); Turn on checks is an `outline` button and Turn off checks a
+  quiet `ghost` one, so the two read differently. Rows are sorted by label on
+  the client.
 - summary cards (`category-summary-cards.tsx`): **Regular checks on**, **No
   schedule yet** (with an outline sm "Show these" `Button` linking to
   `/inspections/schedules/not-set`) and **Schedule set**; see

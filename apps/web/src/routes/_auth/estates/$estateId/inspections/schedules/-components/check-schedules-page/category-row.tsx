@@ -65,7 +65,7 @@ export function CategoryRow({
       </TableCell>
       <TableCell>
         {category.failsSilently ? (
-          <Badge variant="warning">On</Badge>
+          <Badge variant="success">On</Badge>
         ) : (
           <span className="text-muted-foreground">Off</span>
         )}
@@ -96,7 +96,8 @@ export function CategoryRow({
             disabled={disabled}
             onClick={toggleFlag}
             size="sm"
-            variant="ghost"
+            // Turning checks on is the action worth noticing; turning off stays quiet.
+            variant={category.failsSilently ? "ghost" : "outline"}
           >
             {category.failsSilently ? "Turn off checks" : "Turn on checks"}
           </Button>
