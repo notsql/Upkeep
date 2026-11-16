@@ -18,7 +18,9 @@ API: [../api/report-routing.md](../api/report-routing.md).
 The file also exports labels: `EQUIPMENT_TYPES` (Pump, Lift, Gate,
 Common-area light, Plumbing), `ROUTING_STATES` (Classifying, Needs review, Work order
 created, Dismissed), `PRIORITIES`, `workOrderStatusLabel` and
-`dispatchStatusLabel` (Sending, Sent <time>, Failed to send).
+`dispatchStatusLabel` (Sending, Sent <time>, Failed to send). The next-step card shows the
+email status as a `Badge` toned by `dispatchStatusTone` (Sending info, Sent success, Failed to
+send destructive) and the work order's status as a `WorkOrderStatusBadge`.
 
 `apps/web/src/lib/contractors.ts` holds `useContractors` (key
 `[userId, "estate-contractors", estateId]`, enabled for `canCreateWorkOrders`),

@@ -249,6 +249,9 @@ so a new contract enum value breaks `check-types`:
 | --- | --- |
 | `reportUrgencyTone` | LOW neutral, MEDIUM info, HIGH warning, URGENT danger (`isSafety` stays destructive) |
 | `workOrderStatusTone` / `workOrderStatusLabel` | OPEN neutral "Open", ASSIGNED info "Assigned", IN_PROGRESS warning "In progress", CLOSED success "Closed" (reports and work orders) |
+| `reportStatusTone` / `reportStatusLabel` | SUBMITTED info "Submitted" (fault reports) |
+| `routingStateTone` | CLASSIFYING info, NEEDS_REVIEW warning, WORK_ORDER success, DISMISSED muted |
+| `dispatchStatusTone` | PENDING info (Sending), SENT success, FAILED danger (Failed to send) |
 | `assetConditionTone` | GOOD success, NEEDS_ATTENTION warning, FAULTY danger, UNASSESSED/null neutral |
 | `deviceStatusTone` | ONLINE success, OFFLINE danger, AWAITING_FIRST_READING info, DEACTIVATED muted |
 | `lifecycleTone` | ACTIVE success, RETIRED muted, INACTIVE muted |

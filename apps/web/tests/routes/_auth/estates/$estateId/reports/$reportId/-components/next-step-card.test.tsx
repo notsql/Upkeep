@@ -373,9 +373,9 @@ it("shows the work order and lets a manager retry one that failed to send", asyn
   expect(link.getAttribute("href")).toBe(
     `/estates/${estateId}/work-orders/${workOrderId}`
   );
-  card.getByText("· Assigned", { exact: false });
+  expect(card.getByText("Assigned").dataset.variant).toBe("info");
   card.getByText("Acme Lifts (faults@acmelifts.example)");
-  card.getByText("Failed to send");
+  expect(card.getByText("Failed to send").dataset.variant).toBe("destructive");
   expect(card.queryByRole("button", { name: SEND })).toBeNull();
   fireEvent.click(card.getByRole("button", { name: RETRY }));
 
@@ -405,7 +405,9 @@ it("says when the system sent the work order on its own", async () => {
   const card = await routingCard();
 
   card.getByText("Sent automatically");
-  card.getByText(`Sent ${formatDateTime(timestamp)}`);
+  expect(
+    card.getByText(`Sent ${formatDateTime(timestamp)}`).dataset.variant
+  ).toBe("success");
 });
 
 it("shows crew the routing and the contractor but no decisions", async () => {

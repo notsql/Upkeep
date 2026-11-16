@@ -77,6 +77,14 @@ export const reportStatusLabel = {
   SUBMITTED: "Submitted",
 } as const satisfies Record<keyof typeof reportStatusTone, string>;
 
+/** A contractor email: still going out, sent, or given up after retries. */
+export type DispatchStatus = Schemas["WorkOrderDispatchResponse"]["status"];
+export const dispatchStatusTone = {
+  PENDING: "info",
+  SENT: "success",
+  FAILED: "danger",
+} as const satisfies Record<DispatchStatus, StatusTone>;
+
 /** A fault report's routing: what it needs next. Needs review asks for a manager. */
 export type RoutingState = Schemas["ReportRoutingResponse"]["state"];
 export const routingStateTone = {
