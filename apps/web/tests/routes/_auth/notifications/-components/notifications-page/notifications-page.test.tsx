@@ -338,6 +338,15 @@ it("offers the send step on service-due rows but not anomaly alerts", () => {
   expect(within(alertRow).queryByText(PLEASE_INSPECT)).toBeNull();
 });
 
+it("highlights the whole card on hover, down to its send step", () => {
+  renderWithProviders(<NotificationsPage />);
+  const [, dueRow] = list().getAllByRole("listitem");
+  // The send step sits below the link, so the hover tint belongs on the card.
+  expect(dueRow.className).toContain("hover:bg-accent/60");
+  const link = within(dueRow).getByRole("link", { name: SERVICE_LINK });
+  expect(link.className).not.toContain("hover:bg-accent");
+});
+
 it("loads the next notification page on mobile as the list scrolls", async () => {
   mockMobileViewport();
   apiGet.mockImplementation(

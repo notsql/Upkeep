@@ -91,7 +91,7 @@ function RowLink({
   children: ReactNode;
 }) {
   const className =
-    "hover:bg-accent/60 focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2";
+    "focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2";
   const { estateId, assetId, workOrderId } = notification;
   if (notification.type === "WORK_ORDER_ASSIGNED" && workOrderId) {
     return (
@@ -151,7 +151,9 @@ export function NotificationItem({
   return (
     <li
       className={cn(
-        "rounded-[var(--radius)] border transition-colors",
+        // Hover tints the whole card: the send step and alert actions sit
+        // below the link but belong to the same notification.
+        "hover:bg-accent/60 rounded-[var(--radius)] border transition-colors",
         read ? "bg-background" : "border-primary/40 bg-accent/40"
       )}
     >

@@ -19,7 +19,7 @@ users before the theme toggle. Shown only when `useAppAccess()` lists an estate 
 - A `ul` named "Notifications" of `notification-item.tsx` rows: type `Badge` ("Anomaly",
   "Service due", "Repair predicted"; variant from `notificationTypeTone`: destructive, info, warning), "Unread" text for unread rows, relative time in a `time`
   element (absolute time on hover), the summary, then "Asset name (reference) · Estate name".
-  Each row is a `Link` to `/estates/$estateId/assets/$assetId`; opening an unread row marks it read.
+  Each row is a `Link` to `/estates/$estateId/assets/$assetId`; opening an unread row marks it read. The hover tint (`hover:bg-accent/60`) is on the whole `li`, not the link, so it covers the send step and alert actions below it.
   Date-driven rows add a basis line under the summary:
   - Service due: "Based on the service schedule · Every 6 months · Manufacturer interval for the
     category" (or "Set on this asset" for an override).
