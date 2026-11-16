@@ -77,13 +77,15 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
               <p className="text-muted-foreground break-all">
                 By {event.actorUserId}
               </p>
-              <p>
-                Previous out-of-use date:{" "}
-                {event.previousRetiredOn
-                  ? formatDate(event.previousRetiredOn)
-                  : "Not recorded"}{" "}
-                — {event.previousRetirementReason ?? "Not recorded"}
-              </p>
+              {event.previousRetiredOn || event.previousRetirementReason ? (
+                <p>
+                  Previous out-of-use date:{" "}
+                  {event.previousRetiredOn
+                    ? formatDate(event.previousRetiredOn)
+                    : "Not recorded"}{" "}
+                  — {event.previousRetirementReason ?? "Not recorded"}
+                </p>
+              ) : null}
               <p>
                 Result:{" "}
                 {event.deactivatedAt

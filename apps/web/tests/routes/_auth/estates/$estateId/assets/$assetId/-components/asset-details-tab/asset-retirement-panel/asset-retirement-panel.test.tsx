@@ -121,3 +121,29 @@ it("shows the out-of-use date formatted, not as a raw value", async () => {
   screen.getByText(formatDate("2025-01-01"));
   expect(screen.queryByText("2025-01-01")).toBeNull();
 });
+
+it("leaves out the previous out-of-use line when there was nothing before", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [
+      {
+        id: "event-1",
+        action: "RETIRED",
+        occurredAt: "2026-11-12T00:27:21Z",
+        actorUserId: "owner",
+        previousDeactivatedAt: null,
+        previousRetiredOn: null,
+        previousRetirementReason: null,
+        deactivatedAt: "2026-11-12T00:27:21Z",
+        retiredOn: "2026-11-12",
+        retirementReason: "retired",
+        lifecycleVersion: 1,
+      },
+    ],
+    response: new Response(),
+  } as never);
+  renderWithProviders(<AssetRetirementPanel asset={asset} />);
+  await screen.findByText("Result:", { exact: false });
+  expect(
+    screen.queryByText("Previous out-of-use date", { exact: false })
+  ).toBeNull();
+});
