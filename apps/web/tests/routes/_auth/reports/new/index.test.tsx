@@ -67,8 +67,22 @@ function createBody(): Record<string, unknown> {
   return call[1].body;
 }
 
+const { createObjectURL, revokeObjectURL } = vi.hoisted(() => ({
+  createObjectURL: vi.fn(() => "blob:photo"),
+  revokeObjectURL: vi.fn(),
+}));
+
 beforeEach(() => {
   vi.unstubAllGlobals();
+  createObjectURL.mockClear();
+  revokeObjectURL.mockClear();
+  vi.stubGlobal(
+    "URL",
+    class extends URL {
+      static createObjectURL = createObjectURL;
+      static revokeObjectURL = revokeObjectURL;
+    }
+  );
   vi.spyOn(Route, "useSearch").mockReturnValue({});
   auth.role = "user";
   get.mockReset();
@@ -439,6 +453,22 @@ it("lets a resident remove a selected photo before submitting", async () => {
   await screen.findByText("fault.png");
   fireEvent.click(screen.getByRole("button", { name: REMOVE_FAULT_IMAGE }));
   expect(screen.queryByText("fault.png")).toBeNull();
+});
+
+it("shows a thumbnail of each selected photo before submitting", async () => {
+  renderWithProviders(<Page />);
+  await screen.findByRole("heading", { name: REPORT_A_FAULT });
+  const photo = new File(["photo"], "fault.png", { type: "image/png" });
+  fireEvent.change(screen.getByLabelText(IMAGES), {
+    target: { files: [photo] },
+  });
+  const thumbnail = await screen.findByRole<HTMLImageElement>("img", {
+    name: "Selected photo: fault.png",
+  });
+  expect(thumbnail.src).toBe("blob:photo");
+  expect(createObjectURL).toHaveBeenCalledWith(photo);
+  fireEvent.click(screen.getByRole("button", { name: REMOVE_FAULT_IMAGE }));
+  expect(revokeObjectURL).toHaveBeenCalledWith("blob:photo");
 });
 
 it("offers one image picker for the gallery or the device's camera chooser", async () => {
