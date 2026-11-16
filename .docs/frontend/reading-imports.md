@@ -43,7 +43,7 @@ the batch page's "Batch metadata" and "Row results" sections likewise.
 Named, focusable overflow sections contain desktop tables; useMobile selects
 shadcn `Item size="sm"` lists split by `ItemSeparator` (no cards) below 768px
 from the same query state: "Import history" items are whole-item links (title =
-source label; muted "uploaded date · N readings imported"; trailing status
+source label; muted "uploaded date · N readings imported" ("1 reading" in the singular; the Pagination summaries likewise read "1 batch" / "1 record"); trailing status
 badge), "Import results" items show "Record N", a muted "Line N · reason ·
 reason" line and a trailing outcome badge (issue codes are table-only). Resizing does not reset paging,
 filters or mapping. Source labels, filenames and issues wrap.

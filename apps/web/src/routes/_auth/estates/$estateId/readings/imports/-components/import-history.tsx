@@ -53,7 +53,7 @@ export function ImportHistory({
                 </ItemTitle>
                 <ItemDescription>
                   {formatDateTime(batch.createdAt)} · {batch.importedRows}{" "}
-                  readings imported
+                  {batch.importedRows === 1 ? "reading" : "readings"} imported
                 </ItemDescription>
               </ItemContent>
               <ItemActions>

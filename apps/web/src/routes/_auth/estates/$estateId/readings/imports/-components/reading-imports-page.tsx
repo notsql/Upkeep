@@ -348,7 +348,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
             label="Import history pages"
             onNext={nextPage}
             onPrevious={previousPage}
-            summary={`${history.data.totalItems} batches`}
+            summary={`${history.data.totalItems} ${history.data.totalItems === 1 ? "batch" : "batches"}`}
           />
         ) : null}
       </PageSection>

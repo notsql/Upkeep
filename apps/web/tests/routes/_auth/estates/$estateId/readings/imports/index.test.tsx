@@ -1,4 +1,4 @@
-import { act, fireEvent } from "@testing-library/react";
+import { act, cleanup, fireEvent } from "@testing-library/react";
 import {
   chooseOption,
   renderWithProviders,
@@ -487,7 +487,26 @@ describe("import results and rollback", () => {
       name: new RegExp(SOURCE, "u"),
     });
     within(item).getByText("Imported");
-    within(item).getByText("1 readings imported", { exact: false });
+    within(item).getByText("1 reading imported", { exact: false });
+  });
+
+  it("counts one batch and one record in the singular", async () => {
+    await showUpload();
+    await screen.findByText("1 batch");
+    expect(screen.queryByText("1 batches")).toBeNull();
+    cleanup();
+    const original = get.getMockImplementation();
+    get.mockImplementation((path: string, ...args: unknown[]) =>
+      path.endsWith("/rows")
+        ? Promise.resolve({
+            data: { ...results, totalItems: 1 },
+            response: new Response(),
+          })
+        : original?.(path, ...args)
+    );
+    await showBatch();
+    await screen.findByText("1 record");
+    expect(screen.queryByText("1 records")).toBeNull();
   });
 
   it("preserves record numbers, outcomes and reasons in the table", async () => {

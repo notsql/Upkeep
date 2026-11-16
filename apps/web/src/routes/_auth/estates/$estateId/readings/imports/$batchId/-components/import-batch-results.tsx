@@ -92,7 +92,7 @@ export function ImportBatchResults({
           label="Import result pages"
           onNext={onNext}
           onPrevious={onPrevious}
-          summary={`${rows.data.totalItems} records`}
+          summary={`${rows.data.totalItems} ${rows.data.totalItems === 1 ? "record" : "records"}`}
         />
       ) : null}
     </PageSection>
