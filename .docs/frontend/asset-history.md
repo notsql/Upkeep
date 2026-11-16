@@ -35,8 +35,12 @@ The timeline uses shadcn Badge/Button and a divided ordered list named Recorded 
 history (rows, not cards); the date filter is a plain form, not a card. Every row has a type label, heading and time element. Dates retain date-only
 precision; instants display SGT. Documents explicitly label Upload date. Unknown
 costs/provider/downtime display Not recorded; zero stays zero. Completion corrections
-show Edited. Conditions show stored condition/notes and provenance, including
-Anomaly detection. Source detail links require both their server flag and current
+show Edited. Conditions show the condition as a `Badge` toned by `assetConditionTone`
+(Good success, Needs attention warning, Faulty destructive), the notes, and provenance,
+including Anomaly detection; anomaly notes go through `formatAssessmentNotes`, so their
+UTC timestamps read as local dates and times, as on the Condition card. Entries stay in
+occurrence order (spec asset-history-timeline.md), so same-day entries tie-break by
+kind and ID. Source detail links require both their server flag and current
 independent capability. No inference, prediction comparison or polling runs.
 
 Load more uses the combined server cursor. A later-page error retains loaded entries

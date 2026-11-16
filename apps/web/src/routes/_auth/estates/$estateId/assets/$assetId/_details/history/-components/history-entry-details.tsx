@@ -1,7 +1,13 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
+import { conditionLabel } from "@/lib/assessments";
 import type { HistoryEntry } from "@/lib/asset-history";
 import { formatDate } from "@/lib/format";
+import {
+  assetConditionTone,
+  badgeVariantFor,
+  type StatusTone,
+} from "@/lib/status-tone";
 
 function Value({
   label,
@@ -39,13 +45,16 @@ export function HistoryEntryDetails({
       return (
         <div className="space-y-2">
           <p>
-            {(
-              {
-                GOOD: "Good",
-                NEEDS_ATTENTION: "Needs attention",
-                FAULTY: "Faulty",
-              } as Record<string, string>
-            )[details.condition] ?? details.condition}
+            <Badge
+              variant={badgeVariantFor(
+                (assetConditionTone as Record<string, StatusTone>)[
+                  details.condition
+                ]
+              )}
+            >
+              {(conditionLabel as Record<string, string>)[details.condition] ??
+                details.condition}
+            </Badge>
           </p>
           <Badge variant="secondary">{details.sourceLabel}</Badge>
         </div>

@@ -1,5 +1,6 @@
 import { fireEvent } from "@testing-library/react";
 import {
+  conditionEntry,
   historyAsset,
   historyPage,
   invoiceEntry,
@@ -12,6 +13,7 @@ import {
 } from "@tests/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
+import { formatAssessmentNotes } from "@/lib/format";
 import { AssetHistoryPage } from "@/routes/_auth/estates/$estateId/assets/$assetId/_details/history/-components/asset-history-page";
 
 const state = vi.hoisted(() => ({
@@ -291,4 +293,33 @@ describe("asset history", () => {
       screen.queryByRole("button", { name: "Open invoice report.pdf" })
     ).toBeNull();
   });
+});
+
+it("formats anomaly notes' timestamps and colours the condition result", async () => {
+  const notes =
+    "28 consecutive abnormal samples in device readings from 2026-11-11T22:10:02.681Z to 2026-11-11T22:10:31.681Z. Median score 0.69, maximum 0.84.";
+  vi.mocked(api.GET).mockResolvedValue({
+    data: {
+      ...historyPage,
+      items: [
+        {
+          ...conditionEntry,
+          summary: notes,
+          details: { ...conditionEntry.details, notes },
+        },
+      ],
+    },
+    response: new Response(),
+  } as never);
+  renderWithProviders(<AssetHistoryPage assetId="pump" estateId="estate" />);
+  const timeline = await screen.findByRole("list", {
+    name: "Recorded asset history",
+  });
+  within(timeline).getByText(
+    formatAssessmentNotes({ notes, recordedByUserId: "system:anomaly-model" })
+  );
+  expect(within(timeline).queryByText(notes)).toBeNull();
+  expect(within(timeline).getByText("Needs attention").dataset.variant).toBe(
+    "warning"
+  );
 });
