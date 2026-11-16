@@ -10,6 +10,12 @@ import {
 import { FormDialog } from "@/components/dialogs/form-dialog";
 import { useUploadDocumentForm } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/use-upload-document-form";
 
+/** The trigger shows these labels, never the codes. */
+const TYPE_ITEMS = [
+  { value: "INVOICE", label: "Invoice" },
+  { value: "SERVICE_REPORT", label: "Service report" },
+];
+
 /** The upload task, opened by the page's Create button. */
 export function UploadDocumentForm({
   estateId,
@@ -44,6 +50,7 @@ export function UploadDocumentForm({
         <Label htmlFor="document-type">Document type</Label>
         <Select
           disabled={upload.isPending}
+          items={TYPE_ITEMS}
           onValueChange={changeType}
           value={documentType}
         >
@@ -51,8 +58,11 @@ export function UploadDocumentForm({
             <SelectValue placeholder="Choose document type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="INVOICE">Invoice</SelectItem>
-            <SelectItem value="SERVICE_REPORT">Service report</SelectItem>
+            {TYPE_ITEMS.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
