@@ -96,15 +96,16 @@ export function CheckTable({
     );
   }
   return (
-    <Table>
+    // Fixed widths, so each location group's table lines up with the next.
+    <Table className="min-w-[56rem] table-fixed">
       <TableHeader>
         <TableRow>
-          <TableHead>Asset</TableHead>
-          <TableHead>Category</TableHead>
-          <TableHead>Due</TableHead>
-          <TableHead>Basis</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>
+          <TableHead className="w-[26%]">Asset</TableHead>
+          <TableHead className="w-[14%]">Category</TableHead>
+          <TableHead className="w-[12%]">Due</TableHead>
+          <TableHead className="w-[18%]">Basis</TableHead>
+          <TableHead className="w-[12%]">Status</TableHead>
+          <TableHead className="w-[18%]">
             <span className="sr-only">Actions</span>
           </TableHead>
         </TableRow>
@@ -112,7 +113,7 @@ export function CheckTable({
       <TableBody>
         {checks.map((check) => (
           <TableRow key={check.id}>
-            <TableCell>
+            <TableCell className="whitespace-normal">
               <Link
                 className="underline"
                 params={{ estateId, assetId: check.assetId }}
@@ -121,9 +122,11 @@ export function CheckTable({
                 {`${check.assetReference} · ${check.assetName}`}
               </Link>
             </TableCell>
-            <TableCell>{check.categoryLabel}</TableCell>
+            <TableCell className="whitespace-normal">
+              {check.categoryLabel}
+            </TableCell>
             <TableCell>{formatDate(check.dueOn)}</TableCell>
-            <TableCell>{basis(check)}</TableCell>
+            <TableCell className="whitespace-normal">{basis(check)}</TableCell>
             <TableCell>
               <StatusBadge check={check} />
             </TableCell>

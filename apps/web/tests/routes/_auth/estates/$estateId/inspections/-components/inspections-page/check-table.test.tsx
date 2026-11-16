@@ -95,6 +95,16 @@ describe("CheckTable", () => {
     expect(cells.queryByText(SEND_STEP)).toBeNull();
   });
 
+  it("fixes its column widths so tables in different location groups line up", () => {
+    renderWithProviders(
+      <CheckTable canRecord checks={[check({})]} estateId="estate" />
+    );
+    expect(screen.getByRole("table").className).toContain("table-fixed");
+    for (const header of screen.getAllByRole("columnheader")) {
+      expect(header.className).toMatch(/\bw-/u);
+    }
+  });
+
   describe("on a phone", () => {
     it("lists each check with the asset first, then category, due date and basis", () => {
       state.mobile = true;

@@ -44,7 +44,7 @@ e.g. "November 2026"), then:
   shows a `role="note"` explanation.
 - Checks grouped in the server's order: a `section` per block (an `h2` of the block name), and in
   it a `section` per level named "<Block>, <Level>" ("Block-wide" when `level` is null) with an
-  `h3` and a `CheckTable` (`-components/inspections-page/check-table.tsx`). Columns: Asset ("<reference> · <name>"
+  `h3` and a `CheckTable` (`-components/inspections-page/check-table.tsx`; `table-fixed`, `min-w-[56rem]`, fixed percentage column widths so every location group's table lines up; Asset, Category and Basis wrap). Columns: Asset ("<reference> · <name>"
   linked to the asset), Category, Due ("1 Oct 2026"), Basis ("Every 6 months (asset)", "Every 1
   year (category)", "Expected", "Never inspected"), Status (`Badge`: destructive **Overdue**, blue
   **Due**, green **Done · Pass/Fail**), and an unlabelled action column: **Record inspection**
