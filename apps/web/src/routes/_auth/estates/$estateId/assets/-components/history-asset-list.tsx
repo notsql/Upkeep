@@ -38,6 +38,7 @@ import {
   useHistoryAssetFeed,
   useHistoryAssets,
 } from "@/lib/asset-history";
+import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { asPagedList } from "@/lib/infinite-list";
 import { useMobile } from "@/lib/use-mobile";
 
@@ -71,6 +72,7 @@ export function HistoryAssetList({
     )
   );
   const assets = mobile ? feed : paged;
+  const categories = useAssetCategories().data;
   const [search, setSearch] = useState(filters.q ?? "");
   useEffect(() => setSearch(filters.q ?? ""), [filters.q]);
   useEffect(() => {
@@ -184,7 +186,11 @@ export function HistoryAssetList({
             {items.map((asset, index) => (
               <li key={asset.id}>
                 {index > 0 ? <ItemSeparator /> : null}
-                <HistoryAssetItem asset={asset} estateId={estateId} />
+                <HistoryAssetItem
+                  asset={asset}
+                  category={categoryLabel(categories, asset.category)}
+                  estateId={estateId}
+                />
               </li>
             ))}
           </ul>
@@ -215,7 +221,9 @@ export function HistoryAssetList({
                     {asset.name}
                   </Link>
                 </TableCell>
-                <TableCell>{asset.category}</TableCell>
+                <TableCell>
+                  {categoryLabel(categories, asset.category)}
+                </TableCell>
                 <TableCell className="whitespace-normal">
                   {asset.locationPath}
                 </TableCell>
@@ -266,12 +274,14 @@ function statusLabel(asset: HistoryAsset): string {
 
 function HistoryAssetItem({
   asset,
+  category,
   estateId,
 }: {
   asset: HistoryAsset;
+  category: string;
   estateId: string;
 }) {
-  const details = [asset.reference, asset.category, asset.locationPath]
+  const details = [asset.reference, category, asset.locationPath]
     .filter(Boolean)
     .join(" · ");
   return (

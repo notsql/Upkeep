@@ -49,10 +49,14 @@ vi.mock("@tanstack/react-router", () => ({
 
 beforeEach(() => {
   vi.mocked(api.GET).mockReset();
-  vi.mocked(api.GET).mockResolvedValue({
-    data: { items: [historyAsset], nextCursor: "next" },
-    response: new Response(),
-  } as never);
+  vi.mocked(api.GET).mockImplementation(((path: string) =>
+    Promise.resolve({
+      data:
+        path === "/asset-categories"
+          ? []
+          : { items: [historyAsset], nextCursor: "next" },
+      response: new Response(),
+    })) as never);
 });
 
 it("lets Council readers browse assets without owner queries or management actions", async () => {
@@ -183,13 +187,20 @@ it("adds History alongside existing owner sections", () => {
 
 it("shows each asset as a linked list item on a phone", async () => {
   const resize = mockMobileViewport();
-  vi.mocked(api.GET).mockResolvedValue({
-    data: {
-      items: [historyAsset, { ...historyAsset, id: "fan", name: "Fan" }],
-      nextCursor: null,
-    },
-    response: new Response(),
-  } as never);
+  vi.mocked(api.GET).mockImplementation(((path: string) =>
+    Promise.resolve({
+      data:
+        path === "/asset-categories"
+          ? []
+          : {
+              items: [
+                historyAsset,
+                { ...historyAsset, id: "fan", name: "Fan" },
+              ],
+              nextCursor: null,
+            },
+      response: new Response(),
+    })) as never);
   renderWithProviders(
     <HistoryAssetList
       estateId="estate"
@@ -221,4 +232,26 @@ it("names the chosen status filter in words, not its code", async () => {
   const status = await screen.findByRole("combobox", { name: "Status" });
   expect(status.textContent).toContain("Out of use");
   expect(status.textContent).not.toContain("INACTIVE");
+});
+
+it("shows category names, not their codes", async () => {
+  vi.mocked(api.GET).mockImplementation(((path: string) =>
+    Promise.resolve({
+      data:
+        path === "/asset-categories"
+          ? [{ code: historyAsset.category, label: "Pump" }]
+          : { items: [historyAsset], nextCursor: null },
+      response: new Response(),
+    })) as never);
+  renderWithProviders(
+    <HistoryAssetList
+      estateId="estate"
+      filters={{}}
+      onFiltersChange={vi.fn()}
+    />
+  );
+  await screen.findByRole("cell", { name: "Pump" });
+  expect(
+    screen.queryByRole("cell", { name: historyAsset.category })
+  ).toBeNull();
 });
