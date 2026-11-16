@@ -19,6 +19,14 @@ import type { PagedList } from "@/lib/infinite-list";
 import type { ReadingImportOutcome } from "@/lib/reading-imports";
 import { ImportRowResults } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-row-results";
 
+/** The trigger shows these labels, never the codes. */
+const OUTCOME_ITEMS = [
+  { value: "ALL", label: "All outcomes" },
+  { value: "IMPORTED", label: "Imported" },
+  { value: "DUPLICATE", label: "Already imported" },
+  { value: "INVALID", label: "Has problems" },
+];
+
 export function ImportBatchResults({
   rows,
   page,
@@ -47,15 +55,20 @@ export function ImportBatchResults({
       >
         <Field className="w-full sm:w-48">
           <FieldLabel htmlFor="import-outcome">Outcome</FieldLabel>
-          <Select onValueChange={onOutcomeChange} value={outcome ?? "ALL"}>
+          <Select
+            items={OUTCOME_ITEMS}
+            onValueChange={onOutcomeChange}
+            value={outcome ?? "ALL"}
+          >
             <SelectTrigger className="w-full" id="import-outcome">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All outcomes</SelectItem>
-              <SelectItem value="IMPORTED">Imported</SelectItem>
-              <SelectItem value="DUPLICATE">Already imported</SelectItem>
-              <SelectItem value="INVALID">Has problems</SelectItem>
+              {OUTCOME_ITEMS.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </Field>

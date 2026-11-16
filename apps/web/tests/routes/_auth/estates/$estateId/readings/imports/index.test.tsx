@@ -422,6 +422,13 @@ describe("historical CSV upload", () => {
 });
 
 describe("import results and rollback", () => {
+  it("names the Outcome filter in words, not its code", async () => {
+    await showBatch();
+    const outcome = await screen.findByRole("combobox", { name: "Outcome" });
+    expect(outcome.textContent).toContain("All outcomes");
+    expect(outcome.textContent).not.toContain("ALL");
+  });
+
   it("pages the row report and resets paging when filtering outcomes", async () => {
     await showBatch();
     fireEvent.click(await screen.findByRole("button", { name: "Next page" }));
