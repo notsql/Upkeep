@@ -58,7 +58,7 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
             estateId={estateId}
             generated={!!data.generatedAt}
           />
-          <Unscheduled data={data} />
+          <Unscheduled data={data} estateId={estateId} />
         </div>
       ) : null}
     </PageLayout>

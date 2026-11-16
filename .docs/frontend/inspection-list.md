@@ -60,8 +60,11 @@ e.g. "November 2026"), then:
   shown whether or not there are checks.
 - The `EmptyState` "No checks this month" when there are none (description depends on whether
   the list was generated). Loading uses `LoadingState` "Loading inspections…". The sections stay
-  stacked, not tabbed: Not scheduled assets is a short list shown only when non-empty.
-- A **Not scheduled assets** section (`h2`) listing "<reference> · <name>" and the category label.
+  stacked, not tabbed: Assets without a schedule is a short warning shown only when non-empty.
+- An **Assets without a schedule** section (`h2`, `unscheduled.tsx`), shown only when non-empty: a
+  `warning` `Alert` ("N asset(s) have regular checks on but no service interval, so no check will
+  come due."), each asset as an underlined `Link` "<reference> · <name>" to its page with the
+  category label beside it, and a "Set check schedules" link to Inspections › Check schedules.
 
 Loading shows "Loading inspections…"; a load error shows `ErrorState` with the
 message and a Retry that refetches the list.
