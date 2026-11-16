@@ -182,7 +182,7 @@ function Slabs({
 /**
  * One block drawn as a 2D building: roof, a slab or range per
  * level group, the ground line, basements below it and the block's own common
- * areas as "Grounds". Above-ground and below-ground parts are the two rows of
+ * areas as "Block-wide areas". Above-ground and below-ground parts are the two rows of
  * a subgrid, so every building in a row shares one ground line.
  */
 export function BlockBuilding({
@@ -256,7 +256,7 @@ export function BlockBuilding({
         <div className="border-foreground/40 border-t">
           {levels.length ? (
             <p className="text-muted-foreground px-4 pt-1 text-[0.625rem] font-medium tracking-wider uppercase">
-              Ground
+              Ground level
             </p>
           ) : null}
         </div>
@@ -271,10 +271,10 @@ export function BlockBuilding({
         {grounds.length ? (
           <div className="mx-auto mt-2 w-64 max-w-full">
             <p className="text-muted-foreground text-[0.625rem] font-medium tracking-wider uppercase">
-              Grounds
+              Block-wide areas
             </p>
             <ul
-              aria-label={`${node.name} grounds`}
+              aria-label={`${node.name} block-wide areas`}
               className="mt-1 flex flex-wrap gap-1"
             >
               <AreaChips areas={grounds} />
