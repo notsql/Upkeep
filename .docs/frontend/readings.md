@@ -675,7 +675,7 @@ row on the page carries a GAP, DUPLICATE_TIMESTAMP or OUT_OF_RANGE flag
 (`components/readings/possibly-wrong-note.tsx`) shows above the table: a
 `role="note"` Alert "Some readings may be wrong" with "Look at the sensor, or
 take a manual reading to compare." Import rows and batches show
-`importOutcomeLabels` (Imported, Already imported, Has problems) and
+`importOutcomeLabels` (Imported, Already recorded, Has problems) and
 `importStatusLabels` (Imported, Undone) from `lib/reading-imports.ts`, never
 the enum. The import form's source label is "Name for this import".
 

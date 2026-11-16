@@ -5,7 +5,7 @@ describe("import labels", () => {
   it("names row outcomes in plain words", () => {
     expect(importOutcomeLabels).toEqual({
       IMPORTED: "Imported",
-      DUPLICATE: "Already imported",
+      DUPLICATE: "Already recorded",
       INVALID: "Has problems",
     });
   });

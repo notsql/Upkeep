@@ -18,7 +18,7 @@ function row(
 describe("ImportRowResults", () => {
   it.each([
     ["IMPORTED", "Imported", "success"],
-    ["DUPLICATE", "Already imported", "secondary"],
+    ["DUPLICATE", "Already recorded", "secondary"],
     ["INVALID", "Has problems", "destructive"],
   ] as const)("shows %s as %s in the %s variant", (outcome, label, variant) => {
     renderWithProviders(<ImportRowResults items={[row(1, outcome)]} />);

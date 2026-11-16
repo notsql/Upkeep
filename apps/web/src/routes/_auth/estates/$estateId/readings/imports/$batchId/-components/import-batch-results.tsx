@@ -23,7 +23,7 @@ import { ImportRowResults } from "@/routes/_auth/estates/$estateId/readings/impo
 const OUTCOME_ITEMS = [
   { value: "ALL", label: "All outcomes" },
   { value: "IMPORTED", label: "Imported" },
-  { value: "DUPLICATE", label: "Already imported" },
+  { value: "DUPLICATE", label: "Already recorded" },
   { value: "INVALID", label: "Has problems" },
 ];
 

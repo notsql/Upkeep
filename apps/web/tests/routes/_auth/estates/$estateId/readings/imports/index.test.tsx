@@ -490,6 +490,15 @@ describe("import results and rollback", () => {
     within(item).getByText("1 reading imported", { exact: false });
   });
 
+  it("calls duplicates already recorded, since they may have come from a sensor", async () => {
+    await showBatch();
+    await screen.findByText("1 already recorded", { exact: false });
+    expect(screen.queryByText("already imported", { exact: false })).toBeNull();
+    const outcome = screen.getByRole("combobox", { name: "Outcome" });
+    fireEvent.click(outcome);
+    await screen.findByRole("option", { name: "Already recorded" });
+  });
+
   it("counts one batch and one record in the singular", async () => {
     await showUpload();
     await screen.findByText("1 batch");
