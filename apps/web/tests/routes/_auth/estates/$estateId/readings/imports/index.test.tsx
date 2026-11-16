@@ -235,6 +235,19 @@ describe("historical CSV upload", () => {
     );
   });
 
+  it("names the asset lookup and unmapped columns in words, not codes", async () => {
+    await showUpload();
+    await fill(
+      "Equipment,Signal,Observed,Measurement\nPUMP-001,TEMPERATURE,2026-10-01T00:00:00Z,21\n"
+    );
+    const lookup = screen.getByRole("combobox", { name: "Asset lookup" });
+    expect(lookup.textContent).toMatch(/Asset (UUID|reference)/u);
+    expect(lookup.textContent).not.toMatch(/asset_(id|reference)/u);
+    const unmapped = screen.getByRole("combobox", { name: "Asset column" });
+    expect(unmapped.textContent).toContain("Choose column");
+    expect(unmapped.textContent).not.toContain("none");
+  });
+
   it("supports explicitly mapping vendor headers before submitting", async () => {
     await showUpload();
     await fill(

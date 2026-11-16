@@ -32,6 +32,12 @@ const LABELS = {
 };
 type MappingSetter = Dispatch<SetStateAction<Record<string, string>>>;
 
+/** The trigger shows these labels, never the codes. */
+const LOOKUP_ITEMS = [
+  { value: "asset_id", label: "Asset UUID" },
+  { value: "asset_reference", label: "Asset reference" },
+];
+
 function ImportColumn({
   field,
   column,
@@ -56,7 +62,14 @@ function ImportColumn({
   return (
     <Field>
       <FieldLabel htmlFor={`map-${field}`}>{LABELS[field]}</FieldLabel>
-      <Select onValueChange={change} value={mapping[column] || "none"}>
+      <Select
+        items={[
+          { value: "none", label: "Choose column" },
+          ...headers.map((header) => ({ value: header, label: header })),
+        ]}
+        onValueChange={change}
+        value={mapping[column] || "none"}
+      >
         <SelectTrigger className="w-full" id={`map-${field}`}>
           <SelectValue />
         </SelectTrigger>
@@ -149,13 +162,20 @@ export function ImportFormFields({
         <>
           <Field>
             <FieldLabel htmlFor="asset-lookup">Asset lookup</FieldLabel>
-            <Select onValueChange={changeMode} value={mode}>
+            <Select
+              items={LOOKUP_ITEMS}
+              onValueChange={changeMode}
+              value={mode}
+            >
               <SelectTrigger className="w-full" id="asset-lookup">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="asset_id">Asset UUID</SelectItem>
-                <SelectItem value="asset_reference">Asset reference</SelectItem>
+                {LOOKUP_ITEMS.map((item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
