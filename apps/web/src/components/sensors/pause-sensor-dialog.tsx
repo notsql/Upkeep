@@ -15,6 +15,12 @@ import {
   usePauseFlatlineSensor,
 } from "@/lib/flatlined-sensors";
 
+/** The trigger shows these labels, never the codes. */
+const UNIT_ITEMS = [
+  { value: "minutes", label: "Minutes" },
+  { value: "hours", label: "Hours" },
+];
+
 export function PauseSensorDialog({
   estateId,
   sensor,
@@ -86,6 +92,7 @@ export function PauseSensorDialog({
         <FieldLabel htmlFor={`${id}-unit`}>Time unit</FieldLabel>
         <Select
           disabled={pause.isPending}
+          items={UNIT_ITEMS}
           onValueChange={changeUnit}
           value={unit}
         >
@@ -93,8 +100,11 @@ export function PauseSensorDialog({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="minutes">Minutes</SelectItem>
-            <SelectItem value="hours">Hours</SelectItem>
+            {UNIT_ITEMS.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </Field>
