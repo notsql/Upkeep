@@ -7,6 +7,7 @@ import {
   ItemSeparator,
   ItemTitle,
 } from "@proj/ui/components/item";
+import { formatInstantDate } from "@/lib/format";
 import type { AdminUsersListProps } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-list-props";
 import { ManageEstateButton } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/manage-estate-button";
 import { RoleEditor } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/role-editor";
@@ -43,7 +44,7 @@ export function AdminUsersMemberList({
                 </ItemDescription>
                 {user.joined ? (
                   <p className="text-muted-foreground text-xs">
-                    Joined {new Date(user.joined).toLocaleDateString()}
+                    Joined {formatInstantDate(user.joined)}
                   </p>
                 ) : null}
               </ItemContent>

@@ -1,6 +1,7 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
 import type { HistoryEntry } from "@/lib/asset-history";
+import { formatDate } from "@/lib/format";
 
 function Value({
   label,
@@ -112,7 +113,14 @@ export function HistoryEntryDetails({
     case "LIFECYCLE":
       return (
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <Value label="Recorded out-of-use date" value={details.retiredOn} />
+          <Value
+            label="Recorded out-of-use date"
+            value={
+              details.retiredOn
+                ? formatDate(details.retiredOn)
+                : details.retiredOn
+            }
+          />
           {details.previousRetiredOn ? (
             <Value
               label="Previous out-of-use date"

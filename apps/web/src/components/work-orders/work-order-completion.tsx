@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format";
 import type { WorkOrderCompletion } from "@/lib/work-orders";
 export function CompletionOutcome({
   completion,
@@ -45,14 +46,14 @@ export function CompletionOutcome({
       <p className="text-muted-foreground">
         Completed by {completion.completedByName ?? "Name unavailable"} ·{" "}
         <time dateTime={completion.completedAt}>
-          {new Date(completion.completedAt).toLocaleString()}
+          {formatDateTime(completion.completedAt)}
         </time>
       </p>
       {completion.editedAt ? (
         <p className="text-muted-foreground text-sm">
           Edited by {completion.editedByName ?? "Name unavailable"} ·{" "}
           <time dateTime={completion.editedAt}>
-            {new Date(completion.editedAt).toLocaleString()}
+            {formatDateTime(completion.editedAt)}
           </time>
         </p>
       ) : null}

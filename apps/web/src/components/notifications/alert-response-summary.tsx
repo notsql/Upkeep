@@ -1,3 +1,4 @@
+import { formatDateTime } from "@/lib/format";
 import type { Notification } from "@/lib/notifications";
 
 type Anomaly = NonNullable<Notification["anomaly"]>;
@@ -11,7 +12,7 @@ export function AlertResponseSummary({ anomaly }: { anomaly: Anomaly }) {
     anomaly.response === "DISMISSED" ? "Dismissed" : "Marked as seen";
   const who = anomaly.respondedByName ?? "Unknown user";
   const when = anomaly.respondedAt
-    ? ` on ${new Date(anomaly.respondedAt).toLocaleString()}`
+    ? ` on ${formatDateTime(anomaly.respondedAt)}`
     : "";
   const why = anomaly.responseReason ? `: ${anomaly.responseReason}` : "";
   return <p className="text-sm">{`${verb} by ${who}${when}${why}`}</p>;

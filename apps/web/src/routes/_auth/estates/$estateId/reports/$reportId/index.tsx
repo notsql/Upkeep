@@ -14,6 +14,7 @@ import {
   useEstateReport,
   useEstateReportAccess,
 } from "@/lib/estate-reports";
+import { formatDateTime } from "@/lib/format";
 import { pageHead } from "@/lib/page-title";
 import { useRoutingAccess } from "@/lib/report-routing";
 import {
@@ -151,7 +152,7 @@ function EstateReportDetailPage() {
         icon={ClipboardList}
         meta={
           loaded?.createdAt
-            ? `Reported ${new Date(loaded.createdAt).toLocaleString()}`
+            ? `Reported ${formatDateTime(loaded.createdAt)}`
             : undefined
         }
         status={

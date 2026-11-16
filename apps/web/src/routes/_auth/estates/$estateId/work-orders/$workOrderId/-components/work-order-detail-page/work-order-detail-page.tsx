@@ -8,6 +8,7 @@ import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
+import { formatInstantDate } from "@/lib/format";
 import { useWorkOrder, useWorkOrderAccess } from "@/lib/work-orders";
 import { isTransientFailure } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/is-transient-failure";
 import { WorkOrderDetailSummary } from "@/routes/_auth/estates/$estateId/work-orders/$workOrderId/-components/work-order-detail-page/work-order-detail-summary";
@@ -65,7 +66,7 @@ export function WorkOrderDetailPage({
           { label: data.reference },
         ]}
         icon={Wrench}
-        meta={`Opened ${new Date(data.createdAt).toLocaleDateString()}`}
+        meta={`Opened ${formatInstantDate(data.createdAt)}`}
         status={<WorkOrderStatusBadge status={data.status} />}
         title={data.reference}
       />

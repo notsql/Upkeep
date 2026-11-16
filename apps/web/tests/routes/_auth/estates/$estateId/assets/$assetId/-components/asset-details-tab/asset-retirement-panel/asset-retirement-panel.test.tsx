@@ -114,3 +114,10 @@ it("explains an invalid retirement date when correcting information", () => {
     }).disabled
   ).toBe(true);
 });
+
+it("shows the out-of-use date formatted, not as a raw value", async () => {
+  const { formatDate } = await import("@/lib/format");
+  renderWithProviders(<AssetRetirementPanel asset={asset} />);
+  screen.getByText(formatDate("2025-01-01"));
+  expect(screen.queryByText("2025-01-01")).toBeNull();
+});

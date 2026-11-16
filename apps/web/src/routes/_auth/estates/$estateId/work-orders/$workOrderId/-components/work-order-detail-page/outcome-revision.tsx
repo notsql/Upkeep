@@ -1,6 +1,7 @@
 import { Button } from "@proj/ui/components/button";
 import { useCallback, useId, useState } from "react";
 import { CompletionOutcome } from "@/components/work-orders/work-order-completion";
+import { formatDateTime } from "@/lib/format";
 import type { WorkOrderCompletionRevision } from "@/lib/work-orders";
 
 export function OutcomeRevision({
@@ -19,7 +20,7 @@ export function OutcomeRevision({
       <p className="text-muted-foreground">
         {revision.changedByName ?? "Name unavailable"} ·{" "}
         <time dateTime={revision.changedAt}>
-          {new Date(revision.changedAt).toLocaleString()}
+          {formatDateTime(revision.changedAt)}
         </time>
       </p>
       <Button

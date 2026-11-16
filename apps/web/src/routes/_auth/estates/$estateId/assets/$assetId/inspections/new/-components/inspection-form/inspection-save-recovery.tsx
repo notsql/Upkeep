@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ClipboardCheck } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/states/empty-state";
+import { formatDate } from "@/lib/format";
 import { useInspectionResults } from "@/lib/inspections";
 
 /** Only opened after a save error to check canonical records before another POST. */
@@ -46,7 +47,7 @@ export function InspectionSaveRecovery({
                   params={{ estateId, assetId, inspectionId: record.id }}
                   to="/estates/$estateId/assets/$assetId/inspections/$inspectionId"
                 >
-                  {record.inspectedOn} ·{" "}
+                  {formatDate(record.inspectedOn)} ·{" "}
                   {record.outcome === "PASS" ? "Pass" : "Fail"} · View record
                 </Link>
               </li>

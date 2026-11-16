@@ -7,6 +7,7 @@ import {
   ItemTitle,
 } from "@proj/ui/components/item";
 import { Link } from "@tanstack/react-router";
+import { formatDate } from "@/lib/format";
 import { InspectionFollowUp } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-follow-up";
 import type { InspectionHistoryRowProps } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-row-props";
 
@@ -34,7 +35,7 @@ export function InspectionHistoryItem({
             }}
             to="/estates/$estateId/assets/$assetId/inspections/$inspectionId"
           >
-            {record.inspectedOn}
+            {formatDate(record.inspectedOn)}
           </Link>
         </ItemTitle>
         <ItemDescription className="line-clamp-none text-xs">

@@ -1,6 +1,7 @@
 import type { components } from "@proj/api/schema";
 import type { ReactNode } from "react";
 import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
+import { formatDateTime } from "@/lib/format";
 
 export function ReportMetadata({
   report,
@@ -37,9 +38,7 @@ export function ReportMetadata({
         <dt className="font-semibold">Submission time:</dt>
         <dd>
           <time dateTime={report.createdAt}>
-            {report.createdAt
-              ? new Date(report.createdAt).toLocaleString()
-              : ""}
+            {report.createdAt ? formatDateTime(report.createdAt) : ""}
           </time>
         </dd>
       </dl>
@@ -48,7 +47,7 @@ export function ReportMetadata({
           <dt className="font-semibold">Updated:</dt>
           <dd>
             <time dateTime={report.updatedAt}>
-              {new Date(report.updatedAt).toLocaleString()}
+              {formatDateTime(report.updatedAt)}
             </time>
           </dd>
         </dl>

@@ -1,4 +1,5 @@
 import type { SensorPolicy } from "@/lib/flatlined-sensors";
+import { formatDateTime } from "@/lib/format";
 
 export function metricLabel(metric: SensorPolicy["metric"]): string {
   return metric.charAt(0) + metric.slice(1).toLowerCase().replaceAll("_", " ");
@@ -25,5 +26,5 @@ export function wholeMinutes(
 }
 
 export function timeLabel(at: string): string {
-  return new Date(at).toLocaleString();
+  return formatDateTime(at);
 }

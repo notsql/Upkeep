@@ -14,6 +14,7 @@ Omitted means the browser's locale and time zone. Tests pin
 | --- | --- | --- |
 | `formatDate(value)` | `YYYY-MM-DD` calendar date | `7 Nov 2026`, formatted in UTC so the day never shifts (UTC-10 to UTC+14). Anything else, including impossible dates such as `2026-02-30`, is returned unchanged. |
 | `formatDateTime(instant)` | ISO instant | `7 Nov 2026, 9:01:57 pm` |
+| `formatInstantDate(instant)` | ISO instant | `7 Nov 2026` (its day in the viewer's time zone) |
 | `formatTime(instant)` | ISO instant | `9:01:57 pm` |
 | `formatClock(instant)` | ISO instant | `9:01 pm` (hour and minute; Trends x ticks on 1 min, 15 min and 1 h) |
 | `formatDayHour(instant)` | ISO instant | `Sat, 9 pm` (short weekday and hour; the 24 h chart axis) |
@@ -63,3 +64,7 @@ not changed.
   `formatScore`).
 
 Screens are moved onto this module in later phases of the spec.
+
+Screens never call `toLocaleString()` / `toLocaleDateString()` on dates or show raw
+`YYYY-MM-DD` values: instants use `formatDateTime` (or `formatInstantDate` for the day
+only) and calendar dates use `formatDate`, so every date spells out its month.

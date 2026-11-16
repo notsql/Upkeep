@@ -1,5 +1,6 @@
 import { urgencyLabels } from "@/components/reports/urgency-labels";
 import type { EstateReport } from "@/lib/estate-reports";
+import { formatDateTime } from "@/lib/format";
 
 export function LatestUrgencyChange({
   change,
@@ -20,7 +21,7 @@ export function LatestUrgencyChange({
       {change.changedByName ?? "Name unavailable"}
       {" · "}
       <time dateTime={change.changedAt}>
-        {new Date(change.changedAt).toLocaleString()}
+        {formatDateTime(change.changedAt)}
       </time>
     </p>
   );

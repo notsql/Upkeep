@@ -144,3 +144,16 @@ it("links Record repair to its own page", () => {
     screen.getByRole("link", { name: "Record repair" }).getAttribute("href")
   ).toBe("/estates/$estateId/assets/$assetId/maintenance/new");
 });
+
+it("shows a manual entry's dates formatted, not as raw values", async () => {
+  const { formatDate, formatDateTime } = await import("@/lib/format");
+  renderWithProviders(
+    <AssetMaintenanceSection assetId="pump" canRecord={false} estateId="oak" />
+  );
+  const [, manual] = screen.getAllByRole("listitem");
+  within(manual).getByText(`· ${formatDate("2026-10-01")}`);
+  expect(within(manual).queryByText("2026-10-01", { exact: false })).toBeNull();
+  within(manual).getByText(formatDateTime("2026-10-01T08:00:00Z"), {
+    exact: false,
+  });
+});

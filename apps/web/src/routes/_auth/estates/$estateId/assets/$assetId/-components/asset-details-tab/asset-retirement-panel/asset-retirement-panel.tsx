@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { type Asset, useAssetLifecycleEvents } from "@/lib/assets";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { Restoration } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/restoration";
 import { RetirementEdit } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/retirement-edit";
 
@@ -29,7 +30,9 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
           <>
             <dl>
               <dt>Date taken out of use</dt>
-              <dd>{asset.retiredOn ?? "Not recorded"}</dd>
+              <dd>
+                {asset.retiredOn ? formatDate(asset.retiredOn) : "Not recorded"}
+              </dd>
               <dt>Why it's out of use</dt>
               <dd className="whitespace-pre-wrap">
                 {asset.retirementReason ?? "Not recorded"}
@@ -65,7 +68,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
               <p>
                 {actionLabels[event.action ?? ""] ?? event.action} ·{" "}
                 {event.occurredAt
-                  ? new Date(event.occurredAt).toLocaleString("en-SG", {
+                  ? formatDateTime(event.occurredAt, {
                       timeZone: "Asia/Singapore",
                     })
                   : "Not recorded"}{" "}
@@ -76,13 +79,15 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
               </p>
               <p>
                 Previous out-of-use date:{" "}
-                {event.previousRetiredOn ?? "Not recorded"} —{" "}
-                {event.previousRetirementReason ?? "Not recorded"}
+                {event.previousRetiredOn
+                  ? formatDate(event.previousRetiredOn)
+                  : "Not recorded"}{" "}
+                — {event.previousRetirementReason ?? "Not recorded"}
               </p>
               <p>
                 Result:{" "}
                 {event.deactivatedAt
-                  ? `${event.retiredOn ?? "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
+                  ? `${event.retiredOn ? formatDate(event.retiredOn) : "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
                   : "Active"}
               </p>
             </li>

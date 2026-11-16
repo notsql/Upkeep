@@ -14,6 +14,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { formatDateTime } from "@/lib/format";
 import { routeTree } from "@/routeTree.gen";
 
 // Use the registered application routes, so missing report screens fail through
@@ -286,7 +287,7 @@ it("labels each estate report's metadata like the resident report cards", async 
   screen.getByText(report.estateName);
   screen.getByText(report.location.label);
   screen.getByText("Submitted");
-  screen.getByText(new Date(report.createdAt).toLocaleString());
+  screen.getByText(formatDateTime(report.createdAt));
 });
 
 it("shows estate reports with full location paths and links to estate-scoped detail", async () => {

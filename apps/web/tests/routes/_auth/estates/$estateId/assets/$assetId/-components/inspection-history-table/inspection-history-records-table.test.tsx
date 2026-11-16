@@ -3,6 +3,7 @@ import { mockMobileViewport } from "@tests/mock-viewport";
 import { renderWithProviders, screen, within } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
+import { formatDate } from "@/lib/format";
 import { InspectionHistoryRecordsTable } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-records-table";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -67,7 +68,9 @@ it("lists inspection records on phones with the date linking to the record", () 
   const [first, second] = list.getAllByRole("listitem");
   const item = within(first);
   expect(
-    item.getByRole("link", { name: "2026-10-26" }).getAttribute("href")
+    item
+      .getByRole("link", { name: formatDate("2026-10-26") })
+      .getAttribute("href")
   ).toBe("/estates/$estateId/assets/$assetId/inspections/$inspectionId");
   item.getByText("Fail");
   item.getByText("Alex Tan");

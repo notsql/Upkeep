@@ -7,6 +7,7 @@ import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { formatDate } from "@/lib/format";
 import {
   useInspectionAccess,
   useInspectionAsset,
@@ -77,7 +78,9 @@ export function InspectionDetail({
         <div>
           <dt>Inspection date</dt>
           <dd>
-            <time dateTime={record.inspectedOn}>{record.inspectedOn}</time>
+            <time dateTime={record.inspectedOn}>
+              {formatDate(record.inspectedOn)}
+            </time>
           </dd>
         </div>
         <div>

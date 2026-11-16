@@ -11,6 +11,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
+import { formatDateTime } from "@/lib/format";
 import { categoryLabel, routingStateLabel } from "@/lib/report-routing";
 
 export type EstateReport =
@@ -86,9 +87,7 @@ export function EstateReportsTable({
               </TableCell>
               <TableCell>
                 <time dateTime={report.createdAt}>
-                  {report.createdAt
-                    ? new Date(report.createdAt).toLocaleString()
-                    : ""}
+                  {report.createdAt ? formatDateTime(report.createdAt) : ""}
                 </time>
               </TableCell>
             </TableRow>

@@ -16,7 +16,7 @@ import {
 import { TableCell, TableRow } from "@proj/ui/components/table";
 import { EllipsisVertical } from "lucide-react";
 import { useCallback } from "react";
-
+import { formatDateTime } from "@/lib/format";
 import { DocumentActions, type DocumentRowProps } from "./document-actions";
 
 export function DocumentRow(props: DocumentRowProps) {
@@ -34,7 +34,7 @@ export function DocumentRow(props: DocumentRowProps) {
       ) : null}
       <TableCell>
         <time dateTime={document.createdAt}>
-          {new Date(document.createdAt).toLocaleString()}
+          {formatDateTime(document.createdAt)}
         </time>
       </TableCell>
       {assets === undefined ? null : <TableCell>{assets}</TableCell>}
@@ -127,7 +127,7 @@ export function DocumentItem(props: DocumentRowProps & { first: boolean }) {
           </ItemDescription>
           <ItemDescription className="text-xs">
             <time dateTime={document.createdAt}>
-              {`Uploaded ${new Date(document.createdAt).toLocaleString()}`}
+              {`Uploaded ${formatDateTime(document.createdAt)}`}
             </time>
           </ItemDescription>
         </ItemContent>

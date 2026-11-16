@@ -18,6 +18,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { formatDateTime } from "@/lib/format";
 import { routeTree } from "@/routeTree.gen";
 
 vi.mock("@/routes/__root", async () => {
@@ -404,7 +405,7 @@ it("says when the system sent the work order on its own", async () => {
   const card = await routingCard();
 
   card.getByText("Sent automatically");
-  card.getByText(`Sent ${new Date(timestamp).toLocaleString()}`);
+  card.getByText(`Sent ${formatDateTime(timestamp)}`);
 });
 
 it("shows crew the routing and the contractor but no decisions", async () => {

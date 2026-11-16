@@ -74,6 +74,17 @@ export function formatDateTime(
   }).format(new Date(instant));
 }
 
+/** An ISO instant's calendar day, as a medium date in the viewer's time zone. */
+export function formatInstantDate(
+  instant: string,
+  options: FormatOptions = {}
+): string {
+  return dateTimeFormat(options.locale, {
+    dateStyle: "medium",
+    timeZone: options.timeZone,
+  }).format(new Date(instant));
+}
+
 /** An ISO instant as a time with seconds. */
 export function formatTime(
   instant: string,

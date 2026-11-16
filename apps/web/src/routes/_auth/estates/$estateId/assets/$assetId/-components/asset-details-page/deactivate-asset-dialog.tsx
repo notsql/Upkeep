@@ -6,6 +6,7 @@ import { type ChangeEvent, useCallback, useState } from "react";
 import { ConfirmDialog } from "@/components/dialogs/confirm-dialog";
 import { DatePicker } from "@/components/forms/date-picker";
 import { retirementDateError, retirementToday } from "@/lib/assets";
+import { formatDate } from "@/lib/format";
 
 export function DeactivateAssetDialog({
   name,
@@ -117,7 +118,7 @@ export function DeactivateAssetDialog({
         />
         <p className="text-muted-foreground text-sm" id="retirement-date-help">
           Today in Singapore: {today}.
-          {installedOn ? ` Installation date: ${installedOn}.` : ""}
+          {installedOn ? ` Installation date: ${formatDate(installedOn)}.` : ""}
         </p>
         {dateError ? (
           <p

@@ -168,7 +168,7 @@ export function NotificationItem({
           <time
             className="text-muted-foreground ml-auto text-xs"
             dateTime={notification.createdAt}
-            title={new Date(notification.createdAt).toLocaleString()}
+            title={formatDateTime(notification.createdAt)}
           >
             {formatRelativeTime(notification.createdAt)}
           </time>

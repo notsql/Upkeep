@@ -2,6 +2,7 @@ import { Badge } from "@proj/ui/components/badge";
 import { buttonVariants } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { DetailList } from "@/components/page/detail-list";
+import { formatDateTime } from "@/lib/format";
 import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import type { WorkOrder } from "@/lib/work-orders";
 
@@ -102,9 +103,7 @@ export function WorkOrderDetailSummary({
             {data.createdByName?.trim() || "Name unavailable"}
           </span>
         </p>
-        <time dateTime={data.createdAt}>
-          {new Date(data.createdAt).toLocaleString()}
-        </time>
+        <time dateTime={data.createdAt}>{formatDateTime(data.createdAt)}</time>
       </div>
     </div>
   );

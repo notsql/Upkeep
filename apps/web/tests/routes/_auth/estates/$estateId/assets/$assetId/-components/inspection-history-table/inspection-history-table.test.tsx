@@ -19,6 +19,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
+import { formatDate } from "@/lib/format";
 import { routeTree } from "@/routeTree.gen";
 
 const estateId = "00000000-0000-0000-0000-000000000001";
@@ -244,7 +245,7 @@ it.each(["OWNER", "MANAGER", "CREW"])(
       "View record",
     ]);
     const row = within(table).getByRole("row", { name: ALEX_ROW });
-    within(row).getByRole("cell", { name: "2026-10-26" });
+    within(row).getByRole("cell", { name: formatDate("2026-10-26") });
     within(row).getByText("Fail");
     expect(
       within(row)
@@ -298,9 +299,9 @@ it("preserves canonical server order and distinct same-day inspection links", as
     )
   );
   expect(
-    within(table).getAllByRole("cell", { name: "2026-10-26" })
+    within(table).getAllByRole("cell", { name: formatDate("2026-10-26") })
   ).toHaveLength(2);
-  within(table).getByRole("cell", { name: "2026-10-20" });
+  within(table).getByRole("cell", { name: formatDate("2026-10-20") });
 });
 
 it("shows an unavailable inspector without exposing the account identifier", async () => {

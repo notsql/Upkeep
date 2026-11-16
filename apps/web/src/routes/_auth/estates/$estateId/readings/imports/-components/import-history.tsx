@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { formatDateTime } from "@/lib/format";
 import type { ReadingImportBatch } from "@/lib/reading-imports";
 import { importStatusLabels } from "@/lib/reading-imports";
 import { useMobile } from "@/lib/use-mobile";
@@ -51,8 +52,8 @@ export function ImportHistory({
                   {batch.sourceLabel}
                 </ItemTitle>
                 <ItemDescription>
-                  {new Date(batch.createdAt).toLocaleString()} ·{" "}
-                  {batch.importedRows} readings imported
+                  {formatDateTime(batch.createdAt)} · {batch.importedRows}{" "}
+                  readings imported
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
@@ -97,9 +98,7 @@ export function ImportHistory({
                   {batch.sourceLabel}
                 </Link>
               </TableCell>
-              <TableCell>
-                {new Date(batch.createdAt).toLocaleString()}
-              </TableCell>
+              <TableCell>{formatDateTime(batch.createdAt)}</TableCell>
               <TableCell>{importStatusLabels[batch.status]}</TableCell>
               <TableCell>{batch.importedRows}</TableCell>
             </TableRow>
