@@ -209,3 +209,16 @@ it("shows each asset as a linked list item on a phone", async () => {
   expect(screen.queryByRole("table")).toBeNull();
   resize(false);
 });
+
+it("names the chosen status filter in words, not its code", async () => {
+  renderWithProviders(
+    <HistoryAssetList
+      estateId="estate"
+      filters={{ status: "INACTIVE" }}
+      onFiltersChange={vi.fn()}
+    />
+  );
+  const status = await screen.findByRole("combobox", { name: "Status" });
+  expect(status.textContent).toContain("Out of use");
+  expect(status.textContent).not.toContain("INACTIVE");
+});

@@ -45,6 +45,13 @@ type HistoryAsset = NonNullable<
   ReturnType<typeof useHistoryAssets>["data"]
 >["items"][number];
 
+/** The trigger shows these labels, never the codes. */
+const STATUS_ITEMS = [
+  { value: "ALL", label: "All assets" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Out of use" },
+];
+
 export function HistoryAssetList({
   estateId,
   filters,
@@ -128,14 +135,20 @@ export function HistoryAssetList({
         </div>
         <div className="space-y-2">
           <span id="history-asset-status">Status</span>
-          <Select onValueChange={changeStatus} value={filters.status ?? "ALL"}>
+          <Select
+            items={STATUS_ITEMS}
+            onValueChange={changeStatus}
+            value={filters.status ?? "ALL"}
+          >
             <SelectTrigger aria-labelledby="history-asset-status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All assets</SelectItem>
-              <SelectItem value="ACTIVE">Active</SelectItem>
-              <SelectItem value="INACTIVE">Out of use</SelectItem>
+              {STATUS_ITEMS.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
