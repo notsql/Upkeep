@@ -69,6 +69,14 @@ export const workOrderStatusLabel = {
   CLOSED: "Closed",
 } as const satisfies Record<WorkOrderStatus, string>;
 
+/** Fault report statuses that aren't work-order statuses (the server only sets SUBMITTED). */
+export const reportStatusTone = {
+  SUBMITTED: "info",
+} as const satisfies Record<string, StatusTone>;
+export const reportStatusLabel = {
+  SUBMITTED: "Submitted",
+} as const satisfies Record<keyof typeof reportStatusTone, string>;
+
 /** `UNASSESSED` also stands in for a null condition. */
 export type AssetCondition =
   | Schemas["AnomalyAlertDetails"]["condition"]

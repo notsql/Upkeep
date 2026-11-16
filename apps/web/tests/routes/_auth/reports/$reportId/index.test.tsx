@@ -178,7 +178,7 @@ it("shows the resident's report text, location and initial status as text", asyn
     "<script>alert('x')</script> Leaking pipe"
   );
   screen.getByText("Block A, Level 2");
-  screen.getByText("SUBMITTED");
+  screen.getByText("Submitted");
   expect(description.querySelector("script")).toBeNull();
   expect(screen.queryByText(INTERNAL_NOTE)).toBeNull();
 });

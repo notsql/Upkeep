@@ -220,7 +220,9 @@ feature preserves the other feature’s displayed data.
 `ReportMetadata` shows the status through `WorkOrderStatusBadge`, so it reads
 "In progress" (warning) rather than `IN_PROGRESS`. Report status and work-order
 status share one map: Open is outline, Assigned is info, In progress is warning
-and Closed is success. An unknown status shows as-is, outlined.
+and Closed is success. Submitted, the only status the server sets on a new
+report, reads "Submitted" in info (`reportStatusLabel` / `reportStatusTone` in
+`lib/status-tone.ts`). An unknown status shows as-is, outlined.
 
 ## Routing (ID-70)
 

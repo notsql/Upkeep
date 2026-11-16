@@ -285,7 +285,7 @@ it("labels each estate report's metadata like the resident report cards", async 
   }
   screen.getByText(report.estateName);
   screen.getByText(report.location.label);
-  screen.getByText(report.status);
+  screen.getByText("Submitted");
   screen.getByText(new Date(report.createdAt).toLocaleString());
 });
 
@@ -295,7 +295,7 @@ it("shows estate reports with full location paths and links to estate-scoped det
   const link = await screen.findByRole("link", { name: report.title });
   expect(link.getAttribute("href")).toBe(`${basePath}/${reportId}`);
   screen.getByText(report.location.label);
-  screen.getByText(report.status);
+  screen.getByText("Submitted");
   expect(get).toHaveBeenCalledWith(
     "/estates/{estateId}/reports",
     expect.objectContaining({

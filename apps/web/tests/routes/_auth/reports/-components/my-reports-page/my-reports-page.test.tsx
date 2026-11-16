@@ -99,7 +99,7 @@ it("shows own report history with an ordinary WorkOS role even after assignment 
   await screen.findByText("Leaking pipe");
   screen.getByText("Maple Estate");
   screen.getByText("Block A, Level 2");
-  screen.getByText("SUBMITTED");
+  screen.getByText("Submitted");
   expect(
     screen.getByRole("link", { name: LEAKING_PIPE }).getAttribute("href")
   ).toContain(report.id);
