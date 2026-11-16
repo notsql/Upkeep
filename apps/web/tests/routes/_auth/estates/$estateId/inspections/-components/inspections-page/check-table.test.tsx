@@ -5,6 +5,7 @@ import type { InspectionCheck } from "@/lib/inspection-list";
 import { CheckTable } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/check-table";
 
 const SEND_STEP = /Send step/u;
+const WIDTH_CLASS = /\bw-/u;
 
 const state = vi.hoisted(() => ({
   risks: [] as { assetId: string; flagReasons: string[] }[],
@@ -101,7 +102,7 @@ describe("CheckTable", () => {
     );
     expect(screen.getByRole("table").className).toContain("table-fixed");
     for (const header of screen.getAllByRole("columnheader")) {
-      expect(header.className).toMatch(/\bw-/u);
+      expect(header.className).toMatch(WIDTH_CLASS);
     }
   });
 

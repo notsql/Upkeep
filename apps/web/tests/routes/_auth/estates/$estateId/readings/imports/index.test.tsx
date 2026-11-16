@@ -20,6 +20,8 @@ const SOURCE = "Vendor A — October 2026 extract";
 const INACTIVE_ESTATE =
   /inactive estate|estate is inactive|estate is deactivated/iu;
 const LOAD_FAILURE = /failed to load/iu;
+const LOOKUP_LABEL = /Asset (?:UUID|reference)/u;
+const LOOKUP_CODE = /asset_(?:id|reference)/u;
 const INSERTED_COUNT = /1 reading/iu;
 const CSV =
   "asset_reference,metric,measured_at,value\nPUMP-001,TEMPERATURE,2026-10-01T08:00:00+08:00,999999999999.123456\n";
@@ -241,8 +243,8 @@ describe("historical CSV upload", () => {
       "Equipment,Signal,Observed,Measurement\nPUMP-001,TEMPERATURE,2026-10-01T00:00:00Z,21\n"
     );
     const lookup = screen.getByRole("combobox", { name: "Asset lookup" });
-    expect(lookup.textContent).toMatch(/Asset (UUID|reference)/u);
-    expect(lookup.textContent).not.toMatch(/asset_(id|reference)/u);
+    expect(lookup.textContent).toMatch(LOOKUP_LABEL);
+    expect(lookup.textContent).not.toMatch(LOOKUP_CODE);
     const unmapped = screen.getByRole("combobox", { name: "Asset column" });
     expect(unmapped.textContent).toContain("Choose column");
     expect(unmapped.textContent).not.toContain("none");

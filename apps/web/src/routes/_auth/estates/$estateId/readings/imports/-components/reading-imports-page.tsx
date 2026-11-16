@@ -77,6 +77,10 @@ function validMapping(
     new Set(columns).size === columns.length
   );
 }
+function batchCount(total: number): string {
+  return `${total} ${total === 1 ? "batch" : "batches"}`;
+}
+
 export function ReadingImportsPage({ estateId }: { estateId: string }) {
   const { user } = useAuth();
   const access = useAppAccess();
@@ -348,7 +352,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
             label="Import history pages"
             onNext={nextPage}
             onPrevious={previousPage}
-            summary={`${history.data.totalItems} ${history.data.totalItems === 1 ? "batch" : "batches"}`}
+            summary={batchCount(history.data.totalItems)}
           />
         ) : null}
       </PageSection>

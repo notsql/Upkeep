@@ -4,6 +4,8 @@ import { expect, it, vi } from "vitest";
 import type { ResidentLocation } from "@/lib/reports";
 import { ReportLocationFields } from "@/routes/_auth/reports/new/-components/new-report-page/report-location-fields";
 
+const COMMON_AREA = /Common area/u;
+
 const locations: ResidentLocation[] = [
   { id: "b", type: "BLOCK", name: "Block A", parentId: null, sortOrder: 1 },
   { id: "l", type: "LEVEL", name: "L1", parentId: "b", sortOrder: 1 },
@@ -36,7 +38,7 @@ it("groups common areas by where they are: on the level or anywhere in the block
       onLevelChange={vi.fn()}
     />
   );
-  fireEvent.click(screen.getByRole("combobox", { name: /Common area/u }));
+  fireEvent.click(screen.getByRole("combobox", { name: COMMON_AREA }));
   const onLevel = await screen.findByRole("group", { name: "On L1" });
   within(onLevel).getByRole("option", { name: "Lift lobby" });
   const inBlock = screen.getByRole("group", { name: "Anywhere in Block A" });
