@@ -75,7 +75,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                 (Singapore)
               </p>
               <p className="text-muted-foreground break-all">
-                By {event.actorUserId}
+                By {event.actorName ?? "an unknown user"}
               </p>
               {event.previousRetiredOn || event.previousRetirementReason ? (
                 <p>

@@ -61,6 +61,9 @@ class AssetControllerTests {
     CatalogueRepository catalogue;
 
     @MockitoBean
+    com.proj.server.workos.WorkOSService workOS;
+
+    @MockitoBean
     JwtDecoder jwtDecoder;
 
     private final UUID estateId = UUID.fromString("ac514a8e-c643-4a59-aa93-30138327f039");

@@ -11,6 +11,10 @@ public record AssetLifecycleEventResponse(
         String action,
         OffsetDateTime occurredAt,
         String actorUserId,
+
+        @Schema(nullable = true, description = "The actor's name, or null if WorkOS is unavailable")
+        String actorName,
+
         @Schema(nullable = true) OffsetDateTime previousDeactivatedAt,
         @Schema(nullable = true) LocalDate previousRetiredOn,
         @Schema(nullable = true) String previousRetirementReason,

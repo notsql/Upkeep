@@ -147,3 +147,28 @@ it("leaves out the previous out-of-use line when there was nothing before", asyn
     screen.queryByText("Previous out-of-use date", { exact: false })
   ).toBeNull();
 });
+
+it("names who changed the asset's lifecycle, not their user ID", async () => {
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [
+      {
+        id: "event-1",
+        action: "RETIRED",
+        occurredAt: "2026-11-12T00:27:21Z",
+        actorUserId: "user_01ABC",
+        actorName: "Casey Doe",
+        previousDeactivatedAt: null,
+        previousRetiredOn: null,
+        previousRetirementReason: null,
+        deactivatedAt: "2026-11-12T00:27:21Z",
+        retiredOn: "2026-11-12",
+        retirementReason: "retired",
+        lifecycleVersion: 1,
+      },
+    ],
+    response: new Response(),
+  } as never);
+  renderWithProviders(<AssetRetirementPanel asset={asset} />);
+  await screen.findByText("By Casey Doe", { exact: false });
+  expect(screen.queryByText("user_01ABC", { exact: false })).toBeNull();
+});
