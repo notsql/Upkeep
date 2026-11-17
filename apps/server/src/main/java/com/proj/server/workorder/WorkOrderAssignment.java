@@ -59,14 +59,14 @@ public final class WorkOrderAssignment {
     }
 
     /**
-     * Whether the caller may start or complete the order: an owner or Manager on any order that is not closed; Crew only
-     * on an order they are the assignee of.
+     * Whether the caller may start or complete the order: MANAGE_WORK_ORDERS on any order that is not closed;
+     * PROGRESS_ASSIGNED_WORK_ORDERS only on an order they are the assignee of (estate-role-permissions).
      */
     public static boolean canProgress(
-            WorkOrderStatus status, boolean manager, String role, String assigneeUserId, String user) {
+            WorkOrderStatus status, boolean manages, boolean progressesAssigned, String assigneeUserId, String user) {
         if (status == WorkOrderStatus.CLOSED) return false;
-        if (manager) return true;
-        return "CREW".equals(role) && user != null && user.equals(assigneeUserId);
+        if (manages) return true;
+        return progressesAssigned && user != null && user.equals(assigneeUserId);
     }
 
     private static void requireNotClosed(WorkOrderStatus status) {

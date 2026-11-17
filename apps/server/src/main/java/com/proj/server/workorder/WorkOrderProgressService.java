@@ -32,8 +32,6 @@ public class WorkOrderProgressService {
 
     private void authorizeUpdate(UUID estate, String user) {
         orders.authorize(estate, user, true, true);
-        if (!estates.isManager(estate, user))
-            throw error(HttpStatus.FORBIDDEN, "Only the owner or an assigned Manager can update work-order progress.");
     }
 
     /**
@@ -42,7 +40,8 @@ public class WorkOrderProgressService {
      */
     private com.proj.server.db.tables.records.WorkorderRecord authorizeProgress(UUID estate, String user, UUID id) {
         var found = orders.authorize(estate, user, false, true);
-        boolean manager = estates.isManager(estate, user);
+        var codes = orders.codes(estate, user);
+        boolean manager = codes.contains(EstatePermissionCode.MANAGE_WORK_ORDERS);
         if (manager && found.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         var row = repository.lockOrder(estate, id);
         if (manager) {
@@ -53,7 +52,7 @@ public class WorkOrderProgressService {
                 && WorkOrderAssignment.canProgress(
                         WorkOrderStatus.IN_PROGRESS,
                         false,
-                        repository.role(estate, user),
+                        codes.contains(EstatePermissionCode.PROGRESS_ASSIGNED_WORK_ORDERS),
                         row.getAssigneeuserid(),
                         user);
         if (!assignee)

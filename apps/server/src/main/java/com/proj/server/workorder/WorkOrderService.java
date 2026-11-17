@@ -1,5 +1,6 @@
 package com.proj.server.workorder;
 
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.report.EstateReportRepository;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
@@ -38,7 +39,8 @@ public class WorkOrderService {
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user);
         boolean owner = user.equals(estate.getOwneruserid());
-        boolean allowed = permits(owner, role, create);
+        var needed = create ? EstatePermissionCode.MANAGE_WORK_ORDERS : EstatePermissionCode.VIEW_WORK_ORDERS;
+        boolean allowed = repository.codes(estateId, user).contains(needed);
         if (!allowed)
             throw error(
                     owner || role != null ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
@@ -49,16 +51,16 @@ public class WorkOrderService {
         return estate;
     }
 
-    private static boolean permits(boolean owner, String role, boolean create) {
-        boolean manager = owner || "MANAGER".equals(role);
-        return !"RESIDENT".equals(role) && (manager || (!create && "CREW".equals(role)));
-    }
-
     /** The permission half of creating a work order, without the estate-active check; used by who-can-help. */
     @Transactional(readOnly = true)
     public boolean canCreate(UUID estateId, String user) {
-        var estate = repository.estate(estateId, false);
-        return estate != null && permits(user.equals(estate.getOwneruserid()), repository.role(estateId, user), true);
+        return repository.estate(estateId, false) != null
+                && repository.codes(estateId, user).contains(EstatePermissionCode.MANAGE_WORK_ORDERS);
+    }
+
+    /** The codes {@code user} holds in the estate. */
+    public java.util.Set<EstatePermissionCode> codes(UUID estateId, String user) {
+        return repository.codes(estateId, user);
     }
 
     @Transactional
@@ -81,9 +83,8 @@ public class WorkOrderService {
                         || request.sourceReference().isBlank()))
             throw error(HttpStatus.BAD_REQUEST, "Enter a source reference or explanation.");
         if (report) {
-            var role = repository.role(estateId, user);
-            if (!"MANAGER".equals(role) && !"CREW".equals(role))
-                throw error(HttpStatus.FORBIDDEN, "Responder membership required to use a report.");
+            if (!repository.codes(estateId, user).contains(EstatePermissionCode.VIEW_FAULT_REPORTS))
+                throw error(HttpStatus.FORBIDDEN, "This estate permission is required: VIEW_FAULT_REPORTS");
             var sourceLocation = repository.reportLocation(estateId, request.sourceReportId());
             if (sourceLocation == null) throw error(HttpStatus.NOT_FOUND, "Report not found.");
             if (!sourceLocation.equals(request.expectedSourceLocationId()))
@@ -183,16 +184,19 @@ public class WorkOrderService {
     }
 
     private boolean canProgress(UUID estateId, String user, WorkOrderResponse order) {
-        var estate = repository.estate(estateId, false);
-        var role = repository.role(estateId, user);
-        boolean manager = estate != null && (user.equals(estate.getOwneruserid()) || "MANAGER".equals(role));
-        return canProgress(manager, role, user, order);
+        return canProgress(repository.codes(estateId, user), user, order);
     }
 
-    private static boolean canProgress(boolean manager, String role, String user, WorkOrderResponse order) {
+    private static boolean canProgress(
+            java.util.Set<EstatePermissionCode> codes, String user, WorkOrderResponse order) {
         var assignee = order.assignee();
         var member = assignee != null && assignee.kind() == WorkOrderAssignment.Kind.MEMBER ? assignee.id() : null;
-        return WorkOrderAssignment.canProgress(order.status(), manager, role, member, user);
+        return WorkOrderAssignment.canProgress(
+                order.status(),
+                codes.contains(EstatePermissionCode.MANAGE_WORK_ORDERS),
+                codes.contains(EstatePermissionCode.PROGRESS_ASSIGNED_WORK_ORDERS),
+                member,
+                user);
     }
 
     // Creation calls this after its transaction commits, so provider latency never holds the estate lock.
@@ -233,11 +237,10 @@ public class WorkOrderService {
                 id,
                 limit + 1,
                 assignedTo == null ? null : user);
-        var role = repository.role(estateId, user);
-        boolean manager = user.equals(estate.getOwneruserid()) || "MANAGER".equals(role);
+        var codes = repository.codes(estateId, user);
         var page = (found.size() > limit ? found.subList(0, limit) : found)
                 .stream()
-                        .map(order -> order.withCanProgress(canProgress(manager, role, user, order)))
+                        .map(order -> order.withCanProgress(canProgress(codes, user, order)))
                         .toList();
         var last = page.isEmpty() ? null : page.getLast();
         return new WorkOrderPageResponse(

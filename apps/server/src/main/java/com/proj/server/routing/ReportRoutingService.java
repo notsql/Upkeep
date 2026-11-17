@@ -50,9 +50,8 @@ public class ReportRoutingService {
     public ReportRoutingResponse send(
             UUID estateId, String user, String name, UUID reportId, EquipmentType type, WorkOrderPriority priority) {
         orders.authorize(estateId, user, true, true);
-        var role = estates.role(estateId, user, false);
-        if (!"MANAGER".equals(role) && !"CREW".equals(role))
-            throw error(HttpStatus.FORBIDDEN, "Responder membership required to use a report.");
+        if (!orders.codes(estateId, user).contains(EstatePermissionCode.VIEW_FAULT_REPORTS))
+            throw error(HttpStatus.FORBIDDEN, "This estate permission is required: VIEW_FAULT_REPORTS");
         requireReport(estateId, reportId);
         requireReview(reportId);
         var contractor = routing.contractors(estateId).get(type);

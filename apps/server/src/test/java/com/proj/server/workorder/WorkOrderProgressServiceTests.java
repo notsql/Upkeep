@@ -35,10 +35,12 @@ class WorkOrderProgressServiceTests {
         var estates = mock(EstateRepository.class);
         service = new WorkOrderProgressService(repository, orders, estates, mock(WorkOSService.class));
         when(orders.authorize(eq(ESTATE), any(), eq(false), eq(true))).thenReturn(new EstateRecord());
-        when(estates.isManager(ESTATE, "crew_priya")).thenReturn(false);
-        when(estates.isManager(ESTATE, "crew_sam")).thenReturn(false);
-        when(repository.role(ESTATE, "crew_priya")).thenReturn("CREW");
-        when(repository.role(ESTATE, "crew_sam")).thenReturn("CREW");
+        // Crew hold VIEW_WORK_ORDERS and PROGRESS_ASSIGNED_WORK_ORDERS (estate-role-permissions).
+        var crew = java.util.Set.of(
+                com.proj.server.estate.EstatePermissionCode.VIEW_WORK_ORDERS,
+                com.proj.server.estate.EstatePermissionCode.PROGRESS_ASSIGNED_WORK_ORDERS);
+        when(orders.codes(ESTATE, "crew_priya")).thenReturn(crew);
+        when(orders.codes(ESTATE, "crew_sam")).thenReturn(crew);
         var row = new WorkorderRecord();
         row.setId(ORDER);
         row.setStatus("ASSIGNED");

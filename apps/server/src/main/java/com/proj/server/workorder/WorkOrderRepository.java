@@ -11,6 +11,7 @@ import static com.proj.server.db.tables.Workorder.WORKORDER;
 import static com.proj.server.db.tables.Workordercompletion.WORKORDERCOMPLETION;
 
 import com.proj.server.db.tables.records.EstateRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +27,11 @@ public class WorkOrderRepository {
 
     public WorkOrderRepository(DSLContext db) {
         this.db = db;
+    }
+
+    /** The permission codes {@code user} holds in the estate (estate-role-permissions). */
+    public java.util.Set<EstatePermissionCode> codes(UUID estateId, String user) {
+        return com.proj.server.estate.EstatePermissions.effective(db, estateId, user);
     }
 
     public EstateRecord estate(UUID estateId, boolean lock) {

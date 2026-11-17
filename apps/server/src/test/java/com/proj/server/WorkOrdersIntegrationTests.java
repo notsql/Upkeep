@@ -523,9 +523,10 @@ class WorkOrdersIntegrationTests {
     }
 
     @Test
-    void ownershipAloneCannotConvertPrivateReports() throws Exception {
+    void theOwnerMayConvertReportsButAnUnknownReportIsNotFound() throws Exception {
+        // The owner holds every code, VIEW_FAULT_REPORTS included (estate-role-permissions).
         var data = new DeviceTestData(db).estateWithAsset(owner);
-        reportOrder(data, owner, UUID.randomUUID(), data[1]).andExpect(status().isForbidden());
+        reportOrder(data, owner, UUID.randomUUID(), data[1]).andExpect(status().isNotFound());
     }
 
     @Test

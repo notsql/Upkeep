@@ -5,9 +5,12 @@ Source of truth: `packages/api/openapi.json`. Implementation:
 
 ## Authorization and persistence
 
-Identity is required even without a configured JWT issuer. Current estate owners
-and MANAGER members create; owners, MANAGER and CREW members read all orders in
-that estate. Same-estate RESIDENT membership overrides ownership. Other known
+Identity is required even without a configured JWT issuer. Access follows the
+permission codes (estate-role-permissions): `VIEW_WORK_ORDERS` reads all orders
+in the estate (owner, every Manager, Crew); `MANAGE_WORK_ORDERS` creates, edits,
+assigns and progresses any order (owner, every Manager);
+`PROGRESS_ASSIGNED_WORK_ORDERS` starts and completes only orders assigned to the
+caller (Crew). Custom roles hold what they are granted. Same-estate RESIDENT membership overrides ownership. Other known
 members receive 403; foreign/missing estates and related records receive 404.
 WorkOS role claims do not grant estate authority.
 
@@ -24,8 +27,7 @@ orders remain readable even if their asset subsequently moves. Linked assets and
 ancestors must be active; retired assets cannot be linked. All related records
 have composite estate foreign keys. Multiple orders may reference one report.
 Report conversion does not mutate report fields, status, images or timestamps.
-It also requires current MANAGER/CREW responder membership; ownership alone is
-insufficient. The observed report location is checked under the estate lock,
+It also requires `VIEW_FAULT_REPORTS` (the owner holds every code). The observed report location is checked under the estate lock,
 independently of the chosen work location. Source references for inspections and
 recommendations are manually entered; saved inspection integration is deferred.
 
@@ -110,9 +112,9 @@ string. WorkOrderAssetPageResponse: items: WorkOrderAssetOptionResponse[];
 nextCursor: string or null. Order by reference then ID ascending; cursor
 encodes both values. The asset picker does not expose assignments. Provider filtering awaits ID-37.
 
-GET `/access/context` adds canViewWorkOrders: boolean (owner/Manager/Crew,
-including inactive history) and canCreateWorkOrders: boolean (active
-owner/Manager) to every EstateAccessResponse. See [access.md](access.md).
+GET `/access/context` adds canViewWorkOrders: boolean (`VIEW_WORK_ORDERS`,
+including inactive history) and canCreateWorkOrders: boolean (active estate and
+`MANAGE_WORK_ORDERS`) to every EstateAccessResponse. See [access.md](access.md).
 
 Example POST:
 
@@ -145,10 +147,10 @@ were installed.
 ## Progress, closure and asset outcomes
 
 All new reads require the existing reader permission and return private/no-store.
-Writes require an active owner/current Manager; a same-estate Resident overrides
-ownership. Reads preserve inactive history. Writes acquire the estate and order
+Writes require `MANAGE_WORK_ORDERS` in an active estate; a same-estate Resident
+overrides ownership. Reads preserve inactive history. Writes acquire the estate and order
 locks before checking the current version/state. Names are resolved before write
-locks. Crew cannot update progress/completion; non-owner Managers gain no owner asset-register access.
+locks. Holders of only `PROGRESS_ASSIGNED_WORK_ORDERS` (Crew) start and complete just their own assigned orders.
 
 | Method | Path | Request | Success |
 | --- | --- | --- | --- |
@@ -362,8 +364,8 @@ DTO additions:
 - `WorkOrderAssigneeResponse`: `type: MEMBER | CONTRACTOR`, `id`, `name`,
   `email | null`, `inEstate` (false when a member left or a contractor was removed).
 - `WorkOrderResponse`: `assignee: WorkOrderAssigneeResponse | null`,
-  `canProgress` (the caller may start/complete: owner/Manager, or the Crew
-  member it is assigned to).
+  `canProgress` (the caller may start/complete: `MANAGE_WORK_ORDERS` on any open
+  order, or `PROGRESS_ASSIGNED_WORK_ORDERS` on an order assigned to them).
 - `WorkOrderStatusEventResponse`: `kind: STATUS | ASSIGNMENT`, `assigneeName | null`.
 - List: `assignedTo?: me` filters to orders assigned to the caller; any other
   value is 400.

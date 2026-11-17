@@ -190,7 +190,8 @@ class WhoCanHelpIntegrationTests {
 
     @Test
     void rolesComeInAFixedOrderWithTheOwnerLast() throws Exception {
-        assertEquals(List.of("Manager", "estate owner"), roles("crew", "SEND_CONTRACTOR"));
+        // The all-codes custom role holds MANAGE_WORK_ORDERS too (estate-role-permissions).
+        assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("crew", "SEND_CONTRACTOR"));
         assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("member", "REPLACE_SENSOR"));
     }
 
