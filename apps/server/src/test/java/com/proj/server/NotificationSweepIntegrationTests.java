@@ -522,7 +522,7 @@ class NotificationSweepIntegrationTests {
 
     List<Record> predicted() {
         return db.fetch(
-                "select * from \"Notification\" where \"estateId\" = ? and type = 'REPAIR_PREDICTED' order by \"resolvedAt\" nulls last, id",
+                "select * from \"Notification\" where \"estateId\" = ? and type = 'REPAIR_PREDICTED' order by \"resolvedAt\" nulls first, id",
                 estateId);
     }
 
