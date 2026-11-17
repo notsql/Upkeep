@@ -44,7 +44,7 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
 
     @Test
     void ordinaryUploadLinksByUuidAndAppearsOnAssetAfterFreshReadWithoutChangingEquipmentOrFile() throws Exception {
-        UUID document = id(upload("crew", "invoice.pdf"));
+        UUID document = id(upload("uploader", "invoice.pdf"));
         UUID asset = asset(estateId, "TT-A0001");
         var equipment = db.fetchOne("select * from \"Asset\" where id=?", asset).intoMap();
         String key = storageKey(document);
@@ -92,7 +92,7 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
 
     @Test
     void unlinkRetainsTheUploadAndExistingWorkOrderAndNeedsNoCorrectionReason() throws Exception {
-        UUID document = id(upload("crew", "service-report.pdf"));
+        UUID document = id(upload("uploader", "service-report.pdf"));
         UUID asset = asset(estateId, "TT-A0001");
         UUID order = order(asset);
         workOrderLink(document, order).andExpect(status().isOk());
@@ -115,7 +115,7 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.workOrderId").value(order.toString()))
                 .andExpect(jsonPath("$.associationVersion").value(1));
-        mvc.perform(as("crew", get(downloadPath(document)))).andExpect(status().isOk());
+        mvc.perform(as("uploader", get(downloadPath(document)))).andExpect(status().isOk());
         assertTrue(storage.objects.containsKey(storageKey(document)));
         assertEquals(
                 work,
@@ -172,9 +172,9 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"manager", "crew", "resident", "member"})
+    @ValueSource(strings = {"manager", "uploader", "resident", "member"})
     void documentEditingOrUploaderRightsDoNotGrantAssetAssociationAuthority(String user) throws Exception {
-        UUID document = id(upload("crew", "invoice.pdf"));
+        UUID document = id(upload("uploader", "invoice.pdf"));
         UUID asset = asset(estateId, "TT-A0001");
         associate(document, asset, 0, user).andExpect(status().isForbidden());
         associate(document, asset, 0, "owner").andExpect(status().isOk());

@@ -45,8 +45,9 @@ abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
     @BeforeEach
     void documentPeopleAndStorage() {
         storage.reset();
-        member(estateId, "crew", "CREW");
-        member(estateId, "second-crew", "CREW");
+        // Non-Manager uploaders are Council: Crew hold no document codes (estate-role-permissions).
+        member(estateId, "uploader", "COUNCIL");
+        member(estateId, "second-uploader", "COUNCIL");
         member(estateId, "resident", "RESIDENT");
         member(estateId, "legacy-member", "MEMBER");
     }

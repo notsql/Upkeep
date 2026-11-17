@@ -22,7 +22,7 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
         uploadType("INVOICE", "other-invoice.pdf");
         uploadType("SERVICE_REPORT", "other-service.pdf");
         String expected = type.equals("INVOICE") ? "match-invoice.pdf" : "match-service.pdf";
-        mvc.perform(as("crew", get(documents()).param("documentType", type).param("filename", "  MATCH  ")))
+        mvc.perform(as("uploader", get(documents()).param("documentType", type).param("filename", "  MATCH  ")))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
                 .andExpect(jsonPath("$.items[*].originalFilename", contains(expected)))
@@ -38,13 +38,13 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
         db.execute("update \"Document\" set \"createdAt\"='2026-02-01T00:00:00Z' where id=?", newer);
         uploadType("INVOICE", "newest-invoice.pdf");
         var first = body(mvc.perform(as(
-                        "crew",
+                        "uploader",
                         get(documents()).param("documentType", "SERVICE_REPORT").param("limit", "1")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(newer.toString())));
         String cursor = first.get("nextCursor").asText();
         mvc.perform(as(
-                        "crew",
+                        "uploader",
                         get(documents())
                                 .param("documentType", "SERVICE_REPORT")
                                 .param("limit", "1")
@@ -52,19 +52,21 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(old.toString()))
                 .andExpect(jsonPath("$.nextCursor").isEmpty());
-        mvc.perform(as("crew", get(documents()).param("documentType", "INVOICE").param("cursor", cursor)))
-                .andExpect(status().isBadRequest());
-        mvc.perform(as("crew", get(documents()).param("cursor", cursor))).andExpect(status().isBadRequest());
         mvc.perform(as(
-                        "crew",
+                        "uploader",
+                        get(documents()).param("documentType", "INVOICE").param("cursor", cursor)))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as("uploader", get(documents()).param("cursor", cursor))).andExpect(status().isBadRequest());
+        mvc.perform(as(
+                        "uploader",
                         get(documents())
                                 .param("documentType", "SERVICE_REPORT")
                                 .param("filename", "report")
                                 .param("cursor", cursor)))
                 .andExpect(status().isBadRequest());
-        UUID foreign = estate("crew");
+        UUID foreign = estate("uploader");
         mvc.perform(as(
-                        "crew",
+                        "uploader",
                         get("/estates/" + foreign + "/documents")
                                 .param("documentType", "SERVICE_REPORT")
                                 .param("cursor", cursor)))
@@ -75,7 +77,7 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
     void omittedTypeListsBothExistingTypesAndKeepsLegacyUnfilteredCursorsUsable() throws Exception {
         uploadType("INVOICE", "match-invoice.pdf");
         uploadType("SERVICE_REPORT", "match-service.pdf");
-        var all = body(mvc.perform(as("crew", get(documents()).param("filename", "match")))
+        var all = body(mvc.perform(as("uploader", get(documents()).param("filename", "match")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(2)));
         var first = all.get("items").get(0);
@@ -87,12 +89,12 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
                 .encodeToString((binding + first.get("createdAt").asText() + "\n"
                                 + first.get("id").asText())
                         .getBytes(StandardCharsets.UTF_8));
-        mvc.perform(as("crew", get(documents()).param("filename", "match").param("cursor", legacy)))
+        mvc.perform(as("uploader", get(documents()).param("filename", "match").param("cursor", legacy)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id")
                         .value(all.get("items").get(1).get("id").asText()));
         mvc.perform(as(
-                        "crew",
+                        "uploader",
                         get(documents())
                                 .param("filename", "match")
                                 .param("documentType", "INVOICE")
@@ -103,7 +105,7 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
     @ParameterizedTest
     @ValueSource(strings = {"OTHERS", "invoice", "UNKNOWN", "ALL"})
     void unsupportedApiTypesReturnBadRequest(String type) throws Exception {
-        mvc.perform(as("crew", get(documents()).param("documentType", type)))
+        mvc.perform(as("uploader", get(documents()).param("documentType", type)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").isNotEmpty());
     }
@@ -112,11 +114,13 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
     void filtersExcludeDeletedAndForeignDocumentsBeforeLimitingThePage() throws Exception {
         UUID deleted = id(uploadType("INVOICE", "deleted.pdf"));
         uploadType("SERVICE_REPORT", "report.pdf");
-        mvc.perform(as("crew", delete(documents() + "/" + deleted))).andExpect(status().isNoContent());
+        mvc.perform(as("uploader", delete(documents() + "/" + deleted))).andExpect(status().isNoContent());
         UUID foreign = estate("owner");
         mvc.perform(as("owner", submissionTo(foreign, "INVOICE", pdfFile("foreign.pdf"))))
                 .andExpect(status().isCreated());
-        mvc.perform(as("crew", get(documents()).param("documentType", "INVOICE").param("limit", "1")))
+        mvc.perform(as(
+                        "uploader",
+                        get(documents()).param("documentType", "INVOICE").param("limit", "1")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isEmpty())
                 .andExpect(jsonPath("$.nextCursor").isEmpty());
@@ -128,7 +132,7 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
         uploadType("INVOICE", "invoice.pdf");
         uploadType("SERVICE_REPORT", "report.pdf");
         inactive();
-        mvc.perform(as("crew", get(documents()).param("documentType", "SERVICE_REPORT")))
+        mvc.perform(as("uploader", get(documents()).param("documentType", "SERVICE_REPORT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[*].documentType", contains("SERVICE_REPORT")));
         mvc.perform(get(documents()).param("documentType", "SERVICE_REPORT")).andExpect(status().isUnauthorized());
@@ -136,12 +140,13 @@ class DocumentTypeFilterIntegrationTests extends DocumentTestSupport {
                 .andExpect(status().isForbidden());
         mvc.perform(as("outsider", get(documents()).param("documentType", "SERVICE_REPORT")))
                 .andExpect(status().isNotFound());
-        revoke("crew");
-        mvc.perform(as("crew", get(documents()).param("documentType", "SERVICE_REPORT")))
+        revoke("uploader");
+        mvc.perform(as("uploader", get(documents()).param("documentType", "SERVICE_REPORT")))
                 .andExpect(status().isNotFound());
     }
 
     private JsonNode uploadType(String type, String filename) throws Exception {
-        return body(mvc.perform(as("crew", submission(type, pdfFile(filename)))).andExpect(status().isCreated()));
+        return body(
+                mvc.perform(as("uploader", submission(type, pdfFile(filename)))).andExpect(status().isCreated()));
     }
 }

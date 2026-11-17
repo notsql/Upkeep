@@ -121,11 +121,8 @@ public class AccessService {
             boolean canDeleteRoles = active && manager;
             boolean canReassignRoles = active && manager;
             boolean canViewEstateInvitations = manager || permissions.contains(EstatePermissionCode.INVITE_MEMBERS);
-            boolean presetDocuments =
-                    manager || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)) || "CREW".equals(row.get(ESTATEUSER.ROLE));
-            boolean canViewDocuments = presetDocuments || permissions.contains(EstatePermissionCode.VIEW_DOCUMENTS);
-            boolean canUploadDocuments =
-                    active && (presetDocuments || permissions.contains(EstatePermissionCode.EDIT_DOCUMENTS));
+            boolean canViewDocuments = codes.contains(EstatePermissionCode.VIEW_DOCUMENTS);
+            boolean canUploadDocuments = active && codes.contains(EstatePermissionCode.EDIT_DOCUMENTS);
             return new AppAccessResponse.EstateAccessResponse(
                     row.get(ESTATE.ID),
                     row.get(ESTATE.NAME),

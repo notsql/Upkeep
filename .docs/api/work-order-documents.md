@@ -8,16 +8,17 @@ upload files, extract invoice data or edit completion outcomes.
 
 Every endpoint requires authenticated identity, including local open-security
 mode. Reads require both current work-order read access and `VIEW_DOCUMENTS` in
-the estate. Thus permitted Crew can read attachments/history; document-only
-Council/custom roles gain no work-order access. Writes additionally require an
+the estate. Crew hold `VIEW_WORK_ORDERS` but not `VIEW_DOCUMENTS`, so they get
+403 on attachments and history (agreed 2026-11-18); document-only Council/custom
+roles gain no work-order access. Writes additionally require an
 active estate, current Owner/Manager authority and `EDIT_DOCUMENTS`. Document
 edit/uploader/delete rights alone grant no association-write authority. Resident
 override and live estate membership rules apply. Asset-register access is not
 required. Reads remain available in inactive estates.
 
 Association writes enforce Owner/Manager authority separately from work-order
-creation access. Crew can read work orders and permitted attachments,
-but linking, changing or removing a document association returns 403.
+creation access. Crew can read work orders but not their attachments, and linking, changing or
+removing a document association returns 403.
 
 Responses use `Cache-Control: private, no-store`. Errors use
 `EstateError { message: string }`: 400 invalid target/version/reason/cursor/limit;

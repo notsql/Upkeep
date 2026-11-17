@@ -155,8 +155,8 @@ public final class EstatePermissions {
         boolean manager = !"RESIDENT".equals(role) && (user.equals(estate.getOwneruserid()) || "MANAGER".equals(role));
         if (!manager && member == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var customId = member == null ? null : member.getCustomroleid();
-        var grants = "CUSTOM".equals(role) ? grants(db, customId, estateId) : Set.<EstatePermissionCode>of();
-        return new Authority(estate, role, customId, manager, grants);
+        // Every code the user holds here: built-in bundle, custom grants, or all of them for the owner.
+        return new Authority(estate, role, customId, manager, effective(db, estateId, user));
     }
 
     public record Authority(
@@ -165,11 +165,9 @@ public final class EstatePermissions {
             UUID customRoleId,
             boolean manager,
             Set<EstatePermissionCode> permissions) {
+        /** Whether the user holds the code here (estate-role-permissions); no role-name shortcuts. */
         public boolean has(EstatePermissionCode permission) {
-            boolean presetDocuments = (permission == EstatePermissionCode.VIEW_DOCUMENTS
-                            || permission == EstatePermissionCode.EDIT_DOCUMENTS)
-                    && ("COUNCIL".equals(role) || "CREW".equals(role));
-            return manager || presetDocuments || permissions.contains(permission);
+            return permissions.contains(permission);
         }
 
         public boolean active() {

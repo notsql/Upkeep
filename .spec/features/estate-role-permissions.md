@@ -63,7 +63,7 @@ is the prerequisite rule already enforced by `EstatePermissionCode.requires()`.
 | `VIEW_FAULT_REPORTS` | | | Estate fault report list and detail |
 | `RELOCATE_FAULT_REPORTS` | | VIEW_FAULT_REPORTS | Correct a report's location |
 | `TRIAGE_FAULT_REPORTS` | yes | VIEW_FAULT_REPORTS | Change urgency and Safety, change type, confirm/reject/link duplicates, dismiss |
-| `VIEW_WORK_ORDERS` | yes | | Work order list, detail, history, documents, contractor directory (read), contractor email status |
+| `VIEW_WORK_ORDERS` | yes | | Work order list, detail and history, contractor directory (read), contractor email status. A work order's attached files also need VIEW_DOCUMENTS (agreed 2026-11-18: Crew don't see them) |
 | `PROGRESS_ASSIGNED_WORK_ORDERS` | yes | VIEW_WORK_ORDERS | Start and complete a work order assigned to yourself |
 | `MANAGE_WORK_ORDERS` | yes | VIEW_WORK_ORDERS | Create, edit, assign, progress any, correct completion, send a report to a contractor, email or retry a contractor, link documents, edit the contractor directory |
 | `VIEW_ASSETS` | yes | | Asset register and detail, lifecycle History, maintenance records, failure risk, service intervals, work order completions, asset documents |
@@ -180,8 +180,9 @@ Outside the catalogue (not grantable to custom roles):
 - Crew can dismiss a report.
 - Crew get `403` from `POST /estates/{estateId}/reports/{reportId}/work-order`
   (send to a contractor), because it creates a work order.
-- Crew can list and view work orders, their history and documents, the
-  contractor directory, and contractor email status.
+- Crew can list and view work orders, their history, the contractor
+  directory, and contractor email status. They cannot see the files attached
+  to a work order, which are invoices and service reports.
 - Crew can start and complete a work order assigned to them.
 - Crew get `403` when starting or completing a work order assigned to someone
   else or to a contractor.
@@ -451,7 +452,7 @@ and migrated on `prd`) before any later phase is merged.
   codes and their `requires`. `EstatePermissions` resolves built-in bundles,
   owner-holds-all, Resident-holds-none, and drops the Council and Crew
   document shortcut. Add unit tests per role.
-- [ ] **3. Server guards, by area.** Replace `findOwned`, role-name and
+- [x] **3. Server guards, by area.** Replace `findOwned`, role-name and
   owner checks with code checks, in this order:
   - assets and maintenance
   - costs and failure risk
