@@ -36,4 +36,10 @@ public class AssetEventExceptionHandler {
         return ResponseEntity.badRequest()
                 .body(new EstateError("Invalid event request. The type must be a supported one."));
     }
+
+    /** Permission refusals from EstatePermissions.require keep the EstateError body (estate-role-permissions). */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ResponseEntity<EstateError> responseStatus(org.springframework.web.server.ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));
+    }
 }

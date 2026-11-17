@@ -17,4 +17,10 @@ public class FailureRiskExceptionHandler {
     ResponseEntity<EstateError> invalidRequest() {
         return ResponseEntity.badRequest().body(new EstateError("Invalid failure-risk request."));
     }
+
+    /** Permission refusals from EstatePermissions.require keep the EstateError body (estate-role-permissions). */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ResponseEntity<EstateError> responseStatus(org.springframework.web.server.ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));
+    }
 }

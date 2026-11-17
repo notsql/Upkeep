@@ -207,7 +207,7 @@ class CustomEstateRoleEnforcementIntegrationTests extends CustomEstateRoleTestSu
     }
 
     @Test
-    void locationEditorsCanRenameReorderAndMoveButCannotCreateOrDeactivate() throws Exception {
+    void locationEditorsCanRenameReorderMoveAndDeactivateButCannotCreate() throws Exception {
         grant("member", "VIEW_ESTATE", "EDIT_LOCATIONS");
         var first = location(estateId, "BLOCK", null, "Block A", null);
         var second = location(estateId, "BLOCK", null, "Block B", null);
@@ -224,8 +224,9 @@ class CustomEstateRoleEnforcementIntegrationTests extends CustomEstateRoleTestSu
                 .andExpect(status().isForbidden());
         send("member", post(path() + "/locations/" + first + "/floors"), Map.of("lowestFloor", 2, "highestFloor", 3))
                 .andExpect(status().isForbidden());
+        // EDIT_LOCATIONS now covers deactivation (estate-role-permissions).
         mvc.perform(as("member", post(path() + "/locations/" + level + "/deactivate")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @ParameterizedTest

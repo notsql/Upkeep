@@ -110,10 +110,9 @@ public class AccessService {
             boolean canViewFaultReports = responder || permissions.contains(EstatePermissionCode.VIEW_FAULT_REPORTS);
             boolean canRelocateFaultReports =
                     active && (responder || permissions.contains(EstatePermissionCode.RELOCATE_FAULT_REPORTS));
-            boolean canCreateLocations =
-                    active && (manager || permissions.contains(EstatePermissionCode.CREATE_LOCATIONS));
-            boolean canCreateFloors = active && (owner || permissions.contains(EstatePermissionCode.CREATE_LOCATIONS));
-            boolean canEditLocations = active && (owner || permissions.contains(EstatePermissionCode.EDIT_LOCATIONS));
+            boolean canCreateLocations = active && codes.contains(EstatePermissionCode.CREATE_LOCATIONS);
+            boolean canCreateFloors = canCreateLocations;
+            boolean canEditLocations = active && codes.contains(EstatePermissionCode.EDIT_LOCATIONS);
             boolean canViewEstateRoles = manager
                     || permissions.contains(EstatePermissionCode.CREATE_ROLES)
                     || permissions.contains(EstatePermissionCode.EDIT_ROLES);
