@@ -2,6 +2,7 @@ package com.proj.server.device;
 
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.db.tables.records.DeviceRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.location.LocationRepository;
 import java.time.Clock;
@@ -52,7 +53,7 @@ public class DeviceService {
     }
 
     public List<DeviceResponse> list(UUID estateId, UUID assetId, String user) {
-        estates.findManaged(estateId, user).orElseThrow(DeviceService::estateNotFound);
+        estates.require(estateId, user, EstatePermissionCode.VIEW_DEVICES, false);
         assets.find(assetId, estateId, false).orElseThrow(DeviceService::assetNotFound);
         var devices = repository.listForAsset(assetId);
         // Replacements are on the same asset, so the list holds both ends of every link.
@@ -65,7 +66,7 @@ public class DeviceService {
 
     /** Every device in the estate, the ones needing attention first (ID-44). */
     public List<EstateDeviceResponse> listForEstate(UUID estateId, String user) {
-        estates.findManaged(estateId, user).orElseThrow(DeviceService::estateNotFound);
+        estates.require(estateId, user, EstatePermissionCode.VIEW_DEVICES, false);
         var rows = repository.listForEstate(estateId);
         var replacedBy =
                 replacedBy(rows.stream().map(DeviceRepository.WithAsset::device).toList());
@@ -82,7 +83,7 @@ public class DeviceService {
 
     @Transactional
     public DeviceResponse register(UUID estateId, UUID assetId, String owner, CreateDeviceRequest request) {
-        var estate = estates.findOwned(estateId, owner, true).orElseThrow(DeviceService::estateNotFound);
+        var estate = estates.require(estateId, owner, EstatePermissionCode.MANAGE_DEVICES, true);
         if (estate.deactivatedAt() != null) {
             throw new DeviceException(HttpStatus.CONFLICT, "This estate is inactive. You can't add sensors.");
         }
@@ -138,7 +139,7 @@ public class DeviceService {
      */
     @Transactional
     public DeviceCredentialResponse issueCredential(UUID estateId, UUID assetId, UUID deviceId, String owner) {
-        var estate = estates.findOwned(estateId, owner, true).orElseThrow(DeviceService::estateNotFound);
+        var estate = estates.require(estateId, owner, EstatePermissionCode.MANAGE_DEVICES, true);
         if (estate.deactivatedAt() != null) {
             throw new DeviceException(
                     HttpStatus.CONFLICT, "This estate is inactive. Device credentials cannot be issued.");
@@ -161,7 +162,7 @@ public class DeviceService {
     }
 
     private void lockActiveEstateAndAsset(UUID estateId, UUID assetId, String owner) {
-        var estate = estates.findOwned(estateId, owner, true).orElseThrow(DeviceService::estateNotFound);
+        var estate = estates.require(estateId, owner, EstatePermissionCode.MANAGE_DEVICES, true);
         if (estate.deactivatedAt() != null) {
             throw new DeviceException(HttpStatus.CONFLICT, "This estate is inactive. You can't change its sensors.");
         }
@@ -222,10 +223,6 @@ public class DeviceService {
                 replacedByDeviceId,
                 row.getCreatedat(),
                 row.getUpdatedat());
-    }
-
-    private static DeviceException estateNotFound() {
-        return new DeviceException(HttpStatus.NOT_FOUND, "Estate not found.");
     }
 
     private static DeviceException deviceNotFound() {

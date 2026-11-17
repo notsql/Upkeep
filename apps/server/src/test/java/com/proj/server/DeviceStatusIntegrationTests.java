@@ -173,13 +173,22 @@ class DeviceStatusIntegrationTests {
                 .andExpect(jsonPath("$[0].status").value("ONLINE"));
     }
 
+    // Devices follow VIEW_DEVICES: Council hold it; Crew and legacy Member rows do not (estate-role-permissions).
+    @Test
+    void councilCanSeeDevices() throws Exception {
+        device();
+        membership("staff", "COUNCIL");
+        estateDevices("staff").andExpect(status().isOk());
+        assetDevices("staff").andExpect(status().isOk());
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "MEMBER"})
-    void otherEstateRolesCannotSeeDevices(String role) throws Exception {
+    @ValueSource(strings = {"CREW", "MEMBER"})
+    void membersWithoutViewDevicesAreRefused(String role) throws Exception {
         device();
         membership("staff", role);
-        estateDevices("staff").andExpect(status().isNotFound());
-        assetDevices("staff").andExpect(status().isNotFound());
+        estateDevices("staff").andExpect(status().isForbidden());
+        assetDevices("staff").andExpect(status().isForbidden());
     }
 
     @Test

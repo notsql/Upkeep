@@ -191,13 +191,13 @@ class WhoCanHelpIntegrationTests {
     @Test
     void rolesComeInAFixedOrderWithTheOwnerLast() throws Exception {
         assertEquals(List.of("Manager", "estate owner"), roles("crew", "SEND_CONTRACTOR"));
-        assertEquals(List.of("estate owner"), roles("member", "REPLACE_SENSOR"));
+        assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("member", "REPLACE_SENSOR"));
     }
 
     @Test
     void rolesNobodyHoldsAreLeftOut() throws Exception {
         db.execute("delete from \"EstateUser\" where \"estateId\" = ? and role = 'MANAGER'", estateId);
-        assertEquals(List.of("estate owner"), roles("crew", "PAUSE_SENSOR_WARNINGS"));
+        assertEquals(List.of("Facilities lead", "estate owner"), roles("crew", "PAUSE_SENSOR_WARNINGS"));
         assertEquals(List.of(), roles("crew", "REVIEW_DUPLICATE"));
     }
 

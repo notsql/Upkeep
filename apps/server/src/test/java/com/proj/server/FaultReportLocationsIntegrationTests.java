@@ -963,7 +963,7 @@ class FaultReportLocationsIntegrationTests {
                                 {"identifier":"sensor-1","model":"Sensor","locationId":"%s",
                                  "metrics":["TEMPERATURE"],"reportingIntervalSeconds":60}
                                 """.formatted(level))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden()); // Crew lack MANAGE_DEVICES.
         assertEquals("Level 4", db.fetchValue("select name from \"Location\" where id=?", level));
         assertEquals(
                 0L,

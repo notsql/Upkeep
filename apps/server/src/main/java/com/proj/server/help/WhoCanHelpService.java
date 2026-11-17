@@ -98,9 +98,9 @@ public class WhoCanHelpService {
     private boolean allowed(HelpAction action, UUID estateId, String user) {
         try {
             return switch (action) {
-                // DeviceService guards with findOwned.
+                // DeviceService requires MANAGE_DEVICES (estate-role-permissions).
                 case REPLACE_SENSOR, GENERATE_CONNECTION_KEY ->
-                    estates.findOwned(estateId, user, false).isPresent();
+                    EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.MANAGE_DEVICES);
                 // AssetAssessmentService requires RECORD_READINGS (estate-role-permissions).
                 case RECORD_CONDITION ->
                     EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.RECORD_READINGS);
