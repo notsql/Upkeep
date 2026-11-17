@@ -6,8 +6,25 @@ API: [notifications.md](../api/notifications.md).
 
 `src/components/shell/notification-bell.tsx`, rendered by `components/shell/header.tsx` for signed-in
 users before the theme toggle. Shown only when `useAppAccess()` lists an estate with role `MANAGER`
-(owners report `MANAGER`). A ghost icon `Link` to `/notifications` named "Notifications" or
-"Notifications, N unread", with a badge showing N (capped at "99+", hidden at 0).
+(owners report `MANAGER`) or `CREW`. A ghost icon `Button` (shadcn `PopoverTrigger`) named
+"Notifications" or "Notifications, N unread", with a badge showing N (capped at "99+", hidden at 0),
+that opens a shadcn `Popover` (`role="dialog"`, titled "Notifications", `align="end"`,
+`w-[min(24rem,calc(100vw-2rem))]`) instead of leaving the page:
+
+- `components/shell/recent-notifications.tsx` lists the newest `RECENT_NOTIFICATION_COUNT` (5) as
+  `ul aria-label="Recent notifications"` (scrolls past `min(28rem,70vh)`). It reads
+  `useNotifications(0)`, the inbox's first page and query key, only while the dropdown is open,
+  so the two share one cache and the list is never fetched just to draw the header.
+- Each row is a `NotificationRowLink` (type `Badge` by `notificationTypeTone`, "Unread", relative
+  time, the headline from `notificationTitle` or the summary, then "Asset (reference) · Estate");
+  unread rows are tinted `bg-accent/40`. Opening one marks it read (`useMarkNotificationRead`) and
+  closes the dropdown.
+- Loading, error (`ErrorState` with Retry) and "No notifications yet" states.
+- A full-width ghost "View all notifications" link to `/notifications` closes the dropdown.
+
+`components/notifications/notification-row-link.tsx` holds `NotificationRowLink` (work order,
+inspection form for Please inspect, else the asset) and `notificationTitle`, shared by the dropdown
+and the inbox's `notification-item.tsx`.
 
 ## Route
 
