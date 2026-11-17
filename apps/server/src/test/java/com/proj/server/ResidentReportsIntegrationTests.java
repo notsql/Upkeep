@@ -256,9 +256,7 @@ class ResidentReportsIntegrationTests {
         assertEquals(
                 0L,
                 db.fetchValue(
-                        "select count(*) from \"EstateUser\" where \"userId\"='manager-a' and \"estateId\"=?",
-                        Long.class,
-                        other));
+                        "select count(*) from \"EstateUser\" where \"userId\"='manager-a' and \"estateId\"=?", other));
     }
 
     @Test
