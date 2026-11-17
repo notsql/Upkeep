@@ -43,7 +43,6 @@ import {
   canOpenRoles,
   canOpenWorkOrders,
 } from "@/lib/estate-destinations";
-import { useEstate } from "@/lib/estates";
 
 const ESTATE_PATH = /^\/estates\/(?<estateId>[^/]+)/u;
 
@@ -101,11 +100,10 @@ type Permission = components["schemas"]["EstateAccessResponse"];
 function estateGroups(
   estateId: string,
   permission: Permission,
-  owned: boolean | undefined,
   pathname: string
 ): NavigationGroup[] {
   const base = `/estates/${estateId}`;
-  const assets = assetsEntry(permission, owned);
+  const assets = assetsEntry(permission);
   const item = (
     label: string,
     to: Destination,
@@ -144,12 +142,11 @@ function estateGroups(
   }));
   const settings = item(
     "Estate settings",
-    canOpenEstateSettings(permission, owned)
+    canOpenEstateSettings(permission)
       ? "/estates/$estateId/edit"
       : "/estates/$estateId/notification-settings",
     Settings,
-    canOpenEstateSettings(permission, owned) ||
-      canOpenNotificationSettings(permission)
+    canOpenEstateSettings(permission) || canOpenNotificationSettings(permission)
   ).map((entry) => ({
     ...entry,
     active: [`${base}/edit`, `${base}/notification-settings`].some(
@@ -178,7 +175,7 @@ function estateGroups(
           "Inspections",
           "/estates/$estateId/inspections",
           ClipboardCheck,
-          canOpenInspections(permission, owned)
+          canOpenInspections(permission)
         ),
         ...item(
           "Work orders",
@@ -229,22 +226,15 @@ function estateGroups(
 
 export function useNavigationGroups(): NavigationGroup[] {
   const { access, pathname, estateId, permission } = useCurrentEstate();
-  // Ownership comes from the estate itself; only management roles may read it.
-  const estate = useEstate(
-    permission?.canViewManagement ? estateId : undefined
-  );
   if (!(access.data && estateId && permission) || access.isError) {
     return [];
   }
   if (permission.role === "RESIDENT") {
     return [{ items: residentNavigation(access.data, estateId, pathname) }];
   }
-  return estateGroups(
-    estateId,
-    permission,
-    estate.data?.owned,
-    pathname
-  ).filter((group) => group.items.length > 0);
+  return estateGroups(estateId, permission, pathname).filter(
+    (group) => group.items.length > 0
+  );
 }
 
 export function AppNavigation() {

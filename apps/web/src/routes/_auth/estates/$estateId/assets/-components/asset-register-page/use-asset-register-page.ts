@@ -61,13 +61,14 @@ export function useAssetRegisterPage(
   const locations = useLocations(estateId, true);
   // Each source mounts only for viewers its endpoint serves, so none 403s.
   const access = useAppAccess();
-  const owned = Boolean(estate.data?.owned);
-  const role = access.data?.estates?.find(
+  const permission = access.data?.estates?.find(
     (item) => item.estateId === estateId
-  )?.role;
-  const showDevices = owned || role === "MANAGER";
+  );
+  // Flags mirror the codes each endpoint requires (estate-role-permissions).
+  const showDevices = Boolean(permission?.canViewDevices);
+  const showRisk = Boolean(permission?.canViewAssets);
   const devices = useEstateDevices(estateId, showDevices);
-  const risk = useEstateFailureRisk(estateId, owned);
+  const risk = useEstateFailureRisk(estateId, showRisk);
   // Groups depend only on asset and location data, never on devices or risk,
   // so rows keep their order while those load.
   const groups = useMemo((): AssetBlockGroup[] | null => {
@@ -90,7 +91,7 @@ export function useAssetRegisterPage(
         toneFor: deviceSummaryTones(devices.data ?? []),
       } satisfies MonitoringSource;
     }
-    if (owned) {
+    if (showRisk) {
       const flags = new Map(
         (risk.data ?? [])
           .filter((entry) => entry.flagReasons.length > 0)
@@ -108,7 +109,7 @@ export function useAssetRegisterPage(
     return columns;
   }, [
     showDevices,
-    owned,
+    showRisk,
     devices.data,
     devices.isPending,
     devices.isError,
@@ -149,7 +150,8 @@ export function useAssetRegisterPage(
   ].filter(Boolean).length;
   const filtered = activeCount > 0;
   const panel = useFilterPanel(activeCount);
-  const canRegister = !estate.data?.deactivatedAt;
+  const canRegister =
+    Boolean(permission?.canEditAssets) && !estate.data?.deactivatedAt;
   const locationOptions = useMemo(
     () =>
       Object.fromEntries(

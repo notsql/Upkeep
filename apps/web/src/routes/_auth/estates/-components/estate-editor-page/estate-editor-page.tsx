@@ -73,7 +73,6 @@ export function EstateEditorPage({ estateId }: { estateId?: string }) {
       {estateId ? (
         <EstateSettingsViews
           estateId={estateId}
-          owned={estate.data?.owned}
           permission={access.data?.estates.find(
             (assignment) => assignment.estateId === estateId
           )}

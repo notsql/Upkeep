@@ -51,6 +51,7 @@ const viewer = vi.hoisted(() => ({
   role: "MANAGER",
   canViewAssets: true,
   canViewDevices: true,
+  canManageDevices: true,
 }));
 vi.mock("@/lib/estates", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/estates")>()),
@@ -72,6 +73,7 @@ vi.mock("@/lib/access", async (importOriginal) => ({
           canViewManagement: true,
           canViewAssets: viewer.canViewAssets,
           canViewDevices: viewer.canViewDevices,
+          canManageDevices: viewer.canManageDevices,
           canViewInspectionResults: false,
         },
       ],
@@ -212,6 +214,7 @@ beforeEach(() => {
     role: "MANAGER",
     canViewAssets: true,
     canViewDevices: true,
+    canManageDevices: true,
   });
   devices = [
     device("ONLINE-1", "Boiler", "ONLINE"),
@@ -315,6 +318,7 @@ describe("AllDevicesPage", () => {
       owned: false,
       role: "COUNCIL",
       canViewAssets: false,
+      canManageDevices: false,
     });
     canManage = false;
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
@@ -422,21 +426,19 @@ describe("AllDevicesPage", () => {
     within(nav).getByRole("link", { name: "All sensors" });
   });
 
-  it("builds read-only rows from the review for Council without requesting devices", async () => {
+  // Council hold VIEW_DEVICES but not MANAGE_DEVICES (estate-role-permissions).
+  it("shows Council every sensor read-only, with no Replace or Pause", async () => {
     Object.assign(viewer, {
       owned: false,
       role: "COUNCIL",
       canViewAssets: false,
+      canManageDevices: false,
     });
     canManage = false;
     renderWithProviders(<AllDevicesPage estateId={ESTATE} />);
     await screen.findByRole("table", { name: "All sensors" });
-    expect(deviceOrder()).toEqual(["FLAT-1", "ONLINE-1"]);
-    expect(requested(DEVICES_PATH)).toBe(false);
-    const table = screen.getByRole("table", { name: "All sensors" });
-    expect(
-      within(table).queryByRole("columnheader", { name: "Status" })
-    ).toBeNull();
+    await waitFor(() => expect(requested(DEVICES_PATH)).toBe(true));
+    expect(screen.queryByRole("link", { name: "Replace sensor" })).toBeNull();
     expect(screen.queryByRole("button", { name: PAUSE })).toBeNull();
     expect(
       screen.queryByRole("navigation", { name: "Asset views" })

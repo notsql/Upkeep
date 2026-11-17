@@ -3,8 +3,10 @@ import * as fixtures from "@tests/fixtures/access";
 import { describe, expect, it } from "vitest";
 import {
   assetsEntry,
+  canOpenAllDevices,
   canOpenAllReadings,
   canOpenAssets,
+  canOpenCheckSchedules,
   canOpenContractors,
   canOpenDevices,
   canOpenDocuments,
@@ -33,37 +35,23 @@ const managementOnly: Permission = {
 };
 const delegate = { ...managementOnly, canManageInvitationPermissions: true };
 
-describe("owner-or-delegate destinations", () => {
+// Every destination follows the access flags; ownership no longer opens anything
+// (estate-role-permissions).
+describe("flag-gated destinations", () => {
   it.each([
-    ["devices", canOpenDevices],
-    ["inspections", canOpenInspections],
-  ])("%s need ownership or invitation-permission management", (_, open) => {
-    expect(open(managementOnly, false)).toBe(false);
-    expect(open(managementOnly, undefined)).toBe(false);
-    expect(open(managementOnly, true)).toBe(true);
-    expect(open(delegate, false)).toBe(true);
-    expect(open(undefined, false)).toBe(false);
+    ["inspections", canOpenInspections, "canViewInspectionResults"],
+    ["check schedules", canOpenCheckSchedules, "canManageInspections"],
+    ["devices", canOpenDevices, "canViewDevices"],
+    ["all devices", canOpenAllDevices, "canViewDevices"],
+    ["failure risk", canOpenFailureRisk, "canViewAssets"],
+    ["estate settings", canOpenEstateSettings, "canManageEstate"],
+  ] as const)("%s opens exactly with %s", (_, open, flag) => {
+    expect(open({ ...managementOnly, [flag]: true })).toBe(true);
+    expect(open({ ...managementOnly, [flag]: false })).toBe(false);
+    expect(open(undefined)).toBe(false);
   });
 });
 
-describe("failure risk", () => {
-  it("is owner only", () => {
-    expect(canOpenFailureRisk(ownerEstateAccess, false)).toBe(false);
-    expect(canOpenFailureRisk(managementOnly, true)).toBe(true);
-  });
-});
-
-describe("estate settings", () => {
-  it("needs ownership or estate management", () => {
-    expect(canOpenEstateSettings(managementOnly, false)).toBe(false);
-    expect(canOpenEstateSettings(managementOnly, true)).toBe(true);
-    expect(
-      canOpenEstateSettings({ ...managementOnly, canManageEstate: true }, false)
-    ).toBe(true);
-  });
-});
-
-// Device monitoring follows the canViewDevices flag (VIEW_DEVICES; estate-role-permissions).
 describe("sensors", () => {
   it("opens exactly when the user can view devices", () => {
     expect(canOpenSensors({ ...managementOnly, canViewDevices: true })).toBe(
@@ -112,36 +100,32 @@ describe("capability destinations", () => {
 
 describe("assets entry", () => {
   it("lands asset readers on By location", () => {
-    expect(assetsEntry(crewEstateAccess, false)).toBe(
-      "/estates/$estateId/assets"
-    );
-    expect(assetsEntry({ ...managementOnly, canViewAssets: true }, false)).toBe(
+    expect(assetsEntry(crewEstateAccess)).toBe("/estates/$estateId/assets");
+    expect(assetsEntry({ ...managementOnly, canViewAssets: true })).toBe(
       "/estates/$estateId/assets"
     );
   });
   it("lands device viewers without asset access on All devices", () => {
-    expect(
-      assetsEntry({ ...managementOnly, canViewDevices: true }, false)
-    ).toBe("/estates/$estateId/assets/devices");
-    expect(assetsEntry(managementOnly, true)).toBe(
+    expect(assetsEntry({ ...managementOnly, canViewDevices: true })).toBe(
       "/estates/$estateId/assets/devices"
     );
   });
   it("is absent for everyone else", () => {
-    expect(assetsEntry(managementOnly, false)).toBeUndefined();
-    expect(assetsEntry(residentEstateAccess, false)).toBeUndefined();
-    expect(assetsEntry(undefined, false)).toBeUndefined();
+    expect(assetsEntry(managementOnly)).toBeUndefined();
+    expect(assetsEntry(residentEstateAccess)).toBeUndefined();
+    expect(assetsEntry(undefined)).toBeUndefined();
   });
 });
 
 describe("all readings", () => {
-  it("is linked for readings viewers other than Crew", () => {
+  // Linked from the Assets views, so it needs both readings and assets.
+  it("is linked for readings viewers who can also view assets", () => {
     expect(canOpenAllReadings(ownerEstateAccess)).toBe(true);
     expect(
       canOpenAllReadings({
         ...managementOnly,
-        role: "MANAGER",
         canViewReadings: true,
+        canViewAssets: true,
       })
     ).toBe(true);
     expect(canOpenAllReadings(crewEstateAccess)).toBe(false);

@@ -42,7 +42,6 @@ export function AssetOverview({
     return null;
   }
   // Each section mounts only for viewers its endpoint serves, so none 403s.
-  const owned = Boolean(estate.data?.owned);
   const permission = access.data?.estates.find(
     (item) => item.estateId === estateId
   );
@@ -50,12 +49,12 @@ export function AssetOverview({
   // Owners and Managers send crew to judge the condition rather than judging it themselves.
   const canSend =
     assetActive && !estate.data?.deactivatedAt && workOrders.canCreate;
-  const canSeeDevices = owned || permission?.role === "MANAGER";
-  const showForecast = owned && asset.data.category === "PUMP";
-  // The inspection list and service interval serve owners and delegates.
-  const canSeeInspections = canOpenInspections(permission, owned);
-  const canSeeService =
-    owned || Boolean(estate.data?.canManageInvitationPermissions);
+  // Each flag mirrors the permission code its endpoint requires (estate-role-permissions).
+  const canSeeDevices = Boolean(permission?.canViewDevices);
+  const showForecast =
+    Boolean(permission?.canViewAssets) && asset.data.category === "PUMP";
+  const canSeeInspections = canOpenInspections(permission);
+  const canSeeService = Boolean(permission?.canViewAssets);
   const showUpcoming = canSeeInspections || canSeeService;
   return (
     <>

@@ -31,8 +31,6 @@ vi.mock("@/lib/access-server", () => ({
         estates: [access.estate],
       },
     }),
-  getSessionEstate: () =>
-    Promise.resolve({ id: "oak", name: "Oak", owned: false }),
 }));
 vi.mock("@workos/authkit-tanstack-react-start/client", () => ({
   useAuth: () => ({ user: { id: "caller" }, loading: false }),
@@ -65,12 +63,12 @@ it.each([
   expect(router.state.location.pathname).toBe(to);
 });
 
-it("404s the old bookmark for someone who cannot open Inspections", async () => {
+// The old Check schedules bookmark needs MANAGE_INSPECTIONS (estate-role-permissions).
+it("404s the old bookmark for someone who cannot manage inspections", async () => {
   access.estate = {
     ...ownerEstateAccess,
     estateId: "oak",
-    role: "MEMBER",
-    canManageInvitationPermissions: false,
+    canManageInspections: false,
   };
   const router = await open("/estates/oak/asset-categories");
   expect(router.state.location.pathname).toBe("/estates/oak/asset-categories");

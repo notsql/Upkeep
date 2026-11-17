@@ -5,16 +5,13 @@ import {
   Outlet,
   redirect,
 } from "@tanstack/react-router";
-import {
-  getSessionAccess,
-  getSessionEstate,
-  getSessionIdentity,
-} from "@/lib/access-server";
+import { getSessionAccess, getSessionIdentity } from "@/lib/access-server";
 
 import { buildSignInPath } from "@/lib/auth-redirect";
 import {
   canOpenAllDevices,
   canOpenAssets,
+  canOpenCheckSchedules,
   canOpenContractors,
   canOpenEstateSettings,
   canOpenFaultReports,
@@ -26,15 +23,14 @@ import {
 
 type EstatePermission = components["schemas"]["EstateAccessResponse"];
 type DestinationPredicate = (
-  permission: EstatePermission | undefined,
-  owned?: boolean,
-  platformAdmin?: boolean
+  permission: EstatePermission | undefined
 ) => boolean;
 
-// Sections the sidebar gates on ownership; the guard uses the same predicates.
-const OWNER_GATED: Record<string, DestinationPredicate> = {
-  // Old Check schedules bookmarks redirect to Inspections, so gate them alike.
-  "asset-categories": canOpenInspections,
+// Sections (with sub-views) the sidebar gates; the guard uses the same flag
+// predicates (estate-role-permissions), so ownership is never fetched here.
+const DESTINATION_GATED: Record<string, DestinationPredicate> = {
+  // Old Check schedules bookmarks redirect to Inspections' schedules view.
+  "asset-categories": canOpenCheckSchedules,
   inspections: canOpenInspections,
   edit: canOpenEstateSettings,
   "notification-settings": canOpenNotificationSettings,
@@ -127,23 +123,7 @@ export const Route = createFileRoute("/_auth")({
       throw redirect({ href: "/reports/new" });
     }
     guardEstatePath(path, access);
-    await guardDestination(path, access, async (estateId) => {
-      try {
-        const estate = await context.queryClient.ensureQueryData({
-          queryKey: ["estates", user.id, "details", estateId],
-          queryFn: async () => {
-            const result = await getSessionEstate({ data: estateId });
-            if (!result) {
-              throw new Error("Couldn't load the estate. Try again.");
-            }
-            return result;
-          },
-        });
-        return Boolean(estate.owned);
-      } catch {
-        return false;
-      }
-    });
+    guardDestination(path, access);
     return { user };
   },
   loader: ({ context }) => ({ user: context.user }),
@@ -239,18 +219,15 @@ function guardHistoryContext(
 function checkedByDestination(path: string, feature: string | undefined) {
   return (
     isSectionPath(path.split("/").filter(Boolean), feature) &&
-    (feature === "assets" || (feature !== undefined && feature in OWNER_GATED))
+    (feature === "assets" ||
+      (feature !== undefined && feature in DESTINATION_GATED))
   );
 }
 
-/**
- * Destinations whose rule may depend on ownership. Ownership is fetched only
- * when the access flags alone do not already open the destination.
- */
-async function guardDestination(
+/** Destinations gated by one access-flag predicate each, sub-views included. */
+function guardDestination(
   path: string,
-  access: components["schemas"]["AppAccessResponse"],
-  loadOwned: (estateId: string) => Promise<boolean>
+  access: components["schemas"]["AppAccessResponse"]
 ) {
   const segments = path.split("/").filter(Boolean);
   const [, estateId, feature] = segments;
@@ -267,15 +244,13 @@ async function guardDestination(
     }
     return;
   }
-  const open = allDevices ? canOpenAllDevices : OWNER_GATED[feature];
-  if (!open) {
-    return;
+  // Inspections' schedules view changes check schedules (MANAGE_INSPECTIONS).
+  const schedules = feature === "inspections" && segments[3] === "schedules";
+  let open = allDevices ? canOpenAllDevices : DESTINATION_GATED[feature];
+  if (schedules) {
+    open = canOpenCheckSchedules;
   }
-  const admin = access.canAccessPlatformAdmin;
-  if (open(estate, false, admin)) {
-    return;
-  }
-  if (!(estate && open(estate, await loadOwned(estateId), admin))) {
+  if (open && !open(estate)) {
     throw notFound();
   }
 }
