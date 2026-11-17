@@ -1,6 +1,6 @@
 # Estate role permissions
 
-**Status:** agreed
+**Status:** built (phase 8 pending)
 **Owner:** unassigned
 
 ## Problem
@@ -432,7 +432,16 @@ rule after this change.
 | Member administration stays Manager-only, outside the catalogue (keeps 0032). | A grantable `MANAGE_MEMBERS` code. | `EstatePermissions.Authority.requireManager` and callers. Confirmed by the user on 2026-11-17 |
 | Crew cannot send a report to a contractor, because it creates a work order. Agreed with the user on 2026-11-17. | Allow it as a narrow exception to "Crew don't create work orders". | `ReportRoutingService.send` |
 | Crew keep starting and completing their assigned work orders. Agreed on 2026-11-17 ("view and update", option a). | Read-only, or progress any order. | `WorkOrderAssignment.mayProgress` |
-| Fault reporting needs any membership in the estate. Supersedes 0053. | Residents only, or any signed-in user (0053). | `ResidentReportService`, `ResidentReportRepository.activeEstate` |
+| Fault reporting needs any membership in the estate. Supersedes 0053 (decision 0056). | Residents only, or any signed-in user (0053). | `ResidentReportService`, `ResidentReportRepository.activeEstate`; web `resident-estate-selector.tsx` |
+| A work order's attached files need VIEW_DOCUMENTS as well as VIEW_WORK_ORDERS, so Crew don't see them. Agreed by the user on 2026-11-18. | Seeing a work order includes its files. | `WorkOrderDocumentService.authorize` |
+| One shared `EstatePermissions.require` (404 for non-members, 403 without the code), wrapped by `EstateRepository.require` so slice tests can mock it. Controllers whose advice lacked a `ResponseStatusException` handler gained one, keeping the `{ message }` body. | A dedicated permission exception, or a global advice. | `EstatePermissions.require`, `EstateRepository.require`, each area's `*ExceptionHandler` |
+| `EstatePermissions.Authority.has` is plain code membership: the Council/Crew document shortcut is gone, and `permissions()` holds every code the user holds (delegated authors are still limited to codes they hold). | Keep role shortcuts inside `Authority`. | `EstatePermissions.authority` / `Authority.has` |
+| Crew keep the full location list, inactive included, as report responders (historical report locations). | Gate `includeInactive` purely on EDIT_LOCATIONS. | `LocationService.list` |
+| The platform-admin override that lets a Council (or legacy Member) row manage stopped-sensor monitoring is kept. | Drop it with MEMBER. | `FlatlineService.canManage` |
+| Inspections' schedules views (and the old `/asset-categories` bookmark) need MANAGE_INSPECTIONS; Inspections itself needs VIEW_INSPECTIONS, so Crew see the due list but not schedules. | Gate the whole section on one flag. | web `routes/_auth/route.tsx` `guardDestination`, `canOpenCheckSchedules` |
+| The web never fetches ownership to gate a screen; `getSessionEstate` was removed. Ownership stays only for transfer, the danger zone and the Owner badge/filter. | Keep owner fallbacks beside the flags. | web `lib/estate-destinations.ts`, `routes/_auth/route.tsx` |
+| Reading-import history in a deactivated estate is hidden in the web, because the import flags are false there (the server still allows the read). | A separate read flag for import history. | web `reading-imports-page.tsx`, `use-reading-import-batch-state.ts` |
+| Notifications stay role-based (Manager and Crew memberships, owner for anomaly email), as the spec's Out of scope says. | Drive recipients from codes. | `NotificationService`, web `notification-bell.tsx` |
 | MEMBER becomes COUNCIL in Phase 1. Rejecting MEMBER and dropping the default wait for a Phase 8 contract migration, so the migration-only release doesn't break the ~30 test files that still create MEMBER rows. Agreed by the user on 2026-11-17. | Convert and lock in one migration, rewriting those test fixtures in the same release. Or remove MEMBER memberships, or leave them. | `20261117145338_preset_role_permissions`, the Phase 8 migration, and the `allowableValues` on the responses |
 | New UI gates are new boolean flags on `EstateAccessResponse`, following the existing pattern. | Return the raw `permissions: EstatePermissionCode[]` per estate and check codes in the web app. | `AppAccessResponse`, `apps/web/src/lib/estate-destinations.ts` |
 
@@ -481,7 +490,7 @@ and migrated on `prd`) before any later phase is merged.
   - Report form without search, plus the no-estate message.
   - Role form groups for the new codes.
   - Move any screen you touch onto shadcn and folder routes (rule 10).
-- [ ] **7. Docs.**
+- [x] **7. Docs.**
   - Update `.docs/api/`: access, estate-roles, resident-reports, assets,
     readings, devices, work-orders, documents.
   - Update `.docs/frontend/` to match.

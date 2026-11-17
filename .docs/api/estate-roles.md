@@ -72,9 +72,8 @@ or required permission catalogue unavailable. JSON errors are EstateError
 
 \* Added by `estate-role-permissions` (migration
 `20261117145338_preset_role_permissions`). The catalogue lists them and custom
-roles can be granted them, but endpoints only start enforcing them as that
-spec's Phase 3 lands area by area; until then each endpoint keeps its previous
-role check. Built-in roles resolve to the seeded `PresetRolePermission`
+roles can be granted them; every estate endpoint enforces them (see each
+area's API doc and `.docs/api/access.md` for the flag each code drives). Built-in roles resolve to the seeded `PresetRolePermission`
 bundles through `EstatePermissions.effective` (owner: every code; Resident and
 non-members: none).
 
