@@ -42,7 +42,7 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
         mvc.perform(as("author", delete(documents() + "/" + id(document)))).andExpect(status().isForbidden());
         mvc.perform(as("author", get(path()))).andExpect(status().isForbidden());
         var access = body(mvc.perform(as("author", get("/access/context"))).andExpect(status().isOk()));
-        var estate = access.get("estates").get(0);
+        var estate = ownEstate(access);
         assertTrue(access.get("canEnterWorkspace").asBoolean());
         assertTrue(estate.get("canViewDocuments").asBoolean());
         assertFalse(estate.get("canUploadDocuments").asBoolean());
@@ -60,8 +60,8 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
         assertEquals(1, documentList("author").get("items").size());
         mvc.perform(as("author", get("/access/context")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewDocuments").value(true))
-                .andExpect(jsonPath("$.estates[0].canUploadDocuments").value(true));
+                .andExpect(jsonPath(ownEstate("canViewDocuments")).value(contains(true)))
+                .andExpect(jsonPath(ownEstate("canUploadDocuments")).value(contains(true)));
     }
 
     @Test
@@ -97,8 +97,8 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
         mvc.perform(as("author", submission("INVOICE", pdfFile("new.pdf")))).andExpect(status().isForbidden());
         mvc.perform(as("author", get("/access/context")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewDocuments").value(false))
-                .andExpect(jsonPath("$.estates[0].canUploadDocuments").value(false));
+                .andExpect(jsonPath(ownEstate("canViewDocuments")).value(contains(false)))
+                .andExpect(jsonPath(ownEstate("canUploadDocuments")).value(contains(false)));
     }
 
     @Test
@@ -121,7 +121,7 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
         inactive();
 
         var access = body(mvc.perform(as(user, get("/access/context"))).andExpect(status().isOk()));
-        var estate = access.get("estates").get(0);
+        var estate = ownEstate(access);
         assertTrue(estate.get("canViewDocuments").asBoolean());
         assertFalse(estate.get("canUploadDocuments").asBoolean());
     }

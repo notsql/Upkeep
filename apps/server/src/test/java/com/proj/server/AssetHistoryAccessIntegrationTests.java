@@ -1,5 +1,6 @@
 package com.proj.server;
 
+import static org.hamcrest.Matchers.contains;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -20,8 +21,8 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
         assertEquals(List.of(assetId.toString()), values(assets.path("items"), "id"));
         read(user, get("/access/context"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewAssetHistory").value(true))
-                .andExpect(jsonPath("$.estates[0].canViewAssets").value(user.equals("owner")));
+                .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(true)))
+                .andExpect(jsonPath(ownEstate("canViewAssets")).value(contains(user.equals("owner"))));
     }
 
     @ParameterizedTest
@@ -35,7 +36,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                 .andExpect(jsonPath("$.message").isNotEmpty());
         read(user, get("/access/context"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewAssetHistory").value(false));
+                .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(false)));
     }
 
     @Test
@@ -45,7 +46,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
         read("other", get(historyAssets())).andExpect(status().isForbidden());
         read("other", get("/access/context"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewAssetHistory").value(false));
+                .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(false)));
     }
 
     @Test
@@ -57,7 +58,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
         read("owner", get(historyAssets())).andExpect(status().isForbidden());
         read("owner", get("/access/context"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewAssetHistory").value(false));
+                .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(false)));
     }
 
     @ParameterizedTest
@@ -75,7 +76,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
         page(user, historyAssets());
         read(user, get("/access/context"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[0].canViewAssetHistory").value(true));
+                .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(true)));
     }
 
     @Test
