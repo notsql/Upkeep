@@ -34,6 +34,7 @@ export function EstateReportsItems({
           urgency={
             <ReportUrgencyBadges
               isSafety={report.isSafety}
+              labelled
               urgency={report.urgency}
             />
           }

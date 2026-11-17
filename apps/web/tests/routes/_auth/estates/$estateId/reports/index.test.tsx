@@ -279,6 +279,7 @@ it("labels each estate report's metadata like the resident report cards", async 
   for (const label of [
     "Estate name:",
     "Location:",
+    "Urgency:",
     "Status:",
     "Submission time:",
   ]) {
