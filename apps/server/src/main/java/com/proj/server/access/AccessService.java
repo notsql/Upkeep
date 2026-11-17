@@ -135,8 +135,8 @@ public class AccessService {
                     canManageEstate,
                     canViewAssets,
                     canViewAssets,
-                    manager || "CREW".equals(row.get(ESTATEUSER.ROLE)),
-                    active && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
+                    codes.contains(EstatePermissionCode.VIEW_READINGS),
+                    active && codes.contains(EstatePermissionCode.RECORD_READINGS),
                     canViewManagement || responder,
                     !resident && (owner || responder),
                     !resident && (owner || responder) && active,
@@ -160,8 +160,8 @@ public class AccessService {
                     canViewEstateInvitations,
                     canViewDocuments,
                     canUploadDocuments,
-                    manager && active,
-                    manager && active,
+                    active && codes.contains(EstatePermissionCode.IMPORT_READINGS),
+                    active && codes.contains(EstatePermissionCode.IMPORT_READINGS),
                     // Matches EstateReportService: current MANAGER membership in an active estate.
                     active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)),
                     active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)));

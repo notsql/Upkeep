@@ -281,9 +281,9 @@ class ReadingImportBatchIntegrationTests extends ReadingImportTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(1))
                 .andExpect(jsonPath("$.items[0].valueText").value("999999999999.123456"));
-        // Legacy asset history remains Owner-only; estate-wide readings allow Managers.
+        // Every Manager holds VIEW_READINGS, so asset readings are open to them too (estate-role-permissions).
         read("/estates/" + estate + "/assets/" + asset + "/readings?size=1&page=1", "manager")
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         read("/estates/" + estate + "/assets/" + asset + "/readings?size=1&page=1", "import-owner")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalItems").value(2))

@@ -1,6 +1,7 @@
 package com.proj.server.asset;
 
 import com.proj.server.db.tables.records.AssetassessmentRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.workos.WorkOSService;
 import java.time.LocalDate;
@@ -36,7 +37,7 @@ public class AssetAssessmentService {
 
     /** Includes a deactivated asset's history: it is preserved, only closed to new entries. */
     public List<AssetAssessmentResponse> list(UUID estateId, UUID assetId, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(AssetAssessmentService::estateNotFound);
+        estates.require(estateId, owner, EstatePermissionCode.VIEW_READINGS, false);
         assets.find(assetId, estateId, false).orElseThrow(AssetAssessmentService::assetNotFound);
         return repository.listForAsset(assetId).stream()
                 .map(AssetAssessmentService::response)
@@ -52,7 +53,7 @@ public class AssetAssessmentService {
         // Looked up before any row is locked, so a slow WorkOS call never holds a lock.
         var recordedByName = workOS.findDisplayName(owner).orElse(null);
 
-        var estate = estates.findOwned(estateId, owner, true).orElseThrow(AssetAssessmentService::estateNotFound);
+        var estate = estates.require(estateId, owner, EstatePermissionCode.RECORD_READINGS, true);
         if (estate.deactivatedAt() != null) {
             throw new AssetException(HttpStatus.CONFLICT, "This estate is inactive. Its assets cannot be assessed.");
         }
@@ -75,10 +76,6 @@ public class AssetAssessmentService {
                 row.getRecordedbyuserid(),
                 row.getRecordedbyname(),
                 row.getCreatedat());
-    }
-
-    private static AssetException estateNotFound() {
-        return new AssetException(HttpStatus.NOT_FOUND, "Estate not found.");
     }
 
     private static AssetException assetNotFound() {

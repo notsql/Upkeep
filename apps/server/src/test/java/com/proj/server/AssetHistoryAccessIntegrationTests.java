@@ -129,7 +129,8 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
         page("member", history(assetId));
         read("member", get(path() + "/assets/" + assetId)).andExpect(status().isOk());
         read("member", get(path() + "/assets/" + assetId + "/events")).andExpect(status().isOk());
-        read("member", get(path() + "/assets/" + assetId + "/assessments")).andExpect(status().isNotFound());
+        // Council do not hold VIEW_READINGS (estate-role-permissions).
+        read("member", get(path() + "/assets/" + assetId + "/assessments")).andExpect(status().isForbidden());
         for (String suffix : List.of("/documents", "/inspections")) {
             read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isForbidden());
         }
@@ -153,7 +154,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                         "member",
                         post(path() + "/assets/" + assetId + "/assessments"),
                         Map.of("condition", "GOOD", "assessedOn", "2026-09-01", "notes", "Checked"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden()); // Council do not hold RECORD_READINGS.
         send(
                         "member",
                         post(path() + "/assets/" + assetId + "/events"),

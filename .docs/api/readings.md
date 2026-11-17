@@ -2,9 +2,10 @@
 
 ## Estate browser (ID-60 / ID-63 / ID-64)
 
-The following endpoints are read-only. Current estate Owners, Managers and Crew
-may read, including retired assets and inactive-estate history. Resident,
-Member, Council and custom-role memberships alone do not grant access. Current
+The following endpoints are read-only. Callers need the `VIEW_READINGS`
+permission code in the estate (estate-role-permissions): the owner, every
+Manager, Crew and custom roles granted it. Reads include retired assets and
+inactive-estate history. Council, Residents and legacy Member rows get 403. Current
 membership is checked on each request. `canViewReadings: boolean` is a required
 `EstateAccessResponse` field under the same policy. Minimal asset labels do not
 grant asset-register, cost, editing or credential access. ID-63 adds the
@@ -73,10 +74,10 @@ Errors: 401 unauthenticated; 403 unsupported membership; 404 missing/foreign est
 
 ### POST `/estates/{estateId}/readings/manual`
 
-Operation `createManualReading`. Owners, Managers and Crew may create against an
+Operation `createManualReading`. Callers holding `RECORD_READINGS` (the owner, every Manager, Crew and custom roles granted it) may create against an
 active estate and active same-estate asset, including an asset with no device.
 An inactive location alone does not retire an asset. `canRecordReadings` is true
-only for those roles in an active estate; the server checks authority again.
+only for holders of `RECORD_READINGS` in an active estate; the server checks authority again.
 
 `CreateManualReadingRequest` has exactly six required fields; unknown fields,
 duplicate keys, trailing JSON and unsupported value types are rejected:
@@ -283,7 +284,7 @@ page, 26 ms `limit=100`, 11 ms `metric=TEMPERATURE`, 17 ms `from`/`to`, 19 ms
 `OUT_OF_RANGE`) with no dates scan the flagged query over the whole asset:
 about 1.5 s median and 3 s p95 when nothing matches.
 
-## Legacy owner-only per-asset browser (ID-67)
+## Per-asset browser (ID-67)
 
 Contract: `packages/api/openapi.json` (operationId `listAssetReadings`). Read-only:
 lists the union of `ManualReading` and ID-43's `DeviceReading` table (see
@@ -292,7 +293,8 @@ flags computed on every request. Nothing is written; flags are never stored.
 Spec: `.spec/features/suspect-readings.md`. Code: `com.proj.server.reading`
 (`AssetReadingController`, `AssetReadingService`, `AssetReadingRepository`).
 
-Requires bearer JWT and estate ownership. Missing authentication returns 401
+Requires bearer JWT and `VIEW_READINGS` in the estate (estate-role-permissions;
+403 for members without it). Missing authentication returns 401
 (`Sign in to view readings.`); a foreign or missing estate returns 404
 (`Estate not found.`), an asset not in the estate 404 (`Asset not found.`).
 A deactivated (retired) asset's readings are still listed. Spring Security

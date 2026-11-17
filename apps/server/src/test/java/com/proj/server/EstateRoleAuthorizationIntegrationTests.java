@@ -182,11 +182,11 @@ class EstateRoleAuthorizationIntegrationTests {
         // A legacy MEMBER row holds no permission codes (estate-role-permissions); Crew hold no asset codes.
         membership("member", a, "MEMBER");
         membership("crew", a, "CREW");
-        boolean anomaly = template.endsWith("/anomaly-check");
-        for (var user : new String[] {"member", "crew"}) {
+        // Crew hold RECORD_READINGS, so only the legacy member is refused the anomaly check.
+        var refused = template.endsWith("/anomaly-check") ? new String[] {"member"} : new String[] {"member", "crew"};
+        for (var user : refused) {
             mvc.perform(asUser(managementRequest(method, template, a, privateAsset), user, "user"))
-                    // The anomaly check keeps its owner-only rule until the readings slice lands.
-                    .andExpect(anomaly ? status().isNotFound() : status().isForbidden());
+                    .andExpect(status().isForbidden());
         }
         for (var user : new String[] {"unrelated", "platform-admin"}) {
             mvc.perform(asUser(

@@ -5,7 +5,7 @@ Those endpoints have a separate contract: metadata requires document-read access
 and link/unlink remains available on retired assets while preserving the uploaded
 file, work-order link and equipment fields.
 
-Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and a permission code in the estate (estate-role-permissions): reads (`GET` list, detail, lifecycle events) need `VIEW_ASSETS`; create, edit, retire, correct retirement and restore need `EDIT_ASSETS`. The owner, every Manager and Council hold both; custom roles hold what they are granted. Missing authentication returns 401; a member without the code gets 403 (`This estate permission is required: <CODE>`); non-members and foreign or missing resources get 404. Writes require an active estate (409 otherwise) and lock estate before asset. Device, maintenance, assessment, failure-risk and anomaly endpoints below keep their own rules until their slice of that spec lands. No invitation-role dependency.
+Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and a permission code in the estate (estate-role-permissions): reads (`GET` list, detail, lifecycle events) need `VIEW_ASSETS`; create, edit, retire, correct retirement and restore need `EDIT_ASSETS`. The owner, every Manager and Council hold both; custom roles hold what they are granted. Missing authentication returns 401; a member without the code gets 403 (`This estate permission is required: <CODE>`); non-members and foreign or missing resources get 404. Writes require an active estate (409 otherwise) and lock estate before asset. Device endpoints below keep their own rules until their slice of that spec lands; maintenance and failure risk follow `VIEW_ASSETS`/`EDIT_ASSETS`, and assessments follow the reading codes. No invitation-role dependency.
 
 ## GET `/estates/{estateId}/assets`
 
@@ -119,6 +119,8 @@ Owner only (ID-45). Deactivates the device and registers a new one on the same a
 - 201: The old device deactivated and the new one registered on the same asset — DeviceResponse (the new device)
 
 ## GET `/estates/{estateId}/assets/{assetId}/assessments`
+
+Requires `VIEW_READINGS`; the POST below requires `RECORD_READINGS` (owner, every Manager, Crew and custom roles granted them; 403 for other members).
 
 - path `estateId`: uuid (required)
 - path `assetId`: uuid (required)

@@ -6,6 +6,7 @@ import com.proj.server.asset.AssetRepository;
 import com.proj.server.asset.CreateAssetAssessmentRequest;
 import com.proj.server.catalogue.AssetCategoryCodes;
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.notification.AbnormalRun;
 import com.proj.server.notification.AnomalyAlerts;
@@ -54,7 +55,7 @@ public class AnomalyCheckService {
 
     @Transactional
     public AnomalyCheckResponse check(UUID estateId, UUID assetId, AnomalyCheckRequest request, String owner) {
-        var estate = estates.findOwned(estateId, owner, false).orElseThrow(() -> notFound("Estate not found."));
+        var estate = estates.require(estateId, owner, EstatePermissionCode.RECORD_READINGS, false);
         var asset = assets.find(assetId, estateId, false).orElseThrow(() -> notFound("Asset not found."));
         if (estate.deactivatedAt() != null) {
             throw conflict("This estate is inactive. Its assets cannot be checked.");

@@ -4,9 +4,9 @@ Contract source: `packages/api/openapi.json`. Controllers and services are in
 `com.proj.server.reading`; typed repositories use the Prisma-generated jOOQ
 import tables. Migration: `20261106135312_historical_reading_imports`.
 
-All paths below require a signed-in, current estate Owner or Manager under
-`EstatePermissions.Authority.manager()`. Crew manual-entry permission, custom
-estate grants and provider admin claims do not grant import/report access.
+All paths below require the `IMPORT_READINGS` permission code in the estate
+(estate-role-permissions): the owner, every Manager and custom roles granted it.
+Crew (who hold only view/record), Council and provider admin claims get 403.
 Import and revert require an active estate, including retries. Reports and
 history remain readable after deactivation. Foreign/missing estates or batches
 return 404; same-estate unauthorized roles return 403.
