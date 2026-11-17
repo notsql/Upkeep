@@ -57,7 +57,7 @@ selection uses checkboxes, and the modal supplies keyboard/focus behavior.
 
 | Hook | Request | Query key / effect |
 | --- | --- | --- |
-| `useAssetDocumentAccess` | Existing access context and estate detail | Requires current `canViewAssets` plus document-read access for metadata; estate `owned` and activity determine mutations independently of upload permission and asset retirement |
+| `useAssetDocumentAccess` | Existing access context and estate detail | Requires current `canViewAssets` plus document-read access for metadata; `canEditAssets` (EDIT_ASSETS) and an active estate determine mutations independently of upload permission and asset retirement |
 | `useDocumentAsset` | GET `/estates/{estateId}/documents/{documentId}/asset` | `[userId, "documents", estateId, "asset-association", documentId]` |
 | `useAssetDocuments` | GET `/estates/{estateId}/assets/{assetId}/documents`, optional cursor | `[userId, "documents", estateId, "asset-attachments", assetId, cursor]` |
 | `useChangeDocumentAsset` | PUT `/estates/{estateId}/documents/{documentId}/asset` | Sends explicit nullable asset UUID and reviewed version; seeds the association and invalidates the estate document prefix |

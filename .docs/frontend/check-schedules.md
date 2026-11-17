@@ -23,7 +23,9 @@ redirect.
 Entry: the "Inspection views" `SubNav` on Inspections (**Check schedules** tab),
 plus the Inspections page's "Set check schedules" and "Turn on regular checks"
 links. There is no sidebar item; the sidebar's **Inspections** is active here.
-Gate: `canOpenInspections` (`owned || canManageInvitationPermissions`). The
+Gate: `canOpenCheckSchedules` (`canManageInspections`, MANAGE_INSPECTIONS;
+estate-role-permissions). Inspections itself opens with `canOpenInspections`
+(`canViewInspectionResults`), but its schedules views need the manage flag. The
 `_auth` guard covers the section root and up to two levels below it
 (`SUB_VIEW_DEPTH.inspections = 2`), so `/inspections/schedules/days` 404s for
 anyone else.

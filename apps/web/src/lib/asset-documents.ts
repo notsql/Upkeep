@@ -32,9 +32,11 @@ export function useAssetDocumentAccess(estateId: string) {
     userId: session.userId,
     pending: !session.ready || documents.pending || estate.isPending,
     canRead: canReadAssets && documents.canView && !estate.isError,
+    // Linking a document to an asset needs EDIT_ASSETS (estate-role-permissions).
     canWrite:
       canReadAssets &&
-      !!estate.data?.owned &&
+      !!documents.permission?.canEditAssets &&
+      !!estate.data &&
       !estate.data.deactivatedAt &&
       !estate.isError,
   };

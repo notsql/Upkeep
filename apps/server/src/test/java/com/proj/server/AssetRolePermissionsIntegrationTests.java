@@ -3,6 +3,7 @@ package com.proj.server;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.HashMap;
@@ -101,5 +102,29 @@ class AssetRolePermissionsIntegrationTests extends AssetHistoryTestSupport {
         send("manager", post(path() + "/assets"), newAsset()).andExpect(status().isConflict());
         send("member", patch(path() + "/assets/" + assetId), changedAsset()).andExpect(status().isConflict());
         read("manager", get(path() + "/assets")).andExpect(status().isOk());
+    }
+
+    // Linking a document to an asset needs EDIT_ASSETS; reading the link needs VIEW_ASSETS (plus documents).
+    @ParameterizedTest
+    @ValueSource(strings = {"owner", "manager", "member"})
+    void assetEditorsWithDocumentsLinkDocumentsToAssets(String user) throws Exception {
+        var document = document("INVOICE", null, null, "2026-01-01T02:00:00Z");
+        send(
+                        user,
+                        put(path() + "/documents/" + document + "/asset"),
+                        Map.of("assetId", assetId, "expectedAssociationVersion", 0))
+                .andExpect(status().isOk());
+        read(user, get(path() + "/assets/" + assetId + "/documents")).andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"crew", "viewer"})
+    void othersCannotLinkDocumentsToAssets(String user) throws Exception {
+        var document = document("INVOICE", null, null, "2026-01-01T02:00:00Z");
+        send(
+                        user,
+                        put(path() + "/documents/" + document + "/asset"),
+                        Map.of("assetId", assetId, "expectedAssociationVersion", 0))
+                .andExpect(status().isForbidden());
     }
 }

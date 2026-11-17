@@ -31,7 +31,14 @@ const actionLabels: Record<string, string> = {
   RESTORED: "Restored",
 };
 
-export function AssetRetirementPanel({ asset }: { asset: Asset }) {
+/** `canEdit`: correcting and restoring are asset edits (EDIT_ASSETS). */
+export function AssetRetirementPanel({
+  asset,
+  canEdit = true,
+}: {
+  asset: Asset;
+  canEdit?: boolean;
+}) {
   const history = useAssetLifecycleEvents(asset.estateId, asset.id);
   const [mode, setMode] = useState<"restore" | "edit">();
   const closeDialog = useCallback(() => setMode(undefined), []);
@@ -53,12 +60,14 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                 {asset.retirementReason ?? "Not recorded"}
               </dd>
             </dl>
-            <div className="flex flex-wrap gap-4">
-              <Button onClick={openCorrection} variant="outline">
-                Edit out-of-use details
-              </Button>
-              <Button onClick={openRestoration}>Restore asset</Button>
-            </div>
+            {canEdit ? (
+              <div className="flex flex-wrap gap-4">
+                <Button onClick={openCorrection} variant="outline">
+                  Edit out-of-use details
+                </Button>
+                <Button onClick={openRestoration}>Restore asset</Button>
+              </div>
+            ) : null}
           </>
         ) : null}
         {history.isPending ? (

@@ -120,6 +120,15 @@ it("explains an invalid retirement date when correcting information", () => {
   ).toBe(true);
 });
 
+// Correcting and restoring are asset edits (EDIT_ASSETS; estate-role-permissions).
+it("offers no correction or restoration to someone who cannot edit assets", () => {
+  renderWithProviders(<AssetRetirementPanel asset={asset} canEdit={false} />);
+  expect(
+    screen.queryByRole("button", { name: "Edit out-of-use details" })
+  ).toBeNull();
+  expect(screen.queryByRole("button", { name: "Restore asset" })).toBeNull();
+});
+
 it("shows the out-of-use date formatted, not as a raw value", async () => {
   const { formatDate } = await import("@/lib/format");
   renderWithProviders(<AssetRetirementPanel asset={asset} />);

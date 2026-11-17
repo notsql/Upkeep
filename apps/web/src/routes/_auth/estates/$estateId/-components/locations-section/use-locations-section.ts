@@ -30,17 +30,13 @@ function locationPermissions(
   estate: ReturnType<typeof useEstate>["data"],
   permission: components["schemas"]["EstateAccessResponse"] | undefined
 ) {
+  // Flags mirror CREATE_LOCATIONS and EDIT_LOCATIONS; deactivating is editing
+  // (estate-role-permissions).
   const active = Boolean(estate) && !estate?.deactivatedAt;
-  const presetCreator =
-    permission?.role === "MANAGER" && permission.canManageEstate;
-  const canCreate =
-    active &&
-    Boolean(permission?.canCreateLocations ?? (estate?.owned || presetCreator));
-  const canCreateFloors =
-    active && Boolean(permission?.canCreateFloors ?? estate?.owned);
-  const canEdit =
-    active && Boolean(permission?.canEditLocations ?? estate?.owned);
-  const canDeactivate = active && Boolean(estate?.owned);
+  const canCreate = active && Boolean(permission?.canCreateLocations);
+  const canCreateFloors = active && Boolean(permission?.canCreateFloors);
+  const canEdit = active && Boolean(permission?.canEditLocations);
+  const canDeactivate = canEdit;
   return {
     create: canCreate,
     levels: canCreateFloors,

@@ -34,9 +34,7 @@ export function useReadingImportBatchState({
     (estate) => estate.estateId === estateId
   );
   const allowed = Boolean(
-    permission?.canImportReadings ||
-      permission?.canRevertReadingImports ||
-      permission?.role === "MANAGER"
+    permission?.canImportReadings || permission?.canRevertReadingImports
   );
   const detail = useReadingImport(estateId, batchId, allowed);
   const [page, setPage] = useState(0);

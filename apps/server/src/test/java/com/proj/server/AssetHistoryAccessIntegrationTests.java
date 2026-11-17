@@ -131,9 +131,9 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
         read("member", get(path() + "/assets/" + assetId + "/events")).andExpect(status().isOk());
         // Council do not hold VIEW_READINGS (estate-role-permissions).
         read("member", get(path() + "/assets/" + assetId + "/assessments")).andExpect(status().isForbidden());
-        for (String suffix : List.of("/documents", "/inspections")) {
-            read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isForbidden());
-        }
+        // Council hold VIEW_ASSETS and VIEW_DOCUMENTS, but not VIEW_INSPECTIONS (estate-role-permissions).
+        read("member", get(path() + "/assets/" + assetId + "/documents")).andExpect(status().isOk());
+        read("member", get(path() + "/assets/" + assetId + "/inspections")).andExpect(status().isForbidden());
         UUID order = workOrder(estateId, assetId, locationId);
         read("member", get(path() + "/work-orders/" + order)).andExpect(status().isForbidden());
         send(
@@ -166,7 +166,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                         "member",
                         put(path() + "/documents/" + document + "/asset"),
                         Map.of("assetId", assetId, "expectedAssociationVersion", 0))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk()); // Council hold EDIT_ASSETS (estate-role-permissions).
         send(
                         "member",
                         put(path() + "/work-orders/" + order + "/completion"),

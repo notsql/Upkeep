@@ -7,7 +7,8 @@ API: [estate-costs.md](../api/estate-costs.md).
 The estate Overview (`/estates/$estateId`), in the dashboard's list row
 (`routes/_auth/estates/$estateId/-components/estate-details-page/estate-dashboard.tsx`, `DashboardLists`),
 after At-risk assets. Shown only when `DashboardAccess.costs` is true, which is
-`Boolean(permission && owned)`, so only the estate owner. Other roles never fetch them.
+`permission.canViewCosts` (VIEW_COSTS: the owner, every Manager and Council;
+estate-role-permissions). Other roles never fetch them.
 
 ## Widgets
 

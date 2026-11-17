@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 import { FormCard, FormPage } from "@/components/page/form-page";
 import { LoadingState } from "@/components/states/loading-state";
+import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useRegisterDevice } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
@@ -17,6 +18,12 @@ export function NewDevicePage({
   assetId: string;
 }) {
   const estate = useEstate(estateId);
+  const access = useAppAccess();
+  // Registering and replacing devices need MANAGE_DEVICES (estate-role-permissions).
+  const canManageDevices = Boolean(
+    access.data?.estates.find((item) => item.estateId === estateId)
+      ?.canManageDevices
+  );
   const asset = useAsset(estateId, assetId);
   const register = useRegisterDevice(estateId, assetId);
   const navigate = useNavigate();
@@ -39,7 +46,8 @@ export function NewDevicePage({
   const error = estate.error ?? asset.error;
   const loading = estate.isPending || asset.isPending;
   const allowed =
-    estate.data?.owned &&
+    canManageDevices &&
+    estate.data &&
     !estate.data.deactivatedAt &&
     asset.data &&
     !asset.data.deactivatedAt;

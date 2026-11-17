@@ -73,7 +73,11 @@ beforeEach(() => {
   vi.mocked(api.GET).mockImplementation((path) => {
     let data: unknown = locations;
     if (path === "/estates/{id}") {
-      data = { name: "Maple Grove", owned: true };
+      data = { name: "Maple Grove" };
+    }
+    // Replacing devices needs MANAGE_DEVICES (estate-role-permissions).
+    if (path === "/access/context") {
+      data = { estates: [{ estateId: "estate-id", canManageDevices: true }] };
     }
     if (path === "/estates/{estateId}/assets/{id}") {
       data = { name: "Water pump", locationId: "b1" };

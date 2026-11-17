@@ -41,9 +41,9 @@ function heading(editing: boolean): {
 export function EstateEditorPage({ estateId }: { estateId?: string }) {
   const estate = useEstate(estateId);
   const access = useAppAccess();
+  // Editing needs EDIT_ESTATE (estate-role-permissions); creating needs nothing.
   const canEditDetails = Boolean(
     !estateId ||
-      estate.data?.owned ||
       access.data?.estates.some(
         (assignment) =>
           assignment.estateId === estateId && assignment.canManageEstate

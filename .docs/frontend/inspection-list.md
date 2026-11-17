@@ -10,7 +10,8 @@ API: [inspection-list.md](../api/inspection-list.md).
 `inspections-checks.tsx`; `use-inspections-page.ts` holds queries and generation.
 
 Entry: sidebar Maintenance › **Inspections**, shown by `canOpenInspections`
-(`owned || canManageInvitationPermissions`); the `_auth` guard 404s otherwise. The item stays
+(`canViewInspectionResults`: the owner, every Manager and Crew; estate-role-permissions);
+the `_auth` guard 404s otherwise, and the schedules views need `canManageInspections`. The item stays
 active on `/inspections/schedules[/$interval]`.
 
 Below the header, an "Inspection views" `SubNav` (`-components/inspection-views.tsx`, shared with

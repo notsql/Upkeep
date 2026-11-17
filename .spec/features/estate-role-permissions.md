@@ -473,7 +473,7 @@ and migrated on `prd`) before any later phase is merged.
 - [x] **5. Access context.** Add the new flags, re-derive the existing ones,
   and drop MEMBER from the schemas. Run `pnpm api:generate` and then
   `pnpm fix`.
-- [ ] **6. Web.**
+- [x] **6. Web.**
   - Move the 33 files that gate on `role` or `owned` onto the flags.
   - Asset, cost and device controls for Managers and Council.
   - Report triage for Crew.
