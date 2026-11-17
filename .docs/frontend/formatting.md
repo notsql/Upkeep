@@ -17,7 +17,7 @@ Omitted means the browser's locale and time zone. Tests pin
 | `formatInstantDate(instant)` | ISO instant | `7 Nov 2026` (its day in the viewer's time zone) |
 | `formatTime(instant)` | ISO instant | `9:01:57 pm` |
 | `formatClock(instant)` | ISO instant | `9:01 pm` (hour and minute; Trends x ticks on 1 min, 15 min and 1 h) |
-| `formatDayHour(instant)` | ISO instant | `Sat, 9 pm` (short weekday and hour; the 24 h chart axis) |
+| `formatDayHour(instant)` | ISO instant | `Sat, 9 pm` (short weekday and hour; the 24 h chart axis). Day and hour are formatted separately and joined with ", ", since Node 26's ICU dropped the comma from the combined format |
 | `formatDuration(seconds)` | seconds | `1 sec`, `5 mins`, `2.3 hrs` (largest whole unit up to hours; the Trends coverage note) |
 | `localSecondOfDay(t)` | epoch ms | seconds since local midnight, used by `timeTicks` to align ticks to round wall times |
 | `formatRelative(instant, now)` | ISO instant, `Date` | Short style, `numeric: "auto"`: `30 sec ago`, `2 min ago`, `3 hr ago`, `yesterday`, `3 days ago`, `in 2 min`. Show it only next to an absolute time. |
