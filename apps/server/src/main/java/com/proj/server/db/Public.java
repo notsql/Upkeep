@@ -43,6 +43,7 @@ import com.proj.server.db.tables.Notification;
 import com.proj.server.db.tables.Notificationread;
 import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Presetrolepermission;
 import com.proj.server.db.tables.Readingimportbatch;
 import com.proj.server.db.tables.Readingimportrow;
 import com.proj.server.db.tables.Reportclassification;
@@ -272,6 +273,11 @@ public class Public extends SchemaImpl {
     public final Permission PERMISSION = Permission.PERMISSION;
 
     /**
+     * The table <code>public.PresetRolePermission</code>.
+     */
+    public final Presetrolepermission PRESETROLEPERMISSION = Presetrolepermission.PRESETROLEPERMISSION;
+
+    /**
      * The table <code>public.ReadingImportBatch</code>.
      */
     public final Readingimportbatch READINGIMPORTBATCH = Readingimportbatch.READINGIMPORTBATCH;
@@ -376,6 +382,7 @@ public class Public extends SchemaImpl {
             Notificationread.NOTIFICATIONREAD,
             Notificationsweep.NOTIFICATIONSWEEP,
             Permission.PERMISSION,
+            Presetrolepermission.PRESETROLEPERMISSION,
             Readingimportbatch.READINGIMPORTBATCH,
             Readingimportrow.READINGIMPORTROW,
             Reportclassification.REPORTCLASSIFICATION,

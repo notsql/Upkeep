@@ -922,6 +922,17 @@ model Permission {
   label       String                 @db.VarChar(120)
   description String                 @db.VarChar(500)
   roles       EstateRolePermission[]
+  presets     PresetRolePermission[]
+}
+
+// The fixed permission bundle of each built-in role (MANAGER, COUNCIL, CREW).
+// Seeded and changed only by migrations; RESIDENT holds no codes.
+model PresetRolePermission {
+  role       String     @db.VarChar(20)
+  permission String     @db.VarChar(64)
+  catalogue  Permission @relation(fields: [permission], references: [code], onDelete: Restrict, onUpdate: Restrict)
+
+  @@id([role, permission])
 }
 
 model EstateRoleDefinition {

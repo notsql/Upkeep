@@ -8,6 +8,7 @@ import com.proj.server.db.Keys;
 import com.proj.server.db.Public;
 import com.proj.server.db.tables.Estateroledefinition.EstateroledefinitionPath;
 import com.proj.server.db.tables.Estaterolepermission.EstaterolepermissionPath;
+import com.proj.server.db.tables.Presetrolepermission.PresetrolepermissionPath;
 import com.proj.server.db.tables.records.PermissionRecord;
 
 import java.util.Collection;
@@ -154,6 +155,19 @@ public class Permission extends TableImpl<PermissionRecord> {
             _estaterolepermission = new EstaterolepermissionPath(this, null, Keys.ESTATEROLEPERMISSION__ESTATEROLEPERMISSION_PERMISSION_FKEY.getInverseKey());
 
         return _estaterolepermission;
+    }
+
+    private transient PresetrolepermissionPath _presetrolepermission;
+
+    /**
+     * Get the implicit to-many join path to the
+     * <code>public.PresetRolePermission</code> table
+     */
+    public PresetrolepermissionPath presetrolepermission() {
+        if (_presetrolepermission == null)
+            _presetrolepermission = new PresetrolepermissionPath(this, null, Keys.PRESETROLEPERMISSION__PRESETROLEPERMISSION_PERMISSION_FKEY.getInverseKey());
+
+        return _presetrolepermission;
     }
 
     /**
