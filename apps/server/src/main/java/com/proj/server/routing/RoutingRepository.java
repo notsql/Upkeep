@@ -12,6 +12,7 @@ import static com.proj.server.db.tables.Workorder.WORKORDER;
 import static com.proj.server.db.tables.Workorderdispatch.WORKORDERDISPATCH;
 import static org.jooq.impl.DSL.concatWs;
 import static org.jooq.impl.DSL.currentOffsetDateTime;
+import static org.jooq.impl.DSL.field;
 
 import com.proj.server.db.tables.Location;
 import com.proj.server.workorder.WorkOrderStatus;
@@ -275,6 +276,9 @@ public class RoutingRepository {
     public void recordClassification(UUID reportId, Classification classification, String classifiedBy) {
         db.insertInto(REPORTCLASSIFICATION)
                 .set(REPORTCLASSIFICATION.ID, UUID.randomUUID())
+                // The insert's own time, not now(): now() is fixed per transaction, so two
+                // classifications in one transaction would tie and "newest" would be random.
+                .set(REPORTCLASSIFICATION.CREATEDAT, field("clock_timestamp()", OffsetDateTime.class))
                 .set(REPORTCLASSIFICATION.REPORTID, reportId)
                 .set(REPORTCLASSIFICATION.OUTCOME, classification.outcome().name())
                 .set(
