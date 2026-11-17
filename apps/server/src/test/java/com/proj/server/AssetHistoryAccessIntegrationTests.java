@@ -14,19 +14,19 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
     @ParameterizedTest
-    @ValueSource(strings = {"owner", "member"})
-    void ownerAndCurrentCouncilCanReadTheTimelineAndBrowseAssets(String user) throws Exception {
+    @ValueSource(strings = {"owner", "manager", "member"})
+    void ownerManagersAndCurrentCouncilCanReadTheTimelineAndBrowseAssets(String user) throws Exception {
         page(user, history(assetId));
         var assets = page(user, historyAssets());
         assertEquals(List.of(assetId.toString()), values(assets.path("items"), "id"));
         read(user, get("/access/context"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(true)))
-                .andExpect(jsonPath(ownEstate("canViewAssets")).value(contains(user.equals("owner"))));
+                .andExpect(jsonPath(ownEstate("canViewAssets")).value(contains(true)));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"manager", "crew", "resident", "legacy-member"})
+    @ValueSource(strings = {"crew", "resident", "legacy-member"})
     void unrelatedEstateRolesAndForgedProviderAdminClaimsDoNotGrantHistory(String user) throws Exception {
         read(user, get(history(assetId)))
                 .andExpect(status().isForbidden())
@@ -127,7 +127,8 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
     @Test
     void councilHistoryDoesNotGrantPrivateScreensOrAssetDocumentInspectionAndWorkOrderWrites() throws Exception {
         page("member", history(assetId));
-        for (String suffix : List.of("", "/assessments", "/events")) {
+        read("member", get(path() + "/assets/" + assetId)).andExpect(status().isOk());
+        for (String suffix : List.of("/assessments", "/events")) {
             read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isNotFound());
         }
         for (String suffix : List.of("/documents", "/inspections")) {
@@ -139,7 +140,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                         "member",
                         patch(path() + "/assets/" + assetId),
                         Map.of("name", "Changed", "locationId", locationId, "category", "PUMP"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk()); // Council hold EDIT_ASSETS (estate-role-permissions).
         send(
                         "member",
                         post(path() + "/assets/" + assetId + "/deactivate"),
@@ -148,7 +149,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                                 "retiredOn", "2026-09-01",
                                 "retirementReason", "Worn",
                                 "expectedVersion", 0))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         send(
                         "member",
                         post(path() + "/assets/" + assetId + "/assessments"),

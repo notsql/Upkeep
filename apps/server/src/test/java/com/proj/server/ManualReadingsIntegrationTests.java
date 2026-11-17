@@ -168,8 +168,9 @@ class ManualReadingsIntegrationTests {
         mvc.perform(get("/access/context").with(jwt().jwt(j -> j.subject("technician"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates[0].canRecordReadings").value(true));
+        // Managers hold VIEW_ASSETS; Crew do not (estate-role-permissions).
         mvc.perform(get("/estates/" + estate + "/assets").with(jwt().jwt(j -> j.subject("technician"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().is(role.equals("MANAGER") ? 200 : 403));
     }
 
     @ParameterizedTest

@@ -2,6 +2,7 @@ package com.proj.server.asset;
 
 import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.db.tables.records.AssetRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
 import com.proj.server.location.LocationRepository;
@@ -40,7 +41,7 @@ public class AssetService {
     }
 
     public AssetResponse get(UUID estateId, UUID id, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(AssetService::estateNotFound);
+        view(estateId, owner);
         return response(repository.find(id, estateId, false).orElseThrow(AssetService::assetNotFound));
     }
 
@@ -73,7 +74,7 @@ public class AssetService {
             UUID locationId,
             AssetConditionFilter condition,
             AssetStatus status) {
-        estates.findOwned(estateId, owner, false).orElseThrow(AssetService::estateNotFound);
+        view(estateId, owner);
         if (locationId != null)
             locations
                     .find(locationId, estateId)
@@ -83,7 +84,7 @@ public class AssetService {
     }
 
     public java.util.List<AssetLifecycleEventResponse> events(UUID estateId, UUID id, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(AssetService::estateNotFound);
+        view(estateId, owner);
         repository.find(id, estateId, false).orElseThrow(AssetService::assetNotFound);
         // Look each actor's name up once; lifecycle history names who made the change.
         var names = new java.util.HashMap<String, String>();
@@ -163,8 +164,12 @@ public class AssetService {
         return new AssetException(HttpStatus.CONFLICT, message);
     }
 
-    private EstateResponse lockActiveEstate(UUID estateId, String owner) {
-        var estate = estates.findOwned(estateId, owner, true).orElseThrow(AssetService::estateNotFound);
+    private void view(UUID estateId, String user) {
+        estates.require(estateId, user, EstatePermissionCode.VIEW_ASSETS, false);
+    }
+
+    private EstateResponse lockActiveEstate(UUID estateId, String user) {
+        var estate = estates.require(estateId, user, EstatePermissionCode.EDIT_ASSETS, true);
         if (estate.deactivatedAt() != null) {
             throw new AssetException(HttpStatus.CONFLICT, "This estate is inactive. Its assets cannot be changed.");
         }
@@ -209,10 +214,6 @@ public class AssetService {
                 catalogue.manufacturerName(row.getManufacturerid()),
                 catalogue.modelName(row.getModelid()),
                 repository.currentCondition(row.getId()));
-    }
-
-    private static AssetException estateNotFound() {
-        return new AssetException(HttpStatus.NOT_FOUND, "Estate not found.");
     }
 
     private static AssetException assetNotFound() {

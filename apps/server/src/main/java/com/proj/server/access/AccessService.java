@@ -103,7 +103,8 @@ public class AccessService {
             boolean responder = "MANAGER".equals(row.get(ESTATEUSER.ROLE)) || "CREW".equals(row.get(ESTATEUSER.ROLE));
             boolean canViewManagement = management || permissions.contains(EstatePermissionCode.VIEW_ESTATE);
             boolean canManageEstate = manager || permissions.contains(EstatePermissionCode.EDIT_ESTATE);
-            boolean canViewAssets = owner;
+            var codes = EstatePermissions.effective(db, row.get(ESTATE.ID), user);
+            boolean canViewAssets = codes.contains(EstatePermissionCode.VIEW_ASSETS);
             boolean canInviteMembers = active && (manager || permissions.contains(EstatePermissionCode.INVITE_MEMBERS));
             boolean canManageInvitationPermissions = manager;
             boolean canViewFaultReports = responder || permissions.contains(EstatePermissionCode.VIEW_FAULT_REPORTS);
@@ -133,7 +134,7 @@ public class AccessService {
                     canViewManagement,
                     canManageEstate,
                     canViewAssets,
-                    !resident && (owner || "COUNCIL".equals(row.get(ESTATEUSER.ROLE))),
+                    canViewAssets,
                     manager || "CREW".equals(row.get(ESTATEUSER.ROLE)),
                     active && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
                     canViewManagement || responder,

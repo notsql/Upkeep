@@ -398,7 +398,7 @@ class EstateRoleAuthorizationIntegrationTests {
         mvc.perform(asUser(get("/estates/" + councilEstate + "/locations"), "mixed-user", jwtRole))
                 .andExpect(status().isOk());
         mvc.perform(asUser(get("/estates/" + councilEstate + "/assets"), "mixed-user", jwtRole))
-                .andExpect(status().isNotFound()); // The existing asset API remains owner-only.
+                .andExpect(status().isOk()); // Council hold VIEW_ASSETS (estate-role-permissions).
         mvc.perform(asUser(get("/estates/" + ownedEstate + "/assets/" + ownedAsset), "mixed-user", jwtRole))
                 .andExpect(status().isOk());
         mvc.perform(asUser(get("/estates/" + UUID.randomUUID()), "mixed-user", jwtRole))
@@ -427,7 +427,7 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + b + "')].canViewManagement")
                         .value(org.hamcrest.Matchers.contains(true)))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + b + "')].canViewAssets")
-                        .value(org.hamcrest.Matchers.contains(false)))
+                        .value(org.hamcrest.Matchers.contains(true)))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + c + "')].role")
                         .value(org.hamcrest.Matchers.contains("MANAGER")))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + c + "')].canViewAssets")

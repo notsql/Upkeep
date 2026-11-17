@@ -66,6 +66,11 @@ public class EstateRepository {
                 .map(row -> response(row, user));
     }
 
+    /** The estate once {@code user} holds {@code code} there; 404 for non-members, 403 when the code is missing. */
+    public EstateResponse require(UUID id, String user, EstatePermissionCode code, boolean lock) {
+        return response(EstatePermissions.require(db, id, user, code, lock), user);
+    }
+
     public Optional<EstateResponse> findOwned(UUID id, String owner, boolean lock) {
         denyResident(id, owner);
         if (isCustom(id, owner) && !db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner))))

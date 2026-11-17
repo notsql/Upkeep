@@ -196,12 +196,14 @@ class EstateReadingsIntegrationTests {
         mvc.perform(get(path + "/assets").with(jwt().jwt(j -> j.subject("reader"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(2));
+        // Managers hold VIEW_ASSETS; Crew do not (estate-role-permissions).
+        boolean manager = role.equals("MANAGER");
         mvc.perform(get("/estates/" + estate + "/assets").with(jwt().jwt(j -> j.subject("reader"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().is(manager ? 200 : 403));
         mvc.perform(get("/access/context").with(jwt().jwt(j -> j.subject("reader"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates[0].canViewReadings").value(true))
-                .andExpect(jsonPath("$.estates[0].canViewAssets").value(false));
+                .andExpect(jsonPath("$.estates[0].canViewAssets").value(manager));
     }
 
     @ParameterizedTest

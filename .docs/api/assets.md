@@ -5,7 +5,7 @@ Those endpoints have a separate contract: metadata requires document-read access
 and link/unlink remains available on retired assets while preserving the uploaded
 file, work-order link and equipment fields.
 
-Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing resources return 404. Writes require an active estate and lock estate before asset. No invitation-role dependency.
+Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and a permission code in the estate (estate-role-permissions): reads (`GET` list, detail, lifecycle events) need `VIEW_ASSETS`; create, edit, retire, correct retirement and restore need `EDIT_ASSETS`. The owner, every Manager and Council hold both; custom roles hold what they are granted. Missing authentication returns 401; a member without the code gets 403 (`This estate permission is required: <CODE>`); non-members and foreign or missing resources get 404. Writes require an active estate (409 otherwise) and lock estate before asset. Device, maintenance, assessment, failure-risk and anomaly endpoints below keep their own rules until their slice of that spec lands. No invitation-role dependency.
 
 ## GET `/estates/{estateId}/assets`
 

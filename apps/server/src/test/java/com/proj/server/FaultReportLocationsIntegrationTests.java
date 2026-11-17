@@ -951,11 +951,12 @@ class FaultReportLocationsIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Changed\",\"parentId\":\"" + block + "\",\"sortOrder\":1}")))
                 .andExpect(status().isNotFound());
-        mvc.perform(asStaff(get("/estates/" + estate + "/assets"))).andExpect(status().isNotFound());
+        // Crew lack VIEW_ASSETS and EDIT_ASSETS (estate-role-permissions).
+        mvc.perform(asStaff(get("/estates/" + estate + "/assets"))).andExpect(status().isForbidden());
         mvc.perform(asStaff(post("/estates/" + estate + "/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Pump\",\"category\":\"PUMP\",\"locationId\":\"" + level + "\"}")))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mvc.perform(asStaff(post("/estates/" + estate + "/assets/" + asset + "/devices")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""

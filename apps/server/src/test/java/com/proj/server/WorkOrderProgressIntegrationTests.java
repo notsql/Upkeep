@@ -104,8 +104,9 @@ class WorkOrderProgressIntegrationTests {
         mvc.perform(get(base(data) + "/" + id).with(jwt().jwt(t -> t.subject("crew"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completion.findings").value("Worn seal"));
+        // Every Manager holds VIEW_ASSETS (estate-role-permissions).
         mvc.perform(get("/estates/" + data[0] + "/assets/" + data[2]).with(jwt().jwt(t -> t.subject("manager"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         mvc.perform(get(history(data)).with(jwt().jwt(t -> t.subject(owner))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
