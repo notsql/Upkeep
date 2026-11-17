@@ -95,3 +95,15 @@ it("leaves the action column's header for screen readers, not a repeat of its li
   ).toBeNull();
   screen.getByRole("link", { name: "View record" });
 });
+
+it("underlines the date link on phones, which cannot hover to reveal it", () => {
+  renderWithProviders(
+    <InspectionHistoryRecordsTable
+      canCreateWorkOrder
+      canViewWorkOrder
+      records={[failed]}
+    />
+  );
+  const date = screen.getByRole("link", { name: formatDate("2026-10-26") });
+  expect(date.className.split(" ")).toContain("underline");
+});

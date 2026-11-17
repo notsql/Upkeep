@@ -27,7 +27,7 @@ export function InspectionHistoryItem({
       <ItemContent className="min-w-0">
         <ItemTitle>
           <Link
-            className="underline-offset-4 hover:underline"
+            className="underline underline-offset-4"
             params={{
               estateId: record.estateId,
               assetId: record.assetId,

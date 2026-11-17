@@ -74,7 +74,7 @@ screen and limited Manager/Crew screen show **Inspection records** when
 The five columns are Inspection date, Outcome, Follow-up / work order,
 Inspector and an unlabelled action column holding the View record link (its header is a `sr-only` "Actions", as in the app's other tables). Below 768px (`useMobile`) the table becomes an "Inspection records" list
 (`inspection-history-item.tsx`) of shadcn `Item size="sm"` rows divided by
-`ItemSeparator`: title = the inspection date, linking to the record; muted line
+`ItemSeparator`: title = the inspection date, linking to the record (always underlined, like the desktop View record link, since phones cannot hover); muted line
 = Inspector · follow-up (Closed, the work-order reference/link, or Create work
 order; omitted when empty); trailing = the Pass/Fail outcome `Badge`.
 The table preserves the API order (inspection date,
