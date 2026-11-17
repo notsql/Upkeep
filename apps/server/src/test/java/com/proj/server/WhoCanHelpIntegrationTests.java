@@ -198,7 +198,8 @@ class WhoCanHelpIntegrationTests {
     void rolesNobodyHoldsAreLeftOut() throws Exception {
         db.execute("delete from \"EstateUser\" where \"estateId\" = ? and role = 'MANAGER'", estateId);
         assertEquals(List.of("Facilities lead", "estate owner"), roles("crew", "PAUSE_SENSOR_WARNINGS"));
-        assertEquals(List.of(), roles("crew", "REVIEW_DUPLICATE"));
+        // Crew and the all-codes custom role hold TRIAGE_FAULT_REPORTS (estate-role-permissions).
+        assertEquals(List.of("Crew", "Facilities lead", "estate owner"), roles("crew", "REVIEW_DUPLICATE"));
     }
 
     @Test

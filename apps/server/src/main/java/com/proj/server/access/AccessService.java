@@ -161,9 +161,9 @@ public class AccessService {
                     canUploadDocuments,
                     active && codes.contains(EstatePermissionCode.IMPORT_READINGS),
                     active && codes.contains(EstatePermissionCode.IMPORT_READINGS),
-                    // Matches EstateReportService: current MANAGER membership in an active estate.
-                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)),
-                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
+                    // Matches EstateReportService: TRIAGE_FAULT_REPORTS in an active estate.
+                    active && codes.contains(EstatePermissionCode.TRIAGE_FAULT_REPORTS),
+                    active && codes.contains(EstatePermissionCode.TRIAGE_FAULT_REPORTS));
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)

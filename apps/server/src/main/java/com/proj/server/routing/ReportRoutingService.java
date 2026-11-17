@@ -1,6 +1,8 @@
 package com.proj.server.routing;
 
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.report.EstateReportRepository;
+import com.proj.server.report.EstateReportService;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.workorder.WorkOrderAssignmentService;
 import com.proj.server.workorder.WorkOrderCategory;
@@ -16,8 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Work-order creators' decisions on routing (ID-70): sending escalated reports, dismissing them,
- * emailing existing work orders and retrying failed email. Authority is ID-36's: active owner or Manager.
+ * Decisions on routing (ID-70). Sending escalated reports, emailing existing work orders and retrying failed email
+ * create or change work orders (ID-36's work-order authority). Dismissing and changing a report's type are triage and
+ * need TRIAGE_FAULT_REPORTS (estate-role-permissions).
  */
 @Service
 public class ReportRoutingService {
@@ -26,18 +29,21 @@ public class ReportRoutingService {
     private final WorkOrderRepository workOrders;
     private final EstateReportRepository estates;
     private final RoutingRepository routing;
+    private final EstateReportService reportAccess;
 
     public ReportRoutingService(
             WorkOrderService orders,
             WorkOrderAssignmentService assignments,
             WorkOrderRepository workOrders,
             EstateReportRepository estates,
-            RoutingRepository routing) {
+            RoutingRepository routing,
+            EstateReportService reportAccess) {
         this.orders = orders;
         this.assignments = assignments;
         this.workOrders = workOrders;
         this.estates = estates;
         this.routing = routing;
+        this.reportAccess = reportAccess;
     }
 
     @Transactional
@@ -59,7 +65,7 @@ public class ReportRoutingService {
 
     @Transactional
     public ReportRoutingResponse dismiss(UUID estateId, String user, UUID reportId) {
-        orders.authorize(estateId, user, true, true);
+        reportAccess.authorizeActive(estateId, user, EstatePermissionCode.TRIAGE_FAULT_REPORTS);
         requireReport(estateId, reportId);
         requireReview(reportId);
         routing.decide(reportId, RoutingState.DISMISSED, user, null);
@@ -72,7 +78,7 @@ public class ReportRoutingService {
      */
     @Transactional
     public ReportRoutingResponse changeCategory(UUID estateId, String user, UUID reportId, FaultCategory category) {
-        orders.authorize(estateId, user, true, true);
+        reportAccess.authorizeActive(estateId, user, EstatePermissionCode.TRIAGE_FAULT_REPORTS);
         requireReport(estateId, reportId);
         var state = routing.lockState(reportId);
         if (state.isEmpty())

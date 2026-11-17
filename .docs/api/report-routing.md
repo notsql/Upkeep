@@ -126,7 +126,11 @@ state except `CLASSIFYING`; reports from before routing (no routing row) get
 | POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch` | `DispatchRequest { equipmentType }` | 201 `WorkOrderDispatchResponse`; order becomes `ASSIGNED` | 400, 401, 403, 404, 409 not an `EQUIPMENT_FAULT` order from a resident report, already emailed, not `OPEN`, or no route for the type |
 | POST `/estates/{estateId}/work-orders/{workOrderId}/dispatch/retry` | — | 200 `WorkOrderDispatchResponse` (`PENDING`, attempts reset) | 400, 401, 403, 404 no dispatch in this estate, 409 latest email not `FAILED` or failed only because it was superseded |
 
-Writes are owner/Manager only (`canCreateWorkOrders`). The old
+Dismissing a report and changing its type are triage and need
+`TRIAGE_FAULT_REPORTS` (owner, every Manager, Crew, custom roles granted it;
+estate-role-permissions). Sending a report to a contractor, emailing and
+retrying create or change work orders and stay owner/Manager only
+(`canCreateWorkOrders`). The old
 `PUT/DELETE /contractors/{equipmentType}` paths moved under `/contractors/defaults/`
 (work-order-assignment.md).
 
