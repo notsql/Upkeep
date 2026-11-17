@@ -828,6 +828,21 @@ it("opens the existing work-order form after a Fail and can cancel and reopen it
   expect(state.post).toHaveBeenCalledTimes(1);
 });
 
+it("keeps a description typed as soon as the inspection form appears", async () => {
+  await setup(`${orderPath}?sourceInspectionId=${inspectionId}`);
+  // Type in the same moment the box renders, before the source's notes are
+  // filled in, as a fast typist or a slow device can.
+  let description: HTMLTextAreaElement | undefined;
+  await waitFor(() => {
+    description = screen.getByRole<HTMLTextAreaElement>("textbox", {
+      name: "Description",
+    });
+    fireEvent.change(description, { target: { value: "Typed early" } });
+  });
+  await screen.findByText("Block A / Level 1");
+  expect(description?.value).toBe("Typed early");
+});
+
 it("reviews moved inspection assets before creation and preserves edits through a later conflict", async () => {
   const movedLocationId = "00000000-0000-0000-0000-000000000006";
   const latestLocationId = "00000000-0000-0000-0000-000000000007";

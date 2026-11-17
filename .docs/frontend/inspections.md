@@ -179,7 +179,8 @@ See [decision 0039](../../.spec/decisions/0039-unified-work-order-creation.md).
 The server-authorised source lookup supplies the asset ID; the browser then
 loads that asset's limited current context. Source and asset remain fixed.
 Notes prefill the editable description once, so background reads do not erase
-edits. Missing notes leave a required empty description. Existing category and
+edits, and only while it is still empty: the box renders before the prefill effect
+runs, so text typed in that moment is kept. Missing notes leave a required empty description. Existing category and
 priority rules apply, including Safety forcing Urgent.
 
 Recorded inspection location and current work location appear together only in
