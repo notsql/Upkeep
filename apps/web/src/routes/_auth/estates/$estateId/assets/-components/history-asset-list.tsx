@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import {
   Item,
@@ -125,8 +126,10 @@ export function HistoryAssetList({
         title="Assets"
       />
       <div className="flex flex-wrap items-end gap-4">
-        <div className="min-w-0 flex-1 space-y-2">
-          <label htmlFor="history-asset-search">Search assets</label>
+        {/* Field spaces with flex gap; a space-y stack would push the Select
+            up, since its hidden input follows the trigger. */}
+        <Field className="min-w-0 flex-1 basis-60">
+          <FieldLabel htmlFor="history-asset-search">Search assets</FieldLabel>
           <Input
             id="history-asset-search"
             maxLength={255}
@@ -134,15 +137,15 @@ export function HistoryAssetList({
             placeholder="Reference or name"
             value={search}
           />
-        </div>
-        <div className="space-y-2">
-          <span id="history-asset-status">Status</span>
+        </Field>
+        <Field className="w-44">
+          <FieldLabel htmlFor="history-asset-status">Status</FieldLabel>
           <Select
             items={STATUS_ITEMS}
             onValueChange={changeStatus}
             value={filters.status ?? "ALL"}
           >
-            <SelectTrigger aria-labelledby="history-asset-status">
+            <SelectTrigger id="history-asset-status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -153,7 +156,7 @@ export function HistoryAssetList({
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
       </div>
       {assets.isPending ? (
         <LoadingState label="Loading assets…" rows={3} />

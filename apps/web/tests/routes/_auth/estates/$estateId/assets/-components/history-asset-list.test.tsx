@@ -234,6 +234,22 @@ it("names the chosen status filter in words, not its code", async () => {
   expect(status.textContent).not.toContain("INACTIVE");
 });
 
+it("lays the search and status filters out as matching fields, so they line up", async () => {
+  renderWithProviders(
+    <HistoryAssetList
+      estateId="estate"
+      filters={{}}
+      onFiltersChange={vi.fn()}
+    />
+  );
+  // A space-y stack misplaces the Select, whose hidden input comes after it.
+  const search = screen.getByRole("textbox", { name: "Search assets" });
+  const status = await screen.findByRole("combobox", { name: "Status" });
+  for (const control of [search, status]) {
+    expect(control.parentElement?.dataset.slot).toBe("field");
+  }
+});
+
 it("shows category names, not their codes", async () => {
   vi.mocked(api.GET).mockImplementation(((path: string) =>
     Promise.resolve({
