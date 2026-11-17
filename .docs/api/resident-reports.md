@@ -1,6 +1,6 @@
 # Resident fault reports API
 
-`packages/api/openapi.json` is the contract source. WorkOS JWTs authenticate identity. Any signed-in user may report a fault in any active estate, with or without an `EstateUser` row there (decision 0053); RESIDENT memberships only decide which estates the picker lists first. Reporting grants no rights in the estate. JWT resident claims grant no estate permissions. Missing or invalid authentication returns 401. The reporting controller requires a real JWT principal even in development without an issuer.
+`packages/api/openapi.json` is the contract source. WorkOS JWTs authenticate identity. A signed-in user may report a fault only in an active estate they belong to, in any role or as its owner (decision 0056, superseding 0053). Reporting grants no rights in the estate. JWT resident claims grant no estate permissions. Missing or invalid authentication returns 401. The reporting controller requires a real JWT principal even in development without an issuer.
 
 Creation requires only a signed-in user and an active estate; an unknown or deactivated estate returns 404 `Estate not found.`. List, detail and private images require only authenticated subject and report ownership, including after membership deletion, a move or role conversion. Estate ownership and platform administration grant no access to other users' reports. See [access.md](access.md) for the access projection and admin membership contract.
 
@@ -8,7 +8,7 @@ Creation requires only a signed-in user and an active estate; an unknown or deac
 
 | DTO | Fields |
 | --- | --- |
-| `ResidentContextResponse` | `estates: EstateLabel[]` (the caller's active RESIDENT estates, by name); `canSubmit: boolean` (always `true`; kept for compatibility, to be dropped later) |
+| `ResidentContextResponse` | `estates: EstateLabel[]` (every active estate the caller belongs to in any role, or owns, by name); `canSubmit: boolean` (true exactly when `estates` is not empty) |
 | `EstateLabel` | `id: UUID`; `name: string` (both required) |
 | `ResidentLocationResponse` | `id: UUID`; `type: string` (`BLOCK`, `LEVEL`, `COMMON_AREA`); `name: string`; `parentId: UUID \| null`; `sortOrder: integer \| null` |
 | `IssueReportSummaryResponse` | `id: UUID`; `title: string` (1–150 characters); `description: string`; `estateName: string`; `location: { id: UUID, label: string }`; `status: string`; `createdAt: date-time`; `updatedAt: date-time` |
@@ -25,21 +25,15 @@ Storage keys, other residents' data and management notes never appear in these D
 
 | Method and path | Request | Success | Errors |
 | --- | --- | --- | --- |
-| `GET /resident/context` | None | 200 `ResidentContextResponse`; `estates` empty without an active resident membership; `canSubmit` always `true` | 401 |
-| `GET /resident/estates` | Required `q: string` query, 2+ characters after trimming | 200 `EstateLabel[]`: active estates whose name contains `q` (case-insensitive), at most 20, ordered by name then ID | 400 `q` missing or shorter than 2 (`Type at least 2 letters to search.`), 401 |
-| `GET /resident/locations` | Required estateId: UUID query | 200 `ResidentLocationResponse[]`; active hierarchy of any active estate, whatever the caller's memberships | 400, 401, 404 unknown or deactivated estate (`Estate not found.`) |
-| `POST /resident/reports/image-slots` | JSON `ReportImageSlotRequest`: required `estateId: UUID`, `contentType: string` (JPEG/PNG), `size: int64` (1 byte to 5 MiB); optional `reportId: UUID` from this report's first slot | 201 `UploadSlotResponse` (see [documents.md](documents.md)) with `reportId`; key under `reports/{reportId}/` | 400, 401, 404 unknown or deactivated estate, 413 image larger than 5 MiB, 415 unsupported image, 503 storage unavailable |
-| `POST /resident/reports` | JSON `CreateIssueReportRequest`: required `estateId: UUID`, `title` (1–50 characters after trimming), `description` (1–2,500 characters), `locationId` (UUID of active level or common area); optional `reportId: UUID` and `imageKeys: string[]` (up to 3 keys from the slots, already uploaded; `reportId` is required with keys) | 201 `IssueReportDetailResponse` and `Location: /resident/reports/{id}` | 400 invalid title/text/location/image or a key not uploaded, not issued for this report, or already used; 401, 404 unknown or deactivated estate, 413 image too large, 415 unsupported image, 503 storage unavailable |
+| `GET /resident/context` | None | 200 `ResidentContextResponse`; `estates` empty and `canSubmit` false for a user who belongs to no active estate | 401 |
+| `GET /resident/locations` | Required estateId: UUID query | 200 `ResidentLocationResponse[]`; active hierarchy of an active estate the caller belongs to | 400, 401, 404 unknown, deactivated or not the caller's estate (`Estate not found.`) |
+| `POST /resident/reports/image-slots` | JSON `ReportImageSlotRequest`: required `estateId: UUID`, `contentType: string` (JPEG/PNG), `size: int64` (1 byte to 5 MiB); optional `reportId: UUID` from this report's first slot | 201 `UploadSlotResponse` (see [documents.md](documents.md)) with `reportId`; key under `reports/{reportId}/` | 400, 401, 404 unknown, deactivated or not the caller's estate, 413 image larger than 5 MiB, 415 unsupported image, 503 storage unavailable |
+| `POST /resident/reports` | JSON `CreateIssueReportRequest`: required `estateId: UUID`, `title` (1–50 characters after trimming), `description` (1–2,500 characters), `locationId` (UUID of active level or common area); optional `reportId: UUID` and `imageKeys: string[]` (up to 3 keys from the slots, already uploaded; `reportId` is required with keys) | 201 `IssueReportDetailResponse` and `Location: /resident/reports/{id}` | 400 invalid title/text/location/image or a key not uploaded, not issued for this report, or already used; 401, 404 unknown, deactivated or not the caller's estate, 413 image too large, 415 unsupported image, 503 storage unavailable |
 | `GET /resident/reports` | Optional `estateId: UUID`, `cursor: string`, `limit: integer` (1–50, default 20) | 200 `ResidentReportPageResponse`, newest first; caller-owned history, optionally narrowed to an estate, with status `counts` | 400 invalid estate filter/cursor/limit, 401 |
 | `GET /resident/reports/{reportId}` | UUID path | 200 `IssueReportDetailResponse` | 401, 404 missing or not owned |
 | `GET /resident/reports/{reportId}/images/{imageId}` | UUID path | 200 `SignedDownloadResponse { url, expiresAt }` (five-minute link to the private image), `Cache-Control: private, no-store` | 401, 404 missing or not owned, 503 storage unavailable |
 
-Example estate search:
-
-```text
-GET /resident/estates?q=maple
--> 200 [{"id":"<estate-uuid>","name":"Maple Court"},{"id":"<estate-uuid>","name":"Maple Estate"}]
-```
+`GET /resident/estates` (estate search) was removed by decision 0056.
 
 Example submission:
 

@@ -639,9 +639,10 @@ class EstateRoleAuthorizationIntegrationTests {
         mvc.perform(get("/estates/" + a).with(token)).andExpect(status().isForbidden());
         db.execute("update \"EstateUser\" set role='COUNCIL' where \"estateId\"=? and \"userId\"='resident-a'", a);
         mvc.perform(get("/estates/" + a).with(token)).andExpect(status().isOk());
+        // Still a member (now Council), so the estate stays available for reports (estate-role-permissions).
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates").isEmpty())
+                .andExpect(jsonPath("$.estates[0].id").value(a.toString()))
                 .andExpect(jsonPath("$.canSubmit").value(true));
         mvc.perform(get("/resident/reports/" + reportId).with(token))
                 .andExpect(status().isOk())

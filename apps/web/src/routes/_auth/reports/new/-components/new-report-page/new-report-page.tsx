@@ -2,6 +2,7 @@ import { ClipboardPenLine } from "lucide-react";
 import { useCallback } from "react";
 import { FormPage } from "@/components/page/form-page";
 import { PageLayout } from "@/components/page/page-layout";
+import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { useAppAccess } from "@/lib/access";
@@ -64,7 +65,14 @@ export function NewReportPage({
       icon={ClipboardPenLine}
       title="Report a fault"
     >
-      <NewReportForm estates={estates} initialEstateId={requestedEstateId} />
+      {estates.length > 0 ? (
+        <NewReportForm estates={estates} initialEstateId={requestedEstateId} />
+      ) : (
+        <EmptyState
+          description="Ask your estate team for an invitation. Once you join an estate, you can report faults there."
+          title="You need to be invited to an estate before you can report a fault."
+        />
+      )}
     </FormPage>
   );
 }

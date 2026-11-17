@@ -409,7 +409,8 @@ class CustomEstateRoleEnforcementIntegrationTests extends CustomEstateRoleTestSu
         mvc.perform(as("member", get("/resident/reports/" + report))).andExpect(status().isOk());
         mvc.perform(as("member", get("/resident/context")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates[*].id", contains(other.toString())));
+                // Every estate the member belongs to, in any role (estate-role-permissions).
+                .andExpect(jsonPath("$.estates[*].id", containsInAnyOrder(estateId.toString(), other.toString())));
         assertEquals(1, db.fetchCount(ISSUEREPORT, ISSUEREPORT.ID.eq(report)));
     }
 

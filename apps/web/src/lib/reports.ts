@@ -15,7 +15,6 @@ export type IssueReport = components["schemas"]["IssueReportDetailResponse"];
 export type ReportEstate = components["schemas"]["EstateLabel"];
 
 /** Shortest estate search the API accepts, after trimming. */
-export const ESTATE_SEARCH_MIN_LENGTH = 2;
 const ESTATE_CLOSED = "This estate is no longer taking reports.";
 
 function useResidentId() {
@@ -44,26 +43,6 @@ function estateError(
   return response?.status === 404
     ? new Error(ESTATE_CLOSED)
     : reportError(error, fallback);
-}
-
-/** Active estates whose name contains the query; idle until it is long enough. */
-export function useEstateSearch(query: string) {
-  const userId = useResidentId();
-  const q = query.trim();
-  return useQuery({
-    queryKey: [userId, "resident-estates", q],
-    enabled: !!userId && q.length >= ESTATE_SEARCH_MIN_LENGTH,
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await api.GET("/resident/estates", {
-        params: { query: { q } },
-      });
-      if (error || !data) {
-        throw reportError(error, "Couldn't search estates. Try again.");
-      }
-      return data;
-    },
-  });
 }
 
 export function useResidentContext() {

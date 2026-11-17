@@ -467,7 +467,7 @@ and migrated on `prd`) before any later phase is merged.
 
   Add an integration test per role per area, for both the `200` and `403`
   cases.
-- [ ] **4. Fault reporting by membership.** Make `/resident/context`
+- [x] **4. Fault reporting by membership.** Make `/resident/context`
   membership-based, check membership on submit, slots and locations, and
   remove `GET /resident/estates`. Write a decision record superseding 0053.
 - [ ] **5. Access context.** Add the new flags, re-derive the existing ones,

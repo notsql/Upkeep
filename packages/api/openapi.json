@@ -7773,49 +7773,6 @@
         }
       }
     },
-    "/resident/estates": {
-      "get": {
-        "tags": ["resident-report-controller"],
-        "operationId": "searchResidentEstates",
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Up to 20 active estates whose name contains the query",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/EstateLabel" }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Query shorter than 2 characters",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          }
-        }
-      }
-    },
     "/resident/context": {
       "get": {
         "tags": ["resident-report-controller"],
