@@ -26,7 +26,9 @@ export function SubNav({
   items: SubNavItem[];
 }) {
   return (
-    <nav aria-label={label} className="mb-5 overflow-x-auto">
+    // Sideways only: overflow-x alone turns overflow-y to auto, and a pixel
+    // of rounding on the active underline then scrolls the bar vertically.
+    <nav aria-label={label} className="mb-5 overflow-x-auto overflow-y-hidden">
       <ul
         className={cn(
           tabsListVariants({ variant: "line" }),

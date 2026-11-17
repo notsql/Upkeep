@@ -853,7 +853,10 @@ compact muted pill. Each item is a router `Link` styled like a line
 TabsTrigger; the router sets `aria-current="page"` on the active one, which
 darkens its text and shows a 2px underline over the row's border. The height
 and underline are set on SubNav's own elements because there is no
-`Tabs` (`group/tabs`) parent.
+`Tabs` (`group/tabs`) parent. The `nav` scrolls sideways only
+(`overflow-x-auto overflow-y-hidden`): with `overflow-x` alone, `overflow-y`
+computes to auto and a pixel of rounding on the underline scrolls the bar
+vertically.
 
 ```tsx
 <SubNav
