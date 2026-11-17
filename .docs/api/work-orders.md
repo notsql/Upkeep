@@ -157,7 +157,7 @@ locks. Crew cannot update progress/completion; non-owner Managers gain no owner 
 | PATCH | `/estates/{estateId}/work-orders/{workOrderId}/completion` | CorrectWorkOrderCompletionRequest | 200 WorkOrderResponse; unchanged or identical latest retry is a no-op |
 | GET | `/estates/{estateId}/work-orders/{workOrderId}/completion-revisions` | None | 200 WorkOrderCompletionRevisionResponse[], version ascending |
 | GET | `/estates/{estateId}/work-orders/{workOrderId}/status-history` | None | 200 WorkOrderStatusEventResponse[] in version order |
-| GET | `/estates/{estateId}/assets/{assetId}/work-order-completions` | None | 200 AssetWorkOrderCompletionResponse[], closure time/ID descending; existing owner-only asset guard |
+| GET | `/estates/{estateId}/assets/{assetId}/work-order-completions` | None | 200 AssetWorkOrderCompletionResponse[], closure time/ID descending; requires `VIEW_ASSETS` (403 for members without it, 404 for non-members) |
 
 GET work-orders additionally accepts optional status and category enum filters.
 They combine with priority/reference before pagination. Omitted status includes

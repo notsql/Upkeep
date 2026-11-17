@@ -175,17 +175,26 @@ class EstateRoleAuthorizationIntegrationTests {
 
     @ParameterizedTest
     @MethodSource("restoredEstateOperations")
-    void restoredOperationsRemainOwnerOnly(String method, String template, int success) throws Exception {
+    void restoredOperationsRefuseMembersWithoutTheirCodeAndHideTheEstateFromOthers(
+            String method, String template, int success) throws Exception {
         var a = estate("Private estate", "owner");
         var privateAsset = asset(a);
+        // A legacy MEMBER row holds no permission codes (estate-role-permissions); Crew hold no asset codes.
         membership("member", a, "MEMBER");
-        membership("council", a, "COUNCIL");
-        for (var user : new String[] {"member", "council", "unrelated"}) {
+        membership("crew", a, "CREW");
+        boolean anomaly = template.endsWith("/anomaly-check");
+        for (var user : new String[] {"member", "crew"}) {
             mvc.perform(asUser(managementRequest(method, template, a, privateAsset), user, "user"))
+                    // The anomaly check keeps its owner-only rule until the readings slice lands.
+                    .andExpect(anomaly ? status().isNotFound() : status().isForbidden());
+        }
+        for (var user : new String[] {"unrelated", "platform-admin"}) {
+            mvc.perform(asUser(
+                            managementRequest(method, template, a, privateAsset),
+                            user,
+                            user.equals("platform-admin") ? "admin" : "user"))
                     .andExpect(status().isNotFound());
         }
-        mvc.perform(asUser(managementRequest(method, template, a, privateAsset), "platform-admin", "admin"))
-                .andExpect(status().isNotFound());
         assertEquals(0, db.fetchCount(ASSETEVENT));
         assertEquals(0, db.fetchCount(ASSETASSESSMENT));
         verifyNoInteractions(ml);

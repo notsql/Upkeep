@@ -8,9 +8,10 @@ manual maintenance entries (`AssetEvent` labour/parts/other) and completed work 
 
 ## Access
 
-Both endpoints require a bearer JWT subject (401 otherwise) and use `EstateRepository.findOwned`:
-estate owner only, the same as asset costs. A same-estate `RESIDENT` gets 403. Managers, Council,
-Members, Crew, strangers and unknown estates get 404. Both work for inactive estates. Both paths
+Both endpoints require a bearer JWT subject (401 otherwise) and the `VIEW_COSTS` permission code in
+the estate (`EstateRepository.require`, estate-role-permissions): the owner, every Manager, Council
+and custom roles granted it. Crew, Residents and other members without it get 403; strangers and
+unknown estates get 404. Both work for inactive estates. Both paths
 are explicitly allowed in `SecurityConfig`.
 
 ## Money rules

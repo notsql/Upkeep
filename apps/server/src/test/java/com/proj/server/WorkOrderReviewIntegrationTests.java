@@ -140,8 +140,9 @@ class WorkOrderReviewIntegrationTests {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].completion.id").value(completionId))
                 .andExpect(jsonPath("$[0].completion.findings").value("Corrected findings"));
+        // Every Manager holds VIEW_ASSETS (estate-role-permissions).
         mvc.perform(get(assetHistory(data)).with(jwt().jwt(t -> t.subject("manager"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         assertEquals(
                 assetBefore,
                 db.fetchOne("select * from \"Asset\" where id=?", data[2]).intoMap());

@@ -112,8 +112,9 @@ class WorkOrderProgressIntegrationTests {
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].workOrderId").value(id))
                 .andExpect(jsonPath("$[0].completion.totalCost").value("12.30"));
+        // Every Manager holds VIEW_ASSETS (estate-role-permissions).
         mvc.perform(get(history(data)).with(jwt().jwt(t -> t.subject("manager"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         assertEquals(0, db.fetchCount(org.jooq.impl.DSL.table("\"AssetEvent\"")));
     }
 

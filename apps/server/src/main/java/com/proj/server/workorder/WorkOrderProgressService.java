@@ -1,5 +1,6 @@
 package com.proj.server.workorder;
 
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -205,8 +206,8 @@ public class WorkOrderProgressService {
     }
 
     public List<AssetWorkOrderCompletionResponse> completions(UUID estate, UUID asset, String user) {
-        if (estates.findOwned(estate, user, false).isEmpty() || repository.asset(estate, asset) == null)
-            throw error(HttpStatus.NOT_FOUND, "Asset not found.");
+        estates.require(estate, user, EstatePermissionCode.VIEW_ASSETS, false);
+        if (repository.asset(estate, asset) == null) throw error(HttpStatus.NOT_FOUND, "Asset not found.");
         return repository.completions(estate, asset);
     }
 

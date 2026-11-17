@@ -3,6 +3,7 @@ package com.proj.server.cost;
 import com.proj.server.category.ServiceIntervalService;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AsseteventRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.event.AssetEventRepository;
 import com.proj.server.event.AssetEventService;
@@ -21,7 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -199,7 +199,6 @@ public class EstateCostService {
     }
 
     private void owned(UUID estateId, String user) {
-        estates.findOwned(estateId, user, false)
-                .orElseThrow(() -> new EstateCostException(HttpStatus.NOT_FOUND, "Estate not found."));
+        estates.require(estateId, user, EstatePermissionCode.VIEW_COSTS, false);
     }
 }

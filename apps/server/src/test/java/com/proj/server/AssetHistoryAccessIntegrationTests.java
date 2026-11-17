@@ -128,9 +128,8 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
     void councilHistoryDoesNotGrantPrivateScreensOrAssetDocumentInspectionAndWorkOrderWrites() throws Exception {
         page("member", history(assetId));
         read("member", get(path() + "/assets/" + assetId)).andExpect(status().isOk());
-        for (String suffix : List.of("/assessments", "/events")) {
-            read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isNotFound());
-        }
+        read("member", get(path() + "/assets/" + assetId + "/events")).andExpect(status().isOk());
+        read("member", get(path() + "/assets/" + assetId + "/assessments")).andExpect(status().isNotFound());
         for (String suffix : List.of("/documents", "/inspections")) {
             read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isForbidden());
         }
@@ -159,7 +158,8 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                         "member",
                         post(path() + "/assets/" + assetId + "/events"),
                         Map.of("type", "PREVENTIVE", "occurredOn", "2026-09-01", "notes", "Checked"))
-                .andExpect(status().isNotFound());
+                // Council hold EDIT_ASSETS, but the asset was retired above, so it takes no new events.
+                .andExpect(status().isConflict());
         UUID document = document("INVOICE", null, null, "2026-01-01T02:00:00Z");
         send(
                         "member",
