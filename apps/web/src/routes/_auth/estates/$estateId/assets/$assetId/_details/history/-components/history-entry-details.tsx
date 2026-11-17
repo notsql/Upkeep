@@ -1,6 +1,13 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Link } from "@tanstack/react-router";
+import { conditionLabel } from "@/lib/assessments";
 import type { HistoryEntry } from "@/lib/asset-history";
+import { formatDate } from "@/lib/format";
+import {
+  assetConditionTone,
+  badgeVariantFor,
+  type StatusTone,
+} from "@/lib/status-tone";
 
 function Value({
   label,
@@ -38,13 +45,16 @@ export function HistoryEntryDetails({
       return (
         <div className="space-y-2">
           <p>
-            {(
-              {
-                GOOD: "Good",
-                NEEDS_ATTENTION: "Needs attention",
-                FAULTY: "Faulty",
-              } as Record<string, string>
-            )[details.condition] ?? details.condition}
+            <Badge
+              variant={badgeVariantFor(
+                (assetConditionTone as Record<string, StatusTone>)[
+                  details.condition
+                ]
+              )}
+            >
+              {(conditionLabel as Record<string, string>)[details.condition] ??
+                details.condition}
+            </Badge>
           </p>
           <Badge variant="secondary">{details.sourceLabel}</Badge>
         </div>
@@ -112,7 +122,14 @@ export function HistoryEntryDetails({
     case "LIFECYCLE":
       return (
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <Value label="Recorded out-of-use date" value={details.retiredOn} />
+          <Value
+            label="Recorded out-of-use date"
+            value={
+              details.retiredOn
+                ? formatDate(details.retiredOn)
+                : details.retiredOn
+            }
+          />
           {details.previousRetiredOn ? (
             <Value
               label="Previous out-of-use date"

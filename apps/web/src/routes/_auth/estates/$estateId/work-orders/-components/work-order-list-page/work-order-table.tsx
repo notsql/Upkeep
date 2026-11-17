@@ -10,6 +10,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import { SortableTableHead } from "@/components/table/sortable-table-head";
 import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
+import { formatDateTime } from "@/lib/format";
 import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
 import type { WorkOrder, WorkOrderListSearch } from "@/lib/work-orders";
@@ -108,7 +109,7 @@ export function WorkOrderTable({
             <TableCell>{order.assignee?.name ?? "Nobody yet"}</TableCell>
             <TableCell>
               <time dateTime={order.createdAt}>
-                {new Date(order.createdAt).toLocaleString()}
+                {formatDateTime(order.createdAt)}
               </time>
             </TableCell>
           </TableRow>

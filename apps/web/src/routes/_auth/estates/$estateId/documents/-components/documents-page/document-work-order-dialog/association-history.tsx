@@ -1,6 +1,7 @@
 import { Button } from "@proj/ui/components/button";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { formatDateTime } from "@/lib/format";
 import type { AssociationDialogState } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/document-work-order-dialog/use-document-work-order-dialog";
 
 export function AssociationHistory({
@@ -39,7 +40,7 @@ export function AssociationHistory({
               ) : null}
               <p className="text-muted-foreground text-sm">
                 {event.changedByName ?? "Name unavailable"} ·{" "}
-                {new Date(event.changedAt).toLocaleString()}
+                {formatDateTime(event.changedAt)}
               </p>
             </li>
           ))}

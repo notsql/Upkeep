@@ -202,6 +202,7 @@ Owner only (ID-45). Deactivates the device and registers a new one on the same a
 | action | string | yes |  |
 | occurredAt | date-time | yes |  |
 | actorUserId | string | yes |  |
+| actorName | string | no | The actor's WorkOS display name, looked up once per actor; null when WorkOS is unavailable |
 | previousDeactivatedAt | date-time | no |  |
 | previousRetiredOn | date | no |  |
 | previousRetirementReason | string / null | no |  |

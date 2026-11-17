@@ -1,9 +1,12 @@
 import { Badge } from "@proj/ui/components/badge";
 import { cn } from "@proj/ui/lib/utils";
-import { Link } from "@tanstack/react-router";
-import { type ReactNode, useCallback } from "react";
+import { useCallback } from "react";
 import { AlertResponseActions } from "@/components/notifications/alert-response-actions";
 import { AlertResponseSummary } from "@/components/notifications/alert-response-summary";
+import {
+  NotificationRowLink,
+  notificationTitle,
+} from "@/components/notifications/notification-row-link";
 import { UNUSUAL_READINGS_STEP } from "@/components/notifications/unusual-readings-step";
 import { formatDateTime } from "@/lib/format";
 import {
@@ -64,75 +67,6 @@ const SEND_STEP_TYPES: ReadonlySet<Notification["type"]> = new Set([
   "CHECK_FAILED",
 ]);
 
-/** The headline for a warning; others lead with their summary. */
-function title(notification: Notification): string | undefined {
-  if (notification.type === "ANOMALY") {
-    return `${notification.assetName} may have a problem`;
-  }
-  if (notification.type === "CHECK_REQUESTED") {
-    return `Please inspect ${notification.assetName}`;
-  }
-  if (notification.type === "CHECK_FAILED") {
-    return `Crew found a problem with ${notification.assetName}`;
-  }
-  if (notification.type === "WORK_ORDER_ASSIGNED") {
-    return `You've been given a job: ${notification.workOrderReference ?? "a work order"}`;
-  }
-}
-
-/** Where opening a row goes: the inspection form for someone sent to inspect. */
-function RowLink({
-  notification,
-  onClick,
-  children,
-}: {
-  notification: Notification;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  const className =
-    "hover:bg-accent/60 focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2";
-  const { estateId, assetId, workOrderId } = notification;
-  if (notification.type === "WORK_ORDER_ASSIGNED" && workOrderId) {
-    return (
-      <Link
-        className={className}
-        onClick={onClick}
-        params={{ estateId, workOrderId }}
-        to="/estates/$estateId/work-orders/$workOrderId"
-      >
-        {children}
-      </Link>
-    );
-  }
-  if (!assetId) {
-    return <div className={className}>{children}</div>;
-  }
-  const params = { estateId, assetId };
-  if (notification.type === "CHECK_REQUESTED") {
-    return (
-      <Link
-        className={className}
-        onClick={onClick}
-        params={params}
-        to="/estates/$estateId/assets/$assetId/inspections/new"
-      >
-        {children}
-      </Link>
-    );
-  }
-  return (
-    <Link
-      className={className}
-      onClick={onClick}
-      params={params}
-      to="/estates/$estateId/assets/$assetId"
-    >
-      {children}
-    </Link>
-  );
-}
-
 /** One inbox row: opening it marks it read and goes to the asset. */
 export function NotificationItem({
   notification,
@@ -142,7 +76,7 @@ export function NotificationItem({
   onOpen: (id: string) => void;
 }) {
   const { id, read } = notification;
-  const heading = title(notification);
+  const heading = notificationTitle(notification);
   const open = useCallback(() => {
     if (!read) {
       onOpen(id);
@@ -151,11 +85,17 @@ export function NotificationItem({
   return (
     <li
       className={cn(
-        "rounded-[var(--radius)] border transition-colors",
+        // Hover tints the whole card: the send step and alert actions sit
+        // below the link but belong to the same notification.
+        "hover:bg-accent/60 rounded-[var(--radius)] border transition-colors",
         read ? "bg-background" : "border-primary/40 bg-accent/40"
       )}
     >
-      <RowLink notification={notification} onClick={open}>
+      <NotificationRowLink
+        className="focus-visible:ring-ring flex flex-col gap-1 rounded-[var(--radius)] p-4 outline-none focus-visible:ring-2"
+        notification={notification}
+        onClick={open}
+      >
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <Badge
             variant={badgeVariantFor(notificationTypeTone[notification.type])}
@@ -168,7 +108,7 @@ export function NotificationItem({
           <time
             className="text-muted-foreground ml-auto text-xs"
             dateTime={notification.createdAt}
-            title={new Date(notification.createdAt).toLocaleString()}
+            title={formatDateTime(notification.createdAt)}
           >
             {formatRelativeTime(notification.createdAt)}
           </time>
@@ -201,7 +141,7 @@ export function NotificationItem({
           ) : null}
           <span>{notification.estateName}</span>
         </p>
-      </RowLink>
+      </NotificationRowLink>
       {SEND_STEP_TYPES.has(notification.type) ? (
         <NotificationDispatch notification={notification} />
       ) : null}

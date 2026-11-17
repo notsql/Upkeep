@@ -2,7 +2,9 @@ import { Field, FieldLabel } from "@proj/ui/components/field";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@proj/ui/components/select";
@@ -31,12 +33,26 @@ export function ReportLocationFields({
   const levels = locations.filter(
     (item) => item.type === "LEVEL" && item.parentId === blockId && item.id
   );
-  const commonAreas = locations.filter(
-    (item) =>
-      item.type === "COMMON_AREA" &&
-      item.id &&
-      (item.parentId === blockId || item.parentId === levelId)
-  );
+  const commonIn = (parentId: string | null) =>
+    parentId
+      ? locations.filter(
+          (item) =>
+            item.type === "COMMON_AREA" && item.id && item.parentId === parentId
+        )
+      : [];
+  const levelName = levels.find((level) => level.id === levelId)?.name;
+  const blockName = blocks.find((block) => block.id === blockId)?.name;
+  // Areas on the chosen level first, then the block's own areas, labelled so
+  // "Lift lobby" on L1 and a block-wide "Playground" are not one flat list.
+  const commonGroups = [
+    { key: "level", label: `On ${levelName}`, areas: commonIn(levelId) },
+    {
+      key: "block",
+      label: `Anywhere in ${blockName}`,
+      areas: commonIn(blockId),
+    },
+  ].filter((group) => group.areas.length > 0);
+  const commonAreas = commonGroups.flatMap((group) => group.areas);
   return (
     <>
       <div className="grid gap-5 sm:grid-cols-2">
@@ -103,10 +119,15 @@ export function ReportLocationFields({
               <SelectValue placeholder="Choose common area" />
             </SelectTrigger>
             <SelectContent>
-              {commonAreas.map((area) => (
-                <SelectItem key={area.id} value={area.id ?? ""}>
-                  {area.name}
-                </SelectItem>
+              {commonGroups.map((group) => (
+                <SelectGroup key={group.key}>
+                  <SelectLabel>{group.label}</SelectLabel>
+                  {group.areas.map((area) => (
+                    <SelectItem key={area.id} value={area.id ?? ""}>
+                      {area.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>

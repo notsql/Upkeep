@@ -5,6 +5,7 @@ import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportRow } from "@/components/reports/report-row";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import { categoryLabel, routingStateLabel } from "@/lib/report-routing";
+import { badgeVariantFor, routingStateTone } from "@/lib/status-tone";
 import type { EstateReport } from "@/routes/_auth/estates/$estateId/reports/-components/estate-reports-page/estate-reports-table";
 
 /** Mobile: each report as a line item. */
@@ -33,6 +34,7 @@ export function EstateReportsItems({
           urgency={
             <ReportUrgencyBadges
               isSafety={report.isSafety}
+              labelled
               urgency={report.urgency}
             />
           }
@@ -44,7 +46,11 @@ export function EstateReportsItems({
                   {categoryLabel(report.routing.classification.category)}
                 </Badge>
               ) : null}
-              <Badge variant="outline">
+              <Badge
+                variant={badgeVariantFor(
+                  routingStateTone[report.routing.state]
+                )}
+              >
                 Next step: {routingStateLabel(report.routing.state)}
               </Badge>
             </div>

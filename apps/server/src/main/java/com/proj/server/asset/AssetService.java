@@ -6,6 +6,7 @@ import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
 import com.proj.server.location.LocationRepository;
 import com.proj.server.location.LocationResponse;
+import com.proj.server.workos.WorkOSService;
 import java.util.ArrayDeque;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
@@ -23,13 +24,16 @@ public class AssetService {
     private final LocationRepository locations;
     private final EstateRepository estates;
     private final CatalogueRepository catalogue;
+    private final WorkOSService workOS;
 
     public AssetService(
             AssetRepository repository,
             LocationRepository locations,
             EstateRepository estates,
-            CatalogueRepository catalogue) {
+            CatalogueRepository catalogue,
+            WorkOSService workOS) {
         this.catalogue = catalogue;
+        this.workOS = workOS;
         this.repository = repository;
         this.locations = locations;
         this.estates = estates;
@@ -81,7 +85,31 @@ public class AssetService {
     public java.util.List<AssetLifecycleEventResponse> events(UUID estateId, UUID id, String owner) {
         estates.findOwned(estateId, owner, false).orElseThrow(AssetService::estateNotFound);
         repository.find(id, estateId, false).orElseThrow(AssetService::assetNotFound);
-        return repository.events(id);
+        // Look each actor's name up once; lifecycle history names who made the change.
+        var names = new java.util.HashMap<String, String>();
+        return repository.events(id).stream()
+                .map(event -> withActorName(
+                        event,
+                        names.computeIfAbsent(
+                                event.actorUserId(),
+                                user -> workOS.findDisplayName(user).orElse(null))))
+                .toList();
+    }
+
+    private static AssetLifecycleEventResponse withActorName(AssetLifecycleEventResponse event, String name) {
+        return new AssetLifecycleEventResponse(
+                event.id(),
+                event.action(),
+                event.occurredAt(),
+                event.actorUserId(),
+                name,
+                event.previousDeactivatedAt(),
+                event.previousRetiredOn(),
+                event.previousRetirementReason(),
+                event.deactivatedAt(),
+                event.retiredOn(),
+                event.retirementReason(),
+                event.lifecycleVersion());
     }
 
     @Transactional

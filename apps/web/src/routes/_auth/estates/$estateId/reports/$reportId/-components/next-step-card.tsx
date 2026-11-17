@@ -1,8 +1,10 @@
 import { Alert, AlertDescription } from "@proj/ui/components/alert";
+import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { SectionCard } from "@/components/page/section-card";
+import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
 import {
   CATEGORY_CONTRACTOR_TYPE,
   dispatchStatusLabel,
@@ -10,8 +12,8 @@ import {
   type ReportRouting,
   useRetryDispatch,
   useRoutingAccess,
-  workOrderStatusLabel,
 } from "@/lib/report-routing";
+import { badgeVariantFor, dispatchStatusTone } from "@/lib/status-tone";
 import { DismissReportDialog } from "./dismiss-report-dialog";
 import { SendToContractorDialog } from "./send-to-contractor-dialog";
 
@@ -81,7 +83,7 @@ function WorkOrderDetails({
           ) : (
             workOrder.reference
           )}{" "}
-          · {workOrderStatusLabel(workOrder.status)}
+          <WorkOrderStatusBadge status={workOrder.status} />
         </dd>
         {dispatch ? (
           <>
@@ -90,7 +92,13 @@ function WorkOrderDetails({
               {dispatch.contractorName} ({dispatch.contractorEmail})
             </dd>
             <dt className="text-muted-foreground">Email</dt>
-            <dd>{dispatchStatusLabel(dispatch)}</dd>
+            <dd>
+              <Badge
+                variant={badgeVariantFor(dispatchStatusTone[dispatch.status])}
+              >
+                {dispatchStatusLabel(dispatch)}
+              </Badge>
+            </dd>
             <dt className="text-muted-foreground">Approval</dt>
             <dd>
               {dispatch.approval === "AUTOMATIC"

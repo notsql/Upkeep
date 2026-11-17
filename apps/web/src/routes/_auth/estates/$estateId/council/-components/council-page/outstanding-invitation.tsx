@@ -3,6 +3,7 @@ import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { useCallback, useState } from "react";
 import { useCancelCouncilInvitation } from "@/lib/council-invitations";
+import { formatInstantDate } from "@/lib/format";
 import { AccessConfirmation } from "@/routes/_auth/estates/$estateId/council/-components/council-page/access-confirmation";
 import { presetOptions } from "@/routes/_auth/estates/$estateId/council/-components/council-page/role-picker";
 
@@ -42,7 +43,7 @@ export function OutstandingInvitation({
           <span>
             {delivery}
             {invitation.expiresAt
-              ? ` · Expires ${new Date(invitation.expiresAt).toLocaleDateString()}`
+              ? ` · Expires ${formatInstantDate(invitation.expiresAt)}`
               : ""}
           </span>
         </p>

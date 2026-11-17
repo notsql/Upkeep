@@ -69,6 +69,31 @@ export const workOrderStatusLabel = {
   CLOSED: "Closed",
 } as const satisfies Record<WorkOrderStatus, string>;
 
+/** Fault report statuses that aren't work-order statuses (the server only sets SUBMITTED). */
+export const reportStatusTone = {
+  SUBMITTED: "info",
+} as const satisfies Record<string, StatusTone>;
+export const reportStatusLabel = {
+  SUBMITTED: "Submitted",
+} as const satisfies Record<keyof typeof reportStatusTone, string>;
+
+/** A contractor email: still going out, sent, or given up after retries. */
+export type DispatchStatus = Schemas["WorkOrderDispatchResponse"]["status"];
+export const dispatchStatusTone = {
+  PENDING: "info",
+  SENT: "success",
+  FAILED: "danger",
+} as const satisfies Record<DispatchStatus, StatusTone>;
+
+/** A fault report's routing: what it needs next. Needs review asks for a manager. */
+export type RoutingState = Schemas["ReportRoutingResponse"]["state"];
+export const routingStateTone = {
+  CLASSIFYING: "info",
+  NEEDS_REVIEW: "warning",
+  WORK_ORDER: "success",
+  DISMISSED: "muted",
+} as const satisfies Record<RoutingState, StatusTone>;
+
 /** `UNASSESSED` also stands in for a null condition. */
 export type AssetCondition =
   | Schemas["AnomalyAlertDetails"]["condition"]
@@ -97,6 +122,14 @@ export const lifecycleTone = {
   RETIRED: "muted",
   INACTIVE: "muted",
 } as const satisfies Record<Lifecycle, StatusTone>;
+
+/** An asset lifecycle event's action; Restored matches Active, Out of use Retired. */
+export type LifecycleAction = "RETIRED" | "CORRECTED" | "RESTORED";
+export const lifecycleActionTone = {
+  RETIRED: lifecycleTone.RETIRED,
+  CORRECTED: "info",
+  RESTORED: lifecycleTone.ACTIVE,
+} as const satisfies Record<LifecycleAction, StatusTone>;
 
 export type InspectionOutcome = Schemas["CheckResultResponse"]["outcome"];
 export const inspectionOutcomeTone = {

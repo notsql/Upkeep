@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAppAccess, useAuthenticatedSession } from "@/lib/access";
 import { api } from "@/lib/api";
 import { ReportRequestError } from "@/lib/estate-reports";
+import { formatDateTime } from "@/lib/format";
 
 export type EquipmentType =
   components["schemas"]["ContractorResponse"]["defaultFor"][number];
@@ -264,7 +265,7 @@ export function workOrderStatusLabel(
 
 export function dispatchStatusLabel(dispatch: WorkOrderDispatch): string {
   if (dispatch.status === "SENT" && dispatch.sentAt) {
-    return `Sent ${new Date(dispatch.sentAt).toLocaleString()}`;
+    return `Sent ${formatDateTime(dispatch.sentAt)}`;
   }
   return dispatch.status === "FAILED" ? "Failed to send" : "Sending";
 }

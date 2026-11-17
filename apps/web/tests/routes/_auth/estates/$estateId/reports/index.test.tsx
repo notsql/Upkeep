@@ -14,6 +14,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { formatDateTime } from "@/lib/format";
 import { routeTree } from "@/routeTree.gen";
 
 // Use the registered application routes, so missing report screens fail through
@@ -278,6 +279,7 @@ it("labels each estate report's metadata like the resident report cards", async 
   for (const label of [
     "Estate name:",
     "Location:",
+    "Urgency:",
     "Status:",
     "Submission time:",
   ]) {
@@ -285,8 +287,8 @@ it("labels each estate report's metadata like the resident report cards", async 
   }
   screen.getByText(report.estateName);
   screen.getByText(report.location.label);
-  screen.getByText(report.status);
-  screen.getByText(new Date(report.createdAt).toLocaleString());
+  screen.getByText("Submitted");
+  screen.getByText(formatDateTime(report.createdAt));
 });
 
 it("shows estate reports with full location paths and links to estate-scoped detail", async () => {
@@ -295,7 +297,7 @@ it("shows estate reports with full location paths and links to estate-scoped det
   const link = await screen.findByRole("link", { name: report.title });
   expect(link.getAttribute("href")).toBe(`${basePath}/${reportId}`);
   screen.getByText(report.location.label);
-  screen.getByText(report.status);
+  screen.getByText("Submitted");
   expect(get).toHaveBeenCalledWith(
     "/estates/{estateId}/reports",
     expect.objectContaining({
@@ -1462,7 +1464,10 @@ it("shows the routing label in the table, or a dash without routing", async () =
   const routed = within(table)
     .getByRole("link", { name: report.title })
     .closest("tr") as HTMLElement;
-  within(routed).getByText("Needs review");
+  // Needs review asks for a manager's attention, so it is amber.
+  expect(within(routed).getByText("Needs review").dataset.variant).toBe(
+    "warning"
+  );
   const unrouted = within(table)
     .getByRole("link", { name: "Broken light" })
     .closest("tr") as HTMLElement;

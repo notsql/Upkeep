@@ -85,7 +85,9 @@ export function useWorkOrderForm(
       initialized.current !== sourceInspectionId
     ) {
       initialized.current = sourceInspectionId;
-      setDescription(inspection.record.notes ?? "");
+      const notes = inspection.record.notes ?? "";
+      // The box renders before this effect runs; keep anything typed meanwhile.
+      setDescription((current) => current || notes);
     }
   }, [sourceInspectionId, inspection.record, inspection.asset]);
   useEffect(() => {

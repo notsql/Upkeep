@@ -5,6 +5,7 @@ import {
   formatDate,
   formatDateTime,
   formatDayHour,
+  formatInstantDate,
   formatMetricNumber,
   formatMetricValue,
   formatNumber,
@@ -52,6 +53,12 @@ describe("formatDateTime", () => {
         timeZone: "Pacific/Kiritimati",
       })
     ).toBe("8 Nov 2026, 10:00:00 am");
+  });
+});
+
+describe("formatInstantDate", () => {
+  it("shows an instant's calendar day in the viewer's time zone", () => {
+    expect(formatInstantDate("2026-11-07T20:00:00Z", SG)).toBe("8 Nov 2026");
   });
 });
 

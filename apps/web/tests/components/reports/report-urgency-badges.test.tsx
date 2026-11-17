@@ -16,6 +16,17 @@ describe("ReportUrgencyBadges", () => {
     }
   );
 
+  it("leaves the Urgency label to the column or row that holds the badges", () => {
+    render(<ReportUrgencyBadges isSafety={false} urgency="MEDIUM" />);
+    screen.getByText("Medium");
+    expect(screen.queryByText("Urgency:")).toBeNull();
+  });
+
+  it("names the badges Urgency where nothing else does, as on a phone", () => {
+    render(<ReportUrgencyBadges isSafety={false} labelled urgency="MEDIUM" />);
+    screen.getByText("Urgency:");
+  });
+
   it("flags a safety report in the destructive variant", () => {
     render(<ReportUrgencyBadges isSafety urgency="URGENT" />);
     expect(screen.getByText("Safety").dataset.variant).toBe("destructive");

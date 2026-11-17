@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { type AssetEvent, assetEventTypeLabel } from "@/lib/asset-events";
+import { formatDate, formatDateTime } from "@/lib/format";
 import { ManualDetails } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/manual-details";
 
 export function AssetMaintenanceManualEntry({ event }: { event: AssetEvent }) {
@@ -8,7 +9,7 @@ export function AssetMaintenanceManualEntry({ event }: { event: AssetEvent }) {
       <p className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">Manual entry</Badge>
         <span className="font-medium">{assetEventTypeLabel[event.type]}</span>
-        <span>· {event.occurredOn}</span>
+        <span>· {formatDate(event.occurredOn)}</span>
         {event.countsTowardForecast ? null : (
           <Badge variant="secondary">Previous unit</Badge>
         )}
@@ -17,7 +18,7 @@ export function AssetMaintenanceManualEntry({ event }: { event: AssetEvent }) {
       <ManualDetails event={event} />
       <p className="text-muted-foreground mt-2">
         Recorded by {event.recordedByName ?? "Unknown user"} on{" "}
-        {new Date(event.createdAt).toLocaleString()}
+        {formatDateTime(event.createdAt)}
       </p>
     </>
   );

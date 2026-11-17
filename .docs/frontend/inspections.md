@@ -72,9 +72,9 @@ screen and limited Manager/Crew screen show **Inspection records** when
 `$assetId/-components/inspection-history-table/inspection-history-table.tsx`.
 
 The five columns are Inspection date, Outcome, Follow-up / work order,
-Inspector and View record. Below 768px (`useMobile`) the table becomes an "Inspection records" list
+Inspector and an unlabelled action column holding the View record link (its header is a `sr-only` "Actions", as in the app's other tables). Below 768px (`useMobile`) the table becomes an "Inspection records" list
 (`inspection-history-item.tsx`) of shadcn `Item size="sm"` rows divided by
-`ItemSeparator`: title = the inspection date, linking to the record; muted line
+`ItemSeparator`: title = the inspection date, linking to the record (always underlined, like the desktop View record link, since phones cannot hover); muted line
 = Inspector · follow-up (Closed, the work-order reference/link, or Create work
 order; omitted when empty); trailing = the Pass/Fail outcome `Badge`.
 The table preserves the API order (inspection date,
@@ -179,7 +179,8 @@ See [decision 0039](../../.spec/decisions/0039-unified-work-order-creation.md).
 The server-authorised source lookup supplies the asset ID; the browser then
 loads that asset's limited current context. Source and asset remain fixed.
 Notes prefill the editable description once, so background reads do not erase
-edits. Missing notes leave a required empty description. Existing category and
+edits, and only while it is still empty: the box renders before the prefill effect
+runs, so text typed in that moment is kept. Missing notes leave a required empty description. Existing category and
 priority rules apply, including Safety forcing Urgent.
 
 Recorded inspection location and current work location appear together only in

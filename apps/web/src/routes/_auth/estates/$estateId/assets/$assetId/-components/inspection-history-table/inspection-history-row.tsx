@@ -1,6 +1,7 @@
 import { Badge } from "@proj/ui/components/badge";
 import { TableCell, TableRow } from "@proj/ui/components/table";
 import { Link } from "@tanstack/react-router";
+import { formatDate } from "@/lib/format";
 import { InspectionFollowUp } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-follow-up";
 import type { InspectionHistoryRowProps } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/inspection-history-table/inspection-history-row-props";
 
@@ -11,7 +12,7 @@ export function InspectionHistoryRow({
 }: InspectionHistoryRowProps) {
   return (
     <TableRow>
-      <TableCell>{record.inspectedOn}</TableCell>
+      <TableCell>{formatDate(record.inspectedOn)}</TableCell>
       <TableCell>
         <Badge
           variant={record.outcome === "PASS" ? "secondary" : "destructive"}

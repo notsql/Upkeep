@@ -249,9 +249,13 @@ so a new contract enum value breaks `check-types`:
 | --- | --- |
 | `reportUrgencyTone` | LOW neutral, MEDIUM info, HIGH warning, URGENT danger (`isSafety` stays destructive) |
 | `workOrderStatusTone` / `workOrderStatusLabel` | OPEN neutral "Open", ASSIGNED info "Assigned", IN_PROGRESS warning "In progress", CLOSED success "Closed" (reports and work orders) |
+| `reportStatusTone` / `reportStatusLabel` | SUBMITTED info "Submitted" (fault reports) |
+| `routingStateTone` | CLASSIFYING info, NEEDS_REVIEW warning, WORK_ORDER success, DISMISSED muted |
+| `dispatchStatusTone` | PENDING info (Sending), SENT success, FAILED danger (Failed to send) |
 | `assetConditionTone` | GOOD success, NEEDS_ATTENTION warning, FAULTY danger, UNASSESSED/null neutral |
 | `deviceStatusTone` | ONLINE success, OFFLINE danger, AWAITING_FIRST_READING info, DEACTIVATED muted |
 | `lifecycleTone` | ACTIVE success, RETIRED muted, INACTIVE muted |
+| `lifecycleActionTone` | RESTORED success, CORRECTED info, RETIRED muted (asset lifecycle events) |
 | `inspectionCheckTone(status, outcome)` | OVERDUE danger, DUE info, DONE+PASS success, DONE+FAIL warning |
 | `inspectionOutcomeTone` | PASS success, FAIL danger |
 | `notificationTypeTone` | ANOMALY danger, SERVICE_DUE info, REPAIR_PREDICTED warning |
@@ -850,7 +854,10 @@ compact muted pill. Each item is a router `Link` styled like a line
 TabsTrigger; the router sets `aria-current="page"` on the active one, which
 darkens its text and shows a 2px underline over the row's border. The height
 and underline are set on SubNav's own elements because there is no
-`Tabs` (`group/tabs`) parent.
+`Tabs` (`group/tabs`) parent. The `nav` scrolls sideways only
+(`overflow-x-auto overflow-y-hidden`): with `overflow-x` alone, `overflow-y`
+computes to auto and a pixel of rounding on the underline scrolls the bar
+vertically.
 
 ```tsx
 <SubNav

@@ -1,5 +1,6 @@
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
+import { Field, FieldLabel } from "@proj/ui/components/field";
 import { Input } from "@proj/ui/components/input";
 import {
   Item,
@@ -38,12 +39,20 @@ import {
   useHistoryAssetFeed,
   useHistoryAssets,
 } from "@/lib/asset-history";
+import { categoryLabel, useAssetCategories } from "@/lib/catalogue";
 import { asPagedList } from "@/lib/infinite-list";
 import { useMobile } from "@/lib/use-mobile";
 
 type HistoryAsset = NonNullable<
   ReturnType<typeof useHistoryAssets>["data"]
 >["items"][number];
+
+/** The trigger shows these labels, never the codes. */
+const STATUS_ITEMS = [
+  { value: "ALL", label: "All assets" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Out of use" },
+];
 
 export function HistoryAssetList({
   estateId,
@@ -64,6 +73,7 @@ export function HistoryAssetList({
     )
   );
   const assets = mobile ? feed : paged;
+  const categories = useAssetCategories().data;
   const [search, setSearch] = useState(filters.q ?? "");
   useEffect(() => setSearch(filters.q ?? ""), [filters.q]);
   useEffect(() => {
@@ -116,8 +126,10 @@ export function HistoryAssetList({
         title="Assets"
       />
       <div className="flex flex-wrap items-end gap-4">
-        <div className="min-w-0 flex-1 space-y-2">
-          <label htmlFor="history-asset-search">Search assets</label>
+        {/* Field spaces with flex gap; a space-y stack would push the Select
+            up, since its hidden input follows the trigger. */}
+        <Field className="min-w-0 flex-1 basis-60">
+          <FieldLabel htmlFor="history-asset-search">Search assets</FieldLabel>
           <Input
             id="history-asset-search"
             maxLength={255}
@@ -125,20 +137,26 @@ export function HistoryAssetList({
             placeholder="Reference or name"
             value={search}
           />
-        </div>
-        <div className="space-y-2">
-          <span id="history-asset-status">Status</span>
-          <Select onValueChange={changeStatus} value={filters.status ?? "ALL"}>
-            <SelectTrigger aria-labelledby="history-asset-status">
+        </Field>
+        <Field className="w-44">
+          <FieldLabel htmlFor="history-asset-status">Status</FieldLabel>
+          <Select
+            items={STATUS_ITEMS}
+            onValueChange={changeStatus}
+            value={filters.status ?? "ALL"}
+          >
+            <SelectTrigger id="history-asset-status">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">All assets</SelectItem>
-              <SelectItem value="ACTIVE">Active</SelectItem>
-              <SelectItem value="INACTIVE">Out of use</SelectItem>
+              {STATUS_ITEMS.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-        </div>
+        </Field>
       </div>
       {assets.isPending ? (
         <LoadingState label="Loading assets…" rows={3} />
@@ -171,7 +189,11 @@ export function HistoryAssetList({
             {items.map((asset, index) => (
               <li key={asset.id}>
                 {index > 0 ? <ItemSeparator /> : null}
-                <HistoryAssetItem asset={asset} estateId={estateId} />
+                <HistoryAssetItem
+                  asset={asset}
+                  category={categoryLabel(categories, asset.category)}
+                  estateId={estateId}
+                />
               </li>
             ))}
           </ul>
@@ -202,7 +224,9 @@ export function HistoryAssetList({
                     {asset.name}
                   </Link>
                 </TableCell>
-                <TableCell>{asset.category}</TableCell>
+                <TableCell>
+                  {categoryLabel(categories, asset.category)}
+                </TableCell>
                 <TableCell className="whitespace-normal">
                   {asset.locationPath}
                 </TableCell>
@@ -253,12 +277,14 @@ function statusLabel(asset: HistoryAsset): string {
 
 function HistoryAssetItem({
   asset,
+  category,
   estateId,
 }: {
   asset: HistoryAsset;
+  category: string;
   estateId: string;
 }) {
-  const details = [asset.reference, asset.category, asset.locationPath]
+  const details = [asset.reference, category, asset.locationPath]
     .filter(Boolean)
     .join(" · ");
   return (

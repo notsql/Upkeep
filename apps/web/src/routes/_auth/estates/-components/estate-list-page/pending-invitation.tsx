@@ -8,6 +8,7 @@ import {
 import { Button } from "@proj/ui/components/button";
 import { useCallback } from "react";
 import { useAcceptInAppInvitation } from "@/lib/council-invitations";
+import { formatInstantDate } from "@/lib/format";
 
 export function PendingInvitation({
   invitation,
@@ -46,7 +47,7 @@ export function PendingInvitation({
         <AlertTitle>You're invited to {invitation.estateName}</AlertTitle>
         <AlertDescription>
           Offered role: {roleName} · Expires{" "}
-          {new Date(invitation.expiresAt).toLocaleDateString()}
+          {formatInstantDate(invitation.expiresAt)}
           {acceptance.error ? (
             <p className="text-destructive" role="alert">
               {acceptance.error.message}

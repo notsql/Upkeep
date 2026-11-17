@@ -15,6 +15,7 @@ import {
 import { MoreHorizontal } from "lucide-react";
 import { useCallback } from "react";
 import type { EstateDocument } from "@/lib/documents";
+import { formatDateTime } from "@/lib/format";
 import { DocumentActions } from "@/routes/_auth/estates/$estateId/documents/-components/document-actions";
 
 /** Phone view of one linked document. */
@@ -50,7 +51,7 @@ export function AssetDocumentItem({
           </span>{" "}
           ·{" "}
           <time dateTime={document.createdAt}>
-            {new Date(document.createdAt).toLocaleString()}
+            {formatDateTime(document.createdAt)}
           </time>
         </ItemDescription>
       </ItemContent>

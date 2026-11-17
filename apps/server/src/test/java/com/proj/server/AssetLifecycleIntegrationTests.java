@@ -34,11 +34,15 @@ class AssetLifecycleIntegrationTests {
     @MockitoBean
     JwtDecoder decoder;
 
+    @MockitoBean
+    com.proj.server.workos.WorkOSService workOS;
+
     UUID estateId, blockId, levelId, assetId;
     String base, one;
 
     @BeforeEach
     void setup() {
+        org.mockito.Mockito.when(workOS.findDisplayName("owner")).thenReturn(java.util.Optional.of("Casey Doe"));
         estateId = UUID.randomUUID();
         blockId = UUID.randomUUID();
         levelId = UUID.randomUUID();
@@ -98,7 +102,8 @@ class AssetLifecycleIntegrationTests {
                 .andExpect(jsonPath("$.length()").value(3))
                 .andExpect(jsonPath("$[0].action").value("RESTORED"))
                 .andExpect(jsonPath("$[0].previousRetirementReason").value("Corrected date"))
-                .andExpect(jsonPath("$[0].actorUserId").value("owner"));
+                .andExpect(jsonPath("$[0].actorUserId").value("owner"))
+                .andExpect(jsonPath("$[0].actorName").value("Casey Doe"));
     }
 
     @ParameterizedTest

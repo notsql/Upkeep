@@ -6,6 +6,7 @@ import { DetailPageHeader } from "@/components/page/detail-page-header";
 import { PageLayout } from "@/components/page/page-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { formatDateTime } from "@/lib/format";
 import { importStatusLabels } from "@/lib/reading-imports";
 import { ImportBatchMetadata } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-batch-metadata";
 import { ImportBatchResults } from "@/routes/_auth/estates/$estateId/readings/imports/$batchId/-components/import-batch-results";
@@ -49,7 +50,7 @@ export function ReadingImportBatchPage({
         icon={FileSpreadsheet}
         meta={
           batch
-            ? `${batch.originalFilename} · ${new Date(batch.createdAt).toLocaleString()}`
+            ? `${batch.originalFilename} · ${formatDateTime(batch.createdAt)}`
             : undefined
         }
         status={

@@ -42,7 +42,7 @@ CSV formats keep their own terms; only the screen changes.
 | register / deactivate device | add / turn off sensor |
 | reporting interval | how often it reports |
 | acknowledge (alert) | mark as seen ("Not seen yet") |
-| duplicate (import row) | already imported |
+| duplicate (import row) | already recorded (it may have come from a sensor, not an import) |
 | invalid (import row) | has problems |
 | source label (CSV import) | name for this import |
 | timestamp | time |

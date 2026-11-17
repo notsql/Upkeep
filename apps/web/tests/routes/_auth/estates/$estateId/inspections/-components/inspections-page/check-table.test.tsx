@@ -5,6 +5,7 @@ import type { InspectionCheck } from "@/lib/inspection-list";
 import { CheckTable } from "@/routes/_auth/estates/$estateId/inspections/-components/inspections-page/check-table";
 
 const SEND_STEP = /Send step/u;
+const WIDTH_CLASS = /\bw-/u;
 
 const state = vi.hoisted(() => ({
   risks: [] as { assetId: string; flagReasons: string[] }[],
@@ -93,6 +94,16 @@ describe("CheckTable", () => {
     state.canCreate = false;
     const cells = row([check({})]);
     expect(cells.queryByText(SEND_STEP)).toBeNull();
+  });
+
+  it("fixes its column widths so tables in different location groups line up", () => {
+    renderWithProviders(
+      <CheckTable canRecord checks={[check({})]} estateId="estate" />
+    );
+    expect(screen.getByRole("table").className).toContain("table-fixed");
+    for (const header of screen.getAllByRole("columnheader")) {
+      expect(header.className).toMatch(WIDTH_CLASS);
+    }
   });
 
   describe("on a phone", () => {

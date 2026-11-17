@@ -18,6 +18,7 @@ import { TableCell, TableHead, TableRow } from "@proj/ui/components/table";
 import { EllipsisVertical } from "lucide-react";
 import { useCallback } from "react";
 import type { EstateAssetCategory } from "@/lib/asset-categories";
+import { formatDateTime } from "@/lib/format";
 import { IntervalBadge } from "@/routes/_auth/estates/$estateId/inspections/schedules/-components/check-schedules-page/interval-badge";
 
 /** The most recent change to either the flag or the interval. */
@@ -32,7 +33,7 @@ function lastChanged(category: EstateAssetCategory): string {
     return "Never changed";
   }
   const by = latest.changedByName ?? "Unknown user";
-  return `${by} · ${new Date(latest.changedAt).toLocaleString()}`;
+  return `${by} · ${formatDateTime(latest.changedAt)}`;
 }
 
 export function CategoryRow({
@@ -64,7 +65,7 @@ export function CategoryRow({
       </TableCell>
       <TableCell>
         {category.failsSilently ? (
-          <Badge variant="warning">On</Badge>
+          <Badge variant="success">On</Badge>
         ) : (
           <span className="text-muted-foreground">Off</span>
         )}
@@ -95,7 +96,8 @@ export function CategoryRow({
             disabled={disabled}
             onClick={toggleFlag}
             size="sm"
-            variant="ghost"
+            // Turning checks on is the action worth noticing; turning off stays quiet.
+            variant={category.failsSilently ? "ghost" : "outline"}
           >
             {category.failsSilently ? "Turn off checks" : "Turn on checks"}
           </Button>

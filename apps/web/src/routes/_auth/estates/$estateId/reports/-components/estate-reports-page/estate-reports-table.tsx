@@ -11,7 +11,9 @@ import {
 import { Link } from "@tanstack/react-router";
 import { DuplicateBadges } from "@/components/reports/duplicate-badges";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
+import { formatDateTime } from "@/lib/format";
 import { categoryLabel, routingStateLabel } from "@/lib/report-routing";
+import { badgeVariantFor, routingStateTone } from "@/lib/status-tone";
 
 export type EstateReport =
   components["schemas"]["EstateIssueReportPageResponse"]["items"][number];
@@ -77,7 +79,11 @@ export function EstateReportsTable({
               </TableCell>
               <TableCell>
                 {report.routing ? (
-                  <Badge variant="outline">
+                  <Badge
+                    variant={badgeVariantFor(
+                      routingStateTone[report.routing.state]
+                    )}
+                  >
                     {routingStateLabel(report.routing.state)}
                   </Badge>
                 ) : (
@@ -86,9 +92,7 @@ export function EstateReportsTable({
               </TableCell>
               <TableCell>
                 <time dateTime={report.createdAt}>
-                  {report.createdAt
-                    ? new Date(report.createdAt).toLocaleString()
-                    : ""}
+                  {report.createdAt ? formatDateTime(report.createdAt) : ""}
                 </time>
               </TableCell>
             </TableRow>

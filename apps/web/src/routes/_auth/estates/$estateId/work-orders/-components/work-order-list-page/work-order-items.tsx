@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Wrench } from "lucide-react";
 import { ListRow, ListRows } from "@/components/list/list-row";
 import { WorkOrderStatusBadge } from "@/components/work-orders/work-order-status-badge";
+import { formatDateTime } from "@/lib/format";
 import { badgeVariantFor, reportUrgencyTone } from "@/lib/status-tone";
 import type { WorkOrder } from "@/lib/work-orders";
 import { DuplicateCountBadge } from "@/routes/_auth/estates/$estateId/work-orders/-components/work-order-list-page/duplicate-count-badge";
@@ -50,7 +51,7 @@ export function WorkOrderItems({
                 : "Nobody yet"}
             </span>
             <time dateTime={order.createdAt}>
-              {new Date(order.createdAt).toLocaleString()}
+              {formatDateTime(order.createdAt)}
             </time>
           </div>
         </ListRow>

@@ -46,7 +46,9 @@ export function InspectionHistoryRecordsTable({
           <TableHead scope="col">Outcome</TableHead>
           <TableHead scope="col">Follow-up / work order</TableHead>
           <TableHead scope="col">Inspector</TableHead>
-          <TableHead scope="col">View record</TableHead>
+          <TableHead scope="col">
+            <span className="sr-only">Actions</span>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

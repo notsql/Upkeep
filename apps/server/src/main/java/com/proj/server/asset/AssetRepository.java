@@ -218,6 +218,7 @@ public class AssetRepository {
                         row.getAction(),
                         row.getOccurredat(),
                         row.getActoruserid(),
+                        null,
                         row.getPreviousdeactivatedat(),
                         row.getPreviousretiredon(),
                         row.getPreviousretirementreason(),

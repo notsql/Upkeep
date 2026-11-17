@@ -65,10 +65,10 @@ describe("block building", () => {
     expect(slabNames(floors)).toEqual(["L5", "L1"]);
     const basements = screen.getByRole("list", { name: "Blk 101 basements" });
     expect(slabNames(basements)).toEqual(["G", "B1"]);
-    screen.getByText("Ground");
+    screen.getByText("Ground level");
   });
 
-  it("shows the roof summary, level chips and block grounds", () => {
+  it("shows the roof summary, level chips and block-wide areas", () => {
     draw(0);
     screen.getByText("4 levels · 3 common areas");
     const l1 = screen.getByRole("listitem", { name: "L1" });
@@ -76,8 +76,12 @@ describe("block building", () => {
     within(l1).getByText("Bin centre");
     const l5 = screen.getByRole("listitem", { name: "L5" });
     expect(within(l5).queryByText("Lift lobby")).toBeNull();
-    const grounds = screen.getByRole("list", { name: "Blk 101 grounds" });
-    within(grounds).getByText("Playground");
+    screen.getByText("Block-wide areas");
+    expect(screen.queryByText("Grounds")).toBeNull();
+    const blockWide = screen.getByRole("list", {
+      name: "Blk 101 block-wide areas",
+    });
+    within(blockWide).getByText("Playground");
   });
 
   it("opens the same panels from block and level actions", async () => {
@@ -107,7 +111,7 @@ describe("block building", () => {
     draw(1);
     screen.getByText("No levels yet");
     expect(screen.getByText(LONG).getAttribute("title")).toBe(LONG);
-    expect(screen.queryByText("Ground")).toBeNull();
+    expect(screen.queryByText("Ground level")).toBeNull();
   });
 });
 

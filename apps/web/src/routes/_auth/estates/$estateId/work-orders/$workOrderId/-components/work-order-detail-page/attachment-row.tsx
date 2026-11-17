@@ -10,6 +10,7 @@ import {
 import { TableCell, TableRow } from "@proj/ui/components/table";
 import { useCallback } from "react";
 import type { EstateDocument } from "@/lib/documents";
+import { formatDateTime } from "@/lib/format";
 
 export function AttachmentRow({
   document,
@@ -32,7 +33,7 @@ export function AttachmentRow({
       <TableCell>
         {document.documentType === "INVOICE" ? "Invoice" : "Service report"}
       </TableCell>
-      <TableCell>{new Date(document.createdAt).toLocaleString()}</TableCell>
+      <TableCell>{formatDateTime(document.createdAt)}</TableCell>
       <TableCell>
         <Button
           aria-label={`Download ${document.originalFilename}`}
@@ -77,7 +78,7 @@ export function AttachmentItem({
           <ItemDescription className="text-xs">{`${type} · ${size}`}</ItemDescription>
           <ItemDescription className="text-xs">
             <time dateTime={document.createdAt}>
-              {`Uploaded ${new Date(document.createdAt).toLocaleString()}`}
+              {`Uploaded ${formatDateTime(document.createdAt)}`}
             </time>
           </ItemDescription>
         </ItemContent>

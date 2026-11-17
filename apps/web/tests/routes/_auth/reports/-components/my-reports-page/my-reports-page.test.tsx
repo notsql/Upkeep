@@ -7,6 +7,7 @@ import {
 } from "@tests/test-utils";
 import type { ReactNode } from "react";
 import { beforeEach, expect, it, vi } from "vitest";
+import { formatDateTime } from "@/lib/format";
 import { MyReportsPage as Page } from "@/routes/_auth/reports/-components/my-reports-page/my-reports-page";
 
 const { get, auth, listeners } = vi.hoisted(() => ({
@@ -86,9 +87,7 @@ it("labels each report's estate, location, status and submission time", async ()
     screen.getByText(label);
   }
   expect(
-    screen
-      .getByText(new Date(report.createdAt).toLocaleString())
-      .getAttribute("dateTime")
+    screen.getByText(formatDateTime(report.createdAt)).getAttribute("dateTime")
   ).toBe(report.createdAt);
 });
 
@@ -99,7 +98,7 @@ it("shows own report history with an ordinary WorkOS role even after assignment 
   await screen.findByText("Leaking pipe");
   screen.getByText("Maple Estate");
   screen.getByText("Block A, Level 2");
-  screen.getByText("SUBMITTED");
+  screen.getByText("Submitted");
   expect(
     screen.getByRole("link", { name: LEAKING_PIPE }).getAttribute("href")
   ).toContain(report.id);

@@ -41,7 +41,7 @@ export function ImportBatchMetadata({
           <dt>Counts</dt>
           <dd>
             {batch.totalRows} total · {batch.importedRows} imported ·{" "}
-            {batch.duplicateRows} already imported · {batch.invalidRows} with
+            {batch.duplicateRows} already recorded · {batch.invalidRows} with
             problems · {batch.warningRows} with warnings
           </dd>
         </div>

@@ -296,7 +296,7 @@ export function readingImportMessage(cause: unknown, fallback: string): string {
 /** On-screen names for a row's outcome; the enum stays in code. */
 export const importOutcomeLabels: Record<ReadingImportOutcome, string> = {
   IMPORTED: "Imported",
-  DUPLICATE: "Already imported",
+  DUPLICATE: "Already recorded",
   INVALID: "Has problems",
 };
 

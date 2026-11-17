@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { SectionCard } from "@/components/page/section-card";
 import { ReportUrgencyBadges } from "@/components/reports/report-urgency-badges";
 import type { EstateReport } from "@/lib/estate-reports";
+import { formatDateTime } from "@/lib/format";
 import { categoryLabel, type ReportRouting } from "@/lib/report-routing";
 import { ChangeCategoryDialog } from "./change-category-dialog";
 import { ChangeLocationDialog } from "./change-location-dialog/change-location-dialog";
@@ -29,14 +30,14 @@ function Row({
 }
 
 function formatted(value: string): ReactNode {
-  return <time dateTime={value}>{new Date(value).toLocaleString()}</time>;
+  return <time dateTime={value}>{formatDateTime(value)}</time>;
 }
 
 function howSorted(
   classification: NonNullable<ReportRouting["classification"]>
 ): string {
   if (classification.manual) {
-    return `Changed by ${classification.classifiedByName ?? "a manager"}, ${new Date(classification.createdAt).toLocaleString()}`;
+    return `Changed by ${classification.classifiedByName ?? "a manager"}, ${formatDateTime(classification.createdAt)}`;
   }
   return `Sorted automatically, ${Math.round(classification.confidence * 100)}% sure`;
 }

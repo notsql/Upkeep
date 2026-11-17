@@ -3,6 +3,7 @@ import { Button } from "@proj/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { formatDateTime } from "@/lib/format";
 import { AssociationEditor } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/document-work-order-dialog/association-editor";
 import { AssociationHistory } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/document-work-order-dialog/association-history";
 import { AssociationRecovery } from "@/routes/_auth/estates/$estateId/documents/-components/documents-page/document-work-order-dialog/association-recovery";
@@ -62,7 +63,7 @@ export function AssociationBody({
         {latest.changedAt ? (
           <p className="text-muted-foreground text-sm">
             {latest.changedByName ?? "Name unavailable"} ·{" "}
-            {new Date(latest.changedAt).toLocaleString()}
+            {formatDateTime(latest.changedAt)}
           </p>
         ) : null}
       </section>

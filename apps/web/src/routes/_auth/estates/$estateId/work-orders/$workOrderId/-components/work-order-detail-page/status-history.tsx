@@ -2,6 +2,7 @@ import { History } from "lucide-react";
 import { PageSection } from "@/components/page/section-card";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { formatDateTime } from "@/lib/format";
 import type { useWorkOrderStatusHistory } from "@/lib/work-orders";
 
 type StatusEvent = NonNullable<
@@ -49,7 +50,7 @@ export function StatusHistory({
               <p className="text-muted-foreground">
                 {event.changedByName ?? "Name unavailable"} ·{" "}
                 <time dateTime={event.changedAt}>
-                  {new Date(event.changedAt).toLocaleString()}
+                  {formatDateTime(event.changedAt)}
                 </time>
               </p>
             </li>

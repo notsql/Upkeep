@@ -34,6 +34,27 @@ function Layout() {
   );
 }
 
+async function renderAt(path: string) {
+  const root = createRootRoute({ component: Layout });
+  const router = createRouter({
+    routeTree: root.addChildren(
+      ["/estates/$estateId", "/estates/$estateId/locations"].map((route) =>
+        createRoute({ getParentRoute: () => root, path: route })
+      )
+    ),
+    history: createMemoryHistory({ initialEntries: [path] }),
+  });
+  renderWithProviders(<RouterProvider router={router} />);
+  return await screen.findByRole("navigation", { name: "Estate sections" });
+}
+
+it("scrolls sideways only, so a pixel of underline can't make it scroll up and down", async () => {
+  const nav = await renderAt("/estates/e1");
+  const classes = nav.className.split(" ");
+  expect(classes).toContain("overflow-x-auto");
+  expect(classes).toContain("overflow-y-hidden");
+});
+
 it("marks the current sub-view as the active page", async () => {
   const root = createRootRoute({ component: Layout });
   const router = createRouter({

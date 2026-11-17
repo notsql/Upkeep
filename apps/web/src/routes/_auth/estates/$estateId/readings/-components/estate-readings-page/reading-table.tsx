@@ -10,6 +10,7 @@ import {
 import { ReadingCards } from "@/components/readings/reading-cards";
 import { ReadingProvenance } from "@/components/readings/reading-provenance";
 import { deviceMetrics } from "@/lib/devices";
+import { formatDateTime } from "@/lib/format";
 import { type EstateReading, flagLabel } from "@/lib/readings";
 import { badgeVariantFor, readingFlagTone } from "@/lib/status-tone";
 import { useMobile } from "@/lib/use-mobile";
@@ -50,7 +51,7 @@ export function ReadingTable({
           {items.map((reading) => (
             <TableRow key={reading.id}>
               <TableCell className="whitespace-nowrap">
-                {new Date(reading.measuredAt).toLocaleString()}
+                {formatDateTime(reading.measuredAt)}
               </TableCell>
               <TableCell className="max-w-64 min-w-36 [overflow-wrap:anywhere] whitespace-normal">
                 <span>{reading.assetReference}</span>

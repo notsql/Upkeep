@@ -74,6 +74,17 @@ export function formatDateTime(
   }).format(new Date(instant));
 }
 
+/** An ISO instant's calendar day, as a medium date in the viewer's time zone. */
+export function formatInstantDate(
+  instant: string,
+  options: FormatOptions = {}
+): string {
+  return dateTimeFormat(options.locale, {
+    dateStyle: "medium",
+    timeZone: options.timeZone,
+  }).format(new Date(instant));
+}
+
 /** An ISO instant as a time with seconds. */
 export function formatTime(
   instant: string,
@@ -141,11 +152,18 @@ export function formatDayHour(
   instant: string,
   options: FormatOptions = {}
 ): string {
-  return dateTimeFormat(options.locale, {
+  // Day and hour are formatted apart and joined here: whether ICU puts a comma
+  // between them changed in Node 26 ("Sat 9 pm" vs "Sat, 9 pm").
+  const date = new Date(instant);
+  const day = dateTimeFormat(options.locale, {
     weekday: "short",
+    timeZone: options.timeZone,
+  }).format(date);
+  const hour = dateTimeFormat(options.locale, {
     hour: "numeric",
     timeZone: options.timeZone,
-  }).format(new Date(instant));
+  }).format(date);
+  return `${day}, ${hour}`;
 }
 
 const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [

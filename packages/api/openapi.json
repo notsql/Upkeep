@@ -16331,6 +16331,10 @@
           "action": { "type": "string" },
           "occurredAt": { "type": "string", "format": "date-time" },
           "actorUserId": { "type": "string" },
+          "actorName": {
+            "type": ["string", "null"],
+            "description": "The actor's name, or null if WorkOS is unavailable"
+          },
           "previousDeactivatedAt": {
             "type": ["string", "null"],
             "format": "date-time"

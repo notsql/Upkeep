@@ -250,13 +250,24 @@ it("leaves out Record inspection without permission", () => {
   screen.getByRole("link", { name: "View result" });
 });
 
-it("lists unscheduled assets with a way to set an interval", () => {
+it("warns about assets without a schedule, linking each one and the schedules", () => {
   renderWithProviders(<InspectionsPage estateId="oak" />);
   const section = within(
-    screen.getByRole("region", { name: "Not scheduled assets" })
+    screen.getByRole("region", { name: "Assets without a schedule" })
   );
-  section.getByText("F-1 · Exit sign");
+  section.getByRole("alert");
+  section.getByText(
+    "1 asset has regular checks on but no service interval, so no check will come due."
+  );
+  expect(
+    section.getByRole("link", { name: "F-1 · Exit sign" }).getAttribute("href")
+  ).toBe("/estates/oak/assets/a-9");
   section.getByText("Lighting");
+  expect(
+    section
+      .getByRole("link", { name: "Set check schedules" })
+      .getAttribute("href")
+  ).toBe("/estates/oak/inspections/schedules");
 });
 
 it("generates the list and says how many checks were added", async () => {
@@ -293,8 +304,15 @@ it("shows a failed generation", async () => {
   );
   renderWithProviders(<InspectionsPage estateId="oak" />);
   fireEvent.click(screen.getByRole("button", { name: "Generate list" }));
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "This estate is inactive."
+  // The page also warns about assets without a schedule, so find the right alert.
+  await waitFor(() =>
+    expect(
+      screen
+        .getAllByRole("alert")
+        .some((alert) =>
+          alert.textContent?.includes("This estate is inactive.")
+        )
+    ).toBe(true)
   );
 });
 

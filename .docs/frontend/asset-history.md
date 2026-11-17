@@ -5,7 +5,7 @@ Contract: [asset-history API](../api/asset-history.md). Route paths below are un
 
 | Route/folder | Behavior |
 | --- | --- |
-| `index.tsx`, `-components/history-asset-list.tsx` | Council directory at `/estates/$estateId/assets`; owners keep the register and inspection-only readers keep their existing list. Desktop: table "Assets" (Reference, Name link, Category, Location, Status). Below 768px (`useMobile`): `ul aria-label="Assets"` of shadcn `Item size="sm"` rows divided by `ItemSeparator`, each item one link to the asset (labelled "<name> (<reference>)"): title name, muted line Reference · Category · Location, trailing secondary status `Badge` (Active / Out of use) |
+| `index.tsx`, `-components/history-asset-list.tsx` | Council directory at `/estates/$estateId/assets`; owners keep the register and inspection-only readers keep their existing list. Desktop: table "Assets" (Reference, Name link, Category, Location, Status). Category shows the catalogue label from `useAssetCategories` (`GET /asset-categories`) via `categoryLabel`, falling back to the code while it loads; the Status filter `Select` gets labelled `items` so its trigger reads All assets / Active / Out of use. Search and Status are each a shadcn `Field` + `FieldLabel` (flex gap, not `space-y`, which pushed the Select up because its hidden input follows the trigger), bottom-aligned in one row; Status is `w-44`. Below 768px (`useMobile`): `ul aria-label="Assets"` of shadcn `Item size="sm"` rows divided by `ItemSeparator`, each item one link to the asset (labelled "<name> (<reference>)"): title name, muted line Reference · Category · Location, trailing secondary status `Badge` (Active / Out of use) |
 | `$assetId/_details/route.tsx` | Council profile root redirects with replacement to History; the History branch renders its outlet without starting a history query |
 | `$assetId/_details/history/index.tsx` | `/estates/$estateId/assets/$assetId/history`, title Asset history; validates date search before mounting the Council frame, filters and timeline |
 | `$assetId/_details/history/-components/` | Timeline, entry/details components, document dialog, read-only frame and `history-date-filter.tsx` |
@@ -35,8 +35,12 @@ The timeline uses shadcn Badge/Button and a divided ordered list named Recorded 
 history (rows, not cards); the date filter is a plain form, not a card. Every row has a type label, heading and time element. Dates retain date-only
 precision; instants display SGT. Documents explicitly label Upload date. Unknown
 costs/provider/downtime display Not recorded; zero stays zero. Completion corrections
-show Edited. Conditions show stored condition/notes and provenance, including
-Anomaly detection. Source detail links require both their server flag and current
+show Edited. Conditions show the condition as a `Badge` toned by `assetConditionTone`
+(Good success, Needs attention warning, Faulty destructive), the notes, and provenance,
+including Anomaly detection; anomaly notes go through `formatAssessmentNotes`, so their
+UTC timestamps read as local dates and times, as on the Condition card. Entries stay in
+occurrence order (spec asset-history-timeline.md), so same-day entries tie-break by
+kind and ID. Source detail links require both their server flag and current
 independent capability. No inference, prediction comparison or polling runs.
 
 Load more uses the combined server cursor. A later-page error retains loaded entries

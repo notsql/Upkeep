@@ -6,11 +6,12 @@ import { AlertResponseSummary } from "@/components/notifications/alert-response-
 import { UNUSUAL_READINGS_STEP } from "@/components/notifications/unusual-readings-step";
 import { PageSection } from "@/components/page/section-card";
 import { ErrorState } from "@/components/states/error-state";
+import { formatDateTime } from "@/lib/format";
 import { type Notification, useAssetAnomalyAlerts } from "@/lib/notifications";
 import { ConditionBadge } from "@/routes/_auth/estates/$estateId/assets/-components/condition-badge";
 
 function time(iso: string) {
-  return new Date(iso).toLocaleString();
+  return formatDateTime(iso);
 }
 
 function AnomalyAlertItem({

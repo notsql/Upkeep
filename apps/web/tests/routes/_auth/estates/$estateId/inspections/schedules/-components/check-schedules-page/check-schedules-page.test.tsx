@@ -435,14 +435,14 @@ it("locks the intervals of an inactive estate", () => {
   }
 });
 
-it("marks a category with regular checks on with a warning badge", () => {
+it("marks a category with regular checks on with a green (success) badge", () => {
   renderWithProviders(<CheckSchedulesPage estateId="oak" />);
   const badges = screen
     .getAllByText("On")
     .filter((element) => element.dataset.slot === "badge");
   expect(badges.length).toBeGreaterThan(0);
   for (const badge of badges) {
-    expect(badge.dataset.variant).toBe("warning");
+    expect(badge.dataset.variant).toBe("success");
   }
 });
 

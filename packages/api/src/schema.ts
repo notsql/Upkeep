@@ -4471,6 +4471,8 @@ export interface components {
       /** Format: date-time */
       occurredAt: string;
       actorUserId: string;
+      /** @description The actor's name, or null if WorkOS is unavailable */
+      actorName?: string | null;
       /** Format: date-time */
       previousDeactivatedAt?: string | null;
       /** Format: date */

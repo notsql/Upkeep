@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@proj/ui/components/table";
+import { formatInstantDate } from "@/lib/format";
 import type { AdminUsersListProps } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/admin-users-list-props";
 import { ManageEstateButton } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/manage-estate-button";
 import { RoleEditor } from "@/routes/_auth/admin/users/-components/admin-users-page/admin-users-members/role-editor";
@@ -50,7 +51,7 @@ export function AdminUsersTable({
                 <p className="text-muted-foreground mt-1">{user.email}</p>
               </TableCell>
               <TableCell className="text-muted-foreground px-5 py-4">
-                {user.joined ? new Date(user.joined).toLocaleDateString() : "—"}
+                {user.joined ? formatInstantDate(user.joined) : "—"}
               </TableCell>
               <TableCell className="px-5 py-4">
                 <RoleEditor

@@ -1,4 +1,4 @@
-import { act, fireEvent } from "@testing-library/react";
+import { act, cleanup, fireEvent } from "@testing-library/react";
 import {
   chooseOption,
   renderWithProviders,
@@ -20,6 +20,8 @@ const SOURCE = "Vendor A — October 2026 extract";
 const INACTIVE_ESTATE =
   /inactive estate|estate is inactive|estate is deactivated/iu;
 const LOAD_FAILURE = /failed to load/iu;
+const LOOKUP_LABEL = /Asset (?:UUID|reference)/u;
+const LOOKUP_CODE = /asset_(?:id|reference)/u;
 const INSERTED_COUNT = /1 reading/iu;
 const CSV =
   "asset_reference,metric,measured_at,value\nPUMP-001,TEMPERATURE,2026-10-01T08:00:00+08:00,999999999999.123456\n";
@@ -235,6 +237,19 @@ describe("historical CSV upload", () => {
     );
   });
 
+  it("names the asset lookup and unmapped columns in words, not codes", async () => {
+    await showUpload();
+    await fill(
+      "Equipment,Signal,Observed,Measurement\nPUMP-001,TEMPERATURE,2026-10-01T00:00:00Z,21\n"
+    );
+    const lookup = screen.getByRole("combobox", { name: "Asset lookup" });
+    expect(lookup.textContent).toMatch(LOOKUP_LABEL);
+    expect(lookup.textContent).not.toMatch(LOOKUP_CODE);
+    const unmapped = screen.getByRole("combobox", { name: "Asset column" });
+    expect(unmapped.textContent).toContain("Choose column");
+    expect(unmapped.textContent).not.toContain("none");
+  });
+
   it("supports explicitly mapping vendor headers before submitting", async () => {
     await showUpload();
     await fill(
@@ -409,6 +424,13 @@ describe("historical CSV upload", () => {
 });
 
 describe("import results and rollback", () => {
+  it("names the Outcome filter in words, not its code", async () => {
+    await showBatch();
+    const outcome = await screen.findByRole("combobox", { name: "Outcome" });
+    expect(outcome.textContent).toContain("All outcomes");
+    expect(outcome.textContent).not.toContain("ALL");
+  });
+
   it("pages the row report and resets paging when filtering outcomes", async () => {
     await showBatch();
     fireEvent.click(await screen.findByRole("button", { name: "Next page" }));
@@ -467,7 +489,35 @@ describe("import results and rollback", () => {
       name: new RegExp(SOURCE, "u"),
     });
     within(item).getByText("Imported");
-    within(item).getByText("1 readings imported", { exact: false });
+    within(item).getByText("1 reading imported", { exact: false });
+  });
+
+  it("calls duplicates already recorded, since they may have come from a sensor", async () => {
+    await showBatch();
+    await screen.findByText("1 already recorded", { exact: false });
+    expect(screen.queryByText("already imported", { exact: false })).toBeNull();
+    const outcome = screen.getByRole("combobox", { name: "Outcome" });
+    fireEvent.click(outcome);
+    await screen.findByRole("option", { name: "Already recorded" });
+  });
+
+  it("counts one batch and one record in the singular", async () => {
+    await showUpload();
+    await screen.findByText("1 batch");
+    expect(screen.queryByText("1 batches")).toBeNull();
+    cleanup();
+    const original = get.getMockImplementation();
+    get.mockImplementation((path: string, ...args: unknown[]) =>
+      path.endsWith("/rows")
+        ? Promise.resolve({
+            data: { ...results, totalItems: 1 },
+            response: new Response(),
+          })
+        : original?.(path, ...args)
+    );
+    await showBatch();
+    await screen.findByText("1 record");
+    expect(screen.queryByText("1 records")).toBeNull();
   });
 
   it("preserves record numbers, outcomes and reasons in the table", async () => {

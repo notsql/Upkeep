@@ -7,6 +7,7 @@ import { SubNav } from "@/components/page/sub-nav";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { type HistoryDateFilters, useAssetHistory } from "@/lib/asset-history";
+import { formatDate } from "@/lib/format";
 
 export function HistoryAssetFrame({
   estateId,
@@ -54,7 +55,7 @@ export function HistoryAssetFrame({
           />
           {asset.installedOn ? (
             <p className="text-muted-foreground text-sm">
-              Installed on {asset.installedOn}
+              Installed on {formatDate(asset.installedOn)}
             </p>
           ) : null}
           <SubNav

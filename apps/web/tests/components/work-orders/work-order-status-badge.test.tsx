@@ -12,4 +12,15 @@ describe("WorkOrderStatusBadge", () => {
     render(<WorkOrderStatusBadge status={status} />);
     expect(screen.getByText(label).dataset.variant).toBe(variant);
   });
+
+  it("labels a newly submitted fault report Submitted, in the info variant", () => {
+    render(<WorkOrderStatusBadge status="SUBMITTED" />);
+    expect(screen.getByText("Submitted").dataset.variant).toBe("info");
+    expect(screen.queryByText("SUBMITTED")).toBeNull();
+  });
+
+  it("still shows an unknown status as-is, outlined", () => {
+    render(<WorkOrderStatusBadge status="SOMETHING_NEW" />);
+    expect(screen.getByText("SOMETHING_NEW").dataset.variant).toBe("outline");
+  });
 });

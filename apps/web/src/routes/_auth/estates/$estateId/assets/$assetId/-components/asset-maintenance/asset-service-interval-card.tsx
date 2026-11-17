@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PageSection } from "@/components/page/section-card";
 import { ServiceIntervalDialog } from "@/components/service-intervals/service-interval-dialog";
 import { LoadingState } from "@/components/states/loading-state";
+import { formatDateTime } from "@/lib/format";
 import {
   type AssetServiceInterval,
   formatInterval,
@@ -105,7 +106,7 @@ export function AssetServiceIntervalCard({
                 <span>
                   Custom interval last changed by{" "}
                   {change.changedByName ?? "Unknown user"} ·{" "}
-                  {new Date(change.changedAt).toLocaleString()}
+                  {formatDateTime(change.changedAt)}
                 </span>
               </p>
             ) : null}

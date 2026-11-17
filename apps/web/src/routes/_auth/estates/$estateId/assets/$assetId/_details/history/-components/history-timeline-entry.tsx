@@ -6,7 +6,23 @@ import {
   type HistoryEntry,
   historyDate,
 } from "@/lib/asset-history";
+import { formatAssessmentNotes } from "@/lib/format";
 import { HistoryEntryDetails } from "./history-entry-details";
+
+/** Anomaly notes carry UTC timestamps; show them the way the Condition card does. */
+function summaryText(entry: HistoryEntry): string {
+  const summary = entry.summary ?? "";
+  if (
+    entry.details.kind === "CONDITION" &&
+    entry.details.origin === "ANOMALY_MODEL"
+  ) {
+    return formatAssessmentNotes({
+      notes: summary,
+      recordedByUserId: "system:anomaly-model",
+    });
+  }
+  return summary;
+}
 
 const labels = {
   MAINTENANCE: "Maintenance",
@@ -61,7 +77,7 @@ export function HistoryTimelineEntry({
         <h3 className="font-medium">{entry.title}</h3>
       </div>
       {entry.summary ? (
-        <p className="break-words whitespace-pre-wrap">{entry.summary}</p>
+        <p className="break-words whitespace-pre-wrap">{summaryText(entry)}</p>
       ) : null}
       <HistoryEntryDetails
         assetId={assetId}

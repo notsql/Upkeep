@@ -17,6 +17,7 @@ import {
   within,
 } from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
+import { formatDateTime } from "@/lib/format";
 import { routeTree } from "@/routeTree.gen";
 
 vi.mock("@/routes/__root", async () => {
@@ -199,9 +200,7 @@ it("says who changed the type by hand", async () => {
   const card = await detailsCard();
 
   card.getByText("Rubbish or litter");
-  card.getByText(
-    `Changed by Jane Tan, ${new Date(timestamp).toLocaleString()}`
-  );
+  card.getByText(`Changed by Jane Tan, ${formatDateTime(timestamp)}`);
 });
 
 it("says when a report has not been sorted into a type", async () => {

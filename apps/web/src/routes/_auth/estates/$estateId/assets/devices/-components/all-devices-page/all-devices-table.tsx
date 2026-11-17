@@ -14,6 +14,7 @@ import { ListRow, ListRows } from "@/components/list/list-row";
 import { SensorLine } from "@/components/sensors/sensor-line";
 import type { RankedDevice } from "@/lib/asset-monitoring";
 import type { MonitoredSensor } from "@/lib/flatlined-sensors";
+import { formatDateTime } from "@/lib/format";
 import { useMobile } from "@/lib/use-mobile";
 
 interface RowOptions {
@@ -84,9 +85,7 @@ function AllDevicesRow({
 
 function LastSeen({ row }: { row: RankedDevice }) {
   return row.lastSeenAt ? (
-    <time dateTime={row.lastSeenAt}>
-      {new Date(row.lastSeenAt).toLocaleString()}
-    </time>
+    <time dateTime={row.lastSeenAt}>{formatDateTime(row.lastSeenAt)}</time>
   ) : (
     "Never"
   );
