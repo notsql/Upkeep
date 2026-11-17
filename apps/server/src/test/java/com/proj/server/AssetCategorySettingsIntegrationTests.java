@@ -231,7 +231,7 @@ class AssetCategorySettingsIntegrationTests {
     // Reading categories needs VIEW_ASSETS (Council hold it); changing them needs MANAGE_INSPECTIONS
     // (estate-role-permissions). Members without a code get 403.
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "MEMBER"})
+    @ValueSource(strings = {"CREW", "COUNCIL"})
     void otherEstateRolesCannotChangeCategories(String role) throws Exception {
         membership("staff", role);
         list("staff").andExpect(status().is(role.equals("COUNCIL") ? 200 : 403));

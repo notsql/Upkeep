@@ -22,7 +22,7 @@ public class AccessService {
     }
 
     public static Condition managementMembership() {
-        return ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "MANAGER");
+        return ESTATEUSER.ROLE.in("COUNCIL", "MANAGER");
     }
 
     public static Condition managerEstates(String user) {
@@ -83,7 +83,7 @@ public class AccessService {
                         .and(ESTATEROLEDEFINITION.ESTATEID.eq(ESTATE.ID)))
                 .where(ESTATE.OWNERUSERID
                         .eq(user)
-                        .or(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "RESIDENT", "MANAGER", "CREW", "CUSTOM")))
+                        .or(ESTATEUSER.ROLE.in("COUNCIL", "RESIDENT", "MANAGER", "CREW", "CUSTOM")))
                 .orderBy(ESTATE.ID)
                 .fetch();
         var capabilities = rows.map(row -> {

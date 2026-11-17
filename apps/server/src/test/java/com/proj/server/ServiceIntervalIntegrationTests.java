@@ -347,7 +347,7 @@ class ServiceIntervalIntegrationTests {
     // Reading an interval needs VIEW_ASSETS (Council hold it); setting one needs MANAGE_INSPECTIONS
     // (estate-role-permissions). Members without a code get 403.
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "MEMBER"})
+    @ValueSource(strings = {"CREW", "COUNCIL"})
     void otherEstateRolesCannotChangeIntervals(String role) throws Exception {
         membership("staff", role);
         setCategory("staff", "PUMP", every(6, "MONTH")).andExpect(status().isForbidden());

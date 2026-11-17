@@ -153,9 +153,9 @@ class FlatlineIntegrationTests {
         var otherEstate = data.estateWithAsset("other-owner");
         db.execute("update \"Location\" set name='Private block' where id=?", otherEstate[1]);
 
-        for (var role : new String[] {"COUNCIL", "MEMBER"}) {
+        for (var role : new String[] {"COUNCIL"}) {
             member(role, role);
-            mvc.perform(as(get(base + "/flatlined-sensors?view=ALL"), role, "MEMBER".equals(role)))
+            mvc.perform(as(get(base + "/flatlined-sensors?view=ALL"), role, false))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.totalElements").value(1))
                     .andExpect(jsonPath("$.sensors[0].assetLocationPath").value("Block A › L2"))
@@ -235,13 +235,7 @@ class FlatlineIntegrationTests {
     }
 
     @ParameterizedTest
-    @CsvSource({
-        "COUNCIL,false,true,false",
-        "COUNCIL,true,true,true",
-        "MEMBER,true,true,true",
-        "MEMBER,false,false,false",
-        "RESIDENT,true,false,false"
-    })
+    @CsvSource({"COUNCIL,false,true,false", "COUNCIL,true,true,true", "RESIDENT,true,false,false"})
     void membershipAndAdminAuthorityTogetherDetermineSensorPermissions(
             String role, boolean admin, boolean read, boolean write) throws Exception {
         member("assigned", role);
@@ -312,7 +306,7 @@ class FlatlineIntegrationTests {
 
     @Test
     void membershipChangesTakeEffectOnTheNextRequest() throws Exception {
-        member("manager", "MEMBER");
+        member("manager", "MANAGER");
         mvc.perform(as(get(base + "/flatline-policies"), "manager", true)).andExpect(status().isOk());
         db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='manager'", estateId);
         mvc.perform(as(get(base + "/flatline-policies"), "manager", true)).andExpect(status().isNotFound());

@@ -190,7 +190,7 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "CREW", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "CREW", "RESIDENT"})
     void presetMembersCannotReadTheAdministrationCatalogueOrCreateDefinitions(String preset) throws Exception {
         member(estateId, "other", preset);
         mvc.perform(as("other", get(roles()))).andExpect(status().isForbidden());

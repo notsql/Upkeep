@@ -15,7 +15,7 @@ Invited members must accept before reading. Removing membership immediately
 denies subsequent reads. Invitation delegation does not confer location-write
 permission. Reads list active locations, including on an inactive estate.
 Owners and current Managers assigned to the target estate can create blocks,
-levels and common areas. Council/legacy MEMBER/Crew/Resident/unassigned users
+levels and common areas. Council/Crew/Resident/unassigned users
 cannot create; being a Manager in another estate grants no creation authority.
 Editing and deactivation need `EDIT_LOCATIONS` (estate-role-permissions): the owner, every Manager and custom roles granted it. Members without the code get 403; non-members 404. The UI uses separate canCreateLocations/canCreateFloors/canEditLocations flags.
 

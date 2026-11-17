@@ -198,6 +198,22 @@ class PresetRolePermissionMigrationTests {
         }
     }
 
+    // Phase 8 contract: MEMBER is rejected and the role has no default (estate-role-permissions).
+    @Test
+    void membershipsCanNoLongerBeMemberOrRoleless() throws Exception {
+        assertEquals(
+                "23514",
+                rejected(
+                        "insert into \"EstateUser\" (\"estateId\", \"userId\", role) values (?, 'late', 'MEMBER')",
+                        ESTATE));
+        assertEquals(
+                "23502",
+                rejected("insert into \"EstateUser\" (\"estateId\", \"userId\") values (?, 'roleless')", ESTATE));
+        assertEquals("", rejected("""
+                insert into "EstateUser" ("estateId", "userId", role) values (?, 'late-council', 'COUNCIL')
+                """, ESTATE).replace("accepted", ""));
+    }
+
     private Map<String, Set<String>> bundles() throws Exception {
         var result = new HashMap<String, Set<String>>();
         try (var statement = connection.createStatement();

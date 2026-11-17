@@ -187,7 +187,7 @@ it("keeps the section active on nested pages and matches Overview exactly", asyn
 it("hides owner-only items for a management-only non-owner", async () => {
   state.owned = false;
   estate({
-    role: "MEMBER",
+    role: "COUNCIL",
     canManageEstate: false,
     canManageInvitationPermissions: false,
     canViewAssets: false,
@@ -214,7 +214,7 @@ it("hides owner-only items for a management-only non-owner", async () => {
 
 it("shows delegate destinations to a non-owner who manages invitation permissions", async () => {
   state.owned = false;
-  estate({ role: "MEMBER", canManageEstate: false });
+  estate({ role: "COUNCIL", canManageEstate: false });
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "Inspections" });
   nav.getByRole("link", { name: "Assets" });

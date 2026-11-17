@@ -74,7 +74,7 @@ class WorkOrderProgressIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "RESIDENT", "COUNCIL", "MEMBER", "foreign"})
+    @ValueSource(strings = {"CREW", "RESIDENT", "COUNCIL", "foreign"})
     void deniesProgressAndCompletionToReadOnlyOrForeignMemberships(String role) throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
         String id = create(data, false);

@@ -2,7 +2,7 @@
 
 Contract: `packages/api/openapi.json`. Both endpoints require bearer JWT and the `VIEW_ASSETS` permission code in the estate (the owner, every Manager, Council, and custom roles granted it; estate-role-permissions). Missing authentication returns 401; a member without the code gets 403; foreign or missing estate or asset returns 404; a malformed UUID returns 400 "Invalid failure-risk request.". Read-only: forecasts are derived on every read from asset events and never stored.
 
-A same-estate RESIDENT membership takes precedence over conflicting ownership and returns 403. Residency in another estate does not block an owner. A legacy MEMBER row or platform-admin authority alone does not grant access. Both GET operations below are explicitly admitted by Spring Security.
+A same-estate RESIDENT membership takes precedence over conflicting ownership and returns 403. Residency in another estate does not block an owner. Platform-admin authority alone does not grant access. Both GET operations below are explicitly admitted by Spring Security.
 
 ## GET `/estates/{estateId}/assets/{assetId}/failure-risk`
 

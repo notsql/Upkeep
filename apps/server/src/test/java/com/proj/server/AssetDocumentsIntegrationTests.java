@@ -173,7 +173,7 @@ class AssetDocumentsIntegrationTests extends DocumentTestSupport {
 
     @ParameterizedTest
     // Linking needs EDIT_ASSETS (estate-role-permissions): Managers and Council hold it; these do not.
-    @ValueSource(strings = {"resident", "legacy-member"})
+    @ValueSource(strings = {"resident"})
     void membersWithoutAssetEditingCannotChangeAssociations(String user) throws Exception {
         UUID document = id(upload("uploader", "invoice.pdf"));
         UUID asset = asset(estateId, "TT-A0001");

@@ -4941,7 +4941,7 @@ export interface components {
       owner: boolean;
       granted: boolean;
       /** @enum {string|null} */
-      membershipRole?: "MEMBER" | "COUNCIL" | "RESIDENT" | null;
+      membershipRole?: "COUNCIL" | "RESIDENT" | null;
       canManageGrant: boolean;
     };
     Role: {

@@ -105,7 +105,7 @@ class FaultReportLocationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void otherEstateRolesCannotReadImagesOrRelocateReports(String role) throws Exception {
         var estate = estate();
         member(estate, "staff", role);
@@ -215,7 +215,7 @@ class FaultReportLocationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void nonrespondersHaveNoFaultReportCapabilities(String role) throws Exception {
         var estate = estate();
         member(estate, "staff", role);
@@ -238,7 +238,7 @@ class FaultReportLocationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"NONE", "MEMBER", "COUNCIL", "CREW", "MANAGER"})
+    @ValueSource(strings = {"NONE", "COUNCIL", "CREW", "MANAGER"})
     void migrationRestoresExistingOwnersManagerMembershipAndReportAccess(String previousRole) throws Exception {
         var estate = estate();
         db.execute("update \"Estate\" set \"ownerUserId\"='staff' where id=?", estate);

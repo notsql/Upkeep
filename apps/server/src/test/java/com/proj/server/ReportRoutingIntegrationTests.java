@@ -191,7 +191,7 @@ class ReportRoutingIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void otherRolesCannotReadContractors(String role) throws Exception {
         var estate = estate();
         member(estate, "staff", role);

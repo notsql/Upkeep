@@ -398,7 +398,7 @@ class InspectionListIntegrationTests {
     // The due list follows VIEW_INSPECTIONS (Crew hold it); generating needs MANAGE_INSPECTIONS
     // (estate-role-permissions). Members without a code get 403.
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "MEMBER"})
+    @ValueSource(strings = {"CREW", "COUNCIL"})
     void otherEstateRolesCannotGenerateTheList(String role) throws Exception {
         membership("staff", role);
         lamp("L-1");

@@ -1,6 +1,6 @@
 # Estate role permissions
 
-**Status:** built (phase 8 pending)
+**Status:** built
 **Owner:** unassigned
 
 ## Problem
@@ -496,7 +496,7 @@ and migrated on `prd`) before any later phase is merged.
   - Update `.docs/frontend/` to match.
   - Add a decision record amending 0032: built-in roles become bundles.
   - Update the `.spec/README.md` row.
-- [ ] **8. Contract migration.** Once no code or test uses MEMBER:
+- [x] **8. Contract migration.** Once no code or test uses MEMBER:
   replace the `EstateUser` role CHECK with
   `('COUNCIL', 'RESIDENT', 'MANAGER', 'CREW', 'CUSTOM')` and drop
   `@default("MEMBER")`. Write a migration test first.

@@ -183,7 +183,7 @@ class DeviceStatusIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "MEMBER"})
+    @ValueSource(strings = {"CREW"})
     void membersWithoutViewDevicesAreRefused(String role) throws Exception {
         device();
         membership("staff", role);

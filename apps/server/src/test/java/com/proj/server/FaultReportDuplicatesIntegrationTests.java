@@ -429,7 +429,7 @@ class FaultReportDuplicatesIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER", "CUSTOM"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT", "CUSTOM"})
     void membersWithoutTriageCannotReviewOrLink(String role) throws Exception {
         var f = fixture();
         if (role.equals("CUSTOM")) customMember(f.estate, "staff");

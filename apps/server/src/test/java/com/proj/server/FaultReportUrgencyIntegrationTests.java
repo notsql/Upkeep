@@ -134,7 +134,7 @@ class FaultReportUrgencyIntegrationTests {
     // Urgency needs TRIAGE_FAULT_REPORTS (Managers and Crew); the owner holds every code (estate-role-permissions),
     // so ownership moves elsewhere before the caller's own membership changes.
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void membersWithoutTriageCannotEditEvenWithProviderAdminClaims(String role) throws Exception {
         var f = fixture();
         var report = report(f, "2026-01-01T00:00:00Z");

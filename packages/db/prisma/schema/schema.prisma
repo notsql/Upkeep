@@ -140,7 +140,7 @@ model Location {
 model EstateUser {
   customRoleId     String?               @db.Uuid
   customRole       EstateRoleDefinition? @relation(fields: [customRoleId, estateId], references: [id, estateId], onDelete: Restrict, onUpdate: Restrict)
-  role             String                @default("MEMBER") @db.VarChar(20)
+  role             String                @db.VarChar(20)
   canInviteMembers Boolean               @default(false)
   estateId         String                @db.Uuid
   userId           String                @db.VarChar(255)

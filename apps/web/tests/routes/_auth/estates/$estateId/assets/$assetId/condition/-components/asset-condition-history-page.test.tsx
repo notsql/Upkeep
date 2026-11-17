@@ -40,7 +40,7 @@ vi.mock("@/lib/access", async (importOriginal) => ({
       estates: [
         {
           estateId: "estate",
-          role: "MEMBER",
+          role: "COUNCIL",
           canViewAssets: viewer.canViewAssets,
         },
       ],

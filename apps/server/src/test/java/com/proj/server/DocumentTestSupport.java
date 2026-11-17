@@ -49,7 +49,6 @@ abstract class DocumentTestSupport extends CustomEstateRoleTestSupport {
         member(estateId, "uploader", "COUNCIL");
         member(estateId, "second-uploader", "COUNCIL");
         member(estateId, "resident", "RESIDENT");
-        member(estateId, "legacy-member", "MEMBER");
     }
 
     @AfterEach

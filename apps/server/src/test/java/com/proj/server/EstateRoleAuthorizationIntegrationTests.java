@@ -179,10 +179,10 @@ class EstateRoleAuthorizationIntegrationTests {
             String method, String template, int success) throws Exception {
         var a = estate("Private estate", "owner");
         var privateAsset = asset(a);
-        // A legacy MEMBER row holds no permission codes (estate-role-permissions); Crew hold no asset codes.
-        membership("member", a, "MEMBER");
+        // A Resident holds no permission codes (estate-role-permissions); Crew hold no asset codes.
+        membership("member", a, "RESIDENT");
         membership("crew", a, "CREW");
-        // Crew hold RECORD_READINGS, so only the legacy member is refused the anomaly check.
+        // Crew hold RECORD_READINGS, so only the Resident is refused the anomaly check.
         var refused = template.endsWith("/anomaly-check") ? new String[] {"member"} : new String[] {"member", "crew"};
         for (var user : refused) {
             mvc.perform(asUser(managementRequest(method, template, a, privateAsset), user, "user"))
@@ -238,7 +238,7 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     static Stream<Arguments> estateCreators() {
-        return Stream.of("UNASSIGNED", "RESIDENT", "CREW", "COUNCIL", "MEMBER", "MANAGER", "OWNER")
+        return Stream.of("UNASSIGNED", "RESIDENT", "CREW", "COUNCIL", "MANAGER", "OWNER")
                 .flatMap(membership ->
                         Stream.of("user", "resident", "admin").map(claim -> Arguments.of(membership, claim)));
     }
@@ -299,7 +299,7 @@ class EstateRoleAuthorizationIntegrationTests {
                     .andExpect(jsonPath("$.canSubmit").value(true))
                     .andExpect(jsonPath("$.estates[0].id").value(previous.toString()));
         }
-        if (role.equals("RESIDENT") || role.equals("CREW") || role.equals("COUNCIL") || role.equals("MEMBER")) {
+        if (role.equals("RESIDENT") || role.equals("CREW") || role.equals("COUNCIL")) {
             mvc.perform(
                             asUser(patch("/estates/" + previous), "creator", claim)
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -328,9 +328,8 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
                 .andExpect(jsonPath("$.canCreateEstate").value(true))
-                // A legacy MEMBER row holds no permission codes (estate-role-permissions), so no workspace.
-                .andExpect(jsonPath("$.canEnterWorkspace")
-                        .value(!role.equals("UNASSIGNED") && !role.equals("RESIDENT") && !role.equals("MEMBER")))
+                .andExpect(
+                        jsonPath("$.canEnterWorkspace").value(!role.equals("UNASSIGNED") && !role.equals("RESIDENT")))
                 .andExpect(jsonPath("$.canAccessPlatformAdmin").value(false));
     }
 

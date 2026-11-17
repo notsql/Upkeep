@@ -228,9 +228,8 @@ public class FlatlineService {
     }
 
     private static boolean canManage(FlatlineRepository.EstateScope scope, boolean admin) {
-        // The platform-admin override for Council (and legacy Member) rows is kept (estate-role-permissions).
-        return scope.codes().contains(EstatePermissionCode.MANAGE_DEVICES)
-                || (admin && ("MEMBER".equals(scope.role()) || "COUNCIL".equals(scope.role())));
+        // The platform-admin override for Council rows is kept (estate-role-permissions).
+        return scope.codes().contains(EstatePermissionCode.MANAGE_DEVICES) || (admin && "COUNCIL".equals(scope.role()));
     }
 
     private static FlatlinePolicyResponse unconfigured(DeviceMetric metric) {

@@ -347,7 +347,7 @@ class BudgetForecastIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "CREW"})
+    @ValueSource(strings = {"CREW"})
     void membersWithoutViewCostsAreRefused(String role) throws Exception {
         membership("someone", role);
         forecast("someone").andExpect(status().isForbidden());

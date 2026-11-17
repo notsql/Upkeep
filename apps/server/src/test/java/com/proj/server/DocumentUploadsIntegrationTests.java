@@ -85,7 +85,7 @@ class DocumentUploadsIntegrationTests extends DocumentTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"resident", "legacy-member"})
+    @ValueSource(strings = {"resident"})
     void estateMembershipWithoutDocumentAuthorityIsInsufficient(String user) throws Exception {
         mvc.perform(as(user, slot("invoice.pdf", "application/pdf", 100))).andExpect(status().isForbidden());
         mvc.perform(as(user, submission("INVOICE", pdfFile("invoice.pdf")))).andExpect(status().isForbidden());

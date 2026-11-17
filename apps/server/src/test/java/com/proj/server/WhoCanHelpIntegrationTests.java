@@ -48,7 +48,6 @@ class WhoCanHelpIntegrationTests {
         MEMBERS.put("manager", "Manager");
         MEMBERS.put("crew", "Crew");
         MEMBERS.put("council", "Council");
-        MEMBERS.put("member", "Member");
         MEMBERS.put("resident", "Resident");
         MEMBERS.put("lead", "Facilities lead");
     }
@@ -78,7 +77,6 @@ class WhoCanHelpIntegrationTests {
         membership("manager", "MANAGER");
         membership("crew", "CREW");
         membership("council", "COUNCIL");
-        membership("member", "MEMBER");
         membership("resident", "RESIDENT");
         var roleId = UUID.randomUUID();
         db.execute(
@@ -192,7 +190,7 @@ class WhoCanHelpIntegrationTests {
     void rolesComeInAFixedOrderWithTheOwnerLast() throws Exception {
         // The all-codes custom role holds MANAGE_WORK_ORDERS too (estate-role-permissions).
         assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("crew", "SEND_CONTRACTOR"));
-        assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("member", "REPLACE_SENSOR"));
+        assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("council", "REPLACE_SENSOR"));
     }
 
     @Test

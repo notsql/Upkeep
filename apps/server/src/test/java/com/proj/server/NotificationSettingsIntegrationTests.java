@@ -129,7 +129,7 @@ class NotificationSettingsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "COUNCIL", "CREW"})
+    @ValueSource(strings = {"COUNCIL", "CREW"})
     void otherRolesCannotSeeThem(String role) throws Exception {
         membership("someone", role);
         read("someone").andExpect(status().isNotFound());

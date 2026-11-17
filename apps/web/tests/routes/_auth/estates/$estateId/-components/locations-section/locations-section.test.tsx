@@ -180,7 +180,6 @@ describe("locations section", () => {
 
   it.each([
     "COUNCIL",
-    "MEMBER",
     "CREW",
     "RESIDENT",
     "unassigned",

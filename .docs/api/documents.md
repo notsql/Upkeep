@@ -39,8 +39,8 @@ lasts ten minutes, so storage refuses any other type or a larger body.
 `Content-Disposition: attachment` carrying the original filename.
 
 Access follows the `VIEW_DOCUMENTS` and `EDIT_DOCUMENTS` permission codes
-(estate-role-permissions): the owner, every Manager and Council hold both; Crew,
-legacy MEMBER rows and Residents hold neither and get 403. Custom roles need
+(estate-role-permissions): the owner, every Manager and Council hold both; Crew
+and Residents hold neither and get 403. Custom roles need
 explicit `VIEW_DOCUMENTS`; `EDIT_DOCUMENTS` requires it. Neither code requires general
 estate management access. A conflicting same-estate RESIDENT membership denies
 owner authority. JWT roles do not supply document powers. Missing identity is

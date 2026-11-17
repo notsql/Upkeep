@@ -5,7 +5,7 @@
 The following endpoints are read-only. Callers need the `VIEW_READINGS`
 permission code in the estate (estate-role-permissions): the owner, every
 Manager, Crew and custom roles granted it. Reads include retired assets and
-inactive-estate history. Council, Residents and legacy Member rows get 403. Current
+inactive-estate history. Council and Residents get 403. Current
 membership is checked on each request. `canViewReadings: boolean` is a required
 `EstateAccessResponse` field under the same policy. Minimal asset labels do not
 grant asset-register, cost, editing or credential access. ID-63 adds the

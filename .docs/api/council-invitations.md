@@ -37,7 +37,7 @@ Estate/invitation/custom-role IDs are UUIDs; member IDs are WorkOS subjects.
 | PendingCouncilInvitationResponse | id/estateId: UUID, estateName: string, expiresAt: datetime, role: EstateRole, plus CustomMetadata |
 | CustomMetadata | customRoleId: UUID or null, customRoleName: string or null, customRoleVersion: int32 or null, customPermissions: EstatePermissionResponse[] or null |
 | EstateInvitationRoleOptionResponse | role: EstateRole, label: string, customRoleId: UUID or null, customRoleVersion: int32 or null, permissions: EstatePermissionResponse[] or null |
-| EstateMemberResponse | userId/name/email: string, role: EstateRole or legacy MEMBER, owner/canInviteMembers: boolean, customRoleId: UUID or null, customRoleName: string or null |
+| EstateMemberResponse | userId/name/email: string, role: EstateRole (MEMBER no longer exists; migration `20261117195033_estate_user_role_contract` rejects it), owner/canInviteMembers: boolean, customRoleId: UUID or null, customRoleName: string or null |
 | TransferOwnershipRequest | newOwnerUserId: nonblank string, max 255 |
 | AcceptedInvitationsResponse | estateIds: UUID[], activated in this call |
 | InvitationPermissionRequest | canInviteMembers: boolean, required |

@@ -437,7 +437,7 @@ class WorkOrdersIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "COUNCIL", "RESIDENT"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void otherMembershipsCannotReadOrCreate(String role) throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
         member(data[0], "other", role);

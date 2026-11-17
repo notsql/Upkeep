@@ -31,7 +31,7 @@ never shows as Offline; it is listed after every active device.
 - 200: every device in the estate, retired assets included - EstateDeviceResponse[]. Order: `OFFLINE`, then `AWAITING_FIRST_READING`, then `ONLINE`, then `DEACTIVATED`; within a group the oldest `lastSeenAt` first, then `identifier`. Empty array when there are none.
 - 401: Sign in required - EstateError
 - 403: Caller is a resident of the estate - EstateError
-- 403: The caller belongs to the estate but lacks `VIEW_DEVICES` (Crew, Resident, legacy Member) - EstateError
+- 403: The caller belongs to the estate but lacks `VIEW_DEVICES` (Crew, Resident) - EstateError
 - 404: Estate not found, or the caller does not belong to it - EstateError
 
 ## EstateDeviceResponse

@@ -97,7 +97,7 @@ return these estate DTOs. The resident endpoints keep the original DTOs.
 
 Both endpoints need `TRIAGE_FAULT_REPORTS` in an active estate
 (estate-role-permissions): the owner, every Manager, Crew and custom roles
-granted it. Council, Residents, legacy Member rows and other custom roles get 403. Strangers, and estates or reports that are missing or
+granted it. Council, Residents and other custom roles get 403. Strangers, and estates or reports that are missing or
 inaccessible, get 404. The estate row is locked before membership is checked.
 Responses carry `Cache-Control: private, no-store`.
 

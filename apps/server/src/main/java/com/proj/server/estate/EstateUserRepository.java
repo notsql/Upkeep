@@ -37,7 +37,7 @@ public class EstateUserRepository {
                         row.get(ESTATE.CODE),
                         row.get(ESTATE.DEACTIVATEDAT) == null,
                         userId.equals(row.get(ESTATE.OWNERUSERID)),
-                        "MEMBER".equals(row.get(ESTATEUSER.ROLE)) || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)),
+                        "COUNCIL".equals(row.get(ESTATEUSER.ROLE)),
                         row.get(ESTATEUSER.ROLE),
                         !"RESIDENT".equals(row.get(ESTATEUSER.ROLE))));
     }
@@ -67,6 +67,8 @@ public class EstateUserRepository {
         db.insertInto(ESTATEUSER)
                 .set(ESTATEUSER.ESTATEID, estateId)
                 .set(ESTATEUSER.USERID, userId)
+                // The role column has no default since the MEMBER contract migration.
+                .set(ESTATEUSER.ROLE, "COUNCIL")
                 .set(ESTATEUSER.CREATEDAT, OffsetDateTime.now(ZoneOffset.UTC))
                 .onConflictDoNothing()
                 .execute();
@@ -81,7 +83,7 @@ public class EstateUserRepository {
                         .ESTATEID
                         .eq(estateId)
                         .and(ESTATEUSER.USERID.eq(userId))
-                        .and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL")))
+                        .and(ESTATEUSER.ROLE.eq("COUNCIL")))
                 .execute();
     }
 }

@@ -27,7 +27,6 @@ abstract class AssetHistoryTestSupport extends CustomEstateRoleTestSupport {
         assetId = asset(estateId, locationId, "E-A0001", "Water pump");
         member(estateId, "crew", "CREW");
         member(estateId, "resident", "RESIDENT");
-        member(estateId, "legacy-member", "MEMBER");
     }
 
     UUID asset(UUID estate, UUID location, String reference, String name) {

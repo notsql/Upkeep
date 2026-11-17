@@ -207,7 +207,7 @@ class EstateReadingsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"RESIDENT", "COUNCIL", "MEMBER"})
+    @ValueSource(strings = {"RESIDENT", "COUNCIL"})
     void otherMembershipsCannotReadOrDiscoverReadingAssetOptions(String role) throws Exception {
         member("reader", role);
         for (String suffix : new String[] {"", "/assets"}) {

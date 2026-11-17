@@ -240,7 +240,7 @@ class NotificationInboxIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "COUNCIL", "CREW", "RESIDENT"})
+    @ValueSource(strings = {"COUNCIL", "CREW", "RESIDENT"})
     void otherRolesSeeNothing(String role) throws Exception {
         membership("someone", role);
         var id = anomaly(estateId, pump, NOW);

@@ -73,7 +73,7 @@ class InspectionResultsIntegrationTests extends InspectionTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "COUNCIL", "RESIDENT", "CUSTOM"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT", "CUSTOM"})
     void unrelatedEstateRolesCannotReadOrCreateInspectionResults(String role) throws Exception {
         var data = asset();
         var body = saved(data, "FAIL");

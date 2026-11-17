@@ -17,9 +17,9 @@ request. Reads need `VIEW_DEVICES` and writes need `MANAGE_DEVICES` in the estat
 (estate-role-permissions): the owner and every Manager hold both, Council view
 only, custom roles hold what they are granted, unless a conflicting same-estate
 RESIDENT row exists. Role changes apply on the next request with the same
-token. The kept compatibility rule: JWT ROLE_admin plus a same-estate COUNCIL (or
-legacy MEMBER) assignment also permits writes. Crew, legacy MEMBER without admin
-and other members without the codes receive 403. No assignment/foreign estate returns 404, even
+token. The kept compatibility rule: JWT ROLE_admin plus a same-estate COUNCIL
+assignment also permits writes. Crew and other members without the codes
+receive 403. No assignment/foreign estate returns 404, even
 for platform admins. Residency elsewhere does not remove legitimate access.
 
 | Method / path | Request | Response |

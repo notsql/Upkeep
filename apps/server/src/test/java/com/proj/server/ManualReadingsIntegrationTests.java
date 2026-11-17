@@ -174,7 +174,7 @@ class ManualReadingsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"RESIDENT", "COUNCIL", "MEMBER"})
+    @ValueSource(strings = {"RESIDENT", "COUNCIL"})
     void otherRolesCannotRecord(String role) throws Exception {
         member(role);
         save("technician", body(UUID.randomUUID(), "21", TIME)).andExpect(status().isForbidden());

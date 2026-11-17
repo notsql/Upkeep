@@ -62,7 +62,7 @@ class ReadingRolePermissionsIntegrationTests extends AssetHistoryTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"member", "resident", "legacy-member"})
+    @ValueSource(strings = {"member", "resident"})
     void membersWithoutViewReadingsAreRefused(String user) throws Exception {
         for (var path : reads()) read(user, get(path)).andExpect(status().isForbidden());
     }

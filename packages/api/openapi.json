@@ -17009,7 +17009,7 @@
           "granted": { "type": "boolean" },
           "membershipRole": {
             "type": ["string", "null"],
-            "enum": ["MEMBER", "COUNCIL", "RESIDENT"]
+            "enum": ["COUNCIL", "RESIDENT"]
           },
           "canManageGrant": { "type": "boolean" }
         },

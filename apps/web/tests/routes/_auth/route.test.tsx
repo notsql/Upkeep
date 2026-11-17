@@ -690,7 +690,7 @@ const DESTINATION_GATED = [
 ];
 const managementOnly = {
   ...councilEstateAccess,
-  role: "MEMBER",
+  role: "COUNCIL",
   canViewManagement: true,
   canViewAssets: false,
   canViewInspectionResults: false,

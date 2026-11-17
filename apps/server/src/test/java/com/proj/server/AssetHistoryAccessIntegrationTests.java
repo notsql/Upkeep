@@ -26,7 +26,7 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"crew", "resident", "legacy-member"})
+    @ValueSource(strings = {"crew", "resident"})
     void unrelatedEstateRolesAndForgedProviderAdminClaimsDoNotGrantHistory(String user) throws Exception {
         read(user, get(history(assetId)))
                 .andExpect(status().isForbidden())
