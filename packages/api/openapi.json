@@ -12652,7 +12652,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             },
             "minItems": 1
@@ -12687,7 +12702,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             }
           },
@@ -13826,7 +13856,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             },
             "minItems": 1
@@ -14420,7 +14465,22 @@
               "CREATE_ROLES",
               "EDIT_ROLES",
               "VIEW_DOCUMENTS",
-              "EDIT_DOCUMENTS"
+              "EDIT_DOCUMENTS",
+              "TRIAGE_FAULT_REPORTS",
+              "VIEW_WORK_ORDERS",
+              "PROGRESS_ASSIGNED_WORK_ORDERS",
+              "MANAGE_WORK_ORDERS",
+              "VIEW_ASSETS",
+              "EDIT_ASSETS",
+              "VIEW_COSTS",
+              "VIEW_READINGS",
+              "RECORD_READINGS",
+              "IMPORT_READINGS",
+              "VIEW_DEVICES",
+              "MANAGE_DEVICES",
+              "VIEW_INSPECTIONS",
+              "RECORD_INSPECTIONS",
+              "MANAGE_INSPECTIONS"
             ]
           },
           "label": { "type": "string" },
@@ -14440,7 +14500,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             }
           }

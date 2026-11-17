@@ -2371,6 +2371,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
       /** Format: int32 */
       expectedVersion: number;
@@ -2394,6 +2409,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
       /** Format: date-time */
       createdAt: string;
@@ -3011,6 +3041,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
     };
     SendToContractorRequest: {
@@ -3366,7 +3411,22 @@ export interface components {
         | "CREATE_ROLES"
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
-        | "EDIT_DOCUMENTS";
+        | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS";
       label: string;
       description: string;
       requires: (
@@ -3381,6 +3441,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
     };
     CreateAssetRequest: {

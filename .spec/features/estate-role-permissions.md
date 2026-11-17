@@ -447,7 +447,7 @@ and migrated on `prd`) before any later phase is merged.
   `PresetRolePermission`, convert MEMBER to COUNCIL, and regenerate jOOQ. Write a migration test first:
   bundles match the table above, and no MEMBER rows remain. Ship it on its
   own. The user applies it to the shared Neon `dev` database.
-- [ ] **2. Server permission core.** `EstatePermissionCode` gains the 15
+- [x] **2. Server permission core.** `EstatePermissionCode` gains the 15
   codes and their `requires`. `EstatePermissions` resolves built-in bundles,
   owner-holds-all, Resident-holds-none, and drops the Council and Crew
   document shortcut. Add unit tests per role.

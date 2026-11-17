@@ -59,11 +59,24 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
     }
 
     @Test
-    void catalogueContainsTheElevenSupportedCodesWithExplicitPrerequisites() throws Exception {
+    void catalogueContainsTheTwentySixSupportedCodesWithExplicitPrerequisites() throws Exception {
         mvc.perform(as("owner", get(path() + "/role-permissions")))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(jsonPath("$[*].code", contains(CODES.toArray())))
+                .andExpect(jsonPath("$[*].code", contains(ALL_CODES.toArray())))
+                .andExpect(
+                        jsonPath("$[?(@.code == 'TRIAGE_FAULT_REPORTS')].requires[0]", contains("VIEW_FAULT_REPORTS")))
+                .andExpect(jsonPath(
+                        "$[?(@.code == 'PROGRESS_ASSIGNED_WORK_ORDERS')].requires[0]", contains("VIEW_WORK_ORDERS")))
+                .andExpect(jsonPath("$[?(@.code == 'MANAGE_WORK_ORDERS')].requires[0]", contains("VIEW_WORK_ORDERS")))
+                .andExpect(jsonPath("$[?(@.code == 'EDIT_ASSETS')].requires[0]", contains("VIEW_ASSETS")))
+                .andExpect(jsonPath("$[?(@.code == 'VIEW_COSTS')].requires[0]", contains("VIEW_ASSETS")))
+                .andExpect(jsonPath("$[?(@.code == 'RECORD_READINGS')].requires[0]", contains("VIEW_READINGS")))
+                .andExpect(jsonPath("$[?(@.code == 'IMPORT_READINGS')].requires[0]", contains("VIEW_READINGS")))
+                .andExpect(jsonPath("$[?(@.code == 'MANAGE_DEVICES')].requires[0]", contains("VIEW_DEVICES")))
+                .andExpect(jsonPath("$[?(@.code == 'RECORD_INSPECTIONS')].requires[0]", contains("VIEW_INSPECTIONS")))
+                .andExpect(jsonPath("$[?(@.code == 'MANAGE_INSPECTIONS')].requires[0]", contains("VIEW_INSPECTIONS")))
+                .andExpect(jsonPath("$[?(@.code == 'VIEW_ASSETS')].requires[*]", org.hamcrest.Matchers.empty()))
                 .andExpect(jsonPath("$[*].label", everyItem(not(emptyOrNullString()))))
                 .andExpect(jsonPath("$[*].description", everyItem(not(emptyOrNullString()))))
                 .andExpect(jsonPath("$[?(@.code == 'EDIT_ESTATE')].requires[0]", contains("VIEW_ESTATE")))

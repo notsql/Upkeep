@@ -5,6 +5,7 @@ import static com.proj.server.db.tables.Estateroledefinition.ESTATEROLEDEFINITIO
 import static com.proj.server.db.tables.Estaterolepermission.ESTATEROLEPERMISSION;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Permission.PERMISSION;
+import static com.proj.server.db.tables.Presetrolepermission.PRESETROLEPERMISSION;
 import static org.jooq.impl.DSL.*;
 
 import com.proj.server.db.tables.records.EstateRecord;
@@ -65,6 +66,35 @@ public final class EstatePermissions {
 
     public static boolean has(DSLContext db, UUID estate, String user, EstatePermissionCode permission) {
         return db.fetchExists(ESTATE, ESTATE.ID.eq(estate).and(customEstates(user, permission)));
+    }
+
+    /**
+     * Every code the user holds in the estate: all of them for its owner, the seeded bundle for a built-in role, the
+     * current grants for a custom role, and none for a Resident or non-member. A same-estate Resident row fails closed,
+     * even for the owner (decision 0027).
+     */
+    public static Set<EstatePermissionCode> effective(DSLContext db, UUID estate, String user) {
+        var row = db.select(ESTATE.OWNERUSERID, ESTATEUSER.ROLE, ESTATEUSER.CUSTOMROLEID)
+                .from(ESTATE)
+                .leftJoin(ESTATEUSER)
+                .on(ESTATEUSER.ESTATEID.eq(ESTATE.ID).and(ESTATEUSER.USERID.eq(user)))
+                .where(ESTATE.ID.eq(estate))
+                .fetchOne();
+        if (row == null) return Set.of();
+        String role = row.get(ESTATEUSER.ROLE);
+        if ("RESIDENT".equals(role)) return Set.of();
+        if (user.equals(row.get(ESTATE.OWNERUSERID))) return Set.copyOf(EnumSet.allOf(EstatePermissionCode.class));
+        if ("CUSTOM".equals(role)) return grants(db, row.get(ESTATEUSER.CUSTOMROLEID), estate);
+        return preset(db, role);
+    }
+
+    /** A built-in role's seeded bundle; an unknown role, or a bundle with an unsupported code, holds nothing. */
+    static Set<EstatePermissionCode> preset(DSLContext db, String role) {
+        if (role == null) return Set.of();
+        return validatedGrants(db.select(PRESETROLEPERMISSION.PERMISSION)
+                .from(PRESETROLEPERMISSION)
+                .where(PRESETROLEPERMISSION.ROLE.eq(role))
+                .fetch(PRESETROLEPERMISSION.PERMISSION));
     }
 
     public static Set<EstatePermissionCode> grants(DSLContext db, UUID role, UUID estate) {

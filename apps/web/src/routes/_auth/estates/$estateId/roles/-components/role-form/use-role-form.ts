@@ -18,11 +18,21 @@ type Area =
   | "Fault reports"
   | "Members and roles"
   | "Locations"
+  | "Assets"
+  | "Work orders"
+  | "Readings"
+  | "Devices"
+  | "Inspections"
   | "Documents";
 
 const AREAS: Area[] = [
   "Estate",
   "Fault reports",
+  "Work orders",
+  "Assets",
+  "Readings",
+  "Devices",
+  "Inspections",
   "Members and roles",
   "Locations",
   "Documents",
@@ -41,6 +51,21 @@ const AREA_OF: Record<EstatePermissionCode, Area> = {
   EDIT_LOCATIONS: "Locations",
   VIEW_DOCUMENTS: "Documents",
   EDIT_DOCUMENTS: "Documents",
+  TRIAGE_FAULT_REPORTS: "Fault reports",
+  VIEW_WORK_ORDERS: "Work orders",
+  PROGRESS_ASSIGNED_WORK_ORDERS: "Work orders",
+  MANAGE_WORK_ORDERS: "Work orders",
+  VIEW_ASSETS: "Assets",
+  EDIT_ASSETS: "Assets",
+  VIEW_COSTS: "Assets",
+  VIEW_READINGS: "Readings",
+  RECORD_READINGS: "Readings",
+  IMPORT_READINGS: "Readings",
+  VIEW_DEVICES: "Devices",
+  MANAGE_DEVICES: "Devices",
+  VIEW_INSPECTIONS: "Inspections",
+  RECORD_INSPECTIONS: "Inspections",
+  MANAGE_INSPECTIONS: "Inspections",
 };
 
 function validate(
