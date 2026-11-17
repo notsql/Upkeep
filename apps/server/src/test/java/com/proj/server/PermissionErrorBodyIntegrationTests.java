@@ -20,11 +20,13 @@ class PermissionErrorBodyIntegrationTests extends AssetHistoryTestSupport {
                 "/assets/{asset}/work-order-completions",
                 "/assets/{asset}/devices",
                 "/costs/top-assets",
-                "/locations?includeInactive=true"
+                "/locations?includeInactive=true",
+                "/inspection-list",
+                "/asset-categories"
             })
     void refusedReadsExplainWhichPermissionIsMissing(String suffix) throws Exception {
         var path = path() + suffix.replace("{asset}", assetId.toString());
-        var user = suffix.startsWith("/locations") ? "member" : "crew";
+        var user = suffix.startsWith("/locations") || suffix.startsWith("/inspection") ? "member" : "crew";
         read(user, get(path))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message")

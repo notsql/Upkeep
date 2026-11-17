@@ -105,9 +105,11 @@ public class WhoCanHelpService {
                 case RECORD_CONDITION ->
                     EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.RECORD_READINGS);
                 case PAUSE_SENSOR_WARNINGS -> flatlines.canPause(estateId, user);
-                // Notification visibility and the inspection list both use managerEstates via findManaged.
-                case ACKNOWLEDGE_ALERT, SEND_CREW ->
-                    estates.findManaged(estateId, user).isPresent();
+                // Notification visibility uses managerEstates via findManaged.
+                case ACKNOWLEDGE_ALERT -> estates.findManaged(estateId, user).isPresent();
+                // InspectionListService requires MANAGE_INSPECTIONS to send crew (estate-role-permissions).
+                case SEND_CREW ->
+                    EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.MANAGE_INSPECTIONS);
                 case REVIEW_DUPLICATE -> reports.canReviewDuplicates(estateId, user);
                 case SEND_CONTRACTOR -> workOrders.canCreate(estateId, user);
             };

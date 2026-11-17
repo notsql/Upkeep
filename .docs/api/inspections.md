@@ -9,7 +9,7 @@ results, with no scheduled-check dependency or maintenance/condition write.
 ## Authority and responses
 
 Every operation requires a JWT subject, including when the issuer is not
-configured. The current estate Owner, MANAGER or CREW can read; a same-estate
+configured. Reading needs `VIEW_INSPECTIONS` and recording needs `RECORD_INSPECTIONS` (estate-role-permissions; the owner, every Manager and Crew hold both, custom roles hold what they are granted); a same-estate
 RESIDENT membership overrides ownership. Other known roles get 403, unknown
 or foreign relationships get 404. Independent ownership still qualifies an
 Owner with another membership. Provider-admin claims confer no authority.

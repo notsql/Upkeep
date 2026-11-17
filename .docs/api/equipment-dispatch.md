@@ -13,7 +13,8 @@ token (401 without one).
 
 | Action | Who |
 | --- | --- |
-| List inspectors, send crew | Same check as `POST …/inspection-list/generate`: the estate owner or an assigned Manager (`EstateRepository.findManaged`). Others get 404 (403 for a resident membership). |
+| List inspectors | `VIEW_INSPECTIONS` (owner, every Manager, Crew). Members without it get 403; others 404. |
+| Send crew | `MANAGE_INSPECTIONS`, the same as `POST …/inspection-list/generate` (owner, every Manager). |
 | Read the open work order | Same as reading work orders: owner, Manager or Crew. |
 | "Can record inspections" (who may be sent) | The owner (unless a resident there) and `MANAGER` / `CREW` members — the same rule `InspectionService` uses to guard recording. Custom roles have no inspection permission today, so none are listed. |
 

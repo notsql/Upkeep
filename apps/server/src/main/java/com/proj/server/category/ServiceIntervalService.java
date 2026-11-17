@@ -3,8 +3,8 @@ package com.proj.server.category;
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetintervalchangeRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
-import com.proj.server.estate.EstateResponse;
 import com.proj.server.workos.WorkOSService;
 import java.util.Collection;
 import java.util.HashMap;
@@ -68,7 +68,7 @@ public class ServiceIntervalService {
     }
 
     public AssetServiceIntervalResponse get(UUID estateId, UUID assetId, String user) {
-        managed(estateId, user);
+        estates.require(estateId, user, EstatePermissionCode.VIEW_ASSETS, false);
         var asset = assets.find(assetId, estateId, false).orElseThrow(ServiceIntervalService::assetNotFound);
         return response(estateId, asset, repository.latestAssetChange(assetId).orElse(null));
     }
@@ -78,7 +78,7 @@ public class ServiceIntervalService {
     public AssetServiceIntervalResponse setOverride(
             UUID estateId, UUID assetId, String user, SetServiceIntervalRequest request) {
         var interval = ServiceInterval.checked(request);
-        var estate = managed(estateId, user);
+        var estate = estates.require(estateId, user, EstatePermissionCode.MANAGE_INSPECTIONS, true);
         if (estate.deactivatedAt() != null) {
             throw new AssetCategoryException(
                     HttpStatus.CONFLICT, "This estate is inactive. Its service intervals cannot be changed.");
@@ -131,11 +131,6 @@ public class ServiceIntervalService {
                 .latestCategoryChange(estateId, category)
                 .map(change -> ServiceInterval.of(change.getIntervalvalue(), change.getIntervalunit()))
                 .orElse(null);
-    }
-
-    private EstateResponse managed(UUID estateId, String user) {
-        return estates.findManaged(estateId, user)
-                .orElseThrow(() -> new AssetCategoryException(HttpStatus.NOT_FOUND, "Estate not found."));
     }
 
     private static AssetCategoryException assetNotFound() {

@@ -11,6 +11,7 @@ import com.proj.server.db.tables.records.AsseteventRecord;
 import com.proj.server.db.tables.records.AssetinspectionresultRecord;
 import com.proj.server.db.tables.records.InspectioncheckRecord;
 import com.proj.server.db.tables.records.LocationRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
 import com.proj.server.event.AssetEventRepository;
@@ -85,7 +86,7 @@ public class InspectionListService {
 
     @Transactional(readOnly = true)
     public InspectionListResponse list(UUID estateId, String user) {
-        var estate = managed(estateId, user);
+        var estate = estates.require(estateId, user, EstatePermissionCode.VIEW_INSPECTIONS, false);
         return response(estate, LocalDate.now(SINGAPORE));
     }
 
@@ -94,7 +95,7 @@ public class InspectionListService {
     public GenerateInspectionListResponse generate(UUID estateId, String user) {
         // Looked up before any row is locked, so a slow WorkOS call never holds a lock.
         var name = workOS.findDisplayName(user).orElse(null);
-        var estate = managed(estateId, user);
+        var estate = estates.require(estateId, user, EstatePermissionCode.MANAGE_INSPECTIONS, false);
         if (estate.deactivatedAt() != null) {
             throw new InspectionListException(
                     HttpStatus.CONFLICT, "This estate is inactive. Its inspection list cannot be generated.");
@@ -135,7 +136,7 @@ public class InspectionListService {
     /** Current members who can record inspections, by name. */
     @Transactional(readOnly = true)
     public List<InspectorResponse> inspectors(UUID estateId, String user) {
-        managed(estateId, user);
+        estates.require(estateId, user, EstatePermissionCode.VIEW_INSPECTIONS, false);
         return inspectorsOf(estateId);
     }
 
@@ -168,7 +169,7 @@ public class InspectionListService {
         // Looked up before any row is locked, so a slow WorkOS call never holds a lock.
         var name = workOS.findDisplayName(user).orElse(null);
         var assigneeName = workOS.findDisplayName(assignee).orElse(assignee);
-        var estate = managed(estateId, user);
+        var estate = estates.require(estateId, user, EstatePermissionCode.MANAGE_INSPECTIONS, false);
         if (estate.deactivatedAt() != null) {
             throw new InspectionListException(HttpStatus.CONFLICT, "This estate is inactive. Crew cannot be sent.");
         }
@@ -354,10 +355,5 @@ public class InspectionListService {
 
     private static int count(List<InspectionCheckResponse> checks, CheckStatus status) {
         return (int) checks.stream().filter(check -> check.status() == status).count();
-    }
-
-    private EstateResponse managed(UUID estateId, String user) {
-        return estates.findManaged(estateId, user)
-                .orElseThrow(() -> new InspectionListException(HttpStatus.NOT_FOUND, "Estate not found."));
     }
 }

@@ -344,13 +344,15 @@ class ServiceIntervalIntegrationTests {
                 .andExpect(jsonPath("$.lastOverrideChange.changedByUserId").value("manager"));
     }
 
+    // Reading an interval needs VIEW_ASSETS (Council hold it); setting one needs MANAGE_INSPECTIONS
+    // (estate-role-permissions). Members without a code get 403.
     @ParameterizedTest
     @ValueSource(strings = {"CREW", "COUNCIL", "MEMBER"})
-    void otherEstateRolesFindNothing(String role) throws Exception {
+    void otherEstateRolesCannotChangeIntervals(String role) throws Exception {
         membership("staff", role);
-        setCategory("staff", "PUMP", every(6, "MONTH")).andExpect(status().isNotFound());
-        getAsset("staff", assetId).andExpect(status().isNotFound());
-        setAsset("staff", assetId, every(3, "MONTH")).andExpect(status().isNotFound());
+        setCategory("staff", "PUMP", every(6, "MONTH")).andExpect(status().isForbidden());
+        getAsset("staff", assetId).andExpect(status().is(role.equals("COUNCIL") ? 200 : 403));
+        setAsset("staff", assetId, every(3, "MONTH")).andExpect(status().isForbidden());
         assertEquals(0, categoryChanges() + assetChanges());
     }
 
