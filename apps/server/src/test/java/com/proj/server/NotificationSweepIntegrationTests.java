@@ -318,7 +318,9 @@ class NotificationSweepIntegrationTests {
     void reachingANearerMilestoneReplacesTheOpenReminder() throws Exception {
         var lamp = lampDueOn("L-1", TODAY.plusDays(20));
         var earlier = earlierReminder(lamp, TODAY.plusDays(20), 60, false);
-        count("owner").andExpect(jsonPath("$.unread").value(1));
+        // ID-100: unread counts every visible notification not yet read, resolved or not,
+        // so the replaced 60-day reminder still counts beside the new 30-day one.
+        count("owner").andExpect(jsonPath("$.unread").value(2));
         assertEquals(2, due().size());
         assertEquals(30, open().getFirst().get("milestoneDays", Integer.class));
         assertNotNull(db.fetchValue("select \"resolvedAt\" from \"Notification\" where id = ?", earlier));
@@ -328,7 +330,8 @@ class NotificationSweepIntegrationTests {
     void aMilestoneIsNeverSentTwiceForTheSameDueDate() throws Exception {
         var lamp = lampDueOn("L-1", TODAY.plusDays(20));
         earlierReminder(lamp, TODAY.plusDays(20), 30, true);
-        count("owner").andExpect(jsonPath("$.unread").value(0));
+        // The earlier reminder is resolved but unread, so it still counts (ID-100); nothing new is raised.
+        count("owner").andExpect(jsonPath("$.unread").value(1));
         assertEquals(1, due().size());
     }
 
@@ -336,7 +339,10 @@ class NotificationSweepIntegrationTests {
     void aNewDueDateStartsTheMilestonesAgain() throws Exception {
         var lamp = lampDueOn("L-1", TODAY.plusDays(20));
         earlierReminder(lamp, TODAY.minusMonths(6).plusDays(20), 30, true);
-        count("owner").andExpect(jsonPath("$.unread").value(1));
+        // A new reminder is raised beside the earlier due date's, which is resolved but unread (ID-100).
+        count("owner").andExpect(jsonPath("$.unread").value(2));
+        assertEquals(2, due().size());
+        assertEquals(30, open().getFirst().get("milestoneDays", Integer.class));
     }
 
     @Test
@@ -522,7 +528,7 @@ class NotificationSweepIntegrationTests {
 
     List<Record> predicted() {
         return db.fetch(
-                "select * from \"Notification\" where \"estateId\" = ? and type = 'REPAIR_PREDICTED' order by \"resolvedAt\" nulls last, id",
+                "select * from \"Notification\" where \"estateId\" = ? and type = 'REPAIR_PREDICTED' order by \"resolvedAt\" nulls first, id",
                 estateId);
     }
 

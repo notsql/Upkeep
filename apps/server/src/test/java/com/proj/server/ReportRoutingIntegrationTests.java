@@ -643,6 +643,19 @@ class ReportRoutingIntegrationTests {
     }
 
     @Test
+    void theNewestTypeChangeAlwaysWinsEvenWithinOneTransaction() throws Exception {
+        var estate = estate();
+        var report = reviewReport(estate);
+        // This class runs each test in one transaction, where now() never moves;
+        // every change must still read back as the current type.
+        for (var category : List.of("DRAINAGE", "OTHER", "NOISE", "PARKING", "RUBBISH", "GRAFFITI", "WATER_LEAK")) {
+            mvc.perform(changeCategory(estate, report, category))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.classification.category").value(category));
+        }
+    }
+
+    @Test
     void changingTheCategoryOfARoutedReportOnlyChangesItsLabel() throws Exception {
         var estate = estate();
         contractor(estate, "LIFT");

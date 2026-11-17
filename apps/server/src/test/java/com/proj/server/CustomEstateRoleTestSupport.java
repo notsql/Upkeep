@@ -202,6 +202,24 @@ abstract class CustomEstateRoleTestSupport {
         return json.readTree(response.andReturn().getResponse().getContentAsString());
     }
 
+    /**
+     * A JSON path into this test's estate in /access/context. Committed tests leave other estates for
+     * the same users behind, so estates[0] is not reliably this one.
+     */
+    String ownEstate(String field) {
+        return "$.estates[?(@.estateId == '" + estateId + "')]." + field;
+    }
+
+    /** This test's estate in an /access/context body; see {@link #ownEstate(String)}. */
+    JsonNode ownEstate(JsonNode access) {
+        for (var estate : access.get("estates")) {
+            if (estate.get("estateId").asText().equals(estateId.toString())) {
+                return estate;
+            }
+        }
+        throw new AssertionError("estate " + estateId + " is not in the access context");
+    }
+
     UUID id(JsonNode response) {
         return UUID.fromString(response.get("id").asText());
     }
