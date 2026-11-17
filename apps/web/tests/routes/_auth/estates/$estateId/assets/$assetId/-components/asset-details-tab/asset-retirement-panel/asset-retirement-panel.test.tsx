@@ -1,5 +1,10 @@
 import { fireEvent } from "@testing-library/react";
-import { renderWithProviders, screen, waitFor } from "@tests/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import { beforeEach, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import { AssetRetirementPanel } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/asset-retirement-panel";
@@ -171,4 +176,58 @@ it("names who changed the asset's lifecycle, not their user ID", async () => {
   renderWithProviders(<AssetRetirementPanel asset={asset} />);
   await screen.findByText("By Casey Doe", { exact: false });
   expect(screen.queryByText("user_01ABC", { exact: false })).toBeNull();
+});
+
+it("colours each lifecycle change and its result by meaning", async () => {
+  const event = {
+    occurredAt: "2026-11-12T00:27:21Z",
+    actorUserId: "user_01ABC",
+    actorName: "Casey Doe",
+    previousDeactivatedAt: null,
+    previousRetiredOn: null,
+    previousRetirementReason: null,
+    deactivatedAt: null,
+    retiredOn: null,
+    retirementReason: null,
+    lifecycleVersion: 1,
+  };
+  vi.mocked(api.GET).mockResolvedValue({
+    data: [
+      { ...event, id: "e3", action: "RESTORED" },
+      {
+        ...event,
+        id: "e2",
+        action: "CORRECTED",
+        deactivatedAt: "2026-11-12T00:27:21Z",
+        retiredOn: "2026-11-12",
+        retirementReason: "worn out",
+      },
+      {
+        ...event,
+        id: "e1",
+        action: "RETIRED",
+        deactivatedAt: "2026-11-12T00:27:21Z",
+        retiredOn: "2026-11-12",
+        retirementReason: "retired",
+      },
+    ],
+    response: new Response(),
+  } as never);
+  renderWithProviders(<AssetRetirementPanel asset={asset} />);
+  const list = await screen.findByRole("list", { name: "Lifecycle events" });
+  const [restored, corrected, retired] =
+    await within(list).findAllByRole("listitem");
+  const variant = (item: HTMLElement, text: string) =>
+    within(item).getByText(text).dataset.variant;
+  expect(variant(restored as HTMLElement, "Restored")).toBe("success");
+  expect(variant(restored as HTMLElement, "Active")).toBe("success");
+  expect(variant(corrected as HTMLElement, "Out-of-use details changed")).toBe(
+    "info"
+  );
+  // The change and its result both read Out of use, in the same grey.
+  const outOfUse = within(retired as HTMLElement).getAllByText("Out of use");
+  expect(outOfUse.map((badge) => badge.dataset.variant)).toEqual([
+    "secondary",
+    "secondary",
+  ]);
 });

@@ -123,6 +123,14 @@ export const lifecycleTone = {
   INACTIVE: "muted",
 } as const satisfies Record<Lifecycle, StatusTone>;
 
+/** An asset lifecycle event's action; Restored matches Active, Out of use Retired. */
+export type LifecycleAction = "RETIRED" | "CORRECTED" | "RESTORED";
+export const lifecycleActionTone = {
+  RETIRED: lifecycleTone.RETIRED,
+  CORRECTED: "info",
+  RESTORED: lifecycleTone.ACTIVE,
+} as const satisfies Record<LifecycleAction, StatusTone>;
+
 export type InspectionOutcome = Schemas["CheckResultResponse"]["outcome"];
 export const inspectionOutcomeTone = {
   PASS: "success",

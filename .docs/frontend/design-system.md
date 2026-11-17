@@ -255,6 +255,7 @@ so a new contract enum value breaks `check-types`:
 | `assetConditionTone` | GOOD success, NEEDS_ATTENTION warning, FAULTY danger, UNASSESSED/null neutral |
 | `deviceStatusTone` | ONLINE success, OFFLINE danger, AWAITING_FIRST_READING info, DEACTIVATED muted |
 | `lifecycleTone` | ACTIVE success, RETIRED muted, INACTIVE muted |
+| `lifecycleActionTone` | RESTORED success, CORRECTED info, RETIRED muted (asset lifecycle events) |
 | `inspectionCheckTone(status, outcome)` | OVERDUE danger, DUE info, DONE+PASS success, DONE+FAIL warning |
 | `inspectionOutcomeTone` | PASS success, FAIL danger |
 | `notificationTypeTone` | ANOMALY danger, SERVICE_DUE info, REPAIR_PREDICTED warning |

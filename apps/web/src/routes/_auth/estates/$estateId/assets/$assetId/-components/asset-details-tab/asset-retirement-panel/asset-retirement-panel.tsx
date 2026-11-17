@@ -1,3 +1,4 @@
+import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { Archive, ScrollText } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -7,8 +8,19 @@ import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
 import { type Asset, useAssetLifecycleEvents } from "@/lib/assets";
 import { formatDate, formatDateTime } from "@/lib/format";
+import {
+  badgeVariantFor,
+  lifecycleActionTone,
+  lifecycleTone,
+} from "@/lib/status-tone";
 import { Restoration } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/restoration";
 import { RetirementEdit } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-details-tab/asset-retirement-panel/retirement-edit";
+
+function actionTone(action: string) {
+  return Object.hasOwn(lifecycleActionTone, action)
+    ? lifecycleActionTone[action as keyof typeof lifecycleActionTone]
+    : undefined;
+}
 
 const actionLabels: Record<string, string> = {
   RETIRED: "Out of use",
@@ -65,8 +77,10 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
               className="grid gap-1 py-3 text-sm first:pt-0 last:pb-0"
               key={event.id}
             >
-              <p>
-                {actionLabels[event.action ?? ""] ?? event.action} ·{" "}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <Badge variant={badgeVariantFor(actionTone(event.action))}>
+                  {actionLabels[event.action] ?? event.action}
+                </Badge>
                 {event.occurredAt
                   ? formatDateTime(event.occurredAt, {
                       timeZone: "Asia/Singapore",
@@ -86,11 +100,18 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
                   — {event.previousRetirementReason ?? "Not recorded"}
                 </p>
               ) : null}
-              <p>
-                Result:{" "}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                Result:
+                <Badge
+                  variant={badgeVariantFor(
+                    lifecycleTone[event.deactivatedAt ? "RETIRED" : "ACTIVE"]
+                  )}
+                >
+                  {event.deactivatedAt ? "Out of use" : "Active"}
+                </Badge>
                 {event.deactivatedAt
                   ? `${event.retiredOn ? formatDate(event.retiredOn) : "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
-                  : "Active"}
+                  : null}
               </p>
             </li>
           ))}
