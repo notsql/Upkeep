@@ -470,7 +470,7 @@ and migrated on `prd`) before any later phase is merged.
 - [x] **4. Fault reporting by membership.** Make `/resident/context`
   membership-based, check membership on submit, slots and locations, and
   remove `GET /resident/estates`. Write a decision record superseding 0053.
-- [ ] **5. Access context.** Add the new flags, re-derive the existing ones,
+- [x] **5. Access context.** Add the new flags, re-derive the existing ones,
   and drop MEMBER from the schemas. Run `pnpm api:generate` and then
   `pnpm fix`.
 - [ ] **6. Web.**

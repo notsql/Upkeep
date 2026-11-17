@@ -45,10 +45,12 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 const ESTATE = "5f0c7d2e-3a4b-4c5d-8e6f-7a8b9c0d1e2f";
+// Owners and Council both hold VIEW_DEVICES (estate-role-permissions).
 const viewer = vi.hoisted(() => ({
   owned: true,
-  role: "MEMBER",
+  role: "MANAGER",
   canViewAssets: true,
+  canViewDevices: true,
 }));
 vi.mock("@/lib/estates", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/estates")>()),
@@ -69,6 +71,7 @@ vi.mock("@/lib/access", async (importOriginal) => ({
           role: viewer.role,
           canViewManagement: true,
           canViewAssets: viewer.canViewAssets,
+          canViewDevices: viewer.canViewDevices,
           canViewInspectionResults: false,
         },
       ],
@@ -204,7 +207,12 @@ function deviceOrder(): string[] {
 beforeEach(() => {
   vi.mocked(api.GET).mockReset();
   vi.mocked(api.POST).mockReset();
-  Object.assign(viewer, { owned: true, role: "MEMBER", canViewAssets: true });
+  Object.assign(viewer, {
+    owned: true,
+    role: "MANAGER",
+    canViewAssets: true,
+    canViewDevices: true,
+  });
   devices = [
     device("ONLINE-1", "Boiler", "ONLINE"),
     device("GONE-1", "Boiler", "DEACTIVATED"),

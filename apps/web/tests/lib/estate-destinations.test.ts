@@ -28,7 +28,7 @@ const ownerEstateAccess = fixtures.ownerEstateAccess as Permission;
 const residentEstateAccess = fixtures.residentEstateAccess as Permission;
 const managementOnly: Permission = {
   ...residentEstateAccess,
-  role: "MEMBER",
+  role: "COUNCIL",
   canViewManagement: true,
 };
 const delegate = { ...managementOnly, canManageInvitationPermissions: true };
@@ -63,26 +63,17 @@ describe("estate settings", () => {
   });
 });
 
+// Device monitoring follows the canViewDevices flag (VIEW_DEVICES; estate-role-permissions).
 describe("sensors", () => {
-  it.each<[Permission["role"], boolean, boolean]>([
-    ["MANAGER", false, true],
-    ["COUNCIL", false, true],
-    ["MEMBER", false, false],
-    ["MEMBER", true, true],
-    ["CREW", true, false],
-  ])("%s with platform admin %s -> %s", (role, admin, expected) => {
-    expect(canOpenSensors({ ...managementOnly, role }, false, admin)).toBe(
-      expected
+  it("opens exactly when the user can view devices", () => {
+    expect(canOpenSensors({ ...managementOnly, canViewDevices: true })).toBe(
+      true
     );
-  });
-  it("opens for owners and requires management otherwise", () => {
-    expect(canOpenSensors(crewEstateAccess, true)).toBe(true);
-    expect(
-      canOpenSensors(
-        { ...managementOnly, role: "MANAGER", canViewManagement: false },
-        false
-      )
-    ).toBe(false);
+    expect(canOpenSensors({ ...managementOnly, canViewDevices: false })).toBe(
+      false
+    );
+    expect(canOpenSensors(crewEstateAccess)).toBe(false);
+    expect(canOpenSensors(undefined)).toBe(false);
   });
 });
 
@@ -129,12 +120,9 @@ describe("assets entry", () => {
     );
   });
   it("lands device viewers without asset access on All devices", () => {
-    expect(assetsEntry({ ...managementOnly, role: "COUNCIL" }, false)).toBe(
-      "/estates/$estateId/assets/devices"
-    );
-    expect(assetsEntry({ ...managementOnly, role: "MANAGER" }, false)).toBe(
-      "/estates/$estateId/assets/devices"
-    );
+    expect(
+      assetsEntry({ ...managementOnly, canViewDevices: true }, false)
+    ).toBe("/estates/$estateId/assets/devices");
     expect(assetsEntry(managementOnly, true)).toBe(
       "/estates/$estateId/assets/devices"
     );

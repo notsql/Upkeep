@@ -116,16 +116,15 @@ export function useAssetViewsAccess(estateId: string) {
   );
   const estate = useEstate(manages ? estateId : undefined);
   const owned = Boolean(estate.data?.owned);
-  const admin = access.data?.canAccessPlatformAdmin;
   return {
     pending: access.isPending || (manages && estate.isPending),
     /** The full register (owner-only); inspection readers get their own list. */
     register: Boolean(permission?.canViewAssets),
     /** Asset detail pages, including inspection readers'. */
     assetPages: canOpenAssets(permission),
-    allDevices: canOpenAllDevices(permission, owned, admin),
+    allDevices: canOpenAllDevices(permission, owned),
     devices: Boolean(permission && (owned || permission.role === "MANAGER")),
-    review: canOpenSensors(permission, owned, admin),
+    review: canOpenSensors(permission),
     /** The estate-wide readings browser, linked from the Assets views. */
     allReadings: canOpenAllReadings(permission),
   };

@@ -102,11 +102,10 @@ function estateGroups(
   estateId: string,
   permission: Permission,
   owned: boolean | undefined,
-  platformAdmin: boolean | undefined,
   pathname: string
 ): NavigationGroup[] {
   const base = `/estates/${estateId}`;
-  const assets = assetsEntry(permission, owned, platformAdmin);
+  const assets = assetsEntry(permission, owned);
   const item = (
     label: string,
     to: Destination,
@@ -244,7 +243,6 @@ export function useNavigationGroups(): NavigationGroup[] {
     estateId,
     permission,
     estate.data?.owned,
-    access.data.canAccessPlatformAdmin,
     pathname
   ).filter((group) => group.items.length > 0);
 }

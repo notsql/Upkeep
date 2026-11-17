@@ -192,6 +192,7 @@ it("hides owner-only items for a management-only non-owner", async () => {
     canManageInvitationPermissions: false,
     canViewAssets: false,
     canViewInspectionResults: false,
+    canViewDevices: false,
   });
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "People & access" });
@@ -244,6 +245,7 @@ it("shows only the Administration group for a roles-only estate", async () => {
         canViewEstateDetails: false,
         canInviteMembers: false,
         canViewEstateRoles: true,
+        canViewDevices: false,
       },
     ],
   };

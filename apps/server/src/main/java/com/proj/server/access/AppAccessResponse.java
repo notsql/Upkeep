@@ -58,13 +58,20 @@ public record AppAccessResponse(
                 "canViewDocuments",
                 "canUploadDocuments",
                 "canReviewFaultReportDuplicates",
-                "canChangeFaultReportUrgency"
+                "canChangeFaultReportUrgency",
+                "canEditAssets",
+                "canViewCosts",
+                "canViewDevices",
+                "canManageDevices",
+                "canManageInspections",
+                "canProgressAssignedWorkOrders",
+                "canTriageFaultReports"
             })
     public record EstateAccessResponse(
             UUID estateId,
             String estateName,
 
-            @Schema(allowableValues = {"MANAGER", "MEMBER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"})
+            @Schema(allowableValues = {"MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"})
             String role,
 
             boolean canViewManagement,
@@ -104,5 +111,12 @@ public record AppAccessResponse(
             boolean canRevertReadingImports,
 
             boolean canReviewFaultReportDuplicates,
-            boolean canChangeFaultReportUrgency) {}
+            boolean canChangeFaultReportUrgency,
+            boolean canEditAssets,
+            boolean canViewCosts,
+            boolean canViewDevices,
+            boolean canManageDevices,
+            boolean canManageInspections,
+            boolean canProgressAssignedWorkOrders,
+            boolean canTriageFaultReports) {}
 }

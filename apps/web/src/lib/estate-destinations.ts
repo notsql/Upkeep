@@ -56,33 +56,17 @@ export function canOpenReadings(permission: Permission): boolean {
   return Boolean(permission?.canViewReadings);
 }
 
-export function canOpenSensors(
-  permission: Permission,
-  owned?: boolean,
-  platformAdmin?: boolean
-): boolean {
-  if (!permission) {
-    return false;
-  }
-  return Boolean(
-    owned ||
-      (permission.canViewManagement &&
-        (permission.role === "MANAGER" ||
-          permission.role === "COUNCIL" ||
-          (permission.role === "MEMBER" && platformAdmin)))
-  );
+/** Device monitoring: anyone who can view devices (VIEW_DEVICES; estate-role-permissions). */
+export function canOpenSensors(permission: Permission): boolean {
+  return Boolean(permission?.canViewDevices);
 }
 
 /** Assets > All devices: everyone who could open Devices or Device monitoring. */
 export function canOpenAllDevices(
   permission: Permission,
-  owned?: boolean,
-  platformAdmin?: boolean
+  owned?: boolean
 ): boolean {
-  return (
-    canOpenDevices(permission, owned) ||
-    canOpenSensors(permission, owned, platformAdmin)
-  );
+  return canOpenDevices(permission, owned) || canOpenSensors(permission);
 }
 
 /**
@@ -91,8 +75,7 @@ export function canOpenAllDevices(
  */
 export function assetsEntry(
   permission: Permission,
-  owned?: boolean,
-  platformAdmin?: boolean
+  owned?: boolean
 ):
   | "/estates/$estateId/assets"
   | "/estates/$estateId/assets/devices"
@@ -100,7 +83,7 @@ export function assetsEntry(
   if (canOpenAssets(permission)) {
     return "/estates/$estateId/assets";
   }
-  if (canOpenAllDevices(permission, owned, platformAdmin)) {
+  if (canOpenAllDevices(permission, owned)) {
     return "/estates/$estateId/assets/devices";
   }
   return undefined;

@@ -28,9 +28,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class WhoCanHelpService {
     static final String OWNER = "estate owner";
-    private static final List<String> PRESET_ORDER = List.of("MANAGER", "CREW", "COUNCIL", "MEMBER", "RESIDENT");
-    private static final Map<String, String> PRESET_NAMES = Map.of(
-            "MANAGER", "Manager", "CREW", "Crew", "COUNCIL", "Council", "MEMBER", "Member", "RESIDENT", "Resident");
+    private static final List<String> PRESET_ORDER = List.of("MANAGER", "CREW", "COUNCIL", "RESIDENT");
+    private static final Map<String, String> PRESET_NAMES =
+            Map.of("MANAGER", "Manager", "CREW", "Crew", "COUNCIL", "Council", "RESIDENT", "Resident");
 
     private final DSLContext db;
     private final EstateRepository estates;

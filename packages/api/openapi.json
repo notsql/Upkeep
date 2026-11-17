@@ -13060,14 +13060,7 @@
           "canInviteMembers": { "type": "boolean" },
           "role": {
             "type": "string",
-            "enum": [
-              "MANAGER",
-              "COUNCIL",
-              "RESIDENT",
-              "CREW",
-              "MEMBER",
-              "CUSTOM"
-            ]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
           },
           "owner": { "type": "boolean" },
           "customRoleId": { "type": ["string", "null"], "format": "uuid" },
@@ -17092,14 +17085,7 @@
           "estateName": { "type": "string" },
           "role": {
             "type": "string",
-            "enum": [
-              "MANAGER",
-              "MEMBER",
-              "COUNCIL",
-              "RESIDENT",
-              "CREW",
-              "CUSTOM"
-            ]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
           },
           "canViewManagement": { "type": "boolean" },
           "canManageEstate": { "type": "boolean" },
@@ -17133,7 +17119,14 @@
           "canImportReadings": { "type": "boolean" },
           "canRevertReadingImports": { "type": "boolean" },
           "canReviewFaultReportDuplicates": { "type": "boolean" },
-          "canChangeFaultReportUrgency": { "type": "boolean" }
+          "canChangeFaultReportUrgency": { "type": "boolean" },
+          "canEditAssets": { "type": "boolean" },
+          "canViewCosts": { "type": "boolean" },
+          "canViewDevices": { "type": "boolean" },
+          "canManageDevices": { "type": "boolean" },
+          "canManageInspections": { "type": "boolean" },
+          "canProgressAssignedWorkOrders": { "type": "boolean" },
+          "canTriageFaultReports": { "type": "boolean" }
         },
         "required": [
           "canChangeFaultReportUrgency",
@@ -17143,19 +17136,26 @@
           "canCreateRoles",
           "canCreateWorkOrders",
           "canDeleteRoles",
+          "canEditAssets",
           "canEditLocations",
           "canEditRoles",
           "canInviteMembers",
+          "canManageDevices",
           "canManageEstate",
+          "canManageInspections",
           "canManageInvitationPermissions",
+          "canProgressAssignedWorkOrders",
           "canReassignRoles",
           "canRecordReadings",
           "canRelocateFaultReports",
           "canReviewFaultReportDuplicates",
+          "canTriageFaultReports",
           "canUpdateWorkOrders",
           "canUploadDocuments",
           "canViewAssetHistory",
           "canViewAssets",
+          "canViewCosts",
+          "canViewDevices",
           "canViewDocuments",
           "canViewEstateDetails",
           "canViewEstateInvitations",

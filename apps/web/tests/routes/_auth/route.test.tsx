@@ -695,6 +695,7 @@ const managementOnly = {
   canViewInspectionResults: false,
   canManageEstate: false,
   canManageInvitationPermissions: false,
+  canViewDevices: false,
 };
 function estateAccess(
   estate: typeof managementOnly,
@@ -817,12 +818,12 @@ it.each([
   { name: "owner", estate: managementOnly, owned: true },
   {
     name: "Manager",
-    estate: { ...managementOnly, role: "MANAGER" },
+    estate: { ...managementOnly, role: "MANAGER", canViewDevices: true },
     owned: false,
   },
   {
     name: "Council",
-    estate: { ...managementOnly, role: "COUNCIL" },
+    estate: { ...managementOnly, role: "COUNCIL", canViewDevices: true },
     owned: false,
   },
 ])(

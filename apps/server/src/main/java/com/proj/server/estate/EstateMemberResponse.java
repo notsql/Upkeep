@@ -20,7 +20,7 @@ public record EstateMemberResponse(
         String email,
         boolean canInviteMembers,
 
-        @Schema(allowableValues = {"MANAGER", "COUNCIL", "RESIDENT", "CREW", "MEMBER", "CUSTOM"})
+        @Schema(allowableValues = {"MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"})
         String role,
 
         boolean owner,

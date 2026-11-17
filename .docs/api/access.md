@@ -30,16 +30,38 @@ AppAccessResponse fields: canEnterWorkspace/canCreateEstate/canAccessPlatformAdm
 hasResidentMembership/canSubmitReport: boolean; residentEstates: { id: UUID,
 name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is false.
 
-EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
-CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewAssetHistory/canViewReadings/canRecordReadings/canInviteMembers/
-canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
-canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments/
-canReviewFaultReportDuplicates: boolean. canReviewFaultReportDuplicates is true only for current MANAGER
-membership in an active estate ([fault-report-duplicates.md](fault-report-duplicates.md)). Owners project as MANAGER; ownership is
-separate. Managers manage estate-local invitations/roles; inactive estates cannot
-receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
-no management access. Asset visibility and other management mutations retain
-existing individual service guards; broader operations remain separate features.
+EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/COUNCIL/RESIDENT/CREW/CUSTOM
+(MEMBER was dropped; legacy rows were converted to COUNCIL); then booleans. Since
+estate-role-permissions, every flag is derived from the permission codes the user
+holds in the estate (`EstatePermissions.effective`), and write flags are also false
+in an inactive estate:
+
+| Flag | Code (write flags also need an active estate) |
+| --- | --- |
+| canViewManagement / canManageEstate | VIEW_ESTATE / EDIT_ESTATE |
+| canViewAssets, canViewAssetHistory | VIEW_ASSETS |
+| canEditAssets | EDIT_ASSETS |
+| canViewCosts | VIEW_COSTS |
+| canViewReadings / canRecordReadings | VIEW_READINGS / RECORD_READINGS |
+| canImportReadings, canRevertReadingImports | IMPORT_READINGS |
+| canViewDevices / canManageDevices | VIEW_DEVICES / MANAGE_DEVICES |
+| canViewInspectionResults / canCreateInspectionResults | VIEW_INSPECTIONS / RECORD_INSPECTIONS |
+| canManageInspections | MANAGE_INSPECTIONS |
+| canViewFaultReports / canRelocateFaultReports | VIEW_FAULT_REPORTS / RELOCATE_FAULT_REPORTS |
+| canTriageFaultReports, canChangeFaultReportUrgency, canReviewFaultReportDuplicates | TRIAGE_FAULT_REPORTS |
+| canViewWorkOrders | VIEW_WORK_ORDERS |
+| canCreateWorkOrders, canUpdateWorkOrders | MANAGE_WORK_ORDERS |
+| canProgressAssignedWorkOrders | PROGRESS_ASSIGNED_WORK_ORDERS |
+| canCreateLocations, canCreateFloors / canEditLocations | CREATE_LOCATIONS / EDIT_LOCATIONS |
+| canViewEstateRoles | CREATE_ROLES or EDIT_ROLES |
+| canCreateRoles / canEditRoles | CREATE_ROLES / EDIT_ROLES |
+| canInviteMembers | INVITE_MEMBERS |
+| canViewEstateInvitations | Manager, or INVITE_MEMBERS |
+| canViewDocuments / canUploadDocuments | VIEW_DOCUMENTS / EDIT_DOCUMENTS |
+| canViewEstateDetails | holds any code |
+| canManageInvitationPermissions, canDeleteRoles, canReassignRoles | Manager only (member administration, outside the catalogue) |
+
+Owners project as MANAGER and hold every code; ownership itself is separate.
 
 Every authenticated subject has `canCreateEstate=true`, regardless of existing
 membership or WorkOS role claims. Creation records the authenticated subject's

@@ -2619,7 +2619,7 @@ export interface components {
       email: string;
       canInviteMembers: boolean;
       /** @enum {string} */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "MEMBER" | "CUSTOM";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
       owner: boolean;
       /** Format: uuid */
       customRoleId: string | null;
@@ -4977,7 +4977,7 @@ export interface components {
       estateId: string;
       estateName: string;
       /** @enum {string} */
-      role: "MANAGER" | "MEMBER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
@@ -5012,6 +5012,13 @@ export interface components {
       canRevertReadingImports?: boolean;
       canReviewFaultReportDuplicates: boolean;
       canChangeFaultReportUrgency: boolean;
+      canEditAssets: boolean;
+      canViewCosts: boolean;
+      canViewDevices: boolean;
+      canManageDevices: boolean;
+      canManageInspections: boolean;
+      canProgressAssignedWorkOrders: boolean;
+      canTriageFaultReports: boolean;
     };
   };
 }

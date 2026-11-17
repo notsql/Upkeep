@@ -42,6 +42,14 @@ export const residentEstateAccess = {
   canReassignRoles: false,
   canViewEstateInvitations: false,
   canReviewFaultReportDuplicates: false,
+  // Phase 5 flags (estate-role-permissions)
+  canEditAssets: false,
+  canViewCosts: false,
+  canViewDevices: false,
+  canManageDevices: false,
+  canManageInspections: false,
+  canProgressAssignedWorkOrders: false,
+  canTriageFaultReports: false,
 };
 
 export const councilEstateAccess = {
@@ -52,6 +60,9 @@ export const councilEstateAccess = {
   canViewManagement: true,
   canViewEstateDetails: true,
   canInviteMembers: true,
+  canEditAssets: true,
+  canViewCosts: true,
+  canViewDevices: true,
 };
 
 export const ownerEstateAccess = {
@@ -85,6 +96,13 @@ export const ownerEstateAccess = {
   canReassignRoles: true,
   canViewEstateInvitations: true,
   canReviewFaultReportDuplicates: true,
+  canEditAssets: true,
+  canViewCosts: true,
+  canViewDevices: true,
+  canManageDevices: true,
+  canManageInspections: true,
+  canProgressAssignedWorkOrders: true,
+  canTriageFaultReports: true,
 };
 
 export const crewEstateAccess = {
@@ -101,6 +119,8 @@ export const crewEstateAccess = {
   canViewWorkOrders: true,
   canViewFaultReports: true,
   canRelocateFaultReports: true,
+  canProgressAssignedWorkOrders: true,
+  canTriageFaultReports: true,
 };
 
 export const residentAccess = {

@@ -328,8 +328,9 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
                 .andExpect(jsonPath("$.canCreateEstate").value(true))
-                .andExpect(
-                        jsonPath("$.canEnterWorkspace").value(!role.equals("UNASSIGNED") && !role.equals("RESIDENT")))
+                // A legacy MEMBER row holds no permission codes (estate-role-permissions), so no workspace.
+                .andExpect(jsonPath("$.canEnterWorkspace")
+                        .value(!role.equals("UNASSIGNED") && !role.equals("RESIDENT") && !role.equals("MEMBER")))
                 .andExpect(jsonPath("$.canAccessPlatformAdmin").value(false));
     }
 
