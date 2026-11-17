@@ -72,7 +72,7 @@ screen and limited Manager/Crew screen show **Inspection records** when
 `$assetId/-components/inspection-history-table/inspection-history-table.tsx`.
 
 The five columns are Inspection date, Outcome, Follow-up / work order,
-Inspector and View record. Below 768px (`useMobile`) the table becomes an "Inspection records" list
+Inspector and an unlabelled action column holding the View record link (its header is a `sr-only` "Actions", as in the app's other tables). Below 768px (`useMobile`) the table becomes an "Inspection records" list
 (`inspection-history-item.tsx`) of shadcn `Item size="sm"` rows divided by
 `ItemSeparator`: title = the inspection date, linking to the record; muted line
 = Inspector · follow-up (Closed, the work-order reference/link, or Create work

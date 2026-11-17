@@ -78,3 +78,20 @@ it("lists inspection records on phones with the date linking to the record", () 
   within(second).getByText("Pass");
   within(second).getByText("Closed");
 });
+
+it("leaves the action column's header for screen readers, not a repeat of its link", () => {
+  mockMobileViewport(false);
+  renderWithProviders(
+    <InspectionHistoryRecordsTable
+      canCreateWorkOrder
+      canViewWorkOrder
+      records={[failed]}
+    />
+  );
+  const actions = screen.getByRole("columnheader", { name: "Actions" });
+  expect(actions.firstElementChild?.className).toContain("sr-only");
+  expect(
+    screen.queryByRole("columnheader", { name: "View record" })
+  ).toBeNull();
+  screen.getByRole("link", { name: "View record" });
+});

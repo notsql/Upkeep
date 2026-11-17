@@ -242,7 +242,7 @@ it.each(["OWNER", "MANAGER", "CREW"])(
       "Outcome",
       "Follow-up / work order",
       "Inspector",
-      "View record",
+      "Actions",
     ]);
     const row = within(table).getByRole("row", { name: ALEX_ROW });
     within(row).getByRole("cell", { name: formatDate("2026-10-26") });
