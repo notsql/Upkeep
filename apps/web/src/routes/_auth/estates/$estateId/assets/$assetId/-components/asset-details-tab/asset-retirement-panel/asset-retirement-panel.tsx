@@ -1,3 +1,4 @@
+import type { components } from "@proj/api/schema";
 import { Badge } from "@proj/ui/components/badge";
 import { Button } from "@proj/ui/components/button";
 import { Archive, ScrollText } from "lucide-react";
@@ -21,6 +22,8 @@ function actionTone(action: string) {
     ? lifecycleActionTone[action as keyof typeof lifecycleActionTone]
     : undefined;
 }
+
+type AssetLifecycleEvent = components["schemas"]["AssetLifecycleEventResponse"];
 
 const actionLabels: Record<string, string> = {
   RETIRED: "Out of use",
@@ -73,47 +76,7 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
         ) : null}
         <ol aria-label="Lifecycle events" className="divide-y">
           {history.data?.map((event) => (
-            <li
-              className="grid gap-1 py-3 text-sm first:pt-0 last:pb-0"
-              key={event.id}
-            >
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <Badge variant={badgeVariantFor(actionTone(event.action))}>
-                  {actionLabels[event.action] ?? event.action}
-                </Badge>
-                {event.occurredAt
-                  ? formatDateTime(event.occurredAt, {
-                      timeZone: "Asia/Singapore",
-                    })
-                  : "Not recorded"}{" "}
-                (Singapore)
-              </p>
-              <p className="text-muted-foreground break-all">
-                By {event.actorName ?? "an unknown user"}
-              </p>
-              {event.previousRetiredOn || event.previousRetirementReason ? (
-                <p>
-                  Previous out-of-use date:{" "}
-                  {event.previousRetiredOn
-                    ? formatDate(event.previousRetiredOn)
-                    : "Not recorded"}{" "}
-                  — {event.previousRetirementReason ?? "Not recorded"}
-                </p>
-              ) : null}
-              <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                Result:
-                <Badge
-                  variant={badgeVariantFor(
-                    lifecycleTone[event.deactivatedAt ? "RETIRED" : "ACTIVE"]
-                  )}
-                >
-                  {event.deactivatedAt ? "Out of use" : "Active"}
-                </Badge>
-                {event.deactivatedAt
-                  ? `${event.retiredOn ? formatDate(event.retiredOn) : "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
-                  : null}
-              </p>
-            </li>
+            <LifecycleEvent event={event} key={event.id} />
           ))}
         </ol>
         {mode === "edit" ? (
@@ -124,5 +87,49 @@ export function AssetRetirementPanel({ asset }: { asset: Asset }) {
         ) : null}
       </div>
     </PageSection>
+  );
+}
+
+/** One lifecycle change: what happened, when, by whom, and the result. */
+function LifecycleEvent({ event }: { event: AssetLifecycleEvent }) {
+  return (
+    <li className="grid gap-1 py-3 text-sm first:pt-0 last:pb-0">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <Badge variant={badgeVariantFor(actionTone(event.action))}>
+          {actionLabels[event.action] ?? event.action}
+        </Badge>
+        {event.occurredAt
+          ? formatDateTime(event.occurredAt, {
+              timeZone: "Asia/Singapore",
+            })
+          : "Not recorded"}{" "}
+        (Singapore)
+      </p>
+      <p className="text-muted-foreground break-all">
+        By {event.actorName ?? "an unknown user"}
+      </p>
+      {event.previousRetiredOn || event.previousRetirementReason ? (
+        <p>
+          Previous out-of-use date:{" "}
+          {event.previousRetiredOn
+            ? formatDate(event.previousRetiredOn)
+            : "Not recorded"}{" "}
+          — {event.previousRetirementReason ?? "Not recorded"}
+        </p>
+      ) : null}
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        Result:
+        <Badge
+          variant={badgeVariantFor(
+            lifecycleTone[event.deactivatedAt ? "RETIRED" : "ACTIVE"]
+          )}
+        >
+          {event.deactivatedAt ? "Out of use" : "Active"}
+        </Badge>
+        {event.deactivatedAt
+          ? `${event.retiredOn ? formatDate(event.retiredOn) : "Not recorded"} — ${event.retirementReason ?? "Not recorded"}`
+          : null}
+      </p>
+    </li>
   );
 }
