@@ -58,7 +58,7 @@ or required permission catalogue unavailable. JSON errors are EstateError
 | VIEW_WORK_ORDERS | None | Work orders, their history/documents, contractor list and email status * |
 | PROGRESS_ASSIGNED_WORK_ORDERS | VIEW_WORK_ORDERS | Start/complete work orders assigned to the caller * |
 | MANAGE_WORK_ORDERS | VIEW_WORK_ORDERS | Create/edit/assign/progress any order, send reports to contractors, contractor list edits * |
-| VIEW_ASSETS | None | Asset register/detail, history, maintenance records, failure risk, service intervals * |
+| VIEW_ASSETS | VIEW_ESTATE | Asset register/detail, history, maintenance records, failure risk, service intervals * |
 | EDIT_ASSETS | VIEW_ASSETS | Add/edit/retire/restore/correct assets, record maintenance * |
 | VIEW_COSTS | VIEW_ASSETS | Costliest assets and budget forecast * |
 | VIEW_READINGS | None | Estate and per-asset readings, export, anomaly assessments * |

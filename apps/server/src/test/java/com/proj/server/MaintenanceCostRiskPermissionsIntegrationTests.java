@@ -19,9 +19,9 @@ class MaintenanceCostRiskPermissionsIntegrationTests extends AssetHistoryTestSup
     @BeforeEach
     void customRoles() throws Exception {
         for (var user : List.of("viewer", "editor", "costs")) person(user, true);
-        grant("viewer", "VIEW_ASSETS");
-        grant("editor", "VIEW_ASSETS", "EDIT_ASSETS");
-        grant("costs", "VIEW_ASSETS", "VIEW_COSTS");
+        grant("viewer", "VIEW_ESTATE", "VIEW_ASSETS");
+        grant("editor", "VIEW_ESTATE", "VIEW_ASSETS", "EDIT_ASSETS");
+        grant("costs", "VIEW_ESTATE", "VIEW_ASSETS", "VIEW_COSTS");
     }
 
     private List<String> assetReads() {

@@ -22,8 +22,8 @@ class AssetRolePermissionsIntegrationTests extends AssetHistoryTestSupport {
     @BeforeEach
     void customRoles() throws Exception {
         for (var user : List.of("viewer", "editor", "estate-viewer")) person(user, true);
-        grant("viewer", "VIEW_ASSETS");
-        grant("editor", "VIEW_ASSETS", "EDIT_ASSETS");
+        grant("viewer", "VIEW_ESTATE", "VIEW_ASSETS");
+        grant("editor", "VIEW_ESTATE", "VIEW_ASSETS", "EDIT_ASSETS");
         grant("estate-viewer", "VIEW_ESTATE");
     }
 

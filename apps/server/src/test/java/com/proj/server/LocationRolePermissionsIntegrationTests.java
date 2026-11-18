@@ -64,7 +64,7 @@ class LocationRolePermissionsIntegrationTests extends AssetHistoryTestSupport {
         person("estate-viewer", true);
         grant("estate-viewer", "VIEW_ESTATE");
         person("asset-viewer", true);
-        grant("asset-viewer", "VIEW_ASSETS");
+        grant("asset-viewer", "VIEW_ESTATE", "VIEW_ASSETS");
         read("estate-viewer", get(path() + "/locations?includeInactive=true")).andExpect(status().isForbidden());
         read("estate-viewer", get(path() + "/locations")).andExpect(status().isOk());
         read("asset-viewer", get(path() + "/locations?includeInactive=true")).andExpect(status().isOk());

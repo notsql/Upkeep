@@ -76,7 +76,7 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
                 .andExpect(jsonPath("$[?(@.code == 'MANAGE_DEVICES')].requires[0]", contains("VIEW_DEVICES")))
                 .andExpect(jsonPath("$[?(@.code == 'RECORD_INSPECTIONS')].requires[0]", contains("VIEW_INSPECTIONS")))
                 .andExpect(jsonPath("$[?(@.code == 'MANAGE_INSPECTIONS')].requires[0]", contains("VIEW_INSPECTIONS")))
-                .andExpect(jsonPath("$[?(@.code == 'VIEW_ASSETS')].requires[*]", org.hamcrest.Matchers.empty()))
+                .andExpect(jsonPath("$[?(@.code == 'VIEW_ASSETS')].requires[0]", contains("VIEW_ESTATE")))
                 .andExpect(jsonPath("$[*].label", everyItem(not(emptyOrNullString()))))
                 .andExpect(jsonPath("$[*].description", everyItem(not(emptyOrNullString()))))
                 .andExpect(jsonPath("$[?(@.code == 'EDIT_ESTATE')].requires[0]", contains("VIEW_ESTATE")))
@@ -117,6 +117,8 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
                 Arguments.of(
                         "location edit prerequisite",
                         Map.of("name", "Caretaker", "permissions", List.of("EDIT_LOCATIONS"))),
+                Arguments.of(
+                        "asset view prerequisite", Map.of("name", "Caretaker", "permissions", List.of("VIEW_ASSETS"))),
                 Arguments.of(
                         "relocation prerequisite",
                         Map.of("name", "Caretaker", "permissions", List.of("RELOCATE_FAULT_REPORTS"))));

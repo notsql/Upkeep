@@ -33,7 +33,7 @@ public enum EstatePermissionCode {
 
     public List<EstatePermissionCode> requires() {
         return switch (this) {
-            case EDIT_ESTATE, CREATE_LOCATIONS, EDIT_LOCATIONS -> List.of(VIEW_ESTATE);
+            case EDIT_ESTATE, CREATE_LOCATIONS, EDIT_LOCATIONS, VIEW_ASSETS -> List.of(VIEW_ESTATE);
             case RELOCATE_FAULT_REPORTS, TRIAGE_FAULT_REPORTS -> List.of(VIEW_FAULT_REPORTS);
             case EDIT_DOCUMENTS -> List.of(VIEW_DOCUMENTS);
             case PROGRESS_ASSIGNED_WORK_ORDERS, MANAGE_WORK_ORDERS -> List.of(VIEW_WORK_ORDERS);

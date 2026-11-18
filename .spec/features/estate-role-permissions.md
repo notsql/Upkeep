@@ -66,7 +66,7 @@ is the prerequisite rule already enforced by `EstatePermissionCode.requires()`.
 | `VIEW_WORK_ORDERS` | yes | | Work order list, detail and history, contractor directory (read), contractor email status. A work order's attached files also need VIEW_DOCUMENTS (agreed 2026-11-18: Crew don't see them) |
 | `PROGRESS_ASSIGNED_WORK_ORDERS` | yes | VIEW_WORK_ORDERS | Start and complete a work order assigned to yourself |
 | `MANAGE_WORK_ORDERS` | yes | VIEW_WORK_ORDERS | Create, edit, assign, progress any, correct completion, send a report to a contractor, email or retry a contractor, link documents, edit the contractor directory |
-| `VIEW_ASSETS` | yes | | Asset register and detail, lifecycle History, maintenance records, failure risk, service intervals, work order completions, asset documents |
+| `VIEW_ASSETS` | yes | VIEW_ESTATE | Asset register and detail, lifecycle History, maintenance records, failure risk, service intervals, work order completions, asset documents |
 | `EDIT_ASSETS` | yes | VIEW_ASSETS | Add, edit, retire, restore and correct assets; record maintenance |
 | `VIEW_COSTS` | yes | VIEW_ASSETS | Costliest assets and 12-month budget forecast |
 | `VIEW_READINGS` | yes | | Estate and per-asset readings, series, groups, export, anomaly assessments |
@@ -136,7 +136,9 @@ Outside the catalogue (not grantable to custom roles):
   subject to the prerequisites.
 - A delegated custom-role author can still grant only codes they hold
   themselves (0032).
-- Custom roles that existed before the change keep exactly their grants.
+- Custom roles that existed before the change keep exactly their grants, except
+  that one holding VIEW_ASSETS without VIEW_ESTATE gains VIEW_ESTATE
+  (`20261118143016_asset_view_prerequisite`).
 
 ### Owner and Manager
 
@@ -445,6 +447,7 @@ rule after this change.
 | MEMBER becomes COUNCIL in Phase 1. Rejecting MEMBER and dropping the default wait for a Phase 8 contract migration, so the migration-only release doesn't break the ~30 test files that still create MEMBER rows. Agreed by the user on 2026-11-17. | Convert and lock in one migration, rewriting those test fixtures in the same release. Or remove MEMBER memberships, or leave them. | `20261117145338_preset_role_permissions`, the Phase 8 migration, and the `allowableValues` on the responses |
 | New UI gates are new boolean flags on `EstateAccessResponse`, following the existing pattern. | Return the raw `permissions: EstatePermissionCode[]` per estate and check codes in the web app. | `AppAccessResponse`, `apps/web/src/lib/estate-destinations.ts` |
 | A control the viewer cannot use is not shown: every tab, link and button follows the flag for the code its endpoint requires. The 2026-11-18 scan hid Inspections' tabs, schedule links and Generate list from Crew; the asset Condition card's history and Record condition check, and the Sensors tab's Readings link, from Council; and the asset Costs/Sensors tabs, Send crew to inspect and the inspection follow-up work-order link from custom roles lacking VIEW_COSTS, VIEW_DEVICES, MANAGE_INSPECTIONS or VIEW_WORK_ORDERS. Typed URLs for those asset tabs are not found (`guardAssetTab`), and the asset banner and Breakdown forecast request no assessments without VIEW_READINGS. | Show it and let the server refuse it. | web `guardAssetTab`, `AssetAttentionAlert`, `AssetForecastCard`, `InspectionViews`, `InspectionsPage`, `AssetConditionSection`, `AssetDevicesSection`, `AssetDetailsNav`, `DispatchAction`, inspection `InspectionFollowUp` |
+| VIEW_ASSETS requires VIEW_ESTATE. The asset pages also load estate-scoped data that needs VIEW_ESTATE, such as the location picker and the estate header, so an asset viewer without it got broken pages. A data migration adds VIEW_ESTATE to existing custom roles that lack it and bumps their version, because an invalid grant set resolves to no codes at all. | Let the location list (and each other estate read) accept VIEW_ASSETS as well; this fixes one screen at a time and leaves the role meaning unclear. | `EstatePermissionCode.requires()`, migration `20261118143016_asset_view_prerequisite` |
 
 ## Implementation phases
 

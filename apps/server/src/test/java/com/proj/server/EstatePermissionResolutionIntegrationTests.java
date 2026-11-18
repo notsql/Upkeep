@@ -87,8 +87,8 @@ class EstatePermissionResolutionIntegrationTests extends CustomEstateRoleTestSup
 
     @Test
     void aCustomMemberHoldsExactlyTheirRolesGrantsIncludingNewCodes() {
-        customMember("custom", "VIEW_ASSETS", "EDIT_ASSETS", "VIEW_FAULT_REPORTS");
-        assertEquals(Set.of("VIEW_ASSETS", "EDIT_ASSETS", "VIEW_FAULT_REPORTS"), codes("custom"));
+        customMember("custom", "VIEW_ESTATE", "VIEW_ASSETS", "EDIT_ASSETS", "VIEW_FAULT_REPORTS");
+        assertEquals(Set.of("VIEW_ESTATE", "VIEW_ASSETS", "EDIT_ASSETS", "VIEW_FAULT_REPORTS"), codes("custom"));
     }
 
     @Test
