@@ -5,7 +5,7 @@ JWT subject. Estate and location IDs are UUIDs.
 
 | Method | Path | Request | Success | Access |
 | --- | --- | --- | --- | --- |
-| GET | `/estates/{estateId}/locations` | Optional query `includeInactive: boolean`, default false | 200 `LocationResponse[]` | Owner or current management member/responder for active rows; with `includeInactive=true`, `EDIT_LOCATIONS` holders or MANAGER/CREW report responders |
+| GET | `/estates/{estateId}/locations` | Optional query `includeInactive: boolean`, default false | 200 `LocationResponse[]` | Owner or current management member/responder for active rows; with `includeInactive=true`, `VIEW_ASSETS` or `EDIT_LOCATIONS` holders, or MANAGER/CREW report responders (others 403) |
 | POST | `/estates/{estateId}/locations` | `CreateLocationRequest` | 201 `LocationResponse`, Location header | `CREATE_LOCATIONS` (owner, every Manager, custom roles granted it), active estate |
 | PATCH | `/estates/{estateId}/locations/{id}` | `UpdateLocationRequest` | 200 `LocationResponse` | `EDIT_LOCATIONS` (owner, every Manager, custom roles granted it), active estate/location |
 | POST | `/estates/{estateId}/locations/{id}/deactivate` | none | 200 `LocationResponse` | `EDIT_LOCATIONS`, active estate |
@@ -26,9 +26,10 @@ same token. After transfer, the former owner retains creation access through
 their MANAGER membership; only the current owner can transfer ownership or
 deactivate the estate. No creation is allowed in inactive estates (409).
 
-Owners and current MANAGER/CREW responders can use `includeInactive=true` to
-include deactivated locations for historical assets/reports. Other members
-cannot use that option (404). Crew's supporting reads do not grant management
+Owners, current MANAGER/CREW responders and holders of `VIEW_ASSETS` (Council,
+whose asset register shows assets in deactivated locations) or `EDIT_LOCATIONS`
+can use `includeInactive=true` to include deactivated locations for historical
+assets/reports. Other members get 403; non-members 404. Crew's supporting reads do not grant management
 estate, asset, location or device writes. Inactive-estate reads are allowed.
 
 ## DTOs

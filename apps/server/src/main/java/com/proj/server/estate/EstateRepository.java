@@ -167,6 +167,11 @@ public class EstateRepository {
                                 .where(ESTATEUSER.USERID.eq(user).and(ESTATEUSER.ROLE.eq("CREW"))))));
     }
 
+    /** Every code the user holds in the estate (see {@link EstatePermissions#effective}). */
+    public java.util.Set<EstatePermissionCode> codes(UUID id, String user) {
+        return EstatePermissions.effective(db, id, user);
+    }
+
     public boolean hasPermission(UUID id, String user, EstatePermissionCode permission) {
         return EstatePermissions.has(db, id, user, permission);
     }

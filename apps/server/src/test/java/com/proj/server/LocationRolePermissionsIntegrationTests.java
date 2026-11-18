@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 /**
  * Adding locations and floors needs CREATE_LOCATIONS; renaming, moving, deactivating and listing inactive locations
- * need EDIT_LOCATIONS (spec: estate-role-permissions). The owner and every Manager hold both.
+ * need EDIT_LOCATIONS; asset viewers (VIEW_ASSETS) also list inactive locations (spec: estate-role-permissions). The owner and every Manager hold both.
  */
 class LocationRolePermissionsIntegrationTests extends AssetHistoryTestSupport {
     UUID levelId;
@@ -54,9 +54,20 @@ class LocationRolePermissionsIntegrationTests extends AssetHistoryTestSupport {
                 .andExpect(status().isForbidden());
         send(user, patch(path() + "/locations/" + levelId), rename()).andExpect(status().isForbidden());
         read(user, post(path() + "/locations/" + levelId + "/deactivate")).andExpect(status().isForbidden());
-        // Report responders (Crew) keep the full list, inactive locations included, for historical report locations.
-        read(user, get(path() + "/locations?includeInactive=true"))
-                .andExpect(user.equals("crew") ? status().isOk() : status().isForbidden());
+        // Report responders (Crew) keep the full list for historical report locations, and asset viewers
+        // (Council) for assets in deactivated locations on the register.
+        read(user, get(path() + "/locations?includeInactive=true")).andExpect(status().isOk());
+    }
+
+    @Test
+    void membersWithoutAssetsOrLocationEditingCannotListInactiveLocations() throws Exception {
+        person("estate-viewer", true);
+        grant("estate-viewer", "VIEW_ESTATE");
+        person("asset-viewer", true);
+        grant("asset-viewer", "VIEW_ASSETS");
+        read("estate-viewer", get(path() + "/locations?includeInactive=true")).andExpect(status().isForbidden());
+        read("estate-viewer", get(path() + "/locations")).andExpect(status().isOk());
+        read("asset-viewer", get(path() + "/locations?includeInactive=true")).andExpect(status().isOk());
     }
 
     @Test

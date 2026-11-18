@@ -26,7 +26,13 @@ class PermissionErrorBodyIntegrationTests extends AssetHistoryTestSupport {
             })
     void refusedReadsExplainWhichPermissionIsMissing(String suffix) throws Exception {
         var path = path() + suffix.replace("{asset}", assetId.toString());
-        var user = suffix.startsWith("/locations") || suffix.startsWith("/inspection") ? "member" : "crew";
+        var user = suffix.startsWith("/inspection") ? "member" : "crew";
+        // Council view assets, so they list inactive locations; only a role with neither is refused.
+        if (suffix.startsWith("/locations")) {
+            person("estate-viewer", true);
+            grant("estate-viewer", "VIEW_ESTATE");
+            user = "estate-viewer";
+        }
         read(user, get(path))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message")

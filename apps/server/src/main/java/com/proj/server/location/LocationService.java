@@ -34,7 +34,11 @@ public class LocationService {
             return includeInactive ? repository.listAll(estateId) : repository.listActive(estateId);
         }
         if (includeInactive) {
-            estates.require(estateId, user, EstatePermissionCode.EDIT_LOCATIONS, false);
+            // Asset viewers need inactive locations for assets kept in them (estate-role-permissions).
+            var code = estates.codes(estateId, user).contains(EstatePermissionCode.VIEW_ASSETS)
+                    ? EstatePermissionCode.VIEW_ASSETS
+                    : EstatePermissionCode.EDIT_LOCATIONS;
+            estates.require(estateId, user, code, false);
         } else {
             estates.findAccessible(estateId, user).orElseThrow(LocationService::estateNotFound);
         }
