@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useCallback, useState } from "react";
 import { SendCrewDialog } from "@/components/dispatch/send-crew-dialog";
 import { AskSomeoneLine } from "@/components/who-can-help/ask-someone-line";
+import { useAppAccess } from "@/lib/access";
 import {
   type DispatchRoute,
   useAssetCheck,
@@ -106,12 +107,19 @@ export function DispatchAction({
 }: {
   assetId: string;
   assetName: string;
-  /** The reader is an owner or Manager of an active estate. */
+  /** The reader can create work orders in an active estate. */
   canSend: boolean;
   estateId: string;
   route: DispatchRoute;
 }) {
-  if (!canSend) {
+  const access = useAppAccess();
+  // Sending crew is MANAGE_INSPECTIONS, which a custom role may lack while
+  // still creating work orders (estate-role-permissions).
+  const canSendCrew = Boolean(
+    access.data?.estates.find((estate) => estate.estateId === estateId)
+      ?.canManageInspections
+  );
+  if (!canSend || (route === "CREW" && !canSendCrew)) {
     return (
       <AskSomeoneLine
         action={route === "CREW" ? "SEND_CREW" : "SEND_CONTRACTOR"}

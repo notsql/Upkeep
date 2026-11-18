@@ -80,6 +80,7 @@ function renderSection(canRecord = true) {
     <AssetConditionSection
       assetId="asset-id"
       canRecord={canRecord}
+      canView
       estateId="estate-id"
     />
   );
@@ -103,6 +104,7 @@ describe("AssetConditionSection", () => {
       <AssetConditionSection
         assetId="asset-id"
         canRecord
+        canView
         estateId="estate-id"
         upcoming={<h3>Upcoming</h3>}
       />
@@ -110,6 +112,27 @@ describe("AssetConditionSection", () => {
     const card = screen.getByRole("region", { name: "Condition" });
     within(card).getByRole("heading", { level: 3, name: "Upcoming" });
     within(card).getByRole("separator");
+  });
+
+  // Council view assets but not readings, where assessments live
+  // (estate-role-permissions): the card keeps only the upcoming work.
+  it("shows and requests no condition to someone who cannot view readings", () => {
+    renderWithProviders(
+      <AssetConditionSection
+        assetId="asset-id"
+        canRecord={false}
+        canView={false}
+        estateId="estate-id"
+        upcoming={<h3>Upcoming</h3>}
+      />
+    );
+    const card = screen.getByRole("region", { name: "Condition" });
+    within(card).getByRole("heading", { level: 3, name: "Upcoming" });
+    expect(
+      screen.queryByRole("status", { name: "Current condition" })
+    ).toBeNull();
+    expect(screen.queryByRole("separator")).toBeNull();
+    expect(api.GET).not.toHaveBeenCalled();
   });
 
   it("shows no separator without upcoming work", async () => {

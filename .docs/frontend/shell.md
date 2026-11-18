@@ -206,7 +206,9 @@ In `_auth/route.tsx`, `guardDestination` handles the section-level URLs
 (exactly `/estates/<id>/<section>`):
 
 - `/assets` (list) 404s unless `canOpenAssets`. Asset children
-  (`/assets/$assetId/**`) keep `guardInspectionContext`.
+  (`/assets/$assetId/**`) keep `guardInspectionContext`. First, `guardAssetTab`
+  404s an asset's `/costs` tab without `canViewCosts` and its `/devices` tab
+  without `canViewDevices`, matching the tabs `AssetDetailsNav` hides.
 - `/assets/devices` (All sensors) is matched first (`isAllDevicesPath`, so
   "devices" is never treated as an asset ID by `guardInspectionContext`) and
   uses `canOpenAllDevices` (`canOpenDevices || canOpenSensors`), loading

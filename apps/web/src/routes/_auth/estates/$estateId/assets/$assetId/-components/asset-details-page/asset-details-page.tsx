@@ -41,10 +41,8 @@ export function AssetDetailsLayout({
   assetId: string;
   children: ReactNode;
 }) {
-  const { active, asset, canInspect, canSend, retry } = useAssetDetailsLayout(
-    estateId,
-    assetId
-  );
+  const { active, asset, canInspect, canSend, canViewCondition, retry } =
+    useAssetDetailsLayout(estateId, assetId);
   return (
     <PageLayout>
       {asset.isPending ? (
@@ -62,6 +60,7 @@ export function AssetDetailsLayout({
             assetName={asset.data.name}
             canInspect={canInspect}
             canSend={canSend}
+            canViewCondition={canViewCondition}
             estateId={estateId}
           />
           {asset.data.deactivatedAt ? (

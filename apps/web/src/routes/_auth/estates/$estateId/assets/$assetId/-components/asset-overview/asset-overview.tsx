@@ -71,7 +71,10 @@ export function AssetOverview({
       >
         <AssetConditionSection
           assetId={assetId}
-          canRecord={assetActive && !canSend}
+          canRecord={
+            assetActive && !canSend && Boolean(permission?.canRecordReadings)
+          }
+          canView={Boolean(permission?.canViewReadings)}
           estateId={estateId}
           upcoming={
             showUpcoming ? (
@@ -90,6 +93,7 @@ export function AssetOverview({
             assetId={assetId}
             assetName={asset.data.name}
             canSend={canSend}
+            canViewCondition={Boolean(permission?.canViewReadings)}
             estateId={estateId}
           />
         ) : null}

@@ -862,3 +862,31 @@ it("keeps a resident out of All devices", async () => {
   await router.load();
   expect(managementLoader).not.toHaveBeenCalled();
 });
+
+// An asset's Costs and Sensors tabs follow VIEW_COSTS and VIEW_DEVICES, so a
+// typed URL is not found like the hidden tab (estate-role-permissions).
+const ASSET_PATH = "/estates/pine/assets/7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f";
+
+it.each([
+  ["costs", { canViewCosts: false }, true],
+  ["devices", { canViewDevices: false }, true],
+  ["costs", {}, false],
+  ["devices", {}, false],
+])(
+  "guards an asset's %s tab (%o): not found is %s",
+  async (tab, flags, hidden) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [{ ...ownerEstateAccess, ...flags }],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(`${ASSET_PATH}/${tab}`);
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(hidden);
+  }
+);

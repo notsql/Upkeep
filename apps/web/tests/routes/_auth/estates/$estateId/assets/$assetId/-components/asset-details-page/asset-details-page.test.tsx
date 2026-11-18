@@ -14,6 +14,7 @@ const page = vi.hoisted(() => ({
   canCreateInspectionResults: true,
   // Flags an owner or Manager holds (estate-role-permissions).
   canViewDevices: true,
+  canViewCosts: true,
   canEditAssets: true,
   canManageInspections: true,
   devices: [] as { id: string; status: string; deactivatedAt?: string }[],
@@ -32,6 +33,7 @@ beforeEach(() => {
   page.role = "MANAGER";
   page.canCreateInspectionResults = true;
   page.canViewDevices = true;
+  page.canViewCosts = true;
   page.canEditAssets = true;
   page.canManageInspections = true;
   page.devices = [
@@ -107,6 +109,7 @@ vi.mock("@/lib/access", async (importOriginal) => ({
           canViewAssets: true,
           canCreateInspectionResults: page.canCreateInspectionResults,
           canViewDevices: page.canViewDevices,
+          canViewCosts: page.canViewCosts,
           canEditAssets: page.canEditAssets,
           canManageInspections: page.canManageInspections,
         },
@@ -223,15 +226,27 @@ it("hides the device count when the asset has no active devices", () => {
   nav.getByRole("link", { name: "Sensors" });
 });
 
-it("neither counts nor requests devices for a viewer who cannot see them", () => {
+// A tab the viewer cannot open is not offered (estate-role-permissions):
+// Sensors follow VIEW_DEVICES and Costs VIEW_COSTS.
+it("neither offers nor requests devices for a viewer who cannot see them", () => {
   page.role = "CREW";
   page.canViewDevices = false;
   renderLayout();
   const nav = within(
     screen.getByRole("navigation", { name: "Asset sections" })
   );
-  nav.getByRole("link", { name: "Sensors" });
+  expect(nav.queryByRole("link", { name: "Sensors" })).toBeNull();
   expect(page.devicesEnabled.every((enabled) => !enabled)).toBe(true);
+});
+
+it("offers no Costs tab to a viewer who cannot see costs", () => {
+  page.canViewCosts = false;
+  renderLayout();
+  const nav = within(
+    screen.getByRole("navigation", { name: "Asset sections" })
+  );
+  nav.getByRole("link", { name: "Records" });
+  expect(nav.queryByRole("link", { name: "Costs" })).toBeNull();
 });
 
 it("keeps only the title, status and reference in the header", () => {

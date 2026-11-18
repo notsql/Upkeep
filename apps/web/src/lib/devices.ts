@@ -118,6 +118,8 @@ export function useAssetViewsAccess(estateId: string) {
     assetPages: canOpenAssets(permission),
     allDevices: canOpenAllDevices(permission),
     devices: canOpenDevices(permission),
+    /** An asset's maintenance costs (VIEW_COSTS). */
+    costs: Boolean(permission?.canViewCosts),
     /** Replacing sensors and issuing keys (MANAGE_DEVICES). */
     manageDevices: Boolean(permission?.canManageDevices),
     review: canOpenSensors(permission),

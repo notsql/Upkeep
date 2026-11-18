@@ -136,18 +136,21 @@ export function AssetForecastCard({
   assetId,
   assetName,
   canSend,
+  canViewCondition,
   estateId,
 }: {
   assetId: string;
   assetName: string;
   /** The asset and estate are active and the viewer can send crew or a contractor. */
   canSend: boolean;
+  /** Can read assessments (VIEW_READINGS); without it none are requested. */
+  canViewCondition: boolean;
   estateId: string;
 }) {
   const risk = useAssetFailureRisk(estateId, assetId);
   const route = dispatchRoute(risk.data?.flagReasons ?? []);
   // Already cached by the Condition card; the API returns the current one first.
-  const current = useAssessments(estateId, assetId).data?.[0];
+  const current = useAssessments(estateId, assetId, canViewCondition).data?.[0];
   const reason = risk.data ? noForecastReason(risk.data) : null;
   return (
     <Card className="h-full">

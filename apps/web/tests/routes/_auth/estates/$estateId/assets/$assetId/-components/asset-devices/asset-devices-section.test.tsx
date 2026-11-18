@@ -104,11 +104,12 @@ async function openActions(name = "PUMP-01") {
   return within(await screen.findByRole("menu"));
 }
 
-function renderSection(canRegister = true) {
+function renderSection(canRegister = true, canViewReadings = true) {
   renderWithProviders(
     <AssetDevicesSection
       assetId="asset-id"
       canRegister={canRegister}
+      canViewReadings={canViewReadings}
       estateId="estate-id"
     />
   );
@@ -434,4 +435,10 @@ describe("device deactivation and replacement (ID-45)", () => {
     await screen.findByText(`Turned off ${formatDateTime(deactivatedAt)}`);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
+});
+
+// Council view devices but not readings (estate-role-permissions).
+it("offers no Readings link to someone who cannot view readings", () => {
+  renderSection(true, false);
+  expect(screen.queryByRole("link", { name: "Readings" })).toBeNull();
 });

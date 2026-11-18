@@ -73,7 +73,12 @@ function current(
   };
 }
 
-function renderAlert(canInspect = true, canSend = false, active = true) {
+function renderAlert(
+  canInspect = true,
+  canSend = false,
+  active = true,
+  canViewCondition = true
+) {
   return renderWithProviders(
     <AssetAttentionAlert
       active={active}
@@ -81,6 +86,7 @@ function renderAlert(canInspect = true, canSend = false, active = true) {
       assetName="Booster pump"
       canInspect={canInspect}
       canSend={canSend}
+      canViewCondition={canViewCondition}
       estateId="estate"
     />
   );
@@ -172,4 +178,15 @@ describe("AssetAttentionAlert", () => {
     const alert = await screen.findByRole("alert");
     expect(alert.dataset.tone).toBe(tone);
   });
+});
+
+// The banner reads assessments, which need VIEW_READINGS (estate-role-permissions).
+it("shows nothing and requests no assessments without viewing readings", () => {
+  renderAlert(false, false, true, false);
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(
+    (vi.mocked(api.GET).mock.calls as unknown[][]).some(
+      ([path]) => path === "/estates/{estateId}/assets/{assetId}/assessments"
+    )
+  ).toBe(false);
 });

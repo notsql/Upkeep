@@ -101,12 +101,15 @@ vi.mock(
     AssetConditionSection: ({
       upcoming,
       canRecord,
+      canView,
     }: {
       upcoming?: ReactNode;
       canRecord: boolean;
+      canView: boolean;
     }) => (
       <section aria-label="Condition">
         <h2>Condition</h2>
+        {canView ? <p>Can view assessments</p> : null}
         {canRecord ? <p>Can record assessment</p> : null}
         {upcoming}
       </section>
@@ -390,6 +393,23 @@ describe("AssetOverview access", () => {
     viewer.canCreateWorkOrders = true;
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("heading", { name: "Condition" });
+    expect(screen.queryByText("Can record assessment")).toBeNull();
+  });
+
+  // Council: assets without readings, where assessments live (estate-role-permissions).
+  it("offers no condition to view or record without the reading permissions", async () => {
+    viewer.canViewReadings = false;
+    viewer.canRecordReadings = false;
+    renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
+    await screen.findByRole("heading", { name: "Condition" });
+    expect(screen.queryByText("Can view assessments")).toBeNull();
+    expect(screen.queryByText("Can record assessment")).toBeNull();
+  });
+
+  it("lets a reading viewer who cannot record readings see but not record a condition", async () => {
+    viewer.canRecordReadings = false;
+    renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
+    await screen.findByText("Can view assessments");
     expect(screen.queryByText("Can record assessment")).toBeNull();
   });
 

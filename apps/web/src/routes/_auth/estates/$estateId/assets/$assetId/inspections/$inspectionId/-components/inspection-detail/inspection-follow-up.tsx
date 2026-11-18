@@ -6,12 +6,15 @@ export function InspectionFollowUp({
   record,
   estateId,
   canCreate,
+  canViewWorkOrders,
   active,
   pending,
 }: {
   record: InspectionResult;
   estateId: string;
   canCreate: boolean;
+  /** Can open the work order (VIEW_WORK_ORDERS). */
+  canViewWorkOrders: boolean;
   active: boolean;
   pending: boolean;
 }) {
@@ -19,6 +22,9 @@ export function InspectionFollowUp({
     return <p>Closed</p>;
   }
   if (record.workOrder) {
+    if (!canViewWorkOrders) {
+      return <p>{record.workOrder.reference}</p>;
+    }
     return (
       <Link
         className="underline"

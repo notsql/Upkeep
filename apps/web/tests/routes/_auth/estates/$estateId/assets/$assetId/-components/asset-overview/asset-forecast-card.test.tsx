@@ -1,4 +1,9 @@
-import { renderWithProviders, screen, within } from "@tests/test-utils";
+import {
+  renderWithProviders,
+  screen,
+  waitFor,
+  within,
+} from "@tests/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { api } from "@/lib/api";
 import type { Assessment } from "@/lib/assessments";
@@ -63,12 +68,13 @@ function serve() {
   }) as never);
 }
 
-function card(canSend = true) {
+function card(canSend = true, canViewCondition = true) {
   renderWithProviders(
     <AssetForecastCard
       assetId="asset"
       assetName="Booster pump"
       canSend={canSend}
+      canViewCondition={canViewCondition}
       estateId="estate"
     />
   );
@@ -246,4 +252,18 @@ describe("AssetForecastCard", () => {
     await screen.findByText("Breakdowns observed: 0");
     expect(screen.queryByText(SEND_STEP)).toBeNull();
   });
+});
+
+// Council view assets but not readings, where assessments live (estate-role-permissions).
+it("requests no assessments from someone who cannot view readings", async () => {
+  card(false, false);
+  await screen.findByText("Breakdown forecast");
+  await waitFor(() =>
+    expect(api.GET).toHaveBeenCalledWith(RISK_PATH, expect.anything())
+  );
+  expect(
+    (vi.mocked(api.GET).mock.calls as unknown[][]).some(
+      ([path]) => path === ASSESSMENTS_PATH
+    )
+  ).toBe(false);
 });

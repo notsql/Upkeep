@@ -11,11 +11,12 @@ export function AssetDevices({
 }) {
   const asset = useAsset(estateId, assetId);
   const access = useAppAccess();
-  // Adding sensors needs MANAGE_DEVICES (estate-role-permissions).
-  const canManageDevices = Boolean(
-    access.data?.estates.find((item) => item.estateId === estateId)
-      ?.canManageDevices
+  const permission = access.data?.estates.find(
+    (item) => item.estateId === estateId
   );
+  // Adding sensors needs MANAGE_DEVICES; readings need VIEW_READINGS
+  // (estate-role-permissions).
+  const canManageDevices = Boolean(permission?.canManageDevices);
   if (!asset.data) {
     return null;
   }
@@ -23,6 +24,7 @@ export function AssetDevices({
     <AssetDevicesSection
       assetId={assetId}
       canRegister={canManageDevices && !asset.data.deactivatedAt}
+      canViewReadings={Boolean(permission?.canViewReadings)}
       estateId={estateId}
     />
   );

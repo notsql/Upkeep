@@ -22,7 +22,7 @@ redirect.
 
 Entry: the "Inspection views" `SubNav` on Inspections (**Check schedules** tab),
 plus the Inspections page's "Set check schedules" and "Turn on regular checks"
-links. There is no sidebar item; the sidebar's **Inspections** is active here.
+links, all shown only to viewers who pass the gate below. There is no sidebar item; the sidebar's **Inspections** is active here.
 Gate: `canOpenCheckSchedules` (`canManageInspections`, MANAGE_INSPECTIONS;
 estate-role-permissions). Inspections itself opens with `canOpenInspections`
 (`canViewInspectionResults`), but its schedules views need the manage flag. The

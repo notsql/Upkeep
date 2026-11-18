@@ -224,6 +224,27 @@ function checkedByDestination(path: string, feature: string | undefined) {
   );
 }
 
+/**
+ * An asset's Costs and Sensors tabs (/estates/:id/assets/:assetId/costs|devices)
+ * follow VIEW_COSTS and VIEW_DEVICES, like the hidden tabs.
+ */
+function guardAssetTab(
+  segments: string[],
+  access: components["schemas"]["AppAccessResponse"]
+) {
+  if (segments.length !== 5 || segments[2] !== "assets") {
+    return;
+  }
+  const [, estateId, , , tab] = segments;
+  const estate = access.estates.find((item) => item.estateId === estateId);
+  if (
+    (tab === "costs" && !estate?.canViewCosts) ||
+    (tab === "devices" && !estate?.canViewDevices)
+  ) {
+    throw notFound();
+  }
+}
+
 /** Destinations gated by one access-flag predicate each, sub-views included. */
 function guardDestination(
   path: string,
@@ -231,6 +252,7 @@ function guardDestination(
 ) {
   const segments = path.split("/").filter(Boolean);
   const [, estateId, feature] = segments;
+  guardAssetTab(segments, access);
   const allDevices = isAllDevicesPath(segments);
   if (
     !(estateId && feature && (allDevices || isSectionPath(segments, feature)))

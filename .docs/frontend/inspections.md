@@ -210,7 +210,9 @@ location review is open; Cancel navigates to the asset). After saving,
 (`inspection-detail.tsx`) uses `DetailPageHeader` with the Pass/Fail `Badge` as
 `status` and "<reference> · <name>" as `meta` (no estate-name fallback). Its
 date/location/inspector details are a `DetailList` (no card), then Notes and
-Follow-up, split by `Separator`s, then Photos. The asset inspection page shows
+Follow-up, split by `Separator`s, then Photos. The follow-up work order is a
+link only with `useInspectionAccess().canViewWorkOrders` (VIEW_WORK_ORDERS),
+else its plain reference. The asset inspection page shows
 the asset's reference/category/location/installation as a `DetailList`, also
 without a card. Asset
 and record load failures use `ErrorState` ("Retry asset", "Retry inspection").

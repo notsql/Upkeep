@@ -4,6 +4,7 @@ import { AssetDevices } from "@/routes/_auth/estates/$estateId/assets/$assetId/-
 
 const page = vi.hoisted(() => ({
   canManageDevices: true,
+  canViewReadings: true,
   deactivatedAt: null as string | null,
 }));
 vi.mock("@/lib/assets", async (importOriginal) => ({
@@ -17,7 +18,11 @@ vi.mock("@/lib/access", async (importOriginal) => ({
   useAppAccess: () => ({
     data: {
       estates: [
-        { estateId: "estate", canManageDevices: page.canManageDevices },
+        {
+          estateId: "estate",
+          canManageDevices: page.canManageDevices,
+          canViewReadings: page.canViewReadings,
+        },
       ],
     },
   }),
@@ -25,14 +30,24 @@ vi.mock("@/lib/access", async (importOriginal) => ({
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-devices/asset-devices-section",
   () => ({
-    AssetDevicesSection: ({ canRegister }: { canRegister: boolean }) => (
-      <output>{canRegister ? "Sensors (can add)" : "Sensors"}</output>
+    AssetDevicesSection: ({
+      canRegister,
+      canViewReadings,
+    }: {
+      canRegister: boolean;
+      canViewReadings: boolean;
+    }) => (
+      <output>
+        {canRegister ? "Sensors (can add)" : "Sensors"}
+        {canViewReadings ? " with readings" : ""}
+      </output>
     ),
   })
 );
 
 beforeEach(() => {
   page.canManageDevices = true;
+  page.canViewReadings = false;
   page.deactivatedAt = null;
 });
 
@@ -50,3 +65,13 @@ it.each([
     screen.getByText(text);
   }
 );
+
+// The Readings link follows VIEW_READINGS (estate-role-permissions).
+it.each([
+  [true, "Sensors (can add) with readings"],
+  [false, "Sensors (can add)"],
+])("links to readings when canViewReadings is %s", (canViewReadings, text) => {
+  page.canViewReadings = canViewReadings;
+  renderWithProviders(<AssetDevices assetId="asset" estateId="estate" />);
+  screen.getByText(text);
+});
